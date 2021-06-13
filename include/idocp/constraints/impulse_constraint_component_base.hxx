@@ -9,18 +9,6 @@
 
 namespace idocp {
 
-inline double ImpulseConstraintComponentBase::l1NormPrimalResidual(
-    const ConstraintComponentData& data) {
-  return data.residual.lpNorm<1>();
-}
-
-
-inline double ImpulseConstraintComponentBase::squaredNormPrimalAndDualResidual(
-    const ConstraintComponentData& data) {
-  return (data.residual.squaredNorm() + data.duality.squaredNorm());
-}
-
-
 inline double ImpulseConstraintComponentBase::maxSlackStepSize(
     const ConstraintComponentData& data) const {
   return pdipm::FractionToBoundarySlack(fraction_to_boundary_rate_, data);

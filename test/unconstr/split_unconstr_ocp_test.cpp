@@ -39,7 +39,7 @@ protected:
 };
 
 
-TEST_F(SplitUnconstrOCPTest, linearizeOCP) {
+TEST_F(SplitUnconstrOCPTest, computeKKTSystem) {
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
   SplitUnconstrOCP ocp(robot, cost, constraints);
@@ -49,7 +49,7 @@ TEST_F(SplitUnconstrOCPTest, linearizeOCP) {
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  ocp.linearizeOCP(robot, t, dt, s, s_next, kkt_matrix, kkt_residual);
+  ocp.computeKKTSystem(robot, t, dt, s, s_next, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -106,12 +106,9 @@ TEST_F(SplitUnconstrOCPTest, computeKKTResidual) {
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
-  kkt_error_ref += kkt_residual_ref.lx.squaredNorm();
-  kkt_error_ref += kkt_residual_ref.la.squaredNorm();
-  kkt_error_ref += kkt_residual_ref.lu.squaredNorm();
-  kkt_error_ref += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
-  kkt_error_ref += ud.squaredNormUnconstrDynamicsResidual(dt);
-  kkt_error_ref += dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
+  kkt_error_ref += kkt_residual_ref.squaredNormKKTResidual();
+  kkt_error_ref += (dt*dt) * ud.squaredNormKKTResidual();
+  kkt_error_ref += (dt*dt) * constraints_data.squaredNormKKTResidual();
   EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.squaredNormKKTResidual(kkt_residual, dt));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -142,12 +139,12 @@ TEST_F(SplitUnconstrOCPTest, costAndConstraintViolation) {
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   unconstr::stateequation::computeForwardEulerResidual(dt, s, s_next.q, 
                                                        s_next.v, kkt_residual_ref);
-  UnconstrDynamics cd(robot);
-  cd.computeUnconstrDynamicsResidual(robot, s);
+  UnconstrDynamics ud(robot);
+  ud.computeUnconstrDynamicsResidual(robot, s);
   double constraint_violation_ref = 0;
-  constraint_violation_ref += dt * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
-  constraint_violation_ref += cd.l1NormUnconstrDynamicsResidual(dt);
+  constraint_violation_ref += kkt_residual_ref.l1NormConstraintViolation();
+  constraint_violation_ref += dt * constraints_data.l1NormConstraintViolation();
+  constraint_violation_ref += dt * ud.l1NormConstraintViolation();
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }

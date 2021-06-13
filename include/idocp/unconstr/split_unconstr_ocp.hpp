@@ -84,8 +84,7 @@ public:
                        const SplitSolution& s);
 
   ///
-  /// @brief Linearize the OCP for Newton's method around the current solution, 
-  /// i.e., computes the KKT residual and Hessian.
+  /// @brief Computes the KKT residual of this time stage.
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
@@ -94,9 +93,26 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const double dt, 
-                    const SplitSolution& s, const SplitSolution& s_next, 
-                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+  void computeKKTResidual(Robot& robot, const double t, const double dt, 
+                          const SplitSolution& s, const SplitSolution& s_next, 
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Computes the KKT system of this time stage, i.e., the condensed
+  /// KKT matrix and KKT residual of this time stage for Newton's method.
+  /// @param[in] robot Robot model. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  ///
+  void computeKKTSystem(Robot& robot, const double t, const double dt, 
+                        const SplitSolution& s, const SplitSolution& s_next, 
+                        SplitKKTMatrix& kkt_matrix, 
+                        SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the primal and dual variables, i.e., computes the Newton 
@@ -143,21 +159,6 @@ public:
   /// @param[in] dual_step_size Dula step size. 
   ///
   void updateDual(const double dual_step_size);
-
-  ///
-  /// @brief Computes the KKT residual of this time stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
-  ///
-  void computeKKTResidual(Robot& robot, const double t, const double dt, 
-                          const SplitSolution& s, const SplitSolution& s_next, 
-                          SplitKKTMatrix& kkt_matrix, 
-                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 

@@ -95,6 +95,22 @@ SplitKKTResidual::lf() const {
 }
 
 
+inline double SplitKKTResidual::squaredNormKKTResidual() const {
+  double nrm = 0;
+  nrm += Fx.squaredNorm();
+  nrm += lx.squaredNorm();
+  nrm += lu.squaredNorm();
+  nrm += la.squaredNorm();
+  nrm += lf().squaredNorm();
+  return nrm;
+}
+
+
+inline double SplitKKTResidual::l1NormConstraintViolation() const {
+  return Fx.template lpNorm<1>();
+}
+
+
 inline void SplitKKTResidual::setZero() {
   Fx.setZero();
   lx.setZero();

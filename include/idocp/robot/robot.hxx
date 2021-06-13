@@ -49,46 +49,46 @@ inline void Robot::integrateConfiguration(
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(q_integrated.size() == dimq_);
-  if (has_floating_base_) {
-    pinocchio::integrate(
-        model_, q, integration_length*v, 
-        const_cast<Eigen::MatrixBase<ConfigVectorType2>&>(q_integrated));
-  }
-  else {
-    (const_cast<Eigen::MatrixBase<ConfigVectorType2>&>(q_integrated)).noalias() 
-        = q + integration_length * v;
-  }
+  pinocchio::integrate(
+      model_, q, integration_length*v, 
+      const_cast<Eigen::MatrixBase<ConfigVectorType2>&>(q_integrated));
 }
 
 
 template <typename ConfigVectorType, typename TangentVectorType, 
-          typename MatrixType>
-inline void Robot::dIntegratedConfiguration(
+          typename MatrixType1, typename MatrixType2>
+inline void Robot::dIntegrateTransport_dq(
     const Eigen::MatrixBase<ConfigVectorType>& q,
     const Eigen::MatrixBase<TangentVectorType>& v,
-    const Eigen::MatrixBase<MatrixType>& dintegrate_dq) const {
+    const Eigen::MatrixBase<MatrixType1>& Jin,
+    const Eigen::MatrixBase<MatrixType2>& Jout) const {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(dintegrate_dq.rows() == dimv_);
-  assert(dintegrate_dq.cols() == dimv_);
-  pinocchio::dIntegrate(
-      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dintegrate_dq),
+  assert(Jin.cols() == dimv_);
+  assert(Jout.rows() == Jin.rows());
+  assert(Jout.cols() == Jin.cols());
+  pinocchio::dIntegrateTransport(
+      model_, q, v, Jin.transpose(), 
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(Jout).transpose(),
       pinocchio::ARG0);
 }
 
 
 template <typename ConfigVectorType, typename TangentVectorType, 
-          typename MatrixType>
-inline void Robot::dIntegratedVelocity(
+          typename MatrixType1, typename MatrixType2>
+inline void Robot::dIntegrateTransport_dv(
     const Eigen::MatrixBase<ConfigVectorType>& q,
     const Eigen::MatrixBase<TangentVectorType>& v,
-    const Eigen::MatrixBase<MatrixType>& dintegrate_dv) const {
+    const Eigen::MatrixBase<MatrixType1>& Jin,
+    const Eigen::MatrixBase<MatrixType2>& Jout) const {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(dintegrate_dv.rows() == dimv_);
-  assert(dintegrate_dv.cols() == dimv_);
-  pinocchio::dIntegrate(
-      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dintegrate_dv),
+  assert(Jin.cols() == dimv_);
+  assert(Jout.rows() == Jin.rows());
+  assert(Jout.cols() == Jin.cols());
+  pinocchio::dIntegrateTransport(
+      model_, q, v, Jin.transpose(), 
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(Jout).transpose(),
       pinocchio::ARG1);
 }
 
@@ -96,55 +96,47 @@ inline void Robot::dIntegratedVelocity(
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename TangentVectorType>
 inline void Robot::subtractConfiguration(
-    const Eigen::MatrixBase<ConfigVectorType1>& q_plus, 
-    const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-    const Eigen::MatrixBase<TangentVectorType>& difference) const {
-  assert(q_plus.size() == dimq_);
-  assert(q_minus.size() == dimq_);
-  assert(difference.size() == dimv_);
-  if (has_floating_base_) {
-    pinocchio::difference(
-        model_, q_minus, q_plus, 
-        const_cast<Eigen::MatrixBase<TangentVectorType>&>(difference));
-  }
-  else {
-    const_cast<Eigen::MatrixBase<TangentVectorType>&>(difference) 
-        = q_plus - q_minus;
-  }
+    const Eigen::MatrixBase<ConfigVectorType1>& qf, 
+    const Eigen::MatrixBase<ConfigVectorType2>& q0,
+    const Eigen::MatrixBase<TangentVectorType>& qdiff) const {
+  assert(qf.size() == dimq_);
+  assert(q0.size() == dimq_);
+  assert(qdiff.size() == dimv_);
+  pinocchio::difference(
+      model_, q0, qf, 
+      const_cast<Eigen::MatrixBase<TangentVectorType>&>(qdiff));
 }
 
 
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename MatrixType>
-inline void Robot::dSubtractdConfigurationPlus(
-    const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
-    const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-    const Eigen::MatrixBase<MatrixType>& dsubtract_dqplus) const {
-  assert(q_plus.size() == dimq_);
-  assert(q_minus.size() == dimq_);
-  assert(dsubtract_dqplus.rows() == dimv_);
-  assert(dsubtract_dqplus.cols() == dimv_);
-  pinocchio::dDifference(
-      model_, q_minus, q_plus, 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(dsubtract_dqplus),
-      pinocchio::ARG1);
+inline void Robot::dSubtractConfiguration_dqf(
+    const Eigen::MatrixBase<ConfigVectorType1>& qf,
+    const Eigen::MatrixBase<ConfigVectorType2>& q0,
+    const Eigen::MatrixBase<MatrixType>& dqdiff_dqf) const {
+  assert(qf.size() == dimq_);
+  assert(q0.size() == dimq_);
+  assert(dqdiff_dqf.rows() == dimv_);
+  assert(dqdiff_dqf.cols() == dimv_);
+  pinocchio::dDifference(model_, q0, qf, 
+                         const_cast<Eigen::MatrixBase<MatrixType>&>(dqdiff_dqf),
+                         pinocchio::ARG1);
 }
 
 
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename MatrixType>
-inline void Robot::dSubtractdConfigurationMinus(
-    const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
-    const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-    const Eigen::MatrixBase<MatrixType>& dsubtract_dqminus) const {
-  assert(q_plus.size() == dimq_);
-  assert(q_minus.size() == dimq_);
-  assert(dsubtract_dqminus.rows() == dimv_);
-  assert(dsubtract_dqminus.cols() == dimv_);
-  pinocchio::dDifference(
-      model_, q_minus, q_plus, 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(dsubtract_dqminus),
-      pinocchio::ARG0);
+inline void Robot::dSubtractConfiguration_dq0(
+    const Eigen::MatrixBase<ConfigVectorType1>& qf,
+    const Eigen::MatrixBase<ConfigVectorType2>& q0,
+    const Eigen::MatrixBase<MatrixType>& dqdiff_dq0) const {
+  assert(qf.size() == dimq_);
+  assert(q0.size() == dimq_);
+  assert(dqdiff_dq0.rows() == dimv_);
+  assert(dqdiff_dq0.cols() == dimv_);
+  pinocchio::dDifference(model_, q0, qf, 
+                         const_cast<Eigen::MatrixBase<MatrixType>&>(dqdiff_dq0),
+                         pinocchio::ARG0);
 }
 
 
@@ -368,11 +360,9 @@ inline void Robot::computeContactPositionDerivative(
 inline void Robot::setContactForces(const ContactStatus& contact_status, 
                                     const std::vector<Eigen::Vector3d>& f) {
   assert(f.size() == maxPointContacts());
-  int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
-      ++num_active_contacts;
     }
     else {
       point_contacts_[i].computeJointForceFromContactForce(
@@ -385,11 +375,9 @@ inline void Robot::setContactForces(const ContactStatus& contact_status,
 inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
                                     const std::vector<Eigen::Vector3d>& f) {
   assert(f.size() == maxPointContacts());
-  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
-      ++num_active_impulse;
     }
     else {
       point_contacts_[i].computeJointForceFromContactForce(
@@ -500,24 +488,6 @@ inline void Robot::RNEAImpulseDerivatives(
 }
 
 
-template <typename MatrixType>
-inline void Robot::dRNEAPartialdFext(
-    const ContactStatus& contact_status,
-    const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext) {
-  assert(dRNEA_partial_dfext.rows() == dimv_);
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].getContactJacobian(
-          model_, data_,  -1, 
-          (const_cast<Eigen::MatrixBase<MatrixType>&>(dRNEA_partial_dfext))
-              .block(0, 3*num_active_contacts, dimv_, 3), true);
-      ++num_active_contacts;
-    }
-  }
-}
-
-
 template <typename MatrixType1, typename MatrixType2>
 inline void Robot::computeMinv(const Eigen::MatrixBase<MatrixType1>& M, 
                                const Eigen::MatrixBase<MatrixType2>& Minv) {
@@ -576,12 +546,13 @@ inline void Robot::computeMJtJinv(
 
 
 inline Eigen::VectorXd Robot::generateFeasibleConfiguration() const {
-  Eigen::VectorXd q_min = model_.lowerPositionLimit;
-  Eigen::VectorXd q_max = model_.upperPositionLimit;
+  Eigen::VectorXd q_min(dimq_), q_max(dimq_);
   if (has_floating_base_) {
     q_min.head(7) = - Eigen::VectorXd::Ones(7);
     q_max.head(7) = Eigen::VectorXd::Ones(7);
   }
+  q_min.tail(dimu_) = lower_joint_position_limit_;
+  q_max.tail(dimu_) = upper_joint_position_limit_;
   return pinocchio::randomConfiguration(model_, q_min, q_max);
 }
 

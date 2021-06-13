@@ -1,4 +1,4 @@
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/direct_multiple_shooting.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -6,8 +6,9 @@
 
 namespace idocp{
 
-OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse, 
-                             const int nthreads) 
+DirectMultipleShooting::DirectMultipleShooting(const int N, 
+                                               const int max_num_impulse, 
+                                               const int nthreads) 
   : max_num_impulse_(max_num_impulse),
     nthreads_(nthreads),
     kkt_error_(Eigen::VectorXd::Zero(N+1+4*max_num_impulse)) {
@@ -27,20 +28,20 @@ OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse,
 }
 
 
-OCPLinearizer::OCPLinearizer()
+DirectMultipleShooting::DirectMultipleShooting()
   : max_num_impulse_(0),
     nthreads_(0),
     kkt_error_() {
 }
 
 
-OCPLinearizer::~OCPLinearizer() {
+DirectMultipleShooting::~DirectMultipleShooting() {
 }
 
 
-void OCPLinearizer::initConstraints(OCP& ocp, aligned_vector<Robot>& robots, 
-                                    const ContactSequence& contact_sequence, 
-                                    const Solution& s) const {
+void DirectMultipleShooting::initConstraints(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const Solution& s) const {
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -72,30 +73,28 @@ void OCPLinearizer::initConstraints(OCP& ocp, aligned_vector<Robot>& robots,
 }
 
 
-void OCPLinearizer::linearizeOCP(OCP& ocp, aligned_vector<Robot>& robots, 
-                                 const ContactSequence& contact_sequence, 
-                                 const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v, const Solution& s, 
-                                 KKTMatrix& kkt_matrix, 
-                                 KKTResidual& kkt_residual) const {
-  runParallel<internal::LinearizeOCP>(ocp, robots, contact_sequence, q, v, 
-                                      s, kkt_matrix, kkt_residual);
-}
-
-
-void OCPLinearizer::computeKKTResidual(OCP& ocp, aligned_vector<Robot>& robots, 
-                                       const ContactSequence& contact_sequence, 
-                                       const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v, 
-                                       const Solution& s, KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual) const {
+void DirectMultipleShooting::computeKKTResidual(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const Solution& s, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual) const {
   runParallel<internal::ComputeKKTResidual>(ocp, robots, contact_sequence, q, v,  
                                             s, kkt_matrix, kkt_residual);
 }
 
 
-double OCPLinearizer::KKTError(const OCP& ocp, 
-                               const KKTResidual& kkt_residual) {
+void DirectMultipleShooting::computeKKTSystem(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const Solution& s, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual) const {
+  runParallel<internal::ComputeKKTSystem>(ocp, robots, contact_sequence, q, v, 
+                                          s, kkt_matrix, kkt_residual);
+}
+
+
+double DirectMultipleShooting::KKTError(const OCP& ocp, 
+                                        const KKTResidual& kkt_residual) {
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -134,14 +133,14 @@ double OCPLinearizer::KKTError(const OCP& ocp,
     else {
       const int impulse_index = i - (N+1+2*N_impulse+N_lift);
       kkt_error_.coeffRef(i)
-          = kkt_residual.switching[impulse_index].P().squaredNorm();
+          = kkt_residual.switching[impulse_index].squaredNormKKTResidual();
     }
   }
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 
 
-void OCPLinearizer::computeInitialStateDirection(
+void DirectMultipleShooting::computeInitialStateDirection(
     const OCP& ocp, const aligned_vector<Robot>& robots, 
     const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
     const Solution& s, Direction& d) {
@@ -149,11 +148,10 @@ void OCPLinearizer::computeInitialStateDirection(
 }
 
 
-void OCPLinearizer::integrateSolution(OCP& ocp, 
-                                      const aligned_vector<Robot>& robots, 
-                                      const double primal_step_size, 
-                                      const double dual_step_size, 
-                                      Direction& d, Solution& s) const {
+void DirectMultipleShooting::integrateSolution(
+    OCP& ocp, const aligned_vector<Robot>& robots, 
+    const double primal_step_size, const double dual_step_size, 
+    Direction& d, Solution& s) const {
   assert(robots.size() == nthreads_);
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();

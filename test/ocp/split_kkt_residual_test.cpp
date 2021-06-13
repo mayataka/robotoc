@@ -51,6 +51,21 @@ void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact
   EXPECT_TRUE(kkt_res.Fx.tail(dimv).isApprox(kkt_res.Fv()));
   EXPECT_TRUE(kkt_res.lx.head(dimv).isApprox(kkt_res.lq()));
   EXPECT_TRUE(kkt_res.lx.tail(dimv).isApprox(kkt_res.lv()));
+
+  kkt_res.lu.setRandom();
+  kkt_res.la.setRandom();
+  kkt_res.lf().setRandom();
+  const double nrm = kkt_res.squaredNormKKTResidual();
+  const double nrm_ref = kkt_res.Fx.squaredNorm() 
+                          + kkt_res.lx.squaredNorm()
+                          + kkt_res.lu.squaredNorm()
+                          + kkt_res.la.squaredNorm()
+                          + kkt_res.lf().squaredNorm();
+  EXPECT_DOUBLE_EQ(nrm, nrm_ref);
+
+  const double vio = kkt_res.l1NormConstraintViolation();
+  const double vio_ref = kkt_res.Fx.template lpNorm<1>();
+  EXPECT_DOUBLE_EQ(vio, vio_ref);
 }
 
 

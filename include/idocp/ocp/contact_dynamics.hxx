@@ -203,17 +203,14 @@ inline void ContactDynamics::condenseSwitchingConstraint(
 }
 
 
-inline double ContactDynamics::l1NormContactDynamicsResidual(
-    const double dt) const {
+inline double ContactDynamics::squaredNormKKTResidual(const double dt) const {
   assert(dt > 0);
-  return (dt * data_.IDC().lpNorm<1>());
+  return ((dt*dt)*data_.IDC().squaredNorm() + data_.lu_passive.squaredNorm());
 }
 
 
-inline double ContactDynamics::squaredNormContactDynamicsResidual(
-    const double dt) const {
-  assert(dt > 0);
-  return ((dt*dt)*data_.IDC().squaredNorm() + data_.lu_passive.squaredNorm());
+inline double ContactDynamics::l1NormConstraintViolation() const {
+  return data_.IDC().lpNorm<1>();
 }
 
 } // namespace idocp 

@@ -19,7 +19,7 @@ UnconstrLineSearch::UnconstrLineSearch(const Robot& robot, const double T,
     min_step_size_(min_step_size),
     costs_(Eigen::VectorXd::Zero(N+1)), 
     violations_(Eigen::VectorXd::Zero(N)), 
-    s_try_(robot, N), 
+    s_trial_(robot, N), 
     kkt_residual_(robot, N) {
 }
 
@@ -34,7 +34,7 @@ UnconstrLineSearch::UnconstrLineSearch()
     min_step_size_(0),
     costs_(), 
     violations_(), 
-    s_try_(), 
+    s_trial_(), 
     kkt_residual_() {
 }
 
@@ -125,13 +125,13 @@ void UnconstrLineSearch::computeCostAndViolation(UnconstrParNMPC& parnmpc,
 }
 
 
-void UnconstrLineSearch::computeTrySolution(const Solution& s, 
-                                            const Direction& d, 
-                                            const double step_size) {
+void UnconstrLineSearch::computeSolutionTrial(const Solution& s, 
+                                              const Direction& d, 
+                                              const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
   for (int i=0; i<=N_; ++i) {
-    computeTrySolution(s[i], d[i], step_size, s_try_[i]);
+    computeSolutionTrial(s[i], d[i], step_size, s_trial_[i]);
   }
 }
 

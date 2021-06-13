@@ -71,45 +71,6 @@ public:
       pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const;
 
   ///
-  /// @brief Computes the contact Jacobian represented in the local coordinate 
-  /// of the contact frame. Before calling this function, kinematics derivative 
-  /// of the robot model with respect to the frame position must be updated.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] Jacobian Jacobian of the contact frame is stored in this 
-  /// variable. If transpose=true, size must be Robot::dimv() x 3. 
-  /// If transpose=false, size must be 3 x Robot::dimv() 
-  /// @param[in] transpose If true, the Jacobian is transposed. If false, the 
-  /// Jacobian is not transposed, i.e., the original Jacobian is returned. 
-  /// Default is false.
-  ///
-  template <typename MatrixType>
-  void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          const Eigen::MatrixBase<MatrixType>& Jacobian,
-                          const bool transpose=false);
-
-  ///
-  /// @brief Computes the contact Jacobian represented in the local coordinate 
-  /// of the contact frame. Before calling this function, kinematics derivative 
-  /// of the robot model with respect to the frame position must be updated.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff A coefficient multiplied to the Jacobian.
-  /// @param[out] Jacobian Jacobian of the contact frame is stored in this 
-  /// variable. If transpose=true, size must be Robot::dimv() x 3. 
-  /// If transpose=false, size must be 3 x Robot::dimv() 
-  /// @param[in] transpose If true, the Jacobian is transposed. If false, the 
-  /// Jacobian is not transposed, i.e., the original Jacobian is returned. 
-  /// Default is false.
-  ///
-  ///
-  template <typename MatrixType>
-  void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          const double coeff, 
-                          const Eigen::MatrixBase<MatrixType>& Jacobian,
-                          const bool transpose=false);
-
-  ///
   /// @brief Computes the residual of the contact constraints considered by the 
   /// Baumgarte's stabilization method. Before calling this function, kinematics 
   /// of the robot model (frame position, velocity, and acceleration) must be 

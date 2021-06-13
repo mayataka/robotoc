@@ -1,6 +1,6 @@
 #include "solution_factory.hpp"
 
-#include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/hybrid_time_discretization.hpp"
 
 
 namespace idocp {
@@ -22,21 +22,21 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     return CreateSolution(robot, N, max_num_impulse);
   }
   else {
-    OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
-    ocp_discretizer.discretizeOCP(contact_sequence, t);
+    HybridTimeDiscretization discretization(T, N, max_num_impulse);
+    discretization.discretize(contact_sequence, t);
     Solution s(robot, N, max_num_impulse);
     for (int i=0; i<=N; ++i) {
-      s[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhase(i)));
+      s[i].setRandom(robot, contact_sequence.contactStatus(discretization.contactPhase(i)));
     }
     const int num_impulse = contact_sequence.numImpulseEvents();
     for (int i=0; i<num_impulse; ++i) {
       s.impulse[i].setRandom(robot, contact_sequence.impulseStatus(i));
     }
     for (int i=0; i<num_impulse; ++i) {
-      s.aux[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
+      s.aux[i].setRandom(robot, contact_sequence.contactStatus(discretization.contactPhaseAfterImpulse(i)));
     }
     for (int i=0; i<num_impulse; ++i) {
-      const int time_stage_before_impulse = ocp_discretizer.timeStageBeforeImpulse(i);
+      const int time_stage_before_impulse = discretization.timeStageBeforeImpulse(i);
       if (time_stage_before_impulse-1 >= 0) {
         s[time_stage_before_impulse-1].setImpulseStatus(contact_sequence.impulseStatus(i));
         s[time_stage_before_impulse-1].xi_stack().setRandom();
@@ -44,7 +44,7 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     }
     const int num_lift = contact_sequence.numLiftEvents();
     for (int i=0; i<num_lift; ++i) {
-      s.lift[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterLift(i)));
+      s.lift[i].setRandom(robot, contact_sequence.contactStatus(discretization.contactPhaseAfterLift(i)));
     }
     return s;
   }

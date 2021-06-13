@@ -37,7 +37,7 @@ int main() {
 
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
-  const int N = 40;
+  const int N = 20;
   // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
   const int nthreads = 8;
   const double t = 0;
@@ -49,7 +49,7 @@ int main() {
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);
   parnmpc_solver.initBackwardCorrection(t);
-  const int num_iteration = 500;
+  const int num_iteration = 100;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;

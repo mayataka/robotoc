@@ -87,20 +87,6 @@ void computeBackwardEulerResidual(
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
-///
-/// @brief Returns the l1-norm of the residual in the state equation.
-/// @param[in] kkt_residual Split KKT residual at the current time stage. 
-///
-double l1NormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual);
-
-///
-/// @brief Returns the squared norm of the residual in the state equation.
-/// @param[in] kkt_residual Split KKT residual at the current time stage. 
-///
-double squaredNormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual);
-
 } // namespace stateequation 
 } // namespace unconstr
 } // namespace idocp 

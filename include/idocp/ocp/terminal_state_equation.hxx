@@ -40,7 +40,7 @@ inline void TerminalStateEquation::linearizeForwardEuler(
     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
+    robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().template head<6>().noalias() 
         += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
               * s.lmd.template head<6>();

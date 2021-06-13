@@ -1,6 +1,6 @@
 #include "riccati_factory.hpp"
 
-#include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/hybrid_time_discretization.hpp"
 
 
 namespace idocp {

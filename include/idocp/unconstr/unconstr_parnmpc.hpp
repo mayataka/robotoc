@@ -17,7 +17,7 @@ namespace idocp {
 ///
 /// @class UnconstrParNMPC
 /// @brief An optimal control problem of unconstrained rigid-body systems for 
-/// Riccati recursion algorithm.
+/// ParNMPC algorithm.
 ///
 class UnconstrParNMPC {
 public:

@@ -36,8 +36,8 @@ void ImpulseDynamicsTest::testComputeResidual(Robot& robot, const ImpulseStatus&
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s);
-  const double l1norm = id.l1NormImpulseDynamicsResidual();
-  const double squarednorm = id.squaredNormImpulseDynamicsResidual();
+  const double l1norm = id.l1NormConstraintViolation();
+  const double squarednorm = id.squaredNormKKTResidual();
   ImpulseDynamicsData data(robot);
   data.setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
@@ -57,8 +57,8 @@ void ImpulseDynamicsTest::testLinearize(Robot& robot, const ImpulseStatus& impul
   auto kkt_residual = ImpulseSplitKKTResidual::Random(robot, impulse_status);
   auto kkt_residual_ref = kkt_residual;
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual);
-  const double l1norm = id.l1NormImpulseDynamicsResidual();
-  const double squarednorm = id.squaredNormImpulseDynamicsResidual();
+  const double l1norm = id.l1NormConstraintViolation();
+  const double squarednorm = id.squaredNormKKTResidual();
   ImpulseDynamicsData data(robot);
   data.setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);

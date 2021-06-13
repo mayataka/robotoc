@@ -48,7 +48,29 @@ inline void ImpulseSplitOCP::initConstraints(Robot& robot,
 }
 
 
-inline void ImpulseSplitOCP::linearizeOCP(
+inline void ImpulseSplitOCP::computeKKTResidual(
+    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
+    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
+    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
+  assert(q_prev.size() == robot.dimq());
+  robot.updateKinematics(s.q, s.v+s.dv);
+  kkt_matrix.setImpulseStatus(impulse_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  kkt_matrix.setZero();
+  kkt_residual.setZero();
+  impulse_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
+                                              kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, s, 
+                                               kkt_residual);
+  state_equation_.linearizeForwardEuler(robot, q_prev, s, s_next, 
+                                        kkt_matrix, kkt_residual);
+  impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
+                                             kkt_residual);
+}
+
+
+inline void ImpulseSplitOCP::computeKKTSystem(
     Robot& robot, const ImpulseStatus& impulse_status, const double t,  
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -114,38 +136,13 @@ inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline void ImpulseSplitOCP::computeKKTResidual(
-    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
-    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
-    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
-  assert(q_prev.size() == robot.dimq());
-  robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setImpulseStatus(impulse_status);
-  kkt_residual.setImpulseStatus(impulse_status);
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
-  impulse_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
-                                              kkt_residual);
-  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, s, 
-                                               kkt_residual);
-  state_equation_.linearizeForwardEuler(robot, q_prev, s, s_next, 
-                                        kkt_matrix, kkt_residual);
-  impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
-                                             kkt_residual);
-}
-
-
 inline double ImpulseSplitOCP::squaredNormKKTResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
-  double error = 0;
-  error += kkt_residual.lx.squaredNorm();
-  error += kkt_residual.ldv.squaredNorm();
-  error += kkt_residual.lf().squaredNorm();
-  error += state_equation_.squaredNormStateEuqationResidual(kkt_residual);
-  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual();
-  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
-  return error;
+  double nrm = 0;
+  nrm += kkt_residual.squaredNormKKTResidual();
+  nrm += impulse_dynamics_.squaredNormKKTResidual();
+  nrm += constraints_data_.squaredNormKKTResidual();
+  return nrm;
 }
 
 
@@ -176,14 +173,14 @@ inline double ImpulseSplitOCP::constraintViolation(
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   state_equation_.computeForwardEulerResidual(robot, s, q_next, v_next, 
                                               kkt_residual);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s);
   double violation = 0;
-  violation += constraints_->l1NormPrimalResidual(constraints_data_);
-  violation += state_equation_.l1NormStateEuqationResidual(kkt_residual);
-  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual();
+  violation += kkt_residual.l1NormConstraintViolation();
+  violation += constraints_data_.l1NormConstraintViolation();
+  violation += impulse_dynamics_.l1NormConstraintViolation();
   return violation;
 }
 

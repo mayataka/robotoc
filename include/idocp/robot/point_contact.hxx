@@ -20,49 +20,6 @@ inline void PointContact::computeJointForceFromContactForce(
 }
 
 
-template <typename MatrixType>
-inline void PointContact::getContactJacobian(
-    const pinocchio::Model& model, pinocchio::Data& data, 
-    const Eigen::MatrixBase<MatrixType>& Jacobian, const bool transpose) {
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
-                              pinocchio::LOCAL, J_frame_);
-  if (transpose) {
-      assert(Jacobian.rows() == dimv_);
-      assert(Jacobian.cols() == 3);
-      const_cast<Eigen::MatrixBase<MatrixType>&> (Jacobian)
-          = J_frame_.topRows<3>().transpose(); 
-  } 
-  else {
-      assert(Jacobian.rows() == 3);
-      assert(Jacobian.cols() == dimv_);
-      const_cast<Eigen::MatrixBase<MatrixType>&> (Jacobian)
-          = J_frame_.topRows<3>(); 
-  }
-}
-
-
-template <typename MatrixType>
-inline void PointContact::getContactJacobian(
-    const pinocchio::Model& model, pinocchio::Data& data, 
-    const double coeff, const Eigen::MatrixBase<MatrixType>& Jacobian, 
-    const bool transpose) {
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
-                              pinocchio::LOCAL, J_frame_);
-  if (transpose) {
-      assert(Jacobian.rows() == dimv_);
-      assert(Jacobian.cols() == 3);
-      const_cast<Eigen::MatrixBase<MatrixType>&> (Jacobian)
-          = coeff * J_frame_.topRows<3>().transpose(); 
-  } 
-  else {
-      assert(Jacobian.rows() == 3);
-      assert(Jacobian.cols() == dimv_);
-      const_cast<Eigen::MatrixBase<MatrixType>&> (Jacobian)
-          = coeff * J_frame_.topRows<3>(); 
-  }
-}
-
-
 template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 

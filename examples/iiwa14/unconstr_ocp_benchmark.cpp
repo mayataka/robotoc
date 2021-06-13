@@ -37,7 +37,7 @@ int main() {
 
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 1;
-  const int N = 40;
+  const int N = 20;
   const int nthreads = 8;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
@@ -47,7 +47,7 @@ int main() {
   // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
-  const int num_iteration = 100;
+  const int num_iteration = 50;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;

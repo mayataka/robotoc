@@ -82,13 +82,27 @@ public:
   /// @brief Predicted configuration used for computing the switching 
   /// constraint. Size is Robot::dimq().
   ///
-  Eigen::VectorXd q_pred;
+  Eigen::VectorXd q;
 
   ///
   /// @brief Predicted difference of the configuration used for computing the 
   /// switching constraint. Size is Robot::dimv().
   ///
-  Eigen::VectorXd dq_pred;
+  Eigen::VectorXd dq;
+
+  ///
+  /// @brief Returns the squared norm of the KKT residual, that is, 
+  /// the primal and dual residual of the switching constraint. 
+  /// @return Squared norm of the KKT residual in the switching constraint.
+  ///
+  double squaredNormKKTResidual() const;
+
+  ///
+  /// @brief Returns l1-norm of the constraint violation, that is, the primal
+  /// residual in the switchign constraint. 
+  /// @return l1-norm of the constraint violation.
+  ///
+  double l1NormConstraintViolation() const;
 
   ///
   /// @brief Sets the split KKT residual zero.

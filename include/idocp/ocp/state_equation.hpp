@@ -115,20 +115,6 @@ public:
   void correctCostateDirection(SplitDirection& d);
 
   ///
-  /// @brief Returns the l1-norm of the residual in the state equation.
-  /// @param[in] kkt_residual Split KKT residual at the current time stage. 
-  ///
-  static double l1NormStateEuqationResidual(
-      const SplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Returns the squared norm of the residual in the state equation.
-  /// @param[in] kkt_residual Split KKT residual at the current time stage. 
-  ///
-  static double squaredNormStateEuqationResidual(
-      const SplitKKTResidual& kkt_residual);
-
-  ///
   /// @brief Computes the initial state direction using the result of  
   /// StateEquation::linearizeForwardEulerLieDerivative().
   /// @param[in] robot Robot model. 

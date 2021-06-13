@@ -69,7 +69,7 @@ public:
   ///
   /// @brief Initializes the auxiliary matrices by the terminal cost Hessian 
   /// computed by the current solution. 
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] parnmpc Optimal control problem.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] s Solution. 
@@ -83,7 +83,7 @@ public:
   ///
   /// @brief Linearizes the optimal control problem and coarse updates the 
   /// solution in parallel. 
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in, out] parnmpc Optimal control problem.
   /// @param[in] t Initial time of the horizon.
   /// @param[in] q Initial configuration.

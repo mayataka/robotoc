@@ -287,25 +287,6 @@ public:
                           const double step_size) const;
 
   ///
-  /// @brief Returns l1-norm of the primal residual of the constraints.
-  /// before calling this function, Constraints::computePrimalAndDualResidual() 
-  /// or Constraints::condenseSlackAndDual() must be called.
-  /// @param[in] data Constraints data. 
-  /// @return l1-norm of the primal residuals of the constraints. 
-  ///
-  static double l1NormPrimalResidual(const ConstraintsData& data);
-
-  ///
-  /// @brief Returns the squared norm of the primal and dual residuals of the 
-  /// constraints. Before call this function, 
-  /// Constraints::computePrimalAndDualResidual() or 
-  /// Constraints::condenseSlackAndDual() must be called.
-  /// @param[in] data Constraints data.
-  /// @return Squared norm of the primal and dual residuals of the constraints. 
-  ///
-  static double squaredNormPrimalAndDualResidual(const ConstraintsData& data);
-
-  ///
   /// @brief Sets the barrier parameter for all the constraint components.
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
   ///

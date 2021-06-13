@@ -104,6 +104,20 @@ public:
   std::vector<Eigen::MatrixXd> J;
 
   ///
+  /// @brief Returns the squared norm of the KKT reisdual, that is, the primal 
+  /// and dual residuals of the constraint. 
+  /// @return Squared norm of the KKT residual. 
+  ///
+  double squaredNormKKTResidual() const;
+
+  ///
+  /// @brief Returns the l1-norm of the constraint violation, that is, the 
+  /// primal residual of the constraint. 
+  /// @return l1-norm of the constraint violation. 
+  ///
+  double l1NormConstraintViolation() const;
+
+  ///
   /// @brief Dimension of the constraint. 
   /// @return Dimension of the constraint. 
   ///

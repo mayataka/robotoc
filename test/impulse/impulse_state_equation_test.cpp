@@ -44,10 +44,6 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isIdentity());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
-                   state_equation.l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
-                   state_equation.squaredNormStateEuqationResidual(kkt_residual));
   kkt_matrix.setZero();
   kkt_residual.setZero();
   state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
@@ -81,8 +77,8 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd dsubtract_dq_prev = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot.dSubtractdConfigurationPlus(s.q, s_next.q, dsubtract_dq);
-  robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dq_prev);
+  robot.dSubtractConfiguration_dqf(s.q, s_next.q, dsubtract_dq);
+  robot.dSubtractConfiguration_dq0(q_prev, s.q, dsubtract_dq_prev);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((qdiff)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dq.transpose()*s_next.lmd+dsubtract_dq_prev.transpose()*s.lmd)));
@@ -91,16 +87,12 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
-                   state_equation.l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
-                   state_equation.squaredNormStateEuqationResidual(kkt_residual));
   kkt_matrix.setZero();
   kkt_residual.setZero();
   state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
                                                     kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
-  robot.dSubtractdConfigurationMinus(s.q, s_next.q, dsubtract_dq_prev);
+  robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   Eigen::MatrixXd Fqq_ref = dsubtract_dq;
   Fqq_ref.topLeftCorner(6, 6) 

@@ -114,17 +114,13 @@ inline void UnconstrDynamics::expandDual(const double dt,
 }
 
 
-inline double UnconstrDynamics::l1NormUnconstrDynamicsResidual(
-    const double dt) const {
-  assert(dt > 0);
-  return (dt * ID_.lpNorm<1>());
+inline double UnconstrDynamics::squaredNormKKTResidual() const {
+  return ID_.squaredNorm();
 }
 
 
-inline double UnconstrDynamics::squaredNormUnconstrDynamicsResidual(
-    const double dt) const {
-  assert(dt > 0);
-  return (dt * dt * ID_.squaredNorm());
+inline double UnconstrDynamics::l1NormConstraintViolation() const {
+  return ID_.lpNorm<1>();
 }
 
 

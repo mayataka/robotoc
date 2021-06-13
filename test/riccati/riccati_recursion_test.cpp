@@ -6,7 +6,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/direct_multiple_shooting.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/riccati/split_riccati_factorization.hpp"
 #include "idocp/riccati/split_constrained_riccati_factorization.hpp"
@@ -87,7 +87,7 @@ KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot,
 void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   KKTMatrix kkt_matrix(robot, N, max_num_impulse);
   KKTResidual kkt_residual(robot, N, max_num_impulse);
@@ -97,8 +97,8 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto s = testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
-  linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, contact_sequence, s);
+  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   RiccatiFactorization factorization(robot, N, max_num_impulse);
@@ -106,14 +106,14 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   RiccatiRecursion riccati_recursion(robot, N, max_num_impulse, nthreads);
   RiccatiFactorizer factorizer(robot);
   hybrid_container<LQRPolicy> lqr_policy(robot, N, max_num_impulse);
-  const auto ocp_discretizer = ocp.discrete();
+  const auto discretization = ocp.discrete();
   riccati_recursion.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, factorization);
 
-  factorization_ref[ocp_discretizer.N()].P = kkt_matrix_ref[ocp_discretizer.N()].Qxx;
-  factorization_ref[ocp_discretizer.N()].s = - kkt_residual_ref[ocp_discretizer.N()].lx;
+  factorization_ref[discretization.N()].P = kkt_matrix_ref[discretization.N()].Qxx;
+  factorization_ref[discretization.N()].s = - kkt_residual_ref[discretization.N()].lx;
   for (int i=N-1; i>=0; --i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = discretization.impulseIndexAfterTimeStage(i);
       factorizer.backwardRiccatiRecursion(
           factorization_ref[i+1], kkt_matrix_ref.aux[impulse_index], 
           kkt_residual_ref.aux[impulse_index], factorization_ref.aux[impulse_index],
@@ -125,10 +125,10 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
           factorization_ref.impulse[impulse_index], kkt_matrix_ref[i], 
           kkt_residual_ref[i], factorization_ref[i], lqr_policy[i]);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
-      if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
+    else if (discretization.isTimeStageBeforeLift(i)) {
+      const int lift_index = discretization.liftIndexAfterTimeStage(i);
+      if (discretization.isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index = discretization.impulseIndexAfterTimeStage(i+1);
         factorizer.backwardRiccatiRecursion(
             factorization_ref[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
             kkt_matrix_ref.switching[impulse_index], kkt_residual_ref.switching[impulse_index], 
@@ -145,8 +145,8 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
           kkt_residual_ref[i], factorization_ref[i], lqr_policy[i]);
     }
     else {
-      if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
+      if (discretization.isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index = discretization.impulseIndexAfterTimeStage(i+1);
         factorizer.backwardRiccatiRecursion(
             factorization_ref[i+1], kkt_matrix_ref[i], kkt_residual_ref[i], 
             kkt_matrix_ref.switching[impulse_index], kkt_residual_ref.switching[impulse_index], 
@@ -166,7 +166,7 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   Direction d(robot, N, max_num_impulse);
-  for (int i=0; i<=ocp_discretizer.N(); ++i) {
+  for (int i=0; i<=discretization.N(); ++i) {
     d[i].dx.setRandom();
     d[i].du.setRandom();
   }
@@ -179,9 +179,9 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   }
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
-  for (int i=0; i<ocp_discretizer.N(); ++i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+  for (int i=0; i<discretization.N(); ++i) {
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = discretization.impulseIndexAfterTimeStage(i);
       factorizer.forwardRiccatiRecursion(
           kkt_matrix_ref[i], kkt_residual_ref[i], 
           lqr_policy[i], d_ref[i], d_ref.impulse[impulse_index]);
@@ -192,8 +192,8 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], 
           lqr_policy.aux[impulse_index], d_ref.aux[impulse_index], d_ref[i+1]);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+    else if (discretization.isTimeStageBeforeLift(i)) {
+      const int lift_index = discretization.liftIndexAfterTimeStage(i);
       factorizer.forwardRiccatiRecursion(
           kkt_matrix_ref[i], kkt_residual_ref[i], 
           lqr_policy[i], d_ref[i], d_ref.lift[lift_index]);
@@ -230,17 +230,17 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
   aligned_vector<Robot> robots(nthreads, robot);
-  linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, contact_sequence, s);
+  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, N, max_num_impulse, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, factorization);
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
   Direction d = Direction(robot, N, max_num_impulse);
-  linearizer.computeInitialStateDirection(ocp, robots, q, v, s, d);
+  dms.computeInitialStateDirection(ocp, robots, q, v, s, d);
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
   EXPECT_FALSE(testhelper::HasNaN(factorization));

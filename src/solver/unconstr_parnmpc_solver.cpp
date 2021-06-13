@@ -152,7 +152,7 @@ void UnconstrParNMPCSolver::getStateFeedbackGain(const int time_stage,
 
 
 void UnconstrParNMPCSolver::setSolution(const std::string& name, 
-                                  const Eigen::VectorXd& value) {
+                                        const Eigen::VectorXd& value) {
   try {
     if (name == "q") {
       for (auto& e : s_.data) { e.q = value; }

@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_DISCRETIZER_HPP_
-#define IDOCP_OCP_DISCRETIZER_HPP_
+#ifndef IDOCP_HYBRID_TIME_DISCRETIZATION_HPP_
+#define IDOCP_HYBRID_TIME_DISCRETIZATION_HPP_
 
 #include "idocp/hybrid/contact_sequence.hpp"
 
@@ -10,10 +10,11 @@
 namespace idocp {
 
 ///
-/// @class OCPDiscretizer
-/// @brief Discretizer of the hybrid optimal control problems.
+/// @class HybridTimeDiscretization
+/// @brief Non-uniform time discretization of the finite horizon with taking 
+/// into account the discrete events.
 ///
-class OCPDiscretizer {
+class HybridTimeDiscretization {
 public:
   ///
   /// @brief Constructor. 
@@ -24,44 +25,45 @@ public:
   /// @param[in] max_events Maximum number of each discrete events 
   /// (impulse and lift). 
   ///
-  OCPDiscretizer(const double T, const int N, const int max_events);
+  HybridTimeDiscretization(const double T, const int N, const int max_events);
 
   ///
   /// @brief Default constructor. 
   ///
-  OCPDiscretizer();
+  HybridTimeDiscretization();
 
   ///
   /// @brief Destructor. 
   ///
-  ~OCPDiscretizer();
+  ~HybridTimeDiscretization();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  OCPDiscretizer(const OCPDiscretizer&) = default;
+  HybridTimeDiscretization(const HybridTimeDiscretization&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  OCPDiscretizer& operator=(const OCPDiscretizer&) = default;
+  HybridTimeDiscretization& operator=(const HybridTimeDiscretization&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  OCPDiscretizer(OCPDiscretizer&&) noexcept = default;
+  HybridTimeDiscretization(HybridTimeDiscretization&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  OCPDiscretizer& operator=(OCPDiscretizer&&) noexcept = default;
+  HybridTimeDiscretization& operator=(HybridTimeDiscretization&&) noexcept = default;
 
   ///
-  /// @brief Discretizes the hybrid optimal control problem. 
+  /// @brief Discretizes the finite horizon taking into account the discrete 
+  /// events. 
   /// @param[in] contact_sequence Contact sequence.
   /// @param[in] t Initial time of the horizon.
   ///
-  void discretizeOCP(const ContactSequence& contact_sequence, const double t);
+  void discretize(const ContactSequence& contact_sequence, const double t);
 
   ///
   /// @return Number of the time stages on the horizon. 
@@ -260,6 +262,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/hybrid/ocp_discretizer.hxx"
+#include "idocp/hybrid/hybrid_time_discretization.hxx"
 
-#endif // IDOCP_OCP_DISCRETIZER_HPP_ 
+#endif // IDOCP_HYBRID_TIME_DISCRETIZATION_HPP_ 

@@ -99,6 +99,21 @@ ImpulseSplitKKTResidual::lf() const {
 }
 
 
+inline double ImpulseSplitKKTResidual::squaredNormKKTResidual() const {
+  double nrm = 0;
+  nrm += Fx.squaredNorm();
+  nrm += lx.squaredNorm();
+  nrm += ldv.squaredNorm();
+  nrm += lf().squaredNorm();
+  return nrm;
+}
+
+
+inline double ImpulseSplitKKTResidual::l1NormConstraintViolation() const {
+  return Fx.template lpNorm<1>();
+}
+
+
 inline void ImpulseSplitKKTResidual::setZero() {
   Fx.setZero();
   lx.setZero();

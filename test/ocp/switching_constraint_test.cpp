@@ -60,11 +60,11 @@ void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) con
   robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), res_ref.P());
   robot.computeContactPositionDerivative(impulse_status, jac_ref.Pq());
   if (robot.hasFloatingBase()) {
-    robot.dIntegratedConfiguration(s.q, dq, jac_ref.dintegrate_dq);
-    robot.dIntegratedVelocity(s.q, dq, jac_ref.dintegrate_dv);
-    jac_ref.Phiq() = jac_ref.Pq() * jac_ref.dintegrate_dq;
-    jac_ref.Phiv() = (dt1+dt2) * jac_ref.Pq() * jac_ref.dintegrate_dv;
-    jac_ref.Phia() = (dt1*dt2) * jac_ref.Pq() * jac_ref.dintegrate_dv;
+    robot.dIntegrateTransport_dq(s.q, dq, jac_ref.Pq(), jac_ref.Phiq());
+    robot.dIntegrateTransport_dv(s.q, dq, jac_ref.Pq(), jac_ref.Phiv());
+    robot.dIntegrateTransport_dv(s.q, dq, jac_ref.Pq(), jac_ref.Phia());
+    jac_ref.Phiv().array() *= (dt1+dt2);
+    jac_ref.Phia().array() *= (dt1*dt2);
   }
   else {
     jac_ref.Phiq() = jac_ref.Pq();
@@ -76,10 +76,10 @@ void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) con
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(jac.isApprox(jac_ref));
   EXPECT_TRUE(res.isApprox(res_ref));
-  const double l2 = switchingconstraint::squaredNormSwitchingConstraintResidual(res);
+  const double l2 = res.squaredNormKKTResidual();
   const double l2_ref = res.P().squaredNorm();
   EXPECT_DOUBLE_EQ(l2, l2_ref);
-  const double l1 = switchingconstraint::l1NormSwitchingConstraintResidual(res);
+  const double l1 = res.l1NormConstraintViolation();
   const double l1_ref = res.P().lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1, l1_ref);
 }
@@ -105,10 +105,10 @@ void SwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robot& robo
   robot.updateKinematics(q);
   robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), res_ref.P());
   EXPECT_TRUE(res.isApprox(res_ref));
-  const double l2 = switchingconstraint::squaredNormSwitchingConstraintResidual(res);
+  const double l2 = res.squaredNormKKTResidual();
   const double l2_ref = res.P().squaredNorm();
   EXPECT_DOUBLE_EQ(l2, l2_ref);
-  const double l1 = switchingconstraint::l1NormSwitchingConstraintResidual(res);
+  const double l1 = res.l1NormConstraintViolation();
   const double l1_ref = res.P().lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1, l1_ref);
 }

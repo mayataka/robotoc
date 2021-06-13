@@ -49,9 +49,9 @@ protected:
   void testIntegrateConfiguration(const std::string& path_to_urdf, 
                                   const BaseJointType& base_joint_type,
                                   pinocchio::Model& model) const;
-  void testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, 
-                                             const BaseJointType& base_joint_type,
-                                             pinocchio::Model& model) const;
+  void testdIntegrateTransport(const std::string& path_to_urdf, 
+                               const BaseJointType& base_joint_type,
+                               pinocchio::Model& model) const;
   void testSubtractConfiguration(const std::string& path_to_urdf, 
                                  const BaseJointType& base_joint_type,
                                  pinocchio::Model& model) const;
@@ -191,27 +191,25 @@ void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf,
 }
 
 
-void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, 
-                                                      const BaseJointType& base_joint_type,
-                                                      pinocchio::Model& model) const {
+void RobotTest::testdIntegrateTransport(const std::string& path_to_urdf, 
+                                        const BaseJointType& base_joint_type,
+                                        pinocchio::Model& model) const {
   Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
-  Eigen::MatrixXd dIntdq     = Eigen::MatrixXd::Zero(model.nv, model.nv);
-  Eigen::MatrixXd dIntdv     = Eigen::MatrixXd::Zero(model.nv, model.nv);
-  Eigen::MatrixXd dIntdq_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
-  Eigen::MatrixXd dIntdv_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
-  robot.dIntegratedConfiguration(q, v, dIntdq);
-  robot.dIntegratedVelocity(q, v, dIntdv);
-  pinocchio::dIntegrate(model, q, v, dIntdq_ref, pinocchio::ARG0);
-  pinocchio::dIntegrate(model, q, v, dIntdv_ref, pinocchio::ARG1);
+  const int dim = std::floor(model.nv / 2);
+  const Eigen::MatrixXd Jin = Eigen::MatrixXd::Random(dim, model.nv);
+  Eigen::MatrixXd dIntdq     = Eigen::MatrixXd::Zero(dim, model.nv);
+  Eigen::MatrixXd dIntdv     = Eigen::MatrixXd::Zero(dim, model.nv);
+  Eigen::MatrixXd dIntdq_ref = Eigen::MatrixXd::Zero(dim, model.nv);
+  Eigen::MatrixXd dIntdv_ref = Eigen::MatrixXd::Zero(dim, model.nv);
+  robot.dIntegrateTransport_dq(q, v, Jin, dIntdq);
+  robot.dIntegrateTransport_dv(q, v, Jin, dIntdv);
+  pinocchio::dIntegrateTransport(model, q, v, Jin.transpose(), dIntdq_ref.transpose(), pinocchio::ARG0);
+  pinocchio::dIntegrateTransport(model, q, v, Jin.transpose(), dIntdv_ref.transpose(), pinocchio::ARG1);
   EXPECT_TRUE(dIntdq.isApprox(dIntdq_ref));
   EXPECT_TRUE(dIntdv.isApprox(dIntdv_ref));
-  std::cout << "dIntdq" << std::endl;
-  std::cout << dIntdq << std::endl;
-  std::cout << "dIntdv" << std::endl;
-  std::cout << dIntdv << std::endl;
 }
 
 
@@ -242,8 +240,8 @@ void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_
   Eigen::MatrixXd dSubdq_minus =  Eigen::MatrixXd::Zero(model.nv, model.nv);
   Eigen::MatrixXd dSubdq_plus_ref =  Eigen::MatrixXd::Zero(model.nv, model.nv);
   Eigen::MatrixXd dSubdq_minus_ref =  Eigen::MatrixXd::Zero(model.nv, model.nv);
-  robot.dSubtractdConfigurationPlus(q_plus, q_minus, dSubdq_plus);
-  robot.dSubtractdConfigurationMinus(q_plus, q_minus, dSubdq_minus);
+  robot.dSubtractConfiguration_dqf(q_plus, q_minus, dSubdq_plus);
+  robot.dSubtractConfiguration_dq0(q_plus, q_minus, dSubdq_minus);
   pinocchio::dDifference(model, q_minus, q_plus, dSubdq_plus_ref, pinocchio::ARG1);
   pinocchio::dDifference(model, q_minus, q_plus, dSubdq_minus_ref, pinocchio::ARG0);
   EXPECT_TRUE(dSubdq_plus.isApprox(dSubdq_plus_ref));
@@ -633,20 +631,23 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf,
   Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(model.nv, model.nv);
   Eigen::MatrixXd dRNEA_dv = Eigen::MatrixXd::Zero(model.nv, model.nv);
   Eigen::MatrixXd dRNEA_da = Eigen::MatrixXd::Zero(model.nv, model.nv);
-  Eigen::MatrixXd dRNEA_dfext = Eigen::MatrixXd::Zero(model.nv, dimf);
-  robot.updateKinematics(q, v, a);
   robot.RNEADerivatives(q, v, a, dRNEA_dq, dRNEA_dv, dRNEA_da);
-  robot.dRNEAPartialdFext(contact_status, dRNEA_dfext);
-  Eigen::MatrixXd MJtJinv = Eigen::MatrixXd::Zero(model.nv+dimf, model.nv+dimf);
-  const Eigen::MatrixXd J = - dRNEA_dfext.transpose();
-  robot.computeMJtJinv(dRNEA_da, J, MJtJinv);
-  Eigen::MatrixXd MJtJ = Eigen::MatrixXd::Zero(model.nv+dimf, model.nv+dimf);
-  MJtJ.topLeftCorner(model.nv, model.nv) = dRNEA_da;
-  MJtJ.topRightCorner(model.nv, dimf) = J.transpose();
-  MJtJ.bottomLeftCorner(dimf, model.nv) = J;
-  const Eigen::MatrixXd MJtJinv_ref = MJtJ.inverse();
-  EXPECT_TRUE(MJtJinv.isApprox(MJtJinv_ref));
-  EXPECT_TRUE((MJtJinv*MJtJ).isIdentity());
+  if (dimf > 0) {
+    Eigen::MatrixXd baumgarte_partial_q = Eigen::MatrixXd::Zero(dimf, model.nv);
+    Eigen::MatrixXd baumgarte_partial_v = Eigen::MatrixXd::Zero(dimf, model.nv);
+    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(dimf, model.nv);
+    robot.computeBaumgarteDerivatives(contact_status, baumgarte_partial_q, 
+                                      baumgarte_partial_v, J);
+    Eigen::MatrixXd MJtJinv = Eigen::MatrixXd::Zero(model.nv+dimf, model.nv+dimf);
+    robot.computeMJtJinv(dRNEA_da, J, MJtJinv);
+    Eigen::MatrixXd MJtJ = Eigen::MatrixXd::Zero(model.nv+dimf, model.nv+dimf);
+    MJtJ.topLeftCorner(model.nv, model.nv) = dRNEA_da;
+    MJtJ.topRightCorner(model.nv, dimf) = J.transpose();
+    MJtJ.bottomLeftCorner(dimf, model.nv) = J;
+    const Eigen::MatrixXd MJtJinv_ref = MJtJ.inverse();
+    EXPECT_TRUE(MJtJinv.isApprox(MJtJinv_ref));
+    EXPECT_TRUE((MJtJinv*MJtJ).isIdentity());
+  }
   Eigen::MatrixXd Minv = dRNEA_da;
   robot.computeMinv(dRNEA_da, Minv);
   EXPECT_TRUE((dRNEA_da*Minv).isIdentity());
@@ -712,6 +713,7 @@ TEST_F(RobotTest, testFixedbase) {
   pinocchio::Data data = fixed_base_data;
   testConstructorAndSetter(path_to_urdf, BaseJointType::FixedBase, contact_frames);
   testIntegrateConfiguration(path_to_urdf, BaseJointType::FixedBase, model);
+  testdIntegrateTransport(path_to_urdf, BaseJointType::FixedBase, model);
   testSubtractConfiguration(path_to_urdf, BaseJointType::FixedBase, model);
   testSubtractConfigurationDerivatives(path_to_urdf, BaseJointType::FixedBase, model);
   for (const auto frame : contact_frames) {
@@ -735,6 +737,7 @@ TEST_F(RobotTest, testFloatingBase) {
   pinocchio::Data data = floating_base_data;
   testConstructorAndSetter(path_to_urdf, BaseJointType::FloatingBase, contact_frames);
   testIntegrateConfiguration(path_to_urdf, BaseJointType::FloatingBase, model);
+  testdIntegrateTransport(path_to_urdf, BaseJointType::FloatingBase, model);
   testSubtractConfiguration(path_to_urdf, BaseJointType::FloatingBase, model);
   testSubtractConfigurationDerivatives(path_to_urdf, BaseJointType::FloatingBase, model);
   for (const auto frame : contact_frames) {

@@ -66,8 +66,8 @@ inline void StateEquation::linearizeForwardEuler(
   assert(q_prev.size() == robot.dimq());
   computeForwardEulerResidual(robot, dt, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
+    robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
+    robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().template head<6>().noalias() 
         += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
               * s_next.lmd.template head<6>();
@@ -98,7 +98,7 @@ inline void StateEquation::linearizeForwardEulerLieDerivative(
     assert(dt > 0);
     lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
                                                   Fqq_prev_inv_);
-    robot.dSubtractdConfigurationMinus(s.q, s_next.q, kkt_matrix.Fqq_prev);
+    robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);
     lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, Fqq_inv_);
     Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
     Fq_tmp_  = kkt_residual.Fq().template head<6>();
@@ -114,18 +114,6 @@ inline void StateEquation::correctCostateDirection(SplitDirection& d) {
     Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
     d.dlmdgmm.template head<6>() = - Fq_tmp_;
   }
-}
-
-
-inline double StateEquation::l1NormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx.lpNorm<1>();
-}
-
-
-inline double StateEquation::squaredNormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx.squaredNorm();
 }
 
 
