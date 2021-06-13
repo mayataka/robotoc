@@ -7,7 +7,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/direct_multiple_shooting.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 #include "idocp/line_search/line_search.hpp"
 
@@ -92,8 +92,8 @@ void LineSearchTest::test(const Robot& robot) const {
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
-  linearizer.initConstraints(ocp, robots, contact_sequence, s);
+  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  dms.initConstraints(ocp, robots, contact_sequence, s);
   LineSearch line_search(robot, N, max_num_impulse, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);

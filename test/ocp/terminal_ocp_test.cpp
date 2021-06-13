@@ -28,13 +28,39 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testLinearizeOCP(Robot& robot);
-  static void testTerminalCost(Robot& robot);
   static void testComputeKKTResidual(Robot& robot);
+  static void testComputeKKTSystem(Robot& robot);
+  static void testTerminalCost(Robot& robot);
 };
 
 
-void TerminalOCPTest::testLinearizeOCP(Robot& robot) {
+void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
+  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const SplitSolution s = SplitSolution::Random(robot);
+  const SplitSolution s_prev = SplitSolution::Random(robot);
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
+  TerminalOCP ocp(robot, cost, constraints);
+  SplitKKTResidual kkt_residual(robot);  
+  SplitKKTMatrix kkt_matrix(robot);  
+  ocp.computeKKTResidual(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
+  const double KKT = ocp.squaredNormKKTResidual(kkt_residual);
+  robot.updateKinematics(s.q, s.v);
+  SplitKKTResidual kkt_residual_ref(robot);  
+  SplitKKTMatrix kkt_matrix_ref(robot);  
+  robot.updateKinematics(s.q, s.v);
+  auto cost_data = cost->createCostFunctionData(robot);
+  const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
+  TerminalStateEquation state_equation(robot);
+  state_equation.linearizeForwardEuler(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  double KKT_ref = 0;
+  KKT_ref += kkt_residual_ref.lx.squaredNorm();
+  EXPECT_DOUBLE_EQ(KKT, KKT_ref);
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
+}
+
+
+void TerminalOCPTest::testComputeKKTSystem(Robot& robot) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   const auto s_prev = SplitSolution::Random(robot);
@@ -43,7 +69,7 @@ void TerminalOCPTest::testLinearizeOCP(Robot& robot) {
   TerminalOCP ocp(robot, cost, constraints);
   SplitKKTMatrix kkt_matrix(robot);  
   SplitKKTResidual kkt_residual(robot);  
-  ocp.linearizeOCP(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
+  ocp.computeKKTSystem(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
   robot.updateKinematics(s.q, s.v);
   SplitKKTMatrix kkt_matrix_ref(robot);  
   SplitKKTResidual kkt_residual_ref(robot);  
@@ -76,47 +102,21 @@ void TerminalOCPTest::testTerminalCost(Robot& robot) {
 }
 
 
-void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const SplitSolution s = SplitSolution::Random(robot);
-  const SplitSolution s_prev = SplitSolution::Random(robot);
-  auto cost = testhelper::CreateCost(robot);
-  auto constraints = testhelper::CreateConstraints(robot);
-  TerminalOCP ocp(robot, cost, constraints);
-  SplitKKTResidual kkt_residual(robot);  
-  SplitKKTMatrix kkt_matrix(robot);  
-  ocp.computeKKTResidual(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
-  const double KKT = ocp.squaredNormKKTResidual(kkt_residual);
-  robot.updateKinematics(s.q, s.v);
-  SplitKKTResidual kkt_residual_ref(robot);  
-  SplitKKTMatrix kkt_matrix_ref(robot);  
-  robot.updateKinematics(s.q, s.v);
-  auto cost_data = cost->createCostFunctionData(robot);
-  const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
-  TerminalStateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
-  double KKT_ref = 0;
-  KKT_ref += kkt_residual_ref.lx.squaredNorm();
-  EXPECT_DOUBLE_EQ(KKT, KKT_ref);
-  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-}
-
-
 TEST_F(TerminalOCPTest, fixedBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testLinearizeOCP(robot);
-  testTerminalCost(robot);
   testComputeKKTResidual(robot);
+  testComputeKKTSystem(robot);
+  testTerminalCost(robot);
 }
 
 
 TEST_F(TerminalOCPTest, floatingBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testLinearizeOCP(robot);
-  testTerminalCost(robot);
   testComputeKKTResidual(robot);
+  testComputeKKTSystem(robot);
+  testTerminalCost(robot);
 }
 
 } // namespace idocp

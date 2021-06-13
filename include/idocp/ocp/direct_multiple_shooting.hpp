@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_LINEARIZER_HPP_ 
-#define IDOCP_OCP_LINEARIZER_HPP_
+#ifndef IDOCP_DIRECT_MULTIPLE_SHOOTING_HPP_ 
+#define IDOCP_DIRECT_MULTIPLE_SHOOTING_HPP_
 
 #include <vector>
 
@@ -15,50 +15,52 @@
 namespace idocp {
 
 ///
-/// @class OCPLinearizer
-/// @brief Linearizer of the hybrid optimal control problems. 
+/// @class DirectMultipleShooting
+/// @brief Direct multiple shooting method of the hybrid optimal control 
+/// problems. 
 ///
-class OCPLinearizer {
+class DirectMultipleShooting {
 public:
   ///
-  /// @brief Construct the linearizer.
+  /// @brief Construct the direct multiple shooting method.
   /// @param[in] N Number of discretization grids of the horizon. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
   /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  OCPLinearizer(const int N, const int max_num_impulse, const int nthreads);
+  DirectMultipleShooting(const int N, const int max_num_impulse, 
+                         const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  OCPLinearizer();
+  DirectMultipleShooting();
 
   ///
   /// @brief Destructor. 
   ///
-  ~OCPLinearizer();
+  ~DirectMultipleShooting();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  OCPLinearizer(const OCPLinearizer&) = default;
+  DirectMultipleShooting(const DirectMultipleShooting&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  OCPLinearizer& operator=(const OCPLinearizer&) = default;
+  DirectMultipleShooting& operator=(const DirectMultipleShooting&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  OCPLinearizer(OCPLinearizer&&) noexcept = default;
+  DirectMultipleShooting(DirectMultipleShooting&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  OCPLinearizer& operator=(OCPLinearizer&&) noexcept = default;
+  DirectMultipleShooting& operator=(DirectMultipleShooting&&) noexcept = default;
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
@@ -71,23 +73,6 @@ public:
   void initConstraints(OCP& ocp, aligned_vector<Robot>& robots,
                        const ContactSequence& contact_sequence, 
                        const Solution& s) const;
-
-  ///
-  /// @brief Linearizes the optimal control problem in parallel. 
-  /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Contact sequence. 
-  /// @param[in] q Initial configuration.
-  /// @param[in] v Initial generalized velocity.
-  /// @param[in] s Solution. 
-  /// @param[in, out] kkt_matrix KKT matrix. 
-  /// @param[in, out] kkt_residual KKT residual. 
-  ///
-  void linearizeOCP(OCP& ocp, aligned_vector<Robot>& robots,
-                    const ContactSequence& contact_sequence,
-                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                    const Solution& s, KKTMatrix& kkt_matrix, 
-                    KKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the KKT residual of optimal control problem in parallel. 
@@ -105,6 +90,24 @@ public:
                           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                           const Solution& s, KKTMatrix& kkt_matrix, 
                           KKTResidual& kkt_residual) const;
+
+  ///
+  /// @brief Computes the KKT system, i.e., the condensed KKT matrix and KKT
+  /// residual for Newton's method. 
+  /// @param[in, out] ocp Optimal control problem.
+  /// @param[in] robots aligned_vector of Robot.
+  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] q Initial configuration.
+  /// @param[in] v Initial generalized velocity.
+  /// @param[in] s Solution. 
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
+  ///
+  void computeKKTSystem(OCP& ocp, aligned_vector<Robot>& robots,
+                        const ContactSequence& contact_sequence,
+                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                        const Solution& s, KKTMatrix& kkt_matrix, 
+                        KKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the l2-norm of the KKT residual of optimal control problem.
@@ -161,6 +164,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/ocp/ocp_linearizer.hxx"
+#include "idocp/ocp/direct_multiple_shooting.hxx"
 
-#endif // IDOCP_OCP_LINEARIZER_HPP_
+#endif // IDOCP_DIRECT_MULTIPLE_SHOOTING_HPP_ 

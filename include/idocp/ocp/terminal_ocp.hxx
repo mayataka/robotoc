@@ -51,11 +51,27 @@ inline void TerminalOCP::initConstraints(Robot& robot, const int time_stage,
 }
 
 
-inline void TerminalOCP::linearizeOCP(Robot& robot, const double t, 
-                                      const Eigen::VectorXd& q_prev,
-                                      const SplitSolution& s,
-                                      SplitKKTMatrix& kkt_matrix, 
-                                      SplitKKTResidual& kkt_residual) {
+inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
+                                            const Eigen::VectorXd& q_prev,
+                                            const SplitSolution& s,
+                                            SplitKKTMatrix& kkt_matrix,
+                                            SplitKKTResidual& kkt_residual) {
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v);
+  }
+  kkt_residual.lx.setZero();
+  terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
+                                                kkt_residual);
+  state_equation_.linearizeForwardEuler(robot, q_prev, s, 
+                                        kkt_matrix, kkt_residual);
+}
+
+
+inline void TerminalOCP::computeKKTSystem(Robot& robot, const double t, 
+                                          const Eigen::VectorXd& q_prev,
+                                          const SplitSolution& s,
+                                          SplitKKTMatrix& kkt_matrix, 
+                                          SplitKKTResidual& kkt_residual) {
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
@@ -109,22 +125,6 @@ inline void TerminalOCP::updateDual(const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
   // TODO: add inequality constraints at the terminal OCP.
-}
-
-
-inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
-                                            const Eigen::VectorXd& q_prev,
-                                            const SplitSolution& s,
-                                            SplitKKTMatrix& kkt_matrix,
-                                            SplitKKTResidual& kkt_residual) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
-  kkt_residual.lx.setZero();
-  terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
-                                                kkt_residual);
-  state_equation_.linearizeForwardEuler(robot, q_prev, s, 
-                                        kkt_matrix, kkt_residual);
 }
 
 

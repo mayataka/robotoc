@@ -82,22 +82,22 @@ void UnconstrBackwardCorrection::coarseUpdate(aligned_vector<Robot>& robots,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
-      parnmpc[i].linearizeOCP(robots[omp_get_thread_num()], t+dt_, dt_, q, v, 
-                              s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
+      parnmpc[i].computeKKTSystem(robots[omp_get_thread_num()], t+dt_, dt_, q, v, 
+                                  s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
       corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, kkt_matrix[i], 
                                  kkt_residual[i], s[i], s_new_[i]);
     }
     else if (i < N_-1) {
-      parnmpc[i].linearizeOCP(robots[omp_get_thread_num()], t+(i+1)*dt_, 
-                              dt_, s[i-1].q, s[i-1].v, s[i], s[i+1], 
-                              kkt_matrix[i], kkt_residual[i]);
+      parnmpc[i].computeKKTSystem(robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
+                                  s[i-1].q, s[i-1].v, s[i], s[i+1], 
+                                  kkt_matrix[i], kkt_residual[i]);
       corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, kkt_matrix[i], 
                                  kkt_residual[i], s[i], s_new_[i]);
     }
     else {
-      parnmpc.terminal.linearizeOCP(robots[omp_get_thread_num()], t+T_, dt_, 
-                                    s[i-1].q, s[i-1].v, s[i], 
-                                    kkt_matrix[i], kkt_residual[i]);
+      parnmpc.terminal.computeKKTSystem(robots[omp_get_thread_num()], t+T_, dt_, 
+                                        s[i-1].q, s[i-1].v, s[i], 
+                                        kkt_matrix[i], kkt_residual[i]);
       corrector_[i].coarseUpdate(dt_, kkt_matrix[i], kkt_residual[i], 
                                  s[i], s_new_[i]);
     }

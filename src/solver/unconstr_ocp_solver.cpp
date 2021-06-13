@@ -68,24 +68,24 @@ void UnconstrOCPSolver::initConstraints() {
 
 
 void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v, 
-                                 const bool line_search) {
+                                       const Eigen::VectorXd& v, 
+                                       const bool line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
-      ocp_[0].linearizeOCP(robots_[omp_get_thread_num()], t, dt_, 
-                           s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
+      ocp_[0].computeKKTSystem(robots_[omp_get_thread_num()], t, dt_, s_[0], 
+                               s_[1], kkt_matrix_[0], kkt_residual_[0]);
     }
     else if (i < N_) {
-      ocp_[i].linearizeOCP(robots_[omp_get_thread_num()], t+i*dt_, dt_, 
-                           s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
+      ocp_[i].computeKKTSystem(robots_[omp_get_thread_num()], t+i*dt_, dt_, s_[i], 
+                               s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
     }
     else {
-      ocp_.terminal.linearizeOCP(robots_[omp_get_thread_num()], t+T_, 
-                                 s_[N_-1].q, s_[N_], 
-                                 kkt_matrix_[N_], kkt_residual_[N_]);
+      ocp_.terminal.computeKKTSystem(robots_[omp_get_thread_num()], t+T_, 
+                                     s_[N_-1].q, s_[N_], 
+                                     kkt_matrix_[N_], kkt_residual_[N_]);
     }
   }
   riccati_recursion_.backwardRiccatiRecursion(kkt_matrix_, kkt_residual_,
@@ -107,9 +107,9 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   double primal_step_size = primal_step_size_.minCoeff();
   const double dual_step_size   = dual_step_size_.minCoeff();
   if (line_search) {
-    // const double max_primal_step_size = primal_step_size;
-    // primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
-    //                                                 d_, max_primal_step_size);
+    const double max_primal_step_size = primal_step_size;
+    primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
+                                                    d_, max_primal_step_size);
   }
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {

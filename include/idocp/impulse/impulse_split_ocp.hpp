@@ -83,8 +83,7 @@ public:
   void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
-  /// @brief Linearizes the split optimal control problem for Newton's method 
-  /// around the current solution, i.e., computes the KKT residual and Hessian.
+  /// @brief Computes the KKT residual of this impulse stage.
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in] t Time of this impulse stage. 
@@ -94,12 +93,31 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
-  void linearizeOCP(Robot& robot, const ImpulseStatus& impulse_status, 
-                    const double t, const Eigen::VectorXd& q_prev, 
-                    const ImpulseSplitSolution& s, 
-                    const SplitSolution& s_next, 
-                    ImpulseSplitKKTMatrix& kkt_matrix, 
-                    ImpulseSplitKKTResidual& kkt_residual);
+  void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
+                          const double t, const Eigen::VectorXd& q_prev, 
+                          const ImpulseSplitSolution& s, 
+                          const SplitSolution& s_next,
+                          ImpulseSplitKKTMatrix& kkt_matrix, 
+                          ImpulseSplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Computes the KKT system of this impuse stage, i.e., the condensed
+  /// KKT matrix and KKT residual of this impulse stage for Newton's method.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
+  ///
+  void computeKKTSystem(Robot& robot, const ImpulseStatus& impulse_status, 
+                        const double t, const Eigen::VectorXd& q_prev, 
+                        const ImpulseSplitSolution& s, 
+                        const SplitSolution& s_next, 
+                        ImpulseSplitKKTMatrix& kkt_matrix, 
+                        ImpulseSplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
@@ -148,24 +166,6 @@ public:
   /// @param[in] dual_step_size Dula step size.
   ///
   void updateDual(const double dual_step_size);
-
-  ///
-  /// @brief Computes the KKT residual of this impulse stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in] t Time of this impulse stage. 
-  /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
-  ///
-  void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
-                          const double t, const Eigen::VectorXd& q_prev, 
-                          const ImpulseSplitSolution& s, 
-                          const SplitSolution& s_next,
-                          ImpulseSplitKKTMatrix& kkt_matrix, 
-                          ImpulseSplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of this impulse stage. Before calling this 

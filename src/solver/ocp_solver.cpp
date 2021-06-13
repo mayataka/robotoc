@@ -13,7 +13,7 @@ OCPSolver::OCPSolver(const Robot& robot,
                      const int nthreads)
   : robots_(nthreads, robot),
     contact_sequence_(robot, N),
-    ocp_linearizer_(N, max_num_impulse, nthreads),
+    dms_(N, max_num_impulse, nthreads),
     riccati_recursion_(robot, N, max_num_impulse, nthreads),
     line_search_(robot, N, max_num_impulse, nthreads),
     ocp_(robot, cost, constraints, T, N, max_num_impulse),
@@ -58,7 +58,7 @@ OCPSolver::~OCPSolver() {
 void OCPSolver::initConstraints(const double t) {
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
-  ocp_linearizer_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+  dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
 }
 
 
@@ -69,11 +69,11 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
-  ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
-                               kkt_matrix_, kkt_residual_);
+  dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
+                        kkt_matrix_, kkt_residual_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
-  ocp_linearizer_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
+  dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
   riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
   riccati_recursion_.computeDirection(ocp_, riccati_factorization_, s_, d_);
   double primal_step_size = riccati_recursion_.maxPrimalStepSize();
@@ -84,8 +84,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                                     contact_sequence_, q, v, 
                                                     s_, d_, max_primal_step_size);
   }
-  ocp_linearizer_.integrateSolution(ocp_, robots_,  
-                                    primal_step_size, dual_step_size, d_, s_);
+  dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, d_, s_);
 } 
 
 
@@ -250,7 +249,7 @@ void OCPSolver::clearLineSearchFilter() {
 
 
 double OCPSolver::KKTError() {
-  return ocp_linearizer_.KKTError(ocp_, kkt_residual_);
+  return dms_.KKTError(ocp_, kkt_residual_);
 }
 
 
@@ -258,8 +257,8 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
                                    const Eigen::VectorXd& v) {
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
-  ocp_linearizer_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
-                                     kkt_matrix_, kkt_residual_);
+  dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
+                          kkt_matrix_, kkt_residual_);
 }
 
 

@@ -70,14 +70,39 @@ inline void SplitUnconstrParNMPC::initConstraints(Robot& robot,
 }
 
 
-inline void SplitUnconstrParNMPC::linearizeOCP(Robot& robot, const double t, 
-                                               const double dt, 
-                                               const Eigen::VectorXd& q_prev, 
-                                               const Eigen::VectorXd& v_prev, 
-                                               const SplitSolution& s, 
-                                               const SplitSolution& s_next, 
-                                               SplitKKTMatrix& kkt_matrix,
-                                               SplitKKTResidual& kkt_residual) {
+inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const double t, 
+                                                     const double dt, 
+                                                     const Eigen::VectorXd& q_prev, 
+                                                     const Eigen::VectorXd& v_prev, 
+                                                     const SplitSolution& s, 
+                                                     const SplitSolution& s_next, 
+                                                     SplitKKTMatrix& kkt_matrix, 
+                                                     SplitKKTResidual& kkt_residual) {
+  assert(dt > 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q);
+  }
+  kkt_residual.setZero();
+  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
+                                          kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
+                                               kkt_residual);
+  unconstr::stateequation::linearizeBackwardEuler(dt, q_prev, v_prev, s, s_next, 
+                                                  kkt_matrix, kkt_residual);
+  unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
+}
+
+
+inline void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot, const double t, 
+                                                   const double dt, 
+                                                   const Eigen::VectorXd& q_prev, 
+                                                   const Eigen::VectorXd& v_prev, 
+                                                   const SplitSolution& s, 
+                                                   const SplitSolution& s_next, 
+                                                   SplitKKTMatrix& kkt_matrix,
+                                                   SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -132,28 +157,6 @@ inline void SplitUnconstrParNMPC::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(constraints_data_, dual_step_size);
-}
-
-
-inline void SplitUnconstrParNMPC::computeKKTResidual(
-    Robot& robot, const double t, const double dt, 
-    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-    const SplitSolution& s, const SplitSolution& s_next, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
-  kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
-                                          kkt_residual);
-  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
-                                               kkt_residual);
-  unconstr::stateequation::linearizeBackwardEuler(dt, q_prev, v_prev, s, s_next, 
-                                                  kkt_matrix, kkt_residual);
-  unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
 }
 
 

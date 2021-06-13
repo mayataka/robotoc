@@ -6,7 +6,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/direct_multiple_shooting.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/riccati/split_riccati_factorization.hpp"
 #include "idocp/riccati/split_constrained_riccati_factorization.hpp"
@@ -87,7 +87,7 @@ KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot,
 void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   KKTMatrix kkt_matrix(robot, N, max_num_impulse);
   KKTResidual kkt_residual(robot, N, max_num_impulse);
@@ -97,8 +97,8 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto s = testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
-  linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, contact_sequence, s);
+  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   RiccatiFactorization factorization(robot, N, max_num_impulse);
@@ -230,17 +230,17 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
   aligned_vector<Robot> robots(nthreads, robot);
-  linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, contact_sequence, s);
+  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, N, max_num_impulse, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, factorization);
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
   Direction d = Direction(robot, N, max_num_impulse);
-  linearizer.computeInitialStateDirection(ocp, robots, q, v, s, d);
+  dms.computeInitialStateDirection(ocp, robots, q, v, s, d);
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
   EXPECT_FALSE(testhelper::HasNaN(factorization));

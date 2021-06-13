@@ -68,7 +68,7 @@ public:
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
   /// @param[in] robot Robot model. 
-  /// @param[in] s Split solution of this terminal stage.
+  /// @param[in] s Split solution of the terminal stage.
   ///
   bool isFeasible(Robot& robot, const SplitSolution& s);
 
@@ -76,24 +76,39 @@ public:
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
   /// @param[in] robot Robot model. 
   /// @param[in] time_stage Time stage.
-  /// @param[in] s Split solution of this terminal stage.
+  /// @param[in] s Split solution of the terminal stage.
   ///
   void initConstraints(Robot& robot, const int time_stage, 
                        const SplitSolution& s);
 
   ///
-  /// @brief Linearizes the split optimal control problem for Newton's method 
-  /// around the current solution, i.e., computes the KKT residual and Hessian.
+  /// @brief Computes the KKT residual of the terminal stage.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this terminal stage. 
+  /// @param[in] t Time of the terminal stage. 
   /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] s Split solution of this terminal stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this terminal stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this terminal stage.
+  /// @param[in] s Split solution of the terminal stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of the terminal stage.
+  /// @param[in, out] kkt_residual Split KKT residual of the terminal stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const Eigen::VectorXd& q_prev, 
-                    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-                    SplitKKTResidual& kkt_residual);
+  void computeKKTResidual(Robot& robot, const double t, 
+                          const Eigen::VectorXd& q_prev, const SplitSolution& s,
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Computes the KKT system of the terminal stage, i.e., the condensed
+  /// KKT matrix and KKT residual of the terminal stage for Newton's method.
+  /// @param[in] robot Robot model. 
+  /// @param[in] t Time of the terminal stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] s Split solution of the terminal stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of the terminal stage.
+  /// @param[in, out] kkt_residual Split KKT residual of the terminal stage.
+  ///
+  void computeKKTSystem(Robot& robot, const double t, 
+                        const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                        SplitKKTMatrix& kkt_matrix, 
+                        SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -114,24 +129,24 @@ public:
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
   /// direction of the condensed primal variables of the terminal stage.
-  /// @param[in] s Split solution of this terminal stage.
-  /// @param[in, out] d Split direction of this terminal stage.
+  /// @param[in] s Split solution of the terminal stage.
+  /// @param[in, out] d Split direction of the terminal stage.
   /// 
   void expandPrimal(const SplitSolution& s, SplitDirection& d);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of the terminal stage.
-  /// @param[in, out] d Split direction of this terminal stage.
+  /// @param[in, out] d Split direction of the terminal stage.
   /// 
   void expandDual(SplitDirection& d);
 
   ///
-  /// @brief Updates primal variables of this terminal stage.
+  /// @brief Updates primal variables of the terminal stage.
   /// @param[in] robot Robot model. 
   /// @param[in] primal_step_size Primal step size.
-  /// @param[in] d Split direction of this terminal stabe.
-  /// @param[in, out] s Split solution of this terminal stage.
+  /// @param[in] d Split direction of the terminal stabe.
+  /// @param[in, out] s Split solution of the terminal stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const SplitDirection& d, SplitSolution& s) const;
@@ -143,33 +158,19 @@ public:
   void updateDual(const double dual_step_size);
 
   ///
-  /// @brief Computes the KKT residual of this terminal stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this terminal stage. 
-  /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] s Split solution of this terminal stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this terminal stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this terminal stage.
-  ///
-  void computeKKTResidual(Robot& robot, const double t, 
-                          const Eigen::VectorXd& q_prev, const SplitSolution& s,
-                          SplitKKTMatrix& kkt_matrix, 
-                          SplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Returns the KKT residual of this terminal stage. Before calling this 
+  /// @brief Returns the KKT residual of the terminal stage. Before calling this 
   /// function, TerminalOCP::computeKKTResidual() must be called.
-  /// @param[in] kkt_residual KKT residual of this terminal stage.
+  /// @param[in] kkt_residual KKT residual of the terminal stage.
   /// @return The squared norm of the kKT residual.
   ///
   double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the terminal cost of this terminal stage for line search.
+  /// @brief Computes the terminal cost of the terminal stage for line search.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this terminal stage. 
-  /// @param[in] s Split solution of this terminal stage.
-  /// @return Terminal cost of this terminal stage.
+  /// @param[in] t Time of the terminal stage. 
+  /// @param[in] s Split solution of the terminal stage.
+  /// @return Terminal cost of the terminal stage.
   /// 
   double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 

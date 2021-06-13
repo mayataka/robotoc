@@ -48,7 +48,29 @@ inline void ImpulseSplitOCP::initConstraints(Robot& robot,
 }
 
 
-inline void ImpulseSplitOCP::linearizeOCP(
+inline void ImpulseSplitOCP::computeKKTResidual(
+    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
+    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
+    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
+  assert(q_prev.size() == robot.dimq());
+  robot.updateKinematics(s.q, s.v+s.dv);
+  kkt_matrix.setImpulseStatus(impulse_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  kkt_matrix.setZero();
+  kkt_residual.setZero();
+  impulse_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
+                                              kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, s, 
+                                               kkt_residual);
+  state_equation_.linearizeForwardEuler(robot, q_prev, s, s_next, 
+                                        kkt_matrix, kkt_residual);
+  impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
+                                             kkt_residual);
+}
+
+
+inline void ImpulseSplitOCP::computeKKTSystem(
     Robot& robot, const ImpulseStatus& impulse_status, const double t,  
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -111,28 +133,6 @@ inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(constraints_data_, dual_step_size);
-}
-
-
-inline void ImpulseSplitOCP::computeKKTResidual(
-    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
-    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
-    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
-  assert(q_prev.size() == robot.dimq());
-  robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setImpulseStatus(impulse_status);
-  kkt_residual.setImpulseStatus(impulse_status);
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
-  impulse_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
-                                              kkt_residual);
-  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, s, 
-                                               kkt_residual);
-  state_equation_.linearizeForwardEuler(robot, q_prev, s, s_next, 
-                                        kkt_matrix, kkt_residual);
-  impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
-                                             kkt_residual);
 }
 
 

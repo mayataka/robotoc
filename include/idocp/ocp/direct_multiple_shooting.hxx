@@ -1,7 +1,7 @@
-#ifndef IDOCP_OCP_LINEARIZER_HXX_ 
-#define IDOCP_OCP_LINEARIZER_HXX_
+#ifndef IDOCP_DIRECT_MULTIPLE_SHOOTING_HXX_ 
+#define IDOCP_DIRECT_MULTIPLE_SHOOTING_HXX_
 
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/direct_multiple_shooting.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -10,54 +10,6 @@
 
 namespace idocp {
 namespace internal {
-
-struct LinearizeOCP {
-  template <typename SplitSolutionType>
-  static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
-                         const double dt, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, 
-                         const SplitSolutionType& s_next, 
-                         SplitKKTMatrix& kkt_matrix, 
-                         SplitKKTResidual& kkt_residual) {
-    split_ocp.linearizeOCP(robot, contact_status, t, dt, q_prev, s, s_next,
-                           kkt_matrix, kkt_residual);
-  }
-
-  static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
-                         const double dt, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, const SplitSolution& s_next, 
-                         SplitKKTMatrix& kkt_matrix, 
-                         SplitKKTResidual& kkt_residual,
-                         const ImpulseStatus& impulse_status, 
-                         const double dt_next, 
-                         SplitSwitchingConstraintJacobian& switch_jacobian,
-                         SplitSwitchingConstraintResidual& switch_residual) {
-    split_ocp.linearizeOCP(robot, contact_status, t, dt, q_prev, s, s_next,
-                           kkt_matrix, kkt_residual, impulse_status, 
-                           dt_next, switch_jacobian, switch_residual);
-  }
-
-  static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
-                         const double t, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-                         SplitKKTResidual& kkt_residual) {
-    terminal_ocp.linearizeOCP(robot, t, q_prev, s, kkt_matrix, kkt_residual);
-  }
-
-  static inline void run(ImpulseSplitOCP& impulse_split_ocp, Robot& robot, 
-                         const ImpulseStatus& impulse_status, const double t, 
-                         const Eigen::VectorXd& q_prev, 
-                         const ImpulseSplitSolution& s, 
-                         const SplitSolution& s_next, 
-                         ImpulseSplitKKTMatrix& kkt_matrix, 
-                         ImpulseSplitKKTResidual& kkt_residual) {
-    impulse_split_ocp.linearizeOCP(robot, impulse_status, t, q_prev, s, s_next,
-                                   kkt_matrix, kkt_residual);
-  }
-};
-
 
 struct ComputeKKTResidual {
   template <typename SplitSolutionType>
@@ -106,6 +58,54 @@ struct ComputeKKTResidual {
   }
 };
 
+
+struct ComputeKKTSystem {
+  template <typename SplitSolutionType>
+  static inline void run(SplitOCP& split_ocp, Robot& robot, 
+                         const ContactStatus& contact_status, const double t, 
+                         const double dt, const Eigen::VectorXd& q_prev, 
+                         const SplitSolution& s, 
+                         const SplitSolutionType& s_next, 
+                         SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual) {
+    split_ocp.computeKKTSystem(robot, contact_status, t, dt, q_prev, s, s_next,
+                               kkt_matrix, kkt_residual);
+  }
+
+  static inline void run(SplitOCP& split_ocp, Robot& robot, 
+                         const ContactStatus& contact_status, const double t, 
+                         const double dt, const Eigen::VectorXd& q_prev, 
+                         const SplitSolution& s, const SplitSolution& s_next, 
+                         SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual,
+                         const ImpulseStatus& impulse_status, 
+                         const double dt_next, 
+                         SplitSwitchingConstraintJacobian& switch_jacobian,
+                         SplitSwitchingConstraintResidual& switch_residual) {
+    split_ocp.computeKKTSystem(robot, contact_status, t, dt, q_prev, s, s_next,
+                               kkt_matrix, kkt_residual, impulse_status, 
+                               dt_next, switch_jacobian, switch_residual);
+  }
+
+  static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
+                         const double t, const Eigen::VectorXd& q_prev, 
+                         const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual) {
+    terminal_ocp.computeKKTSystem(robot, t, q_prev, s, kkt_matrix, kkt_residual);
+  }
+
+  static inline void run(ImpulseSplitOCP& impulse_split_ocp, Robot& robot, 
+                         const ImpulseStatus& impulse_status, const double t, 
+                         const Eigen::VectorXd& q_prev, 
+                         const ImpulseSplitSolution& s, 
+                         const SplitSolution& s_next, 
+                         ImpulseSplitKKTMatrix& kkt_matrix, 
+                         ImpulseSplitKKTResidual& kkt_residual) {
+    impulse_split_ocp.computeKKTSystem(robot, impulse_status, t, q_prev, s, 
+                                       s_next, kkt_matrix, kkt_residual);
+  }
+};
+
 } // namespace internal
 } // namespace idocp
 
@@ -113,12 +113,11 @@ struct ComputeKKTResidual {
 namespace idocp {
 
 template <typename Algorithm>
-inline void OCPLinearizer::runParallel(OCP& ocp, aligned_vector<Robot>& robots,
-                                       const ContactSequence& contact_sequence,
-                                       const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v, 
-                                       const Solution& s, KKTMatrix& kkt_matrix,
-                                       KKTResidual& kkt_residual) const {
+inline void DirectMultipleShooting::runParallel(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
@@ -231,7 +230,7 @@ inline void OCPLinearizer::runParallel(OCP& ocp, aligned_vector<Robot>& robots,
 }
 
 
-inline const Eigen::VectorXd& OCPLinearizer::q_prev(
+inline const Eigen::VectorXd& DirectMultipleShooting::q_prev(
     const OCPDiscretizer& discretizer, const Eigen::VectorXd& q, 
     const Solution& s, const int time_stage) {
   assert(time_stage >= 0);
@@ -252,4 +251,4 @@ inline const Eigen::VectorXd& OCPLinearizer::q_prev(
 
 } // namespace idocp 
 
-#endif // IDOCP_OCP_LINEARIZER_HXX_ 
+#endif // IDOCP_DIRECT_MULTIPLE_SHOOTING_HXX_ 

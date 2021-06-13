@@ -12,7 +12,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/direct_multiple_shooting.hpp"
 #include "idocp/riccati/riccati_recursion.hpp"
 #include "idocp/line_search/line_search.hpp"
 
@@ -201,7 +201,7 @@ public:
 private:
   aligned_vector<Robot> robots_;
   ContactSequence contact_sequence_;
-  OCPLinearizer ocp_linearizer_;
+  DirectMultipleShooting dms_;
   RiccatiRecursion riccati_recursion_;
   LineSearch line_search_;
   OCP ocp_;

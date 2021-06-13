@@ -39,7 +39,7 @@ protected:
 };
 
 
-TEST_F(TerminalUnconstrParNMPCTest, linearizeOCP) {
+TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = SplitSolution::Random(robot);
   TerminalUnconstrParNMPC parnmpc(robot, cost, constraints);
@@ -49,7 +49,7 @@ TEST_F(TerminalUnconstrParNMPCTest, linearizeOCP) {
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  parnmpc.linearizeOCP(robot, t, dt, s_prev.q, s_prev.v, s, kkt_matrix, kkt_residual);
+  parnmpc.computeKKTSystem(robot, t, dt, s_prev.q, s_prev.v, s, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
