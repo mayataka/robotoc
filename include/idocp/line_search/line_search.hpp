@@ -165,46 +165,6 @@ private:
             +violations_lift_.sum());
   }
 
-  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& discretizer, 
-                                       const Eigen::VectorXd& q, 
-                                       const Solution& s, 
-                                       const int time_stage) {
-    assert(time_stage >= 0);
-    assert(time_stage <= discretizer.N());
-    if (time_stage == 0) {
-      return q;
-    }
-    else if (discretizer.isTimeStageBeforeImpulse(time_stage-1)) {
-      return s.aux[discretizer.impulseIndexAfterTimeStage(time_stage-1)].q;
-    }
-    else if (discretizer.isTimeStageBeforeLift(time_stage-1)) {
-      return s.lift[discretizer.liftIndexAfterTimeStage(time_stage-1)].q;
-    }
-    else {
-      return s[time_stage-1].q;
-    }
-  }
-
-  static const Eigen::VectorXd& v_prev(const OCPDiscretizer& discretizer, 
-                                       const Eigen::VectorXd& v, 
-                                       const Solution& s, 
-                                       const int time_stage) {
-    assert(time_stage >= 0);
-    assert(time_stage <= discretizer.N());
-    if (time_stage == 0) {
-      return v;
-    }
-    else if (discretizer.isTimeStageBeforeImpulse(time_stage-1)) {
-      return s.aux[discretizer.impulseIndexAfterTimeStage(time_stage-1)].v;
-    }
-    else if (discretizer.isTimeStageBeforeLift(time_stage-1)) {
-      return s.lift[discretizer.liftIndexAfterTimeStage(time_stage-1)].v;
-    }
-    else {
-      return s[time_stage-1].v;
-    }
-  }
-
 };
 
 } // namespace idocp 

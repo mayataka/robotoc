@@ -19,9 +19,9 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/hybrid/hybrid_time_discretization.hpp"
 #include "idocp/ocp/split_switching_constraint_residual.hpp"
 #include "idocp/ocp/split_switching_constraint_jacobian.hpp"
 
@@ -80,7 +80,7 @@ public:
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
       impulse(N_impulse, ImpulseSplitOCP(robot, cost, constraints)),
       terminal(TerminalOCP(robot, cost, constraints)),
-      discretizer_(T, N, N_impulse) {
+      time_discretization_(T, N, N_impulse) {
   }
 
   ///
@@ -92,7 +92,7 @@ public:
       lift(),
       impulse(),
       terminal(),
-      discretizer_() {
+      time_discretization_() {
   }
 
   ///
@@ -135,11 +135,11 @@ public:
   }
 
   void discretize(const ContactSequence& contact_sequence, const double t) {
-    discretizer_.discretizeOCP(contact_sequence, t);
+    time_discretization_.discretize(contact_sequence, t);
   }
 
-  const OCPDiscretizer& discrete() const {
-    return discretizer_;
+  const HybridTimeDiscretization& discrete() const {
+    return time_discretization_;
   }
 
   std::vector<SplitOCP> data, aux, lift;
@@ -147,7 +147,8 @@ public:
   TerminalOCP terminal;
 
 private:
-  OCPDiscretizer discretizer_;
+  HybridTimeDiscretization time_discretization_;
+
 };
 
 } // namespace idocp

@@ -51,13 +51,12 @@ RiccatiRecursion::~RiccatiRecursion() {
 void RiccatiRecursion::backwardRiccatiRecursion(
     const OCP& ocp, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
     RiccatiFactorization& factorization) {
-  const OCPDiscretizer& ocp_discretizer = ocp.discrete();
-  const int N = ocp_discretizer.N();
+  const int N = ocp.discrete().N();
   factorization[N].P = kkt_matrix[N].Qxx;
   factorization[N].s = - kkt_residual[N].lx;
   for (int i=N-1; i>=0; --i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+    if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                            kkt_matrix.aux[impulse_index], 
                                            kkt_residual.aux[impulse_index], 
@@ -71,10 +70,10 @@ void RiccatiRecursion::backwardRiccatiRecursion(
                                            kkt_matrix[i], kkt_residual[i], 
                                            factorization[i], lqr_policy_[i]);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
-      if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
+    else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
+      if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                              kkt_matrix.lift[lift_index], 
                                              kkt_residual.lift[lift_index], 
@@ -96,8 +95,8 @@ void RiccatiRecursion::backwardRiccatiRecursion(
                                            factorization[i], lqr_policy_[i]);
     }
     else {
-      if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
+      if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                              kkt_matrix[i], kkt_residual[i], 
                                              kkt_matrix.switching[impulse_index], 
@@ -119,11 +118,10 @@ void RiccatiRecursion::backwardRiccatiRecursion(
 void RiccatiRecursion::forwardRiccatiRecursion(
     const OCP& ocp, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, Direction& d) const {
-  const OCPDiscretizer& ocp_discretizer = ocp.discrete();
-  const int N = ocp_discretizer.N();
+  const int N = ocp.discrete().N();
   for (int i=0; i<N; ++i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+    if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], 
                                           d.impulse[impulse_index]);
@@ -135,8 +133,8 @@ void RiccatiRecursion::forwardRiccatiRecursion(
                                           lqr_policy_.aux[impulse_index], 
                                           d.aux[impulse_index], d[i+1]);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+    else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], 
                                           d.lift[lift_index]);

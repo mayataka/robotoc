@@ -63,7 +63,7 @@ add_library(
   src/constraints/impulse_friction_cone.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
-  src/hybrid/ocp_discretizer.cpp
+  src/hybrid/hybrid_time_discretization.cpp
   src/hybrid/collision_checker.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp

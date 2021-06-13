@@ -5,7 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/hybrid_time_discretization.hpp"
 #include "idocp/robot/robot.hpp"
 
 #include "robot_factory.hpp"
@@ -13,7 +13,7 @@
 
 namespace idocp {
 
-class OCPDiscretizerTest : public ::testing::Test {
+class HybridTimeDiscretizationTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -40,7 +40,7 @@ protected:
 };
 
 
-ContactSequence OCPDiscretizerTest::createContactSequence(const Robot& robot) const {
+ContactSequence HybridTimeDiscretizationTest::createContactSequence(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events;
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -63,7 +63,7 @@ ContactSequence OCPDiscretizerTest::createContactSequence(const Robot& robot) co
 }
 
 
-ContactSequence OCPDiscretizerTest::createContactSequenceOnGrid(const Robot& robot) const {
+ContactSequence HybridTimeDiscretizationTest::createContactSequenceOnGrid(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events;
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -86,32 +86,32 @@ ContactSequence OCPDiscretizerTest::createContactSequenceOnGrid(const Robot& rob
 }
 
 
-void OCPDiscretizerTest::testConstructor(const Robot& robot) const {
-  OCPDiscretizer ocp_discretizer(T, N, max_num_events);
-  EXPECT_EQ(ocp_discretizer.N(), N);
-  EXPECT_EQ(ocp_discretizer.N_impulse(), 0);
-  EXPECT_EQ(ocp_discretizer.N_lift(), 0);
+void HybridTimeDiscretizationTest::testConstructor(const Robot& robot) const {
+  HybridTimeDiscretization discretization(T, N, max_num_events);
+  EXPECT_EQ(discretization.N(), N);
+  EXPECT_EQ(discretization.N_impulse(), 0);
+  EXPECT_EQ(discretization.N_lift(), 0);
   for (int i=0; i<=N; ++i) {
-    EXPECT_EQ(ocp_discretizer.contactPhase(i), 0);
+    EXPECT_EQ(discretization.contactPhase(i), 0);
   }
   for (int i=0; i<N; ++i) {
-    EXPECT_FALSE(ocp_discretizer.isTimeStageBeforeImpulse(i));
-    EXPECT_FALSE(ocp_discretizer.isTimeStageBeforeLift(i));
+    EXPECT_FALSE(discretization.isTimeStageBeforeImpulse(i));
+    EXPECT_FALSE(discretization.isTimeStageBeforeLift(i));
   }
   for (int i=1; i<=N; ++i) {
-    EXPECT_FALSE(ocp_discretizer.isTimeStageAfterImpulse(i));
-    EXPECT_FALSE(ocp_discretizer.isTimeStageAfterLift(i));
+    EXPECT_FALSE(discretization.isTimeStageAfterImpulse(i));
+    EXPECT_FALSE(discretization.isTimeStageAfterLift(i));
   }
 }
 
 
-void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
-  OCPDiscretizer ocp_discretizer(T, N, max_num_events);
+void HybridTimeDiscretizationTest::testDiscretizeOCP(const Robot& robot) const {
+  HybridTimeDiscretization discretization(T, N, max_num_events);
   const ContactSequence contact_sequence = createContactSequence(robot);
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  EXPECT_EQ(ocp_discretizer.N(), N);
-  EXPECT_EQ(ocp_discretizer.N_impulse(), contact_sequence.numImpulseEvents());
-  EXPECT_EQ(ocp_discretizer.N_lift(), contact_sequence.numLiftEvents());
+  discretization.discretize(contact_sequence, t);
+  EXPECT_EQ(discretization.N(), N);
+  EXPECT_EQ(discretization.N_impulse(), contact_sequence.numImpulseEvents());
+  EXPECT_EQ(discretization.N_lift(), contact_sequence.numLiftEvents());
   std::vector<double> t_impulse, t_lift;
   std::vector<int> time_stage_before_impulse, time_stage_before_lift;
   for (int i=0; i<contact_sequence.numImpulseEvents(); ++i) {
@@ -123,16 +123,16 @@ void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
     time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt));
   }
   for (int i=0; i<contact_sequence.numImpulseEvents(); ++i) {
-    EXPECT_EQ(time_stage_before_impulse[i], ocp_discretizer.timeStageBeforeImpulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i], ocp_discretizer.t_impulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt-t, ocp_discretizer.dt(time_stage_before_impulse[i]));
-    EXPECT_DOUBLE_EQ(ocp_discretizer.dt(time_stage_before_impulse[i])+ocp_discretizer.dt_aux(i), dt);
+    EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt-t, discretization.dt(time_stage_before_impulse[i]));
+    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_impulse[i])+discretization.dt_aux(i), dt);
   }
   for (int i=0; i<contact_sequence.numLiftEvents(); ++i) {
-    EXPECT_EQ(time_stage_before_lift[i], ocp_discretizer.timeStageBeforeLift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i], ocp_discretizer.t_lift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt-t, ocp_discretizer.dt(time_stage_before_lift[i]));
-    EXPECT_DOUBLE_EQ(ocp_discretizer.dt(time_stage_before_lift[i])+ocp_discretizer.dt_lift(i), dt);
+    EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt-t, discretization.dt(time_stage_before_lift[i]));
+    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_lift[i])+discretization.dt_lift(i), dt);
   }
   std::vector<int> time_stage_before_events;
   for (auto e :  time_stage_before_impulse) {
@@ -145,72 +145,72 @@ void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
   time_stage_before_events.push_back(N+1);
   int contact_phase_ref = 0;
   for (int i=0; i<=N; ++i) {
-    EXPECT_EQ(ocp_discretizer.contactPhase(i), contact_phase_ref);
+    EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
     if (i == time_stage_before_events[contact_phase_ref]) {
       ++contact_phase_ref;
     }
   }
-  for (int i=0; i<ocp_discretizer.N_impulse(); ++i) {
-    EXPECT_EQ(ocp_discretizer.timeStageBeforeImpulse(i)+1, 
-              ocp_discretizer.timeStageAfterImpulse(i));
-    EXPECT_EQ(ocp_discretizer.contactPhaseAfterImpulse(i), 
-              ocp_discretizer.contactPhase(ocp_discretizer.timeStageAfterImpulse(i)));
+  for (int i=0; i<discretization.N_impulse(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeImpulse(i)+1, 
+              discretization.timeStageAfterImpulse(i));
+    EXPECT_EQ(discretization.contactPhaseAfterImpulse(i), 
+              discretization.contactPhase(discretization.timeStageAfterImpulse(i)));
   }
-  for (int i=0; i<ocp_discretizer.N_lift(); ++i) {
-    EXPECT_EQ(ocp_discretizer.timeStageBeforeLift(i)+1, 
-              ocp_discretizer.timeStageAfterLift(i));
-    EXPECT_EQ(ocp_discretizer.contactPhaseAfterLift(i), 
-              ocp_discretizer.contactPhase(ocp_discretizer.timeStageAfterLift(i)));
-  }
-  for (int i=0; i<N; ++i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      EXPECT_EQ(ocp_discretizer.timeStageBeforeImpulse(ocp_discretizer.impulseIndexAfterTimeStage(i)), i);
-    }
-    else {
-      EXPECT_EQ(ocp_discretizer.impulseIndexAfterTimeStage(i), -1);
-    }
+  for (int i=0; i<discretization.N_lift(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeLift(i)+1, 
+              discretization.timeStageAfterLift(i));
+    EXPECT_EQ(discretization.contactPhaseAfterLift(i), 
+              discretization.contactPhase(discretization.timeStageAfterLift(i)));
   }
   for (int i=0; i<N; ++i) {
-    if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      EXPECT_EQ(ocp_discretizer.timeStageBeforeLift(ocp_discretizer.liftIndexAfterTimeStage(i)), i);
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeImpulse(discretization.impulseIndexAfterTimeStage(i)), i);
     }
     else {
-      EXPECT_EQ(ocp_discretizer.liftIndexAfterTimeStage(i), -1);
+      EXPECT_EQ(discretization.impulseIndexAfterTimeStage(i), -1);
+    }
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeLift(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeLift(discretization.liftIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.liftIndexAfterTimeStage(i), -1);
     }
   }
   const double dt = T/N;
   for (int i=0; i<=N; ++i) {
-    EXPECT_DOUBLE_EQ(ocp_discretizer.t(i), t+i*dt);
+    EXPECT_DOUBLE_EQ(discretization.t(i), t+i*dt);
   }
   for (int i=0; i<N; ++i) {
-    if (!ocp_discretizer.isTimeStageBeforeImpulse(i) && !ocp_discretizer.isTimeStageBeforeLift(i)) {
-      EXPECT_DOUBLE_EQ(ocp_discretizer.dt(i), dt);
+    if (!discretization.isTimeStageBeforeImpulse(i) && !discretization.isTimeStageBeforeLift(i)) {
+      EXPECT_DOUBLE_EQ(discretization.dt(i), dt);
     }
   }
 }
 
 
-void OCPDiscretizerTest::testDiscretizeOCPOnGrid(const Robot& robot) const {
-  OCPDiscretizer ocp_discretizer(T, N, max_num_events);
+void HybridTimeDiscretizationTest::testDiscretizeOCPOnGrid(const Robot& robot) const {
+  HybridTimeDiscretization discretization(T, N, max_num_events);
   const ContactSequence contact_sequence = createContactSequenceOnGrid(robot);
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  EXPECT_EQ(ocp_discretizer.N(), N-max_num_events);
-  EXPECT_EQ(ocp_discretizer.N_impulse(), contact_sequence.numImpulseEvents());
-  EXPECT_EQ(ocp_discretizer.N_lift(), contact_sequence.numLiftEvents());
+  discretization.discretize(contact_sequence, t);
+  EXPECT_EQ(discretization.N(), N-max_num_events);
+  EXPECT_EQ(discretization.N_impulse(), contact_sequence.numImpulseEvents());
+  EXPECT_EQ(discretization.N_lift(), contact_sequence.numLiftEvents());
   double ti = t;
-  for (int i=0; i<ocp_discretizer.N(); ++i) {
-    EXPECT_NEAR(ocp_discretizer.dt(i), dt, min_dt);
-    EXPECT_NEAR(ocp_discretizer.t(i), ti, min_dt);
+  for (int i=0; i<discretization.N(); ++i) {
+    EXPECT_NEAR(discretization.dt(i), dt, min_dt);
+    EXPECT_NEAR(discretization.t(i), ti, min_dt);
     ti += dt;
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i) || ocp_discretizer.isTimeStageBeforeLift(i)) {
+    if (discretization.isTimeStageBeforeImpulse(i) || discretization.isTimeStageBeforeLift(i)) {
       ti += dt;
     }
   }
-  EXPECT_DOUBLE_EQ(ocp_discretizer.t(ocp_discretizer.N()), t+T);
+  EXPECT_DOUBLE_EQ(discretization.t(discretization.N()), t+T);
 }
 
 
-TEST_F(OCPDiscretizerTest, fixedBase) {
+TEST_F(HybridTimeDiscretizationTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   testConstructor(robot);
   testDiscretizeOCP(robot);
@@ -218,7 +218,7 @@ TEST_F(OCPDiscretizerTest, fixedBase) {
 }
 
 
-TEST_F(OCPDiscretizerTest, floatingBase) {
+TEST_F(HybridTimeDiscretizationTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testConstructor(robot);
   testDiscretizeOCP(robot);

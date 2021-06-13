@@ -9,7 +9,7 @@
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/hybrid_time_discretization.hpp"
 
 
 namespace idocp {
@@ -145,10 +145,8 @@ public:
                          const double dual_step_size,
                          Direction& d, Solution& s) const;
 
-  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& ocp_discretizer, 
-                                       const Eigen::VectorXd& q, 
+  static const Eigen::VectorXd& q_prev(const OCP& ocp, const Eigen::VectorXd& q, 
                                        const Solution& s, const int time_stage);
-
 
 private:
   template <typename Algorithm>

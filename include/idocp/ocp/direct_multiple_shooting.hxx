@@ -132,8 +132,7 @@ inline void DirectMultipleShooting::runParallel(
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
-            ocp.discrete().t(i), ocp.discrete().dt(i), 
-            q_prev(ocp.discrete(), q, s, i), 
+            ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
@@ -141,9 +140,8 @@ inline void DirectMultipleShooting::runParallel(
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
-            ocp.discrete().t(i), ocp.discrete().dt(i), 
-            q_prev(ocp.discrete(), q, s, i), s[i], 
-            s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
+            ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
+            s[i], s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
@@ -152,9 +150,9 @@ inline void DirectMultipleShooting::runParallel(
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
-            ocp.discrete().t(i), ocp.discrete().dt(i), 
-            q_prev(ocp.discrete(), q, s, i), s[i], s[i+1], kkt_matrix[i], 
-            kkt_residual[i], contact_sequence.impulseStatus(impulse_index), 
+            ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
+            s[i], s[i+1], kkt_matrix[i], kkt_residual[i], 
+            contact_sequence.impulseStatus(impulse_index), 
             ocp.discrete().dt(i+1), kkt_matrix.switching[impulse_index],
             kkt_residual.switching[impulse_index]);
       }
@@ -162,14 +160,13 @@ inline void DirectMultipleShooting::runParallel(
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
-            ocp.discrete().t(i), ocp.discrete().dt(i), 
-            q_prev(ocp.discrete(), q, s, i), 
+            ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
       }
     }
     else if (i == N) {
       Algorithm::run(ocp.terminal, robots[omp_get_thread_num()], 
-                     ocp.discrete().t(N), q_prev(ocp.discrete(), q, s, N), s[N], 
+                     ocp.discrete().t(N), q_prev(ocp, q, s, N), s[N], 
                      kkt_matrix[N], kkt_residual[N]);
     }
     else if (i < N+1+N_impulse) {
@@ -230,19 +227,20 @@ inline void DirectMultipleShooting::runParallel(
 }
 
 
-inline const Eigen::VectorXd& DirectMultipleShooting::q_prev(
-    const OCPDiscretizer& discretizer, const Eigen::VectorXd& q, 
-    const Solution& s, const int time_stage) {
+inline const Eigen::VectorXd& DirectMultipleShooting::q_prev(const OCP& ocp, 
+                                                             const Eigen::VectorXd& q, 
+                                                             const Solution& s, 
+                                                             const int time_stage) {
   assert(time_stage >= 0);
-  assert(time_stage <= discretizer.N());
+  assert(time_stage <= ocp.discrete().N());
   if (time_stage == 0) {
     return q;
   }
-  else if (discretizer.isTimeStageBeforeImpulse(time_stage-1)) {
-    return s.aux[discretizer.impulseIndexAfterTimeStage(time_stage-1)].q;
+  else if (ocp.discrete().isTimeStageBeforeImpulse(time_stage-1)) {
+    return s.aux[ocp.discrete().impulseIndexAfterTimeStage(time_stage-1)].q;
   }
-  else if (discretizer.isTimeStageBeforeLift(time_stage-1)) {
-    return s.lift[discretizer.liftIndexAfterTimeStage(time_stage-1)].q;
+  else if (ocp.discrete().isTimeStageBeforeLift(time_stage-1)) {
+    return s.lift[ocp.discrete().liftIndexAfterTimeStage(time_stage-1)].q;
   }
   else {
     return s[time_stage-1].q;
