@@ -250,7 +250,6 @@ public:
       const double fraction_to_boundary_rate) final;
 
 protected:
-
   ///
   /// @brief Computes the residual in the duality between the slack and dual 
   /// variables.

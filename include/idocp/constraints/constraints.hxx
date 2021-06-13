@@ -428,48 +428,6 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data,
 }
 
 
-inline double Constraints::l1NormPrimalResidual(
-    const ConstraintsData& data) {
-  double l1_norm = 0;
-  if (data.isPositionLevelValid()) {
-    l1_norm += constraintsimpl::l1NormPrimalResidual(data.position_level_data);
-  }
-  if (data.isVelocityLevelValid()) {
-    l1_norm += constraintsimpl::l1NormPrimalResidual(data.velocity_level_data);
-  }
-  if (data.isAccelerationLevelValid()) {
-    l1_norm += constraintsimpl::l1NormPrimalResidual(data.acceleration_level_data);
-  }
-  if (data.isImpulseLevelValid()) {
-    l1_norm += constraintsimpl::l1NormPrimalResidual(data.impulse_level_data);
-  }
-  return l1_norm;
-}
-
-
-inline double Constraints::squaredNormPrimalAndDualResidual(
-    const ConstraintsData& data) {
-  double squared_norm = 0;
-  if (data.isPositionLevelValid()) {
-    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
-        data.position_level_data);
-  }
-  if (data.isVelocityLevelValid()) {
-    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
-        data.velocity_level_data);
-  }
-  if (data.isAccelerationLevelValid()) {
-    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
-        data.acceleration_level_data);
-  }
-  if (data.isImpulseLevelValid()) {
-    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
-        data.impulse_level_data);
-  }
-  return squared_norm;
-}
-
-
 inline void Constraints::setBarrier(const double barrier) {
   constraintsimpl::setBarrier(position_level_constraints_, barrier);
   constraintsimpl::setBarrier(velocity_level_constraints_, barrier);

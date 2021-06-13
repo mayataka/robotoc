@@ -82,13 +82,13 @@ public:
   /// @brief Predicted configuration used for computing the switching 
   /// constraint. Size is Robot::dimq().
   ///
-  Eigen::VectorXd q_pred;
+  Eigen::VectorXd q;
 
   ///
   /// @brief Predicted difference of the configuration used for computing the 
   /// switching constraint. Size is Robot::dimv().
   ///
-  Eigen::VectorXd dq_pred;
+  Eigen::VectorXd dq;
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 

@@ -239,25 +239,6 @@ double costSlackBarrier(
     const double step_size);
 
 ///
-/// @brief Returns the l1-norm of the primal residuals of the constraints. 
-/// Before calling this function, 
-/// constraintsimpl::computePrimalResidual() must be called.
-/// @param[in] data Vector of the constraints data.
-/// @return l1-norm of the primal residuals of the constraints. 
-///
-double l1NormPrimalResidual(const std::vector<ConstraintComponentData>& data);
-
-///
-/// @brief Returns the squared norm of the primal and dual residuals of the 
-/// constraint. Before calling this function, 
-/// constraintsimpl::computePrimalResidual() must be called.
-/// @param[in] data Vector of the constraints data.
-/// @return Squared norm of the primal and dual residuals of the constraints. 
-///
-double squaredNormPrimalAndDualResidual(
-    const std::vector<ConstraintComponentData>& data);
-
-///
 /// @brief Sets the barrier parameter.
 /// @param[in, out] constraints Vector of the impulse constraints. 
 /// @param[in] barrier Barrier parameter. Must be positive. Should be small.

@@ -24,14 +24,14 @@ namespace switchingconstraint {
 /// @param[in] s Split solution of the time stage 2 stage before the impulse.
 /// @param[in, out] kkt_residual Split KKT residual of the time stage 2 stage
 /// before the impulse.
-/// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
-/// @param[in, out] switch_residual Residual of the switching constraint. 
+/// @param[in, out] switching_jacobian Jacobian of the switching constraint. 
+/// @param[in, out] switching_residual Residual of the switching constraint. 
 ///
 void linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, SplitKKTResidual& kkt_residual, 
-    SplitSwitchingConstraintJacobian& switch_jacobian,
-    SplitSwitchingConstraintResidual& switch_residual);
+    SplitSwitchingConstraintJacobian& switching_jacobian,
+    SplitSwitchingConstraintResidual& switching_residual);
 
 ///
 /// @brief Computes the residual in the switching constraint, i.e., the 
@@ -41,12 +41,12 @@ void linearizeSwitchingConstraint(
 /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.
 /// @param[in] dt2 Time step of the time stage just before the impulse.
 /// @param[in] s Split solution of the time stage 2 stage before the impulse.
-/// @param[in, out] switch_residual Residual of the switching constraint. 
+/// @param[in, out] switching_residual Residual of the switching constraint. 
 ///
 void computeSwitchingConstraintResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, 
-    SplitSwitchingConstraintResidual& switch_residual);
+    SplitSwitchingConstraintResidual& switching_residual);
 
 } // namespace switchingconstraint 
 

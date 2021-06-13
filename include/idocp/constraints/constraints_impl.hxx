@@ -252,26 +252,6 @@ inline double costSlackBarrier(
 }
 
 
-inline double l1NormPrimalResidual(
-    const std::vector<ConstraintComponentData>& data) {
-  double l1_norm = 0;
-  for (const auto& e : data) {
-    l1_norm += e.residual.lpNorm<1>();
-  }
-  return l1_norm;
-}
-
-
-inline double squaredNormPrimalAndDualResidual(
-    const std::vector<ConstraintComponentData>& data) {
-  double squared_norm = 0;
-  for (const auto& e : data) {
-    squared_norm += e.residual.squaredNorm() + e.duality.squaredNorm();
-  }
-  return squared_norm;
-}
-
-
 template <typename ConstraintComponentBaseTypePtr>
 inline void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
                        const double barrier) {

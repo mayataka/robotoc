@@ -10,8 +10,8 @@ namespace idocp {
 
 inline SplitSwitchingConstraintResidual::SplitSwitchingConstraintResidual(
     const Robot& robot)
-  : q_pred(Eigen::VectorXd::Zero(robot.dimq())),
-    dq_pred(Eigen::VectorXd::Zero(robot.dimv())),
+  : q(Eigen::VectorXd::Zero(robot.dimq())),
+    dq(Eigen::VectorXd::Zero(robot.dimv())),
     P_full_(robot.max_dimf()),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
@@ -20,8 +20,8 @@ inline SplitSwitchingConstraintResidual::SplitSwitchingConstraintResidual(
 
 
 inline SplitSwitchingConstraintResidual::SplitSwitchingConstraintResidual() 
-  : q_pred(),
-    dq_pred(),
+  : q(),
+    dq(),
     P_full_(),
     dimq_(0),
     dimv_(0), 
@@ -77,8 +77,8 @@ inline int SplitSwitchingConstraintResidual::dimi() const {
 
 
 inline bool SplitSwitchingConstraintResidual::isDimensionConsistent() const {
-  if(q_pred.size() != dimq_) return false;
-  if(dq_pred.size() != dimv_) return false;
+  if(q.size() != dimq_) return false;
+  if(dq.size() != dimv_) return false;
   return true;
 }
 

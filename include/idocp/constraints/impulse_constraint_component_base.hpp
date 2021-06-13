@@ -159,25 +159,6 @@ public:
       ConstraintComponentData& data) const final;
 
   ///
-  /// @brief Returns the l1-norm of the primal residual of the constraint. 
-  /// Before calling this function, 
-  /// ImpulseConstraintComponentBase::computePrimalResidual() must be called.
-  /// @param[in] data Constraint data. 
-  /// @return l1-norm of the primal residual of the constraint. 
-  ///
-  static double l1NormPrimalResidual(const ConstraintComponentData& data);
-
-  ///
-  /// @brief Returns the squared norm of the primal and dual residuals of the 
-  /// constraint. Before calling this function, 
-  /// ImpulseConstraintComponentBase::computePrimalResidual() must be called.
-  /// @param[in] data Constraint data.
-  /// @return Squared norm of the primal and dual residuals of the constraint. 
-  ///
-  static double squaredNormPrimalAndDualResidual(
-      const ConstraintComponentData& data);
-
-  ///
   /// @brief Computes and returns the maximum step size by applying 
   /// fraction-to-boundary-rule to the direction of the slack variable.
   /// @param[in] data Constraint data.

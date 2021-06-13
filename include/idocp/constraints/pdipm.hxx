@@ -114,13 +114,6 @@ inline double ComputeDualDirection(const double slack, const double dual,
 }
 
 
-// inline double CostBarrier(const double barrier, const Eigen::VectorXd& vec) {
-//   assert(barrier > 0);
-//   assert(vec.array().minCoeff() > 0);
-//   return (- barrier * vec.array().log().sum());
-// }
-
-
 template <typename VectorType>
 inline double CostBarrier(const double barrier, 
                           const Eigen::MatrixBase<VectorType>& vec) {

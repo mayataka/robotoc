@@ -3,6 +3,7 @@
 
 #include "idocp/constraints/constraint_component_data.hpp"
 
+#include <cmath>
 #include <stdexcept>
 #include <iostream>
 
@@ -11,8 +12,8 @@ namespace idocp {
 
 inline ConstraintComponentData::ConstraintComponentData(const int dimc,
                                                         const double barrier)
-  : slack(Eigen::VectorXd::Constant(dimc, barrier)),
-    dual(Eigen::VectorXd::Constant(dimc, barrier)),
+  : slack(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier))),
+    dual(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier))),
     residual(Eigen::VectorXd::Zero(dimc)),
     duality(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
