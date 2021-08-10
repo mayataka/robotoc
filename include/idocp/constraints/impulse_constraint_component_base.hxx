@@ -76,19 +76,19 @@ inline void ImpulseConstraintComponentBase::setSlackAndDualPositive(
 }
 
 
-inline void ImpulseConstraintComponentBase::computeDuality(
+inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data) const {
-  pdipm::ComputeDuality(barrier_, data);
+  pdipm::ComputeComplementarySlackness(barrier_, data);
 }
 
 
-inline void ImpulseConstraintComponentBase::computeDuality(
+inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data, const int start, const int size) const {
-  pdipm::ComputeDuality(barrier_, data, start, size);
+  pdipm::ComputeComplementarySlackness(barrier_, data, start, size);
 }
 
 
-inline double ImpulseConstraintComponentBase::computeDuality(
+inline double ImpulseConstraintComponentBase::computeComplementarySlackness(
     const double slack, const double dual) const {
   return (slack * dual - barrier_); 
 }
@@ -108,10 +108,9 @@ inline void ImpulseConstraintComponentBase::computeDualDirection(
 
 inline double ImpulseConstraintComponentBase::computeDualDirection(
     const double slack, const double dual, const double dslack, 
-    const double duality) {
-  return (- (dual * dslack + duality) / slack);
+    const double cmpl) {
+  return (- (dual * dslack + cmpl) / slack);
 }
-
 
 } // namespace idocp
 

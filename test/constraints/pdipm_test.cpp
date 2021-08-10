@@ -37,15 +37,15 @@ TEST_F(PDIPMTest, SetSlackAndDualPositive) {
 }
 
 
-TEST_F(PDIPMTest, ComputeDuality) {
+TEST_F(PDIPMTest, ComputeComplementarySlackness) {
   EXPECT_TRUE(data.slack.minCoeff() >= 0);
   EXPECT_TRUE(data.dual.minCoeff() >= 0);
-  pdipm::ComputeDuality(barrier, data);
-  Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dim);
+  pdipm::ComputeComplementarySlackness(barrier, data);
+  Eigen::VectorXd compl_ref = Eigen::VectorXd::Zero(dim);
   for (int i=0; i<dim; ++i) {
-    duality_ref(i) = data.slack(i) * data.dual(i) - barrier;
+    compl_ref(i) = data.slack(i) * data.dual(i) - barrier;
   }
-  EXPECT_TRUE(data.duality.isApprox(duality_ref));
+  EXPECT_TRUE(data.cmpl.isApprox(compl_ref));
 }
 
 
@@ -86,11 +86,11 @@ TEST_F(PDIPMTest, FractionToBoundaryDual) {
 
 
 TEST_F(PDIPMTest, ComputeDualDirection) {
-  data.duality.array() = data.dual.array() * data.slack.array() - barrier;
+  data.cmpl.array() = data.dual.array() * data.slack.array() - barrier;
   pdipm::ComputeDualDirection(data);
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dim);
   for (int i=0; i<dim; ++i) {
-    ddual_ref(i) = - (data.dual(i) * data.dslack(i) + data.duality(i)) / data.slack(i);
+    ddual_ref(i) = - (data.dual(i) * data.dslack(i) + data.cmpl(i)) / data.slack(i);
   }
   EXPECT_TRUE(ddual_ref.isApprox(data.ddual));
 }

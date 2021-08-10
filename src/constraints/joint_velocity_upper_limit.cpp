@@ -55,7 +55,7 @@ void JointVelocityUpperLimit::setSlack(Robot& robot,
 void JointVelocityUpperLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = s.v.tail(dimc_) - vmax_ + data.slack;
-  computeDuality(data);
+  computeComplementarySlackness(data);
 }
 
 
@@ -73,7 +73,7 @@ void JointVelocityUpperLimit::condenseSlackAndDual(
   kkt_matrix.Qvv().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
   kkt_residual.lv().tail(dimc_).array() 
-      += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
+      += dt * (data.dual.array()*data.residual.array()-data.cmpl.array()) 
               / data.slack.array();
 }
 

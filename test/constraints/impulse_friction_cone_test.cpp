@@ -130,11 +130,11 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot,
   data.slack.setRandom();
   data.dual.setRandom();
   data.residual.setRandom();
-  data.duality.setRandom();
+  data.cmpl.setRandom();
   auto data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
   data_ref.residual.setZero();
-  data_ref.duality.setZero();
+  data_ref.cmpl.setZero();
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
@@ -142,7 +142,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot,
       ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
       data_ref.residual.template segment<5>(5*i) += data_ref.slack.segment(5*i, 5);
       for (int j=0; j<5; ++j) {
-        data_ref.duality.coeffRef(5*i+j) 
+        data_ref.cmpl.coeffRef(5*i+j) 
             = data_ref.slack.coeff(5*i+j) * data_ref.dual.coeff(5*i+j) - barrier;
       }
     }
@@ -203,7 +203,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
   data.slack.setRandom();
   data.dual.setRandom();
   data.residual.setRandom();
-  data.duality.setRandom();
+  data.cmpl.setRandom();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
   limit.computePrimalAndDualResidual(robot, data, s);
@@ -226,7 +226,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
       const Eigen::MatrixXd dg_dq = cone * dfW_dq;
       const Eigen::MatrixXd dg_df = cone * robot.frameRotation(robot.contactFrames()[i]);
       Eigen::VectorXd r(5);
-      r.array() = (data_ref.dual.segment(5*i, 5).array()*data_ref.residual.segment(5*i, 5).array()-data_ref.duality.segment(5*i, 5).array()) 
+      r.array() = (data_ref.dual.segment(5*i, 5).array()*data_ref.residual.segment(5*i, 5).array()-data_ref.cmpl.segment(5*i, 5).array()) 
                   / data_ref.slack.segment(5*i, 5).array();
       kkt_res_ref.lq() += dg_dq.transpose() * r;
       kkt_res_ref.lf().template segment<3>(dimf_stack) += dg_df.transpose() * r;
@@ -256,7 +256,7 @@ void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const Impulse
   data.slack.setRandom();
   data.dual.setRandom();
   data.residual.setRandom();
-  data.duality.setRandom();
+  data.cmpl.setRandom();
   data.dslack.setRandom();
   data.ddual.setRandom();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
@@ -287,7 +287,7 @@ void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const Impulse
             - data_ref.residual.segment(5*i, 5);
       for (int j=0; j<5; ++j) {
         data_ref.ddual(5*i+j) 
-          = - (data_ref.dual(5*i+j)*data_ref.dslack(5*i+j)+data_ref.duality(5*i+j))
+          = - (data_ref.dual(5*i+j)*data_ref.dslack(5*i+j)+data_ref.cmpl(5*i+j))
               / data_ref.slack(5*i+j);
       }
       dimf_stack += 3;

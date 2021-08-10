@@ -77,7 +77,7 @@ void JointAccelerationLowerLimitTest::testComputePrimalAndDualResidual(Robot& ro
   auto data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
   data_ref.residual = - s.a.tail(dimc) + amin + data_ref.slack;
-  pdipm::ComputeDuality(barrier, data_ref);
+  pdipm::ComputeComplementarySlackness(barrier, data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
 
@@ -110,7 +110,7 @@ void JointAccelerationLowerLimitTest::testCondenseSlackAndDual(Robot& robot, con
   auto kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   kkt_res_ref.la.tail(dimc).array() 
-      -= dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
+      -= dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
   kkt_mat_ref.Qaa.diagonal().tail(dimc).array() 
       += dt * data_ref.dual.array() / data_ref.slack.array();
@@ -126,7 +126,7 @@ void JointAccelerationLowerLimitTest::testExpandSlackAndDual(Robot& robot, const
   const auto s = SplitSolution::Random(robot);
   limit.setSlack(robot, data, s);
   data.residual.setRandom();
-  data.duality.setRandom();
+  data.cmpl.setRandom();
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot);
   limit.expandSlackAndDual(data, s, d);

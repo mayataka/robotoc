@@ -11,8 +11,8 @@ namespace idocp {
 ///
 /// @class ConstraintComponentData
 /// @brief Data used in constraint components. Composed by slack, 
-/// dual (Lagrange multiplier), primal residual, duality between the slack and 
-/// dual, and directions of slack and dual.
+/// dual (Lagrange multiplier), primal residual, complementary slackness between 
+/// the slack and dual, and directions of slack and dual.
 ///
 class ConstraintComponentData {
 public:
@@ -74,10 +74,10 @@ public:
   Eigen::VectorXd residual;
 
   ///
-  /// @brief Residual of the duality between slakc and dual. Size is 
-  /// ConstraintComponentData::dimc(). 
+  /// @brief Residual in the complementary slackness between slack and dual. 
+  /// Size is ConstraintComponentData::dimc(). 
   ///
-  Eigen::VectorXd duality;
+  Eigen::VectorXd cmpl;
 
   ///
   /// @brief Newton direction of the slack. Size is 
@@ -124,7 +124,7 @@ public:
   int dimc() const;
 
   ///
-  /// @brief Check whether dimensions of slack, dual, residual, duality, 
+  /// @brief Check whether dimensions of slack, dual, residual, cmpl, 
   /// dslack, ddual are ConstraintComponentData::dimc(). 
   /// @return Dimension of the constraint. 
   ///

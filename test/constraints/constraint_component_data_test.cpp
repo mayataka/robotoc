@@ -22,7 +22,7 @@ TEST_F(ConstraintComponentDataTest, constructor) {
   EXPECT_EQ(data.slack.size(), dimc);
   EXPECT_EQ(data.dual.size(), dimc);
   EXPECT_EQ(data.residual.size(), dimc);
-  EXPECT_EQ(data.duality.size(), dimc);
+  EXPECT_EQ(data.cmpl.size(), dimc);
   EXPECT_EQ(data.dslack.size(), dimc);
   EXPECT_EQ(data.ddual.size(), dimc);
   EXPECT_EQ(data.dimc(), dimc);
@@ -34,10 +34,10 @@ TEST_F(ConstraintComponentDataTest, nrm) {
   const double barrier = 0.01;
   ConstraintComponentData data(dimc, barrier);
   data.residual.setRandom();
-  data.duality.setRandom();
+  data.cmpl.setRandom();
 
   const double nrm = data.squaredNormKKTResidual();
-  const double nrm_ref = data.residual.squaredNorm() + data.duality.squaredNorm();
+  const double nrm_ref = data.residual.squaredNorm() + data.cmpl.squaredNorm();
   EXPECT_DOUBLE_EQ(nrm, nrm_ref);
 
   const double vio = data.l1NormConstraintViolation();

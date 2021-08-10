@@ -140,7 +140,7 @@ void FrictionCone::computePrimalAndDualResidual(Robot& robot,
                                                 ConstraintComponentData& data, 
                                                 const SplitSolution& s) const {
   data.residual.setZero();
-  data.duality.setZero();
+  data.cmpl.setZero();
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const int idx = 5*i;
@@ -150,7 +150,7 @@ void FrictionCone::computePrimalAndDualResidual(Robot& robot,
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(5*i));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
-      computeDuality(data, idx, 5);
+      computeComplementarySlackness(data, idx, 5);
     }
   }
 }
@@ -206,7 +206,7 @@ void FrictionCone::condenseSlackAndDual(
       Eigen::VectorXd& ri = r(data, i);
       ri.array() = (data.dual.template segment<5>(idx).array()
                     *data.residual.template segment<5>(idx).array()
-                    -data.duality.template segment<5>(idx).array())
+                    -data.cmpl.template segment<5>(idx).array())
                     / data.slack.template segment<5>(idx).array();
       kkt_residual.lq().noalias() += dt * dgi_dq.transpose() * ri;
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()

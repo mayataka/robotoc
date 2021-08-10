@@ -23,26 +23,28 @@ inline void SetSlackAndDualPositive(const double barrier,
 }
 
 
-inline void ComputeDuality(const double barrier, 
-                           ConstraintComponentData& data) {
+inline void ComputeComplementarySlackness(const double barrier, 
+                                          ConstraintComponentData& data) {
   assert(barrier > 0);
   assert(data.checkDimensionalConsistency());
-  data.duality.array() = data.slack.array() * data.dual.array() - barrier;
+  data.cmpl.array() = data.slack.array() * data.dual.array() - barrier;
 }
 
 
-inline void ComputeDuality(const double barrier, ConstraintComponentData& data,
-                           const int start, const int size) {
+inline void ComputeComplementarySlackness(const double barrier, 
+                                          ConstraintComponentData& data,
+                                          const int start, const int size) {
   assert(barrier > 0);
   assert(data.checkDimensionalConsistency());
-  data.duality.segment(start, size).array() 
+  data.cmpl.segment(start, size).array() 
       = data.slack.segment(start, size).array() 
           * data.dual.segment(start, size).array() - barrier;
 }
 
 
-inline double ComputeDuality(const double barrier, const double slack, 
-                             const double dual) {
+inline double ComputeComplementarySlackness(const double barrier, 
+                                            const double slack, 
+                                            const double dual) {
   assert(barrier > 0);
   return (slack * dual - barrier); 
 }
@@ -93,7 +95,7 @@ inline double FractionToBoundary(const int dim, const double fraction_rate,
 inline void ComputeDualDirection(ConstraintComponentData& data) {
   assert(data.checkDimensionalConsistency());
   data.ddual.array() 
-      = - (data.dual.array()*data.dslack.array()+data.duality.array())
+      = - (data.dual.array()*data.dslack.array()+data.cmpl.array())
           / data.slack.array();
 }
 
@@ -103,14 +105,14 @@ inline void ComputeDualDirection(ConstraintComponentData& data,
   data.ddual.segment(start, size).array() 
       = - (data.dual.segment(start, size).array()
               *data.dslack.segment(start, size).array()
-            +data.duality.segment(start, size).array())
+            +data.cmpl.segment(start, size).array())
           / data.slack.segment(start, size).array();
 }
 
 
 inline double ComputeDualDirection(const double slack, const double dual,
-                                   const double dslack, const double duality) {
-  return (- (dual * dslack + duality) / slack);
+                                   const double dslack, const double cmpl) {
+  return (- (dual * dslack + cmpl) / slack);
 }
 
 

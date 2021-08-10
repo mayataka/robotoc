@@ -54,7 +54,7 @@ void JointPositionUpperLimit::setSlack(Robot& robot,
 void JointPositionUpperLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = s.q.tail(dimc_) - qmax_ + data.slack;
-  computeDuality(data);
+  computeComplementarySlackness(data);
 }
 
 
@@ -72,7 +72,7 @@ void JointPositionUpperLimit::condenseSlackAndDual(
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
   kkt_residual.lq().tail(dimc_).array() 
-      += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
+      += dt * (data.dual.array()*data.residual.array()-data.cmpl.array()) 
               / data.slack.array();
 }
 
