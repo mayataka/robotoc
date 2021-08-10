@@ -248,15 +248,15 @@ void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints,
                 const double barrier);
 
 ///
-/// @brief Sets the fraction to boundary rate.
+/// @brief Sets the parameter of the fraction-to-boundary-rule.
 /// @param[in, out] constraints Vector of the impulse constraints. 
-/// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+/// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
 /// than 1. Should be between 0.9 and 0.995.
 ///
 template <typename ConstraintComponentBaseTypePtr>
-void setFractionToBoundaryRate(
+void setFractionToBoundaryRule(
     std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const double fraction_to_boundary_rate);
+    const double fraction_to_boundary_rule);
 
 } // namespace constraintsimpl
 } // namespace idocp

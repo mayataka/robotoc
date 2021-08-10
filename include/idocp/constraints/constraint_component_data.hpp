@@ -92,6 +92,10 @@ public:
   Eigen::VectorXd ddual;
 
   ///
+  /// @brief Value of the log berrier function of the slack variable.
+  double log_barrier;
+
+  ///
   /// @brief std vector of Eigen::VectorXd used to store residual temporaly. 
   /// Only be allocated in ConstraintComponentBase::allocateExtraData().
   ///

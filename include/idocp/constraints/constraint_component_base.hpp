@@ -1,6 +1,8 @@
 #ifndef IDOCP_CONSTRAINT_COMPONENT_BASE_HPP_
 #define IDOCP_CONSTRAINT_COMPONENT_BASE_HPP_
 
+#include "Eigen/Core"
+
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -31,11 +33,12 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
-  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
-  /// than 1. Should be between 0.9 and 0.995.
+  /// @param[in] fraction_to_boundary_rule Parameter of the 
+  /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
+  /// Should be between 0.9 and 0.995.
   ///
   ConstraintComponentBase(const double barrier, 
-                          const double fraction_to_boundary_rate);
+                          const double fraction_to_boundary_rule);
 
   ///
   /// @brief Default constructor. 
@@ -228,12 +231,12 @@ public:
   ///
   /// @brief Returns the barrier parameter.
   ///
-  virtual double barrier() const final;
+  virtual double barrierParameter() const final;
 
   ///
-  /// @brief Returns the rate of the fraction-to-boundary-rule.
+  /// @brief Returns the parameter of the fraction-to-boundary-rule.
   ///
-  virtual double fractionToBoundaryRate() const final;
+  virtual double fractionToBoundaryRule() const final;
 
   ///
   /// @brief Sets the barrier parameter.
@@ -242,12 +245,12 @@ public:
   virtual void setBarrier(const double barrier) final;
 
   ///
-  /// @brief Sets the fraction to boundary rate.
-  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// @brief Sets the parameter of the fraction-to-boundary-rule.
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
   /// than 1. Should be between 0.9 and 0.995.
   ///
-  virtual void setFractionToBoundaryRate(
-      const double fraction_to_boundary_rate) final;
+  virtual void setFractionToBoundaryRule(
+      const double fraction_to_boundary_rule) final;
 
 protected:
   ///
@@ -308,8 +311,16 @@ protected:
   static double computeDualDirection(const double slack, const double dual,
                                      const double dslack, const double cmpl);
 
+  ///
+  /// @brief Computes the log barrier function of the slack variable.
+  /// @param[in] vec Slack variable. All the components must be positive.
+  /// @return log barrier function of the slack variable.
+  ///
+  template <typename VectorType>
+  double logBarrier(const Eigen::MatrixBase<VectorType>& slack) const;
+
 private:
-  double barrier_, fraction_to_boundary_rate_;
+  double barrier_, fraction_to_boundary_rule_;
 
 };
 

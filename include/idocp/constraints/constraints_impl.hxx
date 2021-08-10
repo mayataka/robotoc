@@ -32,8 +32,8 @@ inline void createConstraintsData(
     std::vector<ConstraintComponentData>& data) {
   data.clear();
   for (const auto& constraint : constraints) {
-    auto component_data = ConstraintComponentData(constraint->dimc(), 
-                                                  constraint->barrier());
+    auto component_data = ConstraintComponentData(
+        constraint->dimc(), constraint->barrierParameter());
     constraint->allocateExtraData(component_data);
     data.push_back(component_data);
   }
@@ -262,11 +262,11 @@ inline void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints,
 
 
 template <typename ConstraintComponentBaseTypePtr>
-inline void setFractionToBoundaryRate(
+inline void setFractionToBoundaryRule(
     std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const double fraction_to_boundary_rate) {
+    const double fraction_to_boundary_rule) {
   for (auto& constraint : constraints) {
-    constraint->setFractionToBoundaryRate(fraction_to_boundary_rate);
+    constraint->setFractionToBoundaryRule(fraction_to_boundary_rule);
   }
 }
 

@@ -5,8 +5,8 @@ namespace idocp {
 
 JointPositionUpperLimit::JointPositionUpperLimit(
     const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rate)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
+    const double fraction_to_boundary_rule)
+  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
     dimc_(robot.lowerJointPositionLimit().size()),
     qmax_(robot.upperJointPositionLimit()) {
 }
@@ -55,6 +55,7 @@ void JointPositionUpperLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = s.q.tail(dimc_) - qmax_ + data.slack;
   computeComplementarySlackness(data);
+  data.log_barrier = logBarrier(data.slack);
 }
 
 

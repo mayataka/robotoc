@@ -25,6 +25,7 @@ TEST_F(ConstraintComponentDataTest, constructor) {
   EXPECT_EQ(data.cmpl.size(), dimc);
   EXPECT_EQ(data.dslack.size(), dimc);
   EXPECT_EQ(data.ddual.size(), dimc);
+  EXPECT_DOUBLE_EQ(data.log_barrier, 0.0);
   EXPECT_EQ(data.dimc(), dimc);
 }
 

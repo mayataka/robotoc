@@ -18,6 +18,7 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
     cmpl(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
+    log_barrier(0),
     r(),
     J(),
     dimc_(dimc) {
@@ -45,6 +46,7 @@ inline ConstraintComponentData::ConstraintComponentData()
     cmpl(),
     dslack(),
     ddual(),
+    log_barrier(0),
     r(),
     J(),
     dimc_(0) {
@@ -111,6 +113,12 @@ inline bool ConstraintComponentData::isApprox(
     return false;
   }
   if (!ddual.isApprox(other.ddual)) {
+    return false;
+  }
+  if (!std::abs(log_barrier-other.log_barrier) 
+      < std::numeric_limits<double>::epsilon() 
+         * std::max(1.0, std::max(std::abs(log_barrier), 
+                                  std::abs(other.log_barrier)))) {
     return false;
   }
   return true;

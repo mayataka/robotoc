@@ -114,14 +114,14 @@ double ComputeDualDirection(const double slack, const double dual,
                             const double dslack, const double cmpl);
 
 ///
-/// @brief Computes the barrier function.
+/// @brief Computes the log barrier function.
 /// @param[in] barrier Barrier parameter. Must be positive. 
 /// @param[in] vec Argument of the log function. All the components must be 
 /// positive.
-/// @return Barrier function.
+/// @return log barrier function.
 ///
 template <typename VectorType>
-double CostBarrier(const double barrier, 
+double LogBarrier(const double barrier, 
                    const Eigen::MatrixBase<VectorType>& vec);
 
 } // namespace pdipm

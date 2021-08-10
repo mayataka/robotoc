@@ -5,8 +5,8 @@ namespace idocp {
 
 JointAccelerationUpperLimit::JointAccelerationUpperLimit(
     const Robot& robot, const Eigen::VectorXd& amax, const double barrier, 
-    const double fraction_to_boundary_rate)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
+    const double fraction_to_boundary_rule)
+  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
     dimc_(amax.size()),
     amax_(amax) {
 }
@@ -56,6 +56,7 @@ void JointAccelerationUpperLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = s.a.tail(dimc_) - amax_ + data.slack;
   computeComplementarySlackness(data);
+  data.log_barrier = logBarrier(data.slack);
 }
 
 

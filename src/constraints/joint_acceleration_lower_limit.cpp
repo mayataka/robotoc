@@ -5,8 +5,8 @@ namespace idocp {
 
 JointAccelerationLowerLimit::JointAccelerationLowerLimit(
     const Robot& robot, const Eigen::VectorXd& amin, const double barrier, 
-    const double fraction_to_boundary_rate)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
+    const double fraction_to_boundary_rule)
+  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
     dimc_(amin.size()),
     amin_(amin) {
 }
@@ -56,6 +56,7 @@ void JointAccelerationLowerLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = amin_ - s.a.tail(dimc_) + data.slack;
   computeComplementarySlackness(data);
+  data.log_barrier = logBarrier(data.slack);
 }
 
 

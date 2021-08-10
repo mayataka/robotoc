@@ -8,8 +8,8 @@ namespace idocp {
 
 ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu,
                                          const double barrier,
-                                         const double fraction_to_boundary_rate)
-  : ImpulseConstraintComponentBase(barrier, fraction_to_boundary_rate),
+                                         const double fraction_to_boundary_rule)
+  : ImpulseConstraintComponentBase(barrier, fraction_to_boundary_rule),
     dimv_(robot.dimv()),
     dimc_(5*robot.maxPointContacts()),
     max_point_contacts_(robot.maxPointContacts()),
@@ -108,9 +108,10 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
+      const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
       fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
-      frictionConeResidual(mu_, fWi, data.residual.template segment<5>(5*i));
+      frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
       }
@@ -124,11 +125,12 @@ void ImpulseFrictionCone::setSlack(Robot& robot, ConstraintComponentData& data,
                                    const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<robot.maxPointContacts(); ++i) {
+    const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
     fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
-    frictionConeResidual(mu_, fWi, data.residual.template segment<5>(5*i));
-    data.slack.template segment<5>(5*i)
-        = - data.residual.template segment<5>(5*i);
+    frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
+    data.slack.template segment<5>(idx)
+        = - data.residual.template segment<5>(idx);
   }
 }
 
@@ -138,16 +140,18 @@ void ImpulseFrictionCone::computePrimalAndDualResidual(
     const ImpulseSplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
+  data.log_barrier = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
       fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
-      frictionConeResidual(mu_, fWi, data.residual.template segment<5>(5*i));
+      frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
       computeComplementarySlackness(data, idx, 5);
+      data.log_barrier += logBarrier(data.slack.template segment<5>(idx));
     }
   }
 }
@@ -159,6 +163,7 @@ void ImpulseFrictionCone::computePrimalResidualDerivatives(
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
+      const int idx = 5*i;
       // Contact force expressed in the world frame.
       const Eigen::VectorXd& fWi = fW(data, i);
       // Jacobian of the contact force expressed in the world frame fWi 
@@ -175,13 +180,13 @@ void ImpulseFrictionCone::computePrimalResidualDerivatives(
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       dgi_dq.noalias() = cone_ * dfWi_dq.template topRows<3>();
       kkt_residual.lq().noalias()
-          += dgi_dq.transpose() * data.dual.template segment<5>(5*i);
+          += dgi_dq.transpose() * data.dual.template segment<5>(idx);
       // Jacobian of the frition cone constraint with respect to the contact
       // force expressed in the local frame.
       Eigen::MatrixXd& dgi_df = dg_df(data, i);
       dgi_df.noalias() = cone_ * robot.frameRotation(contact_frame_[i]);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dgi_df.transpose() * data.dual.template segment<5>(5*i);
+          += dgi_df.transpose() * data.dual.template segment<5>(idx);
       dimf_stack += 3;
     }
   }

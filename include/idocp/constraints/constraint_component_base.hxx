@@ -9,13 +9,13 @@ namespace idocp {
 
 inline double ConstraintComponentBase::maxSlackStepSize(
     const ConstraintComponentData& data) const {
-  return pdipm::FractionToBoundarySlack(fraction_to_boundary_rate_, data);
+  return pdipm::FractionToBoundarySlack(fraction_to_boundary_rule_, data);
 }
 
 
 inline double ConstraintComponentBase::maxDualStepSize(
     const ConstraintComponentData& data) const {
-  return pdipm::FractionToBoundaryDual(fraction_to_boundary_rate_, data);
+  return pdipm::FractionToBoundaryDual(fraction_to_boundary_rule_, data);
 }
 
 
@@ -35,23 +35,23 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
 
 inline double ConstraintComponentBase::costSlackBarrier(
     const ConstraintComponentData& data) const {
-  return pdipm::CostBarrier(barrier_, data.slack);
+  return pdipm::LogBarrier(barrier_, data.slack);
 }
 
 
 inline double ConstraintComponentBase::costSlackBarrier(
     const ConstraintComponentData& data, const double step_size) const {
-  return pdipm::CostBarrier(barrier_, data.slack+step_size*data.dslack);
+  return pdipm::LogBarrier(barrier_, data.slack+step_size*data.dslack);
 }
 
 
-inline double ConstraintComponentBase::barrier() const {
+inline double ConstraintComponentBase::barrierParameter() const {
   return barrier_;
 }
 
 
-inline double ConstraintComponentBase::fractionToBoundaryRate() const {
-  return fraction_to_boundary_rate_;
+inline double ConstraintComponentBase::fractionToBoundaryRule() const {
+  return fraction_to_boundary_rule_;
 }
 
 
@@ -61,10 +61,10 @@ inline void ConstraintComponentBase::setBarrier(const double barrier) {
 }
 
 
-inline void ConstraintComponentBase::setFractionToBoundaryRate(
-    const double fraction_to_boundary_rate) {
-  assert(fraction_to_boundary_rate > 0);
-  fraction_to_boundary_rate_ = fraction_to_boundary_rate;
+inline void ConstraintComponentBase::setFractionToBoundaryRule(
+    const double fraction_to_boundary_rule) {
+  assert(fraction_to_boundary_rule > 0);
+  fraction_to_boundary_rule_ = fraction_to_boundary_rule;
 }
 
 
@@ -108,6 +108,13 @@ inline double ConstraintComponentBase::computeDualDirection(
     const double slack, const double dual, const double dslack, 
     const double cmpl) {
   return pdipm::ComputeDualDirection(slack, dual, dslack, cmpl);
+}
+
+
+template <typename VectorType>
+inline double ConstraintComponentBase::logBarrier(
+    const Eigen::MatrixBase<VectorType>& slack) const {
+  return pdipm::LogBarrier(barrier_, slack);
 }
 
 } // namespace idocp

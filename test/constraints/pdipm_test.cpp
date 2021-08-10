@@ -96,9 +96,9 @@ TEST_F(PDIPMTest, ComputeDualDirection) {
 }
 
 
-TEST_F(PDIPMTest, CostBarrier) {
+TEST_F(PDIPMTest, LogBarrier) {
   const double cost_ref = - barrier * (data.slack.array().log()).sum();
-  const double cost = pdipm::CostBarrier(barrier, data.slack);
+  const double cost = pdipm::LogBarrier(barrier, data.slack);
   EXPECT_DOUBLE_EQ(cost_ref, cost);
 }
 

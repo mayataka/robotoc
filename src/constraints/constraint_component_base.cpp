@@ -7,21 +7,21 @@
 namespace idocp {
 
 ConstraintComponentBase::ConstraintComponentBase(
-    const double barrier, const double fraction_to_boundary_rate) 
+    const double barrier, const double fraction_to_boundary_rule) 
   : barrier_(barrier),
-    fraction_to_boundary_rate_(fraction_to_boundary_rate) {
+    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
   try {
     if (barrier <= 0) {
       throw std::out_of_range(
           "Invalid argment: barrirer must be positive!");
     }
-    if (fraction_to_boundary_rate <= 0) {
+    if (fraction_to_boundary_rule <= 0) {
       throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rate must be positive!");
+          "Invalid argment: fraction_to_boundary_rule must be positive!");
     }
-    if (fraction_to_boundary_rate >= 1) {
+    if (fraction_to_boundary_rule >= 1) {
       throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rate must be less than 1!");
+          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
     }
   }
   catch(const std::exception& e) {
@@ -33,7 +33,7 @@ ConstraintComponentBase::ConstraintComponentBase(
 
 ConstraintComponentBase::ConstraintComponentBase() 
   : barrier_(0),
-    fraction_to_boundary_rate_(0) {
+    fraction_to_boundary_rule_(0) {
 }
 
 } // namespace idocp
