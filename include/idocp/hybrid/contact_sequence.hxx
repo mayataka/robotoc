@@ -179,23 +179,6 @@ inline void ContactSequence::updateImpulseTime(const int impulse_index,
           + " must be less than numImpulseEvents()=" 
           + std::to_string(numImpulseEvents()) + "!");
     }
-    const int event_index = event_index_impulse_[impulse_index];
-    if (event_index > 0) {
-      if (event_time_[event_index-1] >= impulse_time) {
-        throw std::runtime_error(
-            "impulse_time=" + std::to_string(impulse_time) 
-            + " must be larger than event_time_[event_index-1]=" 
-            + std::to_string(event_time_[event_index-1]) + "!");
-      }
-    }
-    else if (event_index+1 < numDiscreteEvents()) {
-      if (event_time_[event_index+1] <= impulse_time) {
-        throw std::runtime_error(
-            "impulse_time=" + std::to_string(impulse_time) 
-            + " must be larger than event_time_[event_index+1]=" 
-            + std::to_string(event_time_[event_index+1]) + "!");
-      }
-    }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
@@ -222,23 +205,6 @@ inline void ContactSequence::updateLiftTime(const int lift_index,
           + " must be less than numLiftEvents()=" 
           + std::to_string(numLiftEvents()) + "!");
     }
-    const int event_index = event_index_lift_[lift_index];
-    if (event_index > 0) {
-      if (event_time_[event_index-1] >= lift_time) {
-        throw std::runtime_error(
-            "lift_time=" + std::to_string(lift_time) 
-            + " must be larger than event_time_[event_index-1]=" 
-            + std::to_string(event_time_[event_index-1]) + "!");
-      }
-    }
-    else if (event_index+1 < numDiscreteEvents()) {
-      if (event_time_[event_index+1] <= lift_time) {
-        throw std::runtime_error(
-            "lift_time=" + std::to_string(lift_time) 
-            + " must be larger than event_time_[event_index+1]=" 
-            + std::to_string(event_time_[event_index+1]) + "!");
-      }
-    }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
@@ -246,6 +212,24 @@ inline void ContactSequence::updateLiftTime(const int lift_index,
   }
   lift_time_[lift_index] = lift_time;
   event_time_[event_index_lift_[lift_index]] = lift_time;
+}
+
+
+inline bool ContactSequence::isEventTimeConsistent() const {
+  bool is_consistent = true;
+  if (numDiscreteEvents() > 0) {
+    for (int event_index=1; event_index<numDiscreteEvents(); ++event_index) {
+      if (event_time_[event_index] <= event_time_[event_index-1]) {
+            "event_time[" + std::to_string(event_index) + "]=" 
+            + std::to_string(event_time_[event_index]) 
+            + " must be larger than event_time_[" 
+            + std::to_string(event_index-1) + "]=" 
+            + std::to_string(event_time_[event_index-1]) + "!";
+        is_consistent = false;
+      }
+    }
+  }
+  return is_consistent;
 }
 
 
@@ -318,6 +302,15 @@ inline double ContactSequence::liftTime(const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < numLiftEvents());
   return lift_time_[lift_index];
+}
+
+
+inline DiscreteEventType ContactSequence::eventType(
+    const int event_index) const {
+  assert(event_index >= 0);
+  assert(event_index < numImpulseEvents()+numLiftEvents());
+  if (is_impulse_event_[event_index]) return DiscreteEventType::Impulse;
+  else return DiscreteEventType::Lift;
 }
 
 

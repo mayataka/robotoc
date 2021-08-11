@@ -145,6 +145,7 @@ void ContactSequenceTest::test_push_back(const Robot& robot) const {
     int num_impulse = 0;
     int num_lift = 0;
     for (int i=0; i<j+1; ++i) {
+      EXPECT_EQ(contact_sequence.eventType(num_impulse+num_lift), discrete_events[num_impulse+num_lift].eventType());
       if (discrete_events[i].existImpulse()) {
         EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(num_impulse), event_times[num_impulse+num_lift]);
         EXPECT_TRUE(contact_sequence.impulseStatus(num_impulse) == discrete_events[num_impulse+num_lift].impulseStatus());

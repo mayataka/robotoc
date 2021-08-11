@@ -107,6 +107,12 @@ public:
   void updateLiftTime(const int lift_index, const double lift_time);
 
   ///
+  /// @brief Checks wheather the event times are consistent. 
+  /// @return true if there is no problem. false if not.
+  /// 
+  bool isEventTimeConsistent() const;
+
+  ///
   /// @brief Sets the contact points to contact statsus with specified contact  
   /// phase. Also set the contact points of the discrete event just before the  
   /// contact phase.
@@ -166,6 +172,14 @@ public:
   /// @return Lift event time.
   ///
   double liftTime(const int lift_index) const;
+
+  ///
+  /// @brief Returns the event type of the specified discrete event. 
+  /// @param[in] event_index Index of the discrete event. Must be less than
+  /// ContactSequence::numDiscreteEvents().
+  /// @return The event type of the specified discrete event.
+  ///
+  DiscreteEventType eventType(const int event_index) const;
 
 private:
   int max_num_events_;

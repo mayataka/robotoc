@@ -187,6 +187,21 @@ void HybridTimeDiscretizationTest::testDiscretizeOCP(const Robot& robot) const {
       EXPECT_DOUBLE_EQ(discretization.dt(i), dt);
     }
   }
+
+  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  int impulse_index = 0;
+  int lift_index = 0;
+  for (int event_index=0; event_index<num_events; ++event_index) {
+    EXPECT_FALSE(discretization.eventType(event_index)==DiscreteEventType::None);
+    if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      EXPECT_EQ(discretization.eventIndexImpulse(impulse_index), event_index);
+      ++impulse_index;
+    }
+    else {
+      EXPECT_EQ(discretization.eventIndexLift(lift_index), event_index);
+      ++lift_index;
+    }
+  }
 }
 
 

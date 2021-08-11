@@ -13,6 +13,7 @@ inline DiscreteEvent::DiscreteEvent(const int max_point_contacts)
     post_contact_status_(max_point_contacts),
     impulse_status_(max_point_contacts),
     max_point_contacts_(max_point_contacts),
+    event_type_(DiscreteEventType::None),
     exist_impulse_(false), 
     exist_lift_(false) {
 }
@@ -24,6 +25,7 @@ inline DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status,
     post_contact_status_(pre_contact_status.maxPointContacts()),
     impulse_status_(pre_contact_status.maxPointContacts()),
     max_point_contacts_(pre_contact_status.maxPointContacts()),
+    event_type_(DiscreteEventType::None),
     exist_impulse_(false), 
     exist_lift_(false) {
   setDiscreteEvent(pre_contact_status, post_contact_status);
@@ -35,6 +37,7 @@ inline DiscreteEvent::DiscreteEvent()
     post_contact_status_(),
     impulse_status_(),
     max_point_contacts_(0),
+    event_type_(DiscreteEventType::None),
     exist_impulse_(false), 
     exist_lift_(false) {
 }
@@ -101,6 +104,10 @@ inline void DiscreteEvent::setDiscreteEvent(
   setContactPoints(post_contact_status.contactPoints());
   pre_contact_status_ = pre_contact_status;
   post_contact_status_ = post_contact_status;
+
+  if (exist_impulse_) { event_type_ = DiscreteEventType::Impulse; }
+  else if (exist_lift_) { event_type_ = DiscreteEventType::Lift; }
+  else { event_type_ = DiscreteEventType::None; }
 }
 
 
@@ -121,6 +128,11 @@ inline void DiscreteEvent::setContactPoints(
 
 inline int DiscreteEvent::maxPointContacts() const {
   return max_point_contacts_;
+}
+
+
+inline DiscreteEventType DiscreteEvent::eventType() const {
+  return event_type_;
 }
 
 } // namespace idocp

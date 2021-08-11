@@ -126,21 +126,9 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          const double dt_next,
                                          SplitSwitchingConstraintJacobian& switch_jacobian,
                                          SplitSwitchingConstraintResidual& switch_residual) {
-  assert(dt > 0);
   assert(dt_next > 0);
-  robot.updateKinematics(s.q, s.v, s.a);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
-  kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
-                                          kkt_residual);
-  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
-                                               kkt_residual);
-  stage_cost_ += dt * constraints_data_.logBarrier();
-  state_equation_.linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
-                                        kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
-                                             kkt_residual);
+  computeKKTResidual(robot, contact_status, t, dt, q_prev, s, s_next,
+                     kkt_matrix, kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
                                                     dt_next, s, kkt_residual, 
                                                     switch_jacobian, 

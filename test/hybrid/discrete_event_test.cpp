@@ -35,6 +35,7 @@ TEST_F(DiscreteEventTest, constructor1) {
   ContactStatus contact_status(max_point_contacts);
   EXPECT_EQ(contact_status.dimf(), 0);
   EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::None);
 }
 
 
@@ -57,6 +58,7 @@ TEST_F(DiscreteEventTest, constructor2) {
   for (int i=0; i<max_point_contacts; ++i) {
     EXPECT_TRUE(contact_points[i].isApprox(discrete_event.impulseStatus().contactPoints()[i]));
   }
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
 }
 
 
@@ -72,6 +74,7 @@ TEST_F(DiscreteEventTest, impulse) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
 }
 
 
@@ -87,6 +90,7 @@ TEST_F(DiscreteEventTest, lift) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Lift);
 }
 
 
@@ -102,6 +106,7 @@ TEST_F(DiscreteEventTest, impulseAndLift) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
 }
 
 } // namespace idocp

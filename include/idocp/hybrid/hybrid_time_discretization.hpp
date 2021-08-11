@@ -225,6 +225,26 @@ public:
   double dt_lift(const int lift_index) const;
 
   ///
+  /// @brief Returns the event index of the specified impulse event. 
+  /// @param[in] impulse_index Index of the impulse of interest. 
+  /// @return The event index of the specified impulse event.
+  ///
+  int eventIndexImpulse(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the event index of the specified lift event. 
+  /// @param[in] lift_index Index of the lift of interest. 
+  /// @return The event index of the specified lift event.
+  ///
+  int eventIndexLift(const int lift_index) const;
+
+  ///
+  /// @brief Returns the event type of this discrete event.
+  /// @return Event type of this discrete event. 
+  ///
+  DiscreteEventType eventType(const int event_index) const;
+
+  ///
   /// @brief Checks wheather the optimal control problem is well-defined. 
   /// @return true if the optimal control problem is well-defined. false if not.
   ///
@@ -245,6 +265,7 @@ private:
                    time_stage_before_lift_;
   std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_;
   std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
+  std::vector<DiscreteEventType> event_types_;
 
   static constexpr double min_dt_ 
       = std::sqrt(std::numeric_limits<double>::epsilon());

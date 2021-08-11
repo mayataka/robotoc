@@ -30,7 +30,8 @@ inline HybridTimeDiscretization::HybridTimeDiscretization(const double T,
     t_lift_(max_events+1, 0),
     dt_(N+1, static_cast<double>(T/N)),
     dt_aux_(max_events+1, 0),
-    dt_lift_(max_events+1, 0) {
+    dt_lift_(max_events+1, 0),
+    event_types_(2*max_events+1, DiscreteEventType::None) {
 }
 
 
@@ -55,7 +56,8 @@ inline HybridTimeDiscretization::HybridTimeDiscretization()
     t_lift_(),
     dt_(),
     dt_aux_(),
-    dt_lift_() {
+    dt_lift_(),
+    event_types_() {
 }
 
 
@@ -236,6 +238,29 @@ inline double HybridTimeDiscretization::dt_lift(const int lift_index) const {
 }
 
 
+inline int HybridTimeDiscretization::eventIndexImpulse(
+    const int impulse_index) const {
+  assert(impulse_index >= 0);
+  assert(impulse_index < N_impulse());
+  return (contactPhaseAfterImpulse(impulse_index)-1);
+}
+
+
+inline int HybridTimeDiscretization::eventIndexLift(
+    const int lift_index) const {
+  assert(lift_index >= 0);
+  assert(lift_index < N_lift());
+  return (contactPhaseAfterLift(lift_index)-1);
+}
+
+
+inline DiscreteEventType HybridTimeDiscretization::eventType(
+    const int event_index) const {
+  assert(event_index < N_impulse()+N_lift());
+  return event_types_[event_index];
+}
+
+
 inline bool HybridTimeDiscretization::isWellDefined() const {
   for (int i=0; i<N(); ++i) {
     if (isTimeStageBeforeImpulse(i) && isTimeStageBeforeLift(i)) {
@@ -266,6 +291,9 @@ inline void HybridTimeDiscretization::countDiscreteEvents(
     time_stage_before_lift_[i] = std::floor((t_lift_[i]-t)/dt_ideal_);
   }
   N_ = N_ideal_;
+  for (int i=0; i<N_impulse_+N_lift_; ++i) {
+    event_types_[i] = contact_sequence.eventType(i);
+  } 
   assert(isWellDefined());
 }
 
