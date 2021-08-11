@@ -197,49 +197,6 @@ inline double SplitUnconstrOCP::constraintViolation(
   return vio;
 }
 
-
-inline double SplitUnconstrOCP::stageCost(Robot& robot, const double t,  
-                                          const double dt, 
-                                          const SplitSolution& s, 
-                                          const double primal_step_size) {
-  assert(dt > 0);
-  assert(primal_step_size >= 0);
-  assert(primal_step_size <= 1);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
-  double cost = 0;
-  cost += cost_->computeStageCost(robot, cost_data_, t, dt, s);
-  if (primal_step_size > 0) {
-    cost += dt * constraints_->costSlackBarrier(constraints_data_, 
-                                                primal_step_size);
-  }
-  else {
-    cost += dt * constraints_->costSlackBarrier(constraints_data_);
-  }
-  return cost;
-}
-
-
-inline double SplitUnconstrOCP::constraintViolation(
-    Robot& robot, const double t, const double dt, const SplitSolution& s, 
-    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
-                                                       kkt_residual);
-  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
-  double violation = 0;
-  violation += kkt_residual.constraintViolation();
-  violation += dt * unconstr_dynamics_.constraintViolation();
-  violation += dt * constraints_data_.constraintViolation();
-  return violation;
-}
-
 } // namespace idocp
 
 #endif // IDOCP_SPLIT_UNCONSTR_OCP_HXX_ 

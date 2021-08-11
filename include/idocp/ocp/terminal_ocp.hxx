@@ -149,15 +149,6 @@ inline double TerminalOCP::terminalCost() const {
   return terminal_cost_;
 }
 
-
-inline double TerminalOCP::terminalCost(Robot& robot, const double t, 
-                                        const SplitSolution& s) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
-  return cost_->computeTerminalCost(robot, cost_data_, t, s);
-}
-
 } // namespace idocp
 
 #endif // IDOCP_TERMINAL_OCP_HXX_ 

@@ -184,15 +184,6 @@ public:
   /// 
   double terminalCost() const;
 
-  ///
-  /// @brief Computes the terminal cost of the terminal stage for line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of the terminal stage. 
-  /// @param[in] s Split solution of the terminal stage.
-  /// @return Terminal cost of the terminal stage.
-  /// 
-  double terminalCost(Robot& robot, const double t, const SplitSolution& s);
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

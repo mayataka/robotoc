@@ -207,52 +207,6 @@ inline double TerminalUnconstrParNMPC::constraintViolation(
 }
 
 
-inline double TerminalUnconstrParNMPC::stageCost(Robot& robot, const double t,  
-                                                 const double dt, 
-                                                 const SplitSolution& s, 
-                                                 const double primal_step_size) {
-  assert(dt > 0);
-  assert(primal_step_size >= 0);
-  assert(primal_step_size <= 1);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
-  double cost = 0;
-  cost += cost_->computeStageCost(robot, cost_data_, t, dt, s);
-  cost += cost_->computeTerminalCost(robot, cost_data_, t, s);
-  if (primal_step_size > 0) {
-    cost += dt * constraints_->costSlackBarrier(constraints_data_, 
-                                                primal_step_size);
-  }
-  else {
-    cost += dt * constraints_->costSlackBarrier(constraints_data_);
-  }
-  return cost;
-}
-
-
-inline double TerminalUnconstrParNMPC::constraintViolation(
-    Robot& robot, const double t, const double dt, 
-    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
-                                                        kkt_residual);
-  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
-  double violation = 0;
-  violation += kkt_residual.constraintViolation();
-  violation += dt * unconstr_dynamics_.constraintViolation();
-  violation += dt * constraints_data_.constraintViolation();
-  return violation;
-}
-
-
 inline void TerminalUnconstrParNMPC::computeTerminalCostHessian(
     Robot& robot, const double t, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {

@@ -211,35 +211,6 @@ public:
   double constraintViolation(const SplitKKTResidual& kkt_residual, 
                              const double dt) const;
 
-  ///
-  /// @brief Computes the stage cost of this time stage for line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] primal_step_size Primal step size. Default is 0.
-  /// @return Stage cost of this time stage.
-  /// 
-  double stageCost(Robot& robot, const double t, const double dt, 
-                   const SplitSolution& s, const double primal_step_size=0);
-
-  ///
-  /// @brief Computes the stage cost of this time stage for line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] v_prev Generalized velocity at the previous time stage.
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
-  /// @return Constraint violation of this time stage.
-  ///
-  double constraintViolation(Robot& robot,  const double t, const double dt, 
-                             const Eigen::VectorXd& q_prev, 
-                             const Eigen::VectorXd& v_prev, 
-                             const SplitSolution& s, 
-                             SplitKKTResidual& kkt_residual);
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

@@ -211,36 +211,6 @@ public:
   ///
   double constraintViolation(const ImpulseSplitKKTResidual& kkt_residual) const;
 
-  ///
-  /// @brief Computes and returns the stage cost of this impulse stage for 
-  /// the line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this impulse stage. 
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in] primal_step_size Primal step size. Default is 0.
-  /// @return Stage cost of this impulse stage.
-  /// 
-  double stageCost(Robot& robot, const double t, const ImpulseSplitSolution& s, 
-                   const double primal_step_size=0);
-
-  ///
-  /// @brief Computes the constraint violation of this impulse stage for line 
-  /// search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status oif this impulse stage. 
-  /// @param[in] t Time of this impulse stage. 
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in] q_next Configuration at the next time stage.
-  /// @param[in] v_next Generaized velocity at the next time stage.
-  /// @param[in, out] kkt_residual KKT residual of this impulse stage.
-  /// @return Constraint violation of this impulse stage.
-  ///
-  double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
-                             const double t, const ImpulseSplitSolution& s, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next,
-                             ImpulseSplitKKTResidual& kkt_residual);
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

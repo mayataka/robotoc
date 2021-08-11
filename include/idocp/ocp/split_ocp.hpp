@@ -331,65 +331,6 @@ public:
       const SplitKKTResidual& kkt_residual, const double dt,
       const SplitSwitchingConstraintResidual& switch_residual) const;
 
-  ///
-  /// @brief Computes and returns the stage cost of this time stage for the line 
-  /// search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] primal_step_size Primal step size. Default is 0.
-  /// @return Stage cost of this time stage.
-  /// 
-  double stageCost(Robot& robot, const double t, const double dt, 
-                   const SplitSolution& s, const double primal_step_size=0);
-
-  ///
-  /// @brief Computes the constraint violation of this time stage for line 
-  /// search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] q_next Configuration at the next time stage.
-  /// @param[in] v_next Generaized velocity at the next time stage.
-  /// @param[in, out] kkt_residual KKT residual of this time stage.
-  /// @return Constraint violation of this time stage.
-  ///
-  double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
-                             const double t, const double dt, 
-                             const SplitSolution& s, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next,
-                             SplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Computes the constraint violation of this time stage including
-  /// the switching constraint for line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] q_next Configuration at the next time stage.
-  /// @param[in] v_next Generaized velocity at the next time stage.
-  /// @param[in, out] kkt_residual KKT residual of this time stage.
-  /// @param[in] impulse_status Impulse status at the switching instant. 
-  /// @param[in] dt_next Time step of the next time stage. 
-  /// @param[in, out] switch_residual Residual of the switching constraint. 
-  /// @return Constraint violation of this time stage.
-  ///
-  double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
-                             const double t, const double dt, 
-                             const SplitSolution& s, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next,
-                             SplitKKTResidual& kkt_residual,
-                             const ImpulseStatus& impulse_status, 
-                             const double dt_next,
-                             SplitSwitchingConstraintResidual& switch_residual);
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;
