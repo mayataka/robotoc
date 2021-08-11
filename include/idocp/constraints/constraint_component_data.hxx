@@ -57,12 +57,12 @@ inline ConstraintComponentData::~ConstraintComponentData() {
 }
 
 
-inline double ConstraintComponentData::squaredNormKKTResidual() const {
+inline double ConstraintComponentData::KKTError() const {
   return (residual.squaredNorm() + cmpl.squaredNorm());
 }
 
 
-inline double ConstraintComponentData::l1NormConstraintViolation() const {
+inline double ConstraintComponentData::constraintViolation() const {
   return residual.template lpNorm<1>();
 }
 

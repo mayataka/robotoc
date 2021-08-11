@@ -14,9 +14,10 @@ inline void SetSlackAndDualPositive(const double barrier,
                                     ConstraintComponentData& data) {
   assert(barrier > 0);
   assert(data.checkDimensionalConsistency());
+  const double sqrt_barrier = std::sqrt(barrier);
   for (int i=0; i<data.slack.size(); ++i) {
-    while (data.slack.coeff(i) < barrier) {
-      data.slack.coeffRef(i) += barrier;
+    if (data.slack.coeff(i) < sqrt_barrier) {
+      data.slack.coeffRef(i) = sqrt_barrier;
     }
   }
   data.dual.array() = barrier / data.slack.array();

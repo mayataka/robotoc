@@ -66,6 +66,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                           kkt_residual);
   constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
                                                kkt_residual);
+  stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
@@ -95,6 +96,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                           kkt_residual);
   constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
                                                kkt_residual);
+  stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
@@ -126,6 +128,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                            kkt_residual, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
+  stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
                                                      kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
@@ -159,6 +162,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                            kkt_residual, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
+  stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
                                                      kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
@@ -228,14 +232,39 @@ inline void SplitOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline double SplitOCP::squaredNormKKTResidual(
-    const SplitKKTResidual& kkt_residual, const double dt) const {
+inline double SplitOCP::KKTError(const SplitKKTResidual& kkt_residual, 
+                                 const double dt) const {
   assert(dt > 0);
-  double nrm = 0;
-  nrm += kkt_residual.squaredNormKKTResidual();
-  nrm += contact_dynamics_.squaredNormKKTResidual(dt);
-  nrm += (dt*dt) * constraints_data_.squaredNormKKTResidual();
-  return nrm;
+  double err = 0;
+  err += kkt_residual.KKTError();
+  err += (dt*dt) * contact_dynamics_.KKTError();
+  err += (dt*dt) * constraints_data_.KKTError();
+  return err;
+}
+
+
+inline double SplitOCP::stageCost() const {
+  return stage_cost_;
+} 
+
+
+inline double SplitOCP::constraintViolation(const SplitKKTResidual& kkt_residual, 
+                                            const double dt) const {
+  double vio = 0;
+  vio += kkt_residual.constraintViolation();
+  vio += dt * contact_dynamics_.constraintViolation();
+  vio += dt * constraints_data_.constraintViolation();
+  return vio;
+}
+
+
+inline double SplitOCP::constraintViolation(
+    const SplitKKTResidual& kkt_residual, const double dt,
+    const SplitSwitchingConstraintResidual& switch_residual) const {
+  double vio = 0;
+  vio += constraintViolation(kkt_residual, dt);
+  vio += switch_residual.constraintViolation();
+  return vio;
 }
 
 
@@ -274,9 +303,9 @@ inline double SplitOCP::constraintViolation(Robot& robot,
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   double violation = 0;
-  violation += kkt_residual.l1NormConstraintViolation();
-  violation += dt * contact_dynamics_.l1NormConstraintViolation();
-  violation += dt * constraints_data_.l1NormConstraintViolation();
+  violation += kkt_residual.constraintViolation();
+  violation += dt * contact_dynamics_.constraintViolation();
+  violation += dt * constraints_data_.constraintViolation();
   return violation;
 }
 
@@ -299,10 +328,10 @@ inline double SplitOCP::constraintViolation(
                                                           dt, dt_next, s, 
                                                           switch_residual);
   double violation = 0;
-  violation += kkt_residual.l1NormConstraintViolation();
-  violation += dt * contact_dynamics_.l1NormConstraintViolation();
-  violation += dt * constraints_data_.l1NormConstraintViolation();
-  violation += switch_residual.l1NormConstraintViolation();
+  violation += kkt_residual.constraintViolation();
+  violation += dt * contact_dynamics_.constraintViolation();
+  violation += dt * constraints_data_.constraintViolation();
+  violation += switch_residual.constraintViolation();
   return violation;
 }
 

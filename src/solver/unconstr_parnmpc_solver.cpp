@@ -213,12 +213,10 @@ double UnconstrParNMPCSolver::KKTError() {
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i < N_-1) {
-      kkt_error_.coeffRef(i) 
-          = parnmpc_[i].squaredNormKKTResidual(kkt_residual_[0], dt_);
+      kkt_error_.coeffRef(i) = parnmpc_[i].KKTError(kkt_residual_[0], dt_);
     }
     else {
-      kkt_error_.coeffRef(i) 
-          = parnmpc_.terminal.squaredNormKKTResidual(kkt_residual_[i], dt_);
+      kkt_error_.coeffRef(i) = parnmpc_.terminal.KKTError(kkt_residual_[i], dt_);
     }
   }
   return std::sqrt(kkt_error_.sum());

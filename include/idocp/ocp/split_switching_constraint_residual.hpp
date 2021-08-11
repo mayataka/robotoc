@@ -95,14 +95,14 @@ public:
   /// the primal and dual residual of the switching constraint. 
   /// @return Squared norm of the KKT residual in the switching constraint.
   ///
-  double squaredNormKKTResidual() const;
+  double KKTError() const;
 
   ///
   /// @brief Returns l1-norm of the constraint violation, that is, the primal
   /// residual in the switchign constraint. 
   /// @return l1-norm of the constraint violation.
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
   ///
   /// @brief Sets the split KKT residual zero.

@@ -163,7 +163,14 @@ public:
   /// @param[in] kkt_residual KKT residual of the terminal stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual) const;
+  double KKTError(const SplitKKTResidual& kkt_residual) const;
+
+  ///
+  /// @brief Returns the terminal cost for the line search.
+  /// Before calling this function, TerminalOCP::computeKKTResidual(), 
+  /// TerminalOCP::computeKKTSystem() must be called.
+  /// 
+  double terminalCost() const;
 
   ///
   /// @brief Computes the terminal cost of the terminal stage for line search.

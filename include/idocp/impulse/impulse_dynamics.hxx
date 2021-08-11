@@ -110,12 +110,12 @@ inline void ImpulseDynamics::expandDual(const SplitDirectionType& d_next,
 }
 
 
-inline double ImpulseDynamics::squaredNormKKTResidual() const {
+inline double ImpulseDynamics::KKTError() const {
   return data_.ImDC().squaredNorm();
 }
 
 
-inline double ImpulseDynamics::l1NormConstraintViolation() const {
+inline double ImpulseDynamics::constraintViolation() const {
   return data_.ImDC().lpNorm<1>();
 }
 

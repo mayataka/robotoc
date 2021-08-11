@@ -313,7 +313,7 @@ protected:
 
   ///
   /// @brief Computes the log barrier function of the slack variable.
-  /// @param[in] vec Slack variable. All the components must be positive.
+  /// @param[in] slack Slack variable. All the components must be positive.
   /// @return log barrier function of the slack variable.
   ///
   template <typename VectorType>

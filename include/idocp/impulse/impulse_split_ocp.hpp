@@ -173,11 +173,29 @@ public:
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(
-      const ImpulseSplitKKTResidual& kkt_residual) const;
+  double KKTError(const ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the stage cost of this impulse stage for line search.
+  /// @brief Returns the stage cost of this impulse stage for the line search.
+  /// Before calling this function, ImpulseSplitOCP::computeKKTResidual(), 
+  /// ImpulseSplitOCP::computeKKTSystem() must be called.
+  /// @return The stage cost of this impulse stage.
+  /// 
+  double stageCost() const;
+
+  ///
+  /// @brief Returns the constraint violation of this impulse stage for the 
+  /// line search.
+  /// Before calling this function, ImpulseSplitOCP::computeKKTResidual()
+  /// or ImpulseSplitOCP::computeKKTSystem() must be called.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
+  /// @return The constraint violation of this impulse stage.
+  ///
+  double constraintViolation(const ImpulseSplitKKTResidual& kkt_residual) const;
+
+  ///
+  /// @brief Computes and returns the stage cost of this impulse stage for 
+  /// the line search.
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this impulse stage. 
   /// @param[in] s Split solution of this impulse stage.
@@ -212,7 +230,7 @@ private:
   ConstraintsData constraints_data_;
   ImpulseStateEquation state_equation_;
   ImpulseDynamics impulse_dynamics_;
-  double impulse_cost_;
+  double stage_cost_;
 
 };
 

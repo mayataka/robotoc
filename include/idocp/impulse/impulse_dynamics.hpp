@@ -114,14 +114,14 @@ public:
   /// @return Squared norm of the KKT residual in the impulse dynamics 
   /// constraint.
   ///
-  double squaredNormKKTResidual() const;
+  double KKTError() const;
 
   ///
   /// @brief Returns l1-norm of the constraint violation, that is, the primal
   /// residual in the impulse dynamics constraint. 
   /// @return l1-norm of the constraint violation.
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
 private:
   ImpulseDynamicsData data_;

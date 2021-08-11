@@ -87,6 +87,25 @@ public:
                        const SplitSolution& s);
 
   ///
+  /// @brief Computes the stage cost and constraint violation.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  ///
+  template <typename SplitSolutionType>
+  void evaluateOCP(Robot& robot, const ContactStatus& contact_status,
+                   const double t, const double dt, 
+                   const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                   const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
+                   SplitKKTResidual& kkt_residual);
+
+  ///
   /// @brief Computes the KKT residual of this time stage.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
@@ -256,11 +275,43 @@ public:
   /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual, 
-                                const double dt) const;
+  double KKTError(const SplitKKTResidual& kkt_residual, const double dt) const;
 
   ///
-  /// @brief Computes the stage cost of this time stage for line search.
+  /// @brief Returns the stage cost of this time stage for the line search.
+  /// Before calling this function, SplitOCP::computeKKTResidual(), 
+  /// SplitOCP::computeKKTSystem() must be called.
+  /// @return Stage cost of this time stage.
+  /// 
+  double stageCost() const;
+
+  ///
+  /// @brief Returns the constraint violation of this time stage for the 
+  /// line search. Before calling this function, SplitOCP::computeKKTResidual()
+  /// or SplitOCP::computeKKTSystem() must be called.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
+  /// @param[in] dt Time step of this time stage. 
+  /// @return The constraint violation of this time stage.
+  ///
+  double constraintViolation(const SplitKKTResidual& kkt_residual, 
+                             const double dt) const;
+
+  ///
+  /// @brief Returns the constraint violation of this time stage for the 
+  /// line search. Before calling this function, SplitOCP::computeKKTResidual()
+  /// or SplitOCP::computeKKTSystem() must be called.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] switch_residual Residual of the switching constraint. 
+  /// @return The constraint violation of this time stage.
+  ///
+  double constraintViolation(
+      const SplitKKTResidual& kkt_residual, const double dt,
+      const SplitSwitchingConstraintResidual& switch_residual) const;
+
+  ///
+  /// @brief Computes and returns the stage cost of this time stage for the line 
+  /// search.
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 

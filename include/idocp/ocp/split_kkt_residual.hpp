@@ -152,14 +152,14 @@ public:
   /// the primal and dual residual. 
   /// @return The squared norm of the KKT residual.
   ///
-  double squaredNormKKTResidual() const;
+  double KKTError() const;
 
   ///
   /// @brief Returns the l1 norm of the constraint violation, that is,
   /// the primal residual in the state equation. 
   /// @return The l1 norm of the constraint violation.
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
   ///
   /// @brief Sets the split KKT residual zero.

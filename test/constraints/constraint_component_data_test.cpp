@@ -30,18 +30,18 @@ TEST_F(ConstraintComponentDataTest, constructor) {
 }
 
 
-TEST_F(ConstraintComponentDataTest, nrm) {
+TEST_F(ConstraintComponentDataTest, err) {
   const int dimc = 5;
   const double barrier = 0.01;
   ConstraintComponentData data(dimc, barrier);
   data.residual.setRandom();
   data.cmpl.setRandom();
 
-  const double nrm = data.squaredNormKKTResidual();
-  const double nrm_ref = data.residual.squaredNorm() + data.cmpl.squaredNorm();
-  EXPECT_DOUBLE_EQ(nrm, nrm_ref);
+  const double err = data.KKTError();
+  const double err_ref = data.residual.squaredNorm() + data.cmpl.squaredNorm();
+  EXPECT_DOUBLE_EQ(err, err_ref);
 
-  const double vio = data.l1NormConstraintViolation();
+  const double vio = data.constraintViolation();
   const double vio_ref = data.residual.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
 }

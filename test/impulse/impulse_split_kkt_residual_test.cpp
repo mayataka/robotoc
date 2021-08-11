@@ -55,14 +55,14 @@ void ImpulseSplitKKTResidualTest::test(const Robot& robot, const ImpulseStatus& 
 
   kkt_res.ldv.setRandom();
   kkt_res.lf().setRandom();
-  const double nrm = kkt_res.squaredNormKKTResidual();
-  const double nrm_ref = kkt_res.Fx.squaredNorm() 
+  const double err = kkt_res.KKTError();
+  const double err_ref = kkt_res.Fx.squaredNorm() 
                           + kkt_res.lx.squaredNorm()
                           + kkt_res.ldv.squaredNorm()
                           + kkt_res.lf().squaredNorm();
-  EXPECT_DOUBLE_EQ(nrm, nrm_ref);
+  EXPECT_DOUBLE_EQ(err, err_ref);
 
-  const double vio = kkt_res.l1NormConstraintViolation();
+  const double vio = kkt_res.constraintViolation();
   const double vio_ref = kkt_res.Fx.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
 }

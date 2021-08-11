@@ -112,14 +112,14 @@ public:
   /// and dual residuals of the constraint. 
   /// @return Squared norm of the KKT residual. 
   ///
-  double squaredNormKKTResidual() const;
+  double KKTError() const;
 
   ///
   /// @brief Returns the l1-norm of the constraint violation, that is, the 
-  /// primal residual of the constraint. 
+  /// primal residual in the constraint. 
   /// @return l1-norm of the constraint violation. 
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
   ///
   /// @brief Dimension of the constraint. 

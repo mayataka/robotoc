@@ -172,8 +172,27 @@ public:
   /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual, 
-                                const double dt) const;
+  double KKTError(const SplitKKTResidual& kkt_residual, const double dt) const;
+
+  ///
+  /// @brief Returns the stage cost of this time stage for the line search.
+  /// Before calling this function, SplitUnconstrParNMPC::computeKKTResidual(), 
+  /// SplitUnconstrParNMPC::computeKKTSystem() must be called.
+  /// @return Stage cost of this time stage.
+  /// 
+  double stageCost() const;
+
+  ///
+  /// @brief Returns the constraint violation of this time stage for the 
+  /// line search. Before calling this function, 
+  /// SplitUnconstrParNMPC::computeKKTResidual() or
+  /// SplitUnconstrParNMPC::computeKKTSystem() must be called.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
+  /// @param[in] dt Time step of this time stage. 
+  /// @return The constraint violation of this time stage.
+  ///
+  double constraintViolation(const SplitKKTResidual& kkt_residual, 
+                             const double dt) const;
 
   ///
   /// @brief Computes the stage cost of this time stage for line search.

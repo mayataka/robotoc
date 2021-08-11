@@ -44,7 +44,7 @@ void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
   SplitKKTResidual kkt_residual(robot);  
   SplitKKTMatrix kkt_matrix(robot);  
   ocp.computeKKTResidual(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
-  const double KKT = ocp.squaredNormKKTResidual(kkt_residual);
+  const double KKT = ocp.KKTError(kkt_residual);
   robot.updateKinematics(s.q, s.v);
   SplitKKTResidual kkt_residual_ref(robot);  
   SplitKKTMatrix kkt_matrix_ref(robot);  

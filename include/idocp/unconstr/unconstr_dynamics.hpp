@@ -106,14 +106,14 @@ public:
   /// @return Squared norm of the residual in the unconstrained dynamics 
   /// constraint.
   ///
-  double squaredNormKKTResidual() const;
+  double KKTError() const;
 
   ///
   /// @brief Returns l1-norm of the constraint violation, that is, the primal
   /// residual in the unconstrained dynamics constraint. 
   /// @return l1-norm of the constraint violation.
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ka,

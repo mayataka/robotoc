@@ -127,18 +127,17 @@ public:
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual of the contact dynamics constraint. 
-  /// @param[in] dt Time step of this time stage. 
   /// @return Squared norm of the KKT residual in the contact dynamics 
   /// constraint.
   ///
-  double squaredNormKKTResidual(const double dt) const;
+  double KKTError() const;
 
   ///
   /// @brief Returns l1-norm of the constraint violation, that is, the primal
   /// residual in the contact dynamics constraint. 
   /// @return l1-norm of the constraint violation.
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
 private:
   ContactDynamicsData data_;

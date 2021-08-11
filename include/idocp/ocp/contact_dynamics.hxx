@@ -203,13 +203,12 @@ inline void ContactDynamics::condenseSwitchingConstraint(
 }
 
 
-inline double ContactDynamics::squaredNormKKTResidual(const double dt) const {
-  assert(dt > 0);
-  return ((dt*dt)*data_.IDC().squaredNorm() + data_.lu_passive.squaredNorm());
+inline double ContactDynamics::KKTError() const {
+  return (data_.IDC().squaredNorm() + data_.lu_passive.squaredNorm());
 }
 
 
-inline double ContactDynamics::l1NormConstraintViolation() const {
+inline double ContactDynamics::constraintViolation() const {
   return data_.IDC().lpNorm<1>();
 }
 
