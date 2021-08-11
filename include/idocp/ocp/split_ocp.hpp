@@ -88,22 +88,42 @@ public:
 
   ///
   /// @brief Computes the stage cost and constraint violation.
+  /// Used in the line search.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
-  /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] q_next Configuration at the next time stage.
+  /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  template <typename SplitSolutionType>
   void evaluateOCP(Robot& robot, const ContactStatus& contact_status,
-                   const double t, const double dt, 
-                   const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                   const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
+                   const double t, const double dt, const SplitSolution& s, 
+                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
                    SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Computes the stage cost and constraint violation.
+  /// Used in the line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] q_next Configuration at the next time stage.
+  /// @param[in] v_next Generaized velocity at the next time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] impulse_status Impulse status at the switching instant. 
+  /// @param[in] dt_next Time step of the next time stage. 
+  /// @param[in, out] switch_residual Residual of the switching constraint. 
+  ///
+  void evaluateOCP(Robot& robot, const ContactStatus& contact_status,
+                   const double t, const double dt, const SplitSolution& s, 
+                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+                   SplitKKTResidual& kkt_residual,
+                   const ImpulseStatus& impulse_status, const double dt_next, 
+                   SplitSwitchingConstraintResidual& switch_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -279,16 +299,17 @@ public:
 
   ///
   /// @brief Returns the stage cost of this time stage for the line search.
-  /// Before calling this function, SplitOCP::computeKKTResidual(), 
-  /// SplitOCP::computeKKTSystem() must be called.
+  /// Before calling this function, SplitOCP::evaluateOCP(), 
+  /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @return Stage cost of this time stage.
   /// 
   double stageCost() const;
 
   ///
   /// @brief Returns the constraint violation of this time stage for the 
-  /// line search. Before calling this function, SplitOCP::computeKKTResidual()
-  /// or SplitOCP::computeKKTSystem() must be called.
+  /// line search. 
+  /// Before calling this function, SplitOCP::evaluateOCP(), 
+  /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] dt Time step of this time stage. 
   /// @return The constraint violation of this time stage.
@@ -298,8 +319,9 @@ public:
 
   ///
   /// @brief Returns the constraint violation of this time stage for the 
-  /// line search. Before calling this function, SplitOCP::computeKKTResidual()
-  /// or SplitOCP::computeKKTSystem() must be called.
+  /// line search. 
+  /// Before calling this function, SplitOCP::evaluateOCP(), 
+  /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] switch_residual Residual of the switching constraint. 
@@ -375,7 +397,7 @@ private:
   ConstraintsData constraints_data_;
   StateEquation state_equation_;
   ContactDynamics contact_dynamics_;
-  double stage_cost_, constraint_violation_;
+  double stage_cost_;
 
 };
 

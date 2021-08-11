@@ -48,6 +48,24 @@ inline void ImpulseSplitOCP::initConstraints(Robot& robot,
 }
 
 
+inline void ImpulseSplitOCP::evaluateOCP(
+    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
+    const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
+    const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual) {
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  kkt_residual.setImpulseStatus(impulse_status);
+  kkt_residual.setZero();
+  robot.updateKinematics(s.q, s.v+s.dv);
+  stage_cost_ = cost_->computeImpulseCost(robot, cost_data_, t, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  stage_cost_ += constraints_data_.logBarrier();
+  state_equation_.computeForwardEulerResidual(robot, s, q_next, v_next, 
+                                              kkt_residual);
+  impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s);
+}
+
+
 inline void ImpulseSplitOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 

@@ -117,28 +117,27 @@ TEST_F(SplitUnconstrOCPTest, computeKKTResidual) {
 }
 
 
-TEST_F(SplitUnconstrOCPTest, costAndConstraintViolation) {
+TEST_F(SplitUnconstrOCPTest, evaluateOCP) {
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
   const auto d = SplitDirection::Random(robot);
   SplitUnconstrOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double step_size = 0.3;
   ocp.initConstraints(robot, 10, s);
   SplitKKTResidual kkt_residual(robot);
-  const double stage_cost = ocp.stageCost(robot, t, dt, s, step_size);
-  const double constraint_violation = ocp.constraintViolation(robot, t, dt, s, s_next.q, s_next.v, kkt_residual);
+  ocp.evaluateOCP(robot, t, dt, s, s_next.q, s_next.v, kkt_residual);
+  const double stage_cost = ocp.stageCost();
+  const double constraint_violation = ocp.constraintViolation(kkt_residual, dt);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = 0;
-  stage_cost_ref += cost->computeStageCost(robot, cost_data, t, dt, s);
-  stage_cost_ref += dt * constraints->costSlackBarrier(constraints_data, step_size);
-  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
+  double stage_cost_ref = cost->computeStageCost(robot, cost_data, t, dt, s);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
+  stage_cost_ref += dt * constraints_data.logBarrier();
+  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   unconstr::stateequation::computeForwardEulerResidual(dt, s, s_next.q, 
                                                        s_next.v, kkt_residual_ref);
   UnconstrDynamics ud(robot);

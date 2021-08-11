@@ -84,6 +84,22 @@ public:
                        const SplitSolution& s);
 
   ///
+  /// @brief Computes the stage cost and constraint violation.
+  /// Used in the line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] q_next Configuration at the next time stage.
+  /// @param[in] v_next Generaized velocity at the next time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  ///
+  void evaluateOCP(Robot& robot, const double t, const double dt, 
+                   const SplitSolution& s, const Eigen::VectorXd& q_next, 
+                   const Eigen::VectorXd& v_next, 
+                   SplitKKTResidual& kkt_residual);
+
+  ///
   /// @brief Computes the KKT residual of this time stage.
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this time stage. 
@@ -171,8 +187,9 @@ public:
 
   ///
   /// @brief Returns the stage cost of this time stage for the line search.
-  /// Before calling this function, SplitUnconstrOCP::computeKKTResidual(), 
-  /// SplitUnconstrOCP::computeKKTSystem() must be called.
+  /// Before calling this function, 
+  /// SplitUnconstrOCP::evaluateOCP(), SplitUnconstrOCP::computeKKTResidual(),
+  /// or SplitUnconstrOCP::computeKKTSystem() must be called.
   /// @return Stage cost of this time stage.
   /// 
   double stageCost() const;
@@ -180,8 +197,8 @@ public:
   ///
   /// @brief Returns the constraint violation of this time stage for the 
   /// line search. Before calling this function, 
-  /// SplitUnconstrOCP::computeKKTResidual() or
-  /// SplitUnconstrOCP::computeKKTSystem() must be called.
+  /// SplitUnconstrOCP::evaluateOCP(), SplitUnconstrOCP::computeKKTResidual(),
+  /// or SplitUnconstrOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] dt Time step of this time stage. 
   /// @return The constraint violation of this time stage.
@@ -226,7 +243,7 @@ private:
   ConstraintsData constraints_data_;
   UnconstrDynamics unconstr_dynamics_;
   bool use_kinematics_;
-  double stage_cost_, constraint_violation_;
+  double stage_cost_;
 
 };
 

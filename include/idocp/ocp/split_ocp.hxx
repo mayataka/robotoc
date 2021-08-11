@@ -48,6 +48,46 @@ inline void SplitOCP::initConstraints(Robot& robot, const int time_step,
 }
 
 
+inline void SplitOCP::evaluateOCP(Robot& robot, 
+                                  const ContactStatus& contact_status,
+                                  const double t, const double dt, 
+                                  const SplitSolution& s, 
+                                  const Eigen::VectorXd& q_next, 
+                                  const Eigen::VectorXd& v_next,
+                                  SplitKKTResidual& kkt_residual) {
+  assert(dt > 0);
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  robot.updateKinematics(s.q, s.v, s.a);
+  kkt_residual.setContactStatus(contact_status);
+  kkt_residual.setZero();
+  stage_cost_ = cost_->computeStageCost(robot, cost_data_, t, dt, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  stage_cost_ += dt * constraints_data_.logBarrier();
+  state_equation_.computeForwardEulerResidual(robot, dt, s, q_next, v_next, 
+                                              kkt_residual);
+  contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
+}
+
+
+inline void SplitOCP::evaluateOCP(Robot& robot, 
+                                  const ContactStatus& contact_status,
+                                  const double t, const double dt, 
+                                  const SplitSolution& s, 
+                                  const Eigen::VectorXd& q_next, 
+                                  const Eigen::VectorXd& v_next,
+                                  SplitKKTResidual& kkt_residual,
+                                  const ImpulseStatus& impulse_status,
+                                  const double dt_next, 
+                                  SplitSwitchingConstraintResidual& switch_residual) {
+  assert(dt_next > 0);
+  evaluateOCP(robot, contact_status, t, dt, s, q_next, v_next, kkt_residual);
+  switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status,  
+                                                          dt, dt_next, s, 
+                                                          switch_residual);
+}
+
+
 template <typename SplitSolutionType>
 inline void SplitOCP::computeKKTResidual(Robot& robot, 
                                          const ContactStatus& contact_status, 

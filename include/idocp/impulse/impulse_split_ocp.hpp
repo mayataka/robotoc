@@ -83,6 +83,22 @@ public:
   void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
+  /// @brief Computes the impulse stage cost and constraint violation.
+  /// Used in the line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] q_next Configuration at the next time stage.
+  /// @param[in] v_next Generaized velocity at the next time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
+  ///
+  void evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status,
+                   const double t, const ImpulseSplitSolution& s, 
+                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+                   ImpulseSplitKKTResidual& kkt_residual);
+
+  ///
   /// @brief Computes the KKT residual of this impulse stage.
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
@@ -177,8 +193,9 @@ public:
 
   ///
   /// @brief Returns the stage cost of this impulse stage for the line search.
-  /// Before calling this function, ImpulseSplitOCP::computeKKTResidual(), 
-  /// ImpulseSplitOCP::computeKKTSystem() must be called.
+  /// Before calling this function, ImpulseSplitOCP::evaluateOCP(),
+  /// ImpulseSplitOCP::computeKKTResidual(),
+  /// or ImpulseSplitOCP::computeKKTSystem() must be called.
   /// @return The stage cost of this impulse stage.
   /// 
   double stageCost() const;
@@ -186,7 +203,8 @@ public:
   ///
   /// @brief Returns the constraint violation of this impulse stage for the 
   /// line search.
-  /// Before calling this function, ImpulseSplitOCP::computeKKTResidual()
+  /// Before calling this function, ImpulseSplitOCP::evaluateOCP(),
+  /// ImpulseSplitOCP::computeKKTResidual(),
   /// or ImpulseSplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @return The constraint violation of this impulse stage.

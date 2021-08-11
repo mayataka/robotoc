@@ -17,8 +17,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
     use_kinematics_(false),
-    stage_cost_(0),
-    constraint_violation_(0) {
+    stage_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
@@ -46,8 +45,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC()
     constraints_data_(),
     unconstr_dynamics_(),
     use_kinematics_(false),
-    stage_cost_(0),
-    constraint_violation_(0) {
+    stage_cost_(0) {
 }
 
 
@@ -67,6 +65,29 @@ inline void TerminalUnconstrParNMPC::initConstraints(Robot& robot,
   assert(time_step >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, constraints_data_, s);
+}
+
+
+inline void TerminalUnconstrParNMPC::evaluateOCP(Robot& robot, const double t, 
+                                                 const double dt, 
+                                                 const Eigen::VectorXd& q_prev, 
+                                                 const Eigen::VectorXd& v_prev, 
+                                                 const SplitSolution& s, 
+                                                 SplitKKTResidual& kkt_residual) {
+  assert(dt > 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q);
+  }
+  kkt_residual.setZero();
+  stage_cost_  = cost_->computeStageCost(robot, cost_data_, t, dt, s);
+  stage_cost_ += cost_->computeTerminalCost(robot, cost_data_, t, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  stage_cost_ += dt * constraints_data_.logBarrier();
+  unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
+                                                        kkt_residual);
+  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
 }
 
 

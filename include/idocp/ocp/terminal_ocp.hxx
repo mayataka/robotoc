@@ -51,6 +51,16 @@ inline void TerminalOCP::initConstraints(Robot& robot, const int time_stage,
 }
 
 
+inline void TerminalOCP::evaluateOCP(Robot& robot, const double t, 
+                                     const SplitSolution& s, 
+                                     SplitKKTResidual& kkt_residual) {
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v);
+  }
+  terminal_cost_ = cost_->computeTerminalCost(robot, cost_data_, t, s);
+}
+
+
 inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
                                             const Eigen::VectorXd& q_prev,
                                             const SplitSolution& s,

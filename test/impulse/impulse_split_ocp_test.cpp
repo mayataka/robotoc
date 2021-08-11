@@ -32,17 +32,16 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testComputeKKTResidual(Robot& robot, 
-                                     const ImpulseStatus& impulse_status);
-  static void testComputeKKTSystem(Robot& robot, 
-                               const ImpulseStatus& impulse_status);
-  static void testCostAndConstraintViolation(Robot& robot, 
-                                             const ImpulseStatus& impulse_status);
+  static void test_computeKKTResidual(Robot& robot, 
+                                      const ImpulseStatus& impulse_status);
+  static void test_computeKKTSystem(Robot& robot, 
+                                    const ImpulseStatus& impulse_status);
+  static void test_evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
-void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot, 
-                                                 const ImpulseStatus& impulse_status) {
+void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot, 
+                                                  const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   const auto s_next = SplitSolution::Random(robot);
@@ -81,8 +80,8 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
 }
 
 
-void ImpulseSplitOCPTest::testComputeKKTSystem(Robot& robot, 
-                                               const ImpulseStatus& impulse_status) {
+void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot, 
+                                                const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   const auto s_next = SplitSolution::Random(robot);
@@ -137,8 +136,7 @@ void ImpulseSplitOCPTest::testComputeKKTSystem(Robot& robot,
 }
 
 
-void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot, 
-                                                         const ImpulseStatus& impulse_status) {
+void ImpulseSplitOCPTest::test_evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
@@ -146,13 +144,12 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double step_size = 0.3;
   ocp.initConstraints(robot, s);
-  const double stage_cost = ocp.stageCost(robot, t, s, step_size);
   ImpulseSplitKKTResidual kkt_residual(robot);
-  const double constraint_violation = ocp.constraintViolation(robot, impulse_status, t, s, s_prev.q, s_prev.v, kkt_residual);
-  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setImpulseStatus(impulse_status);
+  ocp.evaluateOCP(robot, impulse_status, t, s, s_prev.q, s_prev.v, kkt_residual);
+  const double impulse_cost = ocp.stageCost();
+  const double constraint_violation = ocp.constraintViolation(kkt_residual);
+
   ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setImpulseStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -160,11 +157,10 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  double stage_cost_ref = 0;
-  stage_cost_ref += cost->computeImpulseCost(robot, cost_data, t, s);
-  stage_cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
-  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
+  double impulse_cost_ref = cost->computeImpulseCost(robot, cost_data, t, s);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
+  impulse_cost_ref +=  constraints_data.logBarrier();
+  EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);
   ImpulseStateEquation::computeForwardEulerResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
   ImpulseDynamics id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s);
@@ -180,13 +176,13 @@ TEST_F(ImpulseSplitOCPTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testComputeKKTSystem(robot, impulse_status);
-  testComputeKKTResidual(robot, impulse_status);
-  testCostAndConstraintViolation(robot, impulse_status);
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evaluateOCP(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  testComputeKKTSystem(robot, impulse_status);
-  testComputeKKTResidual(robot, impulse_status);
-  testCostAndConstraintViolation(robot, impulse_status);
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evaluateOCP(robot, impulse_status);
 }
 
 
@@ -194,16 +190,16 @@ TEST_F(ImpulseSplitOCPTest, floatingBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testComputeKKTSystem(robot, impulse_status);
-  testComputeKKTResidual(robot, impulse_status);
-  testCostAndConstraintViolation(robot, impulse_status);
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evaluateOCP(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  testComputeKKTSystem(robot, impulse_status);
-  testComputeKKTResidual(robot, impulse_status);
-  testCostAndConstraintViolation(robot, impulse_status);
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evaluateOCP(robot, impulse_status);
 }
 
 } // namespace idocp
