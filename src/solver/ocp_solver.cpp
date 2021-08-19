@@ -297,6 +297,12 @@ bool OCPSolver::isCurrentSolutionFeasible() {
 }
 
 
+bool OCPSolver::isFormulationTractable(const double t) {
+  ocp_.discretize(contact_sequence_, t);
+  return ocp_.discrete().isFormulationTractable();
+}
+
+
 void OCPSolver::showInfo() const {
   ocp_.discrete().showInfo();
 }

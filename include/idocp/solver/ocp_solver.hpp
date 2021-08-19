@@ -197,6 +197,14 @@ public:
   bool isCurrentSolutionFeasible();
 
   ///
+  /// @brief Checks wheather the formulation of the discretized optimal control 
+  /// problem is tractable or not.
+  /// @param[in] t Initial time of the horizon. 
+  /// @return true if the optimal control problem is tractable. false if not.
+  ///
+  bool isFormulationTractable(const double t);
+
+  ///
   /// @brief Shows the information of the discretized optimal control problem
   /// onto console.
   ///

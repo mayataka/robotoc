@@ -51,6 +51,27 @@ inline void Convergence(OCPSolverType& ocp_solver, const double t,
   std::cout << std::endl;
 }
 
+
+template <typename OCPSolverType>
+inline void Convergence(OCPSolverType& ocp_solver, Logger& logger, 
+                        const double t, const Eigen::VectorXd& q, 
+                        const Eigen::VectorXd& v, const int num_iteration, 
+                        const bool line_search) {
+  std::cout << "---------- OCP benchmark : Convergence ----------" << std::endl;
+  ocp_solver.computeKKTResidual(t, q, v);
+  logger.takeLog(ocp_solver);
+  std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
+  for (int i=0; i<num_iteration; ++i) {
+    ocp_solver.updateSolution(t, q, v, line_search);
+    ocp_solver.computeKKTResidual(t, q, v);
+    std::cout << "KKT error after iteration " << i+1 << " = " 
+              << ocp_solver.KKTError() << std::endl;
+    logger.takeLog(ocp_solver);
+  }
+  std::cout << "-----------------------------------" << std::endl;
+  std::cout << std::endl;
+}
+
 } // namespace ocpbenchmarker
 } // namespace idocp 
 
