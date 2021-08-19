@@ -7,23 +7,6 @@ find_package(idocp REQUIRED)
 
 option(ENABLE_VIEWER "Enable trajectory viewer" OFF)
 
-add_library(
-  anymal_costs  
-  SHARED
-  periodic_foot_track_ref.cpp
-  periodic_com_ref.cpp
-)
-target_link_libraries(
-  anymal_costs  
-  PRIVATE
-  idocp::idocp
-)
-target_include_directories(
-  anymal_costs  
-  PRIVATE
-  ${IDOCP_INCLUDE_DIR}
-)
-
 macro(add_benchmark BENCHMARK)
   add_executable(
     ${BENCHMARK} 
@@ -55,7 +38,6 @@ macro(add_example EXAMPLE)
     ${EXAMPLE} 
     PRIVATE
     idocp::idocp
-    anymal_costs
   )
   if (ENABLE_VIEWER)
     target_compile_definitions(

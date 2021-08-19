@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 option(OPTIMIZE_FOR_NATIVE "Enable -march=native" OFF)
 option(BUILD_VIEWER "Build trajectory viewer" OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
-option(BUILD_PYTHON_INTERFACE "Build Python interface" OFF)
+option(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 
 #################
 ## Build idocp ##
@@ -44,6 +44,8 @@ add_library(
   src/cost/time_varying_task_space_3d_cost.cpp
   src/cost/time_varying_task_space_6d_cost.cpp
   src/cost/time_varying_com_cost.cpp
+  src/cost/periodic_foot_track_ref.cpp
+  src/cost/periodic_com_ref.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_impl.cpp

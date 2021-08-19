@@ -1,5 +1,5 @@
 #ifndef IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_
-#define IDOCP_UNOCNSTR_PARNMPC_SOLVER_HPP_
+#define IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -176,5 +176,4 @@ private:
 
 } // namespace idocp 
 
-
-#endif // IDOCP_UNOCNSTR_PARNMPC_SOLVER_HPP_ 
+#endif // IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_

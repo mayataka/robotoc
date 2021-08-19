@@ -42,10 +42,14 @@ PYBIND11_MODULE(robot, m) {
         self.normalizeConfiguration(q);
       })
     .def("create_contact_status", &Robot::createContactStatus)
-    .def("get_contact_points", [](const Robot& self, 
-                                  ContactStatus& contact_status) {
-        self.getContactPoints(contact_status);
-      })
+    .def("total_weight", &Robot::totalWeight)
+    .def("dimq", &Robot::dimq)
+    .def("dimv", &Robot::dimv)
+    .def("dimu", &Robot::dimu)
+    .def("max_dimf", &Robot::max_dimf)
+    .def("dim_passive", &Robot::dim_passive)
+    .def("max_point_contacts", &Robot::maxPointContacts)
+    .def("contact_frames", &Robot::contactFrames)
     .def("set_joint_effort_limit", &Robot::setJointEffortLimit)
     .def("set_joint_velocity_limit", &Robot::setJointVelocityLimit)
     .def("set_lower_joint_position_limit", &Robot::setLowerJointPositionLimit)

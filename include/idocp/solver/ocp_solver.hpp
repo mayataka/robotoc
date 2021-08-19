@@ -229,5 +229,4 @@ private:
 
 } // namespace idocp 
 
-
 #endif // IDOCP_OCP_SOLVER_HPP_ 
