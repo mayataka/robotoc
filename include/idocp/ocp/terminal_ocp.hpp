@@ -82,6 +82,17 @@ public:
                        const SplitSolution& s);
 
   ///
+  /// @brief Computes the terminal cost and constraint violation.
+  /// Used in the line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  ///
+  void evaluateOCP(Robot& robot, const double t, const SplitSolution& s, 
+                   SplitKKTResidual& kkt_residual);
+
+  ///
   /// @brief Computes the KKT residual of the terminal stage.
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of the terminal stage. 
@@ -163,16 +174,15 @@ public:
   /// @param[in] kkt_residual KKT residual of the terminal stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual) const;
+  double KKTError(const SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the terminal cost of the terminal stage for line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of the terminal stage. 
-  /// @param[in] s Split solution of the terminal stage.
-  /// @return Terminal cost of the terminal stage.
+  /// @brief Returns the terminal cost for the line search.
+  /// Before calling this function, TerminalOCP::evaluateOCP(), 
+  /// TerminalOCP::computeKKTResidual(), or TerminalOCP::computeKKTSystem() 
+  /// must be called.
   /// 
-  double terminalCost(Robot& robot, const double t, const SplitSolution& s);
+  double terminalCost() const;
 
 private:
   std::shared_ptr<CostFunction> cost_;

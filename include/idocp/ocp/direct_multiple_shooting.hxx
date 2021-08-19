@@ -32,11 +32,11 @@ struct ComputeKKTResidual {
                          SplitKKTResidual& kkt_residual,
                          const ImpulseStatus& impulse_status, 
                          const double dt_next, 
-                         SplitSwitchingConstraintJacobian& switch_jacobian,
-                         SplitSwitchingConstraintResidual& switch_residual) {
+                         SplitSwitchingConstraintJacobian& sc_jacobian,
+                         SplitSwitchingConstraintResidual& sc_residual) {
     split_ocp.computeKKTResidual(robot, contact_status, t, dt, q_prev, s, 
                                  s_next, kkt_matrix, kkt_residual, impulse_status, 
-                                 dt_next, switch_jacobian, switch_residual);
+                                 dt_next, sc_jacobian, sc_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
@@ -80,11 +80,11 @@ struct ComputeKKTSystem {
                          SplitKKTResidual& kkt_residual,
                          const ImpulseStatus& impulse_status, 
                          const double dt_next, 
-                         SplitSwitchingConstraintJacobian& switch_jacobian,
-                         SplitSwitchingConstraintResidual& switch_residual) {
+                         SplitSwitchingConstraintJacobian& sc_jacobian,
+                         SplitSwitchingConstraintResidual& sc_residual) {
     split_ocp.computeKKTSystem(robot, contact_status, t, dt, q_prev, s, s_next,
                                kkt_matrix, kkt_residual, impulse_status, 
-                               dt_next, switch_jacobian, switch_residual);
+                               dt_next, sc_jacobian, sc_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
@@ -129,6 +129,7 @@ inline void DirectMultipleShooting::runParallel(
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+        assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
@@ -137,6 +138,7 @@ inline void DirectMultipleShooting::runParallel(
             kkt_matrix[i], kkt_residual[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+        assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
@@ -197,31 +199,14 @@ inline void DirectMultipleShooting::runParallel(
       const int lift_index = i - (N+1+2*N_impulse);
       const int time_stage_after_lift
           = ocp.discrete().timeStageAfterLift(lift_index);
-      if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {
-        const int impulse_index
-            = ocp.discrete().impulseIndexAfterTimeStage(time_stage_after_lift);
-        Algorithm::run(
-            ocp.lift[lift_index], robots[omp_get_thread_num()], 
-            contact_sequence.contactStatus(
-                ocp.discrete().contactPhaseAfterLift(lift_index)), 
-            ocp.discrete().t_lift(lift_index), 
-            ocp.discrete().dt_lift(lift_index), s[time_stage_after_lift-1].q, 
-            s.lift[lift_index], s[time_stage_after_lift], 
-            kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index],
-            contact_sequence.impulseStatus(impulse_index), 
-            ocp.discrete().dt(time_stage_after_lift), 
-            kkt_matrix.switching[impulse_index], kkt_residual.switching[impulse_index]);
-      }
-      else {
-        Algorithm::run(
-            ocp.lift[lift_index], robots[omp_get_thread_num()], 
-            contact_sequence.contactStatus(
-                ocp.discrete().contactPhaseAfterLift(lift_index)), 
-            ocp.discrete().t_lift(lift_index), 
-            ocp.discrete().dt_lift(lift_index), s[time_stage_after_lift-1].q, 
-            s.lift[lift_index], s[time_stage_after_lift], 
-            kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
-      }
+      Algorithm::run(
+          ocp.lift[lift_index], robots[omp_get_thread_num()], 
+          contact_sequence.contactStatus(
+              ocp.discrete().contactPhaseAfterLift(lift_index)), 
+          ocp.discrete().t_lift(lift_index), 
+          ocp.discrete().dt_lift(lift_index), s[time_stage_after_lift-1].q, 
+          s.lift[lift_index], s[time_stage_after_lift], 
+          kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
     }
   }
 }

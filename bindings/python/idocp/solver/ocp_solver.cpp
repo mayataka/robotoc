@@ -34,6 +34,7 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("pop_front_contact_status", &OCPSolver::popFrontContactStatus)
     .def("compute_KKT_residual", &OCPSolver::computeKKTResidual)
     .def("KKT_error", &OCPSolver::KKTError)
+    .def("is_formulation_tractable", &OCPSolver::isFormulationTractable)
     .def("show_info", &OCPSolver::showInfo);
 }
 

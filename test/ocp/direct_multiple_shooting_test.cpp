@@ -39,9 +39,9 @@ protected:
                           const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
-  void testComputeKKTResidual(const Robot& robot) const;
-  void testComputeKKTSystem(const Robot& robot) const;
-  void testIntegrateSolution(const Robot& robot) const;
+  void test_computeKKTResidual(const Robot& robot) const;
+  void test_computeKKTSystem(const Robot& robot) const;
+  void test_integrateSolution(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
   double T, t, dt;
@@ -63,7 +63,7 @@ ContactSequence DirectMultipleShootingTest::createContactSequence(const Robot& r
 }
 
 
-void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) const {
+void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -123,9 +123,9 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
-      kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
-      kkt_error_ref += ocp_ref.impulse[impulse_index].squaredNormKKTResidual(kkt_residual_ref.impulse[impulse_index]);
-      kkt_error_ref += ocp_ref.aux[impulse_index].squaredNormKKTResidual(kkt_residual_ref.aux[impulse_index], dt_aux);
+      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
+      kkt_error_ref += ocp_ref.impulse[impulse_index].KKTError(kkt_residual_ref.impulse[impulse_index]);
+      kkt_error_ref += ocp_ref.aux[impulse_index].KKTError(kkt_residual_ref.aux[impulse_index], dt_aux);
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -146,8 +146,8 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
       ocp_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
-      kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
-      kkt_error_ref += ocp_ref.lift[lift_index].squaredNormKKTResidual(kkt_residual_ref.lift[lift_index], dt_lift);
+      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
+      kkt_error_ref += ocp_ref.lift[lift_index].KKTError(kkt_residual_ref.lift[lift_index], dt_lift);
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -163,8 +163,8 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
           contact_sequence.impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
-      kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
-      kkt_error_ref += kkt_residual_ref.switching[impulse_index].squaredNormKKTResidual();
+      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
+      kkt_error_ref += kkt_residual_ref.switching[impulse_index].KKTError();
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -174,14 +174,14 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
+      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
     }
   }
   ocp_ref.terminal.computeKKTResidual(robot_ref, t+T, s[ocp_ref.discrete().N()-1].q, 
                                       s[ocp_ref.discrete().N()], 
                                       kkt_matrix_ref[ocp_ref.discrete().N()], 
                                       kkt_residual_ref[ocp_ref.discrete().N()]);
-  kkt_error_ref += ocp_ref.terminal.squaredNormKKTResidual(kkt_residual_ref[ocp_ref.discrete().N()]);
+  kkt_error_ref += ocp_ref.terminal.KKTError(kkt_residual_ref[ocp_ref.discrete().N()]);
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
@@ -192,7 +192,7 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
 }
 
 
-void DirectMultipleShootingTest::testComputeKKTSystem(const Robot& robot) const {
+void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -309,7 +309,7 @@ void DirectMultipleShootingTest::testComputeKKTSystem(const Robot& robot) const 
 }
 
 
-void DirectMultipleShootingTest::testIntegrateSolution(const Robot& robot) const {
+void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -400,25 +400,25 @@ void DirectMultipleShootingTest::testIntegrateSolution(const Robot& robot) const
 
 TEST_F(DirectMultipleShootingTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
   robot = testhelper::CreateFixedBaseRobot(dt);
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
 }
 
 
 TEST_F(DirectMultipleShootingTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot();
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
   robot = testhelper::CreateFloatingBaseRobot(dt);
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
 }
 
 } // namespace idocp

@@ -117,28 +117,27 @@ public:
 
   ///
   /// @brief Condenses the switching constraint. 
-  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
-  /// @param[in, out] switch_residual Residual of the switching constraint. 
+  /// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void condenseSwitchingConstraint(
-      SplitSwitchingConstraintJacobian& switch_jacobian,
-      SplitSwitchingConstraintResidual& switch_residual) const;
+      SplitSwitchingConstraintJacobian& sc_jacobian,
+      SplitSwitchingConstraintResidual& sc_residual) const;
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual of the contact dynamics constraint. 
-  /// @param[in] dt Time step of this time stage. 
   /// @return Squared norm of the KKT residual in the contact dynamics 
   /// constraint.
   ///
-  double squaredNormKKTResidual(const double dt) const;
+  double KKTError() const;
 
   ///
   /// @brief Returns l1-norm of the constraint violation, that is, the primal
   /// residual in the contact dynamics constraint. 
   /// @return l1-norm of the constraint violation.
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
 private:
   ContactDynamicsData data_;

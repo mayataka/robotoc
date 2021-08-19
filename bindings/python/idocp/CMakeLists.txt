@@ -16,8 +16,9 @@ endmacro()
 
 macro(install_idocp_pybind_module CURRENT_MODULE_DIR)
   file(GLOB PYTHON_BINDINGS_${CURRENT_MODULE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/*.cpython*)
+  file(GLOB PYTHON_FILES_${CURRENT_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*.py)
   install(
-    FILES __init__.py ${PYTHON_BINDINGS_${CURRENT_MODULE_DIR}} 
+    FILES ${PYTHON_FILES_${CURRENT_MODULE_DIR}} ${PYTHON_BINDINGS_${CURRENT_MODULE_DIR}} 
     DESTINATION ${IDOCP_PYTHON_BINDINGS_LIBDIR}/${CURRENT_MODULE_DIR}
   )
 endmacro()
@@ -27,6 +28,7 @@ add_subdirectory(cost)
 add_subdirectory(constraints)
 add_subdirectory(ocp)
 add_subdirectory(solver)
+add_subdirectory(utils)
 
 install(
   FILES __init__.py 

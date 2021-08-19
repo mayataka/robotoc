@@ -15,9 +15,11 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
   : slack(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier))),
     dual(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier))),
     residual(Eigen::VectorXd::Zero(dimc)),
-    duality(Eigen::VectorXd::Zero(dimc)),
+    cmpl(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
+    cond(Eigen::VectorXd::Zero(dimc)),
+    log_barrier(0),
     r(),
     J(),
     dimc_(dimc) {
@@ -42,9 +44,11 @@ inline ConstraintComponentData::ConstraintComponentData()
   : slack(),
     dual(),
     residual(),
-    duality(),
+    cmpl(),
     dslack(),
     ddual(),
+    cond(),
+    log_barrier(0),
     r(),
     J(),
     dimc_(0) {
@@ -55,12 +59,12 @@ inline ConstraintComponentData::~ConstraintComponentData() {
 }
 
 
-inline double ConstraintComponentData::squaredNormKKTResidual() const {
-  return (residual.squaredNorm() + duality.squaredNorm());
+inline double ConstraintComponentData::KKTError() const {
+  return (residual.squaredNorm() + cmpl.squaredNorm());
 }
 
 
-inline double ConstraintComponentData::l1NormConstraintViolation() const {
+inline double ConstraintComponentData::constraintViolation() const {
   return residual.template lpNorm<1>();
 }
 
@@ -80,13 +84,16 @@ inline bool ConstraintComponentData::checkDimensionalConsistency() const {
   if (residual.size() != dimc_) {
     return false;
   }
-  if (duality.size() != dimc_) {
+  if (cmpl.size() != dimc_) {
     return false;
   }
   if (dslack.size() != dimc_) {
     return false;
   }
   if (ddual.size() != dimc_) {
+    return false;
+  }
+  if (cond.size() != dimc_) {
     return false;
   }
   return true;
@@ -104,13 +111,22 @@ inline bool ConstraintComponentData::isApprox(
   if (!residual.isApprox(other.residual)) {
     return false;
   }
-  if (!duality.isApprox(other.duality)) {
+  if (!cmpl.isApprox(other.cmpl)) {
     return false;
   }
   if (!dslack.isApprox(other.dslack)) {
     return false;
   }
   if (!ddual.isApprox(other.ddual)) {
+    return false;
+  }
+  if (!cond.isApprox(other.cond)) {
+    return false;
+  }
+  Eigen::VectorXd lb(1), other_lb(1);
+  lb << log_barrier;
+  other_lb << other.log_barrier;
+  if (!lb.isApprox(other_lb)) {
     return false;
   }
   return true;

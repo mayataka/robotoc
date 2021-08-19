@@ -86,8 +86,8 @@ public:
   /// @param[in] riccati_next Riccati factorization of the next stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 
   /// @param[in, out] kkt_residual Split KKT residual of this stage. 
-  /// @param[in] switch_jacobian Jacobian of the switching constraint. 
-  /// @param[in] switch_residual Residual of the switching constraint. 
+  /// @param[in] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in] sc_residual Residual of the switching constraint. 
   /// @param[in, out] riccati Riccati factorization of this stage. 
   /// @param[in, out] c_riccati Riccati factorization for the switching 
   /// constraint. 
@@ -96,8 +96,8 @@ public:
   void backwardRiccatiRecursion(
       const SplitRiccatiFactorization& riccati_next, 
       SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-      const SplitSwitchingConstraintJacobian& switch_jacobian, 
-      const SplitSwitchingConstraintResidual& switch_residual, 
+      const SplitSwitchingConstraintJacobian& sc_jacobian, 
+      const SplitSwitchingConstraintResidual& sc_residual, 
       SplitRiccatiFactorization& riccati, 
       SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy);
 

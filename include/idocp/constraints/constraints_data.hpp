@@ -15,44 +15,14 @@ namespace idocp {
 ///
 class ConstraintsData {
 public:
-  ConstraintsData(const int time_stage) {
-    if (time_stage >= 2) {
-      is_position_level_valid_     = true;
-      is_velocity_level_valid_     = true;
-      is_acceleration_level_valid_ = true;
-      is_impulse_level_valid_      = false;
-    }
-    else if (time_stage == 1) {
-      is_position_level_valid_     = false;
-      is_velocity_level_valid_     = true;
-      is_acceleration_level_valid_ = true;
-      is_impulse_level_valid_      = false;
-    }
-    else if (time_stage == 0) {
-      is_position_level_valid_     = false;
-      is_velocity_level_valid_     = false;
-      is_acceleration_level_valid_ = true;
-      is_impulse_level_valid_      = false;
-    }
-    else if (time_stage <= -1) {
-      is_position_level_valid_     = false;
-      is_velocity_level_valid_     = false;
-      is_acceleration_level_valid_ = false;
-      is_impulse_level_valid_      = true;
-    }
-  }
+  ConstraintsData(const int time_stage);
 
-  ConstraintsData() 
-    : is_position_level_valid_(false), 
-      is_velocity_level_valid_(false),
-      is_acceleration_level_valid_(false),
-      is_impulse_level_valid_(false) {
-  }
+  ConstraintsData();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ConstraintsData() {}
+  ~ConstraintsData();
 
   ///
   /// @brief Default copy constructor. 
@@ -74,75 +44,71 @@ public:
   ///
   ConstraintsData& operator=(ConstraintsData&&) noexcept = default;
 
-  bool isPositionLevelValid() const {
-    return is_position_level_valid_;
-  }
+  ///
+  /// @brief Checks wheather the position-level constraints are valid or not. 
+  /// @return true if the position-level constraints are valid. false otherwise. 
+  ///
+  bool isPositionLevelValid() const;
 
-  bool isVelocityLevelValid() const {
-    return is_velocity_level_valid_;
-  }
+  ///
+  /// @brief Checks wheather the velocity-level constraints are valid or not. 
+  /// @return true if the velocity-level constraints are valid. false otherwise. 
+  ///
+  bool isVelocityLevelValid() const;
 
-  bool isAccelerationLevelValid() const {
-    return is_acceleration_level_valid_;
-  }
+  ///
+  /// @brief Checks wheather the acceleration-level constraints are valid or not. 
+  /// @return true if the acceleration-level constraints are valid. false 
+  /// otherwise. 
+  ///
+  bool isAccelerationLevelValid() const;
 
-  bool isImpulseLevelValid() const {
-    return is_impulse_level_valid_;
-  }
+  ///
+  /// @brief Checks wheather the impulse-level constraints are valid or not. 
+  /// @return true if the impulse-level constraints are valid. false otherwise. 
+  ///
+  bool isImpulseLevelValid() const;
 
-  double squaredNormKKTResidual() const {
-    double nrm = 0.0;
-    if (isPositionLevelValid()) {
-      for (const auto& data : position_level_data) {
-        nrm += data.squaredNormKKTResidual();
-      }
-    }
-    if (isVelocityLevelValid()) {
-      for (const auto& data : velocity_level_data) {
-        nrm += data.squaredNormKKTResidual();
-      }
-    }
-    if (isAccelerationLevelValid()) {
-      for (const auto& data : acceleration_level_data) {
-        nrm += data.squaredNormKKTResidual();
-      }
-    }
-    if (isImpulseLevelValid()) {
-      for (const auto& data : impulse_level_data) {
-        nrm += data.squaredNormKKTResidual();
-      }
-    }
-    return nrm;
-  }
+  ///
+  /// @brief Returns the sum of the squared norm of the KKT error 
+  /// (primal residual and complementary slackness) of all the constraints. 
+  /// @return true if the impulse-level constraints are valid. false otherwise. 
+  ///
+  double KKTError() const;
 
-  double l1NormConstraintViolation() const {
-    double nrm = 0.0;
-    if (isPositionLevelValid()) {
-      for (const auto& data : position_level_data) {
-        nrm += data.l1NormConstraintViolation();
-      }
-    }
-    if (isVelocityLevelValid()) {
-      for (const auto& data : velocity_level_data) {
-        nrm += data.l1NormConstraintViolation();
-      }
-    }
-    if (isAccelerationLevelValid()) {
-      for (const auto& data : acceleration_level_data) {
-        nrm += data.l1NormConstraintViolation();
-      }
-    }
-    if (isImpulseLevelValid()) {
-      for (const auto& data : impulse_level_data) {
-        nrm += data.l1NormConstraintViolation();
-      }
-    }
-    return nrm;
-  }
+  ///
+  /// @brief Returns the sum of the log-barrier of the slack variables of all 
+  /// the constraints. 
+  /// @return The sum of the log-barrier of the slack variables of all 
+  /// the constraints. 
+  ///
+  double logBarrier() const;
 
+  ///
+  /// @brief Returns the sum of the l1-norm of the primal violations in the 
+  /// constraints.
+  /// @return The sum of the l1-norm of the violations in the constraints. 
+  ///
+  double constraintViolation() const;
+
+  ///
+  /// @brief The collection of the position-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> position_level_data;
+
+  ///
+  /// @brief The collection of the velocity-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> velocity_level_data;
+
+  ///
+  /// @brief The collection of the acceleration-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> acceleration_level_data;
+
+  ///
+  /// @brief The collection of the impulse-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> impulse_level_data;
 
 private:
@@ -152,5 +118,7 @@ private:
 };
   
 } // namespace idocp
+
+#include "idocp/constraints/constraints_data.hxx"
 
 #endif // IDOCP_CONSTRAINTS_DATA_HPP_

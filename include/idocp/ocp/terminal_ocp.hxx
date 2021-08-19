@@ -51,6 +51,16 @@ inline void TerminalOCP::initConstraints(Robot& robot, const int time_stage,
 }
 
 
+inline void TerminalOCP::evaluateOCP(Robot& robot, const double t, 
+                                     const SplitSolution& s, 
+                                     SplitKKTResidual& kkt_residual) {
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v);
+  }
+  terminal_cost_ = cost_->computeTerminalCost(robot, cost_data_, t, s);
+}
+
+
 inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
                                             const Eigen::VectorXd& q_prev,
                                             const SplitSolution& s,
@@ -128,20 +138,15 @@ inline void TerminalOCP::updateDual(const double step_size) {
 }
 
 
-inline double TerminalOCP::squaredNormKKTResidual(
-    const SplitKKTResidual& kkt_residual) const {
-  double nrm = 0;
-  nrm += kkt_residual.lx.squaredNorm();
-  return nrm;
+inline double TerminalOCP::KKTError(const SplitKKTResidual& kkt_residual) const {
+  double err = 0;
+  err += kkt_residual.lx.squaredNorm();
+  return err;
 }
 
 
-inline double TerminalOCP::terminalCost(Robot& robot, const double t, 
-                                        const SplitSolution& s) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
-  return cost_->computeTerminalCost(robot, cost_data_, t, s);
+inline double TerminalOCP::terminalCost() const {
+  return terminal_cost_;
 }
 
 } // namespace idocp

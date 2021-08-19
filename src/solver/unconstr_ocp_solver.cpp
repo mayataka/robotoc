@@ -235,11 +235,11 @@ double UnconstrOCPSolver::KKTError() {
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       kkt_error_.coeffRef(i) 
-          = ocp_[i].squaredNormKKTResidual(kkt_residual_[i], dt_);
+          = ocp_[i].KKTError(kkt_residual_[i], dt_);
     }
     else {
       kkt_error_.coeffRef(N_) 
-          = ocp_.terminal.squaredNormKKTResidual(kkt_residual_[N_]);
+          = ocp_.terminal.KKTError(kkt_residual_[N_]);
     }
   }
   return std::sqrt(kkt_error_.sum());

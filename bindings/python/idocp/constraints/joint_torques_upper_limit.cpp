@@ -15,7 +15,7 @@ PYBIND11_MODULE(joint_torques_upper_limit, m) {
              std::shared_ptr<JointTorquesUpperLimit>>(m, "JointTorquesUpperLimit")
     .def(py::init<const Robot&, const double, const double>(),
          py::arg("robot"), py::arg("barrier")=1.0e-04,
-         py::arg("fraction_to_boundary_rate")=0.995);
+         py::arg("fraction_to_boundary_rule")=0.995);
 
   m.def("create_joint_torques_upper_limit", [](const Robot& robot) {
     return std::make_shared<JointTorquesUpperLimit>(robot);

@@ -6,6 +6,8 @@
 
 #include "Eigen/Core"
 
+#include "idocp/utils/logger.hpp"
+
 
 namespace idocp {
 namespace ocpbenchmarker {
@@ -19,6 +21,12 @@ template <typename OCPSolverType>
 void Convergence(OCPSolverType& ocp_solver, const double t, 
                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                  const int num_iteration=10, const bool line_search=false);
+
+template <typename OCPSolverType>
+void Convergence(OCPSolverType& ocp_solver, Logger& logger, 
+                 const double t, const Eigen::VectorXd& q, 
+                 const Eigen::VectorXd& v, const int num_iteration=10, 
+                 const bool line_search=false);
 
 } // namespace ocpbenchmarker
 } // namespace idocp 

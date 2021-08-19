@@ -32,7 +32,7 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
       pre_contact_status = post_contact_status;
     }
     for (int i=0; i<max_num_impulse; ++i) {
-      contact_sequence.push_back(discrete_events[i], event_times[i]);
+      contact_sequence.push_back(discrete_events[i], event_times[i], false);
     }
     return contact_sequence;
   }

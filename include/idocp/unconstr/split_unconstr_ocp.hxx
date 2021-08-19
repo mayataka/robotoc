@@ -17,8 +17,7 @@ inline SplitUnconstrOCP::SplitUnconstrOCP(
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
     use_kinematics_(false),
-    stage_cost_(0),
-    constraint_violation_(0) {
+    stage_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
@@ -46,8 +45,7 @@ inline SplitUnconstrOCP::SplitUnconstrOCP()
     constraints_data_(),
     unconstr_dynamics_(),
     use_kinematics_(false),
-    stage_cost_(0),
-    constraint_violation_(0) {
+    stage_cost_(0) {
 }
 
 
@@ -68,6 +66,28 @@ inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step,
 }
 
 
+inline void SplitUnconstrOCP::evaluateOCP(Robot& robot, const double t, 
+                                          const double dt, 
+                                          const SplitSolution& s, 
+                                          const Eigen::VectorXd& q_next, 
+                                          const Eigen::VectorXd& v_next, 
+                                          SplitKKTResidual& kkt_residual) {
+  assert(dt > 0);
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q);
+  }
+  kkt_residual.setZero();
+  stage_cost_ = cost_->computeStageCost(robot, cost_data_, t, dt, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  stage_cost_ += dt * constraints_data_.logBarrier();
+  unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
+                                                       kkt_residual);
+  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
+}
+
+
 inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t, 
                                                  const double dt, 
                                                  const SplitSolution& s,
@@ -83,6 +103,7 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
                                           kkt_residual);
   constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
                                                kkt_residual);
+  stage_cost_ += dt * constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
@@ -105,6 +126,7 @@ inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const double t,
                                            kkt_residual, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
+  stage_cost_ += dt * constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
@@ -150,57 +172,29 @@ inline void SplitUnconstrOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline double SplitUnconstrOCP::squaredNormKKTResidual(
-    const SplitKKTResidual& kkt_residual, const double dt) const {
+inline double SplitUnconstrOCP::KKTError(const SplitKKTResidual& kkt_residual, 
+                                         const double dt) const {
   assert(dt > 0);
-  double nrm = 0;
-  nrm += kkt_residual.squaredNormKKTResidual();
-  nrm += (dt*dt) * unconstr_dynamics_.squaredNormKKTResidual();
-  nrm += (dt*dt) * constraints_data_.squaredNormKKTResidual();
-  return nrm;
+  double err = 0;
+  err += kkt_residual.KKTError();
+  err += (dt*dt) * unconstr_dynamics_.KKTError();
+  err += (dt*dt) * constraints_data_.KKTError();
+  return err;
 }
 
 
-inline double SplitUnconstrOCP::stageCost(Robot& robot, const double t,  
-                                          const double dt, 
-                                          const SplitSolution& s, 
-                                          const double primal_step_size) {
-  assert(dt > 0);
-  assert(primal_step_size >= 0);
-  assert(primal_step_size <= 1);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
-  double cost = 0;
-  cost += cost_->computeStageCost(robot, cost_data_, t, dt, s);
-  if (primal_step_size > 0) {
-    cost += dt * constraints_->costSlackBarrier(constraints_data_, 
-                                                primal_step_size);
-  }
-  else {
-    cost += dt * constraints_->costSlackBarrier(constraints_data_);
-  }
-  return cost;
+inline double SplitUnconstrOCP::stageCost() const {
+  return stage_cost_;
 }
 
 
 inline double SplitUnconstrOCP::constraintViolation(
-    Robot& robot, const double t, const double dt, const SplitSolution& s, 
-    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
-                                                       kkt_residual);
-  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
-  double violation = 0;
-  violation += kkt_residual.l1NormConstraintViolation();
-  violation += dt * unconstr_dynamics_.l1NormConstraintViolation();
-  violation += dt * constraints_data_.l1NormConstraintViolation();
-  return violation;
+    const SplitKKTResidual& kkt_residual, const double dt) const {
+  double vio = 0;
+  vio += kkt_residual.constraintViolation();
+  vio += dt * unconstr_dynamics_.constraintViolation();
+  vio += dt * constraints_data_.constraintViolation();
+  return vio;
 }
 
 } // namespace idocp

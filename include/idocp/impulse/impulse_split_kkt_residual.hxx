@@ -99,17 +99,17 @@ ImpulseSplitKKTResidual::lf() const {
 }
 
 
-inline double ImpulseSplitKKTResidual::squaredNormKKTResidual() const {
-  double nrm = 0;
-  nrm += Fx.squaredNorm();
-  nrm += lx.squaredNorm();
-  nrm += ldv.squaredNorm();
-  nrm += lf().squaredNorm();
-  return nrm;
+inline double ImpulseSplitKKTResidual::KKTError() const {
+  double err = 0;
+  err += Fx.squaredNorm();
+  err += lx.squaredNorm();
+  err += ldv.squaredNorm();
+  err += lf().squaredNorm();
+  return err;
 }
 
 
-inline double ImpulseSplitKKTResidual::l1NormConstraintViolation() const {
+inline double ImpulseSplitKKTResidual::constraintViolation() const {
   return Fx.template lpNorm<1>();
 }
 

@@ -1,0 +1,1 @@
+#include "idocp/ocp/solution.hpp"

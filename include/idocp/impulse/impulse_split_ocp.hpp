@@ -83,6 +83,22 @@ public:
   void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
+  /// @brief Computes the impulse stage cost and constraint violation.
+  /// Used in the line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] q_next Configuration at the next time stage.
+  /// @param[in] v_next Generaized velocity at the next time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
+  ///
+  void evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status,
+                   const double t, const ImpulseSplitSolution& s, 
+                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+                   ImpulseSplitKKTResidual& kkt_residual);
+
+  ///
   /// @brief Computes the KKT residual of this impulse stage.
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
@@ -173,37 +189,27 @@ public:
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(
-      const ImpulseSplitKKTResidual& kkt_residual) const;
+  double KKTError(const ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the stage cost of this impulse stage for line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this impulse stage. 
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in] primal_step_size Primal step size. Default is 0.
-  /// @return Stage cost of this impulse stage.
+  /// @brief Returns the stage cost of this impulse stage for the line search.
+  /// Before calling this function, ImpulseSplitOCP::evaluateOCP(),
+  /// ImpulseSplitOCP::computeKKTResidual(),
+  /// or ImpulseSplitOCP::computeKKTSystem() must be called.
+  /// @return The stage cost of this impulse stage.
   /// 
-  double stageCost(Robot& robot, const double t, const ImpulseSplitSolution& s, 
-                   const double primal_step_size=0);
+  double stageCost() const;
 
   ///
-  /// @brief Computes the constraint violation of this impulse stage for line 
-  /// search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status oif this impulse stage. 
-  /// @param[in] t Time of this impulse stage. 
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in] q_next Configuration at the next time stage.
-  /// @param[in] v_next Generaized velocity at the next time stage.
-  /// @param[in, out] kkt_residual KKT residual of this impulse stage.
-  /// @return Constraint violation of this impulse stage.
+  /// @brief Returns the constraint violation of this impulse stage for the 
+  /// line search.
+  /// Before calling this function, ImpulseSplitOCP::evaluateOCP(),
+  /// ImpulseSplitOCP::computeKKTResidual(),
+  /// or ImpulseSplitOCP::computeKKTSystem() must be called.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
+  /// @return The constraint violation of this impulse stage.
   ///
-  double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
-                             const double t, const ImpulseSplitSolution& s, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next,
-                             ImpulseSplitKKTResidual& kkt_residual);
+  double constraintViolation(const ImpulseSplitKKTResidual& kkt_residual) const;
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -212,7 +218,7 @@ private:
   ConstraintsData constraints_data_;
   ImpulseStateEquation state_equation_;
   ImpulseDynamics impulse_dynamics_;
-  double impulse_cost_;
+  double stage_cost_;
 
 };
 

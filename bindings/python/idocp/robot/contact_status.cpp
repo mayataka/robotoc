@@ -14,6 +14,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(contact_status, m) {
   py::class_<ContactStatus>(m, "ContactStatus")
     .def(py::init<const int>())
+    .def("max_point_contacts", &ContactStatus::maxPointContacts)
     .def("is_contact_active", 
           static_cast<bool (ContactStatus::*)(const int) const>(&ContactStatus::isContactActive))
     .def("is_contact_active", 
@@ -28,6 +29,8 @@ PYBIND11_MODULE(contact_status, m) {
           static_cast<void (ContactStatus::*)()>(&ContactStatus::activateContacts))
     .def("deactivate_contacts", 
           static_cast<void (ContactStatus::*)()>(&ContactStatus::deactivateContacts))
+    .def("set_contact_point", &ContactStatus::setContactPoint)
+    .def("set_contact_points", &ContactStatus::setContactPoints)
     .def("contact_point", &ContactStatus::contactPoint)
     .def("contact_points", &ContactStatus::contactPoints);
 }

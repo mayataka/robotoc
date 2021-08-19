@@ -5,8 +5,8 @@ namespace idocp {
 
 JointTorquesUpperLimit::JointTorquesUpperLimit(
     const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rate)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
+    const double fraction_to_boundary_rule)
+  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
     dimc_(robot.jointEffortLimit().size()),
     umax_(robot.jointEffortLimit()) {
 }
@@ -55,7 +55,8 @@ void JointTorquesUpperLimit::setSlack(Robot& robot,
 void JointTorquesUpperLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = s.u - umax_ + data.slack;
-  computeDuality(data);
+  computeComplementarySlackness(data);
+  data.log_barrier = logBarrier(data.slack);
 }
 
 
@@ -72,9 +73,8 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Quu.diagonal().array()
       += dt * data.dual.array() / data.slack.array();
-  kkt_residual.lu.array() 
-      += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
-              / data.slack.array();
+  computeCondensingCoeffcient(data);
+  kkt_residual.lu.noalias() += dt * data.cond;
 }
 
 

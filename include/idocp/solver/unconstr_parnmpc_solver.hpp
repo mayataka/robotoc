@@ -1,5 +1,5 @@
 #ifndef IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_
-#define IDOCP_UNOCNSTR_PARNMPC_SOLVER_HPP_
+#define IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -11,6 +11,10 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/unconstr/unconstr_parnmpc.hpp"
+#include "idocp/ocp/solution.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/parnmpc/unconstr_backward_correction.hpp"
 #include "idocp/line_search/unconstr_line_search.hpp"
 
@@ -172,5 +176,4 @@ private:
 
 } // namespace idocp 
 
-
-#endif // IDOCP_UNOCNSTR_PARNMPC_SOLVER_HPP_ 
+#endif // IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_

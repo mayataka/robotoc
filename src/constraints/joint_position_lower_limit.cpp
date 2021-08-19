@@ -5,8 +5,8 @@ namespace idocp {
 
 JointPositionLowerLimit::JointPositionLowerLimit(
     const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rate)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
+    const double fraction_to_boundary_rule)
+  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
     dimc_(robot.lowerJointPositionLimit().size()),
     qmin_(robot.lowerJointPositionLimit()) {
 }
@@ -55,7 +55,8 @@ void JointPositionLowerLimit::setSlack(Robot& robot,
 void JointPositionLowerLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   data.residual = qmin_ - s.q.tail(dimc_) + data.slack;
-  computeDuality(data);
+  computeComplementarySlackness(data);
+  data.log_barrier = logBarrier(data.slack);
 }
 
 
@@ -72,9 +73,8 @@ void JointPositionLowerLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
-  kkt_residual.lq().tail(dimc_).array() 
-      -= dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
-              / data.slack.array();
+  computeCondensingCoeffcient(data);
+  kkt_residual.lq().tail(dimc_).noalias() -= dt * data.cond;
 }
 
 

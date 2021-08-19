@@ -11,50 +11,11 @@
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/hybrid_time_discretization.hpp"
-#include "idocp/ocp/split_switching_constraint_residual.hpp"
-#include "idocp/ocp/split_switching_constraint_jacobian.hpp"
 
 
 namespace idocp {
-
-///
-/// @typedef Solution
-/// @brief Solution to the (hybrid) optimal control problem. 
-///
-using Solution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-
-///
-/// @typedef Direction
-/// @brief Newton direction of the solution to the (hybrid) optimal control 
-/// problem. 
-///
-using Direction = hybrid_container<SplitDirection, ImpulseSplitDirection>;
-
-///
-/// @typedef KKTMatrix 
-/// @brief The KKT matrix of the (hybrid) optimal control problem. 
-///
-using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix, 
-                                   SplitSwitchingConstraintJacobian>;
-
-///
-/// @typedef KKTResidual 
-/// @brief The KKT residual of the (hybrid) optimal control problem. 
-///
-using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual, 
-                                     SplitSwitchingConstraintResidual>;
-
 
 ///
 /// @class OCP

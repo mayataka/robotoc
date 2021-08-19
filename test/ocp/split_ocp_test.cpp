@@ -37,20 +37,20 @@ protected:
   virtual void TearDown() {
   }
 
-  void testComputeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
-                              const bool switching_constraint=false) const;
-  void testComputeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
-                            const bool switching_constraint=false) const;
-  void testCostAndConstraintViolation(Robot& robot, const ContactStatus& contact_status, 
-                                      const bool switching_constraint=false) const;
+  void test_computeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
+                               const bool switching_constraint=false) const;
+  void test_computeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
+                             const bool switching_constraint=false) const;
+  void test_evaluateOCP(Robot& robot, const ContactStatus& contact_status, 
+                        const bool switching_constraint=false) const;
 
   double t, dt, dt_next;
 };
 
 
-void SplitOCPTest::testComputeKKTResidual(Robot& robot, 
-                                          const ContactStatus& contact_status, 
-                                          const bool switching_constraint) const {
+void SplitOCPTest::test_computeKKTResidual(Robot& robot, 
+                                           const ContactStatus& contact_status, 
+                                           const bool switching_constraint) const {
   ImpulseStatus impulse_status;
   if (switching_constraint) {
     impulse_status = robot.createImpulseStatus();
@@ -86,7 +86,7 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
     ocp.computeKKTResidual(robot, contact_status, t, dt, s_prev.q, s, s_next, 
                            kkt_matrix, kkt_residual);
   }
-  const double kkt_error = ocp.squaredNormKKTResidual(kkt_residual, dt);
+  const double kkt_error = ocp.KKTError(kkt_residual, dt);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
@@ -95,8 +95,9 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  const double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  stage_cost += dt * constraints_data.logBarrier();
   StateEquation state_equation(robot);
   state_equation.linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
@@ -110,18 +111,19 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
-  const double kkt_error_ref = kkt_residual_ref.squaredNormKKTResidual()
-                                + cd.squaredNormKKTResidual(dt)
-                                + (dt*dt) * constraints_data.squaredNormKKTResidual();
+  const double kkt_error_ref = kkt_residual_ref.KKTError()
+                                + (dt*dt) * cd.KKTError()
+                                + (dt*dt) * constraints_data.KKTError();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
+  EXPECT_DOUBLE_EQ(stage_cost, ocp.stageCost());
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
 
-void SplitOCPTest::testComputeKKTSystem(Robot& robot, 
-                                        const ContactStatus& contact_status, 
-                                        const bool switching_constraint) const {
+void SplitOCPTest::test_computeKKTSystem(Robot& robot, 
+                                         const ContactStatus& contact_status, 
+                                         const bool switching_constraint) const {
   ImpulseStatus impulse_status;
   if (switching_constraint) {
     impulse_status = robot.createImpulseStatus();
@@ -166,8 +168,9 @@ void SplitOCPTest::testComputeKKTSystem(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  const double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
+  stage_cost += dt * constraints_data.logBarrier();
   StateEquation state_equation(robot);
   state_equation.linearizeForwardEulerLieDerivative(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
@@ -217,9 +220,8 @@ void SplitOCPTest::testComputeKKTSystem(Robot& robot,
 }
 
 
-void SplitOCPTest::testCostAndConstraintViolation(Robot& robot, 
-                                                  const ContactStatus& contact_status, 
-                                                  const bool switching_constraint) const {
+void SplitOCPTest::test_evaluateOCP(Robot& robot, const ContactStatus& contact_status, 
+                                    const bool switching_constraint) const {
   ImpulseStatus impulse_status;
   if (switching_constraint) {
     impulse_status = robot.createImpulseStatus();
@@ -243,20 +245,21 @@ void SplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   SplitOCP ocp(robot, cost, constraints);
   const double step_size = 0.3;
   ocp.initConstraints(robot, 10, s);
-  const double stage_cost = ocp.stageCost(robot, t, dt, s, step_size);
   SplitKKTResidual kkt_residual(robot);
   SplitSwitchingConstraintResidual switch_res(robot);
   double constraint_violation;
   if (switching_constraint) {
-    constraint_violation = ocp.constraintViolation(robot, contact_status, t, dt, 
-                                                   s, s_next.q, s_next.v, 
-                                                   kkt_residual, impulse_status, 
-                                                   dt_next, switch_res);
+    ocp.evaluateOCP(robot, contact_status, t, dt, s, s_next.q, s_next.v, 
+                    kkt_residual, impulse_status, dt_next, switch_res);
+    constraint_violation = ocp.constraintViolation(kkt_residual, dt, switch_res);
   }
   else {
-    constraint_violation = ocp.constraintViolation(robot, contact_status, t, dt, 
-                                                   s, s_next.q, s_next.v, kkt_residual);
+    ocp.evaluateOCP(robot, contact_status, t, dt, s, s_next.q, s_next.v, 
+                    kkt_residual);
+    constraint_violation = ocp.constraintViolation(kkt_residual, dt);
   }
+  const double stage_cost = ocp.stageCost();
+
   SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   SplitKKTResidual kkt_residual_ref(robot);
@@ -265,11 +268,10 @@ void SplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = 0;
-  stage_cost_ref += cost->computeStageCost(robot, cost_data, t, dt, s);
-  stage_cost_ref += dt * constraints->costSlackBarrier(constraints_data, step_size);
-  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
+  double stage_cost_ref = cost->computeStageCost(robot, cost_data, t, dt, s);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
+  stage_cost_ref += dt * constraints_data.logBarrier();
+  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   StateEquation state_equation(robot);
   state_equation.computeForwardEulerResidual(robot, dt, s, s_next.q, 
                                              s_next.v, kkt_residual_ref);
@@ -284,9 +286,9 @@ void SplitOCPTest::testCostAndConstraintViolation(Robot& robot,
     switch_violation_ref = switch_res_ref.P().lpNorm<1>();
   }
   double constraint_violation_ref = 0;
-  constraint_violation_ref += kkt_residual_ref.l1NormConstraintViolation();
-  constraint_violation_ref += dt * constraints_data.l1NormConstraintViolation();
-  constraint_violation_ref += dt * cd.l1NormConstraintViolation();
+  constraint_violation_ref += kkt_residual_ref.constraintViolation();
+  constraint_violation_ref += dt * constraints_data.constraintViolation();
+  constraint_violation_ref += dt * cd.constraintViolation();
   constraint_violation_ref += switch_violation_ref;
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -296,38 +298,38 @@ void SplitOCPTest::testCostAndConstraintViolation(Robot& robot,
 TEST_F(SplitOCPTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  testComputeKKTResidual(robot, contact_status);
-  testComputeKKTSystem(robot, contact_status);
-  testCostAndConstraintViolation(robot, contact_status);
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evaluateOCP(robot, contact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  testComputeKKTResidual(robot, contact_status);
-  testComputeKKTSystem(robot, contact_status);
-  testCostAndConstraintViolation(robot, contact_status);
-  testComputeKKTResidual(robot, contact_status, true);
-  testComputeKKTSystem(robot, contact_status, true);
-  testCostAndConstraintViolation(robot, contact_status, true);
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evaluateOCP(robot, contact_status);
+  test_computeKKTResidual(robot, contact_status, true);
+  test_computeKKTSystem(robot, contact_status, true);
+  test_evaluateOCP(robot, contact_status, true);
 }
 
 
 TEST_F(SplitOCPTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  testComputeKKTResidual(robot, contact_status);
-  testComputeKKTSystem(robot, contact_status);
-  testCostAndConstraintViolation(robot, contact_status);
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evaluateOCP(robot, contact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  testComputeKKTResidual(robot, contact_status);
-  testComputeKKTSystem(robot, contact_status);
-  testCostAndConstraintViolation(robot, contact_status);
-  testComputeKKTResidual(robot, contact_status, true);
-  testComputeKKTSystem(robot, contact_status, true);
-  testCostAndConstraintViolation(robot, contact_status, true);
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evaluateOCP(robot, contact_status);
+  test_computeKKTResidual(robot, contact_status, true);
+  test_computeKKTSystem(robot, contact_status, true);
+  test_evaluateOCP(robot, contact_status, true);
 }
 
 } // namespace idocp

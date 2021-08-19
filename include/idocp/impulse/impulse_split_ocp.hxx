@@ -16,7 +16,7 @@ inline ImpulseSplitOCP::ImpulseSplitOCP(
     constraints_data_(constraints->createConstraintsData(robot, -1)),
     state_equation_(robot),
     impulse_dynamics_(robot),
-    impulse_cost_(0) {
+    stage_cost_(0) {
 }
 
 
@@ -27,7 +27,7 @@ inline ImpulseSplitOCP::ImpulseSplitOCP()
     constraints_data_(),
     state_equation_(),
     impulse_dynamics_(),
-    impulse_cost_(0) {
+    stage_cost_(0) {
 }
 
 
@@ -48,6 +48,24 @@ inline void ImpulseSplitOCP::initConstraints(Robot& robot,
 }
 
 
+inline void ImpulseSplitOCP::evaluateOCP(
+    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
+    const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
+    const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual) {
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  kkt_residual.setImpulseStatus(impulse_status);
+  kkt_residual.setZero();
+  robot.updateKinematics(s.q, s.v+s.dv);
+  stage_cost_ = cost_->computeImpulseCost(robot, cost_data_, t, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  stage_cost_ += constraints_data_.logBarrier();
+  state_equation_.computeForwardEulerResidual(robot, s, q_next, v_next, 
+                                              kkt_residual);
+  impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s);
+}
+
+
 inline void ImpulseSplitOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
@@ -59,10 +77,11 @@ inline void ImpulseSplitOCP::computeKKTResidual(
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  impulse_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
-                                              kkt_residual);
+  stage_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
+                                            kkt_residual);
   constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, s, 
                                                kkt_residual);
+  stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeForwardEuler(robot, q_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
@@ -81,10 +100,11 @@ inline void ImpulseSplitOCP::computeKKTSystem(
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  impulse_cost_ = cost_->quadratizeImpulseCost(robot, cost_data_, t, s, 
-                                               kkt_residual, kkt_matrix);
+  stage_cost_ = cost_->quadratizeImpulseCost(robot, cost_data_, t, s, 
+                                             kkt_residual, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, s, 
                                      kkt_matrix, kkt_residual);
+  stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
                                                      kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
@@ -136,52 +156,28 @@ inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline double ImpulseSplitOCP::squaredNormKKTResidual(
+inline double ImpulseSplitOCP::KKTError(
     const ImpulseSplitKKTResidual& kkt_residual) const {
-  double nrm = 0;
-  nrm += kkt_residual.squaredNormKKTResidual();
-  nrm += impulse_dynamics_.squaredNormKKTResidual();
-  nrm += constraints_data_.squaredNormKKTResidual();
-  return nrm;
+  double err = 0;
+  err += kkt_residual.KKTError();
+  err += impulse_dynamics_.KKTError();
+  err += constraints_data_.KKTError();
+  return err;
 }
 
 
-inline double ImpulseSplitOCP::stageCost(Robot& robot, const double t, 
-                                         const ImpulseSplitSolution& s, 
-                                         const double primal_step_size) {
-  assert(primal_step_size >= 0);
-  assert(primal_step_size <= 1);
-  robot.updateKinematics(s.q, s.v+s.dv);
-  double cost = 0;
-  cost += cost_->computeImpulseCost(robot, cost_data_, t, s);
-  if (primal_step_size > 0) {
-    cost += constraints_->costSlackBarrier(constraints_data_, primal_step_size);
-  }
-  else {
-    cost += constraints_->costSlackBarrier(constraints_data_);
-  }
-  return cost;
+inline double ImpulseSplitOCP::stageCost() const {
+  return stage_cost_;
 }
 
 
 inline double ImpulseSplitOCP::constraintViolation(
-    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
-    const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
-    const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual) {
-  assert(q_next.size() == robot.dimq());
-  assert(v_next.size() == robot.dimv());
-  kkt_residual.setImpulseStatus(impulse_status);
-  kkt_residual.setZero();
-  robot.updateKinematics(s.q, s.v+s.dv);
-  state_equation_.computeForwardEulerResidual(robot, s, q_next, v_next, 
-                                              kkt_residual);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s);
-  double violation = 0;
-  violation += kkt_residual.l1NormConstraintViolation();
-  violation += constraints_data_.l1NormConstraintViolation();
-  violation += impulse_dynamics_.l1NormConstraintViolation();
-  return violation;
+    const ImpulseSplitKKTResidual& kkt_residual) const {
+  double vio = 0;
+  vio += kkt_residual.constraintViolation();
+  vio += constraints_data_.constraintViolation();
+  vio += impulse_dynamics_.constraintViolation();
+  return vio;
 }
 
 } // namespace idocp

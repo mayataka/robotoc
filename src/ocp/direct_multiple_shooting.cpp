@@ -103,37 +103,34 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
       kkt_error_.coeffRef(i) 
-          = ocp[i].squaredNormKKTResidual(kkt_residual[i], ocp.discrete().dt(i));
+          = ocp[i].KKTError(kkt_residual[i], ocp.discrete().dt(i));
     }
     else if (i == N) {
       kkt_error_.coeffRef(N) 
-          = ocp.terminal.squaredNormKKTResidual(kkt_residual[N]);
+          = ocp.terminal.KKTError(kkt_residual[N]);
     }
     else if (i < N+1+N_impulse) {
       const int impulse_index = i - (N+1);
       const int time_stage_before_impulse 
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
       kkt_error_.coeffRef(i) 
-          = ocp.impulse[impulse_index].squaredNormKKTResidual(
-              kkt_residual.impulse[impulse_index]);
+          = ocp.impulse[impulse_index].KKTError(kkt_residual.impulse[impulse_index]);
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index = i - (N+1+N_impulse);
       kkt_error_.coeffRef(i) 
-          = ocp.aux[impulse_index].squaredNormKKTResidual(
-                kkt_residual.aux[impulse_index], 
-                ocp.discrete().dt_aux(impulse_index));
+          = ocp.aux[impulse_index].KKTError(kkt_residual.aux[impulse_index], 
+                                            ocp.discrete().dt_aux(impulse_index));
     }
     else if (i < N+1+2*N_impulse+N_lift) {
       const int lift_index = i - (N+1+2*N_impulse);
       kkt_error_.coeffRef(i) 
-          = ocp.lift[lift_index].squaredNormKKTResidual(
-              kkt_residual.lift[lift_index], ocp.discrete().dt_lift(lift_index));
+          = ocp.lift[lift_index].KKTError(kkt_residual.lift[lift_index], 
+                                          ocp.discrete().dt_lift(lift_index));
     }
     else {
       const int impulse_index = i - (N+1+2*N_impulse+N_lift);
-      kkt_error_.coeffRef(i)
-          = kkt_residual.switching[impulse_index].squaredNormKKTResidual();
+      kkt_error_.coeffRef(i) = kkt_residual.switching[impulse_index].KKTError();
     }
   }
   return std::sqrt(kkt_error_.head(N_all).sum());

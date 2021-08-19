@@ -9,6 +9,8 @@
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/time_varying_task_space_3d_cost.hpp"
 #include "idocp/cost/time_varying_com_cost.hpp"
+#include "idocp/cost/periodic_foot_track_ref.hpp"
+#include "idocp/cost/periodic_com_ref.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -23,9 +25,6 @@
 #ifdef ENABLE_VIEWER
 #include "idocp/utils/trajectory_viewer.hpp"
 #endif 
-
-#include "periodic_foot_track_ref.hpp"
-#include "periodic_com_ref.hpp"
 
 
 int main(int argc, char *argv[]) {

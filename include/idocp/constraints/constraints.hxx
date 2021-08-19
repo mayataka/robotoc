@@ -436,16 +436,16 @@ inline void Constraints::setBarrier(const double barrier) {
 }
 
 
-inline void Constraints::setFractionToBoundaryRate(
-    const double fraction_to_boundary_rate) {
-  constraintsimpl::setFractionToBoundaryRate(position_level_constraints_, 
-                                             fraction_to_boundary_rate);
-  constraintsimpl::setFractionToBoundaryRate(velocity_level_constraints_, 
-                                             fraction_to_boundary_rate);
-  constraintsimpl::setFractionToBoundaryRate(acceleration_level_constraints_, 
-                                             fraction_to_boundary_rate);
-  constraintsimpl::setFractionToBoundaryRate(impulse_level_constraints_, 
-                                             fraction_to_boundary_rate);
+inline void Constraints::setFractionToBoundaryRule(
+    const double fraction_to_boundary_rule) {
+  constraintsimpl::setFractionToBoundaryRule(position_level_constraints_, 
+                                             fraction_to_boundary_rule);
+  constraintsimpl::setFractionToBoundaryRule(velocity_level_constraints_, 
+                                             fraction_to_boundary_rule);
+  constraintsimpl::setFractionToBoundaryRule(acceleration_level_constraints_, 
+                                             fraction_to_boundary_rule);
+  constraintsimpl::setFractionToBoundaryRule(impulse_level_constraints_, 
+                                             fraction_to_boundary_rule);
 }
 
 } // namespace idocp

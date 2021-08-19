@@ -8,6 +8,10 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/ocp/ocp.hpp"
+#include "idocp/ocp/solution.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_time_discretization.hpp"
 

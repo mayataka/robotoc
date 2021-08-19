@@ -28,13 +28,13 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testComputeKKTResidual(Robot& robot);
-  static void testComputeKKTSystem(Robot& robot);
-  static void testTerminalCost(Robot& robot);
+  static void test_computeKKTResidual(Robot& robot);
+  static void test_computeKKTSystem(Robot& robot);
+  static void test_evaluateOCP(Robot& robot);
 };
 
 
-void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
+void TerminalOCPTest::test_computeKKTResidual(Robot& robot) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -44,7 +44,7 @@ void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
   SplitKKTResidual kkt_residual(robot);  
   SplitKKTMatrix kkt_matrix(robot);  
   ocp.computeKKTResidual(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
-  const double KKT = ocp.squaredNormKKTResidual(kkt_residual);
+  const double KKT = ocp.KKTError(kkt_residual);
   robot.updateKinematics(s.q, s.v);
   SplitKKTResidual kkt_residual_ref(robot);  
   SplitKKTMatrix kkt_matrix_ref(robot);  
@@ -60,7 +60,7 @@ void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
 }
 
 
-void TerminalOCPTest::testComputeKKTSystem(Robot& robot) {
+void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   const auto s_prev = SplitSolution::Random(robot);
@@ -88,13 +88,15 @@ void TerminalOCPTest::testComputeKKTSystem(Robot& robot) {
 }
 
 
-void TerminalOCPTest::testTerminalCost(Robot& robot) {
+void TerminalOCPTest::test_evaluateOCP(Robot& robot) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const SplitSolution s = SplitSolution::Random(robot);
+  const auto s = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   TerminalOCP ocp(robot, cost, constraints);
-  const double terminal_cost = ocp.terminalCost(robot, t, s);
+  SplitKKTResidual kkt_residual(robot);  
+  ocp.evaluateOCP(robot, t, s, kkt_residual);
+  const double terminal_cost = ocp.terminalCost();
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost_ref = cost->computeTerminalCost(robot, cost_data, t, s);
@@ -105,18 +107,18 @@ void TerminalOCPTest::testTerminalCost(Robot& robot) {
 TEST_F(TerminalOCPTest, fixedBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testTerminalCost(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_evaluateOCP(robot);
 }
 
 
 TEST_F(TerminalOCPTest, floatingBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testTerminalCost(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_evaluateOCP(robot);
 }
 
 } // namespace idocp

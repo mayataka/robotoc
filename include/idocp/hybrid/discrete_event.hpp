@@ -7,6 +7,16 @@
 
 namespace idocp {
 
+/// 
+/// @enum DiscreteEventType
+/// @brief Type of the discrete events.
+///
+enum class DiscreteEventType {
+  Impulse,
+  Lift,
+  None
+};
+
 ///
 /// @class DiscreteEvent
 /// @brief Discrete event composed by impulse and lift.
@@ -124,10 +134,17 @@ public:
   ///
   int maxPointContacts() const;
 
+  ///
+  /// @brief Returns the event type of this discrete event.
+  /// @return Event type of this discrete event. 
+  ///
+  DiscreteEventType eventType() const;
+
 private:
   ContactStatus pre_contact_status_, post_contact_status_;
   ImpulseStatus impulse_status_;
   int max_point_contacts_;
+  DiscreteEventType event_type_;
   bool exist_impulse_, exist_lift_;
 
 };

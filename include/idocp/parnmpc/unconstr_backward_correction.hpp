@@ -11,7 +11,10 @@
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/ocp.hpp"
+#include "idocp/ocp/solution.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/unconstr/unconstr_parnmpc.hpp"
 #include "idocp/parnmpc/unconstr_split_backward_correction.hpp"
 

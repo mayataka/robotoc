@@ -293,11 +293,12 @@ public:
   void setBarrier(const double barrier);
 
   ///
-  /// @brief Sets the fraction to boundary rate for all the constraint components.
-  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
+  /// constraint components.
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
   /// than 1. Should be between 0.9 and 0.995.
   ///
-  void setFractionToBoundaryRate(const double fraction_to_boundary_rate);
+  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
 
 private:
   std::vector<ConstraintComponentBasePtr> position_level_constraints_, 

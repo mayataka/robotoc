@@ -56,6 +56,7 @@ void RiccatiRecursion::backwardRiccatiRecursion(
   factorization[N].s = - kkt_residual[N].lx;
   for (int i=N-1; i>=0; --i) {
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+      assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                            kkt_matrix.aux[impulse_index], 
@@ -69,47 +70,33 @@ void RiccatiRecursion::backwardRiccatiRecursion(
       factorizer_.backwardRiccatiRecursion(factorization.impulse[impulse_index], 
                                            kkt_matrix[i], kkt_residual[i], 
                                            factorization[i], lqr_policy_[i]);
-    }
-    else if (ocp.discrete().isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-      if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
-        factorizer_.backwardRiccatiRecursion(factorization[i+1], 
-                                             kkt_matrix.lift[lift_index], 
-                                             kkt_residual.lift[lift_index], 
+      if (i-1 >= 0) {
+        factorizer_.backwardRiccatiRecursion(factorization[i], kkt_matrix[i-1], 
+                                             kkt_residual[i-1],
                                              kkt_matrix.switching[impulse_index], 
                                              kkt_residual.switching[impulse_index], 
-                                             factorization.lift[lift_index], 
+                                             factorization[i-1], 
                                              factorization.switching[impulse_index], 
-                                             lqr_policy_.lift[lift_index]);
+                                             lqr_policy_[i-1]);
       }
-      else {
-        factorizer_.backwardRiccatiRecursion(factorization[i+1], 
-                                             kkt_matrix.lift[lift_index], 
-                                             kkt_residual.lift[lift_index], 
-                                             factorization.lift[lift_index], 
-                                             lqr_policy_.lift[lift_index]);
-      }
+
+    }
+    else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+      assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
+      const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
+      factorizer_.backwardRiccatiRecursion(factorization[i+1], 
+                                            kkt_matrix.lift[lift_index], 
+                                            kkt_residual.lift[lift_index], 
+                                            factorization.lift[lift_index], 
+                                            lqr_policy_.lift[lift_index]);
       factorizer_.backwardRiccatiRecursion(factorization.lift[lift_index], 
                                            kkt_matrix[i], kkt_residual[i], 
                                            factorization[i], lqr_policy_[i]);
     }
-    else {
-      if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
-        factorizer_.backwardRiccatiRecursion(factorization[i+1], 
-                                             kkt_matrix[i], kkt_residual[i], 
-                                             kkt_matrix.switching[impulse_index], 
-                                             kkt_residual.switching[impulse_index], 
-                                             factorization[i], 
-                                             factorization.switching[impulse_index], 
-                                             lqr_policy_[i]);
-      }
-      else {
-        factorizer_.backwardRiccatiRecursion(factorization[i+1], 
-                                             kkt_matrix[i], kkt_residual[i], 
-                                             factorization[i], lqr_policy_[i]);
-      }
+    else if (!ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+      factorizer_.backwardRiccatiRecursion(factorization[i+1], 
+                                            kkt_matrix[i], kkt_residual[i], 
+                                            factorization[i], lqr_policy_[i]);
     }
   }
 }
@@ -121,7 +108,12 @@ void RiccatiRecursion::forwardRiccatiRecursion(
   const int N = ocp.discrete().N();
   for (int i=0; i<N; ++i) {
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+      assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
+      if (i-1 >= 0) {
+        factorizer_.forwardRiccatiRecursion(kkt_matrix[i-1], kkt_residual[i-1],
+                                            lqr_policy_[i-1], d[i-1], d[i]);
+      }
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], 
                                           d.impulse[impulse_index]);
@@ -134,6 +126,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
                                           d.aux[impulse_index], d[i+1]);
     }
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+      assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], 
@@ -143,7 +136,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
                                           lqr_policy_.lift[lift_index], 
                                           d.lift[lift_index], d[i+1]);
     }
-    else {
+    else if (!ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], d[i+1]);
     }
@@ -204,15 +197,6 @@ void RiccatiRecursion::computeDirection(
       RiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], 
                                                  d.lift[lift_index]);
       ocp.lift[lift_index].expandPrimal(s.lift[lift_index], d.lift[lift_index]);
-      const int time_stage_after_lift 
-          = ocp.discrete().timeStageAfterLift(lift_index);
-      if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {
-        const int impulse_index
-            = ocp.discrete().impulseIndexAfterTimeStage(time_stage_after_lift);
-        d.lift[lift_index].setImpulseStatusByDimension(s.lift[lift_index].dimi());
-        RiccatiFactorizer::computeLagrangeMultiplierDirection(
-            factorization.switching[impulse_index], d.lift[lift_index]);
-      }
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.lift[lift_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 

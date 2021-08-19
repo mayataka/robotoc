@@ -6,41 +6,94 @@
 
 #include "Eigen/Core"
 
+#include "idocp/solver/ocp_solver.hpp"
+#include "idocp/solver/unconstr_ocp_solver.hpp"
+#include "idocp/solver/unconstr_parnmpc_solver.hpp"
+
 
 namespace idocp {
 
 ///
 /// @class Logger
-/// @brief Logger of the solution of the optimal control problems.
+/// @brief Logger for optimal control solvers.
 ///
 class Logger {
 public:
   ///
   /// @brief Constructs the logger.
+  /// @param[in] vars Names of the variables to be logged. Choose from "q", "v",
+  /// "a", "f", "u", "ts", and "KKT".
   /// @param[in] save_dir Path to the directory where the log files are 
   /// saved. Default is "./".
   ///
-  Logger(const std::string& save_dir="./");
+  Logger(const std::vector<std::string>& vars, 
+         const std::string& save_dir="./");
 
   ///
-  /// @brief Saves the log.
-  /// @param[in] file_name File name.
-  /// @param[in] var Std vector of variables.
+  /// @brief Destructor.
+  ///
+  ~Logger();
+
+  ///
+  /// @brief Takes the log.
+  /// @param[in] solver The OCP solver.
   /// @param[in] precision Precision of float values. Default is 
   /// Eigen::FullPrecision.
   /// @param[in] delimiter Delimiter of values. Default is ", ".
   ///
-  void save(const std::string& file_name, 
-            const std::vector<Eigen::VectorXd>& var,
-            const int precision=Eigen::FullPrecision,
-            const std::string& delimiter=", ") const;
+  void takeLog(OCPSolver& solver, const int precision=Eigen::FullPrecision,
+               const std::string& delimiter=", ");
+
+  ///
+  /// @brief Takes the log.
+  /// @param[in] solver The constrained OCP solver.
+  /// @param[in] precision Precision of float values. Default is 
+  /// Eigen::FullPrecision.
+  /// @param[in] delimiter Delimiter of values. Default is ", ".
+  ///
+  void takeLog(UnconstrOCPSolver& solver, 
+               const int precision=Eigen::FullPrecision,
+               const std::string& delimiter=", ");
+
+  ///
+  /// @brief Takes the log.
+  /// @param[in] solver The constrained ParNMPC solver.
+  /// @param[in] precision Precision of float values. Default is 
+  /// Eigen::FullPrecision.
+  /// @param[in] delimiter Delimiter of values. Default is ", ".
+  ///
+  void takeLog(UnconstrParNMPCSolver& solver, 
+               const int precision=Eigen::FullPrecision,
+               const std::string& delimiter=", ");
 
 private:
+  std::vector<std::string> vars_;
   std::string save_dir_;
+  std::vector<std::ofstream> logs_;
+
+  template <typename UnconstrOCPSolverType>
+  void takeLog_unconstr_impl(UnconstrOCPSolverType& solver, 
+                             const int precision,
+                             const std::string& delimiter) {
+    Eigen::IOFormat format(precision, 0, delimiter);
+    for (int i=0; i<vars_.size(); ++i) {
+      if (vars_[i] == "KKT") {
+        const double kkt = solver.KKTError();
+        Eigen::VectorXd vec(1); vec << kkt;
+        logs_[i] << vec.format(format) << "\n";
+      }
+      else {
+        const auto sols = solver.getSolution(vars_[i]);
+        for (const auto& e : sols) {
+          logs_[i] << e.transpose().format(format) << "\n";
+        }
+        logs_[i] << "\n";
+      }
+    }
+  }
 
 };
 
 } // namespace idocp
-
 
 #endif // IDOCP_LOGGER_HPP_

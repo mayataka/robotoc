@@ -51,8 +51,8 @@ TEST_F(UnconstrDynamicsTest, linearizeUnconstrDynamics) {
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   robot.RNEA(s.q, s.v, s.a, ID);
   ID.noalias() -= s.u;
-  EXPECT_DOUBLE_EQ(ud.l1NormConstraintViolation(), ID.lpNorm<1>());
-  EXPECT_DOUBLE_EQ(ud.squaredNormKKTResidual(), ID.squaredNorm());
+  EXPECT_DOUBLE_EQ(ud.constraintViolation(), ID.lpNorm<1>());
+  EXPECT_DOUBLE_EQ(ud.KKTError(), ID.squaredNorm());
 }
 
 

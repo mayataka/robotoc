@@ -11,8 +11,8 @@ namespace idocp {
 ///
 /// @class ConstraintComponentData
 /// @brief Data used in constraint components. Composed by slack, 
-/// dual (Lagrange multiplier), primal residual, duality between the slack and 
-/// dual, and directions of slack and dual.
+/// dual (Lagrange multiplier), primal residual, complementary slackness between 
+/// the slack and dual, and directions of slack and dual.
 ///
 class ConstraintComponentData {
 public:
@@ -74,10 +74,10 @@ public:
   Eigen::VectorXd residual;
 
   ///
-  /// @brief Residual of the duality between slakc and dual. Size is 
-  /// ConstraintComponentData::dimc(). 
+  /// @brief Residual in the complementary slackness between slack and dual. 
+  /// Size is ConstraintComponentData::dimc(). 
   ///
-  Eigen::VectorXd duality;
+  Eigen::VectorXd cmpl;
 
   ///
   /// @brief Newton direction of the slack. Size is 
@@ -92,6 +92,16 @@ public:
   Eigen::VectorXd ddual;
 
   ///
+  /// @brief Used in condensing of slack and dual. Size is 
+  /// ConstraintComponentData::dimc(). 
+  ///
+  Eigen::VectorXd cond;
+
+  ///
+  /// @brief Value of the log berrier function of the slack variable.
+  double log_barrier;
+
+  ///
   /// @brief std vector of Eigen::VectorXd used to store residual temporaly. 
   /// Only be allocated in ConstraintComponentBase::allocateExtraData().
   ///
@@ -104,18 +114,19 @@ public:
   std::vector<Eigen::MatrixXd> J;
 
   ///
-  /// @brief Returns the squared norm of the KKT reisdual, that is, the primal 
-  /// and dual residuals of the constraint. 
+  /// @brief Returns the squared norm of the KKT reisdual, that is, the sum of
+  /// the squared norm of the primal residual and complementary slackness of 
+  /// the constraint. 
   /// @return Squared norm of the KKT residual. 
   ///
-  double squaredNormKKTResidual() const;
+  double KKTError() const;
 
   ///
   /// @brief Returns the l1-norm of the constraint violation, that is, the 
-  /// primal residual of the constraint. 
+  /// primal residual in the constraint. 
   /// @return l1-norm of the constraint violation. 
   ///
-  double l1NormConstraintViolation() const;
+  double constraintViolation() const;
 
   ///
   /// @brief Dimension of the constraint. 
@@ -124,7 +135,7 @@ public:
   int dimc() const;
 
   ///
-  /// @brief Check whether dimensions of slack, dual, residual, duality, 
+  /// @brief Check whether dimensions of slack, dual, residual, cmpl, 
   /// dslack, ddual are ConstraintComponentData::dimc(). 
   /// @return Dimension of the constraint. 
   ///

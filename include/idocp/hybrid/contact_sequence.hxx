@@ -20,7 +20,9 @@ inline ContactSequence::ContactSequence(const Robot& robot,
     event_time_(max_num_events),
     impulse_time_(max_num_events),
     lift_time_(max_num_events),
-    is_impulse_event_(max_num_events) {
+    is_impulse_event_(max_num_events),
+    sto_impulse_(max_num_events), 
+    sto_lift_(max_num_events) {
   try {
     if (max_num_events <= 0) {
       throw std::out_of_range("invalid argument: max_num_events must be positive!");
@@ -45,7 +47,9 @@ inline ContactSequence::ContactSequence()
     event_time_(),
     impulse_time_(),
     lift_time_(),
-    is_impulse_event_() {
+    is_impulse_event_(),
+    sto_impulse_(),
+    sto_lift_() {
 }
 
 
@@ -61,7 +65,8 @@ inline void ContactSequence::setContactStatusUniformly(
 
 
 inline void ContactSequence::push_back(const DiscreteEvent& discrete_event, 
-                                       const double event_time) {
+                                       const double event_time,
+                                       const bool sto) {
   try {
     if (numContactPhases() == 0) {
       throw std::runtime_error(
@@ -101,19 +106,22 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
     event_index_impulse_.push_back(contact_statuses_.size()-2);
     impulse_time_.push_back(event_time);
     is_impulse_event_.push_back(true);
+    sto_impulse_.push_back(sto);
   }
   else {
     event_index_lift_.push_back(contact_statuses_.size()-2);
     lift_time_.push_back(event_time);
     is_impulse_event_.push_back(false);
+    sto_lift_.push_back(sto);
   }
 }
 
 
 inline void ContactSequence::push_back(const ContactStatus& contact_status, 
-                                       const double event_time) {
+                                       const double event_time,
+                                       const bool sto) {
   DiscreteEvent discrete_event(contact_statuses_.back(), contact_status);
-  push_back(discrete_event, event_time);
+  push_back(discrete_event, event_time, sto);
 }
 
 
@@ -123,10 +131,12 @@ inline void ContactSequence::pop_back() {
       impulse_events_.pop_back();
       event_index_impulse_.pop_back();
       impulse_time_.pop_back();
+      sto_impulse_.pop_back();
     }
     else {
       event_index_lift_.pop_back();
       lift_time_.pop_back();
+      sto_lift_.pop_back();
     }
     event_time_.pop_back();
     is_impulse_event_.pop_back();
@@ -146,10 +156,12 @@ inline void ContactSequence::pop_front() {
       impulse_events_.pop_front();
       event_index_impulse_.pop_front();
       impulse_time_.pop_front();
+      sto_impulse_.pop_front();
     }
     else {
       event_index_lift_.pop_front();
       lift_time_.pop_front();
+      sto_lift_.pop_front();
     }
     event_time_.pop_front();
     is_impulse_event_.pop_front();
@@ -179,23 +191,6 @@ inline void ContactSequence::updateImpulseTime(const int impulse_index,
           + " must be less than numImpulseEvents()=" 
           + std::to_string(numImpulseEvents()) + "!");
     }
-    const int event_index = event_index_impulse_[impulse_index];
-    if (event_index > 0) {
-      if (event_time_[event_index-1] >= impulse_time) {
-        throw std::runtime_error(
-            "impulse_time=" + std::to_string(impulse_time) 
-            + " must be larger than event_time_[event_index-1]=" 
-            + std::to_string(event_time_[event_index-1]) + "!");
-      }
-    }
-    else if (event_index+1 < numDiscreteEvents()) {
-      if (event_time_[event_index+1] <= impulse_time) {
-        throw std::runtime_error(
-            "impulse_time=" + std::to_string(impulse_time) 
-            + " must be larger than event_time_[event_index+1]=" 
-            + std::to_string(event_time_[event_index+1]) + "!");
-      }
-    }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
@@ -222,23 +217,6 @@ inline void ContactSequence::updateLiftTime(const int lift_index,
           + " must be less than numLiftEvents()=" 
           + std::to_string(numLiftEvents()) + "!");
     }
-    const int event_index = event_index_lift_[lift_index];
-    if (event_index > 0) {
-      if (event_time_[event_index-1] >= lift_time) {
-        throw std::runtime_error(
-            "lift_time=" + std::to_string(lift_time) 
-            + " must be larger than event_time_[event_index-1]=" 
-            + std::to_string(event_time_[event_index-1]) + "!");
-      }
-    }
-    else if (event_index+1 < numDiscreteEvents()) {
-      if (event_time_[event_index+1] <= lift_time) {
-        throw std::runtime_error(
-            "lift_time=" + std::to_string(lift_time) 
-            + " must be larger than event_time_[event_index+1]=" 
-            + std::to_string(event_time_[event_index+1]) + "!");
-      }
-    }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
@@ -246,6 +224,24 @@ inline void ContactSequence::updateLiftTime(const int lift_index,
   }
   lift_time_[lift_index] = lift_time;
   event_time_[event_index_lift_[lift_index]] = lift_time;
+}
+
+
+inline bool ContactSequence::isEventTimeConsistent() const {
+  bool is_consistent = true;
+  if (numDiscreteEvents() > 0) {
+    for (int event_index=1; event_index<numDiscreteEvents(); ++event_index) {
+      if (event_time_[event_index] <= event_time_[event_index-1]) {
+            "event_time[" + std::to_string(event_index) + "]=" 
+            + std::to_string(event_time_[event_index]) 
+            + " must be larger than event_time_[" 
+            + std::to_string(event_index-1) + "]=" 
+            + std::to_string(event_time_[event_index-1]) + "!";
+        is_consistent = false;
+      }
+    }
+  }
+  return is_consistent;
 }
 
 
@@ -321,6 +317,29 @@ inline double ContactSequence::liftTime(const int lift_index) const {
 }
 
 
+inline bool ContactSequence::isSTOEnabledImpulse(const int impulse_index) const {
+  assert(impulse_index >= 0);
+  assert(impulse_index < numImpulseEvents());
+  return sto_impulse_[impulse_index];
+}
+
+
+inline bool ContactSequence::isSTOEnabledLift(const int lift_index) const {
+  assert(lift_index >= 0);
+  assert(lift_index < numLiftEvents());
+  return sto_lift_[lift_index];
+}
+
+
+inline DiscreteEventType ContactSequence::eventType(
+    const int event_index) const {
+  assert(event_index >= 0);
+  assert(event_index < numImpulseEvents()+numLiftEvents());
+  if (is_impulse_event_[event_index]) return DiscreteEventType::Impulse;
+  else return DiscreteEventType::Lift;
+}
+
+
 inline void ContactSequence::clear_all() {
   contact_statuses_.clear();
   impulse_events_.clear();
@@ -330,6 +349,8 @@ inline void ContactSequence::clear_all() {
   impulse_time_.clear();
   lift_time_.clear();
   is_impulse_event_.clear();
+  sto_impulse_.clear();
+  sto_lift_.clear();
 }
 
 } // namespace idocp 

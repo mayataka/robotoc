@@ -14,9 +14,11 @@ using ImpulseConstraintComponentBasePtr = std::shared_ptr<ImpulseConstraintCompo
 PYBIND11_MODULE(constraints, m) {
   py::class_<Constraints, std::shared_ptr<Constraints>>(m, "Constraints")
     .def(py::init<>())
-    .def("append", static_cast<void (Constraints::*)(const ConstraintComponentBasePtr&)>(&Constraints::push_back))
-    .def("append", static_cast<void (Constraints::*)(const ImpulseConstraintComponentBasePtr&)>(&Constraints::push_back))
-    .def("clear", &Constraints::clear);
+    .def("push_back", static_cast<void (Constraints::*)(const ConstraintComponentBasePtr&)>(&Constraints::push_back))
+    .def("push_back", static_cast<void (Constraints::*)(const ImpulseConstraintComponentBasePtr&)>(&Constraints::push_back))
+    .def("clear", &Constraints::clear)
+    .def("set_barrier", &Constraints::setBarrier)
+    .def("set_fraction_to_boundary_rule", &Constraints::setFractionToBoundaryRule);
 
   m.def("create_constraints", []() {
     return std::make_shared<Constraints>();

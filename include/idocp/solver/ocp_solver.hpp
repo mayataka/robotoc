@@ -12,6 +12,10 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp.hpp"
+#include "idocp/ocp/solution.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/direct_multiple_shooting.hpp"
 #include "idocp/riccati/riccati_recursion.hpp"
 #include "idocp/line_search/line_search.hpp"
@@ -193,6 +197,14 @@ public:
   bool isCurrentSolutionFeasible();
 
   ///
+  /// @brief Checks wheather the formulation of the discretized optimal control 
+  /// problem is tractable or not.
+  /// @param[in] t Initial time of the horizon. 
+  /// @return true if the optimal control problem is tractable. false if not.
+  ///
+  bool isFormulationTractable(const double t);
+
+  ///
   /// @brief Shows the information of the discretized optimal control problem
   /// onto console.
   ///
@@ -216,6 +228,5 @@ private:
 };
 
 } // namespace idocp 
-
 
 #endif // IDOCP_OCP_SOLVER_HPP_ 
