@@ -6,10 +6,13 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/ocp.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/riccati/unconstr_riccati_factorizer.hpp"
 #include "idocp/riccati/split_riccati_factorization.hpp"
 #include "idocp/riccati/lqr_policy.hpp"
+
 
 namespace idocp {
 

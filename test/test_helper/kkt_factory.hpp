@@ -4,10 +4,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 
 
 namespace idocp {

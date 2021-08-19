@@ -20,6 +20,8 @@ namespace idocp {
 ///
 class ImpulseFrictionCone final : public ImpulseConstraintComponentBase {
 public:
+  using Vector5d = Eigen::Matrix<double, 5, 1>;
+
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.

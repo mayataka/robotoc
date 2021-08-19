@@ -116,14 +116,14 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
   /// @param[in] dt_next Time step of the next time stage. 
-  /// @param[in, out] switch_residual Residual of the switching constraint. 
+  /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void evaluateOCP(Robot& robot, const ContactStatus& contact_status,
                    const double t, const double dt, const SplitSolution& s, 
                    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
                    SplitKKTResidual& kkt_residual,
                    const ImpulseStatus& impulse_status, const double dt_next, 
-                   SplitSwitchingConstraintResidual& switch_residual);
+                   SplitSwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -159,8 +159,8 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
   /// @param[in] dt_next Time step of the next time stage. 
-  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
-  /// @param[in, out] switch_residual Residual of the switching constraint. 
+  /// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
                           const double t, const double dt, 
@@ -170,8 +170,8 @@ public:
                           SplitKKTResidual& kkt_residual, 
                           const ImpulseStatus& impulse_status, 
                           const double dt_next, 
-                          SplitSwitchingConstraintJacobian& switch_jacobian,
-                          SplitSwitchingConstraintResidual& switch_residual);
+                          SplitSwitchingConstraintJacobian& sc_jacobian,
+                          SplitSwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the KKT system of this time stage, i.e., the condensed
@@ -209,8 +209,8 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
   /// @param[in] dt_next Time step of the next time stage. 
-  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
-  /// @param[in, out] switch_residual Residual of the switching constraint. 
+  /// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void computeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
                         const double t, const double dt, 
@@ -219,8 +219,8 @@ public:
                         SplitKKTResidual& kkt_residual, 
                         const ImpulseStatus& impulse_status, 
                         const double dt_next, 
-                        SplitSwitchingConstraintJacobian& switch_jacobian,
-                        SplitSwitchingConstraintResidual& switch_residual);
+                        SplitSwitchingConstraintJacobian& sc_jacobian,
+                        SplitSwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the initial state direction using the result of  
@@ -324,12 +324,12 @@ public:
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] switch_residual Residual of the switching constraint. 
+  /// @param[in] sc_residual Residual of the switching constraint. 
   /// @return The constraint violation of this time stage.
   ///
   double constraintViolation(
       const SplitKKTResidual& kkt_residual, const double dt,
-      const SplitSwitchingConstraintResidual& switch_residual) const;
+      const SplitSwitchingConstraintResidual& sc_residual) const;
 
 private:
   std::shared_ptr<CostFunction> cost_;

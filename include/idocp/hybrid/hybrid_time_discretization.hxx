@@ -31,7 +31,9 @@ inline HybridTimeDiscretization::HybridTimeDiscretization(const double T,
     dt_(N+1, static_cast<double>(T/N)),
     dt_aux_(max_events+1, 0),
     dt_lift_(max_events+1, 0),
-    event_types_(2*max_events+1, DiscreteEventType::None) {
+    event_types_(2*max_events+1, DiscreteEventType::None),
+    sto_impulse_(max_events), 
+    sto_lift_(max_events) {
 }
 
 
@@ -57,7 +59,9 @@ inline HybridTimeDiscretization::HybridTimeDiscretization()
     dt_(),
     dt_aux_(),
     dt_lift_(),
-    event_types_() {
+    event_types_(),
+    sto_impulse_(), 
+    sto_lift_() {
 }
 
 
@@ -71,7 +75,7 @@ inline void HybridTimeDiscretization::discretize(
   countTimeSteps(t);
   countTimeStages();
   countContactPhase();
-  assert(isWellDefined());
+  assert(isFormulationTractable());
 }
 
 
@@ -238,6 +242,27 @@ inline double HybridTimeDiscretization::dt_lift(const int lift_index) const {
 }
 
 
+inline double HybridTimeDiscretization::dt_ideal() const {
+  return dt_ideal_;
+}
+
+
+inline bool HybridTimeDiscretization::isSTOEnabledImpulse(
+    const int impulse_index) const {
+  assert(impulse_index >= 0);
+  assert(impulse_index < N_impulse());
+  return sto_impulse_[impulse_index];
+}
+
+
+inline bool HybridTimeDiscretization::isSTOEnabledLift(
+    const int lift_index) const {
+  assert(lift_index >= 0);
+  assert(lift_index < N_lift());
+  return sto_lift_[lift_index];
+}
+
+
 inline int HybridTimeDiscretization::eventIndexImpulse(
     const int impulse_index) const {
   assert(impulse_index >= 0);
@@ -261,7 +286,7 @@ inline DiscreteEventType HybridTimeDiscretization::eventType(
 }
 
 
-inline bool HybridTimeDiscretization::isWellDefined() const {
+inline bool HybridTimeDiscretization::isFormulationTractable() const {
   for (int i=0; i<N(); ++i) {
     if (isTimeStageBeforeImpulse(i) && isTimeStageBeforeLift(i)) {
       return false;
@@ -269,6 +294,9 @@ inline bool HybridTimeDiscretization::isWellDefined() const {
   }
   for (int i=0; i<N()-1; ++i) {
     if (isTimeStageBeforeImpulse(i) && isTimeStageBeforeImpulse(i+1)) {
+      return false;
+    }
+    if (isTimeStageBeforeLift(i) && isTimeStageBeforeImpulse(i+1)) {
       return false;
     }
   }
@@ -283,18 +311,20 @@ inline void HybridTimeDiscretization::countDiscreteEvents(
   for (int i=0; i<N_impulse_; ++i) {
     t_impulse_[i] = contact_sequence.impulseTime(i);
     time_stage_before_impulse_[i] = std::floor((t_impulse_[i]-t)/dt_ideal_);
+    sto_impulse_[i] = contact_sequence.isSTOEnabledImpulse(i);
   }
   N_lift_ = contact_sequence.numLiftEvents();
   assert(N_lift_ <= max_events_);
   for (int i=0; i<N_lift_; ++i) {
     t_lift_[i] = contact_sequence.liftTime(i);
     time_stage_before_lift_[i] = std::floor((t_lift_[i]-t)/dt_ideal_);
+    sto_lift_[i] = contact_sequence.isSTOEnabledLift(i);
   }
   N_ = N_ideal_;
   for (int i=0; i<N_impulse_+N_lift_; ++i) {
     event_types_[i] = contact_sequence.eventType(i);
   } 
-  assert(isWellDefined());
+  assert(isFormulationTractable());
 }
 
 

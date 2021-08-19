@@ -200,40 +200,18 @@ void LineSearch::computeCostAndViolation(
       const int lift_index = i - (N+1+2*N_impulse);
       const int time_stage_after_lift
           = ocp.discrete().timeStageAfterLift(lift_index);
-      if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {
-        const int impulse_index
-            = ocp.discrete().impulseIndexAfterTimeStage(time_stage_after_lift);
-        ocp.lift[lift_index].evaluateOCP(robots[omp_get_thread_num()], 
-                                         contact_sequence.contactStatus(
-                                           ocp.discrete().contactPhaseAfterLift(lift_index)), 
-                                         ocp.discrete().t_lift(lift_index), 
-                                         ocp.discrete().dt_lift(lift_index), 
-                                         s.lift[lift_index],
-                                         s[time_stage_after_lift].q, 
-                                         s[time_stage_after_lift].v,
-                                         kkt_residual_.lift[lift_index], 
-                                         contact_sequence.impulseStatus(impulse_index), 
-                                         ocp.discrete().dt(time_stage_after_lift),
-                                         kkt_residual_.switching[impulse_index]);
-        violations_lift_.coeffRef(lift_index) 
-            = ocp.lift[lift_index].constraintViolation(kkt_residual_.lift[lift_index], 
-                                                       ocp.discrete().dt_lift(lift_index), 
-                                                       kkt_residual_.switching[impulse_index]);
-      }
-      else {
-        ocp.lift[lift_index].evaluateOCP(robots[omp_get_thread_num()], 
-                                         contact_sequence.contactStatus(
-                                           ocp.discrete().contactPhaseAfterLift(lift_index)), 
-                                         ocp.discrete().t_lift(lift_index), 
-                                         ocp.discrete().dt_lift(lift_index), 
-                                         s.lift[lift_index],
-                                         s[time_stage_after_lift].q, 
-                                         s[time_stage_after_lift].v,
-                                         kkt_residual_.lift[lift_index]);
-        violations_lift_.coeffRef(lift_index) 
-            = ocp.lift[lift_index].constraintViolation(kkt_residual_.lift[lift_index], 
-                                                       ocp.discrete().dt_lift(lift_index));
-      }
+      ocp.lift[lift_index].evaluateOCP(robots[omp_get_thread_num()], 
+                                        contact_sequence.contactStatus(
+                                          ocp.discrete().contactPhaseAfterLift(lift_index)), 
+                                        ocp.discrete().t_lift(lift_index), 
+                                        ocp.discrete().dt_lift(lift_index), 
+                                        s.lift[lift_index],
+                                        s[time_stage_after_lift].q, 
+                                        s[time_stage_after_lift].v,
+                                        kkt_residual_.lift[lift_index]);
+      violations_lift_.coeffRef(lift_index) 
+          = ocp.lift[lift_index].constraintViolation(kkt_residual_.lift[lift_index], 
+                                                      ocp.discrete().dt_lift(lift_index));
       costs_lift_.coeffRef(lift_index) = ocp.lift[lift_index].stageCost();
     }
   }

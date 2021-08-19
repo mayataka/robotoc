@@ -43,11 +43,60 @@ inline void ComputeComplementarySlackness(const double barrier,
 }
 
 
+template <int Size>
+inline void ComputeComplementarySlackness(const double barrier, 
+                                          ConstraintComponentData& data,
+                                          const int start) {
+  assert(barrier > 0);
+  assert(data.checkDimensionalConsistency());
+  data.cmpl.template segment<Size>(start).array() 
+      = data.slack.template segment<Size>(start).array() 
+          * data.dual.template segment<Size>(start).array() - barrier;
+}
+
+
 inline double ComputeComplementarySlackness(const double barrier, 
                                             const double slack, 
                                             const double dual) {
   assert(barrier > 0);
   return (slack * dual - barrier); 
+}
+
+
+inline void ComputeCondensingCoeffcient(ConstraintComponentData& data) {
+  assert(data.checkDimensionalConsistency());
+  data.cond.array() = (data.dual.array()*data.residual.array()-data.cmpl.array()) 
+                        / data.slack.array();
+}
+
+
+inline void ComputeCondensingCoeffcient(ConstraintComponentData& data,
+                                        const int start, const int size) {
+  assert(data.checkDimensionalConsistency());
+  data.cond.segment(start, size).array() 
+      = (data.dual.segment(start, size).array()
+          *data.residual.segment(start, size).array()
+          -data.cmpl.segment(start, size).array()) 
+         / data.slack.segment(start, size).array();
+}
+
+
+template <int Size>
+inline void ComputeCondensingCoeffcient(ConstraintComponentData& data,
+                                        const int start) {
+  assert(data.checkDimensionalConsistency());
+  data.cond.template segment<Size>(start).array() 
+      = (data.dual.template segment<Size>(start).array()
+          *data.residual.template segment<Size>(start).array()
+          -data.cmpl.template segment<Size>(start).array()) 
+         / data.slack.template segment<Size>(start).array();
+}
+
+
+inline double ComputeCondensingCoeffcient(const double slack, const double dual,
+                                          const double residual, 
+                                          const double cmpl) {
+  return ((dual*residual-cmpl)/slack);
 }
 
 
@@ -93,6 +142,20 @@ inline double FractionToBoundary(const int dim, const double fraction_rate,
 }
 
 
+inline double FractionToBoundary(const double fraction_rate, 
+                                 const double var, const double dvar) {
+  assert(fraction_rate > 0);
+  assert(fraction_rate <= 1);
+  const double fraction_to_boundary = - fraction_rate * (var/dvar);
+  if (fraction_to_boundary > 0 && fraction_to_boundary < 1) {
+    return fraction_to_boundary;
+  }
+  else {
+    return 1.0;
+  }
+}
+
+
 inline void ComputeDualDirection(ConstraintComponentData& data) {
   assert(data.checkDimensionalConsistency());
   data.ddual.array() 
@@ -108,6 +171,17 @@ inline void ComputeDualDirection(ConstraintComponentData& data,
               *data.dslack.segment(start, size).array()
             +data.cmpl.segment(start, size).array())
           / data.slack.segment(start, size).array();
+}
+
+
+template <int Size>
+inline void ComputeDualDirection(ConstraintComponentData& data, 
+                                 const int start) {
+  data.ddual.template segment<Size>(start).array() 
+      = - (data.dual.template segment<Size>(start).array()
+              *data.dslack.template segment<Size>(start).array()
+            +data.cmpl.template segment<Size>(start).array())
+          / data.slack.template segment<Size>(start).array();
 }
 
 

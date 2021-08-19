@@ -92,6 +92,12 @@ public:
   Eigen::VectorXd ddual;
 
   ///
+  /// @brief Used in condensing of slack and dual. Size is 
+  /// ConstraintComponentData::dimc(). 
+  ///
+  Eigen::VectorXd cond;
+
+  ///
   /// @brief Value of the log berrier function of the slack variable.
   double log_barrier;
 
@@ -108,8 +114,9 @@ public:
   std::vector<Eigen::MatrixXd> J;
 
   ///
-  /// @brief Returns the squared norm of the KKT reisdual, that is, the primal 
-  /// and dual residuals of the constraint. 
+  /// @brief Returns the squared norm of the KKT reisdual, that is, the sum of
+  /// the squared norm of the primal residual and complementary slackness of 
+  /// the constraint. 
   /// @return Squared norm of the KKT residual. 
   ///
   double KKTError() const;

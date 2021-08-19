@@ -73,9 +73,8 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Quu.diagonal().array()
       += dt * data.dual.array() / data.slack.array();
-  kkt_residual.lu.array() 
-      -= dt * (data.dual.array()*data.residual.array()-data.cmpl.array()) 
-              / data.slack.array();
+  computeCondensingCoeffcient(data);
+  kkt_residual.lu.noalias() -= dt * data.cond;
 }
 
 

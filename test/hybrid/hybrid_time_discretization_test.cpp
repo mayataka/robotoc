@@ -31,9 +31,9 @@ protected:
   ContactSequence createContactSequence(const Robot& robot) const;
   ContactSequence createContactSequenceOnGrid(const Robot& robot) const;
 
-  void testConstructor(const Robot& robot) const;
-  void testDiscretizeOCP(const Robot& robot) const;
-  void testDiscretizeOCPOnGrid(const Robot& robot) const;
+  void test_constructor(const Robot& robot) const;
+  void test_discretizeOCP(const Robot& robot) const;
+  void test_discretizeOCPOnGrid(const Robot& robot) const;
 
   int N, max_num_events;
   double t, T, dt, min_dt;
@@ -56,7 +56,7 @@ ContactSequence HybridTimeDiscretizationTest::createContactSequence(const Robot&
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     }
     const double event_time = t + i * event_period + dt * std::abs(Eigen::VectorXd::Random(1)[0]);
-    contact_sequence.push_back(tmp, event_time);
+    contact_sequence.push_back(tmp, event_time, false);
     pre_contact_status = post_contact_status;
   }
   return contact_sequence;
@@ -79,14 +79,14 @@ ContactSequence HybridTimeDiscretizationTest::createContactSequenceOnGrid(const 
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     }
     const double event_time = t + (i+1) * event_period + min_dt * Eigen::VectorXd::Random(1)[0];
-    contact_sequence.push_back(tmp, event_time);
+    contact_sequence.push_back(tmp, event_time, false);
     pre_contact_status = post_contact_status;
   }
   return contact_sequence;
 }
 
 
-void HybridTimeDiscretizationTest::testConstructor(const Robot& robot) const {
+void HybridTimeDiscretizationTest::test_constructor(const Robot& robot) const {
   HybridTimeDiscretization discretization(T, N, max_num_events);
   EXPECT_EQ(discretization.N(), N);
   EXPECT_EQ(discretization.N_impulse(), 0);
@@ -105,7 +105,7 @@ void HybridTimeDiscretizationTest::testConstructor(const Robot& robot) const {
 }
 
 
-void HybridTimeDiscretizationTest::testDiscretizeOCP(const Robot& robot) const {
+void HybridTimeDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
   HybridTimeDiscretization discretization(T, N, max_num_events);
   const ContactSequence contact_sequence = createContactSequence(robot);
   discretization.discretize(contact_sequence, t);
@@ -127,12 +127,14 @@ void HybridTimeDiscretizationTest::testDiscretizeOCP(const Robot& robot) const {
     EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
     EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt-t, discretization.dt(time_stage_before_impulse[i]));
     EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_impulse[i])+discretization.dt_aux(i), dt);
+    EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
   }
   for (int i=0; i<contact_sequence.numLiftEvents(); ++i) {
     EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
     EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
     EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt-t, discretization.dt(time_stage_before_lift[i]));
     EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_lift[i])+discretization.dt_lift(i), dt);
+    EXPECT_FALSE(discretization.isSTOEnabledLift(i));
   }
   std::vector<int> time_stage_before_events;
   for (auto e :  time_stage_before_impulse) {
@@ -205,7 +207,7 @@ void HybridTimeDiscretizationTest::testDiscretizeOCP(const Robot& robot) const {
 }
 
 
-void HybridTimeDiscretizationTest::testDiscretizeOCPOnGrid(const Robot& robot) const {
+void HybridTimeDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) const {
   HybridTimeDiscretization discretization(T, N, max_num_events);
   const ContactSequence contact_sequence = createContactSequenceOnGrid(robot);
   discretization.discretize(contact_sequence, t);
@@ -227,17 +229,17 @@ void HybridTimeDiscretizationTest::testDiscretizeOCPOnGrid(const Robot& robot) c
 
 TEST_F(HybridTimeDiscretizationTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testConstructor(robot);
-  testDiscretizeOCP(robot);
-  testDiscretizeOCPOnGrid(robot);
+  test_constructor(robot);
+  test_discretizeOCP(robot);
+  test_discretizeOCPOnGrid(robot);
 }
 
 
 TEST_F(HybridTimeDiscretizationTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testConstructor(robot);
-  testDiscretizeOCP(robot);
-  testDiscretizeOCPOnGrid(robot);
+  test_constructor(robot);
+  test_discretizeOCP(robot);
+  test_discretizeOCPOnGrid(robot);
 }
 
 } // namespace idocp

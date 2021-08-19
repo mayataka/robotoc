@@ -11,6 +11,10 @@
 #include "idocp/riccati/lqr_policy.hpp"
 #include "idocp/riccati/riccati_factorizer.hpp"
 #include "idocp/ocp/ocp.hpp"
+#include "idocp/ocp/solution.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 
 
 namespace idocp {

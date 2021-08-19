@@ -222,7 +222,7 @@ void OCPSolver::setContactStatusUniformly(const ContactStatus& contact_status) {
 
 void OCPSolver::pushBackContactStatus(const ContactStatus& contact_status, 
                                       const double switching_time) {
-  contact_sequence_.push_back(contact_status, switching_time);
+  contact_sequence_.push_back(contact_status, switching_time, false);
 }
 
 

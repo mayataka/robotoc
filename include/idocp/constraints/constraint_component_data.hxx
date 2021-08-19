@@ -18,6 +18,7 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
     cmpl(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
+    cond(Eigen::VectorXd::Zero(dimc)),
     log_barrier(0),
     r(),
     J(),
@@ -46,6 +47,7 @@ inline ConstraintComponentData::ConstraintComponentData()
     cmpl(),
     dslack(),
     ddual(),
+    cond(),
     log_barrier(0),
     r(),
     J(),
@@ -91,6 +93,9 @@ inline bool ConstraintComponentData::checkDimensionalConsistency() const {
   if (ddual.size() != dimc_) {
     return false;
   }
+  if (cond.size() != dimc_) {
+    return false;
+  }
   return true;
 }
 
@@ -115,10 +120,13 @@ inline bool ConstraintComponentData::isApprox(
   if (!ddual.isApprox(other.ddual)) {
     return false;
   }
-  if (!std::abs(log_barrier-other.log_barrier) 
-      < std::numeric_limits<double>::epsilon() 
-         * std::max(1.0, std::max(std::abs(log_barrier), 
-                                  std::abs(other.log_barrier)))) {
+  if (!cond.isApprox(other.cond)) {
+    return false;
+  }
+  Eigen::VectorXd lb(1), other_lb(1);
+  lb << log_barrier;
+  other_lb << other.log_barrier;
+  if (!lb.isApprox(other_lb)) {
     return false;
   }
   return true;

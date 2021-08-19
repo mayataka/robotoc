@@ -79,12 +79,12 @@ inline void SplitOCP::evaluateOCP(Robot& robot,
                                   SplitKKTResidual& kkt_residual,
                                   const ImpulseStatus& impulse_status,
                                   const double dt_next, 
-                                  SplitSwitchingConstraintResidual& switch_residual) {
+                                  SplitSwitchingConstraintResidual& sc_residual) {
   assert(dt_next > 0);
   evaluateOCP(robot, contact_status, t, dt, s, q_next, v_next, kkt_residual);
   switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status,  
                                                           dt, dt_next, s, 
-                                                          switch_residual);
+                                                          sc_residual);
 }
 
 
@@ -124,15 +124,14 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          SplitKKTResidual& kkt_residual,
                                          const ImpulseStatus& impulse_status, 
                                          const double dt_next,
-                                         SplitSwitchingConstraintJacobian& switch_jacobian,
-                                         SplitSwitchingConstraintResidual& switch_residual) {
+                                         SplitSwitchingConstraintJacobian& sc_jacobian,
+                                         SplitSwitchingConstraintResidual& sc_residual) {
   assert(dt_next > 0);
   computeKKTResidual(robot, contact_status, t, dt, q_prev, s, s_next,
                      kkt_matrix, kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
                                                     dt_next, s, kkt_residual, 
-                                                    switch_jacobian, 
-                                                    switch_residual);
+                                                    sc_jacobian, sc_residual);
 }
 
 
@@ -176,8 +175,8 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                        SplitKKTResidual& kkt_residual, 
                                        const ImpulseStatus& impulse_status,
                                        const double dt_next, 
-                                       SplitSwitchingConstraintJacobian& switch_jacobian,
-                                       SplitSwitchingConstraintResidual& switch_residual) {
+                                       SplitSwitchingConstraintJacobian& sc_jacobian,
+                                       SplitSwitchingConstraintResidual& sc_residual) {
   assert(dt > 0);
   assert(dt_next > 0);
   assert(q_prev.size() == robot.dimq());
@@ -197,12 +196,10 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                              kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
                                                     dt_next, s, kkt_residual, 
-                                                    switch_jacobian,
-                                                    switch_residual);
+                                                    sc_jacobian, sc_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
                                             kkt_matrix, kkt_residual);
-  contact_dynamics_.condenseSwitchingConstraint(switch_jacobian, 
-                                                switch_residual);
+  contact_dynamics_.condenseSwitchingConstraint(sc_jacobian, sc_residual);
 }
 
 
@@ -288,10 +285,10 @@ inline double SplitOCP::constraintViolation(const SplitKKTResidual& kkt_residual
 
 inline double SplitOCP::constraintViolation(
     const SplitKKTResidual& kkt_residual, const double dt,
-    const SplitSwitchingConstraintResidual& switch_residual) const {
+    const SplitSwitchingConstraintResidual& sc_residual) const {
   double vio = 0;
   vio += constraintViolation(kkt_residual, dt);
-  vio += switch_residual.constraintViolation();
+  vio += sc_residual.constraintViolation();
   return vio;
 }
 

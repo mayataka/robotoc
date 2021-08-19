@@ -117,12 +117,12 @@ public:
 
   ///
   /// @brief Condenses the switching constraint. 
-  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
-  /// @param[in, out] switch_residual Residual of the switching constraint. 
+  /// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void condenseSwitchingConstraint(
-      SplitSwitchingConstraintJacobian& switch_jacobian,
-      SplitSwitchingConstraintResidual& switch_residual) const;
+      SplitSwitchingConstraintJacobian& sc_jacobian,
+      SplitSwitchingConstraintResidual& sc_residual) const;
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 

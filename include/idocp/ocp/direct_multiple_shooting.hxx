@@ -32,11 +32,11 @@ struct ComputeKKTResidual {
                          SplitKKTResidual& kkt_residual,
                          const ImpulseStatus& impulse_status, 
                          const double dt_next, 
-                         SplitSwitchingConstraintJacobian& switch_jacobian,
-                         SplitSwitchingConstraintResidual& switch_residual) {
+                         SplitSwitchingConstraintJacobian& sc_jacobian,
+                         SplitSwitchingConstraintResidual& sc_residual) {
     split_ocp.computeKKTResidual(robot, contact_status, t, dt, q_prev, s, 
                                  s_next, kkt_matrix, kkt_residual, impulse_status, 
-                                 dt_next, switch_jacobian, switch_residual);
+                                 dt_next, sc_jacobian, sc_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
@@ -80,11 +80,11 @@ struct ComputeKKTSystem {
                          SplitKKTResidual& kkt_residual,
                          const ImpulseStatus& impulse_status, 
                          const double dt_next, 
-                         SplitSwitchingConstraintJacobian& switch_jacobian,
-                         SplitSwitchingConstraintResidual& switch_residual) {
+                         SplitSwitchingConstraintJacobian& sc_jacobian,
+                         SplitSwitchingConstraintResidual& sc_residual) {
     split_ocp.computeKKTSystem(robot, contact_status, t, dt, q_prev, s, s_next,
                                kkt_matrix, kkt_residual, impulse_status, 
-                               dt_next, switch_jacobian, switch_residual);
+                               dt_next, sc_jacobian, sc_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 

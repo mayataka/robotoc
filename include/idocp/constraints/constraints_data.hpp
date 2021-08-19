@@ -44,23 +44,71 @@ public:
   ///
   ConstraintsData& operator=(ConstraintsData&&) noexcept = default;
 
+  ///
+  /// @brief Checks wheather the position-level constraints are valid or not. 
+  /// @return true if the position-level constraints are valid. false otherwise. 
+  ///
   bool isPositionLevelValid() const;
 
+  ///
+  /// @brief Checks wheather the velocity-level constraints are valid or not. 
+  /// @return true if the velocity-level constraints are valid. false otherwise. 
+  ///
   bool isVelocityLevelValid() const;
 
+  ///
+  /// @brief Checks wheather the acceleration-level constraints are valid or not. 
+  /// @return true if the acceleration-level constraints are valid. false 
+  /// otherwise. 
+  ///
   bool isAccelerationLevelValid() const;
 
+  ///
+  /// @brief Checks wheather the impulse-level constraints are valid or not. 
+  /// @return true if the impulse-level constraints are valid. false otherwise. 
+  ///
   bool isImpulseLevelValid() const;
 
+  ///
+  /// @brief Returns the sum of the squared norm of the KKT error 
+  /// (primal residual and complementary slackness) of all the constraints. 
+  /// @return true if the impulse-level constraints are valid. false otherwise. 
+  ///
   double KKTError() const;
 
+  ///
+  /// @brief Returns the sum of the log-barrier of the slack variables of all 
+  /// the constraints. 
+  /// @return The sum of the log-barrier of the slack variables of all 
+  /// the constraints. 
+  ///
   double logBarrier() const;
 
+  ///
+  /// @brief Returns the sum of the l1-norm of the primal violations in the 
+  /// constraints.
+  /// @return The sum of the l1-norm of the violations in the constraints. 
+  ///
   double constraintViolation() const;
 
+  ///
+  /// @brief The collection of the position-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> position_level_data;
+
+  ///
+  /// @brief The collection of the velocity-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> velocity_level_data;
+
+  ///
+  /// @brief The collection of the acceleration-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> acceleration_level_data;
+
+  ///
+  /// @brief The collection of the impulse-level constraints data. 
+  ///
   std::vector<ConstraintComponentData> impulse_level_data;
 
 private:

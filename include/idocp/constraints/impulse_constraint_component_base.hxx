@@ -88,9 +88,42 @@ inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
 }
 
 
+template <int Size>
+inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
+    ConstraintComponentData& data, const int start) const {
+  pdipm::ComputeComplementarySlackness<Size>(barrier_, data, start);
+}
+
+
 inline double ImpulseConstraintComponentBase::computeComplementarySlackness(
     const double slack, const double dual) const {
-  return (slack * dual - barrier_); 
+  return pdipm::ComputeComplementarySlackness(barrier_, slack, dual);
+}
+
+
+inline void ImpulseConstraintComponentBase::computeCondensingCoeffcient(
+    ConstraintComponentData& data) {
+  pdipm::ComputeCondensingCoeffcient(data);
+}
+
+
+inline void ImpulseConstraintComponentBase::computeCondensingCoeffcient(
+    ConstraintComponentData& data, const int start, const int size) {
+  pdipm::ComputeCondensingCoeffcient(data, start, size);
+}
+
+
+template <int Size>
+inline void ImpulseConstraintComponentBase::computeCondensingCoeffcient(
+    ConstraintComponentData& data, const int start) {
+  pdipm::ComputeCondensingCoeffcient<Size>(data, start);
+}
+
+
+inline double ImpulseConstraintComponentBase::computeCondensingCoeffcient(
+    const double slack, const double dual, const double residual, 
+    const double cmpl) {
+  return pdipm::ComputeCondensingCoeffcient(slack, dual, residual, cmpl);
 }
 
 
@@ -103,6 +136,13 @@ inline void ImpulseConstraintComponentBase::computeDualDirection(
 inline void ImpulseConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data, const int start, const int size) {
   pdipm::ComputeDualDirection(data, start, size);
+}
+
+
+template <int Size>
+inline void ImpulseConstraintComponentBase::computeDualDirection(
+    ConstraintComponentData& data, const int start) {
+  pdipm::ComputeDualDirection<Size>(data, start);
 }
 
 

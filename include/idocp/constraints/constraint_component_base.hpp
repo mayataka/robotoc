@@ -275,12 +275,62 @@ protected:
   ///
   /// @brief Computes the residual in the complementarity slackness between  
   /// the slack and dual variables.
+  /// @param[in, out] data Constraint data.
+  /// @param[in] start Start position of the segment.
+  /// @tparam Size Size of the segment.
+  ///
+  template <int Size>
+  void computeComplementarySlackness(ConstraintComponentData& data,
+                                     const int start) const;
+
+  ///
+  /// @brief Computes the residual in the complementarity slackness between  
+  /// the slack and dual variables.
   /// @param[in] slack An element of the slack variable.
   /// @param[in] dual An element of the dual variable.
   /// @return The complementarity slackness between the slack and dual variables.
   ///
   virtual double computeComplementarySlackness(const double slack, 
                                                const double dual) const final;
+
+  ///
+  /// @brief Computes the coefficient of the condensing.
+  /// @param[in, out] data Constraint component data.
+  ///
+  static void computeCondensingCoeffcient(ConstraintComponentData& data);
+
+  ///
+  /// @brief Computes the coefficient of the condensing.
+  /// @param[in, out] data Constraint data.
+  /// @param[in] start Start position of the segment.
+  /// @param[in] size Size of the segment.
+  ///
+  static void computeCondensingCoeffcient(ConstraintComponentData& data,
+                                          const int start, const int size);
+
+  ///
+  /// @brief Computes the coefficient of the condensing.
+  /// @param[in, out] data Constraint data.
+  /// @param[in] start Start position of the segment.
+  /// @tparam Size Size of the segment.
+  ///
+  template <int Size>
+  static void computeCondensingCoeffcient(ConstraintComponentData& data,
+                                          const int start);
+
+  ///
+  /// @brief Computes the residual in the complementarity slackness between  
+  /// the slack and dual variables.
+  /// @param[in] slack An element of the slack variable.
+  /// @param[in] dual An element of the dual variable.
+  /// @param[in] residual An element of the primal residual.
+  /// @param[in] cmpl An element of the complementarity slackness.
+  /// @return Coefficient of the condensing. 
+  ///
+  static double computeCondensingCoeffcient(const double slack, 
+                                            const double dual, 
+                                            const double residual, 
+                                            const double cmpl);
 
   ///
   /// @brief Computes the direction of the dual variable from slack, primal 
@@ -298,6 +348,17 @@ protected:
   ///
   static void computeDualDirection(ConstraintComponentData& data, 
                                    const int start, const int size);
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, primal 
+  /// residual, complementary slackness, and the direction of the slack.
+  /// @param[in, out] data Constraint data.
+  /// @param[in] start Start position of the segment.
+  /// @tparam Size Size of the segment.
+  ///
+  template <int Size>
+  static void computeDualDirection(ConstraintComponentData& data, 
+                                   const int start);
 
   ///
   /// @brief Computes the direction of the dual variable from slack, primal 

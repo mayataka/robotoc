@@ -9,6 +9,9 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp.hpp"
+#include "idocp/ocp/solution.hpp"
+#include "idocp/ocp/direction.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 
 

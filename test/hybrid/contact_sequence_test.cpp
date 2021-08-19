@@ -30,8 +30,8 @@ protected:
   static std::vector<DiscreteEvent> createDiscreteEvents(const Robot& robot, 
                                                          const ContactStatus& initial_contact_status, 
                                                          const int num);
-  void testConstructor(const Robot& robot) const;
-  void testSetContactStatus(const Robot& robot) const;
+  void test_constructor(const Robot& robot) const;
+  void test_setContactStatus(const Robot& robot) const;
   void test_push_back(const Robot& robot) const;
   void test_pop_back(const Robot& robot) const;
   void test_pop_front(const Robot& robot) const;
@@ -72,7 +72,7 @@ std::vector<DiscreteEvent> ContactSequenceTest::createDiscreteEvents(const Robot
 }
 
 
-void ContactSequenceTest::testConstructor(const Robot& robot) const {
+void ContactSequenceTest::test_constructor(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_events);
   auto contact_status = robot.createContactStatus();
   EXPECT_EQ(contact_sequence.numImpulseEvents(), 0);
@@ -90,7 +90,7 @@ void ContactSequenceTest::testConstructor(const Robot& robot) const {
 }
 
 
-void ContactSequenceTest::testSetContactStatus(const Robot& robot) const {
+void ContactSequenceTest::test_setContactStatus(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_events);
   auto default_contact_status = robot.createContactStatus();
   auto contact_status = robot.createContactStatus();
@@ -137,7 +137,7 @@ void ContactSequenceTest::test_push_back(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int j=0; j<5; ++j) {
-    contact_sequence.push_back(discrete_events[j], event_times[j]);
+    contact_sequence.push_back(discrete_events[j], event_times[j], false);
     for (int i=0; i<j+1; ++i) {
       EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[i].preContactStatus());
     }
@@ -172,7 +172,7 @@ void ContactSequenceTest::test_pop_back(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
-    contact_sequence.push_back(discrete_events[i], event_times[i]);
+    contact_sequence.push_back(discrete_events[i], event_times[i], false);
   }
   int num_impulse = contact_sequence.numImpulseEvents();
   int num_lift = contact_sequence.numLiftEvents();
@@ -187,10 +187,12 @@ void ContactSequenceTest::test_pop_back(const Robot& robot) const {
       if (discrete_events[i].existImpulse()) {
         EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(num_impulse_tmp), event_times[num_impulse_tmp+num_lift_tmp]);
         EXPECT_TRUE(contact_sequence.impulseStatus(num_impulse_tmp) == discrete_events[num_impulse_tmp+num_lift_tmp].impulseStatus());
+        EXPECT_FALSE(contact_sequence.isSTOEnabledImpulse(num_impulse_tmp));
         ++num_impulse_tmp;
       } 
       else {
         EXPECT_DOUBLE_EQ(contact_sequence.liftTime(num_lift_tmp), event_times[num_impulse_tmp+num_lift_tmp]);
+        EXPECT_FALSE(contact_sequence.isSTOEnabledLift(num_lift_tmp));
         ++num_lift_tmp;
       }
     }
@@ -217,7 +219,7 @@ void ContactSequenceTest::test_pop_front(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
-    contact_sequence.push_back(discrete_events[i], event_times[i]);
+    contact_sequence.push_back(discrete_events[i], event_times[i], false);
   }
   int num_impulse = contact_sequence.numImpulseEvents();
   int num_lift = contact_sequence.numLiftEvents();
@@ -258,8 +260,8 @@ void ContactSequenceTest::test_pop_front(const Robot& robot) const {
 TEST_F(ContactSequenceTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testConstructor(robot);
-  testSetContactStatus(robot);
+  test_constructor(robot);
+  test_setContactStatus(robot);
   test_push_back(robot);
   test_pop_back(robot);
   test_pop_front(robot);
@@ -269,8 +271,8 @@ TEST_F(ContactSequenceTest, fixedBase) {
 TEST_F(ContactSequenceTest, floatingBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testConstructor(robot);
-  testSetContactStatus(robot);
+  test_constructor(robot);
+  test_setContactStatus(robot);
   test_push_back(robot);
   test_pop_back(robot);
   test_pop_front(robot);

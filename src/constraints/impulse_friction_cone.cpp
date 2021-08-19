@@ -150,7 +150,7 @@ void ImpulseFrictionCone::computePrimalAndDualResidual(
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
-      computeComplementarySlackness(data, idx, 5);
+      computeComplementarySlackness<5>(data, idx);
       data.log_barrier += logBarrier(data.slack.template segment<5>(idx));
     }
   }
@@ -197,22 +197,21 @@ void ImpulseFrictionCone::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) const {
+  data.cond.setZero();
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const int idx = 5*i;
+      computeCondensingCoeffcient<5>(data, idx);
+      const Vector5d& condi = data.cond.template segment<5>(idx);
       const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       const Eigen::MatrixXd& dgi_df = dg_df(data, i);
-      Eigen::VectorXd& ri = r(data, i);
-      ri.array() = (data.dual.template segment<5>(idx).array()
-                    *data.residual.template segment<5>(idx).array()
-                    -data.cmpl.template segment<5>(idx).array())
-                    / data.slack.template segment<5>(idx).array();
-      kkt_residual.lq().noalias() += dgi_dq.transpose() * ri;
+      kkt_residual.lq().noalias() += dgi_dq.transpose() * condi;
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dgi_df.transpose() * ri;
+          += dgi_df.transpose() * condi;
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
       Eigen::MatrixXd& r_dgi_df = r_dg_df(data, i);
+      Eigen::VectorXd& ri = r(data, i);
       ri.array() = data.dual.template segment<5>(idx).array() 
                     / data.slack.template segment<5>(idx).array();
       dfWi_dq.template topRows<5>().noalias() = ri.asDiagonal() * dgi_dq;
@@ -246,7 +245,7 @@ void ImpulseFrictionCone::expandSlackAndDual(
       data.dslack.template segment<5>(idx).noalias()
           = - dgi_dq * d.dq() - dgi_df * d.df().template segment<3>(dimf_stack) 
             - data.residual.template segment<5>(idx);
-      computeDualDirection(data, idx, 5);
+      computeDualDirection<5>(data, idx);
       dimf_stack += 3;
     }
   }

@@ -225,6 +225,26 @@ public:
   double dt_lift(const int lift_index) const;
 
   ///
+  /// @brief Returns the ideal time step. 
+  /// @return The ideal time step.
+  ///
+  double dt_ideal() const;
+
+  ///
+  /// @brief Checks wheather the STO is enabled for the specified impulse event. 
+  /// @param[in] impulse_index Index of the impulse of interest. 
+  /// @return true if the STO is enabled. false if not.
+  ///
+  bool isSTOEnabledImpulse(const int impulse_index) const;
+
+  ///
+  /// @brief Checks wheather the STO is enabled for the specified lift event. 
+  /// @param[in] lift_index Index of the lift of interest. 
+  /// @return true if the STO is enabled. false if not.
+  ///
+  bool isSTOEnabledLift(const int lift_index) const;
+
+  ///
   /// @brief Returns the event index of the specified impulse event. 
   /// @param[in] impulse_index Index of the impulse of interest. 
   /// @return The event index of the specified impulse event.
@@ -245,10 +265,10 @@ public:
   DiscreteEventType eventType(const int event_index) const;
 
   ///
-  /// @brief Checks wheather the optimal control problem is well-defined. 
-  /// @return true if the optimal control problem is well-defined. false if not.
+  /// @brief Checks wheather the optimal control problem is tractable. 
+  /// @return true if the optimal control problem is consistent. false if not.
   ///
-  bool isWellDefined() const;
+  bool isFormulationTractable() const;
 
   ///
   /// @brief Shows the information of the discretized optimal control problem 
@@ -263,7 +283,8 @@ private:
                    impulse_index_after_time_stage_, 
                    lift_index_after_time_stage_, time_stage_before_impulse_, 
                    time_stage_before_lift_;
-  std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_;
+  std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_,
+                    sto_impulse_, sto_lift_;
   std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
   std::vector<DiscreteEventType> event_types_;
 

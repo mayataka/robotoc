@@ -87,6 +87,10 @@ add_library(
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
   src/ocp/ocp.cpp
+  src/ocp/solution.cpp
+  src/ocp/direction.cpp
+  src/ocp/kkt_matrix.cpp
+  src/ocp/kkt_residual.cpp
   src/ocp/direct_multiple_shooting.cpp
   src/riccati/split_riccati_factorization.cpp
   src/riccati/split_constrained_riccati_factorization.cpp

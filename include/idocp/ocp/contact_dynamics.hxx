@@ -192,14 +192,14 @@ inline void ContactDynamics::expandDual(const double dt,
 
 
 inline void ContactDynamics::condenseSwitchingConstraint(
-    SplitSwitchingConstraintJacobian& switch_jacobian,
-    SplitSwitchingConstraintResidual& switch_residual) const {
-  switch_jacobian.Phix().noalias() 
-      -= switch_jacobian.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);
-  switch_jacobian.Phiu().noalias()  
-      = switch_jacobian.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
-  switch_residual.P().noalias() 
-      -= switch_jacobian.Phia() * data_.MJtJinv_IDC().topRows(dimv_);
+    SplitSwitchingConstraintJacobian& sc_jacobian,
+    SplitSwitchingConstraintResidual& sc_residual) const {
+  sc_jacobian.Phix().noalias() 
+      -= sc_jacobian.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);
+  sc_jacobian.Phiu().noalias()  
+      = sc_jacobian.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
+  sc_residual.P().noalias() 
+      -= sc_jacobian.Phia() * data_.MJtJinv_IDC().topRows(dimv_);
 }
 
 

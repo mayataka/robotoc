@@ -73,9 +73,8 @@ void JointVelocityLowerLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qvv().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
-  kkt_residual.lv().tail(dimc_).array() 
-      -= dt * (data.dual.array()*data.residual.array()-data.cmpl.array()) 
-              / data.slack.array();
+  computeCondensingCoeffcient(data);
+  kkt_residual.lv().tail(dimc_).noalias() -= dt * data.cond;
 }
 
 

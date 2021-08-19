@@ -52,29 +52,29 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-    const SplitSwitchingConstraintJacobian& switch_jacobian,
-    const SplitSwitchingConstraintResidual& switch_residual, 
+    const SplitSwitchingConstraintJacobian& sc_jacobian,
+    const SplitSwitchingConstraintResidual& sc_residual, 
     SplitRiccatiFactorization& riccati,
     SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
   // Schur complement
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
-  c_riccati.setImpulseStatus(switch_jacobian.dimi());
+  c_riccati.setImpulseStatus(sc_jacobian.dimi());
   c_riccati.Ginv.noalias() = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
-  c_riccati.DGinv().transpose().noalias() = llt_.solve(switch_jacobian.Phiu().transpose());
-  c_riccati.S().noalias() = c_riccati.DGinv() * switch_jacobian.Phiu().transpose();
+  c_riccati.DGinv().transpose().noalias() = llt_.solve(sc_jacobian.Phiu().transpose());
+  c_riccati.S().noalias() = c_riccati.DGinv() * sc_jacobian.Phiu().transpose();
   llt_s_.compute(c_riccati.S());
   assert(llt_s_.info() == Eigen::Success);
   c_riccati.SinvDGinv().noalias() = llt_s_.solve(c_riccati.DGinv());
   c_riccati.Ginv.noalias() -= c_riccati.SinvDGinv().transpose() * c_riccati.DGinv();
   lqr_policy.K.noalias()  = - c_riccati.Ginv * kkt_matrix.Qxu.transpose();
-  lqr_policy.K.noalias() -= c_riccati.SinvDGinv().transpose() * switch_jacobian.Phix();
+  lqr_policy.K.noalias() -= c_riccati.SinvDGinv().transpose() * sc_jacobian.Phix();
   lqr_policy.k.noalias()  = - c_riccati.Ginv * kkt_residual.lu;
-  lqr_policy.k.noalias() -= c_riccati.SinvDGinv().transpose() * switch_residual.P();
-  c_riccati.M().noalias()  = llt_s_.solve(switch_jacobian.Phix());
+  lqr_policy.k.noalias() -= c_riccati.SinvDGinv().transpose() * sc_residual.P();
+  c_riccati.M().noalias()  = llt_s_.solve(sc_jacobian.Phix());
   c_riccati.M().noalias() -= c_riccati.SinvDGinv() * kkt_matrix.Qxu.transpose();
-  c_riccati.m().noalias()  = llt_s_.solve(switch_residual.P());
+  c_riccati.m().noalias()  = llt_s_.solve(sc_residual.P());
   c_riccati.m().noalias() -= c_riccati.SinvDGinv() * kkt_residual.lu;
   assert(!lqr_policy.K.hasNaN());
   assert(!lqr_policy.k.hasNaN());
@@ -83,11 +83,11 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, lqr_policy,
                                                     riccati);
-  c_riccati.DtM.noalias()   = switch_jacobian.Phiu().transpose() * c_riccati.M();
+  c_riccati.DtM.noalias()   = sc_jacobian.Phiu().transpose() * c_riccati.M();
   c_riccati.KtDtM.noalias() = lqr_policy.K.transpose() * c_riccati.DtM;
   riccati.P.noalias() -= c_riccati.KtDtM;
   riccati.P.noalias() -= c_riccati.KtDtM.transpose();
-  riccati.s.noalias() -= switch_jacobian.Phix().transpose() * c_riccati.m();
+  riccati.s.noalias() -= sc_jacobian.Phix().transpose() * c_riccati.m();
 }
 
 

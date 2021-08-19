@@ -72,9 +72,8 @@ void JointPositionUpperLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
-  kkt_residual.lq().tail(dimc_).array() 
-      += dt * (data.dual.array()*data.residual.array()-data.cmpl.array()) 
-              / data.slack.array();
+  computeCondensingCoeffcient(data);
+  kkt_residual.lq().tail(dimc_).noalias() += dt * data.cond;
 }
 
 

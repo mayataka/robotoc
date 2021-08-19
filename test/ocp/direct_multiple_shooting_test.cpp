@@ -39,9 +39,9 @@ protected:
                           const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
-  void testComputeKKTResidual(const Robot& robot) const;
-  void testComputeKKTSystem(const Robot& robot) const;
-  void testIntegrateSolution(const Robot& robot) const;
+  void test_computeKKTResidual(const Robot& robot) const;
+  void test_computeKKTSystem(const Robot& robot) const;
+  void test_integrateSolution(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
   double T, t, dt;
@@ -63,7 +63,7 @@ ContactSequence DirectMultipleShootingTest::createContactSequence(const Robot& r
 }
 
 
-void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) const {
+void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -192,7 +192,7 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
 }
 
 
-void DirectMultipleShootingTest::testComputeKKTSystem(const Robot& robot) const {
+void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -309,7 +309,7 @@ void DirectMultipleShootingTest::testComputeKKTSystem(const Robot& robot) const 
 }
 
 
-void DirectMultipleShootingTest::testIntegrateSolution(const Robot& robot) const {
+void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -400,25 +400,25 @@ void DirectMultipleShootingTest::testIntegrateSolution(const Robot& robot) const
 
 TEST_F(DirectMultipleShootingTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
   robot = testhelper::CreateFixedBaseRobot(dt);
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
 }
 
 
 TEST_F(DirectMultipleShootingTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot();
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
   robot = testhelper::CreateFloatingBaseRobot(dt);
-  testComputeKKTResidual(robot);
-  testComputeKKTSystem(robot);
-  testIntegrateSolution(robot);
+  test_computeKKTResidual(robot);
+  test_computeKKTSystem(robot);
+  test_integrateSolution(robot);
 }
 
 } // namespace idocp
