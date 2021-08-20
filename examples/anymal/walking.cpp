@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.pushBackContactStatus(contact_status_initial, t0+period_double_support+4*period_swing);
 
   for (int i=1; i<cycle; ++i) {
-    const double t1 = t0 + 2*period_double_support + 4*period_swing;
+    const double t1 = t0 + i*(2*period_double_support+4*period_swing);
     contact_status_rh.setContactPoints(contact_points);
     ocp_solver.pushBackContactStatus(contact_status_rh, t1);
 

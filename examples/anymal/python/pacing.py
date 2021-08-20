@@ -138,8 +138,8 @@ contact_status_even.activate_contacts([0, 1])
 contact_status_even.set_contact_points(contact_points)
 ocp_solver.push_back_contact_status(contact_status_even, t0)
 
-contact_points[2][0] += step_length
-contact_points[3][0] += step_length
+contact_points[2][0] += 0.5 * step_length
+contact_points[3][0] += 0.5 * step_length
 contact_status_initial.set_contact_points(contact_points)
 ocp_solver.push_back_contact_status(contact_status_initial, t0+period_swing)
 
@@ -185,7 +185,13 @@ ocp_solver.set_solution("f", f_init)
 
 ocp_solver.init_constraints(t)
 
-num_iteration = 60
-idocp.benchmark_convergence(ocp_solver, t, q, v, num_iteration)
+num_iteration = 70 
+idocp.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # num_iteration = 1000
-# idocp.benchmark_CPU_time(ocp_solver, t, q, v, num_iteration)
+# idocp.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
+
+viewer = idocp.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+                                      base_joint_type=idocp.BaseJointType.FloatingBase)
+viewer.set_contact_info(contact_frames, mu)
+viewer.display(dt, ocp_solver.get_solution('q'), 
+               ocp_solver.get_solution('f', 'WORLD'), viewer='gepetto')

@@ -44,14 +44,27 @@ nthreads = 4
 t = 0.0
 q = np.array([0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi]) 
 v = np.zeros(robot.dimv())
-ocp_solver = idocp.UnconstrOCPSolver(robot, cost, constraints, T, N, nthreads)
-# ocp_solver = idocp.UnconstrParNMPCSolver(robot, cost, constraints, T, N, nthreads)
 
-# Solves the OCP.
+ocp_solver = idocp.UnconstrOCPSolver(robot, cost, constraints, T, N, nthreads)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
-
 ocp_solver.init_constraints()
 
+print("----- Solves the OCP by Riccati recursion algorithm. -----")
 num_iteration = 30
-idocp.benchmark_convergence(ocp_solver, t, q, v, num_iteration)
+idocp.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
+
+# Solves the OCP by ParNMPC algorithm.
+nthreads = 8
+parnmpc_solver = idocp.UnconstrParNMPCSolver(robot, cost, constraints, T, N, nthreads)
+parnmpc_solver.set_solution("q", q)
+parnmpc_solver.set_solution("v", v)
+parnmpc_solver.init_constraints()
+
+print("\n----- Solves the OCP by ParNMPC algorithm. -----")
+num_iteration = 60
+idocp.utils.benchmark.convergence(parnmpc_solver, t, q, v, num_iteration)
+
+viewer = idocp.utils.TrajectoryViewer(path_to_urdf=path_to_urdf)
+# viewer.display((T/N), ocp_solver.get_solution('q'), viewer='gepetto')
+viewer.display((T/N), ocp_solver.get_solution('q'), viewer='meshcat')
