@@ -5,6 +5,7 @@ from pinocchio.utils import skew
 from pinocchio.visualize import GepettoVisualizer, MeshcatVisualizer
 from os.path import abspath, dirname, join
 import numpy as np
+import math
 import time
 
 
@@ -128,15 +129,15 @@ class TrajectoryViewer:
                 robot.forward_kinematics(q)
                 for i in range(len(self.contact_frames)):
                     fi = f[3*i:3*(i+1)]
-                    f_scale = [(self.force_scale*np.linalg.norm(fi)/robot.total_weight()), 1.0, 1.0]
+                    f_scale = [math.sqrt(self.force_scale*np.linalg.norm(fi)/robot.total_weight()), 1.0, 1.0]
                     gui.setVector3Property('world/contact_forces/contact_force_'+str(i), "Scale", f_scale)
                     fpos = robot.frame_position(self.contact_frames[i])
                     quat = pinocchio.Quaternion(self.x_axis, fi).normalized()
-                    pose = np.concatenate((fpos, np.array([quat.x, quat.y, quat.z, quat.w])), axis=None)
-                    gui.applyConfiguration('world/contact_forces/contact_force_'+str(i), pose.tolist())
+                    pose = np.concatenate((fpos, np.array([quat.x, quat.y, quat.z, quat.w])), axis=None).tolist()
+                    gui.applyConfiguration('world/contact_forces/contact_force_'+str(i), pose)
                     if self.mu > 0.0:
-                        pose = np.concatenate((fpos, np.array([0., 0., 0., 1.])), axis=None)
-                        gui.applyConfiguration('world/friction_cones/friction_cone_'+str(i), pose.tolist())
+                        pose = np.concatenate((fpos, np.array([0., 0., 0., 1.])), axis=None).tolist()
+                        gui.applyConfiguration('world/friction_cones/friction_cone_'+str(i), pose)
                     if np.linalg.norm(fi) > 0.0 and self.mu > 0.0:
                         gui.setVisibility('world/friction_cones/friction_cone_'+str(i), 'ON')
                         gui.setVisibility('world/contact_forces/contact_force_'+str(i), 'ON')
