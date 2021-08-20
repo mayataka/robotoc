@@ -1,1 +1,2 @@
-from .ocp_benchmark import *
+from . import benchmark
+from .trajectory_viewer import *

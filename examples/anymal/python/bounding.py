@@ -186,6 +186,12 @@ ocp_solver.set_solution("f", f_init)
 ocp_solver.init_constraints(t)
 
 num_iteration = 60
-idocp.benchmark_convergence(ocp_solver, t, q, v, num_iteration)
+idocp.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # num_iteration = 1000
-# idocp.benchmark_CPU_time(ocp_solver, t, q, v, num_iteration)
+# idocp.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
+
+viewer = idocp.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+                                      base_joint_type=idocp.BaseJointType.FloatingBase)
+viewer.set_contact_info(contact_frames, mu)
+viewer.display(dt, ocp_solver.get_solution('q'), 
+               ocp_solver.get_solution('f', 'WORLD'), viewer='gepetto')

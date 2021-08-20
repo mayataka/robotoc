@@ -85,14 +85,14 @@ target_include_directories(
 ```
 
 ### Python:
-Suppose that thePython version is 3.8. The Python binding will be then installed at `IDOCP_INSTALL_DIR/lib/python3.8/site-packages` where `IDOCP_INSTALL_DIR` is the install directory of `idocp` configured in CMake (e.g., by `-DCMAKE_INSTALL_PREFIX`).
+Suppose that the Python version is 3.8. The Python bindings will then be installed at `IDOCP_INSTALL_DIR/lib/python3.8/site-packages` where `IDOCP_INSTALL_DIR` is the install directory of `idocp` configured in CMake (e.g., by `-DCMAKE_INSTALL_PREFIX`).
 To use the installed Python library, it is convenient to set the environment variable as
 
 ```
 export PYTHONPATH=IDOCP_INSTALL_DIR/lib/python3.8/site-packages:$PYTHONPATH 
 ```
 
-e.g., in ~/.bashrc. Note that if you use another Python version than `python3.8`, please adapt it.
+e.g., in `~/.bashrc`. Note that if you use another Python version than `python3.8`, please adapt it.
 
 ## Solvers
 The following three solvers are provided:
