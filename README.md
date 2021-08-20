@@ -64,7 +64,7 @@ and add the CMake option for `idocp` as
 cmake .. -DBUILD_VIEWER=ON
 ```
 
-7. If you do not want to install Python binding, change the CMake configuration as
+7. If you do not want to install the Python bindings, change the CMake configuration as
 ```
 cmake .. -DBUILD_PYTHON_INTERFACE=OFF
 ```
