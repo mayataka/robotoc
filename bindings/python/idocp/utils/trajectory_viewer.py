@@ -59,19 +59,6 @@ class TrajectoryViewer:
             self.display_meshcat(dt, q_traj)
 
 
-    def rotation_matrix(self, vec):
-            nrm = np.linalg.norm(vec)
-            vec_nrmrzd = np.array(vec/nrm) if nrm > 0.0 else np.zeros(3)
-            axis_cross_vec = np.cross(self.x_axis, vec_nrmrzd)
-            cross_norm = np.linalg.norm(axis_cross_vec)
-            if cross_norm == 0.:
-                return np.eye(3, 3)
-            else:
-                inner = np.dot(self.x_axis, vec_nrmrzd)
-                skew_mat = pinocchio.skew(axis_cross_vec)
-                return np.eye(3, 3) + skew_mat + skew_mat*skew_mat*((1.0-inner)/(cross_norm*cross_norm))
-
-
     def display_gepetto(self, dt, q_traj, f_traj):
         viz = GepettoVisualizer(self.robot.model, self.robot.collision_model,
                                 self.robot.visual_model)
@@ -157,11 +144,11 @@ class TrajectoryViewer:
                         gui.setVisibility('world/friction_cones/friction_cone_'+str(i), 'OFF')
                         gui.setVisibility('world/contact_forces/contact_force_'+str(i), 'OFF')
                     gui.refresh()
-                viz.display(q)
+                self.robot.display(q)
                 time.sleep(sleep_time)
         else:
             for q in q_traj:
-                viz.display(q)
+                self.robot.display(q)
                 time.sleep(sleep_time)
 
 
@@ -173,5 +160,5 @@ class TrajectoryViewer:
         self.robot.loadViewerModel(rootNodeName='idocp.TrajectoryViewer')
         sleep_time = dt / self.play_speed
         for q in q_traj:
-            viz.display(q)
+            self.robot.display(q)
             time.sleep(sleep_time)

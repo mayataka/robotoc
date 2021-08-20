@@ -17,7 +17,8 @@
 - gcc (at least C++11 is required), CMake (at least version 3.1)
 - Eigen3, [Pinocchio](https://stack-of-tasks.github.io/pinocchio/download.html)  , 
 - Python3, NumPy (for Python binding)
-- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (optional to visualize the solution trajectory) 
+- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (optional to visualize the solution trajectory in Python)
+- [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (optional to visualize the solution trajectory in C++) 
 
 ## Installation 
 1. Install the latest stable version of Eigen3 by 
@@ -41,22 +42,29 @@ mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release 
 make install -j$(nproc)
 ```
+NOTE: if you want to maximize the performance, use CMake option
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DOPTIMIZE_FOR_NATIVE=ON
+```
 
-5. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
+5. If you want to visualize the solution trajectory with Python, you have to install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) by
 ```
 sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba -y
+```
+
+6. If you want to visualize the solution trajectory with C++, in addition to [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), you have to install [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
+```
 git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive && cd pinocchio-gepetto-viewer
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make install
 ```
-and change the CMake configuration of `idocp` as 
+and add the CMake option for `idocp` as 
 ```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VIEWER=ON
+cmake .. -DBUILD_VIEWER=ON
 ```
 
-
-6. If you do not want to install Python binding, change the CMake configuration as
+7. If you do not want to install Python binding, change the CMake configuration as
 ```
 cmake .. -DBUILD_PYTHON_INTERFACE=OFF
 ```
@@ -107,7 +115,7 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 Examples are found in `examples` directory.
 The following animations are the solution trajectory of the `UnconstrOCPSolver` for a robot manipulator iiwa14.
 
-- Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`)
+- Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`, or `iiwa14/python/config_space_ocp.py`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/config_ocp.gif" width="135"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/task_ocp.gif" width="135">
@@ -115,12 +123,12 @@ The following animations are the solution trajectory of the `UnconstrOCPSolver` 
 
 The following animations are the solution trajectory of the `OCPSolver` for a quadruped ANYmal (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints).
 
-- Walking, trotting gaits (`anymal/walking.cpp`, `anymal/trotting.cpp`)
+- Walking, trotting gaits (`anymal/walking.cpp`, `anymal/trotting.cpp`, or `anymal/python/walking.py`, `anymal/python/trotting.py`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/walking.gif" width="250"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/trotting.gif" width="250">
 
-- Pacing, bounding, jumping gaits (`anymal/pacing.cpp`, `anymal/bounding.cpp`, `anymal/jumping.cpp`)
+- Pacing, bounding, jumping gaits (`anymal/pacing.cpp`, `anymal/bounding.cpp`, `anymal/jumping.cpp`, or `anymal/python/pacing.py`, `anymal/python/bounding.py`, `anymal/python/jumping.py`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/pacing.gif" width="250"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/bounding.gif" width="250"> &nbsp;
