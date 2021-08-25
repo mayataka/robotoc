@@ -15,4 +15,6 @@ from .time_varying_task_space_6d_cost import *
 from .time_varying_com_ref_base import *
 from .time_varying_com_cost import *
 from .periodic_foot_track_ref import *
+from .periodic_foot_track_ref2 import *
 from .periodic_com_ref import *
+from .periodic_com_ref2 import *

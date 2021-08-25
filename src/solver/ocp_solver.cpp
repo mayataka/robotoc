@@ -331,12 +331,7 @@ void OCPSolver::discretizeSolution() {
     s_.aux[i].set_f_stack();
     const int time_stage_before_impulse 
         = ocp_.discrete().timeStageBeforeImpulse(i);
-    if (ocp_.discrete().isTimeStageAfterLift(time_stage_before_impulse)) {
-      const int lift_index 
-          = ocp_.discrete().liftIndexAfterTimeStage(time_stage_before_impulse-1);
-      s_.lift[lift_index].setImpulseStatus(contact_sequence_.impulseStatus(i));
-    }
-    else if (time_stage_before_impulse > 0) {
+    if (time_stage_before_impulse-1 >= 0) {
       s_[time_stage_before_impulse-1].setImpulseStatus(
           contact_sequence_.impulseStatus(i));
     }

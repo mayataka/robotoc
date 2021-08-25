@@ -35,6 +35,7 @@ protected:
   void test_push_back(const Robot& robot) const;
   void test_pop_back(const Robot& robot) const;
   void test_pop_front(const Robot& robot) const;
+  void test_setContactPoints(const Robot& robot) const;
 
   int max_num_events;
 };
@@ -257,6 +258,51 @@ void ContactSequenceTest::test_pop_front(const Robot& robot) const {
 }
 
 
+void ContactSequenceTest::test_setContactPoints(const Robot& robot) const {
+  ContactSequence contact_sequence(robot, max_num_events);
+  auto pre_contact_status = robot.createContactStatus();
+  pre_contact_status.setRandom();
+  contact_sequence.setContactStatusUniformly(pre_contact_status);
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
+  std::vector<int> impulse_indices;
+  int impulse_index = 0;
+  for (int i=0; i<5; ++i) {
+    contact_sequence.push_back(discrete_events[i], event_times[i], false);
+    if (discrete_events[i].eventType() == DiscreteEventType::Impulse) {
+      impulse_indices.push_back(impulse_index);
+      ++impulse_index;
+    }
+    else {
+      impulse_indices.push_back(-1);
+    }
+  }
+  std::vector<std::vector<Eigen::Vector3d>> contact_points;
+  for (int i=0; i<6; ++i) {
+    std::vector<Eigen::Vector3d> cp;
+    for (int j=0; j<robot.maxPointContacts(); ++j) {
+      cp.push_back(Eigen::Vector3d::Random());
+    }
+    contact_points.push_back(cp);
+  }
+  for (int i=0; i<6; ++i) {
+    contact_sequence.setContactPoints(i, contact_points[i]);
+    const auto& cps = contact_sequence.contactStatus(i).contactPoints();
+    for (int j=0; j<robot.maxPointContacts(); ++j) {
+      EXPECT_TRUE(cps[j].isApprox(contact_points[i][j]));
+    }
+    if (i > 0) {
+      if (contact_sequence.eventType(i-1) == DiscreteEventType::Impulse) {
+        const auto& ips = contact_sequence.impulseStatus(impulse_indices[i-1]).contactPoints();
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          EXPECT_TRUE(ips[j].isApprox(contact_points[i][j]));
+        }
+      }
+    }
+  }
+}
+
+
 TEST_F(ContactSequenceTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
@@ -265,6 +311,7 @@ TEST_F(ContactSequenceTest, fixedBase) {
   test_push_back(robot);
   test_pop_back(robot);
   test_pop_front(robot);
+  test_setContactPoints(robot);
 }
 
 
@@ -276,6 +323,7 @@ TEST_F(ContactSequenceTest, floatingBase) {
   test_push_back(robot);
   test_pop_back(robot);
   test_pop_front(robot);
+  test_setContactPoints(robot);
 }
 
 } // namespace idocp

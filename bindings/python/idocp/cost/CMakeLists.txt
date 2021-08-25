@@ -14,6 +14,8 @@ pybind11_add_idocp_module(time_varying_task_space_6d_cost)
 pybind11_add_idocp_module(time_varying_com_ref_base)
 pybind11_add_idocp_module(time_varying_com_cost)
 pybind11_add_idocp_module(periodic_foot_track_ref)
+pybind11_add_idocp_module(periodic_foot_track_ref2)
 pybind11_add_idocp_module(periodic_com_ref)
+pybind11_add_idocp_module(periodic_com_ref2)
 
 install_idocp_pybind_module(cost)
