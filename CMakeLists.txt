@@ -103,6 +103,7 @@ add_library(
   src/riccati/riccati_factorizer.cpp
   src/riccati/riccati_recursion.cpp
   src/solver/ocp_solver.cpp
+  src/mpc/mpc_quadrupedal_trotting.cpp
   src/unconstr/unconstr_state_equation.cpp
   src/unconstr/unconstr_dynamics.cpp
   src/unconstr/split_unconstr_ocp.cpp

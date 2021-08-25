@@ -28,6 +28,7 @@ add_subdirectory(cost)
 add_subdirectory(constraints)
 add_subdirectory(ocp)
 add_subdirectory(solver)
+add_subdirectory(mpc)
 add_subdirectory(utils)
 
 install(

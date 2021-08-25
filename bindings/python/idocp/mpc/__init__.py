@@ -1,0 +1,1 @@
+from .mpc_quadrupedal_trotting import *
