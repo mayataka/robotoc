@@ -92,7 +92,7 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
             mpc.update_solution(t, q, v, num_mpc_iteration)
             if verbose:
                 print('KKT error = {:.6g}'.format(mpc.KKT_error(t, q, v)))
-                mpc.show_info()
+                # mpc.show_info()
                 print('')
             u = mpc.get_initial_control_input()
             self.apply_control_input_to_pybullet(robot, u)

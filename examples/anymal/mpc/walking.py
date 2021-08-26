@@ -42,7 +42,7 @@ qi_weight = np.array([0, 0, 0, 100, 100, 100,
                       1, 1, 1,
                       1, 1, 1])
 vi_weight = np.full(robot.dimv(), 1)
-dvi_weight = np.full(robot.dimv(), 1e-01)
+dvi_weight = np.full(robot.dimv(), 1e-03)
 config_cost = idocp.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
@@ -76,7 +76,7 @@ LF_cost = idocp.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = idocp.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = idocp.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
 RH_cost = idocp.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
-foot_track_weight = np.full(3, 1.0e04)
+foot_track_weight = np.full(3, 1.0e03)
 LF_cost.set_q_weight(foot_track_weight)
 LH_cost.set_q_weight(foot_track_weight)
 RF_cost.set_q_weight(foot_track_weight)
@@ -104,17 +104,15 @@ joint_torques_lower   = idocp.JointTorquesLowerLimit(robot)
 joint_torques_upper   = idocp.JointTorquesUpperLimit(robot)
 mu = 0.7
 friction_cone         = idocp.FrictionCone(robot, mu)
-# constraints.push_back(joint_position_lower)
-# constraints.push_back(joint_position_upper)
-# constraints.push_back(joint_velocity_lower)
-# constraints.push_back(joint_velocity_upper)
-# constraints.push_back(joint_torques_lower)
-# constraints.push_back(joint_torques_upper)
-# constraints.push_back(friction_cone)
+constraints.push_back(joint_position_lower)
+constraints.push_back(joint_position_upper)
+constraints.push_back(joint_velocity_lower)
+constraints.push_back(joint_velocity_upper)
+constraints.push_back(joint_torques_lower)
+constraints.push_back(joint_torques_upper)
+constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-01)
 
-# T = 0.7
-# N = 65
 T = 0.5
 N = 20
 max_steps = 3
@@ -134,5 +132,5 @@ sim_end_time = 10.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, num_mpc_iteration=10, verbose=True, record=False)
-# sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=False, record=True, record_name='anymal_walking.mp4')
+# sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=True, record=False)
+sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=False, record=True, record_name='anymal_walking.mp4')
