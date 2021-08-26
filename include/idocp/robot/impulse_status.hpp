@@ -176,6 +176,11 @@ public:
   ///
   void setRandom();
 
+  ///
+  /// @brief Shows the info of the impulse status. 
+  ///
+  void showInfo() const;
+
 private:
   ContactStatus impulse_status_;
 

@@ -142,6 +142,24 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
       sol.push_back(s_[i].u);
     }
   }
+  if (name == "ts") {
+    const int num_events = ocp_.discrete().N_impulse()+ocp_.discrete().N_lift();
+    int impulse_index = 0;
+    int lift_index = 0;
+    Eigen::VectorXd ts(1);
+    for (int event_index=0; event_index<num_events; ++event_index) {
+      if (ocp_.discrete().eventType(event_index) == DiscreteEventType::Impulse) {
+        ts.coeffRef(0) = contact_sequence_.impulseTime(impulse_index);
+        sol.push_back(ts);
+        ++impulse_index;
+      }
+      else {
+        ts.coeffRef(0) = contact_sequence_.liftTime(lift_index);
+        sol.push_back(ts);
+        ++lift_index;
+      }
+    }
+  }
   return sol;
 }
 
@@ -304,6 +322,7 @@ bool OCPSolver::isFormulationTractable(const double t) {
 
 
 void OCPSolver::showInfo() const {
+  contact_sequence_.showInfo();
   ocp_.discrete().showInfo();
 }
 
@@ -331,12 +350,7 @@ void OCPSolver::discretizeSolution() {
     s_.aux[i].set_f_stack();
     const int time_stage_before_impulse 
         = ocp_.discrete().timeStageBeforeImpulse(i);
-    if (ocp_.discrete().isTimeStageAfterLift(time_stage_before_impulse)) {
-      const int lift_index 
-          = ocp_.discrete().liftIndexAfterTimeStage(time_stage_before_impulse-1);
-      s_.lift[lift_index].setImpulseStatus(contact_sequence_.impulseStatus(i));
-    }
-    else if (time_stage_before_impulse > 0) {
+    if (time_stage_before_impulse-1 >= 0) {
       s_[time_stage_before_impulse-1].setImpulseStatus(
           contact_sequence_.impulseStatus(i));
     }

@@ -45,7 +45,9 @@ add_library(
   src/cost/time_varying_task_space_6d_cost.cpp
   src/cost/time_varying_com_cost.cpp
   src/cost/periodic_foot_track_ref.cpp
+  src/cost/periodic_foot_track_ref2.cpp
   src/cost/periodic_com_ref.cpp
+  src/cost/periodic_com_ref2.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_impl.cpp
@@ -101,6 +103,8 @@ add_library(
   src/riccati/riccati_factorizer.cpp
   src/riccati/riccati_recursion.cpp
   src/solver/ocp_solver.cpp
+  src/mpc/mpc_quadrupedal_walking.cpp
+  src/mpc/mpc_quadrupedal_trotting.cpp
   src/unconstr/unconstr_state_equation.cpp
   src/unconstr/unconstr_dynamics.cpp
   src/unconstr/split_unconstr_ocp.cpp

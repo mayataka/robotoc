@@ -166,6 +166,8 @@ inline void ContactSequence::pop_front() {
     event_time_.pop_front();
     is_impulse_event_.pop_front();
     contact_statuses_.pop_front();
+    for (auto& e : event_index_impulse_) { e -= 1; }
+    for (auto& e : event_index_lift_) { e -= 1; }
   }
   else if (numContactPhases() > 0) {
     assert(numContactPhases() == 1);
@@ -261,8 +263,16 @@ inline void ContactSequence::setContactPoints(
     std::exit(EXIT_FAILURE);
   }
   contact_statuses_[contact_phase].setContactPoints(contact_points);
-  if (contact_phase > 0 && is_impulse_event_[contact_phase-1]) {
-    impulse_events_[contact_phase-1].setContactPoints(contact_points);
+  if (contact_phase > 0) {
+    if (is_impulse_event_[contact_phase-1]) {
+      for (int impulse_index=0; ; ++impulse_index) {
+        assert(impulse_index < numImpulseEvents());
+        if (event_index_impulse_[impulse_index] == contact_phase-1) {
+          impulse_events_[impulse_index].setContactPoints(contact_points);
+          break;
+        }
+      }
+    }
   }
 }
 

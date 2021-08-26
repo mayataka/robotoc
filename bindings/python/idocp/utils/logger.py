@@ -17,10 +17,13 @@ class Logger:
     def take_log(self, solver, precision='%.18e', delimiter=', '):
         for var, log in zip(self.vars, self.logs):
             if var == 'KKT':
-                np.savetxt(log, np.array([solver.KKT_error()]), delimiter=delimiter)
+                with open(log, 'a') as logf:
+                    np.savetxt(logf, np.array([solver.KKT_error()]), delimiter=delimiter)
             elif var == 'f' and isinstance(solver, idocp.OCPSolver):
                 fs = solver.get_solution('f', 'WORLD')
-                np.savetxt(log, fs, fmt=precision, delimiter=delimiter)
+                with open(log, 'a') as logf:
+                    np.savetxt(logf, fs, fmt=precision, delimiter=delimiter)
             else:
                 sols = solver.get_solution(var)
-                np.savetxt(log, sols, fmt=precision, delimiter=delimiter)
+                with open(log, 'a') as logf:
+                    np.savetxt(logf, sols, fmt=precision, delimiter=delimiter)

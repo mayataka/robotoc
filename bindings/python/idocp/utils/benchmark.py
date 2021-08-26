@@ -12,12 +12,16 @@ def cpu_time(ocp_solver, t, q, v, num_iteration, line_search=False):
     print('-----------------------------------')
 
 
-def convergence(ocp_solver, t, q, v, num_iteration, line_search=False):
+def convergence(ocp_solver, t, q, v, num_iteration, line_search=False, logger=None):
     print('---------- OCP benchmark : Convergence ----------')
     ocp_solver.compute_KKT_residual(t, q, v)
     print('Initial KKT error = {:.6g}'.format(ocp_solver.KKT_error()))
+    if logger is not None:
+        logger.take_log(ocp_solver)
     for i in range(num_iteration):
         ocp_solver.update_solution(t, q, v, line_search)
         ocp_solver.compute_KKT_residual(t, q, v)
         print('KKT error after iteration ' + str(i+1) + ' = {:.6g}'.format(ocp_solver.KKT_error()))
+        if logger is not None:
+            logger.take_log(ocp_solver)
     print('-----------------------------------')
