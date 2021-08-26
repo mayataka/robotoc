@@ -113,10 +113,10 @@ friction_cone         = idocp.FrictionCone(robot, mu)
 # constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-01)
 
-T = 0.7
-N = 65
-# T = 0.5
-# N = 20
+# T = 0.7
+# N = 65
+T = 0.5
+N = 20
 max_steps = 3
 
 nthreads = 4

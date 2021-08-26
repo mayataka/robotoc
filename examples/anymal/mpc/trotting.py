@@ -110,10 +110,10 @@ constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.set_barrier(1.0e-01)
 
-# T = 1.5
-# N = 130
-T = 0.7
-N = 55
+T = 1.5
+N = 130
+# T = 0.7
+# N = 55
 # T = 0.5
 # N = 20
 # T = 0.3
@@ -135,6 +135,6 @@ sim_end_time = 10.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-# sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=True, record=False)
+# sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=False, record=False)
 sim.run_simulation(mpc, q, v, num_mpc_iteration=15, verbose=True, record=False)
 # sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=False, record=True, record_name='anymal_trotting.mp4')

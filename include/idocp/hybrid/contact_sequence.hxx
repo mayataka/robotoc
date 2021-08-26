@@ -166,6 +166,8 @@ inline void ContactSequence::pop_front() {
     event_time_.pop_front();
     is_impulse_event_.pop_front();
     contact_statuses_.pop_front();
+    for (auto& e : event_index_impulse_) { e -= 1; }
+    for (auto& e : event_index_lift_) { e -= 1; }
   }
   else if (numContactPhases() > 0) {
     assert(numContactPhases() == 1);

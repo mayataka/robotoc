@@ -322,8 +322,8 @@ bool OCPSolver::isFormulationTractable(const double t) {
 
 
 void OCPSolver::showInfo() const {
-  // ocp_.discrete().showInfo();
   contact_sequence_.showInfo();
+  ocp_.discrete().showInfo();
 }
 
 
