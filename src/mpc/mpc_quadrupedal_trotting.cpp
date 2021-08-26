@@ -93,13 +93,12 @@ void MPCQuadrupedalTrotting::init(const double t, const Eigen::VectorXd& q,
   double tt = t0_;
   while (tt < t+T_-dtm_) {
     if (predict_step_%2 != 0) {
-      ocp_solver_.pushBackContactStatus(cs_lfrh_, tt);
-      ++predict_step_;
+      ocp_solver_.pushBackContactStatus(cs_rflh_, tt);
     }
     else {
-      ocp_solver_.pushBackContactStatus(cs_rflh_, tt);
-      ++predict_step_;
+      ocp_solver_.pushBackContactStatus(cs_lfrh_, tt);
     }
+    ++predict_step_;
     tt += swing_time_;
   }
   resetContactPoints(q);
@@ -124,7 +123,6 @@ void MPCQuadrupedalTrotting::updateSolution(const double t,
   const bool add_step = addStep(t);
   const auto ts = ocp_solver_.getSolution("ts");
   if (!ts.empty()) {
-    constexpr double eps = std::sqrt(std::numeric_limits<double>::epsilon());
     if (ts.front().coeff(0) <= t) {
       ts_last_ = ts.front().coeff(0);
       ocp_solver_.popFrontContactStatus();
@@ -234,13 +232,14 @@ void MPCQuadrupedalTrotting::resetContactPoints(const Eigen::VectorXd& q) {
                           contact_points_[1].coeff(2); // z : same as LH
   }
   for (int step=current_step_; step<=predict_step_; ++step) {
-    ocp_solver_.setContactPoints(step-current_step_, contact_points_);
     if (step == 0) {
       // do nothing (standing)
     }
     else if (step == 1) {
-      contact_points_[1].coeffRef(0) += 0.5 * step_length_;
-      contact_points_[2].coeffRef(0) += 0.5 * step_length_;
+      if (current_step_ == 0) {
+        contact_points_[1].coeffRef(0) += 0.5 * step_length_;
+        contact_points_[2].coeffRef(0) += 0.5 * step_length_;
+      }
     }
     else if (step%2 != 0) {
       contact_points_[1].coeffRef(0) += step_length_;
@@ -250,7 +249,13 @@ void MPCQuadrupedalTrotting::resetContactPoints(const Eigen::VectorXd& q) {
       contact_points_[0].coeffRef(0) += step_length_;
       contact_points_[3].coeffRef(0) += step_length_;
     }
+    ocp_solver_.setContactPoints(step-current_step_, contact_points_);
   }
+}
+
+
+void MPCQuadrupedalTrotting::showInfo() const {
+  ocp_solver_.showInfo();
 }
 
 } // namespace idocp 

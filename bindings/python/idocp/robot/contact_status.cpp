@@ -32,7 +32,8 @@ PYBIND11_MODULE(contact_status, m) {
     .def("set_contact_point", &ContactStatus::setContactPoint)
     .def("set_contact_points", &ContactStatus::setContactPoints)
     .def("contact_point", &ContactStatus::contactPoint)
-    .def("contact_points", &ContactStatus::contactPoints);
+    .def("contact_points", &ContactStatus::contactPoints)
+    .def("show_info", &ContactStatus::showInfo);
 }
 
 } // namespace python

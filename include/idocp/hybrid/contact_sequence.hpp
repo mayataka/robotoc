@@ -201,6 +201,11 @@ public:
   ///
   DiscreteEventType eventType(const int event_index) const;
 
+  ///
+  /// @brief Shows the info of the contact sequence. 
+  ///
+  void showInfo() const;
+
 private:
   int max_num_events_;
   ContactStatus default_contact_status_;

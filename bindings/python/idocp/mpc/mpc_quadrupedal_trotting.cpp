@@ -29,7 +29,8 @@ PYBIND11_MODULE(mpc_quadrupedal_trotting, m) {
     .def("get_initial_control_input", &MPCQuadrupedalTrotting::getInitialControlInput)
     .def("KKT_error", static_cast<double (MPCQuadrupedalTrotting::*)()>(&MPCQuadrupedalTrotting::KKTError))
     .def("KKT_error", static_cast<double (MPCQuadrupedalTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalTrotting::KKTError),
-          py::arg("t"), py::arg("q"), py::arg("v"));
+          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("show_info", &MPCQuadrupedalTrotting::showInfo);
 }
 
 } // namespace python

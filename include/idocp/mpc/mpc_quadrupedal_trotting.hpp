@@ -122,6 +122,8 @@ public:
   ///
   double KKTError();
 
+  void showInfo() const;
+
 private:
   Robot robot_;
   OCPSolver ocp_solver_;

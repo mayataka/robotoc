@@ -165,6 +165,11 @@ public:
   ///
   void setRandom();
 
+  ///
+  /// @brief Shows the info of the contact status. 
+  ///
+  void showInfo() const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

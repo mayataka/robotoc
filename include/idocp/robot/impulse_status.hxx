@@ -138,6 +138,12 @@ inline void ImpulseStatus::setContactPoints(
 }
 
 
+inline const Eigen::Vector3d& ImpulseStatus::contactPoint(
+    const int impulse_index) const {
+  return impulse_status_.contactPoint(impulse_index);
+}
+
+
 inline const std::vector<Eigen::Vector3d>& 
 ImpulseStatus::contactPoints() const {
   return impulse_status_.contactPoints();
