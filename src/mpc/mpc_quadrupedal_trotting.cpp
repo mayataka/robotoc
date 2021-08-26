@@ -92,10 +92,7 @@ void MPCQuadrupedalTrotting::init(const double t, const Eigen::VectorXd& q,
   ocp_solver_.setContactStatusUniformly(cs_standing_);
   double tt = t0_;
   while (tt < t+T_-dtm_) {
-    if (predict_step_ == 0) {
-      // do nothing
-    }
-    else if (predict_step_%2 != 0) {
+    if (predict_step_%2 != 0) {
       ocp_solver_.pushBackContactStatus(cs_lfrh_, tt);
       ++predict_step_;
     }

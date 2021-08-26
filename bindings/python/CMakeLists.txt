@@ -11,3 +11,4 @@ endif()
 
 add_subdirectory(pybind11)
 add_subdirectory(idocp)
+add_subdirectory(idocp_sim)

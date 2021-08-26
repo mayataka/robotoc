@@ -42,8 +42,7 @@ qi_weight = np.array([0, 0, 0, 100, 100, 100,
                       1, 1, 1,
                       1, 1, 1])
 vi_weight = np.full(robot.dimv(), 1)
-dvi_weight = np.full(robot.dimv(), 0.1)
-# dvi_weight = np.full(robot.dimv(), 0.01)
+dvi_weight = np.full(robot.dimv(), 1e-03)
 config_cost = idocp.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
@@ -122,13 +121,13 @@ mpc.set_gait_pattern(step_length, step_height, period_swing, t0)
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0
-mpc.init(t, q, v, 20, verbose=True)
+mpc.init(t, q, v, 5)
 
 sim_time_step = 0.00333
-sim_start_time = 0.
+sim_start_time = 0.0
 sim_end_time = 10.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 # sim.set_camera(2.0, 45, -10, q[0:3])
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, num_mpc_iteration=5, record=False, verbose=True)
+sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=True, record=False)

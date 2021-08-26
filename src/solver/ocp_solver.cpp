@@ -143,7 +143,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     }
   }
   if (name == "ts") {
-    const int num_events = ocp_.discrete().N_impulse() + ocp_.discrete().N_lift();
+    const int num_events = ocp_.discrete().N_impulse()+ocp_.discrete().N_lift();
     int impulse_index = 0;
     int lift_index = 0;
     Eigen::VectorXd ts(1);
@@ -154,7 +154,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         ++impulse_index;
       }
       else {
-        ts.coeffRef(0) = contact_sequence_.impulseTime(impulse_index);
+        ts.coeffRef(0) = contact_sequence_.liftTime(lift_index);
         sol.push_back(ts);
         ++lift_index;
       }

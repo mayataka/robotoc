@@ -3,3 +3,4 @@ build/
 pybind11/
 pybind11-build/
 __pycache__/
+*.mp4

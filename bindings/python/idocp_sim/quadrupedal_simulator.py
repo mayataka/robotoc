@@ -1,6 +1,5 @@
 import pybullet
 import pybullet_data
-import numpy as np 
 import math
 import time
 import abc
@@ -56,7 +55,8 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
             print(info)
         pybullet.disconnect()
 
-    def run_simulation(self, mpc, q0, v0, num_mpc_iteration, record=False, verbose=True):
+    def run_simulation(self, mpc, q0, v0, num_mpc_iteration, verbose=False, 
+                       record=False, record_name='quadrupedal_mpc_sim.mp4'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
@@ -82,13 +82,13 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
 
         if record:
             pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, 
-                                       'quadruped_sim.mp4')
+                                       record_name)
 
         for i in range(sim_steps):
             self.get_state_from_pybullet(robot, q, v)
             if verbose:
                 print('t = {:.6g}:'.format(t))
-            mpc.update_solution(t, q, v, num_mpc_iteration, verbose)
+            mpc.update_solution(t, q, v, num_mpc_iteration)
             if verbose:
                 print('KKT error = {:.6g}'.format(mpc.KKT_error(t, q, v)))
                 print('')

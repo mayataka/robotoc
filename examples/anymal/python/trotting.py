@@ -18,7 +18,7 @@ step_length = 0.15
 step_height = 0.1
 period_swing = 0.5
 period_double_support = 0.04
-t0 = period_double_support
+t0 = period_double_support 
 cycle = 3
 
 cost = idocp.CostFunction()
@@ -123,7 +123,7 @@ N = math.floor(T/dt)
 max_num_impulse_phase = 2*cycle
 
 nthreads = 4
-t = 0
+t = 0.0
 ocp_solver = idocp.OCPSolver(robot, cost, constraints, T, N, 
                              max_num_impulse_phase, nthreads)
 
