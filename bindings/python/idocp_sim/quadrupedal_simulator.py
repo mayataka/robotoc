@@ -79,6 +79,7 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
                                                 self.camera_yaw,
                                                 self.camera_pitch,
                                                 self.camera_target_pos)
+        pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
 
         if record:
             pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, 
