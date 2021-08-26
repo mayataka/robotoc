@@ -17,8 +17,9 @@
 - gcc (at least C++11 is required), CMake (at least version 3.1)
 - Eigen3, [Pinocchio](https://stack-of-tasks.github.io/pinocchio/download.html)  , 
 - Python3, NumPy (for Python binding)
-- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (optional to visualize the solution trajectory in Python)
+- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and/or [meshcat-python](https://github.com/rdeits/meshcat-python) (optional to visualize the solution trajectory in Python) 
 - [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (optional to visualize the solution trajectory in C++) 
+- [PyBullet](https://pybullet.org/wordpress/) (optional to simulate MPC examples)
 
 ## Installation 
 1. Install the latest stable version of Eigen3 by 
@@ -50,6 +51,10 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DOPTIMIZE_FOR_NATIVE=ON
 5. If you want to visualize the solution trajectory with Python, you have to install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) by
 ```
 sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba -y
+```
+and/or [meshcat-python](https://github.com/rdeits/meshcat-python) by
+```
+pip install meshcat
 ```
 
 6. If you want to visualize the solution trajectory with C++, in addition to [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), you have to install [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
@@ -102,7 +107,7 @@ export PYTHONPATH=IDOCP_INSTALL_DIR/lib/python3.8/site-packages:$PYTHONPATH
 
 e.g., in `~/.bashrc`. Note that if you use another Python version than `python3.8`, please adapt it.
 
-## Solvers
+## Solvers 
 The following three solvers are provided:
 - `OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
 - `UnconstrOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
@@ -110,9 +115,8 @@ The following three solvers are provided:
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 
-
 ## Examples
-Examples are found in `examples` directory.
+Examples of these solvers are found in `examples` directory.
 The following animations are the solution trajectory of the `UnconstrOCPSolver` for a robot manipulator iiwa14.
 
 - Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`, or `iiwa14/python/config_space_ocp.py`)
@@ -137,6 +141,17 @@ The following animations are the solution trajectory of the `OCPSolver` for a qu
 - Running gait (`anymal/running.cpp`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running.gif" width="520">
+
+
+## Whole-body MPC examples
+Two example implementations of whole-body MPC are provided:
+- `MPCQuadrupedalWalking` : MPC with `OCPSolver` for the walking gait of quadrupedal robots.
+- `MPCQuadrupedalTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
+
+You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anymal/mpc/trotting.py` (you need [PyBullet](https://pybullet.org/wordpress/)).
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_walking.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_trotting.gif" width="250">
 
 
 ## Citing idocp
