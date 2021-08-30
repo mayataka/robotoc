@@ -321,6 +321,12 @@ bool OCPSolver::isFormulationTractable(const double t) {
 }
 
 
+bool OCPSolver::isSwitchingTimeConsistent(const double t) {
+  ocp_.discretize(contact_sequence_, t);
+  return ocp_.discrete().isSwitchingTimeConsistent();
+}
+
+
 void OCPSolver::showInfo() const {
   contact_sequence_.showInfo();
   ocp_.discrete().showInfo();

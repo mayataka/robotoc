@@ -123,7 +123,7 @@ void MPCQuadrupedalTrotting::updateSolution(const double t,
   const bool add_step = addStep(t);
   const auto ts = ocp_solver_.getSolution("ts");
   if (!ts.empty()) {
-    if (ts.front().coeff(0) <= t) {
+    if (ts.front().coeff(0) < t+min_dt) {
       ts_last_ = ts.front().coeff(0);
       ocp_solver_.popFrontContactStatus();
       ++current_step_;
@@ -252,6 +252,18 @@ void MPCQuadrupedalTrotting::resetContactPoints(const Eigen::VectorXd& q) {
     ocp_solver_.setContactPoints(step-current_step_, contact_points_);
   }
 }
+
+
+// void MPCQuadrupedalTrotting::checkFormulation(const double t) {
+//   const bool is_formulation_tractable = ocp_solver_.isFormulationTractable(t);
+//   const bool is_switching_time_consistent = ocp_solver_.isSwitchingTimeConsistent(t);
+//   std::cout << "isFormulationTractable: ";
+//   if (is_formulation_tractable) std::cout << "true" << std::endl;
+//   else std::cout << "false" << std::endl;
+//   std::cout << "isSwitchingTimeConsistent: ";
+//   if (is_switching_time_consistent) std::cout << "true" << std::endl;
+//   else std::cout << "false" << std::endl;
+// }
 
 
 void MPCQuadrupedalTrotting::showInfo() const {

@@ -205,6 +205,13 @@ public:
   bool isFormulationTractable(const double t);
 
   ///
+  /// @brief Checks wheather the switching times are consistent. 
+  /// @param[in] t Initial time of the horizon. 
+  /// @return true if the switching times are consistent. false if not.
+  ///
+  bool isSwitchingTimeConsistent(const double t);
+
+  ///
   /// @brief Shows the information of the discretized optimal control problem
   /// onto console.
   ///

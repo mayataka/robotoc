@@ -12,7 +12,7 @@ inline HybridTimeDiscretization::HybridTimeDiscretization(const double T,
                                                           const int max_events) 
   : T_(T),
     dt_ideal_(T/N), 
-    max_dt_(dt_ideal_-min_dt_),
+    max_dt_(dt_ideal_-min_dt),
     N_(N),
     N_ideal_(N),
     N_impulse_(0),
@@ -76,6 +76,7 @@ inline void HybridTimeDiscretization::discretize(
   countTimeStages();
   countContactPhase();
   assert(isFormulationTractable());
+  assert(isSwitchingTimeConsistent());
 }
 
 
@@ -304,6 +305,23 @@ inline bool HybridTimeDiscretization::isFormulationTractable() const {
 }
 
 
+inline bool HybridTimeDiscretization::isSwitchingTimeConsistent() const {
+  for (int i=0; i<N_impulse(); ++i) {
+    // if (t_impulse(i) <= t(0) || t_impulse(i) >= t(N())) {
+    if (t_impulse(i) < t(0)+min_dt || t_impulse(i) >= t(N())-min_dt) {
+      return false;
+    }
+  }
+  for (int i=0; i<N_lift(); ++i) {
+    // if (t_lift(i) <= t(0) || t_lift(i) >= t(N())) {
+    if (t_lift(i) < t(0)+min_dt || t_lift(i) > t(N())-min_dt) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 inline void HybridTimeDiscretization::countDiscreteEvents(
     const ContactSequence& contact_sequence, const double t) {
   N_impulse_ = contact_sequence.numImpulseEvents();
@@ -336,9 +354,9 @@ inline void HybridTimeDiscretization::countTimeSteps(const double t) {
     const int stage = i - num_events_on_grid;
     if (i == time_stage_before_impulse_[impulse_index]) {
       dt_[stage] = t_impulse_[impulse_index] - i * dt_ideal_ - t;
-      assert(dt_[stage] >= -min_dt_);
-      assert(dt_[stage] <= dt_ideal_+min_dt_);
-      if (dt_[stage] <= min_dt_) {
+      assert(dt_[stage] >= -min_dt);
+      assert(dt_[stage] <= dt_ideal_+min_dt);
+      if (dt_[stage] <= min_dt) {
         time_stage_before_impulse_[impulse_index] = stage - 1;
         dt_aux_[impulse_index] = dt_ideal_;
         t_[stage] = t + (i-1) * dt_ideal_;
@@ -358,9 +376,9 @@ inline void HybridTimeDiscretization::countTimeSteps(const double t) {
     }
     else if (i == time_stage_before_lift_[lift_index]) {
       dt_[stage] = t_lift_[lift_index] - i * dt_ideal_ - t;
-      assert(dt_[stage] >= -min_dt_);
-      assert(dt_[stage] <= dt_ideal_+min_dt_);
-      if (dt_[stage] <= min_dt_) {
+      assert(dt_[stage] >= -min_dt);
+      assert(dt_[stage] <= dt_ideal_+min_dt);
+      if (dt_[stage] <= min_dt) {
         time_stage_before_lift_[lift_index] = stage - 1;
         dt_lift_[lift_index] = dt_ideal_;
         t_[stage] = t + (i-1) * dt_ideal_;

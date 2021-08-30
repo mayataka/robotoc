@@ -271,10 +271,22 @@ public:
   bool isFormulationTractable() const;
 
   ///
+  /// @brief Checks wheather the switching times are consistent. 
+  /// @return true if the switching times are consistent. false if not.
+  ///
+  bool isSwitchingTimeConsistent() const;
+
+  ///
   /// @brief Shows the information of the discretized optimal control problem 
   /// into console. 
   ///
   void showInfo() const;
+
+  ///
+  /// @brief Minimum step size of the discretization grid. 
+  ///
+  static constexpr double min_dt 
+      = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:
   double T_, dt_ideal_, max_dt_;
@@ -287,9 +299,6 @@ private:
                     sto_impulse_, sto_lift_;
   std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
   std::vector<DiscreteEventType> event_types_;
-
-  static constexpr double min_dt_ 
-      = std::sqrt(std::numeric_limits<double>::epsilon());
 
   void countDiscreteEvents(const ContactSequence& contact_sequence, 
                            const double t);
