@@ -204,6 +204,7 @@ void HybridTimeDiscretizationTest::test_discretizeOCP(const Robot& robot) const 
       ++lift_index;
     }
   }
+  EXPECT_NO_THROW(discretization.showInfo());
 }
 
 
@@ -224,6 +225,7 @@ void HybridTimeDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) 
     }
   }
   EXPECT_DOUBLE_EQ(discretization.t(discretization.N()), t+T);
+  EXPECT_NO_THROW(discretization.showInfo());
 }
 
 
