@@ -90,6 +90,7 @@ TEST_F(ImpulseStatusTest, activate) {
     EXPECT_FALSE(contact_status.isContactActive(i));
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
+  EXPECT_NO_THROW(impulse_status.showInfo());
 }
 
 

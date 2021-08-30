@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <limits>
 
 #include "Eigen/Core"
 
@@ -122,7 +123,14 @@ public:
   ///
   double KKTError();
 
+  ///
+  /// @brief Shows the information of the discretized optimal control problem
+  /// onto console.
+  ///
   void showInfo() const;
+
+  static constexpr double min_dt 
+      = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:
   Robot robot_;

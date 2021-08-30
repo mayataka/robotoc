@@ -12,6 +12,12 @@ void HybridTimeDiscretization::showInfo() const {
   std::cout << "N_impulse = " << N_impulse() << std::endl;
   std::cout << "N_lift = " << N_lift() << std::endl;
   std::cout << "N_all = " << N_all() << std::endl;
+  std::cout << "isFormulationTractable: ";
+  if (isFormulationTractable()) std::cout << "true" << std::endl;
+  else std::cout << "false" << std::endl;
+  std::cout << "isSwitchingTimeConsistent: ";
+  if (isSwitchingTimeConsistent()) std::cout << "true" << std::endl;
+  else std::cout << "false" << std::endl;
   for (int i=0; i<N(); ++i) {
     std::cout << "i = " << i << ": t = " << t(i) << ": dt = " << dt(i) << std::endl; 
     if (isTimeStageBeforeImpulse(i)) {

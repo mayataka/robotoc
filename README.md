@@ -3,7 +3,7 @@
 [![build](https://github.com/mayataka/idocp/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/idocp/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running_yoko.gif" width="600">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running_yoko.gif" width="530">
 
 ## Features for efficient optimal control for rigid body systems with contacts
 - Direct multiple-shooting method based on inverse dynamics.
@@ -115,43 +115,43 @@ The following three solvers are provided:
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 
-## Examples
+## Optimal control examples
 Examples of these solvers are found in `examples` directory.
 The following animations are the solution trajectory of the `UnconstrOCPSolver` for a robot manipulator iiwa14.
 
 - Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`, or `iiwa14/python/config_space_ocp.py`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/config_ocp.gif" width="135"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/task_ocp.gif" width="135">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/config_ocp.gif" width="115"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/task_ocp.gif" width="115">
 
 
 The following animations are the solution trajectory of the `OCPSolver` for a quadruped ANYmal (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints).
 
 - Walking, trotting gaits (`anymal/walking.cpp`, `anymal/trotting.cpp`, or `anymal/python/walking.py`, `anymal/python/trotting.py`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/walking.gif" width="250"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/trotting.gif" width="250">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/walking.gif" width="215"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/trotting.gif" width="215">
 
 - Pacing, bounding, jumping gaits (`anymal/pacing.cpp`, `anymal/bounding.cpp`, `anymal/jumping.cpp`, or `anymal/python/pacing.py`, `anymal/python/bounding.py`, `anymal/python/jumping.py`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/pacing.gif" width="250"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/bounding.gif" width="250"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/jumping.gif" width="250">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/pacing.gif" width="215"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/bounding.gif" width="215"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/jumping.gif" width="215">
 
 - Running gait (`anymal/running.cpp`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running.gif" width="520">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running.gif" width="500">
 
 
 ## Whole-body MPC examples
-Two example implementations of whole-body MPC are provided:
+The following two example implementations of whole-body MPC are provided:
 - `MPCQuadrupedalWalking` : MPC with `OCPSolver` for the walking gait of quadrupedal robots.
 - `MPCQuadrupedalTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
 
-You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anymal/mpc/trotting.py` (you need [PyBullet](https://pybullet.org/wordpress/)).
+You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anymal/mpc/trotting.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`).
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_walking.gif" width="250"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_trotting.gif" width="250">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_walking.gif" width="300"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_trotting.gif" width="300">
 
 
 ## Citing idocp

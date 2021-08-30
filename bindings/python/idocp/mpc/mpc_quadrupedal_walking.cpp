@@ -30,6 +30,7 @@ PYBIND11_MODULE(mpc_quadrupedal_walking, m) {
     .def("KKT_error", static_cast<double (MPCQuadrupedalWalking::*)()>(&MPCQuadrupedalWalking::KKTError))
     .def("KKT_error", static_cast<double (MPCQuadrupedalWalking::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalWalking::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
+//     .def("check_formulation", &MPCQuadrupedalWalking::checkFormulation)
     .def("show_info", &MPCQuadrupedalWalking::showInfo);
 }
 

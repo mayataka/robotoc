@@ -15,7 +15,7 @@
 namespace idocp {
 
 ///
-/// @typedef ImpulseConstraintComponentBase
+/// @class ImpulseConstraintComponentBase
 /// @brief Base class for impulse constraint components. 
 ///
 class ImpulseConstraintComponentBase {
