@@ -15,8 +15,7 @@ namespace idocp {
 
 ///
 /// @class StateEquation
-/// @brief State equation of forward Euler. Only represent kinematic relation
-/// between stages.
+/// @brief State equation. Only represent kinematic relation between stages.
 ///
 class StateEquation {
 public:
@@ -57,7 +56,7 @@ public:
   StateEquation& operator=(StateEquation&&) noexcept = default;
 
   ///
-  /// @brief Computes the residual in the state equation of forward Euler. 
+  /// @brief Computes the residual in the state equation. 
   /// @param[in] robot Robot model. 
   /// @param[in] dt Time step. 
   /// @param[in] s Solution at the current time stage. 
@@ -66,14 +65,14 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
   template <typename ConfigVectorType, typename TangentVectorType>
-  static void computeForwardEulerResidual(
+  static void computeStateEquationResidual(
       const Robot& robot, const double dt, const SplitSolution& s, 
       const Eigen::MatrixBase<ConfigVectorType>& q_next, 
       const Eigen::MatrixBase<TangentVectorType>& v_next, 
       SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the state equation of forward Euler. 
+  /// @brief Linearizes the state equation. 
   /// @param[in] robot Robot model. 
   /// @param[in] dt Time step. 
   /// @param[in] q_prev Configuration at the previous time stage. 
@@ -83,16 +82,16 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
   template <typename ConfigVectorType, typename SplitSolutionType>
-  static void linearizeForwardEuler(
+  static void linearizeStateEquation(
       const Robot& robot, const double dt, 
       const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
       const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
       SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the state equation of the forward Euler and multiplies 
-  /// the inverse matrix of the Lie derivative to SplitKKTMatrix::Fqq, 
-  /// SplitKKTMatrix::Fqv, and SplitKKTResidual::Fq.
+  /// @brief Linearizes the state equation, and multiplies the inverse of the
+  /// Lie derivative to SplitKKTMatrix::Fqq, SplitKKTMatrix::Fqv, and 
+  /// SplitKKTResidual::Fq.
   /// @param[in] robot Robot model. 
   /// @param[in] dt Time step. 
   /// @param[in] q_prev Configuration at the previous time stage. 
@@ -102,7 +101,7 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
   template <typename ConfigVectorType, typename SplitSolutionType>
-  void linearizeForwardEulerLieDerivative(
+  void linearizeStateEquationAlongLieGroup(
       const Robot& robot, const double dt, 
       const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
       const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
@@ -116,7 +115,7 @@ public:
 
   ///
   /// @brief Computes the initial state direction using the result of  
-  /// StateEquation::linearizeForwardEulerLieDerivative().
+  /// StateEquation::linearizeStateEquationAlongLieGroup().
   /// @param[in] robot Robot model. 
   /// @param[in] q0 Initial configuration. 
   /// @param[in] v0 Initial generalized velocity. 

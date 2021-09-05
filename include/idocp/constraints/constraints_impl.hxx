@@ -74,7 +74,7 @@ inline void setSlackAndDual(
 
 
 template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
-inline void computePrimalAndDualResidual(
+inline void evalConstraint(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const SplitSolutionType& s) {
@@ -82,12 +82,12 @@ inline void computePrimalAndDualResidual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
+    constraints[i]->evalConstraint(robot, data[i], s);
   }
 }
 
 
-inline void linearizePrimalAndDualResidual(
+inline void linearizeConstraints(
    const std::vector<ConstraintComponentBasePtr>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, const double dt,
    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
@@ -95,14 +95,13 @@ inline void linearizePrimalAndDualResidual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
-    constraints[i]->computePrimalResidualDerivatives(robot, data[i], dt, s, 
-                                                     kkt_residual);
+    constraints[i]->evalConstraint(robot, data[i], s);
+    constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
   }
 }
 
 
-inline void linearizePrimalAndDualResidual(
+inline void linearizeConstraints(
    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, 
    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
@@ -110,9 +109,8 @@ inline void linearizePrimalAndDualResidual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
-    constraints[i]->computePrimalResidualDerivatives(robot, data[i], s, 
-                                                     kkt_residual);
+    constraints[i]->evalConstraint(robot, data[i], s);
+    constraints[i]->evalDerivatives(robot, data[i], s, kkt_residual);
   }
 }
 
@@ -126,9 +124,8 @@ inline void condenseSlackAndDual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
-    constraints[i]->computePrimalResidualDerivatives(robot, data[i], dt, s, 
-                                                     kkt_residual);
+    constraints[i]->evalConstraint(robot, data[i], s);
+    constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
     constraints[i]->condenseSlackAndDual(robot, data[i], dt, s, kkt_matrix, 
                                          kkt_residual);
   }
@@ -144,9 +141,8 @@ inline void condenseSlackAndDual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
-    constraints[i]->computePrimalResidualDerivatives(robot, data[i], s, 
-                                                     kkt_residual);
+    constraints[i]->evalConstraint(robot, data[i], s);
+    constraints[i]->evalDerivatives(robot, data[i], s, kkt_residual);
     constraints[i]->condenseSlackAndDual(robot, data[i], s, kkt_matrix, 
                                          kkt_residual);
   }
@@ -219,36 +215,6 @@ inline void updateDual(std::vector<ConstraintComponentData>& data,
   for (auto& e : data) {
     e.dual.noalias() += step_size * e.ddual;
   }
-}
-
-
-template <typename ConstraintComponentBaseTypePtr>
-inline double costSlackBarrier(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data) {
-  assert(constraints.size() == data.size());
-  double cost = 0;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    cost += constraints[i]->costSlackBarrier(data[i]);
-  }
-  return cost;
-}
-
-
-template <typename ConstraintComponentBaseTypePtr>
-inline double costSlackBarrier(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data, const double step_size) {
-  assert(constraints.size() == data.size());
-  double cost = 0;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    cost += constraints[i]->costSlackBarrier(data[i], step_size);
-  }
-  return cost;
 }
 
 

@@ -16,7 +16,7 @@ namespace idocp {
 
 ///
 /// @class ImpulseStateEquation
-/// @brief State equation of forward Euler. Only represent kinematic relation
+/// @brief State equation. Only represent kinematic relation
 /// between stages.
 ///
 class ImpulseStateEquation {
@@ -58,7 +58,7 @@ public:
   ImpulseStateEquation& operator=(ImpulseStateEquation&&) noexcept = default;
 
   ///
-  /// @brief Computes the residual in the impulse state equation of forward Euler. 
+  /// @brief Computes the residual in the impulse state equation. 
   /// @param[in] robot Robot model. 
   /// @param[in] s Solution at the current impulse stage. 
   /// @param[in] q_next Configuration at the next time stage. 
@@ -67,14 +67,14 @@ public:
   /// impulse stage. 
   ///
   template <typename ConfigVectorType, typename TangentVectorType>
-  static void computeForwardEulerResidual(
+  static void computeStateEquationResidual(
       const Robot& robot, const ImpulseSplitSolution& s, 
       const Eigen::MatrixBase<ConfigVectorType>& q_next, 
       const Eigen::MatrixBase<TangentVectorType>& v_next, 
       ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the impulse state equation of forward Euler. 
+  /// @brief Linearizes the impulse state equation. 
   /// @param[in] robot Robot model. 
   /// @param[in] q_prev Configuration at the previous time stage. 
   /// @param[in] s Solution at the current impulse stage. 
@@ -85,16 +85,16 @@ public:
   /// impulse stage. 
   ///
   template <typename ConfigVectorType>
-  static void linearizeForwardEuler(
+  static void linearizeStateEquation(
       const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
       const ImpulseSplitSolution& s, const SplitSolution& s_next, 
       ImpulseSplitKKTMatrix& kkt_matrix, 
       ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the impulse state equation of the forward Euler and 
-  /// multiplies the inverse of the Lie derivative to ImpulseSplitKKTMatrix::Fqq, 
-  /// and ImpulseSplitKKTResidual::Fq.
+  /// @brief Linearizes the impulse state equation, and multiplies the inverse
+  /// of the Lie derivative to ImpulseSplitKKTMatrix::Fqq and 
+  /// ImpulseSplitKKTResidual::Fq.
   /// @param[in] robot Robot model. 
   /// @param[in] q_prev Configuration at the previous time stage. 
   /// @param[in] s Solution at the current impulse stage. 
@@ -105,7 +105,7 @@ public:
   /// impulse stage. 
   ///
   template <typename ConfigVectorType>
-  void linearizeForwardEulerLieDerivative(
+  void linearizeStateEquationAlongLieGroup(
       const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
       const ImpulseSplitSolution& s, const SplitSolution& s_next, 
       ImpulseSplitKKTMatrix& kkt_matrix, 

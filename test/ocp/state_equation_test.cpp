@@ -37,7 +37,7 @@ TEST_F(StateEquationTest, fixedbase) {
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
   StateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
+  state_equation.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q+dt*s.v-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dt*s.a-s_next.v)));
@@ -48,8 +48,8 @@ TEST_F(StateEquationTest, fixedbase) {
   EXPECT_TRUE(kkt_matrix.Fqv().isApprox(dt*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  state_equation.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
-                                                    kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, dt, q_prev, s, s_next, 
+                                                     kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q+dt*s.v-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dt*s.a-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
@@ -72,7 +72,7 @@ TEST_F(StateEquationTest, floatingBase) {
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
   StateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
+  state_equation.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
@@ -90,8 +90,8 @@ TEST_F(StateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  state_equation.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
-                                                    kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, dt, q_prev, s, s_next, 
+                                                     kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   const Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();

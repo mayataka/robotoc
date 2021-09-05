@@ -188,10 +188,16 @@ public:
                  const ImpulseSplitDirection& d);
 
   ///
-  /// @brief Copy other impulse split solution without reallocating memory.
-  /// @param[in] other Other impulse split solution.
+  /// @brief Copies the primal solution from another impulse solution. 
+  /// @param[in] another Another impulse split solution.
   ///
-  void copy(const ImpulseSplitSolution& other);
+  void copyPrimal(const ImpulseSplitSolution& another);
+
+  ///
+  /// @brief Copies the dual solution from another impulse solution. 
+  /// @param[in] another Another impulse split solution.
+  ///
+  void copyDual(const ImpulseSplitSolution& another);
 
   ///
   /// @brief Return true if two ImpulseSplitSolution have the same value and  

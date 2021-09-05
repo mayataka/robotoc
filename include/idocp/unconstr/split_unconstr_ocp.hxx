@@ -66,12 +66,11 @@ inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step,
 }
 
 
-inline void SplitUnconstrOCP::evaluateOCP(Robot& robot, const double t, 
-                                          const double dt, 
-                                          const SplitSolution& s, 
-                                          const Eigen::VectorXd& q_next, 
-                                          const Eigen::VectorXd& v_next, 
-                                          SplitKKTResidual& kkt_residual) {
+inline void SplitUnconstrOCP::evalOCP(Robot& robot, const double t, 
+                                      const double dt, const SplitSolution& s, 
+                                      const Eigen::VectorXd& q_next, 
+                                      const Eigen::VectorXd& v_next, 
+                                      SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
@@ -80,7 +79,7 @@ inline void SplitUnconstrOCP::evaluateOCP(Robot& robot, const double t,
   }
   kkt_residual.setZero();
   stage_cost_ = cost_->computeStageCost(robot, cost_data_, t, dt, s);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  constraints_->evalConstraint(robot, constraints_data_, s);
   stage_cost_ += dt * constraints_data_.logBarrier();
   unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
                                                        kkt_residual);
@@ -101,8 +100,8 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
                                           kkt_residual);
-  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
-                                               kkt_residual);
+  constraints_->linearizeConstraints(robot, constraints_data_, dt, s, 
+                                     kkt_residual);
   stage_cost_ += dt * constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);

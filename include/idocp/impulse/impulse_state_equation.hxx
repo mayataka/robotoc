@@ -42,7 +42,7 @@ inline ImpulseStateEquation::~ImpulseStateEquation() {
 
 
 template <typename ConfigVectorType, typename TangentVectorType>
-inline void ImpulseStateEquation::computeForwardEulerResidual(
+inline void ImpulseStateEquation::computeStateEquationResidual(
     const Robot& robot, const ImpulseSplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
@@ -55,12 +55,12 @@ inline void ImpulseStateEquation::computeForwardEulerResidual(
 
 
 template <typename ConfigVectorType>
-inline void ImpulseStateEquation::linearizeForwardEuler(
+inline void ImpulseStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
-  computeForwardEulerResidual(robot, s, s_next.q, s_next.v, kkt_residual);
+  computeStateEquationResidual(robot, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
@@ -83,11 +83,11 @@ inline void ImpulseStateEquation::linearizeForwardEuler(
 
 
 template <typename ConfigVectorType>
-inline void ImpulseStateEquation::linearizeForwardEulerLieDerivative(
+inline void ImpulseStateEquation::linearizeStateEquationAlongLieGroup(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
-  linearizeForwardEuler(robot, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  linearizeStateEquation(robot, q_prev, s, s_next, kkt_matrix, kkt_residual);
   if (has_floating_base_) {
     lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
                                                   Fqq_prev_inv_);

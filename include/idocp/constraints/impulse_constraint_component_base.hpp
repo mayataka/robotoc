@@ -96,34 +96,33 @@ public:
                         const ImpulseSplitSolution& s) const = 0;
 
   ///
-  /// @brief Computes the primal and dual residuals of the constraint. 
+  /// @brief Computes the primal residual, residual in the complementary 
+  /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
   ///
-  virtual void computePrimalAndDualResidual(
-      Robot& robot, ConstraintComponentData& data, 
-      const ImpulseSplitSolution& s) const = 0;
+  virtual void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+                              const ImpulseSplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the derivatives of the priaml residual, i.e., the 
   /// Jacobian of the inequality constraint, and add the product of the 
   /// Jacobian and the dual variable to the KKT residual. This function is 
-  /// always called just after computePrimalAndDualResidual().
+  /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
   /// @param[in] data Constraint data.
   /// @param[in] s Impulse split solution.
   /// @param[out] kkt_residual Impulse split KKT residual.
   ///
-  virtual void computePrimalResidualDerivatives(
-      Robot& robot, ConstraintComponentData& data, 
-      const ImpulseSplitSolution& s,
-      ImpulseSplitKKTResidual& kkt_residual) const = 0;
+  virtual void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
+                               const ImpulseSplitSolution& s,
+                               ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Condenses the slack and dual variables, i.e., factorizes the  
   /// condensed Hessians and KKT residuals. This function is always called 
-  /// just after computePrimalResidualDerivatives().
+  /// just after evalDerivatives().
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
@@ -158,8 +157,7 @@ public:
   /// @brief Sets the slack and dual variables positive.
   /// @param[in, out] data Constraint data.
   ///
-  virtual void setSlackAndDualPositive(
-      ConstraintComponentData& data) const final;
+  void setSlackAndDualPositive(ConstraintComponentData& data) const;
 
   ///
   /// @brief Computes and returns the maximum step size by applying 
@@ -167,8 +165,7 @@ public:
   /// @param[in] data Constraint data.
   /// @return Maximum step size regarding the slack variable.
   ///
-  virtual double maxSlackStepSize(
-      const ConstraintComponentData& data) const final;
+  double maxSlackStepSize(const ConstraintComponentData& data) const;
 
   ///
   /// @brief Computes and returns the maximum step size by applying 
@@ -176,8 +173,7 @@ public:
   /// @param[in] data Constraint data. 
   /// @return Maximum step size regarding the dual variable.
   ///
-  virtual double maxDualStepSize(
-      const ConstraintComponentData& data) const final;
+  double maxDualStepSize(const ConstraintComponentData& data) const;
 
   ///
   /// @brief Updates the slack variable according to the step size.
@@ -192,25 +188,6 @@ public:
   /// @param[in] step_size Step size. 
   ///
   static void updateDual(ConstraintComponentData& data, const double step_size);
-
-  ///
-  /// @brief Computes and returns the value of the barrier function of the slack 
-  /// variable.
-  /// @param[in] data Constraint data. 
-  /// @return Value of the barrier function. 
-  ///
-  virtual double costSlackBarrier(
-      const ConstraintComponentData& data) const final;
-
-  ///
-  /// @brief Computes and returns the value of the barrier function of the slack 
-  /// variable with the step size.
-  /// @param[in] data Constraint data.
-  /// @param[in] step_size Step size. 
-  /// @return Value of the barrier function. 
-  ///
-  virtual double costSlackBarrier(const ConstraintComponentData& data, 
-                                  const double step_size) const final;
 
   ///
   /// @brief Returns the barrier parameter.
@@ -242,8 +219,7 @@ protected:
   /// the slack and dual variables.
   /// @param[in, out] data Constraint data.
   ///
-  virtual void computeComplementarySlackness(
-      ConstraintComponentData& data) const final;
+  void computeComplementarySlackness(ConstraintComponentData& data) const;
 
   ///
   /// @brief Computes the residual in the complementarity slackness between  
@@ -252,9 +228,9 @@ protected:
   /// @param[in] start Start position of the segment.
   /// @param[in] size Size of the segment.
   ///
-  virtual void computeComplementarySlackness(ConstraintComponentData& data,
-                                             const int start, 
-                                             const int size) const final;
+  void computeComplementarySlackness(ConstraintComponentData& data,
+                                     const int start, 
+                                     const int size) const;
 
   ///
   /// @brief Computes the residual in the complementarity slackness between  
@@ -274,8 +250,8 @@ protected:
   /// @param[in] dual An element of the dual variable.
   /// @return The complementarity slackness between the slack and dual variables.
   ///
-  virtual double computeComplementarySlackness(const double slack, 
-                                               const double dual) const final;
+  double computeComplementarySlackness(const double slack, 
+                                       const double dual) const;
 
   ///
   /// @brief Computes the coefficient of the condensing.

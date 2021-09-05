@@ -104,7 +104,7 @@ TEST_F(SplitUnconstrParNMPCTest, computeKKTResidual) {
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
-  constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
   stage_cost += dt * constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEuler(dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
@@ -119,7 +119,7 @@ TEST_F(SplitUnconstrParNMPCTest, computeKKTResidual) {
 }
 
 
-TEST_F(SplitUnconstrParNMPCTest, evaluateOCP) {
+TEST_F(SplitUnconstrParNMPCTest, evalOCP) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = SplitSolution::Random(robot);
   const auto d = SplitDirection::Random(robot);
@@ -128,7 +128,7 @@ TEST_F(SplitUnconstrParNMPCTest, evaluateOCP) {
   const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   parnmpc.initConstraints(robot, 10, s);
   SplitKKTResidual kkt_residual(robot);
-  parnmpc.evaluateOCP(robot, t, dt, s_prev.q, s_prev.v, s, kkt_residual);
+  parnmpc.evalOCP(robot, t, dt, s_prev.q, s_prev.v, s, kkt_residual);
   const double stage_cost = parnmpc.stageCost();
   const double constraint_violation = parnmpc.constraintViolation(kkt_residual, dt);
   SplitKKTResidual kkt_residual_ref(robot);
@@ -137,7 +137,7 @@ TEST_F(SplitUnconstrParNMPCTest, evaluateOCP) {
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost_ref = cost->computeStageCost(robot, cost_data, t, dt, s);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
+  constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += dt * constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,

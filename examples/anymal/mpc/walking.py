@@ -102,7 +102,7 @@ joint_velocity_lower  = idocp.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = idocp.JointVelocityUpperLimit(robot)
 joint_torques_lower   = idocp.JointTorquesLowerLimit(robot)
 joint_torques_upper   = idocp.JointTorquesUpperLimit(robot)
-mu = 0.7
+mu = 0.8
 friction_cone         = idocp.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
@@ -126,11 +126,11 @@ v = np.zeros(robot.dimv())
 t = 0.0
 mpc.init(t, q, v, 5)
 
-sim_time_step = 0.00333
+sim_time_step = 0.0025 # 400 Hz MPC
 sim_start_time = 0.0
 sim_end_time = 10.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=False, record=False)
-# sim.run_simulation(mpc, q, v, num_mpc_iteration=5, verbose=False, record=True, record_name='anymal_walking.mp4')
+sim.run_simulation(mpc, q, v, num_mpc_iteration=2, verbose=False, record=False)
+# sim.run_simulation(mpc, q, v, num_mpc_iteration=2, verbose=False, record=True, record_name='anymal_walking.mp4')

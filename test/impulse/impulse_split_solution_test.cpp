@@ -22,8 +22,8 @@ protected:
   }
 
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_isApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_integrate(const Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
@@ -139,8 +139,8 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
 }
 
 
-void ImpulseSplitSolutionTest::testIsApprox(const Robot& robot, 
-                                            const ImpulseStatus& impulse_status) {
+void ImpulseSplitSolutionTest::test_isApprox(const Robot& robot, 
+                                             const ImpulseStatus& impulse_status) {
   auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseSplitSolution s_ref = s;
   EXPECT_TRUE(s.isApprox(s_ref));
@@ -187,11 +187,22 @@ void ImpulseSplitSolutionTest::testIsApprox(const Robot& robot,
     s_ref.set_mu_vector();
     EXPECT_TRUE(s.isApprox(s_ref));
   }
+  s_ref.setRandom(robot);
+  EXPECT_FALSE(s.isApprox(s_ref));
+  s_ref.copyPrimal(s);
+  EXPECT_FALSE(s.isApprox(s_ref));
+  s_ref.setRandom(robot);
+  s_ref.copyDual(s);
+  EXPECT_FALSE(s.isApprox(s_ref));
+  s_ref.setRandom(robot);
+  s_ref.copyPrimal(s);
+  s_ref.copyDual(s);
+  EXPECT_TRUE(s.isApprox(s_ref));
 }
 
 
-void ImpulseSplitSolutionTest::testIntegrate(const Robot& robot, 
-                                             const ImpulseStatus& impulse_status) {
+void ImpulseSplitSolutionTest::test_integrate(const Robot& robot, 
+                                              const ImpulseStatus& impulse_status) {
   auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
   auto s_ref = s;
@@ -218,12 +229,12 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
-  testIntegrate(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
+  test_integrate(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
-  testIntegrate(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
+  test_integrate(robot, impulse_status);
 }
 
 
@@ -232,15 +243,15 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
-  testIntegrate(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
+  test_integrate(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
-  testIntegrate(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
+  test_integrate(robot, impulse_status);
 }
 
 } // namespace idocp

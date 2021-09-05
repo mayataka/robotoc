@@ -138,9 +138,8 @@ void FrictionCone::setSlack(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void FrictionCone::computePrimalAndDualResidual(Robot& robot, 
-                                                ConstraintComponentData& data, 
-                                                const SplitSolution& s) const {
+void FrictionCone::evalConstraint(Robot& robot, ConstraintComponentData& data, 
+                                  const SplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -160,9 +159,9 @@ void FrictionCone::computePrimalAndDualResidual(Robot& robot,
 }
 
 
-void FrictionCone::computePrimalResidualDerivatives(
-    Robot& robot, ConstraintComponentData& data, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data, 
+                                   const double dt, const SplitSolution& s, 
+                                   SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {

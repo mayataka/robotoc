@@ -30,8 +30,10 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("set_contact_status_uniformly", &OCPSolver::setContactStatusUniformly)
     .def("set_contact_points", &OCPSolver::setContactPoints)
     .def("push_back_contact_status", &OCPSolver::pushBackContactStatus)
-    .def("pop_back_contact_status", &OCPSolver::popBackContactStatus)
-    .def("pop_front_contact_status", &OCPSolver::popFrontContactStatus)
+    .def("pop_back_contact_status", &OCPSolver::popBackContactStatus,
+          py::arg("t"), py::arg("extrapolate_solution")=false)
+    .def("pop_front_contact_status", &OCPSolver::popFrontContactStatus,
+          py::arg("t"), py::arg("extrapolate_solution")=false)
     .def("compute_KKT_residual", &OCPSolver::computeKKTResidual)
     .def("KKT_error", &OCPSolver::KKTError)
     .def("is_formulation_tractable", &OCPSolver::isFormulationTractable)

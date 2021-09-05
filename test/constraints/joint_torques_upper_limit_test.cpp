@@ -30,8 +30,8 @@ protected:
   void testKinematics(Robot& robot) const;
   void testIsFeasible(Robot& robot) const;
   void testSetSlack(Robot& robot) const;
-  void testComputePrimalAndDualResidual(Robot& robot) const;
-  void testComputePrimalResidualDerivatives(Robot& robot) const;
+  void test_evalConstraint(Robot& robot) const;
+  void test_evalDerivatives(Robot& robot) const;
   void testCondenseSlackAndDual(Robot& robot) const;
   void testExpandSlackAndDual(Robot& robot) const;
 
@@ -69,7 +69,7 @@ void JointTorquesUpperLimitTest::testSetSlack(Robot& robot) const {
 }
 
 
-void JointTorquesUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_evalConstraint(Robot& robot) const {
   JointTorquesUpperLimit constr(robot); 
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot);
@@ -80,7 +80,7 @@ void JointTorquesUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot) 
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
   auto data_ref = data;
-  constr.computePrimalAndDualResidual(robot, data, s);
+  constr.evalConstraint(robot, data, s);
   data_ref.residual = s.u - umax + data_ref.slack;
   pdipm::ComputeComplementarySlackness(barrier, data_ref);
   data_ref.log_barrier = pdipm::LogBarrier(barrier, data_ref.slack);
@@ -88,7 +88,7 @@ void JointTorquesUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot) 
 }
 
 
-void JointTorquesUpperLimitTest::testComputePrimalResidualDerivatives(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_evalDerivatives(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -97,7 +97,7 @@ void JointTorquesUpperLimitTest::testComputePrimalResidualDerivatives(Robot& rob
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_res_ref = kkt_res;
-  constr.computePrimalResidualDerivatives(robot, data, dt, s, kkt_res);
+  constr.evalDerivatives(robot, data, dt, s, kkt_res);
   kkt_res_ref.lu += dt * data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
@@ -149,8 +149,8 @@ TEST_F(JointTorquesUpperLimitTest, fixedBase) {
   testKinematics(robot);
   testIsFeasible(robot);
   testSetSlack(robot);
-  testComputePrimalAndDualResidual(robot);
-  testComputePrimalResidualDerivatives(robot);
+  test_evalConstraint(robot);
+  test_evalDerivatives(robot);
   testCondenseSlackAndDual(robot);
   testExpandSlackAndDual(robot);
 }
@@ -161,8 +161,8 @@ TEST_F(JointTorquesUpperLimitTest, floatingBase) {
   testKinematics(robot);
   testIsFeasible(robot);
   testSetSlack(robot);
-  testComputePrimalAndDualResidual(robot);
-  testComputePrimalResidualDerivatives(robot);
+  test_evalConstraint(robot);
+  test_evalDerivatives(robot);
   testCondenseSlackAndDual(robot);
   testExpandSlackAndDual(robot);
 }

@@ -98,10 +98,10 @@ public:
   /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void evaluateOCP(Robot& robot, const ContactStatus& contact_status,
-                   const double t, const double dt, const SplitSolution& s, 
-                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-                   SplitKKTResidual& kkt_residual);
+  void evalOCP(Robot& robot, const ContactStatus& contact_status,
+               const double t, const double dt, const SplitSolution& s, 
+               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the stage cost and constraint violation.
@@ -118,12 +118,12 @@ public:
   /// @param[in] dt_next Time step of the next time stage. 
   /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
-  void evaluateOCP(Robot& robot, const ContactStatus& contact_status,
-                   const double t, const double dt, const SplitSolution& s, 
-                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-                   SplitKKTResidual& kkt_residual,
-                   const ImpulseStatus& impulse_status, const double dt_next, 
-                   SplitSwitchingConstraintResidual& sc_residual);
+  void evalOCP(Robot& robot, const ContactStatus& contact_status,
+               const double t, const double dt, const SplitSolution& s, 
+               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+               SplitKKTResidual& kkt_residual,
+               const ImpulseStatus& impulse_status, const double dt_next, 
+               SplitSwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -299,7 +299,7 @@ public:
 
   ///
   /// @brief Returns the stage cost of this time stage for the line search.
-  /// Before calling this function, SplitOCP::evaluateOCP(), 
+  /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @return Stage cost of this time stage.
   /// 
@@ -308,7 +308,7 @@ public:
   ///
   /// @brief Returns the constraint violation of this time stage for the 
   /// line search. 
-  /// Before calling this function, SplitOCP::evaluateOCP(), 
+  /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] dt Time step of this time stage. 
@@ -320,7 +320,7 @@ public:
   ///
   /// @brief Returns the constraint violation of this time stage for the 
   /// line search. 
-  /// Before calling this function, SplitOCP::evaluateOCP(), 
+  /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] dt Time step of this time stage. 

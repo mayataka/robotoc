@@ -79,21 +79,22 @@ void setSlackAndDual(
     const SplitSolutionType& s);
 
 ///
-/// @brief Computes the primal and dual residuals of the constraints. 
+/// @brief Computes the primal residual, residual in the complementary 
+/// slackness, and the log-barrier function of the slack varible.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
 ///
 template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
-void computePrimalAndDualResidual(
+void evalConstraint(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const SplitSolutionType& s);
 
 ///
-/// @brief Computes the primal and dual residuals, linearize the 
-/// constraints, and add it to the KKT residual.
+/// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
+/// the products of the Jacobian of the constraints and Lagrange multipliers.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -101,29 +102,28 @@ void computePrimalAndDualResidual(
 /// @param[in] s Impulse split solution.
 /// @param[in, out] kkt_residual Impulse split KKT residual.
 ///
-void computePrimalResidualDerivatives(
+void evalDerivatives(
     const std::vector<ConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, const double dt,
     const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Computes the primal and dual residuals, linearize the 
-/// constraints, and add it to the KKT residual.
+/// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
+/// the products of the Jacobian of the constraints and Lagrange multipliers.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Impulse split solution.
 /// @param[in, out] kkt_residual Impulse split KKT residual.
 ///
-void computePrimalResidualDerivatives(
+void evalDerivatives(
     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Computes the primal and dual residuals, linearize the 
-/// constraints and add it to the KKT residual, and condense the slack and 
-/// dual variables.
+/// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+/// and condense the slack and dual variables.
 /// @param[in] constraints Vector of the constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -141,9 +141,8 @@ void condenseSlackAndDual(
     SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Computes the primal and dual residuals, linearize the 
-/// constraints and add it to the KKT residual, and condense the slack and 
-/// dual variables.
+/// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+/// and condense the slack and dual variables.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -211,32 +210,6 @@ void updateSlack(std::vector<ConstraintComponentData>& data,
 ///
 void updateDual(std::vector<ConstraintComponentData>& data, 
                 const double step_size);
-
-///
-/// @brief Computes and returns the value of the barrier function of the slack 
-/// variables.
-/// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in] data Vector of the constraints data.
-/// @return Value of the barrier function. 
-///
-template <typename ConstraintComponentBaseTypePtr>
-double costSlackBarrier(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data);
-
-///
-/// @brief Computes and returns the value of the barrier function of the slack 
-/// variable with the step size.
-/// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in] data Vector of the constraints data.
-/// @param[in] step_size Step size. 
-/// @return Value of the barrier function. 
-///
-template <typename ConstraintComponentBaseTypePtr>
-double costSlackBarrier(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data, 
-    const double step_size);
 
 ///
 /// @brief Sets the barrier parameter.

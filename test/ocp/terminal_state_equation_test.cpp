@@ -38,7 +38,7 @@ TEST_F(TerminalStateEquationTest, fixedbase) {
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
   TerminalStateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, q_prev, s, kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquation(robot, q_prev, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isZero());
   EXPECT_TRUE(kkt_residual.Fv().isZero());
   EXPECT_TRUE(kkt_residual.lq().isApprox((-s.lmd)));
@@ -48,7 +48,7 @@ TEST_F(TerminalStateEquationTest, fixedbase) {
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isZero());
   EXPECT_TRUE(kkt_residual.Fv().isZero());
   EXPECT_TRUE(kkt_residual.lq().isApprox((-s.lmd)));
@@ -70,7 +70,7 @@ TEST_F(TerminalStateEquationTest, floatingBase) {
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
   TerminalStateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, q_prev, s, kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquation(robot, q_prev, s, kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd dsubtract_dq_prev = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -85,7 +85,7 @@ TEST_F(TerminalStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.inverse();
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;

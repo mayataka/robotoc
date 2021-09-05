@@ -35,18 +35,6 @@ inline void ImpulseConstraintComponentBase::updateDual(
 }
 
 
-inline double ImpulseConstraintComponentBase::costSlackBarrier(
-    const ConstraintComponentData& data) const {
-  return pdipm::LogBarrier(barrier_, data.slack);
-}
-
-
-inline double ImpulseConstraintComponentBase::costSlackBarrier(
-    const ConstraintComponentData& data, const double step_size) const {
-  return pdipm::LogBarrier(barrier_, data.slack+step_size*data.dslack);
-}
-
-
 inline double ImpulseConstraintComponentBase::barrierParameter() const {
   return barrier_;
 }

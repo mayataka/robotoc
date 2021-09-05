@@ -93,10 +93,10 @@ public:
   /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
-  void evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status,
-                   const double t, const ImpulseSplitSolution& s, 
-                   const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-                   ImpulseSplitKKTResidual& kkt_residual);
+  void evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
+               const double t, const ImpulseSplitSolution& s, 
+               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+               ImpulseSplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of this impulse stage.
@@ -193,7 +193,7 @@ public:
 
   ///
   /// @brief Returns the stage cost of this impulse stage for the line search.
-  /// Before calling this function, ImpulseSplitOCP::evaluateOCP(),
+  /// Before calling this function, ImpulseSplitOCP::evalOCP(),
   /// ImpulseSplitOCP::computeKKTResidual(),
   /// or ImpulseSplitOCP::computeKKTSystem() must be called.
   /// @return The stage cost of this impulse stage.
@@ -203,7 +203,7 @@ public:
   ///
   /// @brief Returns the constraint violation of this impulse stage for the 
   /// line search.
-  /// Before calling this function, ImpulseSplitOCP::evaluateOCP(),
+  /// Before calling this function, ImpulseSplitOCP::evalOCP(),
   /// ImpulseSplitOCP::computeKKTResidual(),
   /// or ImpulseSplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.

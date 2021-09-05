@@ -68,14 +68,14 @@ void UnconstrLineSearch::computeCostAndViolation(UnconstrOCP& ocp,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
-      ocp[i].evaluateOCP(robots[omp_get_thread_num()], t+i*dt_, dt_, s[i], 
-                         s[i+1].q, s[i+1].v, kkt_residual_[i]);
+      ocp[i].evalOCP(robots[omp_get_thread_num()], t+i*dt_, dt_, s[i], 
+                     s[i+1].q, s[i+1].v, kkt_residual_[i]);
       costs_.coeffRef(i) = ocp[i].stageCost();
       violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], dt_);
     }
     else {
-      ocp.terminal.evaluateOCP(robots[omp_get_thread_num()], t+i*dt_, 
-                               s[i], kkt_residual_[i]);
+      ocp.terminal.evalOCP(robots[omp_get_thread_num()], t+i*dt_, 
+                           s[i], kkt_residual_[i]);
       costs_.coeffRef(i) = ocp.terminal.terminalCost();
     }
   }
@@ -97,20 +97,20 @@ void UnconstrLineSearch::computeCostAndViolation(UnconstrParNMPC& parnmpc,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
-      parnmpc[0].evaluateOCP(robots[omp_get_thread_num()], t+dt_, dt_, q, v, 
-                             s[0], kkt_residual_[0]);
+      parnmpc[0].evalOCP(robots[omp_get_thread_num()], t+dt_, dt_, q, v, 
+                         s[0], kkt_residual_[0]);
       costs_.coeffRef(0) = parnmpc[0].stageCost();
       violations_.coeffRef(0) = parnmpc[0].constraintViolation(kkt_residual_[0], dt_);
     }
     else if (i < N_-1) {
-      parnmpc[i].evaluateOCP(robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
-                             s[i-1].q, s[i-1].v, s[i], kkt_residual_[i]);
+      parnmpc[i].evalOCP(robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
+                         s[i-1].q, s[i-1].v, s[i], kkt_residual_[i]);
       costs_.coeffRef(i) = parnmpc[i].stageCost();
       violations_.coeffRef(i) = parnmpc[i].constraintViolation(kkt_residual_[i], dt_);
     }
     else {
-      parnmpc.terminal.evaluateOCP(robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
-                                   s[i-1].q, s[i-1].v, s[i], kkt_residual_[i]);
+      parnmpc.terminal.evalOCP(robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
+                               s[i-1].q, s[i-1].v, s[i], kkt_residual_[i]);
       costs_.coeffRef(i) = parnmpc.terminal.stageCost();
       violations_.coeffRef(i) = parnmpc.terminal.constraintViolation(kkt_residual_[i], dt_);
     }

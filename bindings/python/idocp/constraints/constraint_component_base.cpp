@@ -40,18 +40,18 @@ public:
                            robot, data, s);
   }
 
-  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const SplitSolution& s) const override {
+  void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+                      const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
-                           computePrimalAndDualResidual, 
+                           evalConstraint, 
                            robot, data, s);
   }
 
-  void computePrimalResidualDerivatives(Robot& robot, ConstraintComponentData& data,
-                                        const double dt, const SplitSolution& s,
-                                        SplitKKTResidual& kkt_residual) const override {
+  void evalDerivatives(Robot& robot, ConstraintComponentData& data,
+                       const double dt, const SplitSolution& s,
+                       SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
-                           computePrimalResidualDerivatives, 
+                           evalDerivatives, 
                            robot, data, dt, s, kkt_residual);
   }
 

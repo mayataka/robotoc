@@ -89,8 +89,8 @@ public:
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void evaluateOCP(Robot& robot, const double t, const SplitSolution& s, 
-                   SplitKKTResidual& kkt_residual);
+  void evalOCP(Robot& robot, const double t, const SplitSolution& s, 
+               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of the terminal stage.
@@ -178,7 +178,7 @@ public:
 
   ///
   /// @brief Returns the terminal cost for the line search.
-  /// Before calling this function, TerminalOCP::evaluateOCP(), 
+  /// Before calling this function, TerminalOCP::evalOCP(), 
   /// TerminalOCP::computeKKTResidual(), or TerminalOCP::computeKKTSystem() 
   /// must be called.
   /// 

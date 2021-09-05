@@ -35,7 +35,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   ImpulseSplitKKTResidual kkt_residual(robot);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   ImpulseStateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, q_prev, s, s_next, 
+  state_equation.linearizeStateEquation(robot, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
@@ -46,8 +46,8 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
-                                                    kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, s_next, 
+                                                     kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
@@ -71,8 +71,8 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   ImpulseSplitKKTResidual kkt_residual(robot);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   ImpulseStateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, q_prev, s, s_next, 
-                                       kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquation(robot, q_prev, s, s_next, 
+                                        kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -89,8 +89,8 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
-                                                    kkt_matrix, kkt_residual);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, s_next, 
+                                                     kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();

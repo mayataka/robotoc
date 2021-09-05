@@ -34,7 +34,7 @@ inline TerminalStateEquation::~TerminalStateEquation() {
 
 
 template <typename ConfigVectorType>
-inline void TerminalStateEquation::linearizeForwardEuler(
+inline void TerminalStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
@@ -55,11 +55,11 @@ inline void TerminalStateEquation::linearizeForwardEuler(
 
 
 template <typename ConfigVectorType>
-inline void TerminalStateEquation::linearizeForwardEulerLieDerivative(
+inline void TerminalStateEquation::linearizeStateEquationAlongLieGroup(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  linearizeForwardEuler(robot, q_prev, s, kkt_matrix, kkt_residual);
+  linearizeStateEquation(robot, q_prev, s, kkt_matrix, kkt_residual);
   if (has_floating_base_) {
     lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
                                                   Fqq_prev_inv_);

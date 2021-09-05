@@ -84,12 +84,12 @@ public:
   void setSlack(Robot& robot, ConstraintComponentData& data, 
                 const SplitSolution& s) const override;
 
-  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const SplitSolution& s) const override;
+  void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+                      const SplitSolution& s) const override;
 
-  void computePrimalResidualDerivatives(Robot& robot, ConstraintComponentData& data, 
-                                        const double dt, const SplitSolution& s,
-                                        SplitKKTResidual& kkt_residual) const override;
+  void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
+                       const double dt, const SplitSolution& s,
+                       SplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const double dt, const SplitSolution& s,

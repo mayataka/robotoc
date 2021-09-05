@@ -42,7 +42,7 @@ inline StateEquation::~StateEquation() {
 
 
 template <typename ConfigVectorType, typename TangentVectorType>
-inline void StateEquation::computeForwardEulerResidual(
+inline void StateEquation::computeStateEquationResidual(
     const Robot& robot, const double dt, const SplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
@@ -57,14 +57,14 @@ inline void StateEquation::computeForwardEulerResidual(
 
 
 template <typename ConfigVectorType, typename SplitSolutionType>
-inline void StateEquation::linearizeForwardEuler(
+inline void StateEquation::linearizeStateEquation(
     const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
-  computeForwardEulerResidual(robot, dt, s, s_next.q, s_next.v, kkt_residual);
+  computeStateEquationResidual(robot, dt, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
@@ -88,12 +88,12 @@ inline void StateEquation::linearizeForwardEuler(
 
 
 template <typename ConfigVectorType, typename SplitSolutionType>
-inline void StateEquation::linearizeForwardEulerLieDerivative(
+inline void StateEquation::linearizeStateEquationAlongLieGroup(
     const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  linearizeForwardEuler(robot, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  linearizeStateEquation(robot, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
   if (has_floating_base_) {
     assert(dt > 0);
     lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 

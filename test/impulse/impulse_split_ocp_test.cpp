@@ -36,7 +36,7 @@ protected:
                                       const ImpulseStatus& impulse_status);
   static void test_computeKKTSystem(Robot& robot, 
                                     const ImpulseStatus& impulse_status);
-  static void test_evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_evalOCP(Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
@@ -64,10 +64,10 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   double impulse_cost = cost->linearizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref);
-  constraints->linearizePrimalAndDualResidual(robot, constraints_data, s, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
-  ImpulseStateEquation::linearizeForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  ImpulseStateEquation::linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref);
@@ -106,7 +106,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
-  state_equation.linearizeForwardEulerLieDerivative(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref );
@@ -136,7 +136,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
 }
 
 
-void ImpulseSplitOCPTest::test_evaluateOCP(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
@@ -146,7 +146,7 @@ void ImpulseSplitOCPTest::test_evaluateOCP(Robot& robot, const ImpulseStatus& im
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
   ImpulseSplitKKTResidual kkt_residual(robot);
-  ocp.evaluateOCP(robot, impulse_status, t, s, s_prev.q, s_prev.v, kkt_residual);
+  ocp.evalOCP(robot, impulse_status, t, s, s_prev.q, s_prev.v, kkt_residual);
   const double impulse_cost = ocp.stageCost();
   const double constraint_violation = ocp.constraintViolation(kkt_residual);
 
@@ -158,10 +158,10 @@ void ImpulseSplitOCPTest::test_evaluateOCP(Robot& robot, const ImpulseStatus& im
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   double impulse_cost_ref = cost->computeImpulseCost(robot, cost_data, t, s);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
+  constraints->evalConstraint(robot, constraints_data, s);
   impulse_cost_ref +=  constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);
-  ImpulseStateEquation::computeForwardEulerResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
+  ImpulseStateEquation::computeStateEquationResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
   ImpulseDynamics id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s);
   double constraint_violation_ref = 0;
@@ -178,11 +178,11 @@ TEST_F(ImpulseSplitOCPTest, fixedBase) {
   auto impulse_status = robot.createImpulseStatus();
   test_computeKKTSystem(robot, impulse_status);
   test_computeKKTResidual(robot, impulse_status);
-  test_evaluateOCP(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test_computeKKTSystem(robot, impulse_status);
   test_computeKKTResidual(robot, impulse_status);
-  test_evaluateOCP(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
 }
 
 
@@ -192,14 +192,14 @@ TEST_F(ImpulseSplitOCPTest, floatingBase) {
   auto impulse_status = robot.createImpulseStatus();
   test_computeKKTSystem(robot, impulse_status);
   test_computeKKTResidual(robot, impulse_status);
-  test_evaluateOCP(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test_computeKKTSystem(robot, impulse_status);
   test_computeKKTResidual(robot, impulse_status);
-  test_evaluateOCP(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
 }
 
 } // namespace idocp

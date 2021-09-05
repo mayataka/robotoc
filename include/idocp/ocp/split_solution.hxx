@@ -242,6 +242,38 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
 }
 
 
+inline void SplitSolution::copyPrimal(const SplitSolution& other) {
+  setContactStatus(other);
+  q = other.q;
+  v = other.v;
+  a = other.a;
+  u = other.u;
+  for (int i=0; i<f.size(); ++i) {
+    f[i] = other.f[i];
+  }
+  set_f_stack();
+}
+
+
+inline void SplitSolution::copyDual(const SplitSolution& other) {
+  setContactStatus(other);
+  setImpulseStatus(other);
+  lmd = other.lmd;
+  gmm = other.gmm;
+  beta = other.beta;
+  if (has_floating_base_) {
+    nu_passive = other.nu_passive;
+  }
+  for (int i=0; i<f.size(); ++i) {
+    mu[i] = other.mu[i];
+  }
+  set_mu_stack();
+  if (has_active_impulse_) {
+    xi_stack() = other.xi_stack();
+  }
+}
+
+
 inline bool SplitSolution::isApprox(const SplitSolution& other) const {
   if (!q.isApprox(other.q)) {
     return false;
