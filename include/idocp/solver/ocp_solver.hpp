@@ -160,14 +160,24 @@ public:
                         const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Pop back a contact status. 
+  /// @brief Pop back a contact status. Optionally extrapolates the solution
+  /// over the grids where the contact phase is eliminated.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] extrapolate_solution if true, the solution over the grids
+  /// where the contact phase is eliminated is extrapolated. Defalut is false.
   ///
-  void popBackContactStatus();
+  void popBackContactStatus(const double t, 
+                            const bool extrapolate_solution=false);
 
   ///
-  /// @brief Pop front a contact status. 
+  /// @brief Pop front a contact status. Optionally extrapolates the solution
+  /// over the grids where the contact phase is eliminated.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] extrapolate_solution if true, the solution over the grids
+  /// where the contact phase is eliminated is extrapolated. Defalut is false.
   ///
-  void popFrontContactStatus();
+  void popFrontContactStatus(const double t, 
+                             const bool extrapolate_solution=false);
 
   ///
   /// @brief Clear the line search filter. 

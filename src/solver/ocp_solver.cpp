@@ -251,12 +251,45 @@ void OCPSolver::setContactPoints(
 }
 
 
-void OCPSolver::popBackContactStatus() {
+void OCPSolver::popBackContactStatus(const double t,
+                                     const bool extrapolate_solution) {
+  const int num_discrete_events = contact_sequence_.numDiscreteEvents();
+  if (extrapolate_solution && (num_discrete_events>0)) {
+    ocp_.discretize(contact_sequence_, t);
+    int time_stage_after_event;
+    if (contact_sequence_.eventType(num_discrete_events-1) 
+          == DiscreteEventType::Impulse) {
+      time_stage_after_event 
+          = ocp_.discrete().timeStageAfterImpulse(ocp_.discrete().N_impulse()-1);
+    }
+    else {
+      time_stage_after_event 
+          = ocp_.discrete().timeStageAfterLift(ocp_.discrete().N_lift()-1);
+    }
+    for (int i=time_stage_after_event; i<=ocp_.discrete().N(); ++i) {
+      s_[i] = s_[time_stage_after_event-1];
+    }
+  }
   contact_sequence_.pop_back();
 }
 
 
-void OCPSolver::popFrontContactStatus() {
+void OCPSolver::popFrontContactStatus(const double t, 
+                                      const bool extrapolate_solution) {
+  const int num_discrete_events = contact_sequence_.numDiscreteEvents();
+  if (extrapolate_solution && (num_discrete_events>0)) {
+    ocp_.discretize(contact_sequence_, t);
+    int time_stage_before_event;
+    if (contact_sequence_.eventType(0) == DiscreteEventType::Impulse) {
+      time_stage_before_event = ocp_.discrete().timeStageBeforeImpulse(0);
+    }
+    else {
+      time_stage_before_event = ocp_.discrete().timeStageBeforeLift(0);
+    }
+    for (int i=0; i<=time_stage_before_event; ++i) {
+      s_[i] = s_[time_stage_before_event+1];
+    }
+  }
   contact_sequence_.pop_front();
 }
 
