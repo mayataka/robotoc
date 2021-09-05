@@ -248,6 +248,18 @@ public:
                  const SplitDirection& d);
 
   ///
+  /// @brief Copies the primal solution from another solution. 
+  /// @param[in] other Another split solution.
+  ///
+  void copyPrimal(const SplitSolution& other);
+
+  ///
+  /// @brief Copies the dual solution from another solution. 
+  /// @param[in] other Another split solution.
+  ///
+  void copyDual(const SplitSolution& other);
+
+  ///
   /// @brief Return true if two SplitSolution have the same value and false if 
   /// not. 
   /// @param[in] other Split solution that is compared with this object.

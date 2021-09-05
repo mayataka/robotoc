@@ -173,18 +173,27 @@ inline void ImpulseSplitSolution::integrate(const Robot& robot,
 }
 
 
-inline void ImpulseSplitSolution::copy(const ImpulseSplitSolution& other) {
+inline void ImpulseSplitSolution::copyPrimal(const ImpulseSplitSolution& other) {
   setImpulseStatus(other);
-  q          = other.q;
-  v          = other.v;
-  dv         = other.dv;
-  f_stack()  = other.f_stack();
-  set_f_vector();
-  lmd        = other.lmd;
-  gmm        = other.gmm;
-  beta       = other.beta;
-  mu_stack() = other.mu_stack();
-  set_mu_vector();
+  q = other.q;
+  v = other.v;
+  dv = other.dv;
+  for (int i=0; i<f.size(); ++i) {
+    f[i] = other.f[i];
+  }
+  set_f_stack();
+}
+
+
+inline void ImpulseSplitSolution::copyDual(const ImpulseSplitSolution& other) {
+  setImpulseStatus(other);
+  lmd = other.lmd;
+  gmm = other.gmm;
+  beta = other.beta;
+  for (int i=0; i<f.size(); ++i) {
+    mu[i] = other.mu[i];
+  }
+  set_mu_stack();
 }
 
 

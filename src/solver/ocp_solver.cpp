@@ -267,7 +267,8 @@ void OCPSolver::popBackContactStatus(const double t,
           = ocp_.discrete().timeStageAfterLift(ocp_.discrete().N_lift()-1);
     }
     for (int i=time_stage_after_event; i<=ocp_.discrete().N(); ++i) {
-      s_[i] = s_[time_stage_after_event-1];
+      s_[i].copyPrimal(s_[time_stage_after_event-1]);
+      s_[i].copyDual(s_[time_stage_after_event-1]);
     }
   }
   contact_sequence_.pop_back();
@@ -287,7 +288,8 @@ void OCPSolver::popFrontContactStatus(const double t,
       time_stage_before_event = ocp_.discrete().timeStageBeforeLift(0);
     }
     for (int i=0; i<=time_stage_before_event; ++i) {
-      s_[i] = s_[time_stage_before_event+1];
+      s_[i].copyPrimal(s_[time_stage_before_event+1]);
+      s_[i].copyDual(s_[time_stage_before_event+1]);
     }
   }
   contact_sequence_.pop_front();

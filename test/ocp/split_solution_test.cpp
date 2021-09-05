@@ -27,10 +27,10 @@ protected:
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
   static void test(const Robot& robot, const ContactStatus& contact_status, 
                    const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, 
+  static void test_isApprox(const Robot& robot, 
                            const ContactStatus& contact_status, 
                            const ImpulseStatus& impulse_status);
-  static void testIntegrate(const Robot& robot, 
+  static void test_integrate(const Robot& robot, 
                             const ContactStatus& contact_status, 
                             const ImpulseStatus& impulse_status);
 
@@ -134,9 +134,9 @@ void SplitSolutionTest::test(const Robot& robot,
 }
 
 
-void SplitSolutionTest::testIsApprox(const Robot& robot, 
-                                     const ContactStatus& contact_status,
-                                     const ImpulseStatus& impulse_status) {
+void SplitSolutionTest::test_isApprox(const Robot& robot, 
+                                      const ContactStatus& contact_status,
+                                      const ImpulseStatus& impulse_status) {
   auto s = SplitSolution::Random(robot, contact_status, impulse_status);
   EXPECT_FALSE(s.q.isZero());
   EXPECT_FALSE(s.v.isZero());
@@ -224,12 +224,23 @@ void SplitSolutionTest::testIsApprox(const Robot& robot,
     s_ref.xi_stack().setRandom();
     EXPECT_TRUE(s.isApprox(s_ref));
   }
+  s_ref.setRandom(robot);
+  EXPECT_FALSE(s.isApprox(s_ref));
+  s_ref.copyPrimal(s);
+  EXPECT_FALSE(s.isApprox(s_ref));
+  s_ref.setRandom(robot);
+  s_ref.copyDual(s);
+  EXPECT_FALSE(s.isApprox(s_ref));
+  s_ref.setRandom(robot);
+  s_ref.copyPrimal(s);
+  s_ref.copyDual(s);
+  EXPECT_TRUE(s.isApprox(s_ref));
 }
 
 
-void SplitSolutionTest::testIntegrate(const Robot& robot, 
-                                      const ContactStatus& contact_status,
-                                      const ImpulseStatus& impulse_status) {
+void SplitSolutionTest::test_integrate(const Robot& robot, 
+                                       const ContactStatus& contact_status,
+                                       const ImpulseStatus& impulse_status) {
   SplitSolution s = SplitSolution::Random(robot, contact_status, impulse_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status, impulse_status);
   SplitSolution s_ref = s;
@@ -264,12 +275,12 @@ TEST_F(SplitSolutionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
-  testIsApprox(robot, contact_status, impulse_status);
-  testIntegrate(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
+  test_integrate(robot, contact_status, impulse_status);
   contact_status.activateContact(0);
   test(robot, contact_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  testIntegrate(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
+  test_integrate(robot, contact_status, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
   test(robot, contact_status, impulse_status);
@@ -282,15 +293,15 @@ TEST_F(SplitSolutionTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
-  testIsApprox(robot, contact_status, impulse_status);
-  testIntegrate(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
+  test_integrate(robot, contact_status, impulse_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
   test(robot, contact_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  testIntegrate(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
+  test_integrate(robot, contact_status, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
