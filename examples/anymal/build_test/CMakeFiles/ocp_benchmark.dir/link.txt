@@ -1,1 +1,0 @@
-/usr/bin/c++  -O3 -DNDEBUG  -rdynamic CMakeFiles/ocp_benchmark.dir/ocp_benchmark.cpp.o  -o ocp_benchmark  -Wl,-rpath,/home/katayama/install-idocp-test/lib:/opt/openrobots/lib /home/katayama/install-idocp-test/lib/libidocp.so /opt/openrobots/lib/libpinocchio.so -lboost_filesystem -lboost_serialization -lboost_system 
