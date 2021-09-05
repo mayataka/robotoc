@@ -135,9 +135,9 @@ void ImpulseFrictionCone::setSlack(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void ImpulseFrictionCone::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, 
-    const ImpulseSplitSolution& s) const {
+void ImpulseFrictionCone::evalConstraint(Robot& robot, 
+                                         ConstraintComponentData& data, 
+                                         const ImpulseSplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -157,7 +157,7 @@ void ImpulseFrictionCone::computePrimalAndDualResidual(
 }
 
 
-void ImpulseFrictionCone::computePrimalResidualDerivatives(
+void ImpulseFrictionCone::evalDerivatives(
     Robot& robot, ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;

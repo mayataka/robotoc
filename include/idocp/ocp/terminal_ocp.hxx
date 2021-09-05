@@ -51,9 +51,9 @@ inline void TerminalOCP::initConstraints(Robot& robot, const int time_stage,
 }
 
 
-inline void TerminalOCP::evaluateOCP(Robot& robot, const double t, 
-                                     const SplitSolution& s, 
-                                     SplitKKTResidual& kkt_residual) {
+inline void TerminalOCP::evalOCP(Robot& robot, const double t, 
+                                 const SplitSolution& s, 
+                                 SplitKKTResidual& kkt_residual) {
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
@@ -72,8 +72,8 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
                                                 kkt_residual);
-  state_equation_.linearizeForwardEuler(robot, q_prev, s, 
-                                        kkt_matrix, kkt_residual);
+  state_equation_.linearizeStateEquation(robot, q_prev, s, 
+                                         kkt_matrix, kkt_residual);
 }
 
 
@@ -89,8 +89,8 @@ inline void TerminalOCP::computeKKTSystem(Robot& robot, const double t,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
                                                  kkt_residual, kkt_matrix);
-  state_equation_.linearizeForwardEulerLieDerivative(robot, q_prev, s, 
-                                                     kkt_matrix, kkt_residual);
+  state_equation_.linearizeStateEquationAlongLieGroup(robot, q_prev, s, 
+                                                      kkt_matrix, kkt_residual);
 }
 
  

@@ -33,18 +33,6 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
 }
 
 
-inline double ConstraintComponentBase::costSlackBarrier(
-    const ConstraintComponentData& data) const {
-  return pdipm::LogBarrier(barrier_, data.slack);
-}
-
-
-inline double ConstraintComponentBase::costSlackBarrier(
-    const ConstraintComponentData& data, const double step_size) const {
-  return pdipm::LogBarrier(barrier_, data.slack+step_size*data.dslack);
-}
-
-
 inline double ConstraintComponentBase::barrierParameter() const {
   return barrier_;
 }

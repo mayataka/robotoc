@@ -93,9 +93,9 @@ public:
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void evaluateOCP(Robot& robot, const double t, const double dt, 
-                   const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-                   const SplitSolution& s, SplitKKTResidual& kkt_residual);
+  void evalOCP(Robot& robot, const double t, const double dt, 
+               const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+               const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -191,7 +191,7 @@ public:
 
   ///
   /// @brief Returns the stage cost of this time stage for the line search.
-  /// Before calling this function, SplitUnconstrParNMPC::evaluateOCP(), 
+  /// Before calling this function, SplitUnconstrParNMPC::evalOCP(), 
   /// SplitUnconstrParNMPC::computeKKTResidual(), or
   /// SplitUnconstrParNMPC::computeKKTSystem() must be called.
   /// @return Stage cost of this time stage.
@@ -201,7 +201,7 @@ public:
   ///
   /// @brief Returns the constraint violation of this time stage for the 
   /// line search. Before calling this function, 
-  /// SplitUnconstrParNMPC::evaluateOCP(), 
+  /// SplitUnconstrParNMPC::evalOCP(), 
   /// SplitUnconstrParNMPC::computeKKTResidual(), or
   /// SplitUnconstrParNMPC::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.

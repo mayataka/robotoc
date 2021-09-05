@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG  -rdynamic CMakeFiles/bounding.dir/bounding.cpp.o  -o bounding  -Wl,-rpath,/home/katayama/install-idocp-test/lib:/opt/openrobots/lib /home/katayama/install-idocp-test/lib/libidocp.so /opt/openrobots/lib/libpinocchio.so -lboost_filesystem -lboost_serialization -lboost_system 

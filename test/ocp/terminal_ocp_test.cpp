@@ -30,7 +30,7 @@ protected:
 
   static void test_computeKKTResidual(Robot& robot);
   static void test_computeKKTSystem(Robot& robot);
-  static void test_evaluateOCP(Robot& robot);
+  static void test_evalOCP(Robot& robot);
 };
 
 
@@ -52,7 +52,7 @@ void TerminalOCPTest::test_computeKKTResidual(Robot& robot) {
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
   TerminalStateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   double KKT_ref = 0;
   KKT_ref += kkt_residual_ref.lx.squaredNorm();
   EXPECT_DOUBLE_EQ(KKT, KKT_ref);
@@ -77,7 +77,7 @@ void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   TerminalStateEquation state_equation(robot);
-  state_equation.linearizeForwardEulerLieDerivative(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquationAlongLieGroup(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   auto d = SplitDirection::Random(robot);
@@ -88,14 +88,14 @@ void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
 }
 
 
-void TerminalOCPTest::test_evaluateOCP(Robot& robot) {
+void TerminalOCPTest::test_evalOCP(Robot& robot) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   TerminalOCP ocp(robot, cost, constraints);
   SplitKKTResidual kkt_residual(robot);  
-  ocp.evaluateOCP(robot, t, s, kkt_residual);
+  ocp.evalOCP(robot, t, s, kkt_residual);
   const double terminal_cost = ocp.terminalCost();
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -109,7 +109,7 @@ TEST_F(TerminalOCPTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   test_computeKKTResidual(robot);
   test_computeKKTSystem(robot);
-  test_evaluateOCP(robot);
+  test_evalOCP(robot);
 }
 
 
@@ -118,7 +118,7 @@ TEST_F(TerminalOCPTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   test_computeKKTResidual(robot);
   test_computeKKTSystem(robot);
-  test_evaluateOCP(robot);
+  test_evalOCP(robot);
 }
 
 } // namespace idocp

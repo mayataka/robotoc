@@ -52,15 +52,16 @@ void JointVelocityLowerLimit::setSlack(Robot& robot,
 }
 
 
-void JointVelocityLowerLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+void JointVelocityLowerLimit::evalConstraint(Robot& robot, 
+                                                 ConstraintComponentData& data, 
+                                                 const SplitSolution& s) const {
   data.residual = vmin_ - s.v.tail(dimc_) + data.slack;
   computeComplementarySlackness(data);
   data.log_barrier = logBarrier(data.slack);
 }
 
 
-void JointVelocityLowerLimit::computePrimalResidualDerivatives(
+void JointVelocityLowerLimit::evalDerivatives(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   kkt_residual.lv().tail(dimc_).noalias() -= dt * data.dual;

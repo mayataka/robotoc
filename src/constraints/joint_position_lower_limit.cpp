@@ -52,15 +52,16 @@ void JointPositionLowerLimit::setSlack(Robot& robot,
 }
 
 
-void JointPositionLowerLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+void JointPositionLowerLimit::evalConstraint(Robot& robot, 
+                                             ConstraintComponentData& data, 
+                                             const SplitSolution& s) const {
   data.residual = qmin_ - s.q.tail(dimc_) + data.slack;
   computeComplementarySlackness(data);
   data.log_barrier = logBarrier(data.slack);
 }
 
 
-void JointPositionLowerLimit::computePrimalResidualDerivatives(
+void JointPositionLowerLimit::evalDerivatives(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   kkt_residual.lq().tail(dimc_).noalias() -= dt * data.dual;

@@ -40,10 +40,8 @@ protected:
   void testfLocal2World(Robot& robot, const ContactStatus& contact_status) const;
   void testIsFeasible(Robot& robot, const ContactStatus& contact_status) const;
   void testSetSlack(Robot& robot, const ContactStatus& contact_status) const;
-  void testComputePrimalAndDualResidual(Robot& robot, 
-                                        const ContactStatus& contact_status) const;
-  void testComputePrimalResidualDerivatives(Robot& robot, 
-                                            const ContactStatus& contact_status) const;
+  void test_evalConstraint(Robot& robot, const ContactStatus& contact_status) const;
+  void test_evalDerivatives(Robot& robot, const ContactStatus& contact_status) const;
   void testCondenseSlackAndDual(Robot& robot, 
                                 const ContactStatus& contact_status) const;
   void testExpandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
@@ -120,7 +118,7 @@ void FrictionConeTest::testSetSlack(Robot& robot, const ContactStatus& contact_s
 }
 
 
-void FrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, const ContactStatus& contact_status) const {
+void FrictionConeTest::test_evalConstraint(Robot& robot, const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
@@ -134,7 +132,7 @@ void FrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, const Cont
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
-  constr.computePrimalAndDualResidual(robot, data, s);
+  constr.evalConstraint(robot, data, s);
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
@@ -155,8 +153,7 @@ void FrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, const Cont
 }
 
 
-void FrictionConeTest::testComputePrimalResidualDerivatives(Robot& robot, 
-                                                            const ContactStatus& contact_status) const {
+void FrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   constr.allocateExtraData(data);
@@ -168,11 +165,11 @@ void FrictionConeTest::testComputePrimalResidualDerivatives(Robot& robot,
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
-  constr.computePrimalAndDualResidual(robot, data, s);
+  constr.evalConstraint(robot, data, s);
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
   auto kkt_res_ref = kkt_res;
-  constr.computePrimalResidualDerivatives(robot, data, dt, s, kkt_res);
+  constr.evalDerivatives(robot, data, dt, s, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -214,8 +211,8 @@ void FrictionConeTest::testCondenseSlackAndDual(Robot& robot,
   data.cmpl.setRandom();
   auto kkt_mat = SplitKKTMatrix::Random(robot, contact_status);
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
-  constr.computePrimalAndDualResidual(robot, data, s);
-  constr.computePrimalResidualDerivatives(robot, data, dt, s, kkt_res);
+  constr.evalConstraint(robot, data, s);
+  constr.evalDerivatives(robot, data, dt, s, kkt_res);
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
@@ -271,8 +268,8 @@ void FrictionConeTest::testExpandSlackAndDual(Robot& robot, const ContactStatus&
   data.ddual.setRandom();
   auto kkt_mat = SplitKKTMatrix::Random(robot, contact_status);
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
-  constr.computePrimalAndDualResidual(robot, data, s);
-  constr.computePrimalResidualDerivatives(robot, data, dt, s, kkt_res);
+  constr.evalConstraint(robot, data, s);
+  constr.evalDerivatives(robot, data, dt, s, kkt_res);
   constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot, contact_status);
@@ -328,8 +325,8 @@ TEST_F(FrictionConeTest, fixedBase) {
   testfLocal2World(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlack(robot, contact_status);
-  testComputePrimalAndDualResidual(robot, contact_status);
-  testComputePrimalResidualDerivatives(robot, contact_status);
+  test_evalConstraint(robot, contact_status);
+  test_evalDerivatives(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testExpandSlackAndDual(robot, contact_status);
   contact_status.activateContact(0);
@@ -337,8 +334,8 @@ TEST_F(FrictionConeTest, fixedBase) {
   testfLocal2World(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlack(robot, contact_status);
-  testComputePrimalAndDualResidual(robot, contact_status);
-  testComputePrimalResidualDerivatives(robot, contact_status);
+  test_evalConstraint(robot, contact_status);
+  test_evalDerivatives(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testExpandSlackAndDual(robot, contact_status);
 }
@@ -351,8 +348,8 @@ TEST_F(FrictionConeTest, floatingBase) {
   testfLocal2World(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlack(robot, contact_status);
-  testComputePrimalAndDualResidual(robot, contact_status);
-  testComputePrimalResidualDerivatives(robot, contact_status);
+  test_evalConstraint(robot, contact_status);
+  test_evalDerivatives(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testExpandSlackAndDual(robot, contact_status);
   contact_status.setRandom();
@@ -360,8 +357,8 @@ TEST_F(FrictionConeTest, floatingBase) {
   testfLocal2World(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlack(robot, contact_status);
-  testComputePrimalAndDualResidual(robot, contact_status);
-  testComputePrimalResidualDerivatives(robot, contact_status);
+  test_evalConstraint(robot, contact_status);
+  test_evalDerivatives(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testExpandSlackAndDual(robot, contact_status);
 }

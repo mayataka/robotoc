@@ -6,7 +6,7 @@
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running_yoko.gif" width="530">
 
 ## Features for efficient optimal control for rigid body systems with contacts
-- Direct multiple-shooting method based on inverse dynamics.
+- Direct multiple-shooting method based on inverse dynamics / the lifted contact dynamics.
 - Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT systems.
 - Efficient constraint handling method for pure-state equality constraints in Riccati recursion.
 - Primal-dual interior point method for inequality constraints.

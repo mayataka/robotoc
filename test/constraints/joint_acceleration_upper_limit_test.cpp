@@ -29,8 +29,8 @@ protected:
   void testKinematics(Robot& robot, const Eigen::VectorXd& amax) const;
   void testIsFeasible(Robot& robot, const Eigen::VectorXd& amax) const;
   void testSetSlack(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testComputePrimalAndDualResidual(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testComputePrimalResidualDerivatives(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_evalConstraint(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_evalDerivatives(Robot& robot, const Eigen::VectorXd& amax) const;
   void testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
   void testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
 
@@ -67,7 +67,7 @@ void JointAccelerationUpperLimitTest::testSetSlack(Robot& robot, const Eigen::Ve
 }
 
 
-void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_evalConstraint(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot);
@@ -77,7 +77,7 @@ void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& ro
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
   auto data_ref = data;
-  constr.computePrimalAndDualResidual(robot, data, s);
+  constr.evalConstraint(robot, data, s);
   data_ref.residual = s.a.tail(dimc) - amax + data_ref.slack;
   pdipm::ComputeComplementarySlackness(barrier, data_ref);
   data_ref.log_barrier = pdipm::LogBarrier(barrier, data_ref.slack);
@@ -85,7 +85,7 @@ void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& ro
 }
 
 
-void JointAccelerationUpperLimitTest::testComputePrimalResidualDerivatives(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_evalDerivatives(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -94,7 +94,7 @@ void JointAccelerationUpperLimitTest::testComputePrimalResidualDerivatives(Robot
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_res_ref = kkt_res;
-  constr.computePrimalResidualDerivatives(robot, data, dt, s, kkt_res);
+  constr.evalDerivatives(robot, data, dt, s, kkt_res);
   kkt_res_ref.la.tail(dimc) += dt * data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
@@ -145,8 +145,8 @@ TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
   testKinematics(robot, amax);
   testIsFeasible(robot, amax);
   testSetSlack(robot, amax);
-  testComputePrimalAndDualResidual(robot, amax);
-  testComputePrimalResidualDerivatives(robot, amax);
+  test_evalConstraint(robot, amax);
+  test_evalDerivatives(robot, amax);
   testCondenseSlackAndDual(robot, amax);
   testExpandSlackAndDual(robot, amax);
 }
@@ -158,8 +158,8 @@ TEST_F(JointAccelerationUpperLimitTest, floatingBase) {
   testKinematics(robot, amax);
   testIsFeasible(robot, amax);
   testSetSlack(robot, amax);
-  testComputePrimalAndDualResidual(robot, amax);
-  testComputePrimalResidualDerivatives(robot, amax);
+  test_evalConstraint(robot, amax);
+  test_evalDerivatives(robot, amax);
   testCondenseSlackAndDual(robot, amax);
   testExpandSlackAndDual(robot, amax);
 }

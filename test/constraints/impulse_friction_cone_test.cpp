@@ -40,10 +40,8 @@ protected:
   void testfLocal2World(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testIsFeasible(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testSetSlack(Robot& robot, const ImpulseStatus& impulse_status) const;
-  void testComputePrimalResidualDerivatives(Robot& robot, 
-                                            const ImpulseStatus& impulse_status) const;
-  void testComputePrimalAndDualResidual(Robot& robot, 
-                                        const ImpulseStatus& impulse_status) const;
+  void test_evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status) const;
+  void test_evalConstraint(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testCondenseSlackAndDual(Robot& robot, 
                                 const ImpulseStatus& impulse_status) const;
   void testExpandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const;
@@ -119,7 +117,7 @@ void ImpulseFrictionConeTest::testSetSlack(Robot& robot, const ImpulseStatus& im
 }
 
 
-void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, 
+void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot, 
                                                                const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   const int dimc = constr.dimc();
@@ -134,7 +132,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot,
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
-  constr.computePrimalAndDualResidual(robot, data, s);
+  constr.evalConstraint(robot, data, s);
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
@@ -155,8 +153,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testComputePrimalResidualDerivatives(Robot& robot, 
-                                                                   const ImpulseStatus& impulse_status) const {
+void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   constr.allocateExtraData(data);
@@ -168,11 +165,11 @@ void ImpulseFrictionConeTest::testComputePrimalResidualDerivatives(Robot& robot,
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
-  constr.computePrimalAndDualResidual(robot, data, s);
+  constr.evalConstraint(robot, data, s);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
   auto data_ref = data;
   auto kkt_res_ref = kkt_res;
-  constr.computePrimalResidualDerivatives(robot, data, s, kkt_res);
+  constr.evalDerivatives(robot, data, s, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -214,8 +211,8 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
   data.cmpl.setRandom();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
-  constr.computePrimalAndDualResidual(robot, data, s);
-  constr.computePrimalResidualDerivatives(robot, data, s, kkt_res);
+  constr.evalConstraint(robot, data, s);
+  constr.evalDerivatives(robot, data, s, kkt_res);
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
@@ -271,8 +268,8 @@ void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const Impulse
   data.ddual.setRandom();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
-  constr.computePrimalAndDualResidual(robot, data, s);
-  constr.computePrimalResidualDerivatives(robot, data, s, kkt_res);
+  constr.evalConstraint(robot, data, s);
+  constr.evalDerivatives(robot, data, s, kkt_res);
   constr.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
@@ -329,8 +326,8 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlack(robot, impulse_status);
-  testComputePrimalAndDualResidual(robot, impulse_status);
-  testComputePrimalResidualDerivatives(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
   impulse_status.activateImpulse(0);
@@ -338,8 +335,8 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlack(robot, impulse_status);
-  testComputePrimalAndDualResidual(robot, impulse_status);
-  testComputePrimalResidualDerivatives(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
 }
@@ -353,8 +350,8 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlack(robot, impulse_status);
-  testComputePrimalAndDualResidual(robot, impulse_status);
-  testComputePrimalResidualDerivatives(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
   impulse_status.setRandom();
@@ -362,8 +359,8 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlack(robot, impulse_status);
-  testComputePrimalAndDualResidual(robot, impulse_status);
-  testComputePrimalResidualDerivatives(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
 }

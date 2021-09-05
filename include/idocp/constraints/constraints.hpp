@@ -141,52 +141,54 @@ public:
                        const ImpulseSplitSolution& s) const;
 
   ///
+  /// @brief Computes the primal residual, residual in the complementary 
+  /// slackness, and the log-barrier function of the slack varible.
   /// @brief Computes the primal and dual residuals of the constraints. 
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
   ///
-  void computePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
-                                    const SplitSolution& s) const;
+  void evalConstraint(Robot& robot, ConstraintsData& data, 
+                      const SplitSolution& s) const;
 
   ///
-  /// @brief Computes the primal and dual residuals of the constraints. 
+  /// @brief Computes the primal residual, residual in the complementary 
+  /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
   ///
-  void computePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
-                                    const ImpulseSplitSolution& s) const;
+  void evalConstraint(Robot& robot, ConstraintsData& data, 
+                      const ImpulseSplitSolution& s) const;
 
   ///
-  /// @brief Computes the primal and dual residuals, linearize the 
-  /// constraints, and add it to the KKT residual.
+  /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
+  /// the products of the Jacobian of the constraints and Lagrange multipliers.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
-                                      const double dt, const SplitSolution& s, 
-                                      SplitKKTResidual& kkt_residual) const;
+  void linearizeConstraints(Robot& robot, ConstraintsData& data, 
+                            const double dt, const SplitSolution& s, 
+                            SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the primal and dual residuals, linearize the 
-  /// constraints, and add it to the KKT residual.
+  /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
+  /// the products of the Jacobian of the constraints and Lagrange multipliers.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizePrimalAndDualResidual(
-      Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s,
-      ImpulseSplitKKTResidual& kkt_residual) const;
+  void linearizeConstraints(Robot& robot, ConstraintsData& data, 
+                            const ImpulseSplitSolution& s,
+                            ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the primal and dual residuals, linearize the 
-  /// constraints and add it to the KKT residual, and condense the slack and 
-  /// dual variables.
+  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+  /// and condense the slack and dual variables.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
@@ -202,9 +204,8 @@ public:
                             SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the primal and dual residuals, linearize the 
-  /// constraints and add it to the KKT residual, and condense the slack and 
-  /// dual variables.
+  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+  /// and condense the slack and dual variables.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
@@ -267,24 +268,6 @@ public:
   /// @param[in] step_size Step size. 
   ///
   static void updateDual(ConstraintsData& data, const double step_size);
-
-  ///
-  /// @brief Computes and returns the value of the barrier function for the 
-  /// slack variables.
-  /// @param[in] data Constraints data.
-  /// @return Value of the barrier function. 
-  ///
-  double costSlackBarrier(const ConstraintsData& data) const;
-
-  ///
-  /// @brief Computes and returns the value of the barrier function for the 
-  /// slack variables with the step_size.
-  /// @param[in] data Constraints data.
-  /// @param[in] step_size Step size. 
-  /// @return Value of the barrier function. 
-  ///
-  double costSlackBarrier(const ConstraintsData& data, 
-                          const double step_size) const;
 
   ///
   /// @brief Sets the barrier parameter for all the constraint components.

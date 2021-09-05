@@ -150,61 +150,61 @@ inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data,
 }
 
 
-inline void Constraints::computePrimalAndDualResidual(
-    Robot& robot, ConstraintsData& data, const SplitSolution& s) const {
+inline void Constraints::evalConstraint(Robot& robot, ConstraintsData& data, 
+                                        const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        position_level_constraints_, robot, data.position_level_data, s);
+    constraintsimpl::evalConstraint(position_level_constraints_, robot, 
+                                    data.position_level_data, s);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        velocity_level_constraints_, robot, data.velocity_level_data, s);
+    constraintsimpl::evalConstraint(velocity_level_constraints_, robot, 
+                                    data.velocity_level_data, s);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        acceleration_level_constraints_, robot, data.acceleration_level_data, s);
+    constraintsimpl::evalConstraint(acceleration_level_constraints_, robot, 
+                                    data.acceleration_level_data, s);
   }
 }
 
 
-inline void Constraints::computePrimalAndDualResidual(
+inline void Constraints::evalConstraint(
     Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        impulse_level_constraints_, robot, data.impulse_level_data, s);
+    constraintsimpl::evalConstraint(impulse_level_constraints_, robot, 
+                                    data.impulse_level_data, s);
   }
 }
 
 
-inline void Constraints::linearizePrimalAndDualResidual(
+inline void Constraints::linearizeConstraints(
     Robot& robot, ConstraintsData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   if (data.isPositionLevelValid()) {
-    constraintsimpl::linearizePrimalAndDualResidual(
-        position_level_constraints_, robot, data.position_level_data, 
-        dt, s, kkt_residual);
+    constraintsimpl::linearizeConstraints(position_level_constraints_, robot, 
+                                          data.position_level_data, dt, s, 
+                                          kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::linearizePrimalAndDualResidual(
-        velocity_level_constraints_, robot, data.velocity_level_data, 
-        dt, s, kkt_residual);
+    constraintsimpl::linearizeConstraints(velocity_level_constraints_, robot, 
+                                          data.velocity_level_data, dt, s, 
+                                          kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::linearizePrimalAndDualResidual(
-        acceleration_level_constraints_, robot, data.acceleration_level_data, 
-        dt, s, kkt_residual);
+    constraintsimpl::linearizeConstraints(acceleration_level_constraints_, 
+                                          robot, data.acceleration_level_data, 
+                                          dt, s, kkt_residual);
   }
 }
 
 
-inline void Constraints::linearizePrimalAndDualResidual(
+inline void Constraints::linearizeConstraints(
     Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s,
     ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::linearizePrimalAndDualResidual(
-        impulse_level_constraints_, robot, data.impulse_level_data, 
-        s, kkt_residual);
+    constraintsimpl::linearizeConstraints(impulse_level_constraints_, robot, 
+                                          data.impulse_level_data, s, 
+                                          kkt_residual);
   }
 }
 
@@ -374,57 +374,6 @@ inline void Constraints::updateDual(ConstraintsData& data,
   if (data.isImpulseLevelValid()) {
     constraintsimpl::updateDual(data.impulse_level_data, step_size);
   }
-}
-
-
-inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
-  double cost = 0;
-  if (data.isPositionLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(position_level_constraints_, 
-                                              data.position_level_data);
-  }
-  if (data.isVelocityLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(velocity_level_constraints_, 
-                                              data.velocity_level_data);
-  }
-  if (data.isAccelerationLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(acceleration_level_constraints_, 
-                                              data.acceleration_level_data);
-  }
-  if (data.isImpulseLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(impulse_level_constraints_, 
-                                              data.impulse_level_data);
-  }
-  return cost;
-}
-
-
-inline double Constraints::costSlackBarrier(const ConstraintsData& data, 
-                                            const double step_size) const {
-  assert(step_size >= 0);
-  assert(step_size <= 1);
-  double cost = 0;
-  if (data.isPositionLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(position_level_constraints_, 
-                                              data.position_level_data, 
-                                              step_size);
-  }
-  if (data.isVelocityLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(velocity_level_constraints_, 
-                                              data.velocity_level_data, 
-                                              step_size);
-  }
-  if (data.isAccelerationLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(acceleration_level_constraints_, 
-                                              data.acceleration_level_data, 
-                                              step_size);
-  }
-  if (data.isImpulseLevelValid()) {
-    cost += constraintsimpl::costSlackBarrier(impulse_level_constraints_, 
-                                              data.impulse_level_data, 
-                                              step_size);
-  }
-  return cost;
 }
 
 
