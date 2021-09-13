@@ -35,7 +35,7 @@ inline void CPUTime(OCPSolverType& ocp_solver, const double t,
 
 
 template <typename OCPSolverType>
-inline void Convergence(OCPSolverType& ocp_solver, const double t, 
+inline void convergence(OCPSolverType& ocp_solver, const double t, 
                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                         const int num_iteration, const bool line_search) {
   std::cout << "---------- OCP benchmark : Convergence ----------" << std::endl;
