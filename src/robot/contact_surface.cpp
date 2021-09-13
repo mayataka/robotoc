@@ -1,1 +1,0 @@
-#include "idocp/robot/contact_surface.hpp"

@@ -24,109 +24,15 @@ find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
 # build idocp 
+file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES src/*.cpp)
+file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS include/${PROJECT_NAME}/*.h*)
+list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX ".trajectory_viewer.")
+list(FILTER ${PROJECT_NAME}_HEADERS EXCLUDE REGEX ".trajectory_viewer.")
 add_library(
   ${PROJECT_NAME} 
   SHARED
-  src/robot/robot.cpp
-  src/robot/point_contact.cpp
-  src/robot/contact_status.cpp
-  src/robot/impulse_status.cpp
-  src/robot/lie_derivative_inverter.cpp
-  src/cost/cost_function.cpp
-  src/cost/cost_function_data.cpp
-  src/cost/cost_function_component_base.cpp
-  src/cost/configuration_space_cost.cpp
-  src/cost/task_space_3d_cost.cpp
-  src/cost/task_space_6d_cost.cpp
-  src/cost/com_cost.cpp
-  src/cost/contact_force_cost.cpp
-  src/cost/time_varying_configuration_space_cost.cpp
-  src/cost/time_varying_task_space_3d_cost.cpp
-  src/cost/time_varying_task_space_6d_cost.cpp
-  src/cost/time_varying_com_cost.cpp
-  src/cost/periodic_foot_track_ref.cpp
-  src/cost/periodic_foot_track_ref2.cpp
-  src/cost/periodic_com_ref.cpp
-  src/cost/periodic_com_ref2.cpp
-  src/constraints/pdipm.cpp
-  src/constraints/constraints.cpp
-  src/constraints/constraints_impl.cpp
-  src/constraints/constraints_data.cpp
-  src/constraints/constraint_component_base.cpp
-  src/constraints/impulse_constraint_component_base.cpp
-  src/constraints/constraint_component_data.cpp
-  src/constraints/joint_position_upper_limit.cpp
-  src/constraints/joint_position_lower_limit.cpp
-  src/constraints/joint_velocity_upper_limit.cpp
-  src/constraints/joint_velocity_lower_limit.cpp
-  src/constraints/joint_acceleration_upper_limit.cpp
-  src/constraints/joint_acceleration_lower_limit.cpp
-  src/constraints/joint_torques_upper_limit.cpp
-  src/constraints/joint_torques_lower_limit.cpp
-  src/constraints/friction_cone.cpp
-  src/constraints/impulse_friction_cone.cpp
-  src/hybrid/discrete_event.cpp
-  src/hybrid/contact_sequence.cpp
-  src/hybrid/hybrid_time_discretization.cpp
-  src/hybrid/collision_checker.cpp
-  src/impulse/impulse_split_solution.cpp
-  src/impulse/impulse_split_direction.cpp
-  src/impulse/impulse_split_kkt_residual.cpp
-  src/impulse/impulse_split_kkt_matrix.cpp
-  src/impulse/impulse_state_equation.cpp
-  src/impulse/impulse_dynamics_data.cpp
-  src/impulse/impulse_dynamics.cpp
-  src/impulse/impulse_split_ocp.cpp
-  src/ocp/split_kkt_residual.cpp
-  src/ocp/split_kkt_matrix.cpp
-  src/ocp/split_solution.cpp
-  src/ocp/split_direction.cpp
-  src/ocp/state_equation.cpp
-  src/ocp/terminal_state_equation.cpp
-  src/ocp/contact_dynamics_data.cpp
-  src/ocp/contact_dynamics.cpp
-  src/ocp/split_switching_constraint_jacobian.cpp
-  src/ocp/split_switching_constraint_residual.cpp
-  src/ocp/switching_constraint.cpp
-  src/ocp/split_ocp.cpp
-  src/ocp/terminal_ocp.cpp
-  src/ocp/ocp.cpp
-  src/ocp/solution.cpp
-  src/ocp/direction.cpp
-  src/ocp/kkt_matrix.cpp
-  src/ocp/kkt_residual.cpp
-  src/ocp/direct_multiple_shooting.cpp
-  src/riccati/split_riccati_factorization.cpp
-  src/riccati/split_constrained_riccati_factorization.cpp
-  src/riccati/lqr_policy.cpp
-  src/riccati/backward_riccati_recursion_factorizer.cpp
-  src/riccati/riccati_factorizer.cpp
-  src/riccati/riccati_recursion.cpp
-  src/solver/ocp_solver.cpp
-  src/mpc/mpc_quadrupedal_walking.cpp
-  src/mpc/mpc_quadrupedal_trotting.cpp
-  src/unconstr/unconstr_state_equation.cpp
-  src/unconstr/unconstr_dynamics.cpp
-  src/unconstr/split_unconstr_ocp.cpp
-  src/unconstr/unconstr_ocp.cpp
-  src/riccati/unconstr_backward_riccati_recursion_factorizer.cpp
-  src/riccati/unconstr_riccati_factorizer.cpp
-  src/riccati/unconstr_riccati_recursion.cpp
-  src/solver/unconstr_ocp_solver.cpp
-  src/unconstr/split_unconstr_parnmpc.cpp
-  src/unconstr/terminal_unconstr_parnmpc.cpp
-  src/unconstr/unconstr_parnmpc.cpp
-  src/parnmpc/unconstr_kkt_matrix_inverter.cpp
-  src/parnmpc/unconstr_split_backward_correction.cpp
-  src/parnmpc/unconstr_backward_correction.cpp
-  src/solver/unconstr_parnmpc_solver.cpp
-  src/line_search/line_search_filter.cpp
-  src/line_search/line_search.cpp
-  src/line_search/unconstr_line_search.cpp
-  src/utils/derivative_checker.cpp
-  src/utils/joint_constraints_factory.cpp
-  src/utils/ocp_benchmarker.cpp
-  src/utils/logger.cpp
+  ${${PROJECT_NAME}_SOURCES} 
+  ${${PROJECT_NAME}_HEADERS}
 )
 target_link_libraries(
   ${PROJECT_NAME} 

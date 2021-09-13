@@ -1,1 +1,0 @@
-#include "idocp/cost/cost_function.hpp"

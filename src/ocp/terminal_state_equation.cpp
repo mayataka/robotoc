@@ -1,1 +1,0 @@
-#include "idocp/ocp/terminal_state_equation.hpp"
