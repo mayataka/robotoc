@@ -11,6 +11,7 @@
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
+#include "idocp/robot/se3.hpp"
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
@@ -272,7 +273,7 @@ public:
   /// @param[in] frame_id Index of the frame.
   /// @return Const reference to the SE(3) of the frame.
   ///
-  const pinocchio::SE3& framePlacement(const int frame_id) const;
+  const SE3& framePlacement(const int frame_id) const;
 
   ///
   /// @brief Returns the position of the center of mass. Before calling this 

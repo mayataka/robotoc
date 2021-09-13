@@ -8,9 +8,76 @@
 #include "pinocchio/algorithm/kinematics-derivatives.hpp"
 #include "pinocchio/algorithm/frames-derivatives.hpp"
 
+#include <stdexcept>
 #include <cassert>
 
+
 namespace idocp {
+
+inline PointContact::PointContact(const pinocchio::Model& model, 
+                                  const int contact_frame_id,
+                                  const double baumgarte_weight_on_velocity,
+                                  const double baumgarte_weight_on_position)
+  : contact_frame_id_(contact_frame_id),
+    parent_joint_id_(model.frames[contact_frame_id_].parent), 
+    dimv_(model.nv),
+    baumgarte_weight_on_velocity_(baumgarte_weight_on_velocity),
+    baumgarte_weight_on_position_(baumgarte_weight_on_position), 
+    jXf_(model.frames[contact_frame_id_].placement),
+    J_frame_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_v_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
+  try {
+    if (contact_frame_id_ < 0) {
+      throw std::out_of_range(
+          "Invalid argument: contact_frame_id must be non-negative!");
+    }
+    if (baumgarte_weight_on_velocity < 0) {
+      throw std::out_of_range(
+          "Invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+    }
+    if (baumgarte_weight_on_position < 0) {
+      throw std::out_of_range(
+          "Invalid argument: baumgarte_weight_on_position must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  v_frame_.setZero();
+  v_linear_skew_.setZero();
+  v_angular_skew_.setZero();
+}
+
+
+inline PointContact::~PointContact() {
+}
+
+
+inline void PointContact::setBaumgarteWeights(
+    const double baumgarte_weight_on_velocity,
+    const double baumgarte_weight_on_position) {
+  try {
+    if (baumgarte_weight_on_velocity < 0) {
+      throw std::out_of_range(
+          "Invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+    }
+    if (baumgarte_weight_on_position < 0) {
+      throw std::out_of_range(
+          "Invalid argument: baumgarte_weight_on_position must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  baumgarte_weight_on_velocity_ = baumgarte_weight_on_velocity;
+  baumgarte_weight_on_position_ = baumgarte_weight_on_position;
+}
+
 
 inline void PointContact::computeJointForceFromContactForce(
     const Eigen::Vector3d& contact_force, 

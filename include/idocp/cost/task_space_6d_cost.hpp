@@ -2,9 +2,9 @@
 #define IDOCP_TASK_SPACE_6D_COST_HPP_
 
 #include "Eigen/Core"
-#include "pinocchio/spatial/se3.hpp"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/se3.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
@@ -76,7 +76,7 @@ public:
   /// @param[in] rotation_weight Weight vector on the rotation error. 
   ///
   void set_q_weight(const Eigen::Vector3d& position_weight, 
-                       const Eigen::Vector3d& rotation_weight);
+                    const Eigen::Vector3d& rotation_weight);
 
   ///
   /// @brief Sets the terminal weight vectors. 
@@ -84,7 +84,7 @@ public:
   /// @param[in] rotation_weight Temrinal weight vector on the rotation error. 
   ///
   void set_qf_weight(const Eigen::Vector3d& position_weight, 
-                        const Eigen::Vector3d& rotation_weight);
+                     const Eigen::Vector3d& rotation_weight);
 
   ///
   /// @brief Sets the weight vectors at impulse. 
@@ -92,7 +92,7 @@ public:
   /// @param[in] rotation_weight Weight vector on the rotation error at impulse. 
   ///
   void set_qi_weight(const Eigen::Vector3d& position_weight, 
-                        const Eigen::Vector3d& rotation_weight);
+                     const Eigen::Vector3d& rotation_weight);
 
   bool useKinematics() const override;
 
@@ -139,7 +139,7 @@ public:
 
 private:
   int frame_id_;
-  pinocchio::SE3 SE3_ref_, SE3_ref_inv_;
+  SE3 SE3_ref_, SE3_ref_inv_;
   Eigen::VectorXd q_6d_weight_, qf_6d_weight_, qi_6d_weight_;
 
 };

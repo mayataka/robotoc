@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/se3.hpp"
 #include "idocp/cost/time_varying_task_space_6d_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
@@ -44,8 +45,8 @@ public:
   TimeVaryingTaskSpace6DRef& operator=(
       TimeVaryingTaskSpace6DRef&&) noexcept = default;
 
-  void update_SE3_ref(const double t, pinocchio::SE3& SE3_ref) const override {
-    SE3_ref = pinocchio::SE3(rotm_, (q0_ref_+(t-t0_)*v_ref_));
+  void update_SE3_ref(const double t, SE3& SE3_ref) const override {
+    SE3_ref = SE3(rotm_, (q0_ref_+(t-t0_)*v_ref_));
   }
 
   bool isActive(const double t) const override {
@@ -118,17 +119,17 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
-  const pinocchio::SE3 ref_placement = pinocchio::SE3(Eigen::Matrix3d::Identity(), q_ref);
-  const pinocchio::SE3 placement = robot.framePlacement(frame_id);
-  const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
-  const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
+  const SE3 ref_placement = SE3(Eigen::Matrix3d::Identity(), q_ref);
+  const SE3 placement = robot.framePlacement(frame_id);
+  const SE3 diff_SE3 = ref_placement.inverse() * placement;
+  const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
   const double l_ref = dt * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), l_ref);
   cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
   cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::Jlog6(diff_SE3, J_66);
+  computeJLog6Map(diff_SE3, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
   kkt_res_ref.lq() += dt * J66_J_6d.transpose() * q_weight.asDiagonal() * diff_6d;
@@ -175,17 +176,17 @@ void TimeVaryingTaskSpace6DCostTest::testTerminalCost(Robot& robot, const int fr
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
-  const pinocchio::SE3 ref_placement = pinocchio::SE3(Eigen::Matrix3d::Identity(), q_ref);
-  const pinocchio::SE3 placement = robot.framePlacement(frame_id);
-  const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
-  const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
+  const SE3 ref_placement = SE3(Eigen::Matrix3d::Identity(), q_ref);
+  const SE3 placement = robot.framePlacement(frame_id);
+  const SE3 diff_SE3 = ref_placement.inverse() * placement;
+  const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
   const double l_ref = 0.5 * diff_6d.transpose() * qf_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), l_ref);
   cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
   cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::Jlog6(diff_SE3, J_66);
+  computeJLog6Map(diff_SE3, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
   kkt_res_ref.lq() += J66_J_6d.transpose() * qf_weight.asDiagonal() * diff_6d;
@@ -232,17 +233,17 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
-  const pinocchio::SE3 ref_placement = pinocchio::SE3(Eigen::Matrix3d::Identity(), q_ref);
-  const pinocchio::SE3 placement = robot.framePlacement(frame_id);
-  const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
-  const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
+  const SE3 ref_placement = SE3(Eigen::Matrix3d::Identity(), q_ref);
+  const SE3 placement = robot.framePlacement(frame_id);
+  const SE3 diff_SE3 = ref_placement.inverse() * placement;
+  const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
   const double l_ref = 0.5 * diff_6d.transpose() * qi_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t, s), l_ref);
   cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
   cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::Jlog6(diff_SE3, J_66);
+  computeJLog6Map(diff_SE3, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
   kkt_res_ref.lq() += J66_J_6d.transpose() * qi_weight.asDiagonal() * diff_6d;

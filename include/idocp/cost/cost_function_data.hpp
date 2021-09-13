@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/se3.hpp"
 
 
 namespace idocp {
@@ -94,20 +95,20 @@ public:
   /// @brief Vector used for computing the reference SE3 of the end-effector in 
   /// TimeVaryingTaskSpace6DCost. 
   ///
-  pinocchio::SE3 SE3_ref;
+  SE3 SE3_ref;
 
   ///
   /// @brief Vector used for computing the inverse of the reference SE3 of the 
   /// end-effector in TimeVaryingTaskSpace6DCost. 
   ///
-  pinocchio::SE3 SE3_ref_inv;
+  SE3 SE3_ref_inv;
 
   ///
   /// @brief Vector used for computing the difference of the SE3 of the 
   /// end-effector in TaskSpace6DCost. 
   /// Be allocated only when CostFunction has TaskSpace6DCost. 
   ///
-  pinocchio::SE3 diff_SE3;
+  SE3 diff_SE3;
 
   ///
   /// @brief Jacobian of the difference of the configurations used in 

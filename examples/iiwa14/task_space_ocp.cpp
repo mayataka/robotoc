@@ -5,6 +5,7 @@
 
 #include "idocp/solver/unconstr_ocp_solver.hpp"
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/se3.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/time_varying_task_space_6d_cost.hpp"
@@ -30,11 +31,11 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void update_SE3_ref(const double t, pinocchio::SE3& SE3_ref) const override {
+  void update_SE3_ref(const double t, SE3& SE3_ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*t);
     pos.coeffRef(2) += radius_ * cos(M_PI*t);
-    SE3_ref = pinocchio::SE3(rotm_, pos);
+    SE3_ref = SE3(rotm_, pos);
   }
 
   bool isActive(const double t) const override {

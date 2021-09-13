@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "idocp/cost/time_varying_task_space_6d_cost.hpp"
+#include "idocp/robot/se3.hpp"
 
 
 namespace idocp {
@@ -13,7 +14,7 @@ public:
   // Inherit the constructors
   using TimeVaryingTaskSpace6DRefBase::TimeVaryingTaskSpace6DRefBase;
 
-  void update_SE3_ref(const double t, pinocchio::SE3& SE3_ref) const override {
+  void update_SE3_ref(const double t, SE3& SE3_ref) const override {
     PYBIND11_OVERRIDE_PURE(void, TimeVaryingTaskSpace6DRefBase, 
                            update_SE3_ref, 
                            t, SE3_ref);
