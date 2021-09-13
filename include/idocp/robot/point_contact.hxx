@@ -53,6 +53,24 @@ inline PointContact::PointContact(const pinocchio::Model& model,
 }
 
 
+inline PointContact::PointContact() 
+  : contact_frame_id_(0),
+    parent_joint_id_(0), 
+    dimv_(0),
+    baumgarte_weight_on_velocity_(0),
+    baumgarte_weight_on_position_(0), 
+    jXf_(),
+    J_frame_(),
+    frame_v_partial_dq_(),
+    frame_a_partial_dq_(),
+    frame_a_partial_dv_(),
+    frame_a_partial_da_() {
+  v_frame_.setZero();
+  v_linear_skew_.setZero();
+  v_angular_skew_.setZero();
+}
+
+
 inline PointContact::~PointContact() {
 }
 
