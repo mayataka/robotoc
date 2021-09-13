@@ -51,9 +51,9 @@ int main() {
   parnmpc_solver.initBackwardCorrection(t);
   const int num_iteration = 100;
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
+  idocp::benchmark::convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;
-  idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
+  idocp::benchmark::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
 
   return 0;
 }

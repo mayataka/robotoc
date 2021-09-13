@@ -28,19 +28,19 @@ protected:
 };
 
 
-TEST_F(PDIPMTest, SetSlackAndDualPositive) {
+TEST_F(PDIPMTest, setSlackAndDualPositive) {
   data.slack = Eigen::VectorXd::Random(dim);
   data.dual = Eigen::VectorXd::Random(dim);
-  pdipm::SetSlackAndDualPositive(barrier, data);
+  pdipm::setSlackAndDualPositive(barrier, data);
   EXPECT_TRUE(data.slack.minCoeff() >= barrier);
   EXPECT_TRUE(data.dual.minCoeff() >= barrier);
 }
 
 
-TEST_F(PDIPMTest, ComputeComplementarySlackness) {
+TEST_F(PDIPMTest, computeComplementarySlackness) {
   EXPECT_TRUE(data.slack.minCoeff() >= 0);
   EXPECT_TRUE(data.dual.minCoeff() >= 0);
-  pdipm::ComputeComplementarySlackness(barrier, data);
+  pdipm::computeComplementarySlackness(barrier, data);
   Eigen::VectorXd compl_ref = Eigen::VectorXd::Zero(dim);
   for (int i=0; i<dim; ++i) {
     compl_ref(i) = data.slack(i) * data.dual(i) - barrier;
@@ -49,45 +49,45 @@ TEST_F(PDIPMTest, ComputeComplementarySlackness) {
 }
 
 
-TEST_F(PDIPMTest, FractionToBoundary) {
+TEST_F(PDIPMTest, fractionToBoundary) {
   Eigen::VectorXd vec = Eigen::VectorXd::Random(dim).array().abs();
   Eigen::VectorXd dvec = Eigen::VectorXd::Random(dim);
   const double fraction_rate = 0.995;
-  const double step_size = pdipm::FractionToBoundary(dim, fraction_rate, 
+  const double step_size = pdipm::fractionToBoundary(dim, fraction_rate, 
                                                      vec, dvec);
   Eigen::VectorXd vec_updated = vec + step_size * dvec;
   EXPECT_TRUE(vec_updated.minCoeff() >= 0);
 }
 
 
-TEST_F(PDIPMTest, FractionToBoundarySlack) {
+TEST_F(PDIPMTest, fractionToBoundarySlack) {
   EXPECT_TRUE(data.slack.minCoeff() >= 0);
   const double fraction_rate = 0.995;
-  const double step_slack = pdipm::FractionToBoundarySlack(fraction_rate, data);
+  const double step_slack = pdipm::fractionToBoundarySlack(fraction_rate, data);
   Eigen::VectorXd slack_tmp = data.slack + step_slack * data.dslack;
   EXPECT_TRUE(slack_tmp.minCoeff() >= 0);
-  const double step_size = pdipm::FractionToBoundary(dim, fraction_rate, 
+  const double step_size = pdipm::fractionToBoundary(dim, fraction_rate, 
                                                      data.slack, data.dslack);
   EXPECT_DOUBLE_EQ(step_size, step_slack);
 }
 
 
-TEST_F(PDIPMTest, FractionToBoundaryDual) {
+TEST_F(PDIPMTest, fractionToBoundaryDual) {
   EXPECT_TRUE(data.dual.minCoeff() >= 0);
   const double fraction_rate = 0.995;
-  const double step_dual = pdipm::FractionToBoundaryDual(fraction_rate, data);
+  const double step_dual = pdipm::fractionToBoundaryDual(fraction_rate, data);
   Eigen::VectorXd dual_tmp = data.dual + step_dual * data.ddual;
   EXPECT_TRUE(dual_tmp.minCoeff() >= 0);
-  const double step_size = pdipm::FractionToBoundary(dim, fraction_rate, 
+  const double step_size = pdipm::fractionToBoundary(dim, fraction_rate, 
                                                      data.dual, data.ddual);
   EXPECT_DOUBLE_EQ(step_size, step_dual);
 }
 
 
 
-TEST_F(PDIPMTest, ComputeDualDirection) {
+TEST_F(PDIPMTest, computeDualDirection) {
   data.cmpl.array() = data.dual.array() * data.slack.array() - barrier;
-  pdipm::ComputeDualDirection(data);
+  pdipm::computeDualDirection(data);
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dim);
   for (int i=0; i<dim; ++i) {
     ddual_ref(i) = - (data.dual(i) * data.dslack(i) + data.cmpl(i)) / data.slack(i);
@@ -96,9 +96,9 @@ TEST_F(PDIPMTest, ComputeDualDirection) {
 }
 
 
-TEST_F(PDIPMTest, LogBarrier) {
+TEST_F(PDIPMTest, logBarrier) {
   const double cost_ref = - barrier * (data.slack.array().log()).sum();
-  const double cost = pdipm::LogBarrier(barrier, data.slack);
+  const double cost = pdipm::logBarrier(barrier, data.slack);
   EXPECT_DOUBLE_EQ(cost_ref, cost);
 }
 

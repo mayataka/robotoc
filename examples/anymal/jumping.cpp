@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 50, line_search);
+  idocp::benchmark::convergence(ocp_solver, t, q, v, 50, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf, idocp::BaseJointType::FloatingBase);

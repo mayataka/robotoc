@@ -146,7 +146,7 @@ void FrictionConeTest::test_evalConstraint(Robot& robot, const ContactStatus& co
         data_ref.cmpl.coeffRef(5*i+j) 
             = data_ref.slack.coeff(5*i+j) * data_ref.dual.coeff(5*i+j) - barrier;
       }
-      data_ref.log_barrier += pdipm::LogBarrier(barrier, data_ref.slack.segment(5*i, 5));
+      data_ref.log_barrier += pdipm::logBarrier(barrier, data_ref.slack.segment(5*i, 5));
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));

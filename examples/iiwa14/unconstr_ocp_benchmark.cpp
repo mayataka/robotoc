@@ -49,9 +49,9 @@ int main() {
   ocp_solver.setSolution("v", v);
   const int num_iteration = 50;
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
+  idocp::benchmark::convergence(ocp_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;
-  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, num_iteration_CPU, line_search);
+  idocp::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration_CPU, line_search);
 
   return 0;
 }

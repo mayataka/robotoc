@@ -14,7 +14,7 @@ namespace pdipm {
 /// @param[in] barrier Barrier parameter. Must be positive. 
 /// @param[in, out] data Constraint component data.
 ///
-void SetSlackAndDualPositive(const double barrier, 
+void setSlackAndDualPositive(const double barrier, 
                              ConstraintComponentData& data);
 
 ///
@@ -23,7 +23,7 @@ void SetSlackAndDualPositive(const double barrier,
 /// @param[in] barrier Barrier parameter. Must be positive. 
 /// @param[in, out] data Constraint component data.
 ///
-void ComputeComplementarySlackness(const double barrier, 
+void computeComplementarySlackness(const double barrier, 
                                    ConstraintComponentData& data);
 
 ///
@@ -34,7 +34,7 @@ void ComputeComplementarySlackness(const double barrier,
 /// @param[in] start Start position of the segment.
 /// @param[in] size Size of the segment.
 ///
-void ComputeComplementarySlackness(const double barrier, 
+void computeComplementarySlackness(const double barrier, 
                                    ConstraintComponentData& data,
                                    const int start, const int size);
 
@@ -47,7 +47,7 @@ void ComputeComplementarySlackness(const double barrier,
 /// @tparam Size Size of the segment.
 ///
 template <int Size>
-void ComputeComplementarySlackness(const double barrier, 
+void computeComplementarySlackness(const double barrier, 
                                    ConstraintComponentData& data,
                                    const int start);
 
@@ -59,14 +59,14 @@ void ComputeComplementarySlackness(const double barrier,
 /// @param[in] dual An element of the dual variable.
 /// @return The complementarity slackness between the slack and dual variables.
 ///
-double ComputeComplementarySlackness(const double barrier, const double slack, 
+double computeComplementarySlackness(const double barrier, const double slack, 
                                      const double dual);
 
 ///
 /// @brief Computes the coefficient of the condensing.
 /// @param[in, out] data Constraint component data.
 ///
-void ComputeCondensingCoeffcient(ConstraintComponentData& data);
+void computeCondensingCoeffcient(ConstraintComponentData& data);
 
 ///
 /// @brief Computes the coefficient of the condensing.
@@ -74,7 +74,7 @@ void ComputeCondensingCoeffcient(ConstraintComponentData& data);
 /// @param[in] start Start position of the segment.
 /// @param[in] size Size of the segment.
 ///
-void ComputeCondensingCoeffcient(ConstraintComponentData& data,
+void computeCondensingCoeffcient(ConstraintComponentData& data,
                                  const int start, const int size);
 
 ///
@@ -84,7 +84,7 @@ void ComputeCondensingCoeffcient(ConstraintComponentData& data,
 /// @tparam Size Size of the segment.
 ///
 template <int Size>
-void ComputeCondensingCoeffcient(ConstraintComponentData& data,
+void computeCondensingCoeffcient(ConstraintComponentData& data,
                                  const int start);
 
 ///
@@ -96,7 +96,7 @@ void ComputeCondensingCoeffcient(ConstraintComponentData& data,
 /// @param[in] cmpl An element of the complementarity slackness.
 /// @return Coefficient of the condensing. 
 ///
-double ComputeCondensingCoeffcient(const double slack, const double dual,
+double computeCondensingCoeffcient(const double slack, const double dual,
                                    const double residual, const double cmpl);
 
 ///
@@ -107,7 +107,7 @@ double ComputeCondensingCoeffcient(const double slack, const double dual,
 /// @param[in] data Constraint component data.
 /// @return Fraction-to-boundary of the direction of the slack variables. 
 ///
-double FractionToBoundarySlack(const double fraction_rate, 
+double fractionToBoundarySlack(const double fraction_rate, 
                                const ConstraintComponentData& data);
 
 ///
@@ -118,7 +118,7 @@ double FractionToBoundarySlack(const double fraction_rate,
 /// @param[in] data Constraint component data.
 /// @return Fraction-to-boundary of the direction of the dual variables. 
 ///
-double FractionToBoundaryDual(const double fraction_rate, 
+double fractionToBoundaryDual(const double fraction_rate, 
                               const ConstraintComponentData& data);
 
 ///
@@ -130,7 +130,7 @@ double FractionToBoundaryDual(const double fraction_rate,
 /// @param[in] dvec A direction vector of vec. 
 /// @return Fraction-to-boundary of dvec.
 ///
-double FractionToBoundary(const int dim, const double fraction_rate, 
+double fractionToBoundary(const int dim, const double fraction_rate, 
                           const Eigen::VectorXd& vec,
                           const Eigen::VectorXd& dvec);
 
@@ -142,7 +142,7 @@ double FractionToBoundary(const int dim, const double fraction_rate,
 /// @param[in] dvar A direction the variable. 
 /// @return Fraction-to-boundary of dvec.
 ///
-double FractionToBoundary(const double fraction_rate, 
+double fractionToBoundary(const double fraction_rate, 
                           const double var, const double dvar);
 
 ///
@@ -150,7 +150,7 @@ double FractionToBoundary(const double fraction_rate,
 /// residual, complementary slackness, and the direction of the slack.
 /// @param[in, out] data Constraint component data.
 ///
-void ComputeDualDirection(ConstraintComponentData& data);
+void computeDualDirection(ConstraintComponentData& data);
 
 ///
 /// @brief Computes the direction of the dual variable from slack, primal 
@@ -159,7 +159,7 @@ void ComputeDualDirection(ConstraintComponentData& data);
 /// @param[in] start Start position of the segment.
 /// @param[in] size Size of the segment.
 ///
-void ComputeDualDirection(ConstraintComponentData& data, 
+void computeDualDirection(ConstraintComponentData& data, 
                           const int start, const int size);
 
 ///
@@ -169,7 +169,7 @@ void ComputeDualDirection(ConstraintComponentData& data,
 /// @param[in] start Start position of the segment.
 ///
 template <int Size>
-void ComputeDualDirection(ConstraintComponentData& data, const int start);
+void computeDualDirection(ConstraintComponentData& data, const int start);
 
 ///
 /// @brief Computes the direction of the dual variable from slack, primal 
@@ -180,7 +180,7 @@ void ComputeDualDirection(ConstraintComponentData& data, const int start);
 /// @param[in] cmpl The complementary slackness.
 /// @return The direction of the dual variable.
 ///
-double ComputeDualDirection(const double slack, const double dual,
+double computeDualDirection(const double slack, const double dual,
                             const double dslack, const double cmpl);
 
 ///
@@ -191,7 +191,7 @@ double ComputeDualDirection(const double slack, const double dual,
 /// @return log barrier function.
 ///
 template <typename VectorType>
-double LogBarrier(const double barrier, 
+double logBarrier(const double barrier, 
                    const Eigen::MatrixBase<VectorType>& vec);
 
 } // namespace pdipm

@@ -8,7 +8,7 @@
 
 
 namespace idocp {
-namespace ocpbenchmarker {
+namespace benchmark {
 
 template <typename OCPSolverType>
 inline void CPUTime(OCPSolverType& ocp_solver, const double t, 
@@ -72,7 +72,7 @@ inline void Convergence(OCPSolverType& ocp_solver, Logger& logger,
   std::cout << std::endl;
 }
 
-} // namespace ocpbenchmarker
+} // namespace benchmark
 } // namespace idocp 
 
 #endif // IDOCP_UTILS_OCP_BENCHMARKER_HXX_

@@ -42,13 +42,13 @@ inline ConstraintComponentBase::ConstraintComponentBase()
 
 inline double ConstraintComponentBase::maxSlackStepSize(
     const ConstraintComponentData& data) const {
-  return pdipm::FractionToBoundarySlack(fraction_to_boundary_rule_, data);
+  return pdipm::fractionToBoundarySlack(fraction_to_boundary_rule_, data);
 }
 
 
 inline double ConstraintComponentBase::maxDualStepSize(
     const ConstraintComponentData& data) const {
-  return pdipm::FractionToBoundaryDual(fraction_to_boundary_rule_, data);
+  return pdipm::fractionToBoundaryDual(fraction_to_boundary_rule_, data);
 }
 
 
@@ -91,91 +91,91 @@ inline void ConstraintComponentBase::setFractionToBoundaryRule(
 
 inline void ConstraintComponentBase::setSlackAndDualPositive(
     ConstraintComponentData& data) const {
-  pdipm::SetSlackAndDualPositive(barrier_, data);
+  pdipm::setSlackAndDualPositive(barrier_, data);
 }
 
 
 inline void ConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data) const {
-  pdipm::ComputeComplementarySlackness(barrier_, data);
+  pdipm::computeComplementarySlackness(barrier_, data);
 }
 
 
 inline void ConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data, const int start, const int size) const {
-  pdipm::ComputeComplementarySlackness(barrier_, data, start, size);
+  pdipm::computeComplementarySlackness(barrier_, data, start, size);
 }
 
 
 template <int Size>
 inline void ConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data, const int start) const {
-  pdipm::ComputeComplementarySlackness<Size>(barrier_, data, start);
+  pdipm::computeComplementarySlackness<Size>(barrier_, data, start);
 }
 
 
 inline double ConstraintComponentBase::computeComplementarySlackness(
     const double slack, const double dual) const {
-  return pdipm::ComputeComplementarySlackness(barrier_, slack, dual);
+  return pdipm::computeComplementarySlackness(barrier_, slack, dual);
 }
 
 
 inline void ConstraintComponentBase::computeCondensingCoeffcient(
     ConstraintComponentData& data) {
-  pdipm::ComputeCondensingCoeffcient(data);
+  pdipm::computeCondensingCoeffcient(data);
 }
 
 
 inline void ConstraintComponentBase::computeCondensingCoeffcient(
     ConstraintComponentData& data, const int start, const int size) {
-  pdipm::ComputeCondensingCoeffcient(data, start, size);
+  pdipm::computeCondensingCoeffcient(data, start, size);
 }
 
 
 template <int Size>
 inline void ConstraintComponentBase::computeCondensingCoeffcient(
     ConstraintComponentData& data, const int start) {
-  pdipm::ComputeCondensingCoeffcient<Size>(data, start);
+  pdipm::computeCondensingCoeffcient<Size>(data, start);
 }
 
 
 inline double ConstraintComponentBase::computeCondensingCoeffcient(
     const double slack, const double dual, const double residual, 
     const double cmpl) {
-  return pdipm::ComputeCondensingCoeffcient(slack, dual, residual, cmpl);
+  return pdipm::computeCondensingCoeffcient(slack, dual, residual, cmpl);
 }
 
 
 inline void ConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data) {
-  pdipm::ComputeDualDirection(data);
+  pdipm::computeDualDirection(data);
 }
 
 
 inline void ConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data, const int start, const int size) {
-  pdipm::ComputeDualDirection(data, start, size);
+  pdipm::computeDualDirection(data, start, size);
 }
 
 
 template <int Size>
 inline void ConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data, const int start) {
-  pdipm::ComputeDualDirection<Size>(data, start);
+  pdipm::computeDualDirection<Size>(data, start);
 }
 
 
 inline double ConstraintComponentBase::computeDualDirection(
     const double slack, const double dual, const double dslack, 
     const double cmpl) {
-  return pdipm::ComputeDualDirection(slack, dual, dslack, cmpl);
+  return pdipm::computeDualDirection(slack, dual, dslack, cmpl);
 }
 
 
 template <typename VectorType>
 inline double ConstraintComponentBase::logBarrier(
     const Eigen::MatrixBase<VectorType>& slack) const {
-  return pdipm::LogBarrier(barrier_, slack);
+  return pdipm::logBarrier(barrier_, slack);
 }
 
 } // namespace idocp

@@ -81,8 +81,8 @@ void JointPositionLowerLimitTest::test_evalConstraint(Robot& robot) const {
   auto data_ref = data;
   constr.evalConstraint(robot, data, s);
   data_ref.residual = - s.q.tail(dimc) + qmin + data_ref.slack;
-  pdipm::ComputeComplementarySlackness(barrier, data_ref);
-  data_ref.log_barrier = pdipm::LogBarrier(barrier, data_ref.slack);
+  pdipm::computeComplementarySlackness(barrier, data_ref);
+  data_ref.log_barrier = pdipm::logBarrier(barrier, data_ref.slack);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
 
@@ -138,7 +138,7 @@ void JointPositionLowerLimitTest::testExpandSlackAndDual(Robot& robot) const {
   const auto d = SplitDirection::Random(robot);
   constr.expandSlackAndDual(data, s, d);
   data_ref.dslack = d.dq().tail(dimc) - data_ref.residual;
-  pdipm::ComputeDualDirection(data_ref);
+  pdipm::computeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
 
