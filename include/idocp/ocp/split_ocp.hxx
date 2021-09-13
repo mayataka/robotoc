@@ -48,6 +48,11 @@ inline void SplitOCP::initConstraints(Robot& robot, const int time_step,
 }
 
 
+inline void SplitOCP::initConstraints(const SplitOCP& other) { 
+  constraints_data_.copySlackAndDual(other.getConstraintsData());
+}
+
+
 inline void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
                               const double t, const double dt, 
                               const SplitSolution& s, 

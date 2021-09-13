@@ -70,6 +70,34 @@ inline bool ConstraintsData::isImpulseLevelValid() const {
 }
 
 
+inline void ConstraintsData::copySlackAndDual(const ConstraintsData& other) {
+  if (isPositionLevelValid()) {
+    const int size = position_level_data.size();
+    for (int i=0; i<size; ++i) {
+      position_level_data[i].copySlackAndDual(other.position_level_data[i]);
+    }
+  }
+  if (isVelocityLevelValid()) {
+    const int size = velocity_level_data.size();
+    for (int i=0; i<size; ++i) {
+      velocity_level_data[i].copySlackAndDual(other.velocity_level_data[i]);
+    }
+  }
+  if (isAccelerationLevelValid()) {
+    const int size = acceleration_level_data.size();
+    for (int i=0; i<size; ++i) {
+      acceleration_level_data[i].copySlackAndDual(other.acceleration_level_data[i]);
+    }
+  }
+  if (isImpulseLevelValid()) {
+    const int size = impulse_level_data.size();
+    for (int i=0; i<size; ++i) {
+      impulse_level_data[i].copySlackAndDual(other.impulse_level_data[i]);
+    }
+  }
+}
+
+
 inline double ConstraintsData::KKTError() const {
   double err = 0.0;
   if (isPositionLevelValid()) {
