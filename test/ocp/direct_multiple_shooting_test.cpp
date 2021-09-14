@@ -367,7 +367,7 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dt);
-      const bool sto = false;
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
@@ -388,7 +388,7 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dt);
-      const bool sto = false;
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
@@ -398,8 +398,8 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
     }
     else {
       const double dti = ocp_ref.discrete().dt(i);
-      const bool sto = false;
-      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], sto);
+      const bool sto_false = false;
+      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], sto_false);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }

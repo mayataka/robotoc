@@ -48,8 +48,8 @@ protected:
                             const ContactSequence& contact_sequence) const;
   KKTResidual createKKTResidual(const Robot& robot, 
                                 const ContactSequence& contact_sequence) const;
-  void testRiccatiRecursion(const Robot& robot) const;
-  void testComputeDirection(const Robot& robot) const;
+  void test_riccatiRecursion(const Robot& robot) const;
+  void test_computeDirection(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
   double T, t, dt;
@@ -84,7 +84,7 @@ KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot,
 }
 
 
-void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
+void RiccatiRecursionTest::test_riccatiRecursion(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
@@ -219,7 +219,7 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
 }
 
 
-void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
+void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
@@ -258,7 +258,7 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
   for (int i=0; i<N; ++i) {
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-      const bool sto = false;
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], sto);
       ocp_ref[i].expandPrimal(ocp_ref.discrete().dt(i), s[i], d_ref[i], sto);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
@@ -286,7 +286,7 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
     }
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-      const bool sto = false;
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], sto);
       ocp_ref[i].expandPrimal(ocp_ref.discrete().dt(i), s[i], d_ref[i], sto);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
@@ -307,15 +307,16 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
       ASSERT_FALSE(ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift));
     }
     else {
-      const bool sto = false;
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
-      ocp_ref[i].expandPrimal(ocp_ref.discrete().dt(i), s[i], d_ref[i], sto);
+      const bool sto_false = false;
+      RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], sto_false);
+      ocp_ref[i].expandPrimal(ocp_ref.discrete().dt(i), s[i], d_ref[i], sto_false);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = ocp_ref[i].maxDualStepSize();
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
+        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
         d_ref[i].setImpulseStatus(contact_sequence.impulseStatus(impulse_index));
         RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization.switching[impulse_index], 
                                                               d_ref[i], sto);
@@ -336,21 +337,21 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
 
 TEST_F(RiccatiRecursionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
-  testRiccatiRecursion(robot);
-  testComputeDirection(robot);
+  test_riccatiRecursion(robot);
+  test_computeDirection(robot);
   robot = testhelper::CreateFixedBaseRobot(dt);
-  testRiccatiRecursion(robot);
-  testComputeDirection(robot);
+  test_riccatiRecursion(robot);
+  test_computeDirection(robot);
 }
 
 
 TEST_F(RiccatiRecursionTest, floating_base) {
   auto robot = testhelper::CreateFloatingBaseRobot();
-  testRiccatiRecursion(robot);
-  testComputeDirection(robot);
+  test_riccatiRecursion(robot);
+  test_computeDirection(robot);
   robot = testhelper::CreateFloatingBaseRobot(dt);
-  testRiccatiRecursion(robot);
-  testComputeDirection(robot);
+  test_riccatiRecursion(robot);
+  test_computeDirection(robot);
 }
 
 } // namespace idocp
