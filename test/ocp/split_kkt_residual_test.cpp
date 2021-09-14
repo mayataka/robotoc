@@ -106,7 +106,7 @@ void SplitKKTResidualTest::test_isApprox(const Robot& robot, const ContactStatus
     kkt_res_ref.lf().setRandom();
     EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   }
-  kkt_res.h = Eigen::VectorXd::Random(1);
+  kkt_res.h = Eigen::VectorXd::Random(1)[0];
   EXPECT_FALSE(kkt_res.isApprox(kkt_res_ref));
   kkt_res.h = kkt_res_ref.h;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));

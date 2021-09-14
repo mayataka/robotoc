@@ -12,6 +12,7 @@ inline SplitDirection::SplitDirection(const Robot& robot)
     du(Eigen::VectorXd::Zero(robot.dimu())),
     dlmdgmm(Eigen::VectorXd::Zero(2*robot.dimv())),
     dnu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
+    dts(0.0),
     daf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dxi_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -28,6 +29,7 @@ inline SplitDirection::SplitDirection()
     du(),
     dlmdgmm(),
     dnu_passive(),
+    dts(0.0),
     daf_full_(),
     dbetamu_full_(),
     dxi_full_(),
@@ -206,6 +208,7 @@ inline void SplitDirection::setZero() {
   dbetamu().setZero();
   dnu_passive.setZero();
   dxi().setZero();
+  dts = 0.0;
 }
 
 
@@ -254,6 +257,12 @@ inline bool SplitDirection::isApprox(const SplitDirection& other) const {
   if (!dnu_passive.isApprox(other.dnu_passive)) {
     return false;
   }
+  Eigen::VectorXd vec(1), other_vec(1);
+  vec << dts;
+  other_vec << other.dts;
+  if (!vec.isApprox(other_vec)) {
+    return false;
+  } 
   return true;
 }
 
@@ -267,6 +276,7 @@ inline void SplitDirection::setRandom() {
   dbetamu().setRandom();
   dnu_passive.setRandom();
   dxi().setRandom();
+  dts = Eigen::VectorXd::Random(1)[0];
 }
 
 

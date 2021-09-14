@@ -177,6 +177,10 @@ void SplitDirectionTest::test_isApprox(const Robot& robot,
     d_ref.dxi().setRandom();
     EXPECT_TRUE(d.isApprox(d_ref));
   }
+  d_ref.dts = Eigen::VectorXd::Random(1)[0];
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dts = d.dts;
+  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 

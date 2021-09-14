@@ -227,6 +227,11 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dxi() const;
 
   ///
+  /// @brief Newton direction of the switching time.
+  ///
+  double dts;
+
+  ///
   /// @brief Set the all directions zero.
   ///
   void setZero();

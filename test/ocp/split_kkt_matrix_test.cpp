@@ -164,7 +164,7 @@ void SplitKKTMatrixTest::test_isApprox(const Robot& robot, const ContactStatus& 
   EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
   kkt_mat_ref.fx = kkt_mat.fx;
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  kkt_mat_ref.Qtt = Eigen::VectorXd::Random(1);
+  kkt_mat_ref.Qtt = Eigen::VectorXd::Random(1)[0];
   EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
   kkt_mat_ref.Qtt = kkt_mat.Qtt;
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
