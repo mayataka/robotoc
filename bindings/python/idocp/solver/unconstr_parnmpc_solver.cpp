@@ -26,7 +26,8 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
     .def("get_solution", static_cast<std::vector<Eigen::VectorXd> (UnconstrParNMPCSolver::*)(const std::string&) const>(&UnconstrParNMPCSolver::getSolution))
     .def("set_solution", &UnconstrParNMPCSolver::setSolution)
     .def("compute_KKT_residual", &UnconstrParNMPCSolver::computeKKTResidual)
-    .def("KKT_error", &UnconstrParNMPCSolver::KKTError);
+    .def("KKT_error", &UnconstrParNMPCSolver::KKTError)
+    .def("cost", &UnconstrParNMPCSolver::cost);
 }
 
 } // namespace python

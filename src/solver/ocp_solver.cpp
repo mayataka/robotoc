@@ -306,6 +306,11 @@ double OCPSolver::KKTError() {
 }
 
 
+double OCPSolver::cost() const {
+  return dms_.totalCost(ocp_);
+}
+
+
 void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q, 
                                    const Eigen::VectorXd& v) {
   ocp_.discretize(contact_sequence_, t);

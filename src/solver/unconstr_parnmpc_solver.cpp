@@ -223,6 +223,16 @@ double UnconstrParNMPCSolver::KKTError() {
 }
 
 
+double UnconstrParNMPCSolver::cost() const {
+  double total_cost = 0;
+  for (int i=0; i<N_-1; ++i) {
+    total_cost += parnmpc_[i].stageCost();
+  }
+  total_cost += parnmpc_.terminal.stageCost();
+  return total_cost;
+}
+
+
 bool UnconstrParNMPCSolver::isCurrentSolutionFeasible() {
   for (int i=0; i<N_; ++i) {
     if (i < N_-1) {

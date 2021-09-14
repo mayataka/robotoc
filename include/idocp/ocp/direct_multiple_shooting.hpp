@@ -121,6 +121,12 @@ public:
   double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
   ///
+  /// @brief Returns the total value of the cost function.
+  /// @param[in] ocp Optimal control problem.
+  ///
+  double totalCost(const OCP& ocp) const;
+
+  ///
   /// @brief Computes the initial state direction.
   /// @param[in] ocp Optimal control problem.
   /// @param[in] robots aligned_vector of Robot.

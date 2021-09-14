@@ -137,6 +137,23 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
 }
 
 
+double DirectMultipleShooting::totalCost(const OCP& ocp) const {
+  double total_cost = 0;
+  for (int i=0; i<ocp.discrete().N(); ++i) {
+    total_cost += ocp[i].stageCost();
+  }
+  total_cost += ocp.terminal.terminalCost();
+  for (int i=0; i<ocp.discrete().N_impulse(); ++i) {
+    total_cost += ocp.impulse[i].stageCost();
+    total_cost += ocp.aux[i].stageCost();
+  }
+  for (int i=0; i<ocp.discrete().N_lift(); ++i) {
+    total_cost += ocp.lift[i].stageCost();
+  }
+  return total_cost;
+}
+
+
 void DirectMultipleShooting::computeInitialStateDirection(
     const OCP& ocp, const aligned_vector<Robot>& robots, 
     const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 

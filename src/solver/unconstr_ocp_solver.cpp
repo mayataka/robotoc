@@ -246,6 +246,16 @@ double UnconstrOCPSolver::KKTError() {
 }
 
 
+double UnconstrOCPSolver::cost() const {
+  double total_cost = 0;
+  for (int i=0; i<N_; ++i) {
+    total_cost += ocp_[i].stageCost();
+  }
+  total_cost += ocp_.terminal.terminalCost();
+  return total_cost;
+}
+
+
 bool UnconstrOCPSolver::isCurrentSolutionFeasible() {
   for (int i=0; i<N_; ++i) {
     const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
