@@ -23,7 +23,7 @@ protected:
 
   static void test(const Robot& robot, const ContactStatus& contact_status, 
                    const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, 
+  static void test_isApprox(const Robot& robot, 
                            const ContactStatus& contact_status, 
                            const ImpulseStatus& impulse_status);
 
@@ -105,7 +105,7 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
 }
 
 
-void SplitDirectionTest::testIsApprox(const Robot& robot, 
+void SplitDirectionTest::test_isApprox(const Robot& robot, 
                                       const ContactStatus& contact_status,
                                       const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
@@ -185,18 +185,18 @@ TEST_F(SplitDirectionTest, fixedBase) {
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
   contact_status.activateContact(0);
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
   contact_status.deactivateContact(0);
   impulse_status.activateImpulse(0);
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
   contact_status.activateContact(0);
   impulse_status.activateImpulse(0);
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
 }
 
 
@@ -205,13 +205,13 @@ TEST_F(SplitDirectionTest, floatingBase) {
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
   for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.deactivateContact(i);
   }
@@ -220,7 +220,7 @@ TEST_F(SplitDirectionTest, floatingBase) {
     impulse_status.activateImpulse(0);
   }
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
@@ -230,7 +230,7 @@ TEST_F(SplitDirectionTest, floatingBase) {
     impulse_status.activateImpulse(0);
   }
   test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test_isApprox(robot, contact_status, impulse_status);
 }
 
 } // namespace idocp

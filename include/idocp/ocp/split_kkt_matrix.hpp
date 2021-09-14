@@ -237,6 +237,73 @@ public:
   Eigen::MatrixXd Fqq_prev;
 
   ///
+  /// @brief Derivative of the discrete time state equation w.r.t. the 
+  /// length of the time interval. 
+  ///
+  Eigen::VectorXd fx;
+
+  ///
+  /// @brief Derivative of the discrete-time state equation w.r.t. the 
+  /// configuration q w.r.t. the length of the time interval. 
+  /// @return Reference to the vector. Size is Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> fq();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::fq().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> fq() const;
+
+  ///
+  /// @brief Derivative of the discrete-time state equation w.r.t. the 
+  /// velocity v w.r.t. the length of the time interval. 
+  /// @return Reference to the vector. Size is Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> fv();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::fv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> fv() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian w.r.t. the switching time. 
+  ///
+  double Qtt;
+
+  ///
+  /// @brief Derivative of the Hamiltonian w.r.t. the state. 
+  ///
+  Eigen::VectorXd hx;
+
+  ///
+  /// @brief Derivative of the Hamiltonian w.r.t. the configuration q. 
+  /// @return Reference to the vector. Size is Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> hq();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::hq().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> hq() const;
+
+  ///
+  /// @brief Derivative of the Hamiltonian w.r.t. the velocity v. 
+  /// @return Reference to the vector. Size is Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> hv();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::hv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> hv() const;
+
+  ///
+  /// @brief Derivative of the Hamiltonian w.r.t. the control input. 
+  ///
+  Eigen::VectorXd hu;
+
+  ///
   /// @brief Set the all components zero.
   ///
   void setZero();

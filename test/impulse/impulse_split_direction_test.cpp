@@ -21,7 +21,7 @@ protected:
   }
 
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_isApprox(const Robot& robot, const ImpulseStatus& impulse_status);
 
 };
 
@@ -79,7 +79,7 @@ void ImpulseSplitDirectionTest::test(const Robot& robot, const ImpulseStatus& im
 }
 
 
-void ImpulseSplitDirectionTest::testIsApprox(const Robot& robot, 
+void ImpulseSplitDirectionTest::test_isApprox(const Robot& robot, 
                                              const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
@@ -135,10 +135,10 @@ TEST_F(ImpulseSplitDirectionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 
@@ -147,13 +147,13 @@ TEST_F(ImpulseSplitDirectionTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 } // namespace idocp

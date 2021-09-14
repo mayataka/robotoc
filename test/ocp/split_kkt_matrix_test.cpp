@@ -21,7 +21,7 @@ protected:
   }
 
   static void test(const Robot& robot, const ContactStatus& contact_status);
-  static void testIsApprox(const Robot& robot, const ContactStatus& contact_status);
+  static void test_isApprox(const Robot& robot, const ContactStatus& contact_status);
 
   double dt;
 };
@@ -112,7 +112,7 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
 }
 
 
-void SplitKKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status) {
+void SplitKKTMatrixTest::test_isApprox(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTMatrix kkt_mat(robot);
   kkt_mat.setContactStatus(contact_status);
   const int dimv = robot.dimv();
@@ -160,6 +160,22 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& c
     kkt_mat_ref.Qqf() = kkt_mat.Qqf();
     EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   }
+  kkt_mat_ref.fx.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.fx = kkt_mat.fx;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qtt = Eigen::VectorXd::Random(1);
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qtt = kkt_mat.Qtt;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.hx.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.hx = kkt_mat.hx;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.hu.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.hu = kkt_mat.hu;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 }
 
 
@@ -168,10 +184,10 @@ TEST_F(SplitKKTMatrixTest, fixedBase) {
   auto contact_status = robot.createContactStatus();
   contact_status.deactivateContact(0);
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
   contact_status.activateContact(0);
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
 }
 
 
@@ -180,13 +196,13 @@ TEST_F(SplitKKTMatrixTest, floatingBase) {
   auto contact_status = robot.createContactStatus();
   contact_status.deactivateContacts();
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
 }
 
 } // namespace idocp

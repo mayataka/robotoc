@@ -16,7 +16,7 @@ protected:
     srand((unsigned int) time(0));
   }
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, 
+  static void test_isApprox(const Robot& robot, 
                            const ImpulseStatus& impulse_status);
 
   virtual void TearDown() {
@@ -68,7 +68,7 @@ void ImpulseSplitKKTResidualTest::test(const Robot& robot, const ImpulseStatus& 
 }
 
 
-void ImpulseSplitKKTResidualTest::testIsApprox(const Robot& robot, 
+void ImpulseSplitKKTResidualTest::test_isApprox(const Robot& robot, 
                                                const ImpulseStatus& impulse_status) {
   ImpulseSplitKKTResidual kkt_res(robot);
   kkt_res.setImpulseStatus(impulse_status);
@@ -108,10 +108,10 @@ TEST_F(ImpulseSplitKKTResidualTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 
@@ -120,13 +120,13 @@ TEST_F(ImpulseSplitKKTResidualTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 } // namespace idocp

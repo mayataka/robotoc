@@ -21,7 +21,7 @@ protected:
   }
 
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_isApprox(const Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
@@ -85,7 +85,7 @@ void ImpulseSplitKKTMatrixTest::test(const Robot& robot, const ImpulseStatus& im
 }
 
 
-void ImpulseSplitKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseSplitKKTMatrixTest::test_isApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
   ImpulseSplitKKTMatrix kkt_mat(robot);
   kkt_mat.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
@@ -133,10 +133,10 @@ TEST_F(ImpulseSplitKKTMatrixTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 
@@ -145,13 +145,13 @@ TEST_F(ImpulseSplitKKTMatrixTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 } // namespace idocp

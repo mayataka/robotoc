@@ -11,6 +11,7 @@ inline SplitKKTResidual::SplitKKTResidual(const Robot& robot)
     lx(Eigen::VectorXd::Zero(2*robot.dimv())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
     lu(Eigen::VectorXd::Zero(robot.dimu())),
+    h(0.0),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()),
@@ -23,6 +24,7 @@ inline SplitKKTResidual::SplitKKTResidual()
     lx(),
     la(),
     lu(),
+    h(0.0),
     lf_full_(),
     dimv_(0), 
     dimu_(0),
@@ -117,6 +119,7 @@ inline void SplitKKTResidual::setZero() {
   la.setZero();
   lu.setZero();
   lf().setZero();
+  h = 0.0;
 }
 
 
@@ -144,6 +147,10 @@ inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (dimf_ > 0) {
     if (!lf().isApprox(other.lf())) return false;
   }
+  Eigen::VectorXd vec(1), other_vec(1);
+  vec << h;
+  other_vec << other.h;
+  if (!vec.isApprox(other_vec)) return false;
   return true;
 }
 
@@ -155,6 +162,9 @@ inline bool SplitKKTResidual::hasNaN() const {
   if (la.hasNaN()) return true;
   if (lu.hasNaN()) return true;
   if (lf().hasNaN()) return true;
+  Eigen::VectorXd vec(1);
+  vec << h;
+  if (vec.hasNaN()) return true;
   return false;
 }
 
@@ -165,6 +175,7 @@ inline void SplitKKTResidual::setRandom() {
   la.setRandom();
   lu.setRandom();
   lf().setRandom();
+  h = Eigen::VectorXd::Random(1)[0];
 }
 
 

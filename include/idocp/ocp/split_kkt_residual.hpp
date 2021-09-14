@@ -148,6 +148,12 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
+  /// @brief KKT residual w.r.t. the switching time, that is, this is the value
+  /// of the Hamiltonian. 
+  ///
+  double h;
+
+  ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual. 
   /// @return The squared norm of the KKT residual.
