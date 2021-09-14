@@ -367,14 +367,15 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dt);
-      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i]);
+      const bool sto = false;
+      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index], sto);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
@@ -387,16 +388,18 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dt);
-      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i]);
+      const bool sto = false;
+      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index], sto);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
     }
     else {
       const double dti = ocp_ref.discrete().dt(i);
-      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i]);
+      const bool sto = false;
+      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
