@@ -82,8 +82,10 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
   dms.initConstraints(ocp, robots, contact_sequence, s);
   dms.computeKKTResidual(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   const double kkt_error = dms.KKTError(ocp, kkt_residual);
+  const double total_cost = dms.totalCost(ocp);
   auto robot_ref = robot;
   double kkt_error_ref = 0;
+  double total_cost_ref = 0;
   for (int i=0; i<ocp_ref.discrete().N(); ++i) {
     Eigen::VectorXd q_prev;
     if (i == 0 ) {
@@ -126,6 +128,9 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.impulse[impulse_index].KKTError(kkt_residual_ref.impulse[impulse_index]);
       kkt_error_ref += ocp_ref.aux[impulse_index].KKTError(kkt_residual_ref.aux[impulse_index], dt_aux);
+      total_cost_ref += ocp_ref[i].stageCost();
+      total_cost_ref += ocp_ref.impulse[impulse_index].stageCost();
+      total_cost_ref += ocp_ref.aux[impulse_index].stageCost();
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -148,6 +153,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.lift[lift_index].KKTError(kkt_residual_ref.lift[lift_index], dt_lift);
+      total_cost_ref += ocp_ref[i].stageCost();
+      total_cost_ref += ocp_ref.lift[lift_index].stageCost();
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -165,6 +172,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           kkt_residual_ref.switching[impulse_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += kkt_residual_ref.switching[impulse_index].KKTError();
+      total_cost_ref += ocp_ref[i].stageCost();
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -175,6 +183,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
+      total_cost_ref += ocp_ref[i].stageCost();
     }
   }
   ocp_ref.terminal.computeKKTResidual(robot_ref, t+T, s[ocp_ref.discrete().N()-1].q, 
@@ -182,6 +191,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
                                       kkt_matrix_ref[ocp_ref.discrete().N()], 
                                       kkt_residual_ref[ocp_ref.discrete().N()]);
   kkt_error_ref += ocp_ref.terminal.KKTError(kkt_residual_ref[ocp_ref.discrete().N()]);
+  total_cost_ref += ocp_ref.terminal.terminalCost();
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
@@ -189,6 +199,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual_ref));
   EXPECT_DOUBLE_EQ(kkt_error, std::sqrt(kkt_error_ref));
+  EXPECT_DOUBLE_EQ(total_cost, total_cost_ref);
 }
 
 

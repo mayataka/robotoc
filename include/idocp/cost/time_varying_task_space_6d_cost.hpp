@@ -59,8 +59,7 @@ public:
   /// @param[in] t Time.
   /// @param[in] SE3_ref Reference placement.
   ///
-  virtual void update_SE3_ref(const double t, 
-                              pinocchio::SE3& SE3_ref) const = 0;
+  virtual void update_SE3_ref(const double t, SE3& SE3_ref) const = 0;
 
   ///
   /// @brief Checks wheather the cost is active or not at the specified time. 

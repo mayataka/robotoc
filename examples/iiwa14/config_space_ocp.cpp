@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.setSolution("v", v);
   const int num_iteration = 30;
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
+  idocp::benchmark::convergence(ocp_solver, t, q, v, num_iteration, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf);

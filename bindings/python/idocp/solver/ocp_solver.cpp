@@ -36,6 +36,7 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("t"), py::arg("extrapolate_solution")=false)
     .def("compute_KKT_residual", &OCPSolver::computeKKTResidual)
     .def("KKT_error", &OCPSolver::KKTError)
+    .def("cost", &OCPSolver::cost)
     .def("is_formulation_tractable", &OCPSolver::isFormulationTractable)
     .def("show_info", &OCPSolver::showInfo);
 }

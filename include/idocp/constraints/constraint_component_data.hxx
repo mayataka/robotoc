@@ -59,6 +59,14 @@ inline ConstraintComponentData::~ConstraintComponentData() {
 }
 
 
+inline void ConstraintComponentData::copySlackAndDual(
+    const ConstraintComponentData& other) {
+  assert(dimc() == other.dimc());
+  slack = other.slack;
+  dual = other.dual;
+}
+
+
 inline double ConstraintComponentData::KKTError() const {
   return (residual.squaredNorm() + cmpl.squaredNorm());
 }

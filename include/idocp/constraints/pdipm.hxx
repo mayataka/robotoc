@@ -10,7 +10,7 @@
 namespace idocp {
 namespace pdipm {
 
-inline void SetSlackAndDualPositive(const double barrier, 
+inline void setSlackAndDualPositive(const double barrier, 
                                     ConstraintComponentData& data) {
   assert(barrier > 0);
   assert(data.checkDimensionalConsistency());
@@ -24,7 +24,7 @@ inline void SetSlackAndDualPositive(const double barrier,
 }
 
 
-inline void ComputeComplementarySlackness(const double barrier, 
+inline void computeComplementarySlackness(const double barrier, 
                                           ConstraintComponentData& data) {
   assert(barrier > 0);
   assert(data.checkDimensionalConsistency());
@@ -32,7 +32,7 @@ inline void ComputeComplementarySlackness(const double barrier,
 }
 
 
-inline void ComputeComplementarySlackness(const double barrier, 
+inline void computeComplementarySlackness(const double barrier, 
                                           ConstraintComponentData& data,
                                           const int start, const int size) {
   assert(barrier > 0);
@@ -44,7 +44,7 @@ inline void ComputeComplementarySlackness(const double barrier,
 
 
 template <int Size>
-inline void ComputeComplementarySlackness(const double barrier, 
+inline void computeComplementarySlackness(const double barrier, 
                                           ConstraintComponentData& data,
                                           const int start) {
   assert(barrier > 0);
@@ -55,7 +55,7 @@ inline void ComputeComplementarySlackness(const double barrier,
 }
 
 
-inline double ComputeComplementarySlackness(const double barrier, 
+inline double computeComplementarySlackness(const double barrier, 
                                             const double slack, 
                                             const double dual) {
   assert(barrier > 0);
@@ -63,14 +63,14 @@ inline double ComputeComplementarySlackness(const double barrier,
 }
 
 
-inline void ComputeCondensingCoeffcient(ConstraintComponentData& data) {
+inline void computeCondensingCoeffcient(ConstraintComponentData& data) {
   assert(data.checkDimensionalConsistency());
   data.cond.array() = (data.dual.array()*data.residual.array()-data.cmpl.array()) 
                         / data.slack.array();
 }
 
 
-inline void ComputeCondensingCoeffcient(ConstraintComponentData& data,
+inline void computeCondensingCoeffcient(ConstraintComponentData& data,
                                         const int start, const int size) {
   assert(data.checkDimensionalConsistency());
   data.cond.segment(start, size).array() 
@@ -82,7 +82,7 @@ inline void ComputeCondensingCoeffcient(ConstraintComponentData& data,
 
 
 template <int Size>
-inline void ComputeCondensingCoeffcient(ConstraintComponentData& data,
+inline void computeCondensingCoeffcient(ConstraintComponentData& data,
                                         const int start) {
   assert(data.checkDimensionalConsistency());
   data.cond.template segment<Size>(start).array() 
@@ -93,32 +93,32 @@ inline void ComputeCondensingCoeffcient(ConstraintComponentData& data,
 }
 
 
-inline double ComputeCondensingCoeffcient(const double slack, const double dual,
+inline double computeCondensingCoeffcient(const double slack, const double dual,
                                           const double residual, 
                                           const double cmpl) {
   return ((dual*residual-cmpl)/slack);
 }
 
 
-inline double FractionToBoundarySlack(const double fraction_rate, 
+inline double fractionToBoundarySlack(const double fraction_rate, 
                                       const ConstraintComponentData& data) {
   assert(fraction_rate > 0);
   assert(fraction_rate <= 1);
   assert(data.checkDimensionalConsistency());
-  return FractionToBoundary(data.dimc(), fraction_rate, data.slack, data.dslack);
+  return fractionToBoundary(data.dimc(), fraction_rate, data.slack, data.dslack);
 }
 
 
-inline double FractionToBoundaryDual(const double fraction_rate, 
+inline double fractionToBoundaryDual(const double fraction_rate, 
                                      const ConstraintComponentData& data) {
   assert(fraction_rate > 0);
   assert(fraction_rate <= 1);
   assert(data.checkDimensionalConsistency());
-  return FractionToBoundary(data.dimc(), fraction_rate, data.dual, data.ddual);
+  return fractionToBoundary(data.dimc(), fraction_rate, data.dual, data.ddual);
 }
 
 
-inline double FractionToBoundary(const int dim, const double fraction_rate, 
+inline double fractionToBoundary(const int dim, const double fraction_rate, 
                                  const Eigen::VectorXd& vec, 
                                  const Eigen::VectorXd& dvec) {
   assert(dim > 0);
@@ -142,7 +142,7 @@ inline double FractionToBoundary(const int dim, const double fraction_rate,
 }
 
 
-inline double FractionToBoundary(const double fraction_rate, 
+inline double fractionToBoundary(const double fraction_rate, 
                                  const double var, const double dvar) {
   assert(fraction_rate > 0);
   assert(fraction_rate <= 1);
@@ -156,7 +156,7 @@ inline double FractionToBoundary(const double fraction_rate,
 }
 
 
-inline void ComputeDualDirection(ConstraintComponentData& data) {
+inline void computeDualDirection(ConstraintComponentData& data) {
   assert(data.checkDimensionalConsistency());
   data.ddual.array() 
       = - (data.dual.array()*data.dslack.array()+data.cmpl.array())
@@ -164,7 +164,7 @@ inline void ComputeDualDirection(ConstraintComponentData& data) {
 }
 
 
-inline void ComputeDualDirection(ConstraintComponentData& data, 
+inline void computeDualDirection(ConstraintComponentData& data, 
                                  const int start, const int size) {
   data.ddual.segment(start, size).array() 
       = - (data.dual.segment(start, size).array()
@@ -175,7 +175,7 @@ inline void ComputeDualDirection(ConstraintComponentData& data,
 
 
 template <int Size>
-inline void ComputeDualDirection(ConstraintComponentData& data, 
+inline void computeDualDirection(ConstraintComponentData& data, 
                                  const int start) {
   data.ddual.template segment<Size>(start).array() 
       = - (data.dual.template segment<Size>(start).array()
@@ -185,14 +185,14 @@ inline void ComputeDualDirection(ConstraintComponentData& data,
 }
 
 
-inline double ComputeDualDirection(const double slack, const double dual,
+inline double computeDualDirection(const double slack, const double dual,
                                    const double dslack, const double cmpl) {
   return (- (dual * dslack + cmpl) / slack);
 }
 
 
 template <typename VectorType>
-inline double LogBarrier(const double barrier, 
+inline double logBarrier(const double barrier, 
                           const Eigen::MatrixBase<VectorType>& vec) {
   assert(barrier > 0);
   assert(vec.array().minCoeff() > 0);

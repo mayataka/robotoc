@@ -70,6 +70,12 @@ public:
   bool isImpulseLevelValid() const;
 
   ///
+  /// @brief Copies the slack and dual variables from another constraint data.
+  /// @param[in] other Another constraint data. 
+  ///
+  void copySlackAndDual(const ConstraintsData& other);
+
+  ///
   /// @brief Returns the sum of the squared norm of the KKT error 
   /// (primal residual and complementary slackness) of all the constraints. 
   /// @return true if the impulse-level constraints are valid. false otherwise. 

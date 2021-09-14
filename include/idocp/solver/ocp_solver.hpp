@@ -195,10 +195,18 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// OCPsolver::computeKKTResidual() must be computed.  
+  /// OCPsolver::computeKKTResidual() must be called.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();
+
+  ///
+  /// @brief Returns the value of the cost function.
+  /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
+  /// called.  
+  /// @return The value of the cost function.
+  ///
+  double cost() const;
 
   ///
   /// @return true if the current solution is feasible subject to the 

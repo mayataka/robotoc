@@ -87,6 +87,19 @@ public:
                        const SplitSolution& s);
 
   ///
+  /// @brief Initializes the constraints, i.e., copies the slack and dual 
+  /// variables from another time stage. 
+  /// @param[in] other Split optimal control problem at another time stage.
+  ///
+  void initConstraints(const SplitOCP& other);
+
+  ///
+  /// @brief Gets the const reference to the constraints data. 
+  /// @return const reference to the constraints data. 
+  ///
+  const ConstraintsData& getConstraintsData() const;
+
+  ///
   /// @brief Computes the stage cost and constraint violation.
   /// Used in the line search.
   /// @param[in] robot Robot model. 

@@ -5,19 +5,52 @@
 #include "idocp/constraints/pdipm.hpp"
 
 #include <cassert>
+#include <stdexcept>
+#include <iostream>
 
 
 namespace idocp {
 
+inline ImpulseConstraintComponentBase::ImpulseConstraintComponentBase(
+    const double barrier, const double fraction_to_boundary_rule) 
+  : barrier_(barrier),
+    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
+    try {
+    if (barrier <= 0) {
+      throw std::out_of_range(
+          "invalid argment: barrirer must be positive");
+    }
+    if (fraction_to_boundary_rule <= 0) {
+      throw std::out_of_range(
+          "invalid argment: fraction_to_boundary_rule must be positive");
+    }
+    if (fraction_to_boundary_rule >= 1) {
+      throw std::out_of_range(
+          "invalid argment: fraction_to_boundary_rule must be less than 1");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+}
+
+
+inline ImpulseConstraintComponentBase::ImpulseConstraintComponentBase() 
+  : barrier_(0),
+    fraction_to_boundary_rule_(0) {
+}
+
+
 inline double ImpulseConstraintComponentBase::maxSlackStepSize(
     const ConstraintComponentData& data) const {
-  return pdipm::FractionToBoundarySlack(fraction_to_boundary_rule_, data);
+  return pdipm::fractionToBoundarySlack(fraction_to_boundary_rule_, data);
 }
 
 
 inline double ImpulseConstraintComponentBase::maxDualStepSize(
     const ConstraintComponentData& data) const {
-  return pdipm::FractionToBoundaryDual(fraction_to_boundary_rule_, data);
+  return pdipm::fractionToBoundaryDual(fraction_to_boundary_rule_, data);
 }
 
 
@@ -60,77 +93,77 @@ inline void ImpulseConstraintComponentBase::setFractionToBoundaryRule(
 
 inline void ImpulseConstraintComponentBase::setSlackAndDualPositive(
     ConstraintComponentData& data) const {
-  pdipm::SetSlackAndDualPositive(barrier_, data);
+  pdipm::setSlackAndDualPositive(barrier_, data);
 }
 
 
 inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data) const {
-  pdipm::ComputeComplementarySlackness(barrier_, data);
+  pdipm::computeComplementarySlackness(barrier_, data);
 }
 
 
 inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data, const int start, const int size) const {
-  pdipm::ComputeComplementarySlackness(barrier_, data, start, size);
+  pdipm::computeComplementarySlackness(barrier_, data, start, size);
 }
 
 
 template <int Size>
 inline void ImpulseConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data, const int start) const {
-  pdipm::ComputeComplementarySlackness<Size>(barrier_, data, start);
+  pdipm::computeComplementarySlackness<Size>(barrier_, data, start);
 }
 
 
 inline double ImpulseConstraintComponentBase::computeComplementarySlackness(
     const double slack, const double dual) const {
-  return pdipm::ComputeComplementarySlackness(barrier_, slack, dual);
+  return pdipm::computeComplementarySlackness(barrier_, slack, dual);
 }
 
 
 inline void ImpulseConstraintComponentBase::computeCondensingCoeffcient(
     ConstraintComponentData& data) {
-  pdipm::ComputeCondensingCoeffcient(data);
+  pdipm::computeCondensingCoeffcient(data);
 }
 
 
 inline void ImpulseConstraintComponentBase::computeCondensingCoeffcient(
     ConstraintComponentData& data, const int start, const int size) {
-  pdipm::ComputeCondensingCoeffcient(data, start, size);
+  pdipm::computeCondensingCoeffcient(data, start, size);
 }
 
 
 template <int Size>
 inline void ImpulseConstraintComponentBase::computeCondensingCoeffcient(
     ConstraintComponentData& data, const int start) {
-  pdipm::ComputeCondensingCoeffcient<Size>(data, start);
+  pdipm::computeCondensingCoeffcient<Size>(data, start);
 }
 
 
 inline double ImpulseConstraintComponentBase::computeCondensingCoeffcient(
     const double slack, const double dual, const double residual, 
     const double cmpl) {
-  return pdipm::ComputeCondensingCoeffcient(slack, dual, residual, cmpl);
+  return pdipm::computeCondensingCoeffcient(slack, dual, residual, cmpl);
 }
 
 
 inline void ImpulseConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data) {
-  pdipm::ComputeDualDirection(data);
+  pdipm::computeDualDirection(data);
 }
 
 
 inline void ImpulseConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data, const int start, const int size) {
-  pdipm::ComputeDualDirection(data, start, size);
+  pdipm::computeDualDirection(data, start, size);
 }
 
 
 template <int Size>
 inline void ImpulseConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data, const int start) {
-  pdipm::ComputeDualDirection<Size>(data, start);
+  pdipm::computeDualDirection<Size>(data, start);
 }
 
 
@@ -144,7 +177,7 @@ inline double ImpulseConstraintComponentBase::computeDualDirection(
 template <typename VectorType>
 inline double ImpulseConstraintComponentBase::logBarrier(
     const Eigen::MatrixBase<VectorType>& slack) const {
-  return pdipm::LogBarrier(barrier_, slack);
+  return pdipm::logBarrier(barrier_, slack);
 }
 
 } // namespace idocp

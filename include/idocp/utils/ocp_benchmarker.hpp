@@ -10,7 +10,7 @@
 
 
 namespace idocp {
-namespace ocpbenchmarker {
+namespace benchmark {
 
 template <typename OCPSolverType>
 void CPUTime(OCPSolverType& ocp_solver, const double t, 
@@ -28,7 +28,7 @@ void Convergence(OCPSolverType& ocp_solver, Logger& logger,
                  const Eigen::VectorXd& v, const int num_iteration=10, 
                  const bool line_search=false);
 
-} // namespace ocpbenchmarker
+} // namespace benchmark
 } // namespace idocp 
 
 #include "idocp/utils/ocp_benchmarker.hxx"

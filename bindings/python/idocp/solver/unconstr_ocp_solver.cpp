@@ -26,7 +26,8 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
     .def("get_solution", static_cast<std::vector<Eigen::VectorXd> (UnconstrOCPSolver::*)(const std::string&) const>(&UnconstrOCPSolver::getSolution))
     .def("set_solution", &UnconstrOCPSolver::setSolution)
     .def("compute_KKT_residual", &UnconstrOCPSolver::computeKKTResidual)
-    .def("KKT_error", &UnconstrOCPSolver::KKTError);
+    .def("KKT_error", &UnconstrOCPSolver::KKTError)
+    .def("cost", &UnconstrOCPSolver::cost);
 }
 
 } // namespace python

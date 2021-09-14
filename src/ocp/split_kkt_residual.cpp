@@ -1,1 +1,0 @@
-#include "idocp/ocp/split_kkt_residual.hpp"

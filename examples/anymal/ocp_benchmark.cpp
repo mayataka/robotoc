@@ -123,8 +123,8 @@ int main () {
 
   ocp_solver.initConstraints(t);
 
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 10, false);
-  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 10000, false);
+  idocp::benchmark::convergence(ocp_solver, t, q, v, 10, false);
+  idocp::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
   // robot.printRobotModel();
 
