@@ -122,12 +122,15 @@ public:
   /// @param[in] lqr_policy LQR policy of this stage. 
   /// @param[in] d Split direction of this stage. 
   /// @param[in, out] d_next Split direction of the next stage. 
+  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
+  /// considered. If false, it is not considered.
   ///
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
                                const LQRPolicy& lqr_policy, SplitDirection& d, 
-                               SplitDirectionType& d_next) const;
+                               SplitDirectionType& d_next, 
+                               const bool sto=false) const;
 
   ///
   /// @brief Performs the forward Riccati recursion and computes the state 

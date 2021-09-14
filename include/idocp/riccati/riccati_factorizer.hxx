@@ -104,13 +104,19 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const LQRPolicy& lqr_policy, SplitDirection& d, 
-    SplitDirectionType& d_next) const {
+    const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirectionType& d_next, 
+    const bool sto) const {
   d.du.noalias()  = lqr_policy.K * d.dx;
   d.du.noalias() += lqr_policy.k;
+  if (sto) {
+    d.du.noalias() += lqr_policy.T * d.dts;
+  }
   d_next.dx = kkt_residual.Fx;
-  d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;
+  d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
   d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
+  if (sto) {
+    d_next.dx.noalias() += kkt_matrix.fx * d.dts;
+  }
 }
 
 
@@ -129,7 +135,7 @@ inline void RiccatiFactorizer::computeCostateDirection(
     const bool sto) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
   if (sto) {
-    // d.dlmdgmm.noalias() += riccati.Gmm * d.dts;
+    d.dlmdgmm.noalias() += riccati.Gmm * d.dts;
   }
 }
 
@@ -140,7 +146,7 @@ inline void RiccatiFactorizer::computeLagrangeMultiplierDirection(
   d.dxi().noalias()  = c_riccati.M() * d.dx;
   d.dxi().noalias() += c_riccati.m();
   if (sto) {
-    // d.dxi().noalias() += c_riccati.L() * d.dts;
+    d.dxi().noalias() += c_riccati.mt() * d.dts;
   }
 }
 

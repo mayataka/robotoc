@@ -12,6 +12,7 @@ namespace idocp {
 inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot) 
   : dx(Eigen::VectorXd::Zero(2*robot.dimv())),
     dlmdgmm(Eigen::VectorXd::Zero(2*robot.dimv())),
+    dts(0.0),
     ddvf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -22,6 +23,7 @@ inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot)
 inline ImpulseSplitDirection::ImpulseSplitDirection() 
   : dx(),
     dlmdgmm(),
+    dts(0.0),
     ddvf_full_(),
     dbetamu_full_(),
     dimv_(0), 
