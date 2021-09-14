@@ -97,7 +97,7 @@ public:
   /// @brief Gets the const reference to the constraints data. 
   /// @return const reference to the constraints data. 
   ///
-  const ConstraintsData& getConstraintsData() const;
+  const ConstraintsData& constraintsData() const;
 
   ///
   /// @brief Computes the stage cost and constraint violation.
