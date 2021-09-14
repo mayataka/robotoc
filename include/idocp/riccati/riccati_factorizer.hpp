@@ -15,6 +15,7 @@
 #include "idocp/ocp/split_switching_constraint_residual.hpp"
 #include "idocp/riccati/split_riccati_factorization.hpp"
 #include "idocp/riccati/lqr_policy.hpp"
+#include "idocp/riccati/sto_policy.hpp"
 #include "idocp/riccati/backward_riccati_recursion_factorizer.hpp"
 #include "idocp/riccati/split_constrained_riccati_factorization.hpp"
 

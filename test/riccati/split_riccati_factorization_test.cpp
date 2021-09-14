@@ -41,6 +41,8 @@ void RiccatiFactorizationTest::test(const Robot& robot) {
   EXPECT_EQ(riccati.Pvv().cols(), dimv);
   EXPECT_EQ(riccati.sq().size(), dimv);
   EXPECT_EQ(riccati.sv().size(), dimv);
+  EXPECT_EQ(riccati.Gmm.size(), dimx);
+  EXPECT_EQ(riccati.Gmm_cvx.size(), dimx);
 }
 
 
