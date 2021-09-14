@@ -253,10 +253,15 @@ public:
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
   /// direction of the condensed primal variables of this stage.
+  /// @param[in] dt Time step of this time stage. This is used only when sto is 
+  /// true.
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] d Split direction of this time stage.
+  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
+  /// considered. If false, it is not considered. 
   /// 
-  void expandPrimal(const SplitSolution& s, SplitDirection& d);
+  void expandPrimal(const double dt, const SplitSolution& s, 
+                    SplitDirection& d, const bool sto);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
@@ -264,10 +269,12 @@ public:
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
+  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
+  /// considered. If false, it is not considered. 
   /// 
   template <typename SplitDirectionType>
   void expandDual(const double dt, const SplitDirectionType& d_next, 
-                  SplitDirection& d);
+                  SplitDirection& d, const bool sto);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

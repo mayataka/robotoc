@@ -84,6 +84,9 @@ inline void StateEquation::linearizeStateEquation(
   kkt_matrix.Fqv().diagonal().fill(dt);
   kkt_residual.lv().noalias() += dt * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la.noalias() += dt * s_next.gmm;
+  // linearize Hamiltonian
+  kkt_residual.h += s_next.lmd.dot(s.v);
+  kkt_residual.h += s_next.gmm.dot(s.a);
 }
 
 
@@ -105,6 +108,14 @@ inline void StateEquation::linearizeStateEquationAlongLieGroup(
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
     kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * Fqq_inv_;
     kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
+  }
+  // linearize the Hamiltonian derivatives
+  kkt_matrix.hv().noalias() += s_next.lmd;
+  kkt_matrix.fq() = s.v;
+  kkt_matrix.fv() = s.a;
+  if (robot.hasFloatingBase()) {
+    Fq_tmp_.template head<6>() = kkt_matrix.fq().template head<6>();
+    kkt_matrix.fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
   }
 }
 

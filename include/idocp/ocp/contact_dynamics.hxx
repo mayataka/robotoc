@@ -75,12 +75,16 @@ inline void ContactDynamics::linearizeContactDynamics(
         += dt * data_.dCdv().transpose() * s.mu_stack();
     kkt_residual.la.noalias() += dt * data_.dCda().transpose() * s.mu_stack();
   }
+  // linearize Hamiltonian
+  kkt_residual.h += s.beta.dot(data_.ID_full());
+  kkt_residual.h += s.mu_stack().dot(data_.C());
 }
 
 
 inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dt,
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -158,6 +162,25 @@ inline void ContactDynamics::condenseContactDynamics(
           + Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvu = dt * data_.MJtJinv().block(0, dim_passive, dimv, dimu);
   kkt_residual.Fv().noalias() -= dt * data_.MJtJinv_IDC().head(dimv);
+
+  // linearize and condense the Hamiltonian derivatives
+  kkt_matrix.hq().noalias() += data_.dIDdq().transpose() * s.beta;
+  kkt_matrix.hv().noalias() += data_.dIDdv().transpose() * s.beta;
+  if (has_active_contacts_) {
+    kkt_matrix.hq().noalias() += data_.dCdq().transpose() * s.mu_stack();
+    kkt_matrix.hv().noalias() += data_.dCdv().transpose() * s.mu_stack();
+  }
+  kkt_matrix.hx.noalias() 
+      -= (1/dt) * data_.MJtJinv_dIDCdqv().transpose() * data_.laf();
+  kkt_matrix.hq().noalias()
+      += (1/dt) * kkt_matrix.Qqf() * data_.MJtJinv_IDC().tail(dimf);
+  kkt_matrix.hu = (1/dt) * kkt_residual.lu; 
+  kkt_matrix.fv().noalias() -= data_.MJtJinv_IDC().head(dimv);
+  const double ht = data_.MJtJinv_IDC().dot(data_.laf()) 
+                    + data_.MJtJinv_IDC().head(dimv).dot(kkt_residual.la)
+                    - data_.MJtJinv_IDC().tail(dimf).dot(kkt_residual.lf());
+  kkt_residual.h -= ht / dt;
+  kkt_matrix.Qtt -= ht / (dt*dt);
 }
 
 
@@ -166,6 +189,17 @@ inline void ContactDynamics::expandPrimal(SplitDirection& d) const {
   d.daf().noalias() 
       += data_.MJtJinv().middleCols(dim_passive_, dimu_) * d.du;
   d.daf().noalias() -= data_.MJtJinv_IDC();
+  d.df().array()    *= -1;
+}
+
+
+inline void ContactDynamics::expandPrimal(const double dt, const double dts, 
+                                          SplitDirection& d) const {
+  assert(dt > 0);
+  d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx;
+  d.daf().noalias() 
+      += data_.MJtJinv().middleCols(dim_passive_, dimu_) * d.du;
+  d.daf().noalias() -= (1+(dts/dt)) * data_.MJtJinv_IDC();
   d.df().array()    *= -1;
 }
 
@@ -191,15 +225,45 @@ inline void ContactDynamics::expandDual(const double dt,
 }
 
 
+template <typename SplitDirectionType>
+inline void ContactDynamics::expandDual(const double dt, const double dts,
+                                        const SplitDirectionType& d_next, 
+                                        SplitDirection& d) {
+  assert(dt > 0);
+  if (has_floating_base_) {
+    d.dnu_passive            = (1+(dts/dt)) * data_.lu_passive;
+    d.dnu_passive.noalias() += data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() += data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive.noalias() 
+        += dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+              * d_next.dgmm();
+    d.dnu_passive.array() *= - (1/dt);
+  }
+  data_.laf().array()   *= (1+(dts/dt));
+  data_.laf().noalias() += data_.Qafqv() * d.dx;
+  data_.laf().noalias() += data_.Qafu() * d.du;
+  data_.la().noalias()  += dt * d_next.dgmm();
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf() * (1/dt);
+}
+
+
 inline void ContactDynamics::condenseSwitchingConstraint(
     SplitSwitchingConstraintJacobian& sc_jacobian,
-    SplitSwitchingConstraintResidual& sc_residual) const {
+    SplitSwitchingConstraintResidual& sc_residual,
+    SplitKKTMatrix& kkt_matrix) const {
   sc_jacobian.Phix().noalias() 
       -= sc_jacobian.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);
   sc_jacobian.Phiu().noalias()  
       = sc_jacobian.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
   sc_residual.P().noalias() 
       -= sc_jacobian.Phia() * data_.MJtJinv_IDC().topRows(dimv_);
+  // condense Hamiltonian derivatives
+  kkt_matrix.hx.noalias() 
+      -= data_.MJtJinv_dIDCdqv().topRows(dimv_).transpose() 
+            * sc_residual.dq;
+  kkt_matrix.hu.noalias() 
+       = data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_).transpose() 
+            * sc_residual.dq;
 }
 
 

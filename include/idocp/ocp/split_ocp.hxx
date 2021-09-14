@@ -110,6 +110,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   constraints_->linearizeConstraints(robot, constraints_data_, dt, s, 
                                      kkt_residual);
   stage_cost_ += dt * constraints_data_.logBarrier();
+  kkt_residual.h += (1/dt) * stage_cost_;
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
@@ -133,8 +134,9 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   computeKKTResidual(robot, contact_status, t, dt, q_prev, s, s_next,
                      kkt_matrix, kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
-                                                    dt_next, s, kkt_residual, 
-                                                    sc_jacobian, sc_residual);
+                                                    dt_next, s, kkt_matrix, 
+                                                    kkt_residual, sc_jacobian, 
+                                                    sc_residual);
 }
 
 
@@ -159,11 +161,13 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   stage_cost_ += dt * constraints_data_.logBarrier();
+  kkt_residual.h += (1/dt) * stage_cost_;
+  kkt_matrix.hx = (1/dt) * kkt_residual.lx;
   state_equation_.linearizeStateEquationAlongLieGroup(robot, dt, q_prev, s, s_next, 
                                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
                                              kkt_residual);
-  contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
+  contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, s, 
                                             kkt_matrix, kkt_residual);
 }
 
@@ -193,16 +197,20 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   stage_cost_ += dt * constraints_data_.logBarrier();
+  kkt_residual.h += (1/dt) * stage_cost_;
+  kkt_matrix.hx = (1/dt) * kkt_residual.lx;
   state_equation_.linearizeStateEquationAlongLieGroup(robot, dt, q_prev, s, s_next, 
                                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
                                              kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
-                                                    dt_next, s, kkt_residual, 
-                                                    sc_jacobian, sc_residual);
-  contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
+                                                    dt_next, s, kkt_matrix, 
+                                                    kkt_residual, sc_jacobian, 
+                                                    sc_residual);
+  contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, s,
                                             kkt_matrix, kkt_residual);
-  contact_dynamics_.condenseSwitchingConstraint(sc_jacobian, sc_residual);
+  contact_dynamics_.condenseSwitchingConstraint(sc_jacobian, sc_residual, 
+                                                kkt_matrix);
 }
 
 
@@ -215,19 +223,32 @@ inline void SplitOCP::computeInitialStateDirection(const Robot& robot,
 }
 
 
-inline void SplitOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
+inline void SplitOCP::expandPrimal(const double dt, const SplitSolution& s, 
+                                   SplitDirection& d, const bool sto) {
   d.setContactStatusByDimension(s.dimf());
-  contact_dynamics_.expandPrimal(d);
-  constraints_->expandSlackAndDual(constraints_data_, s, d);
+  if (sto) {
+    assert(dt > 0);
+    contact_dynamics_.expandPrimal(dt, d.dts, d);
+    constraints_->expandSlackAndDual(constraints_data_, dt, d.dts, s, d);
+  }
+  else {
+    contact_dynamics_.expandPrimal(d);
+    constraints_->expandSlackAndDual(constraints_data_, s, d);
+  }
 }
 
 
 template <typename SplitDirectionType>
 inline void SplitOCP::expandDual(const double dt, 
                                  const SplitDirectionType& d_next, 
-                                 SplitDirection& d) {
+                                 SplitDirection& d, const bool sto) {
   assert(dt > 0);
-  contact_dynamics_.expandDual(dt, d_next, d);
+  if (sto) {
+    contact_dynamics_.expandDual(dt, d.dts, d_next, d);
+  }
+  else {
+    contact_dynamics_.expandDual(dt, d_next, d);
+  }
   state_equation_.correctCostateDirection(d);
 }
 

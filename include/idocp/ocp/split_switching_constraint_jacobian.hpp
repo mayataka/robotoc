@@ -139,6 +139,18 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Phiu() const;
 
   ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. the switching time. 
+  /// @return Reference to the time Jacobian vector. 
+  /// Size is ImpulseStatus::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> Phit();
+
+  ///
+  /// @brief const version of SplitSwitchingConstraintJacobian::Phit().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Phit() const;
+
+  ///
   /// @brief Set the all components zero.
   ///
   void setZero();
@@ -165,6 +177,7 @@ public:
 
 private:
   Eigen::MatrixXd Pq_full_, Phix_full_, Phia_full_, Phiu_full_;
+  Eigen::VectorXd Phit_full_;
   bool has_floating_base_;
   int dimv_, dimx_, dimu_, dimi_;
 

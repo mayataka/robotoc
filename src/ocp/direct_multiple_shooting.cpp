@@ -121,12 +121,27 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
       kkt_error_.coeffRef(i) 
           = ocp.aux[impulse_index].KKTError(kkt_residual.aux[impulse_index], 
                                             ocp.discrete().dt_aux(impulse_index));
+      const int time_stage_before_impulse 
+          = ocp.discrete().timeStageBeforeImpulse(impulse_index);
+      if (ocp.discrete().isSTOEnabledImpulse(impulse_index)) {
+        const double hdiff = kkt_residual[time_stage_before_impulse-1].h 
+                              + kkt_residual[time_stage_before_impulse].h 
+                              - kkt_residual.aux[impulse_index].h;
+        kkt_error_.coeffRef(i) += hdiff*hdiff;
+      }
     }
     else if (i < N+1+2*N_impulse+N_lift) {
       const int lift_index = i - (N+1+2*N_impulse);
       kkt_error_.coeffRef(i) 
           = ocp.lift[lift_index].KKTError(kkt_residual.lift[lift_index], 
                                           ocp.discrete().dt_lift(lift_index));
+      const int time_stage_before_lift
+          = ocp.discrete().timeStageBeforeLift(lift_index);
+      if (ocp.discrete().isSTOEnabledLift(lift_index)) {
+        const double hdiff = kkt_residual[time_stage_before_lift].h 
+                              - kkt_residual.lift[lift_index].h;
+        kkt_error_.coeffRef(i) += hdiff*hdiff;
+      }
     }
     else {
       const int impulse_index = i - (N+1+2*N_impulse+N_lift);
@@ -175,17 +190,18 @@ void DirectMultipleShooting::integrateSolution(
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
-        ocp[i].expandDual(
-            ocp.discrete().dt(i), 
-            d.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], d[i]);
+        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
+        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+        ocp[i].expandDual(ocp.discrete().dt(i), d.impulse[impulse_index], d[i], sto);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
-        ocp[i].expandDual(
-            ocp.discrete().dt(i), 
-            d.lift[ocp.discrete().liftIndexAfterTimeStage(i)], d[i]);
+        const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
+        const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
+        ocp[i].expandDual(ocp.discrete().dt(i), d.lift[lift_index], d[i], sto);
       }
       else {
-        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i]);
+        constexpr bool sto = false;
+        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i], sto);
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                           d[i], s[i]);
@@ -209,10 +225,11 @@ void DirectMultipleShooting::integrateSolution(
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       ocp.aux[impulse_index].expandDual(
           ocp.discrete().dt_aux(impulse_index), 
           d[ocp.discrete().timeStageAfterImpulse(impulse_index)], 
-          d.aux[impulse_index]);
+          d.aux[impulse_index], sto);
       ocp.aux[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                           primal_step_size, 
                                           d.aux[impulse_index], 
@@ -221,12 +238,14 @@ void DirectMultipleShooting::integrateSolution(
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       ocp.lift[lift_index].expandDual(
           ocp.discrete().dt_lift(lift_index), 
-          d[ocp.discrete().timeStageAfterLift(lift_index)], d.lift[lift_index]);
+          d[ocp.discrete().timeStageAfterLift(lift_index)], 
+          d.lift[lift_index], sto);
       ocp.lift[lift_index].updatePrimal(robots[omp_get_thread_num()], 
-                                        primal_step_size, 
-                                        d.lift[lift_index], s.lift[lift_index]);
+                                        primal_step_size, d.lift[lift_index], 
+                                        s.lift[lift_index]);
       ocp.lift[lift_index].updateDual(dual_step_size);
     }
   }

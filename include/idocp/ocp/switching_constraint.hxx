@@ -10,7 +10,8 @@ namespace switchingconstraint {
 
 inline void linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
-    const double dt2, const SplitSolution& s, SplitKKTResidual& kkt_residual, 
+    const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual, 
     SplitSwitchingConstraintJacobian& sc_jacobian,
     SplitSwitchingConstraintResidual& sc_residual) {
   assert(dt1 > 0);
@@ -37,6 +38,14 @@ inline void linearizeSwitchingConstraint(
   }
   kkt_residual.lx.noalias() += sc_jacobian.Phix().transpose() * s.xi_stack();
   kkt_residual.la.noalias() += sc_jacobian.Phia().transpose() * s.xi_stack();
+  // linearize Hamitonian 
+  sc_residual.dq = s.v + dt1 * s.a;
+  sc_jacobian.Phit().noalias() = sc_jacobian.Pq() * sc_residual.dq;
+  kkt_residual.h = s.xi_stack().dot(sc_jacobian.Phit());
+  kkt_matrix.hq().setZero();
+  kkt_matrix.hv().noalias() = sc_jacobian.Pq().transpose() * s.xi_stack();
+  kkt_matrix.hu.setZero();
+  sc_residual.dq.noalias() = dt1 * sc_jacobian.Pq().transpose() * s.xi_stack();
 }
 
 

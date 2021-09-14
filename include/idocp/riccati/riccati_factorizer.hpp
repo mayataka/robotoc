@@ -145,20 +145,25 @@ public:
   /// @brief Computes the Newton direction of the costate. 
   /// @param[in] riccati Riccati factorization of this impulse stage. 
   /// @param[in, out] d Split direction. 
+  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
+  /// considered. If false, it is not considered. Defalut is false.
   ///
   template <typename SplitDirectionType>
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
-                                      SplitDirectionType& d);
+                                      SplitDirectionType& d, 
+                                      const bool sto=false);
 
   ///
   /// @brief Computes the Newton direction of the Lagrange multiplier with 
   /// respect to the switching constraint. 
   /// @param[in] c_riccati Riccati factorization for the switching constraint.
   /// @param[in, out] d Split direction of the this stage. 
+  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
+  /// considered. If false, it is not considered. Defalut is false.
   ///
   static void computeLagrangeMultiplierDirection(
       const SplitConstrainedRiccatiFactorization& c_riccati,
-      SplitDirection& d);
+      SplitDirection& d, const bool sto=false);
 
 private:
   bool has_floating_base_;

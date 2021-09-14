@@ -125,17 +125,25 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
 
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::computeCostateDirection(
-    const SplitRiccatiFactorization& riccati, SplitDirectionType& d) {
+    const SplitRiccatiFactorization& riccati, SplitDirectionType& d,
+    const bool sto) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
+  if (sto) {
+    // d.dlmdgmm.noalias() += riccati.Gmm * d.dts;
+  }
 }
 
 
 inline void RiccatiFactorizer::computeLagrangeMultiplierDirection(
     const SplitConstrainedRiccatiFactorization& c_riccati, 
-    SplitDirection& d) {
+    SplitDirection& d, const bool sto) {
   d.dxi().noalias()  = c_riccati.M() * d.dx;
   d.dxi().noalias() += c_riccati.m();
+  if (sto) {
+    // d.dxi().noalias() += c_riccati.L() * d.dts;
+  }
 }
+
 
 } // namespace idocp
 

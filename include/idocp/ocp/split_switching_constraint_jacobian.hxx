@@ -14,6 +14,7 @@ inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian(
     Phix_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
     Phia_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Phiu_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimu())),
+    Phit_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
@@ -27,6 +28,7 @@ inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian()
     Phix_full_(),
     Phia_full_(),
     Phiu_full_(),
+    Phit_full_(),
     has_floating_base_(false),
     dimv_(0),
     dimx_(0),
@@ -116,11 +118,24 @@ inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phiu() {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+SplitSwitchingConstraintJacobian::Phit() {
+  return Phit_full_.head(dimi_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSwitchingConstraintJacobian::Phit() const {
+  return Phit_full_.head(dimi_);
+}
+
+
 inline void SplitSwitchingConstraintJacobian::setZero() {
   Pq().setZero();
   Phix().setZero();
   Phia().setZero();
   Phiu().setZero();
+  Phit().setZero();
 }
 
 
@@ -136,6 +151,7 @@ inline bool SplitSwitchingConstraintJacobian::isApprox(
   if (!Phix().isApprox(other.Phix())) return false;
   if (!Phia().isApprox(other.Phia())) return false;
   if (!Phiu().isApprox(other.Phiu())) return false;
+  if (!Phit().isApprox(other.Phit())) return false;
   return true;
 }
 
@@ -145,6 +161,7 @@ inline bool SplitSwitchingConstraintJacobian::hasNaN() const {
   if (Phix().hasNaN()) return true;
   if (Phia().hasNaN()) return true;
   if (Phiu().hasNaN()) return true;
+  if (Phit().hasNaN()) return true;
   return false;
 }
 
