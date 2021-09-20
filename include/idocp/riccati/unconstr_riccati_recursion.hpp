@@ -89,11 +89,13 @@ public:
   /// @brief Gets of the state feedback gain of the LQR subproblem of the 
   /// specified time stage. 
   /// @param[in] time_stage Time stage of interested. 
-  /// @param[in, out] Kq The state feedback gain with respect to the configuration. 
-  /// @param[in, out] Kv The state feedback gain with respect to the velocity. 
+  /// @param[in, out] da_dq The state feedback gain of the optimal joint 
+  /// acceleration w.r.t the joint configuration. 
+  /// @param[in, out] da_dv The state feedback gain of the optimal joint 
+  /// acceleration w.r.t the joint velocity. 
   ///
-  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& da_dq, 
+                            Eigen::MatrixXd& da_dv) const;
 
 private:
   int N_;

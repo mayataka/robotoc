@@ -114,18 +114,6 @@ public:
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
   ///
-  /// @brief Gets the state-feedback gain.
-  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
-  /// than N.
-  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
-  /// Size must be Robot::dimu() x Robot::dimv().
-  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
-  /// Size must be Robot::dimu() x Robot::dimv().
-  ///
-  void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
-
-  ///
   /// @brief Sets the solution over the horizon. 
   /// @param[in] name Name of the variable. 
   /// @param[in] value Value of the specified variable. 

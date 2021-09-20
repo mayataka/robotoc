@@ -60,13 +60,13 @@ void UnconstrRiccatiRecursion::forwardRiccatiRecursion(
 }
 
 
-void UnconstrRiccatiRecursion::getStateFeedbackGain(const int time_stage, 
-                                                    Eigen::MatrixXd& Kq, 
-                                                    Eigen::MatrixXd& Kv) const {
+void UnconstrRiccatiRecursion::getStateFeedbackGain(
+    const int time_stage, Eigen::MatrixXd& da_dq, 
+    Eigen::MatrixXd& dq_dv) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
-  Kq = lqr_policy_[time_stage].Kq();
-  Kv = lqr_policy_[time_stage].Kv();
+  da_dq = lqr_policy_[time_stage].Kq();
+  da_dv = lqr_policy_[time_stage].Kv();
 }
 
 } // namespace idocp

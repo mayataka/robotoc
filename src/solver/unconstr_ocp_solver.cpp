@@ -170,7 +170,7 @@ void UnconstrOCPSolver::getStateFeedbackGain(const int time_stage,
   assert(Kq.cols() == robots_[0].dimv());
   assert(Kv.rows() == robots_[0].dimv());
   assert(Kv.cols() == robots_[0].dimv());
-  // riccati_solver_.getStateFeedbackGain(time_stage, Kq, Kv);
+  riccati_solver_.getStateFeedbackGain(time_stage, Kq, Kv);
 }
 
 

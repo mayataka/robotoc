@@ -107,7 +107,8 @@ public:
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
   ///
-  /// @brief Gets the state-feedback gain.
+  /// @brief Gets the state-feedback gain of the optimal joint acceleration
+  /// w.r.t. the joint configuration and velocity.
   /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
   /// than N.
   /// @param[out] Kq The state-feedback gain with respec to the configuration. 

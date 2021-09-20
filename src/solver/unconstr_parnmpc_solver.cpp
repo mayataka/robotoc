@@ -138,19 +138,6 @@ std::vector<Eigen::VectorXd> UnconstrParNMPCSolver::getSolution(
 }
 
 
-void UnconstrParNMPCSolver::getStateFeedbackGain(const int time_stage, 
-                                                 Eigen::MatrixXd& Kq, 
-                                                 Eigen::MatrixXd& Kv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  assert(Kq.rows() == robots_[0].dimv());
-  assert(Kq.cols() == robots_[0].dimv());
-  assert(Kv.rows() == robots_[0].dimv());
-  assert(Kv.cols() == robots_[0].dimv());
-  // riccati_solver_.getStateFeedbackGain(time_stage, Kq, Kv);
-}
-
-
 void UnconstrParNMPCSolver::setSolution(const std::string& name, 
                                         const Eigen::VectorXd& value) {
   try {
