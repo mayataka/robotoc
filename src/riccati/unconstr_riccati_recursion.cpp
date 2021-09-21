@@ -62,7 +62,7 @@ void UnconstrRiccatiRecursion::forwardRiccatiRecursion(
 
 void UnconstrRiccatiRecursion::getStateFeedbackGain(
     const int time_stage, Eigen::MatrixXd& da_dq, 
-    Eigen::MatrixXd& dq_dv) const {
+    Eigen::MatrixXd& da_dv) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
   da_dq = lqr_policy_[time_stage].Kq();

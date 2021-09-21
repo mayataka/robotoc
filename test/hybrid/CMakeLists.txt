@@ -1,3 +1,4 @@
 add_idocp_test(discrete_event_test)
 add_idocp_test(contact_sequence_test)
 add_idocp_test(hybrid_time_discretization_test)
+add_idocp_test(dwell_time_lower_bound_test)

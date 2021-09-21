@@ -48,6 +48,8 @@ public:
 
   ///
   /// @brief Computes the cost on the switching times. 
+  /// @param[in] t0 Initial time of the horizon.
+  /// @param[in] tf Terminal time of the horizon.
   /// @param[in] ts Switching times.
   /// @return Cost on the switching times.
   ///
@@ -56,6 +58,8 @@ public:
 
   ///
   /// @brief Computes the derivative of the cost on the switching times. 
+  /// @param[in] t0 Initial time of the horizon.
+  /// @param[in] tf Terminal time of the horizon.
   /// @param[in] ts Switching times.
   /// @param[in] hts Derivative of the cost w.r.t. the switching times.
   ///
@@ -66,6 +70,8 @@ public:
   ///
   /// @brief Computes the twice-time derivative (Hessian) of the cost on the 
   /// switching times. 
+  /// @param[in] t0 Initial time of the horizon.
+  /// @param[in] tf Terminal time of the horizon.
   /// @param[in] ts Switching times.
   /// @param[in] Qts Hessian of the cost w.r.t. the switching times.
   ///
