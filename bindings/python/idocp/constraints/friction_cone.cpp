@@ -15,10 +15,6 @@ PYBIND11_MODULE(friction_cone, m) {
          py::arg("robot"), py::arg("mu"), py::arg("barrier")=1.0e-04,
          py::arg("fraction_to_boundary_rule")=0.995)
     .def("set_friction_coefficient", &FrictionCone::setFrictionCoefficient);
-
-  m.def("create_friction_cone", [](const Robot& robot, const double mu) {
-    return std::make_shared<FrictionCone>(robot, mu);
-  });
 }
 
 } // namespace python

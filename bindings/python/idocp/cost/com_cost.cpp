@@ -18,10 +18,6 @@ PYBIND11_MODULE(com_cost, m) {
     .def("set_q_weight", &CoMCost::set_q_weight)
     .def("set_qf_weight", &CoMCost::set_qf_weight)
     .def("set_qi_weight", &CoMCost::set_qi_weight);
-
-  m.def("create_com_cost", [](const Robot& robot) {
-    return std::make_shared<CoMCost>(robot);
-  });
 }
 
 } // namespace python

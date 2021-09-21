@@ -20,11 +20,6 @@ PYBIND11_MODULE(time_varying_configuration_space_cost, m) {
     .def("set_q_weight", &TimeVaryingConfigurationSpaceCost::set_q_weight)
     .def("set_qf_weight", &TimeVaryingConfigurationSpaceCost::set_qf_weight)
     .def("set_qi_weight", &TimeVaryingConfigurationSpaceCost::set_qi_weight);
-
-  m.def("create_time_varying_configuration_space_cost", [](const Robot& robot, 
-                                                           const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref) {
-    return std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, ref);
-  });
 }
 
 } // namespace python

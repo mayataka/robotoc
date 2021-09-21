@@ -18,10 +18,6 @@ PYBIND11_MODULE(task_space_6d_cost, m) {
     .def("set_q_weight", &TaskSpace6DCost::set_q_weight)
     .def("set_qf_weight", &TaskSpace6DCost::set_qf_weight)
     .def("set_qi_weight", &TaskSpace6DCost::set_qi_weight);
-
-  m.def("create_task_space_6d_cost", [](const Robot& robot, const int frame_id) {
-    return std::make_shared<TaskSpace6DCost>(robot, frame_id);
-  });
 }
 
 } // namespace python

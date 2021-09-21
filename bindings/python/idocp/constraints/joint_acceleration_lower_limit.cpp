@@ -16,11 +16,6 @@ PYBIND11_MODULE(joint_acceleration_lower_limit, m) {
     .def(py::init<const Robot&, const Eigen::VectorXd&, const double, const double>(),
          py::arg("robot"), py::arg("amin"), py::arg("barrier")=1.0e-04,
          py::arg("fraction_to_boundary_rule")=0.995);
-
-  m.def("create_joint_acceleration_lower_limit", [](const Robot& robot, 
-                                                    const Eigen::VectorXd& amin) {
-    return std::make_shared<JointAccelerationLowerLimit>(robot, amin);
-  });
 }
 
 } // namespace python

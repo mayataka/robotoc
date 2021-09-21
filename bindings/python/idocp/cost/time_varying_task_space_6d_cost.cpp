@@ -19,12 +19,6 @@ PYBIND11_MODULE(time_varying_task_space_6d_cost, m) {
     .def("set_q_weight", &TimeVaryingTaskSpace6DCost::set_q_weight)
     .def("set_qf_weight", &TimeVaryingTaskSpace6DCost::set_qf_weight)
     .def("set_qi_weight", &TimeVaryingTaskSpace6DCost::set_qi_weight);
-
-  m.def("create_time_varying_task_space_6d_cost", [](const Robot& robot, 
-                                                     const int frame_id,
-                                                     const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref) {
-    return std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
-  });
 }
 
 } // namespace python

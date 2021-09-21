@@ -13,10 +13,6 @@ PYBIND11_MODULE(cost_function, m) {
     .def(py::init<>())
     .def("push_back", &CostFunction::push_back)
     .def("clear", &CostFunction::clear);
-
-  m.def("create_cost_function", []() {
-    return std::make_shared<CostFunction>();
-  });
 }
 
 } // namespace python

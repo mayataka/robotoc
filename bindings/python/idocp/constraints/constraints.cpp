@@ -19,10 +19,6 @@ PYBIND11_MODULE(constraints, m) {
     .def("clear", &Constraints::clear)
     .def("set_barrier", &Constraints::setBarrier)
     .def("set_fraction_to_boundary_rule", &Constraints::setFractionToBoundaryRule);
-
-  m.def("create_constraints", []() {
-    return std::make_shared<Constraints>();
-  });
 }
 
 } // namespace python

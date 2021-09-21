@@ -20,11 +20,6 @@ PYBIND11_MODULE(time_varying_com_cost, m) {
     .def("set_q_weight", &TimeVaryingCoMCost::set_q_weight)
     .def("set_qf_weight", &TimeVaryingCoMCost::set_qf_weight)
     .def("set_qi_weight", &TimeVaryingCoMCost::set_qi_weight);
-
-  m.def("create_time_varying_com_cost", [](const Robot& robot, 
-                                           const std::shared_ptr<TimeVaryingCoMRefBase>& ref) {
-    return std::make_shared<TimeVaryingCoMCost>(robot, ref);
-  });
 }
 
 } // namespace python

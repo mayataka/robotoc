@@ -26,10 +26,6 @@ PYBIND11_MODULE(configuration_space_cost, m) {
     .def("set_qi_weight", &ConfigurationSpaceCost::set_qi_weight)
     .def("set_vi_weight", &ConfigurationSpaceCost::set_vi_weight)
     .def("set_dvi_weight", &ConfigurationSpaceCost::set_dvi_weight);
-
-  m.def("create_configuration_space_cost", [](const Robot& robot) {
-    return std::make_shared<ConfigurationSpaceCost>(robot);
-  });
 }
 
 } // namespace python
