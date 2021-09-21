@@ -107,6 +107,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       const double t_impulse = ocp_ref.discrete().t_impulse(impulse_index);
       const double dti = ocp_ref.discrete().dt(i);
       const double dt_aux = ocp_ref.discrete().dt_aux(impulse_index);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       ASSERT_TRUE(dti >= 0);
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
@@ -128,6 +129,16 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.impulse[impulse_index].KKTError(kkt_residual_ref.impulse[impulse_index]);
       kkt_error_ref += ocp_ref.aux[impulse_index].KKTError(kkt_residual_ref.aux[impulse_index], dt_aux);
+      if (sto) {
+        if (i >= 1) {
+          const double hdiff = kkt_residual_ref[i].h + kkt_residual_ref[i-1].h - kkt_residual_ref.aux[impulse_index].h;
+          kkt_error_ref += hdiff * hdiff;
+        }
+        else {
+          const double hdiff = kkt_residual_ref[i].h - kkt_residual_ref.aux[impulse_index].h;
+          kkt_error_ref += hdiff * hdiff;
+        }
+      }
       total_cost_ref += ocp_ref[i].stageCost();
       total_cost_ref += ocp_ref.impulse[impulse_index].stageCost();
       total_cost_ref += ocp_ref.aux[impulse_index].stageCost();
@@ -139,6 +150,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       const double t_lift = ocp_ref.discrete().t_lift(lift_index);
       const double dti = ocp_ref.discrete().dt(i);
       const double dt_lift = ocp_ref.discrete().dt_lift(lift_index);
+      const bool sto = ocp_ref.discrete().isSTOEnabledLift(lift_index);
       ASSERT_TRUE(dti >= 0);
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
@@ -153,6 +165,10 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.lift[lift_index].KKTError(kkt_residual_ref.lift[lift_index], dt_lift);
+      if (sto) {
+        const double hdiff = kkt_residual_ref[i].h - kkt_residual_ref.lift[lift_index].h;
+        kkt_error_ref += hdiff * hdiff;
+      }
       total_cost_ref += ocp_ref[i].stageCost();
       total_cost_ref += ocp_ref.lift[lift_index].stageCost();
     }

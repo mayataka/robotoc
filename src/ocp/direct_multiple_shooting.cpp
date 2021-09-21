@@ -125,10 +125,17 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
       const int time_stage_before_impulse 
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
       if (ocp.discrete().isSTOEnabledImpulse(impulse_index)) {
-        const double hdiff = kkt_residual[time_stage_before_impulse-1].h 
-                              + kkt_residual[time_stage_before_impulse].h 
-                              - kkt_residual.aux[impulse_index].h;
-        kkt_error_.coeffRef(i) += hdiff*hdiff;
+        if (time_stage_before_impulse >= 1) {
+          const double hdiff = kkt_residual[time_stage_before_impulse-1].h 
+                                + kkt_residual[time_stage_before_impulse].h 
+                                - kkt_residual.aux[impulse_index].h;
+          kkt_error_.coeffRef(i) += hdiff*hdiff;
+        }
+        else {
+          const double hdiff = kkt_residual[time_stage_before_impulse].h 
+                                - kkt_residual.aux[impulse_index].h;
+          kkt_error_.coeffRef(i) += hdiff*hdiff;
+        }
       }
     }
     else if (i < N+1+2*N_impulse+N_lift) {
