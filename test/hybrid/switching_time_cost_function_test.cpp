@@ -30,7 +30,7 @@ protected:
     contact_sequence 
         = testhelper::CreateContactSequence(robot, N, max_num_impulse, 0, 3*dt);
 
-    discretization = HybridTimeDiscretization(T, N, 2*max_num_impulse);
+    discretization = HybridOCPDiscretization(T, N, 2*max_num_impulse);
     discretization.discretize(contact_sequence, t);
   }
 
@@ -42,7 +42,7 @@ protected:
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
   ContactSequence contact_sequence;
-  HybridTimeDiscretization discretization;
+  HybridOCPDiscretization discretization;
 };
 
 

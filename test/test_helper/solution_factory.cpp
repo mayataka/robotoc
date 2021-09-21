@@ -1,6 +1,6 @@
 #include "solution_factory.hpp"
 
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 
 
 namespace idocp {
@@ -22,7 +22,7 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     return CreateSolution(robot, N, max_num_impulse);
   }
   else {
-    HybridTimeDiscretization discretization(T, N, max_num_impulse);
+    HybridOCPDiscretization discretization(T, N, max_num_impulse);
     discretization.discretize(contact_sequence, t);
     Solution s(robot, N, max_num_impulse);
     for (int i=0; i<=N; ++i) {

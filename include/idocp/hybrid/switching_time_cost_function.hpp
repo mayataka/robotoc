@@ -6,7 +6,7 @@
 
 #include "Eigen/Core"
 
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 #include "idocp/hybrid/switching_time_cost_function_component_base.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
@@ -73,7 +73,7 @@ public:
   /// @param[in] discretization Discretization of the optimal control problem.
   /// @return Cost on the switching times.
   ///
-  double computeCost(const HybridTimeDiscretization& discretization);
+  double computeCost(const HybridOCPDiscretization& discretization);
 
   ///
   /// @brief Computes the cost on the switching times and its first-order 
@@ -83,7 +83,7 @@ public:
   /// are added to this object.
   /// @return Cost on the switching times.
   ///
-  double linearizeCost(const HybridTimeDiscretization& discretization,
+  double linearizeCost(const HybridOCPDiscretization& discretization,
                        KKTResidual& kkt_residual); 
 
   ///
@@ -94,7 +94,7 @@ public:
   /// @param[out] kkt_residual KKT residual.
   /// @return Cost on the switching times.
   ///
-  double quadratizeCost(const HybridTimeDiscretization& discretization,
+  double quadratizeCost(const HybridOCPDiscretization& discretization,
                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 private:
@@ -104,12 +104,12 @@ private:
 
   void setNumSwitches(const int num_switches);
 
-  void setSwitchingTimes(const HybridTimeDiscretization& discretization);
+  void setSwitchingTimes(const HybridOCPDiscretization& discretization);
 
-  void setKKT(const HybridTimeDiscretization& discretization,
+  void setKKT(const HybridOCPDiscretization& discretization,
               KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
-  void setKKT(const HybridTimeDiscretization& discretization,
+  void setKKT(const HybridOCPDiscretization& discretization,
               KKTResidual& kkt_residual);
 
 };

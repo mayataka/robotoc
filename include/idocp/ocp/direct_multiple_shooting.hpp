@@ -13,7 +13,7 @@
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 
 
 namespace idocp {

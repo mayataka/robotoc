@@ -1,13 +1,13 @@
-#ifndef IDOCP_HYBRID_TIME_DISCRETIZATION_HXX_
-#define IDOCP_HYBRID_TIME_DISCRETIZATION_HXX_
+#ifndef IDOCP_HYBRID_OCP_DISCRETIZATION_HXX_
+#define IDOCP_HYBRID_OCP_DISCRETIZATION_HXX_ 
 
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 
 #include <cassert>
 
 namespace idocp {
 
-inline HybridTimeDiscretization::HybridTimeDiscretization(const double T, 
+inline HybridOCPDiscretization::HybridOCPDiscretization(const double T, 
                                                           const int N, 
                                                           const int max_events) 
   : T_(T),
@@ -37,7 +37,7 @@ inline HybridTimeDiscretization::HybridTimeDiscretization(const double T,
 }
 
 
-inline HybridTimeDiscretization::HybridTimeDiscretization()
+inline HybridOCPDiscretization::HybridOCPDiscretization()
   : T_(0),
     dt_ideal_(0), 
     max_dt_(0),
@@ -65,11 +65,11 @@ inline HybridTimeDiscretization::HybridTimeDiscretization()
 }
 
 
-inline HybridTimeDiscretization::~HybridTimeDiscretization() {
+inline HybridOCPDiscretization::~HybridOCPDiscretization() {
 }
 
 
-inline void HybridTimeDiscretization::discretize(
+inline void HybridOCPDiscretization::discretize(
     const ContactSequence& contact_sequence, const double t) {
   countDiscreteEvents(contact_sequence, t);
   countTimeSteps(t);
@@ -80,51 +80,51 @@ inline void HybridTimeDiscretization::discretize(
 }
 
 
-inline int HybridTimeDiscretization::N() const {
+inline int HybridOCPDiscretization::N() const {
   return N_;
 }
 
 
-inline int HybridTimeDiscretization::N_impulse() const {
+inline int HybridOCPDiscretization::N_impulse() const {
   return N_impulse_;
 }
 
 
-inline int HybridTimeDiscretization::N_lift() const {
+inline int HybridOCPDiscretization::N_lift() const {
   return N_lift_;
 }
 
 
-inline int HybridTimeDiscretization::N_all() const {
+inline int HybridOCPDiscretization::N_all() const {
   return (N()+1+2*N_impulse()+N_lift());
 }
 
 
-inline int HybridTimeDiscretization::N_ideal() const {
+inline int HybridOCPDiscretization::N_ideal() const {
   return N_ideal_;
 }
 
 
-inline int HybridTimeDiscretization::contactPhase(const int time_stage) const {
+inline int HybridOCPDiscretization::contactPhase(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N());
   return contact_phase_index_from_time_stage_[time_stage];
 }
 
 
-inline int HybridTimeDiscretization::contactPhaseAfterImpulse(
+inline int HybridOCPDiscretization::contactPhaseAfterImpulse(
     const int impulse_index) const {
   return contactPhase(timeStageAfterImpulse(impulse_index));
 }
 
 
-inline int HybridTimeDiscretization::contactPhaseAfterLift(
+inline int HybridOCPDiscretization::contactPhaseAfterLift(
     const int lift_index) const {
   return contactPhase(timeStageAfterLift(lift_index));
 }
 
 
-inline int HybridTimeDiscretization::impulseIndexAfterTimeStage(
+inline int HybridOCPDiscretization::impulseIndexAfterTimeStage(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N());
@@ -132,7 +132,7 @@ inline int HybridTimeDiscretization::impulseIndexAfterTimeStage(
 }
 
 
-inline int HybridTimeDiscretization::liftIndexAfterTimeStage(
+inline int HybridOCPDiscretization::liftIndexAfterTimeStage(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N());
@@ -140,7 +140,7 @@ inline int HybridTimeDiscretization::liftIndexAfterTimeStage(
 }
 
 
-inline int HybridTimeDiscretization::timeStageBeforeImpulse(
+inline int HybridOCPDiscretization::timeStageBeforeImpulse(
     const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < N_impulse());
@@ -148,13 +148,13 @@ inline int HybridTimeDiscretization::timeStageBeforeImpulse(
 }
 
 
-inline int HybridTimeDiscretization::timeStageAfterImpulse(
+inline int HybridOCPDiscretization::timeStageAfterImpulse(
     const int impulse_index) const {
   return timeStageBeforeImpulse(impulse_index) + 1;
 }
 
 
-inline int HybridTimeDiscretization::timeStageBeforeLift(
+inline int HybridOCPDiscretization::timeStageBeforeLift(
     const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < N_lift());
@@ -162,13 +162,13 @@ inline int HybridTimeDiscretization::timeStageBeforeLift(
 }
 
 
-inline int HybridTimeDiscretization::timeStageAfterLift(
+inline int HybridOCPDiscretization::timeStageAfterLift(
     const int lift_index) const {
   return timeStageBeforeLift(lift_index) + 1;
 }
 
 
-inline bool HybridTimeDiscretization::isTimeStageBeforeImpulse(
+inline bool HybridOCPDiscretization::isTimeStageBeforeImpulse(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N());
@@ -176,7 +176,7 @@ inline bool HybridTimeDiscretization::isTimeStageBeforeImpulse(
 }
 
 
-inline bool HybridTimeDiscretization::isTimeStageAfterImpulse(
+inline bool HybridOCPDiscretization::isTimeStageAfterImpulse(
     const int time_stage) const {
   assert(time_stage > 0);
   assert(time_stage <= N());
@@ -184,7 +184,7 @@ inline bool HybridTimeDiscretization::isTimeStageAfterImpulse(
 }
 
 
-inline bool HybridTimeDiscretization::isTimeStageBeforeLift(
+inline bool HybridOCPDiscretization::isTimeStageBeforeLift(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N());
@@ -192,7 +192,7 @@ inline bool HybridTimeDiscretization::isTimeStageBeforeLift(
 }
 
 
-inline bool HybridTimeDiscretization::isTimeStageAfterLift(
+inline bool HybridOCPDiscretization::isTimeStageAfterLift(
     const int time_stage) const {
   assert(time_stage > 0);
   assert(time_stage <= N());
@@ -200,14 +200,14 @@ inline bool HybridTimeDiscretization::isTimeStageAfterLift(
 }
 
 
-inline double HybridTimeDiscretization::t(const int time_stage) const {
+inline double HybridOCPDiscretization::t(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N());
   return t_[time_stage];
 }
 
 
-inline double HybridTimeDiscretization::t_impulse(
+inline double HybridOCPDiscretization::t_impulse(
     const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < N_impulse());
@@ -215,40 +215,40 @@ inline double HybridTimeDiscretization::t_impulse(
 }
 
 
-inline double HybridTimeDiscretization::t_lift(const int lift_index) const {
+inline double HybridOCPDiscretization::t_lift(const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < N_lift());
   return t_lift_[lift_index];
 }
 
 
-inline double HybridTimeDiscretization::dt(const int time_stage) const {
+inline double HybridOCPDiscretization::dt(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N());
   return dt_[time_stage];
 }
 
 
-inline double HybridTimeDiscretization::dt_aux(const int impulse_index) const {
+inline double HybridOCPDiscretization::dt_aux(const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < N_impulse());
   return dt_aux_[impulse_index];
 }
 
 
-inline double HybridTimeDiscretization::dt_lift(const int lift_index) const {
+inline double HybridOCPDiscretization::dt_lift(const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < N_lift());
   return dt_lift_[lift_index];
 }
 
 
-inline double HybridTimeDiscretization::dt_ideal() const {
+inline double HybridOCPDiscretization::dt_ideal() const {
   return dt_ideal_;
 }
 
 
-inline bool HybridTimeDiscretization::isSTOEnabledImpulse(
+inline bool HybridOCPDiscretization::isSTOEnabledImpulse(
     const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < N_impulse());
@@ -256,7 +256,7 @@ inline bool HybridTimeDiscretization::isSTOEnabledImpulse(
 }
 
 
-inline bool HybridTimeDiscretization::isSTOEnabledLift(
+inline bool HybridOCPDiscretization::isSTOEnabledLift(
     const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < N_lift());
@@ -264,7 +264,7 @@ inline bool HybridTimeDiscretization::isSTOEnabledLift(
 }
 
 
-inline int HybridTimeDiscretization::eventIndexImpulse(
+inline int HybridOCPDiscretization::eventIndexImpulse(
     const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < N_impulse());
@@ -272,7 +272,7 @@ inline int HybridTimeDiscretization::eventIndexImpulse(
 }
 
 
-inline int HybridTimeDiscretization::eventIndexLift(
+inline int HybridOCPDiscretization::eventIndexLift(
     const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < N_lift());
@@ -280,14 +280,14 @@ inline int HybridTimeDiscretization::eventIndexLift(
 }
 
 
-inline DiscreteEventType HybridTimeDiscretization::eventType(
+inline DiscreteEventType HybridOCPDiscretization::eventType(
     const int event_index) const {
   assert(event_index < N_impulse()+N_lift());
   return event_types_[event_index];
 }
 
 
-inline bool HybridTimeDiscretization::isFormulationTractable() const {
+inline bool HybridOCPDiscretization::isFormulationTractable() const {
   for (int i=0; i<N(); ++i) {
     if (isTimeStageBeforeImpulse(i) && isTimeStageBeforeLift(i)) {
       return false;
@@ -305,7 +305,7 @@ inline bool HybridTimeDiscretization::isFormulationTractable() const {
 }
 
 
-inline bool HybridTimeDiscretization::isSwitchingTimeConsistent() const {
+inline bool HybridOCPDiscretization::isSwitchingTimeConsistent() const {
   for (int i=0; i<N_impulse(); ++i) {
     // if (t_impulse(i) <= t(0) || t_impulse(i) >= t(N())) {
     if (t_impulse(i) < t(0)+min_dt || t_impulse(i) >= t(N())-min_dt) {
@@ -322,7 +322,7 @@ inline bool HybridTimeDiscretization::isSwitchingTimeConsistent() const {
 }
 
 
-inline void HybridTimeDiscretization::countDiscreteEvents(
+inline void HybridOCPDiscretization::countDiscreteEvents(
     const ContactSequence& contact_sequence, const double t) {
   N_impulse_ = contact_sequence.numImpulseEvents();
   assert(N_impulse_ <= max_events_);
@@ -346,7 +346,7 @@ inline void HybridTimeDiscretization::countDiscreteEvents(
 }
 
 
-inline void HybridTimeDiscretization::countTimeSteps(const double t) {
+inline void HybridOCPDiscretization::countTimeSteps(const double t) {
   int impulse_index = 0;
   int lift_index = 0;
   int num_events_on_grid = 0;
@@ -406,7 +406,7 @@ inline void HybridTimeDiscretization::countTimeSteps(const double t) {
 }
 
 
-inline void HybridTimeDiscretization::countTimeStages() {
+inline void HybridOCPDiscretization::countTimeStages() {
   int impulse_index = 0;
   int lift_index = 0;
   for (int i=0; i<N(); ++i) {
@@ -446,7 +446,7 @@ inline void HybridTimeDiscretization::countTimeStages() {
 }
 
 
-inline void HybridTimeDiscretization::countContactPhase() {
+inline void HybridOCPDiscretization::countContactPhase() {
   int num_events = 0;
   for (int i=0; i<N(); ++i) {
     contact_phase_index_from_time_stage_[i] = num_events;
@@ -459,4 +459,4 @@ inline void HybridTimeDiscretization::countContactPhase() {
 
 } // namespace idocp
 
-#endif // IDOCP_HYBRID_TIME_DISCRETIZATION_HXX_ 
+#endif // IDOCP_HYBRID_OCP_DISCRETIZATION_HXX_ 

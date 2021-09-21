@@ -29,7 +29,7 @@ inline void SwitchingTimeCostFunction::clear() {
 
 
 inline double SwitchingTimeCostFunction::computeCost(
-    const HybridTimeDiscretization& discretization) {
+    const HybridOCPDiscretization& discretization) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
     setNumSwitches(num_events);
@@ -49,7 +49,7 @@ inline double SwitchingTimeCostFunction::computeCost(
 
 
 inline double SwitchingTimeCostFunction::linearizeCost(
-    const HybridTimeDiscretization& discretization, KKTResidual& kkt_residual) {
+    const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
     setNumSwitches(num_events);
@@ -71,7 +71,7 @@ inline double SwitchingTimeCostFunction::linearizeCost(
 
 
 inline double SwitchingTimeCostFunction::quadratizeCost(
-    const HybridTimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
+    const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -109,7 +109,7 @@ inline void SwitchingTimeCostFunction::setNumSwitches(const int num_switches) {
 
 
 inline void SwitchingTimeCostFunction::setSwitchingTimes(
-    const HybridTimeDiscretization& discretization) {
+    const HybridOCPDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
@@ -138,7 +138,7 @@ inline void SwitchingTimeCostFunction::setSwitchingTimes(
 
 
 inline void SwitchingTimeCostFunction::setKKT(
-    const HybridTimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
+    const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
@@ -172,7 +172,7 @@ inline void SwitchingTimeCostFunction::setKKT(
 
 
 inline void SwitchingTimeCostFunction::setKKT(
-    const HybridTimeDiscretization& discretization, KKTResidual& kkt_residual) {
+    const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;

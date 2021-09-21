@@ -1,5 +1,5 @@
-#ifndef IDOCP_HYBRID_TIME_DISCRETIZATION_HPP_
-#define IDOCP_HYBRID_TIME_DISCRETIZATION_HPP_
+#ifndef IDOCP_HYBRID_OCP_DISCRETIZATION_HPP_ 
+#define IDOCP_HYBRID_OCP_DISCRETIZATION_HPP_
 
 #include "idocp/hybrid/contact_sequence.hpp"
 
@@ -10,11 +10,10 @@
 namespace idocp {
 
 ///
-/// @class HybridTimeDiscretization
-/// @brief Non-uniform time discretization of the finite horizon with taking 
-/// into account the discrete events.
+/// @class HybridOCPDiscretization
+/// @brief Non-uniform time discretization of the hybrid optimal control problem.
 ///
-class HybridTimeDiscretization {
+class HybridOCPDiscretization {
 public:
   ///
   /// @brief Constructor. 
@@ -25,37 +24,37 @@ public:
   /// @param[in] max_events Maximum number of each discrete events 
   /// (impulse and lift). 
   ///
-  HybridTimeDiscretization(const double T, const int N, const int max_events);
+  HybridOCPDiscretization(const double T, const int N, const int max_events);
 
   ///
   /// @brief Default constructor. 
   ///
-  HybridTimeDiscretization();
+  HybridOCPDiscretization();
 
   ///
   /// @brief Destructor. 
   ///
-  ~HybridTimeDiscretization();
+  ~HybridOCPDiscretization();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  HybridTimeDiscretization(const HybridTimeDiscretization&) = default;
+  HybridOCPDiscretization(const HybridOCPDiscretization&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  HybridTimeDiscretization& operator=(const HybridTimeDiscretization&) = default;
+  HybridOCPDiscretization& operator=(const HybridOCPDiscretization&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  HybridTimeDiscretization(HybridTimeDiscretization&&) noexcept = default;
+  HybridOCPDiscretization(HybridOCPDiscretization&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  HybridTimeDiscretization& operator=(HybridTimeDiscretization&&) noexcept = default;
+  HybridOCPDiscretization& operator=(HybridOCPDiscretization&&) noexcept = default;
 
   ///
   /// @brief Discretizes the finite horizon taking into account the discrete 
@@ -313,6 +312,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/hybrid/hybrid_time_discretization.hxx"
+#include "idocp/hybrid/hybrid_ocp_discretization.hxx"
 
-#endif // IDOCP_HYBRID_TIME_DISCRETIZATION_HPP_ 
+#endif // IDOCP_HYBRID_OCP_DISCRETIZATION_HPP_ 

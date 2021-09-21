@@ -12,7 +12,7 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 
 
 namespace idocp {
@@ -99,7 +99,7 @@ public:
     time_discretization_.discretize(contact_sequence, t);
   }
 
-  const HybridTimeDiscretization& discrete() const {
+  const HybridOCPDiscretization& discrete() const {
     return time_discretization_;
   }
 
@@ -108,7 +108,7 @@ public:
   TerminalOCP terminal;
 
 private:
-  HybridTimeDiscretization time_discretization_;
+  HybridOCPDiscretization time_discretization_;
 
 };
 

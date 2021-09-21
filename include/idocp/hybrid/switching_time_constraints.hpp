@@ -7,7 +7,7 @@
 
 #include "Eigen/Core"
 
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/direction.hpp"
@@ -82,14 +82,14 @@ public:
   /// @brief Sets the slack variables. 
   /// @param[in] discretization Discretization of the optimal control problem.
   ///
-  void setSlack(const HybridTimeDiscretization& discretization);
+  void setSlack(const HybridOCPDiscretization& discretization);
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] discretization Discretization of the optimal control problem.
   ///
-  void evalConstraint(const HybridTimeDiscretization& discretization);
+  void evalConstraint(const HybridOCPDiscretization& discretization);
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
@@ -97,7 +97,7 @@ public:
   /// @param[in] discretization Discretization of the optimal control problem.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(const HybridTimeDiscretization& discretization,
+  void linearizeConstraints(const HybridOCPDiscretization& discretization,
                             KKTResidual& kkt_residual); 
 
   ///
@@ -107,7 +107,7 @@ public:
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void condenseSlackAndDual(const HybridTimeDiscretization& discretization,
+  void condenseSlackAndDual(const HybridOCPDiscretization& discretization,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual);
 
@@ -117,7 +117,7 @@ public:
   /// @param[in] discretization Discretization of the optimal control problem.
   /// @param[in] d Newton direction.
   ///
-  void expandSlackAndDual(const HybridTimeDiscretization& discretization, 
+  void expandSlackAndDual(const HybridOCPDiscretization& discretization, 
                           const Direction& d); 
 
   ///

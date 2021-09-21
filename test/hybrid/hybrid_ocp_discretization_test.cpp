@@ -5,7 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 #include "idocp/robot/robot.hpp"
 
 #include "robot_factory.hpp"
@@ -13,7 +13,7 @@
 
 namespace idocp {
 
-class HybridTimeDiscretizationTest : public ::testing::Test {
+class HybridOCPDiscretizationTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -40,7 +40,7 @@ protected:
 };
 
 
-ContactSequence HybridTimeDiscretizationTest::createContactSequence(const Robot& robot) const {
+ContactSequence HybridOCPDiscretizationTest::createContactSequence(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events;
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -63,7 +63,7 @@ ContactSequence HybridTimeDiscretizationTest::createContactSequence(const Robot&
 }
 
 
-ContactSequence HybridTimeDiscretizationTest::createContactSequenceOnGrid(const Robot& robot) const {
+ContactSequence HybridOCPDiscretizationTest::createContactSequenceOnGrid(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events;
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -86,8 +86,8 @@ ContactSequence HybridTimeDiscretizationTest::createContactSequenceOnGrid(const 
 }
 
 
-void HybridTimeDiscretizationTest::test_constructor(const Robot& robot) const {
-  HybridTimeDiscretization discretization(T, N, max_num_events);
+void HybridOCPDiscretizationTest::test_constructor(const Robot& robot) const {
+  HybridOCPDiscretization discretization(T, N, max_num_events);
   EXPECT_EQ(discretization.N(), N);
   EXPECT_EQ(discretization.N_impulse(), 0);
   EXPECT_EQ(discretization.N_lift(), 0);
@@ -105,8 +105,8 @@ void HybridTimeDiscretizationTest::test_constructor(const Robot& robot) const {
 }
 
 
-void HybridTimeDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
-  HybridTimeDiscretization discretization(T, N, max_num_events);
+void HybridOCPDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
+  HybridOCPDiscretization discretization(T, N, max_num_events);
   const ContactSequence contact_sequence = createContactSequence(robot);
   discretization.discretize(contact_sequence, t);
   EXPECT_EQ(discretization.N(), N);
@@ -208,8 +208,8 @@ void HybridTimeDiscretizationTest::test_discretizeOCP(const Robot& robot) const 
 }
 
 
-void HybridTimeDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) const {
-  HybridTimeDiscretization discretization(T, N, max_num_events);
+void HybridOCPDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) const {
+  HybridOCPDiscretization discretization(T, N, max_num_events);
   const ContactSequence contact_sequence = createContactSequenceOnGrid(robot);
   discretization.discretize(contact_sequence, t);
   EXPECT_EQ(discretization.N(), N-max_num_events);
@@ -229,7 +229,7 @@ void HybridTimeDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) 
 }
 
 
-TEST_F(HybridTimeDiscretizationTest, fixedBase) {
+TEST_F(HybridOCPDiscretizationTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   test_constructor(robot);
   test_discretizeOCP(robot);
@@ -237,7 +237,7 @@ TEST_F(HybridTimeDiscretizationTest, fixedBase) {
 }
 
 
-TEST_F(HybridTimeDiscretizationTest, floatingBase) {
+TEST_F(HybridOCPDiscretizationTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   test_constructor(robot);
   test_discretizeOCP(robot);

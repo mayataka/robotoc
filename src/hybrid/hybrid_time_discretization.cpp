@@ -1,10 +1,10 @@
-#include "idocp/hybrid/hybrid_time_discretization.hpp"
+#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
 
 #include <iostream>
 
 namespace idocp {
 
-void HybridTimeDiscretization::showInfo() const {
+void HybridOCPDiscretization::showInfo() const {
   std::cout << "----- The discretized optimal control problem (OCP) -----" << std::endl;
   std::cout << "T = " << T_ << std::endl;
   std::cout << "N_ideal = " << N_ideal() << std::endl;

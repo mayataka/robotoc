@@ -37,7 +37,7 @@ inline SwitchingTimeConstraints::~SwitchingTimeConstraints() {
 
 
 inline void SwitchingTimeConstraints::setSlack(
-    const HybridTimeDiscretization& discretization) {
+    const HybridOCPDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -93,7 +93,7 @@ inline void SwitchingTimeConstraints::setSlack(
 
 
 inline void SwitchingTimeConstraints::evalConstraint(
-    const HybridTimeDiscretization& discretization) {
+    const HybridOCPDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -165,7 +165,7 @@ inline void SwitchingTimeConstraints::evalConstraint(
 
 
 inline void SwitchingTimeConstraints::linearizeConstraints(
-    const HybridTimeDiscretization& discretization, 
+    const HybridOCPDiscretization& discretization, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   assert(num_events+1 <= dtlb_.size());
@@ -251,7 +251,7 @@ inline void SwitchingTimeConstraints::linearizeConstraints(
 
 
 inline void SwitchingTimeConstraints::condenseSlackAndDual(
-    const HybridTimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
+    const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   assert(num_events+1 <= dtlb_.size());
@@ -354,7 +354,7 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
 
 
 inline void SwitchingTimeConstraints::expandSlackAndDual(
-    const HybridTimeDiscretization& discretization, const Direction& d) {
+    const HybridOCPDiscretization& discretization, const Direction& d) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
