@@ -11,9 +11,6 @@ public:
   // Inherit the constructors
   using SwitchingTimeCostFunctionComponentBase::SwitchingTimeCostFunctionComponentBase;
 
-  virtual double computeCost(const double t0, const double tf, 
-                             const Eigen::VectorXd& ts) const = 0;
-
   double computeCost(const double t0, const double tf, 
                      const Eigen::VectorXd& ts) const override {
     PYBIND11_OVERRIDE_PURE(double, SwitchingTimeCostFunctionComponentBase, 
@@ -24,7 +21,7 @@ public:
   void computeCostDerivatives(const double t0, const double tf, 
                               const Eigen::VectorXd& ts,
                               Eigen::VectorXd& hts) const override {
-    PYBIND11_OVERRIDE_PURE(double, SwitchingTimeCostFunctionComponentBase, 
+    PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
                            computeCostDerivatives, 
                            t0, tf, ts, hts);
   }
@@ -32,7 +29,7 @@ public:
   void computeCostHessian(const double t0, const double tf, 
                           const Eigen::VectorXd& ts,
                           Eigen::MatrixXd& Qts) const override {
-    PYBIND11_OVERRIDE_PURE(double, SwitchingTimeCostFunctionComponentBase, 
+    PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
                            computeStageCostHessian, 
                            t0, tf, ts, Qts);
   }
