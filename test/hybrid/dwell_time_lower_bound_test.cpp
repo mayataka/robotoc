@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
+#include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/hybrid_time_discretization.hpp"
 #include "idocp/hybrid/dwell_time_lower_bound.hpp"
 
 

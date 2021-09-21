@@ -8,6 +8,8 @@
 
 #include "idocp/hybrid/hybrid_time_discretization.hpp"
 #include "idocp/hybrid/switching_time_cost_function_component_base.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -92,9 +94,8 @@ public:
   /// @param[out] kkt_residual KKT residual.
   /// @return Cost on the switching times.
   ///
-  double quadratizeStageCost(const HybridTimeDiscretization& discretization,
-                             KKTMatrix& kkt_matrix, 
-                             KKTResidual& kkt_residual);
+  double quadratizeCost(const HybridTimeDiscretization& discretization,
+                        KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 private:
   std::vector<SwitchingTimeCostFunctionComponentBasePtr> costs_;

@@ -10,8 +10,11 @@ inline SwitchingTimeConstraints::SwitchingTimeConstraints(
     const int max_num_switches, const double min_dt, const double min_dt0, 
     const double min_dtf, const double barrier, 
     const double fraction_to_boundary_rule) 
-  : dtlb_(max_num_switches+1, DwellTimeLowerBound(min_dt, barrier, 
+  : dtlb_(max_num_switches+1, DwellTimeLowerBound(barrier, 
                                                   fraction_to_boundary_rule)),
+    min_dt_(min_dt), 
+    min_dt0_(min_dt0), 
+    min_dtf_(min_dtf),
     num_switches_(0),
     primal_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)), 
     dual_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)) {
@@ -20,6 +23,9 @@ inline SwitchingTimeConstraints::SwitchingTimeConstraints(
 
 inline SwitchingTimeConstraints::SwitchingTimeConstraints()
   : dtlb_(),
+    min_dt_(0), 
+    min_dt0_(0), 
+    min_dtf_(0),
     num_switches_(0),
     primal_step_size_(), 
     dual_step_size_() {
@@ -160,7 +166,7 @@ inline void SwitchingTimeConstraints::evalConstraint(
 
 inline void SwitchingTimeConstraints::linearizeConstraints(
     const HybridTimeDiscretization& discretization, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -191,12 +197,12 @@ inline void SwitchingTimeConstraints::linearizeConstraints(
           dtlb_[event_index+1].evalConstraint(
               min_dt_, discretization.t_impulse(impulse_index), 
               discretization.t_impulse(impulse_index+1));
-          dtlb_[event_index+1].evalDerivatives_lub(
+          dtlb_[event_index+1].evalDerivatives_lub( 
               kkt_residual.aux[impulse_index], 
               kkt_residual.aux[impulse_index+1]);
         }
         else {
-          dtlb_[event_index+1].evalConstraint_lub(
+          dtlb_[event_index+1].evalConstraint(
               min_dt_, discretization.t_impulse(impulse_index), 
               discretization.t_lift(lift_index));
           dtlb_[event_index+1].evalDerivatives_lub(
@@ -212,8 +218,7 @@ inline void SwitchingTimeConstraints::linearizeConstraints(
               min_dt_, discretization.t_lift(lift_index), 
               discretization.t_impulse(impulse_index));
           dtlb_[event_index+1].evalDerivatives_lub(
-              kkt_residual.lift[lift_index], 
-              kkt_residual.impulse[impulse_index]);
+              kkt_residual.lift[lift_index], kkt_residual.aux[impulse_index]);
         }
         else {
           dtlb_[event_index+1].evalConstraint(
@@ -283,8 +288,7 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.aux[impulse_index], kkt_residual.aux[impulse_index+1]);
           dtlb_[event_index+1].condenseSlackAndDual_lub(
-              kkt_matrix.aux[impulse_index], 
-             kkt_residual.aux[impulse_index], 
+              kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index], 
               kkt_matrix.aux[impulse_index+1], kkt_residual.aux[impulse_index+1]);
         }
         else {
@@ -307,10 +311,10 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
               min_dt_, discretization.t_lift(lift_index), 
               discretization.t_impulse(impulse_index));
           dtlb_[event_index+1].evalDerivatives_lub(
-              kkt_residual.lift[lift_index], kkt_residual.impulse[impulse_index]);
+              kkt_residual.lift[lift_index], kkt_residual.aux[impulse_index]);
           dtlb_[event_index+1].condenseSlackAndDual_lub(
               kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
-              kkt_matrix.impulse[impulse_index], kkt_residual.impulse[impulse_index]);
+              kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
         }
         else {
           dtlb_[event_index+1].evalConstraint(
@@ -361,22 +365,22 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
     if (discretization.isSTOEnabledImpulse(0)) {
       dtlb_[0].expandSlackAndDual_lb(d.aux[0].dts);
       primal_step_size_.coeffRef(0) = dtlb_[0].maxSlackStepSize();
-      duall_step_size_.coeffRef(0) = dtlb_[0].maxDualStepSize();
+      dual_step_size_.coeffRef(0) = dtlb_[0].maxDualStepSize();
     }
     else {
       primal_step_size_.coeffRef(0) = 1.0;
-      duall_step_size_.coeffRef(0) = 1.0;
+      dual_step_size_.coeffRef(0) = 1.0;
     }
   }
   else {
     if (discretization.isSTOEnabledLift(0)) {
       dtlb_[0].expandSlackAndDual_lb(d.lift[0].dts);
       primal_step_size_.coeffRef(0) = dtlb_[0].maxSlackStepSize();
-      duall_step_size_.coeffRef(0) = dtlb_[0].maxDualStepSize();
+      dual_step_size_.coeffRef(0) = dtlb_[0].maxDualStepSize();
     }
     else {
       primal_step_size_.coeffRef(0) = 1.0;
-      duall_step_size_.coeffRef(0) = 1.0;
+      dual_step_size_.coeffRef(0) = 1.0;
     }
   }
   int impulse_index = 0;
@@ -396,12 +400,12 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
         }
         primal_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxSlackStepSize();
-        duall_step_size_.coeffRef(event_index+1) 
+        dual_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxDualStepSize();
       }
       else {
         primal_step_size_.coeffRef(event_index+1) = 1.0;
-        duall_step_size_.coeffRef(event_index+1) = 1.0;
+        dual_step_size_.coeffRef(event_index+1) = 1.0;
       }
       ++impulse_index;
     }
@@ -417,43 +421,43 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
         }
         primal_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxSlackStepSize();
-        duall_step_size_.coeffRef(event_index+1) 
+        dual_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxDualStepSize();
       }
       else {
         primal_step_size_.coeffRef(event_index+1) = 1.0;
-        duall_step_size_.coeffRef(event_index+1) = 1.0;
+        dual_step_size_.coeffRef(event_index+1) = 1.0;
       }
       ++lift_index;
     }
   }
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
-      dtlb_[num_events].expandSlackAndDual_lub(-d.aux[impulse_index].dts);
+      dtlb_[num_events].expandSlackAndDual_ub(-d.aux[impulse_index].dts);
       primal_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxSlackStepSize();
-      duall_step_size_.coeffRef(num_events) 
+      dual_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxDualStepSize();
     }
     else {
       primal_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxSlackStepSize();
-      duall_step_size_.coeffRef(num_events) 
+      dual_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxDualStepSize();
     }
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
-      dtlb_[num_events].expandSlackAndDual_lub(-d.lift[lift_index].dts);
+      dtlb_[num_events].expandSlackAndDual_ub(-d.lift[lift_index].dts);
       primal_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxSlackStepSize();
-      duall_step_size_.coeffRef(num_events) 
+      dual_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxDualStepSize();
     }
     else {
       primal_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxSlackStepSize();
-      duall_step_size_.coeffRef(num_events) 
+      dual_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxDualStepSize();
     }
   }
@@ -461,12 +465,22 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
 
 
 inline double SwitchingTimeConstraints::maxPrimalStepSize() const {
-  return primal_step_size_.head(num_switches_).minCoeff();
+  if (num_switches_ > 0) {
+    return primal_step_size_.head(num_switches_).minCoeff();
+  }
+  else {
+    return 1.0;
+  }
 }
 
 
 inline double SwitchingTimeConstraints::maxDualStepSize() const {
-  return dual_step_size_.head(num_switches_).minCoeff();
+  if (num_switches_ > 0) {
+    return dual_step_size_.head(num_switches_).minCoeff();
+  }
+  else {
+    return 1.0;
+  }
 }
 
 

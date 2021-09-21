@@ -98,7 +98,7 @@ public:
   /// @param[out] kkt_residual KKT residual.
   ///
   void linearizeConstraints(const HybridTimeDiscretization& discretization,
-                            KKTResidual& kkt_residual) const; 
+                            KKTResidual& kkt_residual); 
 
   ///
   /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
@@ -109,7 +109,7 @@ public:
   ///
   void condenseSlackAndDual(const HybridTimeDiscretization& discretization,
                             KKTMatrix& kkt_matrix, 
-                            KKTResidual& kkt_residual) const;
+                            KKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
