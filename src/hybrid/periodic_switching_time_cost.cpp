@@ -1,4 +1,4 @@
-#include "idocp/cost/periodic_switching_time_cost.hpp"
+#include "idocp/hybrid/periodic_switching_time_cost.hpp"
 
 #include <stdexcept>
 #include <cassert>

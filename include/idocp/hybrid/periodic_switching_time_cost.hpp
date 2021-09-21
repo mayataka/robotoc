@@ -1,7 +1,7 @@
 #ifndef IDOCP_PERIODIC_SWITCHING_TIME_COST_HPP_
 #define IDOCP_PERIODIC_SWITCHING_TIME_COST_HPP_
 
-#include "idocp/cost/switching_time_cost_function_component_base.hpp"
+#include "idocp/hybrid/switching_time_cost_function_component_base.hpp"
 
 #include "Eigen/Core"
 

@@ -387,12 +387,12 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
-          dtlb_[event_index+1].expandSlackAndDual_lub(d.aux[impulse_index].dts,
-                                                      d.aux[impulse_index+1].dts);
+          dtlb_[event_index+1].expandSlackAndDual_lub((-d.aux[impulse_index].dts),
+                                                      (-d.aux[impulse_index+1].dts));
         }
         else {
-          dtlb_[event_index+1].expandSlackAndDual_lub(d.aux[impulse_index].dts,
-                                                      d.lift[lift_index].dts);
+          dtlb_[event_index+1].expandSlackAndDual_lub((-d.aux[impulse_index].dts),
+                                                      (-d.lift[lift_index].dts));
         }
         primal_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxSlackStepSize();
@@ -408,12 +408,12 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
     else {
       if (discretization.isSTOEnabledLift(lift_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
-          dtlb_[event_index+1].expandSlackAndDual_lub(d.lift[lift_index].dts,
-                                                      d.aux[impulse_index+1].dts);
+          dtlb_[event_index+1].expandSlackAndDual_lub((-d.lift[lift_index].dts),
+                                                      (-d.aux[impulse_index+1].dts));
         }
         else {
-          dtlb_[event_index+1].expandSlackAndDual_lub(d.lift[lift_index].dts,
-                                                      d.lift[lift_index+1].dts);
+          dtlb_[event_index+1].expandSlackAndDual_lub((-d.lift[lift_index].dts),
+                                                      (-d.lift[lift_index+1].dts));
         }
         primal_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxSlackStepSize();
@@ -429,7 +429,7 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
   }
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
-      dtlb_[num_events].expandSlackAndDual_lub(d.aux[impulse_index].dts);
+      dtlb_[num_events].expandSlackAndDual_lub(-d.aux[impulse_index].dts);
       primal_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxSlackStepSize();
       duall_step_size_.coeffRef(num_events) 
@@ -444,7 +444,7 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
-      dtlb_[num_events].expandSlackAndDual_lub(d.lift[lift_index].dts);
+      dtlb_[num_events].expandSlackAndDual_lub(-d.lift[lift_index].dts);
       primal_step_size_.coeffRef(num_events) 
           = dtlb_[num_events].maxSlackStepSize();
       duall_step_size_.coeffRef(num_events) 
