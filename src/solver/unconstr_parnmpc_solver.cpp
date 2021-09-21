@@ -2,6 +2,7 @@
 
 #include <omp.h>
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 

@@ -1,6 +1,7 @@
 #include "idocp/mpc/mpc_quadrupedal_walking.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <algorithm>

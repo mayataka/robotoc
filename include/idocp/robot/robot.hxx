@@ -15,7 +15,6 @@
 #include "pinocchio/algorithm/cholesky.hpp"
 #include "pinocchio/algorithm/contact-dynamics.hpp"
 
-#include <stdexcept>
 #include <cassert>
 
 namespace idocp {

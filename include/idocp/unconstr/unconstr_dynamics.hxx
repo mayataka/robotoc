@@ -4,6 +4,7 @@
 #include "idocp/unconstr/unconstr_dynamics.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 namespace idocp {

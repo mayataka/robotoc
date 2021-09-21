@@ -12,7 +12,6 @@
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/direction.hpp"
 #include "idocp/hybrid/dwell_time_lower_bound.hpp"
-#include "idocp/utils/empty_type.hpp"
 
 
 namespace idocp {

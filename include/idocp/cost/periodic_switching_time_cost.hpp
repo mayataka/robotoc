@@ -30,7 +30,9 @@ public:
   PeriodicSwitchingTimeCost& operator=(
       PeriodicSwitchingTimeCost&&) noexcept = default;
 
-  void set_period(const double period);
+  void set_period(const double period, const double t_start);
+
+  void set_weight(const double weight);
 
   double computeCost(const double t0, const double tf, 
                      const Eigen::VectorXd& ts) const override;
@@ -44,7 +46,7 @@ public:
                           Eigen::MatrixXd& Qts) const override;
 
 private:
-  double period_, t_start_;
+  double period_, t_start_, weight_;;
 
 };
 

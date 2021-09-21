@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
 
 
 namespace idocp {

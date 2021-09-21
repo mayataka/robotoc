@@ -1,7 +1,7 @@
 #include "idocp/constraints/friction_cone.hpp"
 
-#include <iostream>
 #include <stdexcept>
+#include <iostream>
 
 
 namespace idocp {

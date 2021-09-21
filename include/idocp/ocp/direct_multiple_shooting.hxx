@@ -4,7 +4,6 @@
 #include "idocp/ocp/direct_multiple_shooting.hpp"
 
 #include <omp.h>
-#include <stdexcept>
 #include <cassert>
 
 

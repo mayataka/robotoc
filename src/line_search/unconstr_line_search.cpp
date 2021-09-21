@@ -1,6 +1,7 @@
 #include "idocp/line_search/unconstr_line_search.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 

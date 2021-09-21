@@ -1,6 +1,7 @@
 #include "idocp/robot/robot.hpp"
 
 #include <stdexcept>
+#include <iostream>
 
 
 namespace idocp {

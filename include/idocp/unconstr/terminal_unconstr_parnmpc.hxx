@@ -4,6 +4,7 @@
 #include "idocp/unconstr/terminal_unconstr_parnmpc.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 namespace idocp {

@@ -1,6 +1,7 @@
 #include "idocp/solver/ocp_solver.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 

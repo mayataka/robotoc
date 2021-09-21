@@ -1,6 +1,7 @@
 #include "idocp/mpc/mpc_quadrupedal_trotting.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <algorithm>

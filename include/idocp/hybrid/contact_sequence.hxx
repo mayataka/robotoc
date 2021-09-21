@@ -4,6 +4,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 #include <algorithm>
 
