@@ -1,0 +1,4 @@
+pybind11_add_idocp_module(switching_time_cost_function_component_base)
+pybind11_add_idocp_module(periodic_switching_time_cost)
+
+install_idocp_pybind_module(hybrid)
