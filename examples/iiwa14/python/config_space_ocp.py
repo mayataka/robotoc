@@ -65,6 +65,6 @@ print("\n----- Solves the OCP by ParNMPC algorithm. -----")
 num_iteration = 60
 idocp.utils.benchmark.convergence(parnmpc_solver, t, q, v, num_iteration)
 
-viewer = idocp.utils.TrajectoryViewer(path_to_urdf=path_to_urdf)
-# viewer.display((T/N), ocp_solver.get_solution('q'), viewer='gepetto')
-viewer.display((T/N), ocp_solver.get_solution('q'), viewer='meshcat')
+viewer = idocp.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')
+viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)
+viewer.display((T/N), ocp_solver.get_solution('q'))

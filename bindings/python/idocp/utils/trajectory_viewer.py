@@ -1,17 +1,17 @@
 import idocp
 import pinocchio
 from pinocchio.robot_wrapper import RobotWrapper
-from pinocchio.utils import skew
 from pinocchio.visualize import GepettoVisualizer, MeshcatVisualizer
 from os.path import abspath, dirname, join
 import numpy as np
 import math
 import time
-
+import meshcat.transformations 
 
 class TrajectoryViewer:
     def __init__(self, path_to_urdf, path_to_pkg=None, 
-                 base_joint_type=idocp.BaseJointType.FixedBase):
+                 base_joint_type=idocp.BaseJointType.FixedBase, 
+                 viewer_type='gepetto'):
         self.path_to_urdf = abspath(path_to_urdf)
         if path_to_pkg is None:
             path_to_pkg = join(dirname(self.path_to_urdf), '../..')
@@ -25,10 +25,6 @@ class TrajectoryViewer:
 
         self.play_speed = 1.0
 
-        self.window_name = 'idocp.TrajectoryViewer'
-        self.camera_pos=[2.2, -3.5, 1.13]
-        self.camera_angle=[0.60612, 0.166663, 0.19261, 0.753487]
-
         self.force_radius = 0.015
         self.force_length = 0.5
         self.force_scale = 0.75
@@ -41,6 +37,24 @@ class TrajectoryViewer:
         self.cone_color = [0.3, 0.3, 0.7, 0.7]
         self.x_axis = np.array([1.0, 0.0, 0.0])
 
+        self.viewer_type = viewer_type
+        if viewer_type == 'gepetto':
+            self.viewer = GepettoVisualizer(self.robot.model, 
+                                            self.robot.collision_model,
+                                            self.robot.visual_model)
+            self.window_name = 'idocp.TrajectoryViewer'
+            self.camera_pos = [2.2, -3.5, 1.13] 
+            self.camera_angle = [0.60612, 0.166663, 0.19261, 0.753487] 
+        elif viewer_type == 'meshcat':
+            self.viewer = MeshcatVisualizer(self.robot.model, 
+                                            self.robot.collision_model, 
+                                            self.robot.visual_model)
+            self.camera_tf = meshcat.transformations.translation_matrix([0.8, -2.5, -0.2]) 
+            self.zoom = 3.0
+        else:
+            print('Please choose viewer_type from "gepetto" or "meshcat"!')
+            return NotImplementedError()
+
 
     def set_contact_info(self, contact_frames, mu):
         self.display_contact = True
@@ -48,22 +62,28 @@ class TrajectoryViewer:
         self.mu = mu
 
 
-    def set_camera_transform(self, camera_pos, camera_angle):
-        self.camera_pos = camera_pos
-        self.camera_angle = camera_angle
+    def set_camera_transform_gepetto(self, camera_pos=None, camera_angle=None):
+        if camera_pos is not None:
+            self.camera_pos = camera_pos
+        if camera_angle is not None:
+            self.camera_angle = camera_angle
+
+    def set_camera_transform_meshcat(self, camera_tf_vec=None, zoom=None):
+        if camera_tf_vec is not None:
+            self.camera_tf = meshcat.transformations.translation_matrix(camera_tf_vec) 
+        if zoom is not None:
+            self.zoom = zoom
 
 
-    def display(self, dt, q_traj, f_traj=None, viewer='gepetto'):
-        if viewer == 'gepetto':
+    def display(self, dt, q_traj, f_traj=None):
+        if self.viewer_type == 'gepetto':
             self.display_gepetto(dt, q_traj, f_traj)
-        elif viewer == 'meshcat':
+        elif self.viewer_type == 'meshcat':
             self.display_meshcat(dt, q_traj)
 
 
     def display_gepetto(self, dt, q_traj, f_traj):
-        viz = GepettoVisualizer(self.robot.model, self.robot.collision_model,
-                                self.robot.visual_model)
-        self.robot.setVisualizer(viz)
+        self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(windowName=self.window_name, loadModel=False)
         self.robot.loadViewerModel(rootNodeName=self.window_name)
         gui = self.robot.viewer.gui
@@ -154,11 +174,14 @@ class TrajectoryViewer:
 
 
     def display_meshcat(self, dt, q_traj, open=True):
-        viz = MeshcatVisualizer(self.robot.model, self.robot.collision_model, 
-                                self.robot.visual_model)
-        self.robot.setVisualizer(viz)
+        self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(open=open)
         self.robot.loadViewerModel(rootNodeName='idocp.TrajectoryViewer')
+        self.viewer.viewer["/Cameras/default"].set_transform(self.camera_tf)
+        self.viewer.viewer["/Cameras/default/rotated/<object>"].set_property("zoom", self.zoom)
+        # self.viewer.viewer["/Cameras/default"].set_transform(tf.translation_matrix([0.3, -2.5, -0.2]))
+        # self.viewer.viewer["/Cameras/default/rotated/<object>"].set_property("zoom", 5.0)
+
         sleep_time = dt / self.play_speed
         for q in q_traj:
             self.robot.display(q)
