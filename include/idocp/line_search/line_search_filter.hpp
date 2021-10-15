@@ -1,7 +1,7 @@
 #ifndef IDOCP_LINE_SEARCH_FILTER_HPP_
 #define IDOCP_LINE_SEARCH_FILTER_HPP_
 
-#include <vector>
+#include <set>
 #include <utility>
 
 
@@ -75,7 +75,7 @@ public:
   bool isEmpty() const;
 
 private:
-  std::vector<std::pair<double, double>> filter_;
+  std::set<std::pair<double, double>> filter_;
   double cost_reduction_rate_, constraints_reduction_rate_;
 
 };
