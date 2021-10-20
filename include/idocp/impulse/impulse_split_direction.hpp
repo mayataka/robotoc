@@ -1,6 +1,8 @@
 #ifndef IDOCP_IMPULSE_SPLIT_DIRECTION_HPP_ 
 #define IDOCP_IMPULSE_SPLIT_DIRECTION_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -250,6 +252,14 @@ public:
   ///
   static ImpulseSplitDirection Random(const Robot& robot, 
                                       const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Displays the impulse split direction onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ImpulseSplitDirection& d);
 
 private:
   Eigen::VectorXd ddvf_full_, dbetamu_full_;

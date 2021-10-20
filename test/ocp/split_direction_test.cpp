@@ -102,6 +102,10 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_TRUE(d.dbetamu().isZero());
   EXPECT_TRUE(d.dnu_passive.isZero());
   EXPECT_TRUE(d.dxi().isZero());
+
+  EXPECT_NO_THROW(
+    std::cout << d << std::endl;
+  );
 }
 
 

@@ -1,6 +1,8 @@
 #ifndef IDOCP_SPLIT_DIRECTION_HPP_
 #define IDOCP_SPLIT_DIRECTION_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -323,6 +325,13 @@ public:
   static SplitDirection Random(const Robot& robot, 
                                const ContactStatus& contact_status,
                                const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Displays the split direction onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, const SplitDirection& d);
 
 private:
   Eigen::VectorXd daf_full_, dbetamu_full_, dxi_full_;

@@ -109,6 +109,10 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_TRUE(kkt_mat.Qxx.bottomRightCorner(dimv, dimv).isApprox(kkt_mat.Qvv()));
   EXPECT_TRUE(kkt_mat.Qxu.topRows(dimv).isApprox(kkt_mat.Qqu()));
   EXPECT_TRUE(kkt_mat.Qxu.bottomRows(dimv).isApprox(kkt_mat.Qvu()));
+
+  EXPECT_NO_THROW(
+    std::cout << kkt_mat << std::endl;
+  );
 }
 
 

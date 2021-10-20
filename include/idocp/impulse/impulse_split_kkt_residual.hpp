@@ -1,6 +1,8 @@
 #ifndef IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HPP_ 
 #define IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -203,6 +205,14 @@ public:
   ///
   static ImpulseSplitKKTResidual Random(const Robot& robot, 
                                         const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Displays the impulse split KKT residual onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ImpulseSplitKKTResidual& kkt_residual);
 
 private:
   Eigen::VectorXd lf_full_;

@@ -18,7 +18,12 @@ PYBIND11_MODULE(split_solution, m) {
     .def_readwrite("v", &SplitSolution::v)
     .def_readwrite("a", &SplitSolution::a)
     .def_readwrite("u", &SplitSolution::u)
-    .def_readwrite("f", &SplitSolution::f);
+    .def_readwrite("f", &SplitSolution::f)
+    .def("__str__", [](const SplitSolution& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
+      });
 }
 
 } // namespace python

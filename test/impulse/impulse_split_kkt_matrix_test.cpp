@@ -82,6 +82,10 @@ void ImpulseSplitKKTMatrixTest::test(const Robot& robot, const ImpulseStatus& im
   EXPECT_TRUE(kkt_mat.Qxx.topRightCorner(dimv, dimv).isApprox(kkt_mat.Qqv()));
   EXPECT_TRUE(kkt_mat.Qxx.bottomLeftCorner(dimv, dimv).isApprox(kkt_mat.Qvq()));
   EXPECT_TRUE(kkt_mat.Qxx.bottomRightCorner(dimv, dimv).isApprox(kkt_mat.Qvv()));
+
+  EXPECT_NO_THROW(
+    std::cout << kkt_mat << std::endl;
+  );
 }
 
 

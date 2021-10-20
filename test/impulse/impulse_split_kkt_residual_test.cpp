@@ -65,6 +65,10 @@ void ImpulseSplitKKTResidualTest::test(const Robot& robot, const ImpulseStatus& 
   const double vio = kkt_res.constraintViolation();
   const double vio_ref = kkt_res.Fx.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
+
+  EXPECT_NO_THROW(
+    std::cout << kkt_res << std::endl;
+  );
 }
 
 

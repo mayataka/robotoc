@@ -2,6 +2,7 @@
 #define IDOCP_SPLIT_SOLUTION_HPP_
 
 #include <vector>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -332,6 +333,13 @@ public:
   static SplitSolution Random(const Robot& robot, 
                               const ContactStatus& contact_status,
                               const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Displays the split solution onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, const SplitSolution& s);
 
 private:
   Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;

@@ -76,6 +76,10 @@ void ImpulseSplitDirectionTest::test(const Robot& robot, const ImpulseStatus& im
   EXPECT_TRUE(d.ddvf().isZero());
   EXPECT_TRUE(d.dlmdgmm.isZero());
   EXPECT_TRUE(d.dbetamu().isZero());
+
+  EXPECT_NO_THROW(
+    std::cout << d << std::endl;
+  );
 }
 
 

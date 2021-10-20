@@ -2,6 +2,7 @@
 #define IDOCP_IMPULSE_SPLIT_SOLUTION_HPP_
 
 #include <vector>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -235,6 +236,14 @@ public:
   ///
   static ImpulseSplitSolution Random(const Robot& robot, 
                                      const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Displays the impulse split solution onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ImpulseSplitSolution& s);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

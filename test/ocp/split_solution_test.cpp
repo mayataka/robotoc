@@ -81,6 +81,10 @@ void SplitSolutionTest::test(const Robot& robot,
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));
   }
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 
@@ -103,6 +107,10 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.xi_stack().size(), impulse_status.dimf());
   EXPECT_EQ(s.dimf(), 0);
   EXPECT_EQ(s.dimi(), impulse_status.dimf());
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 
@@ -131,6 +139,10 @@ void SplitSolutionTest::test(const Robot& robot,
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));
   }
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 

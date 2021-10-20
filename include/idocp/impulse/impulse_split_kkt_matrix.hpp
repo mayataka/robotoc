@@ -1,6 +1,8 @@
 #ifndef IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HPP_
 #define IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -252,6 +254,14 @@ public:
   ///
   static ImpulseSplitKKTMatrix Random(const Robot& robot, 
                                       const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Displays the impulse split KKT matrix onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ImpulseSplitKKTMatrix& kkt_matrix);
 
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;

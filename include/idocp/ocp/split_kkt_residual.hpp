@@ -1,6 +1,8 @@
 #ifndef IDOCP_SPLIT_KKT_RESIDUAL_HPP_ 
 #define IDOCP_SPLIT_KKT_RESIDUAL_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -224,6 +226,14 @@ public:
   ///
   static SplitKKTResidual Random(const Robot& robot, 
                                  const ContactStatus& contact_status);
+
+  ///
+  /// @brief Displays the split KKT residual onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const SplitKKTResidual& kkt_residual);
 
 private:
   Eigen::VectorXd lf_full_;

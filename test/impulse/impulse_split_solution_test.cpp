@@ -136,6 +136,10 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
   }
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 

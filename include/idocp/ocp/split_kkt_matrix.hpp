@@ -1,6 +1,8 @@
 #ifndef IDOCP_SPLIT_KKT_MATRIX_HPP_
 #define IDOCP_SPLIT_KKT_MATRIX_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -360,6 +362,14 @@ public:
   ///
   static SplitKKTMatrix Random(const Robot& robot, 
                                const ContactStatus& contact_status);
+
+  ///
+  /// @brief Displays the split KKT matrix onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const SplitKKTMatrix& kkt_matrix);
 
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;

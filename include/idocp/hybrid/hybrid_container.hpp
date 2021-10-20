@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cassert>
+#include <iostream>
 
 #include "idocp/robot/robot.hpp"
 
@@ -20,6 +21,13 @@ public:
   EmptyType(const Robot&) {}
   EmptyType() {}
   ~EmptyType() {}
+
+  ///
+  /// @brief Does not print anything.
+  ///
+  friend std::ostream& operator<<(std::ostream& os, const EmptyType& obj) {
+    return os;
+  }
 };
 } // namespace internal
 
@@ -102,6 +110,31 @@ public:
     assert(i >= 0);
     assert(i < data.size());
     return data[i];
+  }
+
+  ///
+  /// @brief Displays the elements of the container onto a ostream.
+  ///
+  void disp(std::ostream& os) const {
+    const int N = data.size() - 1;
+    for (int i=0; i<=N; ++i) {
+      os << "  stage: " << i << std::endl;
+      os << data[i] << std::endl;
+    }
+    const int max_num_impulses = impulse.size();
+    for (int i=0; i<max_num_impulses; ++i) {
+      os << "  impulse: " << i << std::endl;
+      os << impulse[i] << std::endl;
+    }
+    for (int i=0; i<max_num_impulses; ++i) {
+      os << "  aux: " << i << std::endl;
+      os << aux[i] << std::endl;
+    }
+    const int max_num_lifts = lift.size();
+    for (int i=0; i<max_num_lifts; ++i) {
+      os << "  lift: " << i << std::endl;
+      os << lift[i] << std::endl;
+    }
   }
 
   std::vector<Type> data, aux, lift;

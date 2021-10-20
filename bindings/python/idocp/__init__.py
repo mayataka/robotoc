@@ -1,4 +1,5 @@
 from .robot import *
+from .impulse import *
 from .ocp import *
 from .cost import *
 from .constraints import *

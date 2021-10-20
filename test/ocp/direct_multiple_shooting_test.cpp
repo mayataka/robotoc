@@ -425,6 +425,14 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   ocp_ref.terminal.updateDual(dual_step_size);
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
+
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+    std::cout << d << std::endl;
+    std::cout << kkt_matrix << std::endl;
+    std::cout << kkt_residual << std::endl;
+  );
 }
 
 
