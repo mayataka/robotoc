@@ -126,7 +126,7 @@ int main () {
   idocp::benchmark::convergence(ocp_solver, t, q, v, 10, false);
   idocp::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
-  // robot.printRobotModel();
+  // std::cout << robot << std::endl;
 
   return 0;
 }

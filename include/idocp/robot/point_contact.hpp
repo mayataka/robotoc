@@ -7,6 +7,8 @@
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
+#include <iostream>
+
 
 namespace idocp {
 
@@ -200,6 +202,14 @@ public:
   /// @return Parent joint id.
   /// 
   int parent_joint_id() const;
+
+  ///
+  /// @brief Displays the point contact onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const PointContact& point_contact);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

@@ -2,6 +2,7 @@
 #define IDOCP_IMPULSE_STATUS_HPP_
 
 #include <vector>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -12,7 +13,8 @@ namespace idocp {
 
   ///
   /// @class ImpulseStatus
-  /// @brief Impulse status of robot model. Wraps ContactStatus for impulses.
+  /// @brief Impulse status of robot model. Wrapper of ContactStatus to treat
+  /// impulses.
   ///
 class ImpulseStatus {
 public:
@@ -177,12 +179,15 @@ public:
   void setRandom();
 
   ///
-  /// @brief Shows the info of the impulse status. 
+  /// @brief Displays the impulse status onto a ostream.
   ///
-  void showInfo() const;
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ImpulseStatus& impulse_status);
 
 private:
-  ContactStatus impulse_status_;
+  ContactStatus contact_status_;
 
 };
 

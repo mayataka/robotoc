@@ -162,7 +162,9 @@ void ContactSequenceTest::test_push_back(const Robot& robot) const {
     EXPECT_EQ(contact_sequence.numDiscreteEvents(), num_impulse+num_lift);
     EXPECT_EQ(contact_sequence.numContactPhases(), num_impulse+num_lift+1);
   }
-  EXPECT_NO_THROW(contact_sequence.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << contact_sequence << std::endl;
+  );
 }
 
 

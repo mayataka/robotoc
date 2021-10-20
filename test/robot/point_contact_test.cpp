@@ -81,6 +81,9 @@ void PointContactTest::testConstructor(pinocchio::Model& model, pinocchio::Data&
   PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id);
   EXPECT_EQ(contact.parent_joint_id(), model.frames[contact_frame_id].parent);
+  EXPECT_NO_THROW(
+    std::cout << contact << std::endl;
+  );
 }
 
 

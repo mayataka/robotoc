@@ -149,7 +149,9 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
     EXPECT_EQ(robot_contact.dim_passive(), 0);
   }
   EXPECT_EQ(robot_contact.maxPointContacts(), contact_frames.size());
-  robot_contact.printRobotModel();
+  EXPECT_NO_THROW(
+    std::cout << robot_contact << std::endl;
+  );
   EXPECT_EQ(robot.jointEffortLimit().size(), robot.dimu());
   EXPECT_EQ(robot.jointVelocityLimit().size(), robot.dimu());
   EXPECT_EQ(robot.lowerJointPositionLimit().size(), robot.dimu());

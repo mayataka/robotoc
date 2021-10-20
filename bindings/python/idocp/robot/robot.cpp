@@ -5,6 +5,8 @@
 
 #include "idocp/robot/robot.hpp"
 
+#include <iostream>
+
 
 namespace idocp {
 namespace python {
@@ -54,7 +56,11 @@ PYBIND11_MODULE(robot, m) {
     .def("set_joint_velocity_limit", &Robot::setJointVelocityLimit)
     .def("set_lower_joint_position_limit", &Robot::setLowerJointPositionLimit)
     .def("set_upper_joint_position_limit", &Robot::setUpperJointPositionLimit)
-    .def("print_robot_model", &Robot::printRobotModel);
+    .def("__str__", [](const Robot& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
+      });
 }
 
 } // namespace python

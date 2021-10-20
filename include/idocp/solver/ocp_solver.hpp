@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -230,10 +231,12 @@ public:
   bool isSwitchingTimeConsistent(const double t);
 
   ///
-  /// @brief Shows the information of the discretized optimal control problem
-  /// onto console.
+  /// @brief Displays the optimal control problem solver onto a ostream.
   ///
-  void showInfo() const;
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const OCPSolver& ocp_solver);
 
 private:
   aligned_vector<Robot> robots_;

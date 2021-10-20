@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <iostream>
 
 #include "Eigen/Core"
 #include "pinocchio/multibody/model.hpp"
@@ -676,9 +677,11 @@ public:
       const Eigen::VectorXd& upper_joint_position_limit);
 
   ///
-  /// @brief Prints the robot model into console.
+  /// @brief Displays the point contact onto a ostream.
   ///
-  void printRobotModel() const;
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, const Robot& robot);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

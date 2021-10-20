@@ -2,6 +2,7 @@
 #define IDOCP_CONTACT_SEQUENCE_HPP_ 
 
 #include <deque>
+#include <iostream>
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
@@ -202,9 +203,12 @@ public:
   DiscreteEventType eventType(const int event_index) const;
 
   ///
-  /// @brief Shows the info of the contact sequence. 
+  /// @brief Displays the contact sequence onto a ostream.
   ///
-  void showInfo() const;
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ContactSequence& contact_sequence);
 
 private:
   int max_num_events_;

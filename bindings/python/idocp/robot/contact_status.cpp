@@ -5,6 +5,8 @@
 
 #include "idocp/robot/contact_status.hpp"
 
+#include <iostream>
+
 
 namespace idocp {
 namespace python {
@@ -33,7 +35,11 @@ PYBIND11_MODULE(contact_status, m) {
     .def("set_contact_points", &ContactStatus::setContactPoints)
     .def("contact_point", &ContactStatus::contactPoint)
     .def("contact_points", &ContactStatus::contactPoints)
-    .def("show_info", &ContactStatus::showInfo);
+    .def("__str__", [](const ContactStatus& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
+      });
 }
 
 } // namespace python

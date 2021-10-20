@@ -72,7 +72,9 @@ TEST_F(ContactStatusTest, activate) {
   for (int i=7; i<contact_status.maxPointContacts(); ++i) {
     EXPECT_FALSE(contact_status.isContactActive(i));
   }
-  EXPECT_NO_THROW(contact_status.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << contact_status << std::endl;
+  );
 }
 
 

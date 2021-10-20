@@ -1,11 +1,13 @@
 #ifndef IDOCP_HYBRID_OCP_DISCRETIZATION_HPP_ 
 #define IDOCP_HYBRID_OCP_DISCRETIZATION_HPP_
 
-#include "idocp/hybrid/contact_sequence.hpp"
-
 #include <vector>
 #include <limits>
 #include <cmath>
+#include <iostream>
+
+#include "idocp/hybrid/contact_sequence.hpp"
+
 
 namespace idocp {
 
@@ -276,10 +278,12 @@ public:
   bool isSwitchingTimeConsistent() const;
 
   ///
-  /// @brief Shows the information of the discretized optimal control problem 
-  /// into console. 
+  /// @brief Displays the hybrid OCP discretization onto a ostream.
   ///
-  void showInfo() const;
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const HybridOCPDiscretization& discretization);
 
   ///
   /// @brief Minimum step size of the discretization grid. 

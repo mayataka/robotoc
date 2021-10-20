@@ -268,7 +268,7 @@ void MPCQuadrupedalTrotting::resetContactPoints(const Eigen::VectorXd& q) {
 
 
 void MPCQuadrupedalTrotting::showInfo() const {
-  ocp_solver_.showInfo();
+  std::cout << ocp_solver_ << std::endl;
 }
 
 } // namespace idocp 

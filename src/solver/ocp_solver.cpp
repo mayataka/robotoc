@@ -1,7 +1,6 @@
 #include "idocp/solver/ocp_solver.hpp"
 
 #include <stdexcept>
-#include <iostream>
 #include <cassert>
 
 
@@ -370,12 +369,6 @@ bool OCPSolver::isSwitchingTimeConsistent(const double t) {
 }
 
 
-void OCPSolver::showInfo() const {
-  contact_sequence_.showInfo();
-  ocp_.discrete().showInfo();
-}
-
-
 void OCPSolver::discretizeSolution() {
   for (int i=0; i<=ocp_.discrete().N(); ++i) {
     s_[i].setContactStatus(
@@ -404,6 +397,18 @@ void OCPSolver::discretizeSolution() {
           contact_sequence_.impulseStatus(i));
     }
   }
+}
+
+
+void OCPSolver::disp(std::ostream& os) const {
+  os << contact_sequence_ << std::endl;
+  os << ocp_.discrete() << std::endl;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const OCPSolver& ocp_solver) {
+  ocp_solver.disp(os);
+  return os;
 }
 
 } // namespace idocp

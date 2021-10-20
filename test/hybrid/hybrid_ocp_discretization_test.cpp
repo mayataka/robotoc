@@ -204,7 +204,9 @@ void HybridOCPDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
       ++lift_index;
     }
   }
-  EXPECT_NO_THROW(discretization.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << discretization << std::endl;
+  );
 }
 
 
@@ -225,7 +227,9 @@ void HybridOCPDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) c
     }
   }
   EXPECT_DOUBLE_EQ(discretization.t(discretization.N()), t+T);
-  EXPECT_NO_THROW(discretization.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << discretization << std::endl;
+  );
 }
 
 

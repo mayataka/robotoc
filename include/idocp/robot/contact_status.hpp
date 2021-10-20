@@ -2,6 +2,7 @@
 #define IDOCP_CONTACT_STATUS_HPP_
 
 #include <vector>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -166,9 +167,12 @@ public:
   void setRandom();
 
   ///
-  /// @brief Shows the info of the contact status. 
+  /// @brief Displays the contact status onto a ostream.
   ///
-  void showInfo() const;
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const ContactStatus& contact_status);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
