@@ -3,29 +3,29 @@
 
 #include "Eigen/Core"
 
-#include "idocp/solver/ocp_solver.hpp"
-#include "idocp/robot/robot.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/configuration_space_cost.hpp"
-#include "idocp/cost/time_varying_configuration_space_cost.hpp"
-#include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
-#include "idocp/constraints/impulse_friction_cone.hpp"
+#include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/cost/cost_function.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
+#include "robotoc/constraints/constraints.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/constraints/impulse_friction_cone.hpp"
 
-#include "idocp/utils/ocp_benchmarker.hpp"
+#include "robotoc/utils/ocp_benchmarker.hpp"
 
 #ifdef ENABLE_VIEWER
-#include "idocp/utils/trajectory_viewer.hpp"
+#include "robotoc/utils/trajectory_viewer.hpp"
 #endif 
 
  
-class TimeVaryingConfigurationRef final : public idocp::TimeVaryingConfigurationRefBase {
+class TimeVaryingConfigurationRef final : public robotoc::TimeVaryingConfigurationRefBase {
 public:
   TimeVaryingConfigurationRef(const double t0, 
                               const double period_init1, 
@@ -56,7 +56,7 @@ public:
 
   ~TimeVaryingConfigurationRef() {}
 
-  void update_q_ref(const idocp::Robot& robot, const double t, 
+  void update_q_ref(const robotoc::Robot& robot, const double t, 
                     Eigen::VectorXd& q_ref) const override {
     if (t < t0_) {
       q_ref = q0_;
@@ -108,8 +108,8 @@ int main(int argc, char *argv[]) {
   std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
-  idocp::Robot robot(path_to_urdf, idocp::BaseJointType::FloatingBase, 
-                     contact_frames, baumgarte_time_step);
+  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
+                       contact_frames, baumgarte_time_step);
 
   const double stride = 0.45;
   const double additive_stride_hip = 0.2;
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
   const double t_period = t_front_swing + t_front_hip_swing + t_hip_swing;
   const int steps = 10;
 
-  auto cost = std::make_shared<idocp::CostFunction>();
+  auto cost = std::make_shared<robotoc::CostFunction>();
   Eigen::VectorXd v_weight(Eigen::VectorXd::Zero(robot.dimv()));
   v_weight << 0.01, 0.01, 0.01, 0.1, 0.1, 0.1, 
               0.1, 0.1, 0.1,
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
               0.1, 0.1, 0.1;
   Eigen::VectorXd a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.001));
 
-  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
+  auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_v_weight(v_weight);
   config_cost->set_vf_weight(v_weight);
   config_cost->set_vi_weight(v_weight);
@@ -153,22 +153,22 @@ int main(int argc, char *argv[]) {
   const double v_ref = stride / t_period;
   auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.5, steps,
                                                                   q_standing, v_ref);
-  auto time_varying_config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
+  auto time_varying_config_cost = std::make_shared<robotoc::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_qf_weight(q_weight);
   time_varying_config_cost->set_qi_weight(q_weight);
   cost->push_back(time_varying_config_cost);
 
-  auto constraints           = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower  = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper  = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower  = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto constraints           = std::make_shared<robotoc::Constraints>();
+  auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower  = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper  = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower   = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   const double mu = 0.7;
-  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
-  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 
   const int nthreads = 4;
   const double t = 0;
-  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
@@ -285,10 +285,10 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::benchmark::convergence(ocp_solver, t, q, v, 80, line_search);
+  robotoc::benchmark::convergence(ocp_solver, t, q, v, 80, line_search);
 
 #ifdef ENABLE_VIEWER
-  idocp::TrajectoryViewer viewer(path_to_urdf, idocp::BaseJointType::FloatingBase);
+  robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
   camera_pos << 0.119269, -7.96283, 1.95978;

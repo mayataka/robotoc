@@ -1,10 +1,10 @@
-#include "idocp/cost/time_varying_configuration_space_cost.hpp"
+#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 TimeVaryingConfigurationSpaceCost::TimeVaryingConfigurationSpaceCost(
     const Robot& robot,
@@ -233,4 +233,4 @@ void TimeVaryingConfigurationSpaceCost::computeImpulseCostHessian(
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

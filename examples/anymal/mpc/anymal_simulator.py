@@ -1,8 +1,8 @@
-import idocp_sim
+import robotoc_sim
 import pybullet
 
 
-class ANYmalSimulator(idocp_sim.QuadrupedalSimulator):
+class ANYmalSimulator(robotoc_sim.QuadrupedalSimulator):
     def __init__(self, path_to_urdf, time_step, start_time, end_time):
         super().__init__(path_to_urdf, time_step, start_time, end_time)
 

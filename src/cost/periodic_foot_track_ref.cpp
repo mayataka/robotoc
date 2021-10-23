@@ -1,7 +1,7 @@
-#include "idocp/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/periodic_foot_track_ref.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 PeriodicFootTrackRef::PeriodicFootTrackRef(const Eigen::Vector3d p0, 
                                            const double step_length, 
@@ -79,4 +79,4 @@ bool PeriodicFootTrackRef::isActive(const double t) const {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

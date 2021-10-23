@@ -1,7 +1,7 @@
-#include "idocp/hybrid/contact_sequence.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void ContactSequence::disp(std::ostream& os) const {
   int impulse_index = 0;
@@ -32,4 +32,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

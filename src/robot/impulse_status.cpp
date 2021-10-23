@@ -1,7 +1,7 @@
-#include "idocp/robot/impulse_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void ImpulseStatus::disp(std::ostream& os) const {
   os << "impulse status:" << std::endl;
@@ -30,4 +30,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

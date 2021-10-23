@@ -1,7 +1,7 @@
-#include "idocp/ocp/kkt_residual.hpp"
+#include "robotoc/ocp/kkt_residual.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 std::ostream& operator<<(std::ostream& os, const KKTResidual& kkt_residual) {
   os << "KKT residual:" << std::endl;
@@ -9,4 +9,4 @@ std::ostream& operator<<(std::ostream& os, const KKTResidual& kkt_residual) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

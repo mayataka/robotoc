@@ -1,7 +1,7 @@
-#include "idocp/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id)
   : CostFunctionComponentBase(),
@@ -144,4 +144,4 @@ void TaskSpace3DCost::computeImpulseCostHessian(
       += data.J_3d.transpose() * qi_3d_weight_.asDiagonal() * data.J_3d;
 }
 
-} // namespace idocp
+} // namespace robotoc

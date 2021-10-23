@@ -1,10 +1,10 @@
-#include "idocp/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
   : CostFunctionComponentBase(),
@@ -371,4 +371,4 @@ void ConfigurationSpaceCost::computeImpulseCostHessian(
   kkt_matrix.Qdvdv.diagonal().noalias() += dvi_weight_;
 }
 
-} // namespace idocp
+} // namespace robotoc

@@ -1,3 +1,0 @@
-pybind11_add_idocp_module(impulse_split_solution)
-
-install_idocp_pybind_module(impulse)

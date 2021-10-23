@@ -1,4 +1,4 @@
-#include "idocp/utils/trajectory_viewer.hpp"
+#include "robotoc/utils/trajectory_viewer.hpp"
 
 #include <thread>
 #include <chrono>
@@ -15,7 +15,7 @@
 #include "gepetto/viewer/corba/conversions.hh"
 
 
-namespace idocp {
+namespace robotoc {
 
 TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
                                    const BaseJointType& base_joint_type)
@@ -100,13 +100,13 @@ void TrajectoryViewer::setFrictionConeProperties() {
 void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj, 
                                const double sampling_period_in_sec) {
   pinocchio::gepetto::Viewer viewer(model_, &vmodel_, NULL);
-  const bool success = viewer.initViewer("idocp::TrajectoryViewer");
+  const bool success = viewer.initViewer("robotoc::TrajectoryViewer");
   if(!success) {
     std::cout << "Failed in connecting to CORBA!!" << std::endl;
   }
 
   auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
+  const auto window_id = gui->createWindow("robotoc::TrajectoryViewer");
   gui->createScene("hpp-gui");
   gui->addSceneToWindow("hpp-gui", window_id);
   viewer.loadViewerModel("hpp-gui");
@@ -118,8 +118,8 @@ void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj,
     gui->addFloor("hpp-gui/floor");
   }
   gui->setColor("hpp-gui/floor", gepetto::viewer::corba::grey);
-  gui->setBackgroundColor1("idocp::TrajectoryViewer", gepetto::viewer::corba::white);
-  gui->setBackgroundColor2("idocp::TrajectoryViewer", gepetto::viewer::corba::white);
+  gui->setBackgroundColor1("robotoc::TrajectoryViewer", gepetto::viewer::corba::white);
+  gui->setBackgroundColor2("robotoc::TrajectoryViewer", gepetto::viewer::corba::white);
   gui->setLightingMode("hpp-gui/floor", "OFF");
 
   setCameraTransform();
@@ -137,13 +137,13 @@ void TrajectoryViewer::display(Robot& robot,
                                const double sampling_period_in_sec,
                                const double mu) {
   pinocchio::gepetto::Viewer viewer(model_, &vmodel_, NULL);
-  const bool success = viewer.initViewer("idocp::TrajectoryViewer");
+  const bool success = viewer.initViewer("robotoc::TrajectoryViewer");
   if(!success) {
     std::cout << "Failed in connecting to CORBA!!" << std::endl;
   }
 
   auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
+  const auto window_id = gui->createWindow("robotoc::TrajectoryViewer");
   gui->createScene("hpp-gui");
   gui->addSceneToWindow("hpp-gui", window_id);
   viewer.loadViewerModel("hpp-gui");
@@ -155,8 +155,8 @@ void TrajectoryViewer::display(Robot& robot,
     gui->addFloor("hpp-gui/floor");
   }
   gui->setColor("hpp-gui/floor", gepetto::viewer::corba::grey);
-  gui->setBackgroundColor1("idocp::TrajectoryViewer", gepetto::viewer::corba::white);
-  gui->setBackgroundColor2("idocp::TrajectoryViewer", gepetto::viewer::corba::white);
+  gui->setBackgroundColor1("robotoc::TrajectoryViewer", gepetto::viewer::corba::white);
+  gui->setBackgroundColor2("robotoc::TrajectoryViewer", gepetto::viewer::corba::white);
   gui->setLightingMode("hpp-gui/floor", "OFF");
 
   if (mu > 0) {
@@ -274,7 +274,7 @@ void TrajectoryViewer::setCameraTransformDefault() {
 
 void TrajectoryViewer::printCurrentCameraTransform() const {
   auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
+  const auto window_id = gui->getWindowID("robotoc::TrajectoryViewer");
   const auto camera = gui->getCameraTransform(window_id);
   std::cout << "Current camera transform is: [";
   for (int i=0; i<6; ++i) {
@@ -286,7 +286,7 @@ void TrajectoryViewer::printCurrentCameraTransform() const {
 
 void TrajectoryViewer::setCameraTransform() {
   auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
+  const auto window_id = gui->getWindowID("robotoc::TrajectoryViewer");
   std::vector<float> pose(7);
   pose[0] = camera_pos_.coeff(0);
   pose[1] = camera_pos_.coeff(1);
@@ -298,4 +298,4 @@ void TrajectoryViewer::setCameraTransform() {
   gui->setCameraTransform(window_id, pose.data());
 }
 
-} // namespace idocp
+} // namespace robotoc

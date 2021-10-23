@@ -1,7 +1,7 @@
-#include "idocp/cost/periodic_com_ref2.hpp"
+#include "robotoc/cost/periodic_com_ref2.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 PeriodicCoMRef2::PeriodicCoMRef2(const Eigen::Vector3d CoM_ref0, 
                                  const Eigen::Vector3d v_CoM_ref, 
@@ -66,4 +66,4 @@ bool PeriodicCoMRef2::isActive(const double t) const {
   return true;
 }
 
-} // namespace idocp
+} // namespace robotoc

@@ -1,11 +1,11 @@
-#include "idocp/line_search/unconstr_line_search.hpp"
+#include "robotoc/line_search/unconstr_line_search.hpp"
 
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrLineSearch::UnconstrLineSearch(const Robot& robot, const double T, 
                                        const int N, const int nthreads, 
@@ -129,4 +129,4 @@ void UnconstrLineSearch::computeSolutionTrial(const Solution& s,
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

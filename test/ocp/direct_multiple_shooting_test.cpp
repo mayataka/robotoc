@@ -3,11 +3,11 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/riccati/riccati_recursion.hpp"
-#include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/direct_multiple_shooting.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/riccati/riccati_recursion.hpp"
+#include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/direct_multiple_shooting.hpp"
 
 #include "test_helper.hpp"
 #include "robot_factory.hpp"
@@ -17,7 +17,7 @@
 #include "constraints_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class DirectMultipleShootingTest : public ::testing::Test {
 protected:
@@ -459,7 +459,7 @@ TEST_F(DirectMultipleShootingTest, floatingBase) {
   test_integrateSolution(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

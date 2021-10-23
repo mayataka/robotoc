@@ -1,9 +1,9 @@
-#include "idocp/robot/point_contact.hpp"
+#include "robotoc/robot/point_contact.hpp"
 
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 PointContact::PointContact(const pinocchio::Model& model, 
                            const int contact_frame_id,
@@ -105,4 +105,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

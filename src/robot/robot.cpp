@@ -1,9 +1,9 @@
-#include "idocp/robot/robot.hpp"
+#include "robotoc/robot/robot.hpp"
 
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 Robot::Robot(const std::string& path_to_urdf, 
              const BaseJointType& base_joint_type,
@@ -235,4 +235,4 @@ std::ostream& operator<<(std::ostream& os, const Robot& robot) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

@@ -3,12 +3,12 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/unconstr/unconstr_ocp.hpp"
-#include "idocp/riccati/unconstr_riccati_factorizer.hpp"
-#include "idocp/riccati/unconstr_riccati_recursion.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/unconstr/unconstr_ocp.hpp"
+#include "robotoc/riccati/unconstr_riccati_factorizer.hpp"
+#include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 
 #include "robot_factory.hpp"
 #include "direction_factory.hpp"
@@ -16,7 +16,7 @@
 #include "riccati_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class UnconstrRiccatiRecursionTest : public ::testing::Test {
 protected:
@@ -99,7 +99,7 @@ TEST_F(UnconstrRiccatiRecursionTest, test) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

@@ -1,4 +1,4 @@
-#include "idocp/solver/unconstr_ocp_solver.hpp"
+#include "robotoc/solver/unconstr_ocp_solver.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -6,7 +6,7 @@
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrOCPSolver::UnconstrOCPSolver(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
@@ -268,4 +268,4 @@ bool UnconstrOCPSolver::isCurrentSolutionFeasible() {
   return true;
 }
 
-} // namespace idocp
+} // namespace robotoc

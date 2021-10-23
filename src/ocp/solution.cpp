@@ -1,7 +1,7 @@
-#include "idocp/ocp/solution.hpp"
+#include "robotoc/ocp/solution.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 std::ostream& operator<<(std::ostream& os, const Solution& s) {
   os << "solution:" << std::endl;
@@ -9,4 +9,4 @@ std::ostream& operator<<(std::ostream& os, const Solution& s) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

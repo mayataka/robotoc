@@ -1,7 +1,7 @@
-#include "idocp/cost/com_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 CoMCost::CoMCost(const Robot& robot)
   : CostFunctionComponentBase(),
@@ -138,4 +138,4 @@ void CoMCost::computeImpulseCostHessian(
       += data.J_3d.transpose() * qi_weight_.asDiagonal() * data.J_3d;
 }
 
-} // namespace idocp
+} // namespace robotoc

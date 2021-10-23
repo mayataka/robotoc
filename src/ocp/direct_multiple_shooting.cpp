@@ -1,11 +1,11 @@
-#include "idocp/ocp/direct_multiple_shooting.hpp"
+#include "robotoc/ocp/direct_multiple_shooting.hpp"
 
 #include <omp.h>
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
 
-namespace idocp{
+namespace robotoc{
 
 DirectMultipleShooting::DirectMultipleShooting(const int N, 
                                                const int max_num_impulse, 
@@ -259,4 +259,4 @@ void DirectMultipleShooting::integrateSolution(
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

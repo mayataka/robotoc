@@ -1,16 +1,16 @@
 #include "constraints_factory.hpp"
 
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
-#include "idocp/constraints/impulse_friction_cone.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/constraints/impulse_friction_cone.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 std::shared_ptr<Constraints> CreateConstraints(const Robot& robot) {
@@ -38,4 +38,4 @@ std::shared_ptr<Constraints> CreateConstraints(const Robot& robot) {
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

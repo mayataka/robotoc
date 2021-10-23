@@ -1,7 +1,7 @@
-#include "idocp/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void SplitSolution::disp(std::ostream& os) const {
   os << "split solution:" << std::endl;
@@ -29,4 +29,4 @@ std::ostream& operator<<(std::ostream& os, const SplitSolution& s) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

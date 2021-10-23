@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
-project(idocp_examples_ANYmal CXX)
+project(robotoc_examples_ANYmal CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(idocp REQUIRED)
+find_package(robotoc REQUIRED)
 
 option(ENABLE_VIEWER "Enable trajectory viewer" OFF)
 
@@ -15,12 +15,12 @@ macro(add_benchmark BENCHMARK)
   target_include_directories(
     ${BENCHMARK} 
     PRIVATE
-    ${IDOCP_INCLUDE_DIR}
+    ${ROBOTOC_INCLUDE_DIR}
   )
   target_link_libraries(
     ${BENCHMARK} 
     PRIVATE
-    idocp::idocp
+    robotoc::robotoc
   )
 endmacro()
 
@@ -32,12 +32,12 @@ macro(add_example EXAMPLE)
   target_include_directories(
     ${EXAMPLE} 
     PRIVATE
-  ${IDOCP_INCLUDE_DIR}
+  ${ROBOTOC_INCLUDE_DIR}
   )
   target_link_libraries(
     ${EXAMPLE} 
     PRIVATE
-    idocp::idocp
+    robotoc::robotoc
   )
   if (ENABLE_VIEWER)
     target_compile_definitions(

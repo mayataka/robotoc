@@ -1,0 +1,5 @@
+pybind11_add_robotoc_module(switching_time_cost_function)
+pybind11_add_robotoc_module(switching_time_cost_function_component_base)
+pybind11_add_robotoc_module(periodic_switching_time_cost)
+
+install_robotoc_pybind_module(hybrid)

@@ -1,4 +1,4 @@
-#include "idocp/mpc/mpc_quadrupedal_trotting.hpp"
+#include "robotoc/mpc/mpc_quadrupedal_trotting.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <algorithm>
 
 
-namespace idocp {
+namespace robotoc {
 
 MPCQuadrupedalTrotting::MPCQuadrupedalTrotting(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
@@ -271,4 +271,4 @@ void MPCQuadrupedalTrotting::showInfo() const {
   std::cout << ocp_solver_ << std::endl;
 }
 
-} // namespace idocp 
+} // namespace robotoc 
