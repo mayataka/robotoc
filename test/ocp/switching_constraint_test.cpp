@@ -4,8 +4,8 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
 #include "robotoc/ocp/switching_constraint.hpp"
 
 #include "robot_factory.hpp"
@@ -46,8 +46,8 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
   auto kkt_residual_ref = kkt_residual;
   SplitKKTMatrix kkt_matrix(robot);
   auto kkt_matrix_ref = kkt_matrix;
-  SplitSwitchingConstraintJacobian jac(robot);
-  SplitSwitchingConstraintResidual res(robot);
+  SwitchingConstraintJacobian jac(robot);
+  SwitchingConstraintResidual res(robot);
   auto jac_ref = jac;
   auto res_ref = res;
   robot.updateKinematics(s.q);
@@ -103,7 +103,7 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   }
   const SplitSolution s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  SplitSwitchingConstraintResidual res(robot);
+  SwitchingConstraintResidual res(robot);
   auto res_ref = res;
   switchingconstraint::evalSwitchingConstraint(robot, impulse_status, 
                                                 dt1, dt2, s, res);

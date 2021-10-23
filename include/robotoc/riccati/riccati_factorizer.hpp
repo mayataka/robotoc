@@ -11,8 +11,8 @@
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
-#include "robotoc/ocp/split_switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 #include "robotoc/riccati/sto_policy.hpp"
@@ -97,8 +97,8 @@ public:
   void backwardRiccatiRecursion(
       const SplitRiccatiFactorization& riccati_next, 
       SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-      const SplitSwitchingConstraintJacobian& sc_jacobian, 
-      const SplitSwitchingConstraintResidual& sc_residual, 
+      const SwitchingConstraintJacobian& sc_jacobian, 
+      const SwitchingConstraintResidual& sc_residual, 
       SplitRiccatiFactorization& riccati, 
       SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy);
 

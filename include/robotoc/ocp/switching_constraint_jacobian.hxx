@@ -1,14 +1,14 @@
-#ifndef ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_JACOBIAN_HXX_ 
-#define ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_JACOBIAN_HXX_
+#ifndef ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HXX_ 
+#define ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HXX_
 
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
 
 #include <cassert>
 
 
 namespace robotoc {
 
-inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian(
+inline SwitchingConstraintJacobian::SwitchingConstraintJacobian(
     const Robot& robot)
   : Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Phix_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
@@ -23,7 +23,7 @@ inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian(
 }
 
 
-inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian()
+inline SwitchingConstraintJacobian::SwitchingConstraintJacobian()
   : Pq_full_(),
     Phix_full_(),
     Phia_full_(),
@@ -37,100 +37,99 @@ inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian()
 }
 
 
-inline SplitSwitchingConstraintJacobian::~SplitSwitchingConstraintJacobian() {
+inline SwitchingConstraintJacobian::~SwitchingConstraintJacobian() {
 }
 
 
-inline void SplitSwitchingConstraintJacobian::setImpulseStatus(
+inline void SwitchingConstraintJacobian::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimf();
 }
 
 
-inline void SplitSwitchingConstraintJacobian::setImpulseStatus() {
+inline void SwitchingConstraintJacobian::setImpulseStatus() {
   dimi_ = 0;
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Pq() {
+inline Eigen::Block<Eigen::MatrixXd> SwitchingConstraintJacobian::Pq() {
   return Pq_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitSwitchingConstraintJacobian::Pq() const {
+SwitchingConstraintJacobian::Pq() const {
   return Pq_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phix() {
+inline Eigen::Block<Eigen::MatrixXd> SwitchingConstraintJacobian::Phix() {
   return Phix_full_.topLeftCorner(dimi_, dimx_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitSwitchingConstraintJacobian::Phix() const {
+SwitchingConstraintJacobian::Phix() const {
   return Phix_full_.topLeftCorner(dimi_, dimx_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phiq() {
+inline Eigen::Block<Eigen::MatrixXd> SwitchingConstraintJacobian::Phiq() {
   return Phix_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitSwitchingConstraintJacobian::Phiq() const {
+SwitchingConstraintJacobian::Phiq() const {
   return Phix_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phiv() {
+inline Eigen::Block<Eigen::MatrixXd> SwitchingConstraintJacobian::Phiv() {
   return Phix_full_.topRightCorner(dimi_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitSwitchingConstraintJacobian::Phiv() const {
+SwitchingConstraintJacobian::Phiv() const {
   return Phix_full_.topRightCorner(dimi_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitSwitchingConstraintJacobian::Phia() const {
-  return Phia_full_.topLeftCorner(dimi_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phia() {
+inline Eigen::Block<Eigen::MatrixXd> SwitchingConstraintJacobian::Phia() {
   return Phia_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitSwitchingConstraintJacobian::Phiu() const {
+SwitchingConstraintJacobian::Phia() const {
+  return Phia_full_.topLeftCorner(dimi_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SwitchingConstraintJacobian::Phiu() {
   return Phiu_full_.topLeftCorner(dimi_, dimu_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phiu() {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+SwitchingConstraintJacobian::Phiu() const {
   return Phiu_full_.topLeftCorner(dimi_, dimu_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-SplitSwitchingConstraintJacobian::Phit() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SwitchingConstraintJacobian::Phit() {
   return Phit_full_.head(dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitSwitchingConstraintJacobian::Phit() const {
+SwitchingConstraintJacobian::Phit() const {
   return Phit_full_.head(dimi_);
 }
 
 
-inline void SplitSwitchingConstraintJacobian::setZero() {
+inline void SwitchingConstraintJacobian::setZero() {
   Pq().setZero();
   Phix().setZero();
   Phia().setZero();
@@ -139,13 +138,13 @@ inline void SplitSwitchingConstraintJacobian::setZero() {
 }
 
 
-inline int SplitSwitchingConstraintJacobian::dimi() const {
+inline int SwitchingConstraintJacobian::dimi() const {
   return dimi_;
 }
 
 
-inline bool SplitSwitchingConstraintJacobian::isApprox(
-    const SplitSwitchingConstraintJacobian& other) const {
+inline bool SwitchingConstraintJacobian::isApprox(
+    const SwitchingConstraintJacobian& other) const {
   assert(dimi() == other.dimi());
   if (!Pq().isApprox(other.Pq())) return false;
   if (!Phix().isApprox(other.Phix())) return false;
@@ -156,7 +155,7 @@ inline bool SplitSwitchingConstraintJacobian::isApprox(
 }
 
 
-inline bool SplitSwitchingConstraintJacobian::hasNaN() const {
+inline bool SwitchingConstraintJacobian::hasNaN() const {
   if (Pq().hasNaN()) return true;
   if (Phix().hasNaN()) return true;
   if (Phia().hasNaN()) return true;
@@ -167,4 +166,4 @@ inline bool SplitSwitchingConstraintJacobian::hasNaN() const {
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_JACOBIAN_HXX_ 
+#endif // ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HXX_ 

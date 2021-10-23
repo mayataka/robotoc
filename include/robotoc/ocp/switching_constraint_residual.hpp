@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_RESIDUAL_HPP_ 
-#define ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_RESIDUAL_HPP_
+#ifndef ROBOTOC_SWITCHING_CONSTRAINT_RESIDUAL_HPP_ 
+#define ROBOTOC_SWITCHING_CONSTRAINT_RESIDUAL_HPP_
 
 #include "Eigen/Core"
 
@@ -10,50 +10,48 @@
 namespace robotoc {
 
 ///
-/// @class SplitSwitchingConstraintResidual
+/// @class SwitchingConstraintResidual
 /// @brief KKT residual w.r.t. the switching constraint split into each time stage. 
 ///
-class SplitSwitchingConstraintResidual {
+class SwitchingConstraintResidual {
 public:
   ///
   /// @brief Construct a split KKT residual.
   /// @param[in] robot Robot model. 
   ///
-  SplitSwitchingConstraintResidual(const Robot& robot);
+  SwitchingConstraintResidual(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  SplitSwitchingConstraintResidual();
+  SwitchingConstraintResidual();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitSwitchingConstraintResidual();
+  ~SwitchingConstraintResidual();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitSwitchingConstraintResidual(
-      const SplitSwitchingConstraintResidual&) = default;
+  SwitchingConstraintResidual(const SwitchingConstraintResidual&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  SplitSwitchingConstraintResidual& operator=(
-      const SplitSwitchingConstraintResidual&) = default;
+  SwitchingConstraintResidual& operator=(
+      const SwitchingConstraintResidual&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitSwitchingConstraintResidual(
-      SplitSwitchingConstraintResidual&&) noexcept = default;
+  SwitchingConstraintResidual(SwitchingConstraintResidual&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitSwitchingConstraintResidual& operator=(
-      SplitSwitchingConstraintResidual&&) noexcept = default;
+  SwitchingConstraintResidual& operator=(
+      SwitchingConstraintResidual&&) noexcept = default;
 
   ///
   /// @brief Set impulse status, i.e., set dimension of the impulse.
@@ -74,7 +72,7 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> P();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintResidual::P().
+  /// @brief const version of SwitchingConstraintResidual::P().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
 
@@ -123,11 +121,11 @@ public:
   bool isDimensionConsistent() const;
 
   ///
-  /// @brief Checks the equivalence of two SplitSwitchingConstraintResidual.
+  /// @brief Checks the equivalence of two SwitchingConstraintResidual.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const SplitSwitchingConstraintResidual& other) const;
+  bool isApprox(const SwitchingConstraintResidual& other) const;
 
   ///
   /// @brief Checks this has at least one NaN.
@@ -143,6 +141,6 @@ private:
 
 } // namespace robotoc 
 
-#include "robotoc/ocp/split_switching_constraint_residual.hxx"
+#include "robotoc/ocp/switching_constraint_residual.hxx"
 
-#endif // ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_RESIDUAL_HPP_ 
+#endif // ROBOTOC_SWITCHING_CONSTRAINT_RESIDUAL_HPP_ 

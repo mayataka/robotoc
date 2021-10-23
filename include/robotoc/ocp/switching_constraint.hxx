@@ -11,9 +11,8 @@ namespace switchingconstraint {
 inline void linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual, 
-    SplitSwitchingConstraintJacobian& sc_jacobian,
-    SplitSwitchingConstraintResidual& sc_residual) {
+    SplitKKTResidual& kkt_residual, SwitchingConstraintJacobian& sc_jacobian,
+    SwitchingConstraintResidual& sc_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
   sc_residual.setImpulseStatus(impulse_status);
@@ -51,7 +50,7 @@ inline void linearizeSwitchingConstraint(
 inline void evalSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, 
-    SplitSwitchingConstraintResidual& sc_residual) {
+    SwitchingConstraintResidual& sc_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
   sc_residual.setImpulseStatus(impulse_status);

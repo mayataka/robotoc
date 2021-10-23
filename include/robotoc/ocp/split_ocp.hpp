@@ -18,8 +18,8 @@
 #include "robotoc/ocp/state_equation.hpp"
 #include "robotoc/ocp/contact_dynamics.hpp"
 #include "robotoc/ocp/switching_constraint.hpp"
-#include "robotoc/ocp/split_switching_constraint_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
 
 
 namespace robotoc {
@@ -136,7 +136,7 @@ public:
                const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
                SplitKKTResidual& kkt_residual,
                const ImpulseStatus& impulse_status, const double dt_next, 
-               SplitSwitchingConstraintResidual& sc_residual);
+               SwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -183,8 +183,8 @@ public:
                           SplitKKTResidual& kkt_residual, 
                           const ImpulseStatus& impulse_status, 
                           const double dt_next, 
-                          SplitSwitchingConstraintJacobian& sc_jacobian,
-                          SplitSwitchingConstraintResidual& sc_residual);
+                          SwitchingConstraintJacobian& sc_jacobian,
+                          SwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the KKT system of this time stage, i.e., the condensed
@@ -232,8 +232,8 @@ public:
                         SplitKKTResidual& kkt_residual, 
                         const ImpulseStatus& impulse_status, 
                         const double dt_next, 
-                        SplitSwitchingConstraintJacobian& sc_jacobian,
-                        SplitSwitchingConstraintResidual& sc_residual);
+                        SwitchingConstraintJacobian& sc_jacobian,
+                        SwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the initial state direction using the result of  
@@ -349,7 +349,7 @@ public:
   ///
   double constraintViolation(
       const SplitKKTResidual& kkt_residual, const double dt,
-      const SplitSwitchingConstraintResidual& sc_residual) const;
+      const SwitchingConstraintResidual& sc_residual) const;
 
 private:
   std::shared_ptr<CostFunction> cost_;

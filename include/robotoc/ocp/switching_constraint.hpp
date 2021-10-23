@@ -6,8 +6,8 @@
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
 
 
 namespace robotoc {
@@ -33,8 +33,8 @@ void linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual, 
-    SplitSwitchingConstraintJacobian& sc_jacobian,
-    SplitSwitchingConstraintResidual& sc_residual);
+    SwitchingConstraintJacobian& sc_jacobian,
+    SwitchingConstraintResidual& sc_residual);
 
 ///
 /// @brief Computes the residual in the switching constraint, i.e., the 
@@ -49,7 +49,7 @@ void linearizeSwitchingConstraint(
 void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
                              const double dt1, const double dt2, 
                              const SplitSolution& s, 
-                             SplitSwitchingConstraintResidual& sc_residual);
+                             SwitchingConstraintResidual& sc_residual);
 
 } // namespace switchingconstraint 
 

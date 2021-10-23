@@ -226,8 +226,8 @@ inline void ContactDynamics::expandDual(const double dt, const double dts,
 
 
 inline void ContactDynamics::condenseSwitchingConstraint(
-    SplitSwitchingConstraintJacobian& sc_jacobian,
-    SplitSwitchingConstraintResidual& sc_residual,
+    SwitchingConstraintJacobian& sc_jacobian,
+    SwitchingConstraintResidual& sc_residual,
     SplitKKTMatrix& kkt_matrix) const {
   sc_jacobian.Phix().noalias() 
       -= sc_jacobian.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);

@@ -86,7 +86,7 @@ inline void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
                               SplitKKTResidual& kkt_residual,
                               const ImpulseStatus& impulse_status,
                               const double dt_next, 
-                              SplitSwitchingConstraintResidual& sc_residual) {
+                              SwitchingConstraintResidual& sc_residual) {
   assert(dt_next > 0);
   evalOCP(robot, contact_status, t, dt, s, q_next, v_next, kkt_residual);
   switchingconstraint::evalSwitchingConstraint(robot, impulse_status,  dt, 
@@ -130,8 +130,8 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          SplitKKTResidual& kkt_residual,
                                          const ImpulseStatus& impulse_status, 
                                          const double dt_next,
-                                         SplitSwitchingConstraintJacobian& sc_jacobian,
-                                         SplitSwitchingConstraintResidual& sc_residual) {
+                                         SwitchingConstraintJacobian& sc_jacobian,
+                                         SwitchingConstraintResidual& sc_residual) {
   assert(dt_next > 0);
   computeKKTResidual(robot, contact_status, t, dt, q_prev, s, s_next,
                      kkt_matrix, kkt_residual);
@@ -182,8 +182,8 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                        SplitKKTResidual& kkt_residual, 
                                        const ImpulseStatus& impulse_status,
                                        const double dt_next, 
-                                       SplitSwitchingConstraintJacobian& sc_jacobian,
-                                       SplitSwitchingConstraintResidual& sc_residual) {
+                                       SwitchingConstraintJacobian& sc_jacobian,
+                                       SwitchingConstraintResidual& sc_residual) {
   assert(dt > 0);
   assert(dt_next > 0);
   assert(q_prev.size() == robot.dimq());
@@ -307,7 +307,7 @@ inline double SplitOCP::constraintViolation(const SplitKKTResidual& kkt_residual
 
 inline double SplitOCP::constraintViolation(
     const SplitKKTResidual& kkt_residual, const double dt,
-    const SplitSwitchingConstraintResidual& sc_residual) const {
+    const SwitchingConstraintResidual& sc_residual) const {
   double vio = 0;
   vio += constraintViolation(kkt_residual, dt);
   vio += sc_residual.constraintViolation();

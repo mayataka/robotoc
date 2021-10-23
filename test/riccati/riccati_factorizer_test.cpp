@@ -7,8 +7,8 @@
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
-#include "robotoc/ocp/split_switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
@@ -84,8 +84,8 @@ void RiccatiFactorizerTest::test_backwardRecursionWithSwitchingConstraint(const 
   auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  SplitSwitchingConstraintJacobian sc_jacobian(robot);
-  SplitSwitchingConstraintResidual sc_residual(robot);
+  SwitchingConstraintJacobian sc_jacobian(robot);
+  SwitchingConstraintResidual sc_residual(robot);
   sc_jacobian.setImpulseStatus(impulse_status);
   sc_residual.setImpulseStatus(impulse_status);
   sc_jacobian.Phix().setRandom();

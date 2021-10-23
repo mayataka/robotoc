@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_JACOBIAN_HPP_ 
-#define ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_JACOBIAN_HPP_
+#ifndef ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HPP_ 
+#define ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HPP_
 
 #include "Eigen/Core"
 
@@ -10,50 +10,48 @@
 namespace robotoc {
 
 ///
-/// @class SplitSwitchingConstraintJacobian
+/// @class SwitchingConstraintJacobian
 /// @brief The KKT matrix split into a time stage.
 ///
-class SplitSwitchingConstraintJacobian {
+class SwitchingConstraintJacobian {
 public:
   ///
   /// @brief Construct a split KKT matrix.
   /// @param[in] robot Robot model. 
   ///
-  SplitSwitchingConstraintJacobian(const Robot& robot);
+  SwitchingConstraintJacobian(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  SplitSwitchingConstraintJacobian();
+  SwitchingConstraintJacobian();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitSwitchingConstraintJacobian();
+  ~SwitchingConstraintJacobian();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitSwitchingConstraintJacobian(
-      const SplitSwitchingConstraintJacobian&) = default;
+  SwitchingConstraintJacobian(const SwitchingConstraintJacobian&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  SplitSwitchingConstraintJacobian& operator=(
-      const SplitSwitchingConstraintJacobian&) = default;
+  SwitchingConstraintJacobian& operator=(
+      const SwitchingConstraintJacobian&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitSwitchingConstraintJacobian(
-      SplitSwitchingConstraintJacobian&&) noexcept = default;
+  SwitchingConstraintJacobian(SwitchingConstraintJacobian&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitSwitchingConstraintJacobian& operator=(
-      SplitSwitchingConstraintJacobian&&) noexcept = default;
+  SwitchingConstraintJacobian& operator=(
+      SwitchingConstraintJacobian&&) noexcept = default;
 
   ///
   /// @brief Set impulse status, i.e., set dimension of the impulses.
@@ -74,7 +72,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Pq();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Pq().
+  /// @brief const version of SwitchingConstraintJacobian::Pq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Pq() const;
 
@@ -86,7 +84,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Phix();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Phix().
+  /// @brief const version of SwitchingConstraintJacobian::Phix().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Phix() const;
 
@@ -98,7 +96,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Phiq();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Phiq().
+  /// @brief const version of SwitchingConstraintJacobian::Phiq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Phiq() const;
 
@@ -110,7 +108,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Phiv();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Phiv().
+  /// @brief const version of SwitchingConstraintJacobian::Phiv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Phiv() const;
 
@@ -122,7 +120,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Phia();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Phia().
+  /// @brief const version of SwitchingConstraintJacobian::Phia().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Phia() const;
 
@@ -134,7 +132,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Phiu();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Phiu().
+  /// @brief const version of SwitchingConstraintJacobian::Phiu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Phiu() const;
 
@@ -146,7 +144,7 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> Phit();
 
   ///
-  /// @brief const version of SplitSwitchingConstraintJacobian::Phit().
+  /// @brief const version of SwitchingConstraintJacobian::Phit().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Phit() const;
 
@@ -163,11 +161,11 @@ public:
   int dimi() const;
 
   ///
-  /// @brief Checks the equivalence of two SplitSwitchingConstraintJacobian.
+  /// @brief Checks the equivalence of two SwitchingConstraintJacobian.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const SplitSwitchingConstraintJacobian& other) const;
+  bool isApprox(const SwitchingConstraintJacobian& other) const;
 
   ///
   /// @brief Checks this has at least one NaN.
@@ -185,6 +183,6 @@ private:
 
 } // namespace robotoc 
 
-#include "robotoc/ocp/split_switching_constraint_jacobian.hxx"
+#include "robotoc/ocp/switching_constraint_jacobian.hxx"
 
-#endif // ROBOTOC_SPLIT_SWITCHING_CONSTRAINT_JACOBIAN_HPP_ 
+#endif // ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HPP_ 

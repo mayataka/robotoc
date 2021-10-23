@@ -10,8 +10,8 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/contact_dynamics_data.hpp"
-#include "robotoc/ocp/split_switching_constraint_residual.hpp"
-#include "robotoc/ocp/split_switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
 
 
 namespace robotoc {
@@ -145,10 +145,9 @@ public:
   /// @param[in, out] sc_residual Residual of the switching constraint. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   ///
-  void condenseSwitchingConstraint(
-      SplitSwitchingConstraintJacobian& sc_jacobian,
-      SplitSwitchingConstraintResidual& sc_residual,
-      SplitKKTMatrix& kkt_matrix) const;
+  void condenseSwitchingConstraint(SwitchingConstraintJacobian& sc_jacobian,
+                                   SwitchingConstraintResidual& sc_residual,
+                                   SplitKKTMatrix& kkt_matrix) const;
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 

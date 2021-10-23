@@ -52,8 +52,8 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-    const SplitSwitchingConstraintJacobian& sc_jacobian,
-    const SplitSwitchingConstraintResidual& sc_residual, 
+    const SwitchingConstraintJacobian& sc_jacobian,
+    const SwitchingConstraintResidual& sc_residual, 
     SplitRiccatiFactorization& riccati,
     SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
