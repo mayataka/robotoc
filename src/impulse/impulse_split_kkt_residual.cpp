@@ -1,7 +1,7 @@
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void ImpulseSplitKKTResidual::disp(std::ostream& os) const {
   os << "impulse split KKT residual:" << std::endl;
@@ -22,4 +22,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

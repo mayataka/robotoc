@@ -1,10 +1,10 @@
-#include "idocp/utils/logger.hpp"
+#include "robotoc/utils/logger.hpp"
 
 #include <fstream>
 #include <boost/filesystem.hpp>
 
 
-namespace idocp {
+namespace robotoc {
 
 Logger::Logger(const std::vector<std::string>& vars,
                const std::string& save_dir) 
@@ -71,4 +71,4 @@ void Logger::takeLog(UnconstrParNMPCSolver& solver, const int precision,
   takeLog_unconstr_impl(solver, precision, delimiter);
 }
 
-} // namespace idocp
+} // namespace robotoc

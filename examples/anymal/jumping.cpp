@@ -3,27 +3,27 @@
 
 #include "Eigen/Core"
 
-#include "idocp/solver/ocp_solver.hpp"
-#include "idocp/robot/robot.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/configuration_space_cost.hpp"
-#include "idocp/cost/time_varying_task_space_3d_cost.hpp"
-#include "idocp/cost/time_varying_com_cost.hpp"
-#include "idocp/cost/periodic_foot_track_ref.hpp"
-#include "idocp/cost/periodic_com_ref.hpp"
-#include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
+#include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/cost/cost_function.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
+#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/periodic_com_ref.hpp"
+#include "robotoc/constraints/constraints.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
 
-#include "idocp/utils/ocp_benchmarker.hpp"
+#include "robotoc/utils/ocp_benchmarker.hpp"
 
 #ifdef ENABLE_VIEWER
-#include "idocp/utils/trajectory_viewer.hpp"
+#include "robotoc/utils/trajectory_viewer.hpp"
 #endif 
 
 
@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
   std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
-  idocp::Robot robot(path_to_urdf, idocp::BaseJointType::FloatingBase, 
-                     contact_frames, baumgarte_time_step);
+  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
+                       contact_frames, baumgarte_time_step);
 
   const double dt = 0.01;
   const double jump_length = 0.5;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   const double period_ground = 0.30;
   const double t0 = 0;
 
-  auto cost = std::make_shared<idocp::CostFunction>();
+  auto cost = std::make_shared<robotoc::CostFunction>();
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
   q_standing << 0, 0, 0.4792, 0, 0, 0, 1, 
                 -0.1,  0.7, -1.0, 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
                100, 100, 100,
                100, 100, 100;
   Eigen::VectorXd vi_weight = Eigen::VectorXd::Constant(robot.dimv(), 100);
-  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
+  auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
   config_cost->set_qf_weight(q_weight);
@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
   CoM_ref0_flying_up(2) = robot.CoM()(2);
   Eigen::Vector3d v_CoM_ref_flying_up = Eigen::Vector3d::Zero();
   v_CoM_ref_flying_up << (0.5*jump_length/period_flying_up), 0, (jump_height/period_flying_up);
-  auto com_ref_flying_up = std::make_shared<idocp::PeriodicCoMRef>(CoM_ref0_flying_up, v_CoM_ref_flying_up, 
-                                                                   t0+period_ground, period_flying_up, 
-                                                                   period_flying_down+2*period_ground, false);
-  auto com_cost_flying_up = std::make_shared<idocp::TimeVaryingCoMCost>(robot, com_ref_flying_up);
+  auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_flying_up, v_CoM_ref_flying_up, 
+                                                                     t0+period_ground, period_flying_up, 
+                                                                     period_flying_down+2*period_ground, false);
+  auto com_cost_flying_up = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_flying_up);
   com_cost_flying_up->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_flying_up);
 
@@ -106,22 +106,22 @@ int main(int argc, char *argv[]) {
   CoM_ref0_landed(0) += jump_length;
   CoM_ref0_landed(2) = robot.CoM()(2);
   const Eigen::Vector3d v_CoM_ref_landed = Eigen::Vector3d::Zero();
-  auto com_ref_landed = std::make_shared<idocp::PeriodicCoMRef>(CoM_ref0_landed, v_CoM_ref_landed, 
-                                                                t0+period_ground+period_flying, period_ground, 
-                                                                period_ground+period_flying, false);
-  auto com_cost_landed = std::make_shared<idocp::TimeVaryingCoMCost>(robot, com_ref_landed);
+  auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_landed, v_CoM_ref_landed, 
+                                                                  t0+period_ground+period_flying, period_ground, 
+                                                                  period_ground+period_flying, false);
+  auto com_cost_landed = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_landed);
   com_cost_landed->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_landed);
 
-  auto constraints           = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower  = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper  = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower  = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto constraints           = std::make_shared<robotoc::Constraints>();
+  auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower  = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper  = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower   = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   const double mu = 0.7;
-  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
 
   const int nthreads = 4;
   const double t = 0;
-  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
 
   std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
   auto contact_status_initial = robot.createContactStatus();
@@ -167,10 +167,10 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::benchmark::convergence(ocp_solver, t, q, v, 50, line_search);
+  robotoc::benchmark::convergence(ocp_solver, t, q, v, 50, line_search);
 
 #ifdef ENABLE_VIEWER
-  idocp::TrajectoryViewer viewer(path_to_urdf, idocp::BaseJointType::FloatingBase);
+  robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
   viewer.display(robot, ocp_solver.getSolution("q"), 
                  ocp_solver.getSolution("f", "WORLD"), dt, mu);
 #endif 

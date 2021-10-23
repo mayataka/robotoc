@@ -1,11 +1,11 @@
 #include "cost_factory.hpp"
 
-#include "idocp/cost/configuration_space_cost.hpp"
-#include "idocp/cost/time_varying_configuration_space_cost.hpp"
-#include "idocp/cost/contact_force_cost.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
+#include "robotoc/cost/contact_force_cost.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 TimeVaryingConfigurationRef::TimeVaryingConfigurationRef(
@@ -84,4 +84,4 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

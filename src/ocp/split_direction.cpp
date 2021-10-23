@@ -1,7 +1,7 @@
-#include "idocp/ocp/split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void SplitDirection::disp(std::ostream& os) const {
   os << "split diretion:" << std::endl;
@@ -29,4 +29,4 @@ std::ostream& operator<<(std::ostream& os, const SplitDirection& d) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

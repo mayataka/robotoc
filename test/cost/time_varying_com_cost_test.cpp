@@ -3,18 +3,18 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/cost/time_varying_com_cost.hpp"
-#include "idocp/cost/cost_function_data.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/cost_function_data.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 
-#include "idocp/utils/derivative_checker.hpp"
+#include "robotoc/utils/derivative_checker.hpp"
 
 #include "robot_factory.hpp"
 
-namespace idocp {
+namespace robotoc {
 
 class TimeVaryingCoMRef final : public TimeVaryingCoMRefBase {
 public:
@@ -249,7 +249,7 @@ TEST_F(TimeVaryingCoMCostTest, floatingBase) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

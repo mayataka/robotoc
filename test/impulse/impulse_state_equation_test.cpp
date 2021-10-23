@@ -3,17 +3,17 @@
 #include "Eigen/Core"
 #include "Eigen/LU"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_state_equation.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/impulse/impulse_state_equation.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseStateEquationTest : public ::testing::Test {
 protected:
@@ -111,7 +111,7 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

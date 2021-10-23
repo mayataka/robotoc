@@ -1,10 +1,10 @@
-#include "idocp/cost/contact_force_cost.hpp"
+#include "robotoc/cost/contact_force_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 ContactForceCost::ContactForceCost(const Robot& robot)
   : CostFunctionComponentBase(),
@@ -209,4 +209,4 @@ void ContactForceCost::computeImpulseCostHessian(
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

@@ -1,9 +1,9 @@
 #include "riccati_factory.hpp"
 
-#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 SplitRiccatiFactorization CreateSplitRiccatiFactorization(const Robot& robot) {
@@ -16,4 +16,4 @@ SplitRiccatiFactorization CreateSplitRiccatiFactorization(const Robot& robot) {
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

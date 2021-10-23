@@ -3,21 +3,21 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/solver/ocp_solver.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/configuration_space_cost.hpp"
-#include "idocp/cost/contact_force_cost.hpp"
-#include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/cost/cost_function.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/contact_force_cost.hpp"
+#include "robotoc/constraints/constraints.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
 
-#include "idocp/utils/ocp_benchmarker.hpp"
+#include "robotoc/utils/ocp_benchmarker.hpp"
 
 
 int main () {
@@ -29,11 +29,11 @@ int main () {
   std::vector<int> contact_frames = {LF_foot, LH_foot, RF_foot, RH_foot}; // LF, LH, RF, RH
   const double baumgarte_time_step = 0.5 / 20;
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  idocp::Robot robot(path_to_urdf, idocp::BaseJointType::FloatingBase, 
-                     contact_frames, baumgarte_time_step);
+  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
+                       contact_frames, baumgarte_time_step);
 
   // Create a cost function.
-  auto cost = std::make_shared<idocp::CostFunction>();
+  auto cost = std::make_shared<robotoc::CostFunction>();
   Eigen::VectorXd q_ref(robot.dimq());
   q_ref << 0, 0, 0.4792, 0, 0, 0, 1, 
            -0.1,  0.7, -1.0, 
@@ -46,14 +46,14 @@ int main () {
            0, 0, 0, 
            0, 0, 0, 
            0, 0, 0;
-  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
+  auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_q_ref(q_ref);
   config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
+  auto contact_cost = std::make_shared<robotoc::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<contact_frames.size(); ++i) {
     Eigen::Vector3d fw; 
@@ -69,15 +69,15 @@ int main () {
   cost->push_back(contact_cost);
 
   // Create inequality constraints.
-  auto constraints = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto constraints = std::make_shared<robotoc::Constraints>();
+  auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   const double mu = 0.7;
-  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
+  auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -91,8 +91,8 @@ int main () {
   const int N = 20;
   const int max_num_impulse_phase = 4;
   const int nthreads = 4;
-  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, 
-                              max_num_impulse_phase, nthreads);
+  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, 
+                                max_num_impulse_phase, nthreads);
 
   // Initial time and initial state
   const double t = 0;
@@ -123,8 +123,8 @@ int main () {
 
   ocp_solver.initConstraints(t);
 
-  idocp::benchmark::convergence(ocp_solver, t, q, v, 10, false);
-  idocp::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
+  robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
+  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
   // std::cout << robot << std::endl;
 

@@ -1,7 +1,7 @@
-#include "idocp/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void ImpulseSplitSolution::disp(std::ostream& os) const {
   os << "impulse split solution:" << std::endl;
@@ -25,4 +25,4 @@ std::ostream& operator<<(std::ostream& os, const ImpulseSplitSolution& s) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

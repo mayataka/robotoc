@@ -1,9 +1,9 @@
 #include "direction_factory.hpp"
 
-#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 Direction CreateDirection(const Robot& robot, const int N, 
@@ -51,4 +51,4 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

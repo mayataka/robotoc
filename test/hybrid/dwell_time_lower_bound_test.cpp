@@ -3,12 +3,12 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
-#include "idocp/hybrid/dwell_time_lower_bound.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/dwell_time_lower_bound.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class DwellTimeLowerBoundTest : public ::testing::Test {
 protected:
@@ -114,7 +114,7 @@ TEST_F(DwellTimeLowerBoundTest, ub) {
   EXPECT_DOUBLE_EQ(kkt_res1.h, -h1_ref);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

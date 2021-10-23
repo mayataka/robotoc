@@ -1,7 +1,7 @@
-#include "idocp/cost/time_varying_task_space_6d_cost.hpp"
+#include "robotoc/cost/time_varying_task_space_6d_cost.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 TimeVaryingTaskSpace6DCost::TimeVaryingTaskSpace6DCost(
     const Robot& robot, const int frame_id, 
@@ -194,4 +194,4 @@ void TimeVaryingTaskSpace6DCost::computeImpulseCostHessian(
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

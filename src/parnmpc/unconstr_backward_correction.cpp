@@ -1,4 +1,4 @@
-#include "idocp/parnmpc/unconstr_backward_correction.hpp"
+#include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -6,7 +6,7 @@
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrBackwardCorrection::UnconstrBackwardCorrection(const Robot& robot, 
                                                        const double T, 
@@ -153,4 +153,4 @@ double UnconstrBackwardCorrection::dualStepSize() const {
   return dual_step_sizes_.minCoeff();
 }
 
-} // namespace idocp
+} // namespace robotoc

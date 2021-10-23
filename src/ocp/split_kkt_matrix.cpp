@@ -1,7 +1,7 @@
-#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void SplitKKTMatrix::disp(std::ostream& os) const {
   os << "split KKT matrix:" << std::endl;
@@ -30,4 +30,4 @@ std::ostream& operator<<(std::ostream& os, const SplitKKTMatrix& kkt_matrix) {
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

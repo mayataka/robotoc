@@ -1,10 +1,10 @@
-#include "idocp/hybrid/periodic_switching_time_cost.hpp"
+#include "robotoc/hybrid/periodic_switching_time_cost.hpp"
 
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
 
-namespace idocp {
+namespace robotoc {
 
 PeriodicSwitchingTimeCost::PeriodicSwitchingTimeCost(const double period, 
                                                      const double t_start)
@@ -102,4 +102,4 @@ void PeriodicSwitchingTimeCost::computeCostHessian(const double t0,
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

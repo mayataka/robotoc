@@ -1,7 +1,7 @@
-#include "idocp/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void SplitKKTResidual::disp(std::ostream& os) const {
   os << "split KKT residual:" << std::endl;
@@ -24,4 +24,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

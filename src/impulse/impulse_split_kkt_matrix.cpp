@@ -1,7 +1,7 @@
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 void ImpulseSplitKKTMatrix::disp(std::ostream& os) const {
   os << "impulse split KKT matrix:" << std::endl;
@@ -22,4 +22,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

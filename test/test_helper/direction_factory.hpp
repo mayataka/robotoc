@@ -1,12 +1,12 @@
-#ifndef IDOCP_TEST_HELPER_DIRECTION_FACTORY_HPP_
-#define IDOCP_TEST_HELPER_DIRECTION_FACTORY_HPP_
+#ifndef ROBOTOC_TEST_HELPER_DIRECTION_FACTORY_HPP_
+#define ROBOTOC_TEST_HELPER_DIRECTION_FACTORY_HPP_
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/direction.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/ocp/direction.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 Direction CreateDirection(const Robot& robot, const int N, 
@@ -17,6 +17,6 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
 
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc
 
-#endif // IDOCP_TEST_HELPER_DIRECTION_FACTORY_HPP_ 
+#endif // ROBOTOC_TEST_HELPER_DIRECTION_FACTORY_HPP_ 

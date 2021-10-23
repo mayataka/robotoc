@@ -1,11 +1,11 @@
-#include "idocp/riccati/riccati_recursion.hpp"
+#include "robotoc/riccati/riccati_recursion.hpp"
 
 #include <omp.h>
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
 
-namespace idocp {
+namespace robotoc {
 
 RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N, 
                                    const int max_num_impulse, 
@@ -256,4 +256,4 @@ void RiccatiRecursion::getStateFeedbackGain(const int time_stage,
   Kv = lqr_policy_[time_stage].Kv();
 }
 
-} // namespace idocp
+} // namespace robotoc

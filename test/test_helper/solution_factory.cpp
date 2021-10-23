@@ -1,9 +1,9 @@
 #include "solution_factory.hpp"
 
-#include "idocp/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 Solution CreateSolution(const Robot& robot, const int N, 
@@ -51,4 +51,4 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

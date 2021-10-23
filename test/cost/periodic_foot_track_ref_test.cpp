@@ -3,11 +3,11 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/cost/periodic_foot_track_ref.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class PeriodicFootTrackRefTest : public ::testing::Test {
 protected:
@@ -112,7 +112,7 @@ TEST_F(PeriodicFootTrackRefTest, first_mode_half_false) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

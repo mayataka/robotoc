@@ -1,7 +1,7 @@
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 JointVelocityLowerLimit::JointVelocityLowerLimit(
     const Robot& robot, const double barrier, 
@@ -91,4 +91,4 @@ int JointVelocityLowerLimit::dimc() const {
   return dimc_;
 }
 
-} // namespace idocp
+} // namespace robotoc

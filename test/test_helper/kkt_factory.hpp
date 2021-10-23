@@ -1,14 +1,14 @@
-#ifndef IDOCP_TEST_HELPER_KKT_FACTORY_HPP_
-#define IDOCP_TEST_HELPER_KKT_FACTORY_HPP_
+#ifndef ROBOTOC_TEST_HELPER_KKT_FACTORY_HPP_
+#define ROBOTOC_TEST_HELPER_KKT_FACTORY_HPP_
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/kkt_matrix.hpp"
+#include "robotoc/ocp/kkt_residual.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt);
@@ -28,6 +28,6 @@ KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact
                               const int N, const int max_num_impulse);
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc
 
-#endif // IDOCP_TEST_HELPER_KKT_FACTORY_HPP_
+#endif // ROBOTOC_TEST_HELPER_KKT_FACTORY_HPP_

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(idocp CXX)
+project(robotoc CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 #############
@@ -10,9 +10,9 @@ option(BUILD_VIEWER "Build trajectory viewer" OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 
-#################
-## Build idocp ##
-#################
+###################
+## Build robotoc ##
+###################
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "WARNING: CMAKE_BUILD_TYPE is NOT set to Release, which can decrease performance significantly.")
 endif()
@@ -23,7 +23,7 @@ find_package(Eigen3 REQUIRED)
 find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
-# build idocp 
+# build robotoc 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES src/*.cpp)
 file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS include/${PROJECT_NAME}/*.h*)
 list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX ".trajectory_viewer.")

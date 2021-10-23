@@ -1,0 +1,5 @@
+pybind11_add_robotoc_module(ocp_solver)
+pybind11_add_robotoc_module(unconstr_ocp_solver)
+pybind11_add_robotoc_module(unconstr_parnmpc_solver)
+
+install_robotoc_pybind_module(solver)

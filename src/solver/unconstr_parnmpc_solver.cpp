@@ -1,4 +1,4 @@
-#include "idocp/solver/unconstr_parnmpc_solver.hpp"
+#include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -6,7 +6,7 @@
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrParNMPCSolver::UnconstrParNMPCSolver(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
@@ -241,4 +241,4 @@ bool UnconstrParNMPCSolver::isCurrentSolutionFeasible() {
   return true;
 }
 
-} // namespace idocp
+} // namespace robotoc

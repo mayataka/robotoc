@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "idocp/robot/robot.hpp"
+#include "robotoc/robot/robot.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 Robot CreateFixedBaseRobot() {
@@ -36,4 +36,4 @@ Robot CreateFloatingBaseRobot(const double time_step) {
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

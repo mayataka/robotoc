@@ -1,7 +1,7 @@
-#include "idocp/constraints/joint_acceleration_upper_limit.hpp"
+#include "robotoc/constraints/joint_acceleration_upper_limit.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 JointAccelerationUpperLimit::JointAccelerationUpperLimit(
     const Robot& robot, const Eigen::VectorXd& amax, const double barrier, 
@@ -91,4 +91,4 @@ int JointAccelerationUpperLimit::dimc() const {
   return dimc_;
 }
 
-} // namespace idocp
+} // namespace robotoc

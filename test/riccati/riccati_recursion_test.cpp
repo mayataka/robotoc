@@ -3,16 +3,16 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/utils/aligned_vector.hpp"
-#include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/direct_multiple_shooting.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/riccati/split_riccati_factorization.hpp"
-#include "idocp/riccati/split_constrained_riccati_factorization.hpp"
-#include "idocp/riccati/lqr_policy.hpp"
-#include "idocp/riccati/riccati_factorizer.hpp"
-#include "idocp/riccati/riccati_recursion.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/direct_multiple_shooting.hpp"
+#include "robotoc/hybrid/hybrid_container.hpp"
+#include "robotoc/riccati/split_riccati_factorization.hpp"
+#include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
+#include "robotoc/riccati/lqr_policy.hpp"
+#include "robotoc/riccati/riccati_factorizer.hpp"
+#include "robotoc/riccati/riccati_recursion.hpp"
 
 #include "test_helper.hpp"
 #include "robot_factory.hpp"
@@ -23,7 +23,7 @@
 #include "constraints_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class RiccatiRecursionTest : public ::testing::Test {
 protected:
@@ -354,7 +354,7 @@ TEST_F(RiccatiRecursionTest, floating_base) {
   test_computeDirection(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {
