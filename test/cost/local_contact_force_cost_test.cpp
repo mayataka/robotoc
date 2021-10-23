@@ -61,9 +61,9 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   auto s = SplitSolution::Random(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), 0);
-  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t, dt, s), 0);
+  cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->evalStageCostHessian(robot, data, t, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   contact_status.setRandom();
@@ -75,15 +75,15 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
                                     * (s.f[i].array()-f_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), 0.5*dt*l_ref);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t, dt, s), 0.5*dt*l_ref);
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
+  cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->evalStageCostHessian(robot, data, t, dt, s, kkt_mat);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -131,22 +131,22 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   auto s = SplitSolution::Random(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), 0);
-  cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), 0);
+  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   contact_status.setRandom();
   s.setRandom(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), 0);
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
+  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -179,9 +179,9 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   kkt_res.setImpulseStatus(impulse_status);
   kkt_mat.setImpulseStatus(impulse_status);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t, s), 0);
-  cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t, s), 0);
+  cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, data, t, s, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   impulse_status.setRandom();
@@ -193,15 +193,15 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
                                      * (s.f[i].array()-fi_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t, s), 0.5*l_ref);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t, s), 0.5*l_ref);
   kkt_res.setImpulseStatus(impulse_status);
   kkt_mat.setImpulseStatus(impulse_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
+  cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, data, t, s, kkt_mat);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {

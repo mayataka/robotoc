@@ -98,7 +98,6 @@ inline void linearizeConstraints(
     assert(data[i].checkDimensionalConsistency());
     constraints[i]->evalConstraint(robot, data[i], s);
     constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
-    kkt_residual.h += data[i].dual.dot(data[i].residual);
   }
 }
 
@@ -130,12 +129,6 @@ inline void condenseSlackAndDual(
     constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
     constraints[i]->condenseSlackAndDual(robot, data[i], dt, s, kkt_matrix, 
                                          kkt_residual);
-    kkt_residual.h += data[i].dual.dot(data[i].residual);
-    const double r1 = (data[i].residual.array()*data[i].cond.array()).sum();
-    const double r2 = (data[i].residual.array()*data[i].cmpl.array()/data[i].slack.array()).sum();
-    const double rr = r1 - r2; 
-    kkt_residual.h += rr;
-    kkt_matrix.Qtt += std::abs(rr) / dt;
   }
 }
 

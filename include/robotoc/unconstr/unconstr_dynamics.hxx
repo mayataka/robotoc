@@ -53,8 +53,8 @@ inline UnconstrDynamics::~UnconstrDynamics() {
 }
 
 
-inline void UnconstrDynamics::computeUnconstrDynamicsResidual(
-    Robot& robot, const SplitSolution& s) {
+inline void UnconstrDynamics::evalUnconstrDynamics(Robot& robot, 
+                                                   const SplitSolution& s) {
   robot.RNEA(s.q, s.v, s.a, ID_);
   ID_.noalias() -= s.u;
 }
@@ -64,7 +64,7 @@ inline void UnconstrDynamics::linearizeUnconstrDynamics(
     Robot& robot, const double dt, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) { 
   assert(dt > 0);
-  computeUnconstrDynamicsResidual(robot, s);
+  evalUnconstrDynamics(robot, s);
   // augment inverse dynamics constraint
   robot.RNEADerivatives(s.q, s.v, s.a, dID_dq_, dID_dv_, dID_da_);
   kkt_residual.lq().noalias() += dt * dID_dq_.transpose() * s.beta;

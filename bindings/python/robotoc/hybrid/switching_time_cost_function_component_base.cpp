@@ -30,7 +30,7 @@ public:
                           const Eigen::VectorXd& ts,
                           Eigen::MatrixXd& Qts) const override {
     PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
-                           computeStageCostHessian, 
+                           evalStageCostHessian, 
                            t0, tf, ts, Qts);
   }
 };

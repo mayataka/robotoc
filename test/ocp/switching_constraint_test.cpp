@@ -27,7 +27,7 @@ protected:
   }
 
   void test_linearizeSwitchingConstraint(Robot& robot) const;
-  void test_computeSwitchingConstraintResidual(Robot& robot) const;
+  void test_evalSwitchingConstraint(Robot& robot) const;
 
   double dt1, dt2, dt;
 };
@@ -95,7 +95,7 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
 }
 
 
-void SwitchingConstraintTest::test_computeSwitchingConstraintResidual(Robot& robot) const {
+void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -105,8 +105,8 @@ void SwitchingConstraintTest::test_computeSwitchingConstraintResidual(Robot& rob
   robot.updateKinematics(s.q);
   SplitSwitchingConstraintResidual res(robot);
   auto res_ref = res;
-  switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status, 
-                                                          dt1, dt2, s, res);
+  switchingconstraint::evalSwitchingConstraint(robot, impulse_status, 
+                                                dt1, dt2, s, res);
 
   res_ref.setImpulseStatus(impulse_status);
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
@@ -127,14 +127,14 @@ void SwitchingConstraintTest::test_computeSwitchingConstraintResidual(Robot& rob
 TEST_F(SwitchingConstraintTest, fixedbase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   test_linearizeSwitchingConstraint(robot);
-  test_computeSwitchingConstraintResidual(robot);
+  test_evalSwitchingConstraint(robot);
 }
 
 
 TEST_F(SwitchingConstraintTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   test_linearizeSwitchingConstraint(robot);
-  test_computeSwitchingConstraintResidual(robot);
+  test_evalSwitchingConstraint(robot);
 }
 
 } // namespace robotoc

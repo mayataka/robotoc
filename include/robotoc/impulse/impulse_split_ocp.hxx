@@ -60,12 +60,11 @@ inline void ImpulseSplitOCP::evalOCP(Robot& robot,
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
-  stage_cost_ = cost_->computeImpulseCost(robot, cost_data_, t, s);
+  stage_cost_ = cost_->evalImpulseCost(robot, cost_data_, t, s);
   constraints_->evalConstraint(robot, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
-  state_equation_.computeStateEquationResidual(robot, s, q_next, v_next, 
-                                               kkt_residual);
-  impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s);
+  state_equation_.evalStateEquation(robot, s, q_next, v_next, kkt_residual);
+  impulse_dynamics_.evalImpulseDynamics(robot, impulse_status, s);
 }
 
 

@@ -105,10 +105,9 @@ bool LocalContactForceCost::useKinematics() const {
 }
 
 
-double LocalContactForceCost::computeStageCost(Robot& robot, 
-                                               CostFunctionData& data, 
-                                               const double t, const double dt, 
-                                               const SplitSolution& s) const {
+double LocalContactForceCost::evalStageCost(Robot& robot, CostFunctionData& data, 
+                                            const double t, const double dt, 
+                                            const SplitSolution& s) const {
   double l = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isContactActive(i)) {
@@ -120,7 +119,7 @@ double LocalContactForceCost::computeStageCost(Robot& robot,
 }
 
 
-void LocalContactForceCost::computeStageCostDerivatives(
+void LocalContactForceCost::evalStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
@@ -134,7 +133,7 @@ void LocalContactForceCost::computeStageCostDerivatives(
 }
 
 
-void LocalContactForceCost::computeStageCostHessian(
+void LocalContactForceCost::evalStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
@@ -148,29 +147,29 @@ void LocalContactForceCost::computeStageCostHessian(
 }
 
 
-double LocalContactForceCost::computeTerminalCost(Robot& robot, 
-                                             CostFunctionData& data, 
-                                             const double t, 
-                                             const SplitSolution& s) const {
+double LocalContactForceCost::evalTerminalCost(Robot& robot, 
+                                               CostFunctionData& data, 
+                                               const double t, 
+                                               const SplitSolution& s) const {
   return 0;
 }
 
 
-void LocalContactForceCost::computeTerminalCostDerivatives(
+void LocalContactForceCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   // Do nothing.
 }
 
 
-void LocalContactForceCost::computeTerminalCostHessian(
+void LocalContactForceCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   // Do nothing.
 }
 
 
-double LocalContactForceCost::computeImpulseCost(
+double LocalContactForceCost::evalImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   double l = 0;
@@ -184,7 +183,7 @@ double LocalContactForceCost::computeImpulseCost(
 }
 
 
-void LocalContactForceCost::computeImpulseCostDerivatives(
+void LocalContactForceCost::evalImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
@@ -199,7 +198,7 @@ void LocalContactForceCost::computeImpulseCostDerivatives(
 }
 
 
-void LocalContactForceCost::computeImpulseCostHessian(
+void LocalContactForceCost::evalImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;

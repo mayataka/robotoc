@@ -20,8 +20,7 @@ inline void linearizeSwitchingConstraint(
   sc_jacobian.setImpulseStatus(impulse_status);
   sc_residual.setZero();
   sc_jacobian.setZero();
-  computeSwitchingConstraintResidual(robot, impulse_status, dt1, dt2, s, 
-                                     sc_residual);
+  evalSwitchingConstraint(robot, impulse_status, dt1, dt2, s, sc_residual);
   robot.computeContactPositionDerivative(impulse_status, sc_jacobian.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegrateTransport_dq(s.q, sc_residual.dq, sc_jacobian.Pq(), 
@@ -49,7 +48,7 @@ inline void linearizeSwitchingConstraint(
 }
 
 
-inline void computeSwitchingConstraintResidual(
+inline void evalSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, 
     SplitSwitchingConstraintResidual& sc_residual) {

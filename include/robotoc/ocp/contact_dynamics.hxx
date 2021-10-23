@@ -31,7 +31,7 @@ inline ContactDynamics::~ContactDynamics() {
 }
 
 
-inline void ContactDynamics::computeContactDynamicsResidual(
+inline void ContactDynamics::evalContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const SplitSolution& s) {
   data_.setContactStatus(contact_status);
   has_active_contacts_ = contact_status.hasActiveContacts();
@@ -47,7 +47,7 @@ inline void ContactDynamics::linearizeContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) { 
   assert(dt > 0);
-  computeContactDynamicsResidual(robot, contact_status, s);
+  evalContactDynamics(robot, contact_status, s);
   robot.RNEADerivatives(s.q, s.v, s.a, data_.dIDdq(), data_.dIDdv(), data_.dIDda);
   robot.computeBaumgarteDerivatives(contact_status, data_.dCdq(), data_.dCdv(), 
                                     data_.dCda());
@@ -75,9 +75,6 @@ inline void ContactDynamics::linearizeContactDynamics(
         += dt * data_.dCdv().transpose() * s.mu_stack();
     kkt_residual.la.noalias() += dt * data_.dCda().transpose() * s.mu_stack();
   }
-  // linearize Hamiltonian
-  kkt_residual.h += s.beta.dot(data_.ID_full());
-  kkt_residual.h += s.mu_stack().dot(data_.C());
 }
 
 
@@ -162,25 +159,6 @@ inline void ContactDynamics::condenseContactDynamics(
           + Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvu = dt * data_.MJtJinv().block(0, dim_passive, dimv, dimu);
   kkt_residual.Fv().noalias() -= dt * data_.MJtJinv_IDC().head(dimv);
-
-  // linearize and condense the Hamiltonian derivatives
-  kkt_matrix.hq().noalias() += data_.dIDdq().transpose() * s.beta;
-  kkt_matrix.hv().noalias() += data_.dIDdv().transpose() * s.beta;
-  if (has_active_contacts_) {
-    kkt_matrix.hq().noalias() += data_.dCdq().transpose() * s.mu_stack();
-    kkt_matrix.hv().noalias() += data_.dCdv().transpose() * s.mu_stack();
-  }
-  kkt_matrix.hx.noalias() 
-      -= (1/dt) * data_.MJtJinv_dIDCdqv().transpose() * data_.laf();
-  kkt_matrix.hq().noalias()
-      += (1/dt) * kkt_matrix.Qqf() * data_.MJtJinv_IDC().tail(dimf);
-  kkt_matrix.hu = (1/dt) * kkt_residual.lu; 
-  kkt_matrix.fv().noalias() -= data_.MJtJinv_IDC().head(dimv);
-  const double ht = data_.MJtJinv_IDC().dot(data_.laf()) 
-                    + data_.MJtJinv_IDC().head(dimv).dot(kkt_residual.la)
-                    - data_.MJtJinv_IDC().tail(dimf).dot(kkt_residual.lf());
-  kkt_residual.h -= ht / dt;
-  kkt_matrix.Qtt -= ht / (dt*dt);
 }
 
 
@@ -256,14 +234,7 @@ inline void ContactDynamics::condenseSwitchingConstraint(
   sc_jacobian.Phiu().noalias()  
       = sc_jacobian.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
   sc_residual.P().noalias() 
-      -= sc_jacobian.Phia() * data_.MJtJinv_IDC().topRows(dimv_);
-  // condense Hamiltonian derivatives
-  kkt_matrix.hx.noalias() 
-      -= data_.MJtJinv_dIDCdqv().topRows(dimv_).transpose() 
-            * sc_residual.dq;
-  kkt_matrix.hu.noalias() 
-       = data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_).transpose() 
-            * sc_residual.dq;
+      -= sc_jacobian.Phia() * data_.MJtJinv_IDC().head(dimv_);
 }
 
 

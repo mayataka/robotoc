@@ -57,9 +57,9 @@ void CoMCostTest::testStageCost(Robot& robot) const {
   robot.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_diff = robot.CoM() - CoM_ref;
   const double l_ref = dt * 0.5 * q_diff.transpose() * q_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), l_ref);
-  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t, dt, s), l_ref);
+  cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->evalStageCostHessian(robot, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += dt * J_3d.transpose() * q_weight.asDiagonal() * q_diff;
@@ -92,9 +92,9 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
   robot.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_diff = robot.CoM() - CoM_ref;
   const double l_ref = 0.5 * q_diff.transpose() * qf_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), l_ref);
-  cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
+  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += J_3d.transpose() * qf_weight.asDiagonal() * q_diff;
@@ -127,9 +127,9 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
   robot.updateKinematics(s.q, s.v);
   const Eigen::Vector3d q_diff = robot.CoM() - CoM_ref;
   const double l_ref = 0.5 * q_diff.transpose() * qi_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t, s), l_ref);
-  cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += J_3d.transpose() * qi_weight.asDiagonal() * q_diff;

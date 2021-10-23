@@ -219,7 +219,7 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void computeTerminalCostHessian(Robot& robot, const double t, 
+  void evalTerminalCostHessian(Robot& robot, const double t, 
                                   const SplitSolution& s, 
                                   SplitKKTMatrix& kkt_matrix,
                                   SplitKKTResidual& kkt_residual);

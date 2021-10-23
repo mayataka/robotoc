@@ -67,7 +67,7 @@ public:
   /// impulse stage. 
   ///
   template <typename ConfigVectorType, typename TangentVectorType>
-  static void computeStateEquationResidual(
+  static void evalStateEquation(
       const Robot& robot, const ImpulseSplitSolution& s, 
       const Eigen::MatrixBase<ConfigVectorType>& q_next, 
       const Eigen::MatrixBase<TangentVectorType>& v_next, 

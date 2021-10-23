@@ -82,12 +82,12 @@ inline void SplitUnconstrParNMPC::evalOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->computeStageCost(robot, cost_data_, t, dt, s);
+  stage_cost_ = cost_->evalStageCost(robot, cost_data_, t, dt, s);
   constraints_->evalConstraint(robot, constraints_data_, s);
   stage_cost_ += dt * constraints_data_.logBarrier();
   unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
                                                         kkt_residual);
-  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
+  unconstr_dynamics_.evalUnconstrDynamics(robot, s);
 }
 
 

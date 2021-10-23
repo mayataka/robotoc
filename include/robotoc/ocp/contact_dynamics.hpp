@@ -64,9 +64,8 @@ public:
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] s Split solution of this time stage.
   ///
-  void computeContactDynamicsResidual(Robot& robot, 
-                                      const ContactStatus& contact_status,
-                                      const SplitSolution& s);
+  void evalContactDynamics(Robot& robot, const ContactStatus& contact_status,
+                           const SplitSolution& s);
 
   ///
   /// @brief Computes the residual and derivatives of the contact dynamics  

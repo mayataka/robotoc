@@ -62,9 +62,8 @@ public:
   /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in] s Split solution of this impulse stage.
   ///
-  void computeImpulseDynamicsResidual(Robot& robot, 
-                                      const ImpulseStatus& impulse_status,
-                                      const ImpulseSplitSolution& s);
+  void evalImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,
+                           const ImpulseSplitSolution& s);
 
   ///
   /// @brief Linearizes the impulse dynamics constraint. 

@@ -157,13 +157,13 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  double impulse_cost_ref = cost->computeImpulseCost(robot, cost_data, t, s);
+  double impulse_cost_ref = cost->evalImpulseCost(robot, cost_data, t, s);
   constraints->evalConstraint(robot, constraints_data, s);
   impulse_cost_ref +=  constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);
-  ImpulseStateEquation::computeStateEquationResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
+  ImpulseStateEquation::evalStateEquation(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
   ImpulseDynamics id(robot);
-  id.computeImpulseDynamicsResidual(robot, impulse_status, s);
+  id.evalImpulseDynamics(robot, impulse_status, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += kkt_residual_ref.constraintViolation();
   constraint_violation_ref += constraints_data.constraintViolation();

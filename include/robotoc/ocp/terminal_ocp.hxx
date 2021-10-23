@@ -57,7 +57,7 @@ inline void TerminalOCP::evalOCP(Robot& robot, const double t,
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
-  terminal_cost_ = cost_->computeTerminalCost(robot, cost_data_, t, s);
+  terminal_cost_ = cost_->evalTerminalCost(robot, cost_data_, t, s);
 }
 
 

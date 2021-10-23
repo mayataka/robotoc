@@ -35,7 +35,7 @@ void ImpulseDynamicsTest::test_computeResidual(Robot& robot, const ImpulseStatus
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
-  id.computeImpulseDynamicsResidual(robot, impulse_status, s);
+  id.evalImpulseDynamics(robot, impulse_status, s);
   const double l1norm = id.constraintViolation();
   const double squarednorm = id.KKTError();
   ImpulseDynamicsData data(robot);

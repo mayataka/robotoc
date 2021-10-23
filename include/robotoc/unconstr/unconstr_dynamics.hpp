@@ -60,7 +60,7 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] s Split solution of this time stage.
   ///
-  void computeUnconstrDynamicsResidual(Robot& robot, const SplitSolution& s);
+  void evalUnconstrDynamics(Robot& robot, const SplitSolution& s);
 
   ///
   /// @brief Linearizes the unconstrained dynamics constraint. 

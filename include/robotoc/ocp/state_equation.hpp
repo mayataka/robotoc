@@ -65,7 +65,7 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
   template <typename ConfigVectorType, typename TangentVectorType>
-  static void computeStateEquationResidual(
+  static void evalStateEquation(
       const Robot& robot, const double dt, const SplitSolution& s, 
       const Eigen::MatrixBase<ConfigVectorType>& q_next, 
       const Eigen::MatrixBase<TangentVectorType>& v_next, 

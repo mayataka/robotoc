@@ -64,9 +64,10 @@ bool TimeVaryingTaskSpace6DCost::useKinematics() const {
 }
 
 
-double TimeVaryingTaskSpace6DCost::computeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s) const {
+double TimeVaryingTaskSpace6DCost::evalStageCost(Robot& robot, 
+                                                 CostFunctionData& data, 
+                                                 const double t, const double dt, 
+                                                 const SplitSolution& s) const {
   if (ref_->isActive(t)) {
     double l = 0;
     ref_->update_SE3_ref(t, data.SE3_ref);
@@ -82,7 +83,7 @@ double TimeVaryingTaskSpace6DCost::computeStageCost(
 }
 
 
-void TimeVaryingTaskSpace6DCost::computeStageCostDerivatives(
+void TimeVaryingTaskSpace6DCost::evalStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
@@ -98,7 +99,7 @@ void TimeVaryingTaskSpace6DCost::computeStageCostDerivatives(
 }
 
 
-void TimeVaryingTaskSpace6DCost::computeStageCostHessian(
+void TimeVaryingTaskSpace6DCost::evalStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
@@ -108,7 +109,7 @@ void TimeVaryingTaskSpace6DCost::computeStageCostHessian(
 }
 
 
-double TimeVaryingTaskSpace6DCost::computeTerminalCost(
+double TimeVaryingTaskSpace6DCost::evalTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
   if (ref_->isActive(t)) {
@@ -126,7 +127,7 @@ double TimeVaryingTaskSpace6DCost::computeTerminalCost(
 }
 
 
-void TimeVaryingTaskSpace6DCost::computeTerminalCostDerivatives(
+void TimeVaryingTaskSpace6DCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
@@ -141,7 +142,7 @@ void TimeVaryingTaskSpace6DCost::computeTerminalCostDerivatives(
 }
 
 
-void TimeVaryingTaskSpace6DCost::computeTerminalCostHessian(
+void TimeVaryingTaskSpace6DCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
@@ -151,7 +152,7 @@ void TimeVaryingTaskSpace6DCost::computeTerminalCostHessian(
 }
 
 
-double TimeVaryingTaskSpace6DCost::computeImpulseCost(
+double TimeVaryingTaskSpace6DCost::evalImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   if (ref_->isActive(t)) {
@@ -169,7 +170,7 @@ double TimeVaryingTaskSpace6DCost::computeImpulseCost(
 }
 
 
-void TimeVaryingTaskSpace6DCost::computeImpulseCostDerivatives(
+void TimeVaryingTaskSpace6DCost::evalImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
@@ -185,7 +186,7 @@ void TimeVaryingTaskSpace6DCost::computeImpulseCostDerivatives(
 }
 
 
-void TimeVaryingTaskSpace6DCost::computeImpulseCostHessian(
+void TimeVaryingTaskSpace6DCost::evalImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {

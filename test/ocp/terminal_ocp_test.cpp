@@ -99,7 +99,7 @@ void TerminalOCPTest::test_evalOCP(Robot& robot) {
   const double terminal_cost = ocp.terminalCost();
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  const double terminal_cost_ref = cost->computeTerminalCost(robot, cost_data, t, s);
+  const double terminal_cost_ref = cost->evalTerminalCost(robot, cost_data, t, s);
   EXPECT_DOUBLE_EQ(terminal_cost, terminal_cost_ref);
 }
 

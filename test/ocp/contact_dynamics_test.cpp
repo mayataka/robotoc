@@ -38,7 +38,7 @@ void ContactDynamicsTest::test_computeResidual(Robot& robot, const ContactStatus
   const auto s = SplitSolution::Random(robot, contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics cd(robot);
-  cd.computeContactDynamicsResidual(robot, contact_status, s);
+  cd.evalContactDynamics(robot, contact_status, s);
   const double l1norm = cd.constraintViolation();
   const double squarednorm = cd.KKTError();
   ContactDynamicsData data(robot);
@@ -85,7 +85,6 @@ void ContactDynamicsTest::test_linearize(Robot& robot, const ContactStatus& cont
   lu_full.head(robot.dim_passive()) += dt * s.nu_passive;
   data.lu_passive     = lu_full.head(robot.dim_passive());
   kkt_residual_ref.lu = lu_full.tail(robot.dimu());
-  kkt_residual_ref.h += s.beta.dot(data.ID_full()) + s.mu_stack().dot(data.C()); 
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   const double l1norm_ref = data.IDC().lpNorm<1>();
   const double squarednorm_ref = data.IDC().squaredNorm() + data.lu_passive.squaredNorm();
@@ -165,22 +164,6 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   const Eigen::MatrixXd Fxu_full = OOIO_mat * data.MJtJinv() * IO_mat;
   kkt_matrix_ref.Fvu = Fxu_full.bottomRows(dimv).rightCols(dimu);
   kkt_residual_ref.Fx -= (OOIO_mat * data.MJtJinv() * data.IDC());
-
-  kkt_matrix_ref.hq() += data.dIDdq().transpose() * s.beta;
-  kkt_matrix_ref.hv() += data.dIDdv().transpose() * s.beta;
-  kkt_matrix_ref.hq() += data.dCdq().transpose() * s.mu_stack();
-  kkt_matrix_ref.hv() += data.dCdv().transpose() * s.mu_stack();
-  kkt_matrix_ref.hx.noalias() 
-      -= (1/dt) * data.MJtJinv_dIDCdqv().transpose() * data.laf();
-  kkt_matrix_ref.hq().noalias()
-      += (1/dt) * kkt_matrix_ref.Qqf() * data.MJtJinv_IDC().tail(dimf);
-  kkt_matrix_ref.hu = (1/dt) * kkt_residual_ref.lu; 
-  kkt_matrix_ref.fv().noalias() -= data.MJtJinv_IDC().head(dimv);
-  const double ht = data.MJtJinv_IDC().dot(data.laf()) 
-                    + data.MJtJinv_IDC().head(dimv).dot(kkt_residual_ref.la)
-                    - data.MJtJinv_IDC().tail(dimf).dot(kkt_residual_ref.lf());
-  kkt_residual_ref.h -= ht / dt;
-  kkt_matrix_ref.Qtt -= ht / (dt*dt);
 
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));

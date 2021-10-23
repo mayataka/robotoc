@@ -96,8 +96,8 @@ public:
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                          const double dt, const SplitSolution& s) const;
+  double evalStageCost(Robot& robot, CostFunctionData& data, const double t, 
+                       const double dt, const SplitSolution& s) const;
 
   ///
   /// @brief Computes the stage cost and its first-order partial derivatives. 
@@ -143,8 +143,8 @@ public:
   /// @param[in] s Split solution.
   /// @return Terminal cost.
   ///
-  double computeTerminalCost(Robot& robot, CostFunctionData& data,
-                             const double t, const SplitSolution& s) const;
+  double evalTerminalCost(Robot& robot, CostFunctionData& data, const double t, 
+                          const SplitSolution& s) const;
 
   ///
   /// @brief Computes the terminal cost and its first-order partial derivatives. 
@@ -186,9 +186,8 @@ public:
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
-                            const double t, 
-                            const ImpulseSplitSolution& s) const;
+  double evalImpulseCost(Robot& robot, CostFunctionData& data, 
+                         const double t, const ImpulseSplitSolution& s) const;
 
   ///
   /// @brief Computes the impulse cost and its first-order partial derivatives. 

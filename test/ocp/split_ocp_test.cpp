@@ -98,7 +98,6 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
   stage_cost += dt * constraints_data.logBarrier();
-  kkt_residual_ref.h += stage_cost / dt;
   StateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
@@ -173,8 +172,6 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += dt * constraints_data.logBarrier();
-  kkt_residual_ref.h += stage_cost / dt;
-  kkt_matrix_ref.hx = kkt_residual_ref.lx / dt;
   StateEquation state_equation(robot);
   state_equation.linearizeStateEquationAlongLieGroup(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
@@ -274,20 +271,19 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->computeStageCost(robot, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
   constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += dt * constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   StateEquation state_equation(robot);
-  state_equation.computeStateEquationResidual(robot, dt, s, s_next.q, 
-                                             s_next.v, kkt_residual_ref);
+  state_equation.evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual_ref);
   ContactDynamics cd(robot);
-  cd.computeContactDynamicsResidual(robot, contact_status, s);
+  cd.evalContactDynamics(robot, contact_status, s);
   double switch_violation_ref = 0;
   if (switching_constraint) {
     SplitSwitchingConstraintResidual switch_res_ref(robot);
-    switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status, dt, dt_next, 
-                                                            s, switch_res_ref);
+    switchingconstraint::evalSwitchingConstraint(robot, impulse_status, dt,  
+                                                 dt_next, s, switch_res_ref);
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
     switch_violation_ref = switch_res_ref.P().lpNorm<1>();
   }

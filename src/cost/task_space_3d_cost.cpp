@@ -52,9 +52,9 @@ bool TaskSpace3DCost::useKinematics() const {
 }
 
 
-double TaskSpace3DCost::computeStageCost(Robot& robot, CostFunctionData& data, 
-                                         const double t, const double dt, 
-                                         const SplitSolution& s) const {
+double TaskSpace3DCost::evalStageCost(Robot& robot, CostFunctionData& data, 
+                                      const double t, const double dt, 
+                                      const SplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   l += (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -62,7 +62,7 @@ double TaskSpace3DCost::computeStageCost(Robot& robot, CostFunctionData& data,
 }
 
 
-void TaskSpace3DCost::computeStageCostDerivatives(
+void TaskSpace3DCost::evalStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   data.J_6d.setZero();
@@ -74,18 +74,18 @@ void TaskSpace3DCost::computeStageCostDerivatives(
 }
 
 
-void TaskSpace3DCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+void TaskSpace3DCost::evalStageCostHessian(Robot& robot, CostFunctionData& data, 
+                                           const double t, const double dt, 
+                                           const SplitSolution& s, 
+                                           SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()
       += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
 }
 
 
-double TaskSpace3DCost::computeTerminalCost(Robot& robot,  
-                                            CostFunctionData& data, 
-                                            const double t, 
-                                            const SplitSolution& s) const {
+double TaskSpace3DCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
+                                         const double t, 
+                                         const SplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   l += (qf_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -93,7 +93,7 @@ double TaskSpace3DCost::computeTerminalCost(Robot& robot,
 }
 
 
-void TaskSpace3DCost::computeTerminalCostDerivatives(
+void TaskSpace3DCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   data.J_6d.setZero();
@@ -105,7 +105,7 @@ void TaskSpace3DCost::computeTerminalCostDerivatives(
 }
 
 
-void TaskSpace3DCost::computeTerminalCostHessian(
+void TaskSpace3DCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()
@@ -113,10 +113,10 @@ void TaskSpace3DCost::computeTerminalCostHessian(
 }
 
 
-double TaskSpace3DCost::computeImpulseCost(Robot& robot,  
-                                           CostFunctionData& data, 
-                                           const double t, 
-                                           const ImpulseSplitSolution& s) const {
+double TaskSpace3DCost::evalImpulseCost(Robot& robot,  
+                                        CostFunctionData& data, 
+                                        const double t, 
+                                        const ImpulseSplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   l += (qi_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -124,7 +124,7 @@ double TaskSpace3DCost::computeImpulseCost(Robot& robot,
 }
 
 
-void TaskSpace3DCost::computeImpulseCostDerivatives(
+void TaskSpace3DCost::evalImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
@@ -137,7 +137,7 @@ void TaskSpace3DCost::computeImpulseCostDerivatives(
 }
 
 
-void TaskSpace3DCost::computeImpulseCostHessian(
+void TaskSpace3DCost::evalImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()

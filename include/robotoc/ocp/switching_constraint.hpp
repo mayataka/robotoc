@@ -46,10 +46,10 @@ void linearizeSwitchingConstraint(
 /// @param[in] s Split solution of the time stage 2 stage before the impulse.
 /// @param[in, out] sc_residual Residual of the switching constraint. 
 ///
-void computeSwitchingConstraintResidual(
-    Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
-    const double dt2, const SplitSolution& s, 
-    SplitSwitchingConstraintResidual& sc_residual);
+void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+                             const double dt1, const double dt2, 
+                             const SplitSolution& s, 
+                             SplitSwitchingConstraintResidual& sc_residual);
 
 } // namespace switchingconstraint 
 

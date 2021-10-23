@@ -42,7 +42,7 @@ inline StateEquation::~StateEquation() {
 
 
 template <typename ConfigVectorType, typename TangentVectorType>
-inline void StateEquation::computeStateEquationResidual(
+inline void StateEquation::evalStateEquation(
     const Robot& robot, const double dt, const SplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
@@ -64,7 +64,7 @@ inline void StateEquation::linearizeStateEquation(
     SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
-  computeStateEquationResidual(robot, dt, s, s_next.q, s_next.v, kkt_residual);
+  evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
