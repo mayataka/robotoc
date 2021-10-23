@@ -75,15 +75,6 @@ public:
                           SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Factorizes the derivatives of the Hamiltonian of a time stage for 
-  /// the backward Riccati recursion.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] riccati Riccati factorization of time time stage.
-  ///
-  void factorizeHamiltonian(SplitKKTMatrix& kkt_matrix, 
-                            SplitRiccatiFactorization& riccati) const;
-
-  ///
   /// @brief Factorizes the split KKT matrix and split KKT residual of 
   /// this impulse stage for the backward Riccati recursion.
   /// @param[in] riccati_next Riccati factorization of the next time stage.

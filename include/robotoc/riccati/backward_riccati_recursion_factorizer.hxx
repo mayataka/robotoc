@@ -46,15 +46,6 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
 }
 
 
-inline void BackwardRiccatiRecursionFactorizer::factorizeHamiltonian(
-    SplitKKTMatrix& kkt_matrix, SplitRiccatiFactorization& riccati) const {
-  riccati.hx_cvx.noalias() = AtP_ * kkt_matrix.fx;
-  riccati.hu_cvx.noalias() = BtP_ * kkt_matrix.fx;
-  kkt_matrix.hx.noalias() += riccati.hx_cvx;
-  kkt_matrix.hu.noalias() += riccati.hu_cvx;
-}
-
-
 inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     const SplitRiccatiFactorization& riccati_next, 
     ImpulseSplitKKTMatrix& kkt_matrix) {

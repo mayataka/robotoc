@@ -179,8 +179,6 @@ class TrajectoryViewer:
         self.robot.loadViewerModel(rootNodeName='robotoc.TrajectoryViewer')
         self.viewer.viewer["/Cameras/default"].set_transform(self.camera_tf)
         self.viewer.viewer["/Cameras/default/rotated/<object>"].set_property("zoom", self.zoom)
-        # self.viewer.viewer["/Cameras/default"].set_transform(tf.translation_matrix([0.3, -2.5, -0.2]))
-        # self.viewer.viewer["/Cameras/default/rotated/<object>"].set_property("zoom", 5.0)
 
         sleep_time = dt / self.play_speed
         for q in q_traj:

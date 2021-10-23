@@ -1,4 +1,4 @@
-#include "robotoc/cost/contact_force_cost.hpp"
+#include "robotoc/cost/local_contact_force_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -6,7 +6,7 @@
 
 namespace robotoc {
 
-ContactForceCost::ContactForceCost(const Robot& robot)
+LocalContactForceCost::LocalContactForceCost(const Robot& robot)
   : CostFunctionComponentBase(),
     max_point_contacts_(robot.maxPointContacts()),
     max_dimf_(robot.max_dimf()),
@@ -17,7 +17,7 @@ ContactForceCost::ContactForceCost(const Robot& robot)
 }
 
 
-ContactForceCost::ContactForceCost()
+LocalContactForceCost::LocalContactForceCost()
   : CostFunctionComponentBase(),
     max_point_contacts_(0),
     max_dimf_(0),
@@ -28,11 +28,12 @@ ContactForceCost::ContactForceCost()
 }
 
 
-ContactForceCost::~ContactForceCost() {
+LocalContactForceCost::~LocalContactForceCost() {
 }
 
 
-void ContactForceCost::set_f_ref(const std::vector<Eigen::Vector3d>& f_ref) {
+void LocalContactForceCost::set_f_ref(
+    const std::vector<Eigen::Vector3d>& f_ref) {
   try {
     if (f_ref.size() != max_point_contacts_) {
       throw std::invalid_argument(
@@ -48,7 +49,7 @@ void ContactForceCost::set_f_ref(const std::vector<Eigen::Vector3d>& f_ref) {
 }
 
 
-void ContactForceCost::set_f_weight(
+void LocalContactForceCost::set_f_weight(
     const std::vector<Eigen::Vector3d>& f_weight) {
   try {
     if (f_weight.size() != max_point_contacts_) {
@@ -65,7 +66,8 @@ void ContactForceCost::set_f_weight(
 }
 
 
-void ContactForceCost::set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref) {
+void LocalContactForceCost::set_fi_ref(
+    const std::vector<Eigen::Vector3d>& fi_ref) {
   try {
     if (fi_ref.size() != max_point_contacts_) {
       throw std::invalid_argument(
@@ -81,7 +83,7 @@ void ContactForceCost::set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref) {
 }
 
 
-void ContactForceCost::set_fi_weight(
+void LocalContactForceCost::set_fi_weight(
     const std::vector<Eigen::Vector3d>& fi_weight) {
   try {
     if (fi_weight.size() != max_point_contacts_) {
@@ -98,14 +100,15 @@ void ContactForceCost::set_fi_weight(
 }
 
 
-bool ContactForceCost::useKinematics() const {
+bool LocalContactForceCost::useKinematics() const {
   return false;
 }
 
 
-double ContactForceCost::computeStageCost(Robot& robot, CostFunctionData& data, 
-                                          const double t, const double dt, 
-                                          const SplitSolution& s) const {
+double LocalContactForceCost::computeStageCost(Robot& robot, 
+                                               CostFunctionData& data, 
+                                               const double t, const double dt, 
+                                               const SplitSolution& s) const {
   double l = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isContactActive(i)) {
@@ -117,7 +120,7 @@ double ContactForceCost::computeStageCost(Robot& robot, CostFunctionData& data,
 }
 
 
-void ContactForceCost::computeStageCostDerivatives(
+void LocalContactForceCost::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
@@ -131,7 +134,7 @@ void ContactForceCost::computeStageCostDerivatives(
 }
 
 
-void ContactForceCost::computeStageCostHessian(
+void LocalContactForceCost::computeStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
@@ -145,7 +148,7 @@ void ContactForceCost::computeStageCostHessian(
 }
 
 
-double ContactForceCost::computeTerminalCost(Robot& robot, 
+double LocalContactForceCost::computeTerminalCost(Robot& robot, 
                                              CostFunctionData& data, 
                                              const double t, 
                                              const SplitSolution& s) const {
@@ -153,21 +156,21 @@ double ContactForceCost::computeTerminalCost(Robot& robot,
 }
 
 
-void ContactForceCost::computeTerminalCostDerivatives(
+void LocalContactForceCost::computeTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   // Do nothing.
 }
 
 
-void ContactForceCost::computeTerminalCostHessian(
+void LocalContactForceCost::computeTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   // Do nothing.
 }
 
 
-double ContactForceCost::computeImpulseCost(
+double LocalContactForceCost::computeImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   double l = 0;
@@ -181,7 +184,7 @@ double ContactForceCost::computeImpulseCost(
 }
 
 
-void ContactForceCost::computeImpulseCostDerivatives(
+void LocalContactForceCost::computeImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
@@ -196,7 +199,7 @@ void ContactForceCost::computeImpulseCostDerivatives(
 }
 
 
-void ContactForceCost::computeImpulseCostHessian(
+void LocalContactForceCost::computeImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;

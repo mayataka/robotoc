@@ -2,7 +2,7 @@
 
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/time_varying_configuration_space_cost.hpp"
-#include "robotoc/cost/contact_force_cost.hpp"
+#include "robotoc/cost/local_contact_force_cost.hpp"
 
 
 namespace robotoc {
@@ -59,15 +59,15 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   cost->push_back(config_cost);
 
   if (robot.maxPointContacts() > 0) {
-    auto contact_force_cost = std::make_shared<ContactForceCost>(robot);
+    auto local_contact_force_cost = std::make_shared<LocalContactForceCost>(robot);
     std::vector<Eigen::Vector3d> f_weight, fi_weight;
     for (int i=0; i<robot.maxPointContacts(); ++i) {
       f_weight.push_back(Eigen::Vector3d::Constant(0.001));
       fi_weight.push_back(Eigen::Vector3d::Constant(0.005));
     }
-    contact_force_cost->set_f_weight(f_weight);
-    contact_force_cost->set_fi_weight(fi_weight);
-    cost->push_back(contact_force_cost);
+    local_contact_force_cost->set_f_weight(f_weight);
+    local_contact_force_cost->set_fi_weight(fi_weight);
+    cost->push_back(local_contact_force_cost);
   }
 
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();

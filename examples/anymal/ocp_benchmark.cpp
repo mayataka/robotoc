@@ -7,7 +7,7 @@
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/contact_force_cost.hpp"
+#include "robotoc/cost/local_contact_force_cost.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
 #include "robotoc/constraints/joint_position_upper_limit.hpp"
@@ -53,7 +53,8 @@ int main () {
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  auto contact_cost = std::make_shared<robotoc::ContactForceCost>(robot);
+  cost->push_back(config_cost);
+  auto local_contact_force_cost = std::make_shared<robotoc::LocalContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<contact_frames.size(); ++i) {
     Eigen::Vector3d fw; 
@@ -63,10 +64,9 @@ int main () {
     fr << 0, 0, 70;
     f_ref.push_back(fr);
   }
-  contact_cost->set_f_weight(f_weight);
-  contact_cost->set_f_ref(f_ref);
-  cost->push_back(config_cost);
-  cost->push_back(contact_cost);
+  local_contact_force_cost->set_f_weight(f_weight);
+  local_contact_force_cost->set_f_ref(f_ref);
+  cost->push_back(local_contact_force_cost);
 
   // Create inequality constraints.
   auto constraints = std::make_shared<robotoc::Constraints>();

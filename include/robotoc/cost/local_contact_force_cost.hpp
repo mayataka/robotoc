@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_CONTACT_FORCE_COST_HPP_
-#define ROBOTOC_CONTACT_FORCE_COST_HPP_
+#ifndef ROBOTOC_LOCAL_CONTACT_FORCE_COST_HPP_
+#define ROBOTOC_LOCAL_CONTACT_FORCE_COST_HPP_
 
 #include <vector>
 
@@ -16,46 +16,46 @@
 namespace robotoc {
 
 ///
-/// @class ContactForceCost
+/// @class LocalContactForceCost
 /// @brief Cost on the contact forces expressed in the local frames.
 ///
-class ContactForceCost final : public CostFunctionComponentBase {
+class LocalContactForceCost final : public CostFunctionComponentBase {
 public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
   ///
-  ContactForceCost(const Robot& robot);
+  LocalContactForceCost(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  ContactForceCost();
+  LocalContactForceCost();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ContactForceCost();
+  ~LocalContactForceCost();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ContactForceCost(const ContactForceCost&) = default;
+  LocalContactForceCost(const LocalContactForceCost&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ContactForceCost& operator=(const ContactForceCost&) = default;
+  LocalContactForceCost& operator=(const LocalContactForceCost&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ContactForceCost(ContactForceCost&&) noexcept = default;
+  LocalContactForceCost(LocalContactForceCost&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ContactForceCost& operator=(ContactForceCost&&) noexcept = default;
+  LocalContactForceCost& operator=(LocalContactForceCost&&) noexcept = default;
 
   ///
   /// @brief Sets the reference contact forces expressed in the local frames. 
@@ -137,4 +137,4 @@ private:
 } // namespace robotoc
 
 
-#endif // ROBOTOC_CONTACT_FORCE_COST_HPP_ 
+#endif // ROBOTOC_LOCAL_CONTACT_FORCE_COST_HPP_ 

@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/cost/contact_force_cost.hpp"
+#include "robotoc/cost/local_contact_force_cost.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -17,7 +17,7 @@
 
 namespace robotoc {
 
-class ContactForceCostTest : public ::testing::Test {
+class LocalContactForceCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -37,7 +37,7 @@ protected:
 };
 
 
-void ContactForceCostTest::testStageCost(Robot& robot) const {
+void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
@@ -45,7 +45,7 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
     fi_weight.push_back(Eigen::Vector3d::Random());
     fi_ref.push_back(Eigen::Vector3d::Random());
   }
-  auto cost = std::make_shared<ContactForceCost>(robot);
+  auto cost = std::make_shared<LocalContactForceCost>(robot);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
@@ -107,7 +107,7 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
 }
 
 
-void ContactForceCostTest::testTerminalCost(Robot& robot) const {
+void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
@@ -115,7 +115,7 @@ void ContactForceCostTest::testTerminalCost(Robot& robot) const {
     fi_weight.push_back(Eigen::Vector3d::Random());
     fi_ref.push_back(Eigen::Vector3d::Random());
   }
-  auto cost = std::make_shared<ContactForceCost>(robot);
+  auto cost = std::make_shared<LocalContactForceCost>(robot);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
@@ -155,7 +155,7 @@ void ContactForceCostTest::testTerminalCost(Robot& robot) const {
 }
 
 
-void ContactForceCostTest::testImpulseCost(Robot& robot) const {
+void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
@@ -163,7 +163,7 @@ void ContactForceCostTest::testImpulseCost(Robot& robot) const {
     fi_weight.push_back(Eigen::Vector3d::Random());
     fi_ref.push_back(Eigen::Vector3d::Random());
   }
-  auto cost = std::make_shared<ContactForceCost>(robot);
+  auto cost = std::make_shared<LocalContactForceCost>(robot);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
@@ -225,7 +225,7 @@ void ContactForceCostTest::testImpulseCost(Robot& robot) const {
 }
 
 
-TEST_F(ContactForceCostTest, fixedBase) {
+TEST_F(LocalContactForceCostTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
@@ -233,7 +233,7 @@ TEST_F(ContactForceCostTest, fixedBase) {
 }
 
 
-TEST_F(ContactForceCostTest, floatingBase) {
+TEST_F(LocalContactForceCostTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);

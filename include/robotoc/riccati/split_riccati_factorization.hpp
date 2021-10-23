@@ -24,10 +24,6 @@ public:
       Gmm(Eigen::VectorXd::Zero(2*robot.dimv())),
       xi(0.0),
       eta(0.0),
-      Gmm_cvx(Eigen::VectorXd::Zero(2*robot.dimv())),
-      hx_cvx(Eigen::VectorXd::Zero(2*robot.dimv())),
-      hu_cvx(Eigen::VectorXd::Zero(robot.dimu())),
-      xi_cvx(0.0),
       dimv_(robot.dimv()),
       dimx_(2*robot.dimv()) {
   }
@@ -41,10 +37,6 @@ public:
       Gmm(),
       xi(0.0),
       eta(0.0),
-      Gmm_cvx(),
-      hx_cvx(),
-      hu_cvx(),
-      xi_cvx(0.0),
       dimv_(0.0),
       dimx_(0.0) {
   }
@@ -154,29 +146,6 @@ public:
   double eta;
 
   ///
-  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
-  /// 2 * Robot::dimv().
-  ///
-  Eigen::VectorXd Gmm_cvx;
-
-  ///
-  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
-  /// 2 * Robot::dimv().
-  ///
-  Eigen::VectorXd hx_cvx;
-
-  ///
-  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
-  /// Robot::dimu().
-  ///
-  Eigen::VectorXd hu_cvx;
-
-  ///
-  /// @brief Riccati factorization w.r.t. the switching time. 
-  ///
-  double xi_cvx;
-
-  ///
   /// @brief Checks the equivalence of two SplitRiccatiFactorization.
   /// @param[in] other object.
   /// @return true if this and other is same. false otherwise.
@@ -185,12 +154,9 @@ public:
     if (!P.isApprox(other.P)) return false;
     if (!s.isApprox(other.s)) return false;
     if (!Gmm.isApprox(other.Gmm)) return false;
-    if (!Gmm_cvx.isApprox(other.Gmm_cvx)) return false;
-    if (!hx_cvx.isApprox(other.hx_cvx)) return false;
-    if (!hu_cvx.isApprox(other.hu_cvx)) return false;
-    Eigen::Vector3d vec, other_vec;
-    vec << xi, eta, xi_cvx;
-    other_vec << other.xi, other.eta, other.xi_cvx;
+    Eigen::Vector2d vec, other_vec;
+    vec << xi, eta;
+    other_vec << other.xi, other.eta;
     if (!vec.isApprox(other_vec)) return false;
     return true;
   }
@@ -203,11 +169,8 @@ public:
     if (P.hasNaN()) return true;
     if (s.hasNaN()) return true;
     if (Gmm.hasNaN()) return true;
-    if (Gmm_cvx.hasNaN()) return true;
-    if (hx_cvx.hasNaN()) return true;
-    if (hu_cvx.hasNaN()) return true;
-    Eigen::Vector3d vec;
-    vec << xi, eta, xi_cvx;
+    Eigen::Vector2d vec;
+    vec << xi, eta;
     if (vec.hasNaN()) return true;
     return false;
   }

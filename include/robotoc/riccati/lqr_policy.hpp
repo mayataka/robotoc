@@ -26,7 +26,6 @@ public:
     : K(MatrixXdRowMajor::Zero(robot.dimu(), 2*robot.dimv())),
       k(Eigen::VectorXd::Zero(robot.dimu())),
       T(Eigen::VectorXd::Zero(robot.dimu())),
-      T_cvx(Eigen::VectorXd::Zero(robot.dimu())),
       dimv_(robot.dimv()),
       dimu_(robot.dimu()) {
   }
@@ -38,7 +37,6 @@ public:
     : K(),
       k(),
       T(),
-      T_cvx(),
       dimv_(0),
       dimu_(0) {
   }
@@ -86,11 +84,6 @@ public:
   Eigen::VectorXd T;
 
   ///
-  /// @brief Feedback gain w.r.t the switching time. Size is Robot::dimu(). 
-  ///
-  Eigen::VectorXd T_cvx;
-
-  ///
   /// @brief State feedback gain matrix w.r.t. the configuration q. Size is 
   /// Robot::dimu() x Robot::dimv().
   /// @return const reference to the gain matrix.
@@ -117,7 +110,6 @@ public:
     if (!K.isApprox(other.K)) return false;
     if (!k.isApprox(other.k)) return false;
     if (!T.isApprox(other.T)) return false;
-    if (!T_cvx.isApprox(other.T_cvx)) return false;
     return true;
   }
 

@@ -89,10 +89,6 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> mt() const;
 
-  Eigen::VectorBlock<Eigen::VectorXd> mt_cvx();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> mt_cvx() const;
-
   Eigen::MatrixXd Ginv;
 
   Eigen::MatrixXd DtM;
@@ -105,7 +101,7 @@ public:
 
 private:
   Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_, M_full_;
-  Eigen::VectorXd m_full_, mt_full_, mt_cvx_full_;
+  Eigen::VectorXd m_full_, mt_full_;
   int dimv_, dimx_, dimu_, dimi_;
 
 };
