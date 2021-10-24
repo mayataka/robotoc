@@ -5,6 +5,7 @@
 
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
@@ -151,54 +152,57 @@ int main(int argc, char *argv[]) {
   const int N = T / dt; 
   const int max_num_impulse_phase = 2*cycle;
 
-  const int nthreads = 4;
-  const double t = 0;
-  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, 2*max_num_impulse_phase);
 
   std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
   auto contact_status_initial = robot.createContactStatus();
   contact_status_initial.activateContacts({0, 1, 2, 3});
   contact_status_initial.setContactPoints(contact_points);
-  ocp_solver.setContactStatusUniformly(contact_status_initial);
+  contact_sequence->setContactStatusUniformly(contact_status_initial);
 
   auto contact_status_even = robot.createContactStatus();
   contact_status_even.activateContacts({0, 1});
   contact_status_even.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_even, t0);
+  contact_sequence->push_back(contact_status_even, t0);
 
   contact_points[2].coeffRef(0) += 0.5 * step_length;
   contact_points[3].coeffRef(0) += 0.5 * step_length;
   contact_status_initial.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_initial, t0+period_swing);
+  contact_sequence->push_back(contact_status_initial, t0+period_swing);
 
   auto contact_status_odd = robot.createContactStatus();
   contact_status_odd.activateContacts({2, 3});
   contact_status_odd.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_odd, t0+period_swing+period_double_support);
+  contact_sequence->push_back(contact_status_odd, t0+period_swing+period_double_support);
 
   contact_points[0].coeffRef(0) += step_length;
   contact_points[1].coeffRef(0) += step_length;
   contact_status_initial.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_initial, t0+2*period_swing+period_double_support);
+  contact_sequence->push_back(contact_status_initial, t0+2*period_swing+period_double_support);
 
   for (int i=1; i<cycle; ++i) {
     const double t1 = t0 + i*(2*period_swing+2*period_double_support);
     contact_status_even.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_even, t1);
+    contact_sequence->push_back(contact_status_even, t1);
 
     contact_points[2].coeffRef(0) += step_length;
     contact_points[3].coeffRef(0) += step_length;
     contact_status_initial.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_initial, t1+period_swing);
+    contact_sequence->push_back(contact_status_initial, t1+period_swing);
 
     contact_status_odd.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_odd, t1+period_swing+period_double_support);
+    contact_sequence->push_back(contact_status_odd, t1+period_swing+period_double_support);
 
     contact_points[0].coeffRef(0) += step_length;
     contact_points[1].coeffRef(0) += step_length;
     contact_status_initial.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_initial, t1+2*period_swing+period_double_support);
+    contact_sequence->push_back(contact_status_initial, t1+2*period_swing+period_double_support);
   }
+
+  const int nthreads = 4;
+  const double t = 0;
+  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
+                                T, N, nthreads);
 
   Eigen::VectorXd q(q_standing);
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));

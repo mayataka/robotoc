@@ -351,6 +351,11 @@ inline DiscreteEventType ContactSequence::eventType(
 }
 
 
+inline int ContactSequence::maxNumEvents() const {
+  return max_num_events_;
+}
+
+
 inline void ContactSequence::clear_all() {
   contact_statuses_.clear();
   impulse_events_.clear();

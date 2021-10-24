@@ -5,6 +5,7 @@
 
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
@@ -135,26 +136,29 @@ int main(int argc, char *argv[]) {
   const int N = T / dt;
   const int max_num_impulse_phase = 1;
 
-  const int nthreads = 4;
-  const double t = 0;
-  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, 2*max_num_impulse_phase);
 
   std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
   auto contact_status_initial = robot.createContactStatus();
   contact_status_initial.activateContacts({0, 1, 2, 3});
   contact_status_initial.setContactPoints(contact_points);
-  ocp_solver.setContactStatusUniformly(contact_status_initial);
+  contact_sequence->setContactStatusUniformly(contact_status_initial);
 
   auto contact_status_flying = robot.createContactStatus();
-  ocp_solver.pushBackContactStatus(contact_status_flying, t0+period_ground);
+  contact_sequence->push_back(contact_status_flying, t0+period_ground);
 
   contact_points[0].coeffRef(0) += jump_length;
   contact_points[1].coeffRef(0) += jump_length;
   contact_points[2].coeffRef(0) += jump_length;
   contact_points[3].coeffRef(0) += jump_length;
   contact_status_initial.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_initial, t0+period_ground+period_flying);
+  contact_sequence->push_back(contact_status_initial, t0+period_ground+period_flying);
 
+  const int nthreads = 4;
+  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
+                                T, N, nthreads);
+
+  const double t = 0;
   Eigen::VectorXd q(q_standing);
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 

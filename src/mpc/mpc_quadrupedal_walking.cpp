@@ -14,7 +14,8 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(
     const std::shared_ptr<Constraints>& constraints, const double T, 
     const int N, const int max_num_steps, const int nthreads)
   : robot_(robot),
-    ocp_solver_(robot, cost, constraints, T, N, max_num_steps, nthreads), 
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_num_steps)),
+    ocp_solver_(robot, contact_sequence_, cost, constraints, T, N, nthreads), 
     cs_standing_(robot.createContactStatus()),
     cs_lf_(robot.createContactStatus()),
     cs_lh_(robot.createContactStatus()),
@@ -94,20 +95,20 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
   current_step_ = 0;
   predict_step_ = 0;
   // Init contact status
-  ocp_solver_.setContactStatusUniformly(cs_standing_);
+  contact_sequence_->setContactStatusUniformly(cs_standing_);
   double tt = t0_;
   while (tt < t+T_-dtm_) {
     if (predict_step_%4 == 1) {
-      ocp_solver_.pushBackContactStatus(cs_rf_, tt);
+      contact_sequence_->push_back(cs_rf_, tt);
     }
     else if (predict_step_%4 == 2) {
-      ocp_solver_.pushBackContactStatus(cs_lh_, tt);
+      contact_sequence_->push_back(cs_lh_, tt);
     }
     else if (predict_step_%4 == 3) {
-      ocp_solver_.pushBackContactStatus(cs_lf_, tt);
+      contact_sequence_->push_back(cs_lf_, tt);
     }
     else { // predict_step_%4 == 0
-      ocp_solver_.pushBackContactStatus(cs_rh_, tt);
+      contact_sequence_->push_back(cs_rh_, tt);
     }
     ++predict_step_;
     tt += swing_time_;
@@ -133,16 +134,19 @@ void MPCQuadrupedalWalking::updateSolution(const double t,
                                            const int num_iteration) {
   const bool add_step = addStep(t);
   const auto ts = ocp_solver_.getSolution("ts");
+  bool remove_step = false;
   if (!ts.empty()) {
     if (ts.front().coeff(0) < t+min_dt) {
       ts_last_ = ts.front().coeff(0);
-      ocp_solver_.popFrontContactStatus(t, true);
+      contact_sequence_->pop_front();
+      remove_step = true;
+      // ocp_solver_.popFrontContactStatus(t, true);
       ++current_step_;
     }
   }
   resetContactPoints(q);
 
-  if (add_step) {
+  if (add_step || remove_step) {
     ocp_solver_.initConstraints(t);
   }
 
@@ -172,7 +176,7 @@ double MPCQuadrupedalWalking::KKTError() {
 bool MPCQuadrupedalWalking::addStep(const double t) {
   if (predict_step_ == 0) {
     if (t0_ < t+T_-dtm_) {
-      ocp_solver_.pushBackContactStatus(cs_rh_, t0_);
+      contact_sequence_->push_back(cs_rh_, t0_);
       ++predict_step_;
       return true;
     }
@@ -185,16 +189,16 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
     }
     if (tt < t+T_-dtm_) {
       if (predict_step_%4 == 1) {
-        ocp_solver_.pushBackContactStatus(cs_rf_, tt);
+        contact_sequence_->push_back(cs_rf_, tt);
       }
       else if (predict_step_%4 == 2) {
-        ocp_solver_.pushBackContactStatus(cs_lh_, tt);
+        contact_sequence_->push_back(cs_lh_, tt);
       }
       else if (predict_step_%4 == 3) {
-        ocp_solver_.pushBackContactStatus(cs_lf_, tt);
+        contact_sequence_->push_back(cs_lf_, tt);
       }
       else { // predict_step_%4 == 0
-        ocp_solver_.pushBackContactStatus(cs_rh_, tt);
+        contact_sequence_->push_back(cs_rh_, tt);
       }
       ++predict_step_;
       return true;
@@ -278,21 +282,9 @@ void MPCQuadrupedalWalking::resetContactPoints(const Eigen::VectorXd& q) {
     else {
       contact_points_[0].coeffRef(0) += step_length_;
     }
-    ocp_solver_.setContactPoints(step-current_step_, contact_points_);
+    contact_sequence_->setContactPoints(step-current_step_, contact_points_);
   }
 }
-
-
-// void MPCQuadrupedalWalking::checkFormulation(const double t) {
-//   const bool is_formulation_tractable = ocp_solver_.isFormulationTractable(t);
-//   const bool is_switching_time_consistent = ocp_solver_.isSwitchingTimeConsistent(t);
-//   std::cout << "isFormulationTractable: ";
-//   if (is_formulation_tractable) std::cout << "true" << std::endl;
-//   else std::cout << "false" << std::endl;
-//   std::cout << "isSwitchingTimeConsistent: ";
-//   if (is_switching_time_consistent) std::cout << "true" << std::endl;
-//   else std::cout << "false" << std::endl;
-// }
 
 
 void MPCQuadrupedalWalking::showInfo() const {

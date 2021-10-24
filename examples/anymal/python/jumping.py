@@ -105,27 +105,28 @@ T = t0 + period_flying + 2*period_ground
 N = math.floor(T/dt) 
 max_num_impulse_phase = 1
 
-nthreads = 4
-t = 0
-ocp_solver = robotoc.OCPSolver(robot, cost, constraints, T, N, 
-                               max_num_impulse_phase, nthreads)
+contact_sequence = robotoc.ContactSequence(robot, 2*max_num_impulse_phase)
 
 contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
 contact_status_initial = robot.create_contact_status()
 contact_status_initial.activate_contacts([0, 1, 2, 3])
 contact_status_initial.set_contact_points(contact_points)
-ocp_solver.set_contact_status_uniformly(contact_status_initial)
+contact_sequence.set_contact_status_uniformly(contact_status_initial)
 
 contact_status_flying = robot.create_contact_status()
-ocp_solver.push_back_contact_status(contact_status_flying, t0+period_ground)
+contact_sequence.push_back(contact_status_flying, t0+period_ground)
 
 contact_points[0][0] += jump_length
 contact_points[1][0] += jump_length
 contact_points[2][0] += jump_length
 contact_points[3][0] += jump_length
 contact_status_initial.set_contact_points(contact_points)
-ocp_solver.push_back_contact_status(contact_status_initial, t0+period_ground+period_flying)
+contact_sequence.push_back(contact_status_initial, t0+period_ground+period_flying)
 
+ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
+                               T, N, nthreads=4)
+
+t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
 
@@ -142,8 +143,8 @@ robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                      base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                      viewer_type='gepetto')
+                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
+                                        viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
 viewer.display(dt, ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

@@ -33,18 +33,20 @@ public:
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] robot Robot model. 
+  /// @param[in] contact_sequence Shared ptr to the contact sequence.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  OCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+  OCPSolver(const Robot& robot, 
+            const std::shared_ptr<ContactSequence>& contact_sequence,
+            const std::shared_ptr<CostFunction>& cost,
             const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int max_num_impulse=0, const int nthreads=1);
+            const int N, const int nthreads=1);
+
 
   ///
   /// @brief Default constructor. 
@@ -135,52 +137,6 @@ public:
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
-  /// @brief Sets the contact status over all of the time stages uniformly. Also, 
-  /// disable discrete events over all of the time stages.
-  /// @param[in] contact_status Contact status.
-  ///
-  void setContactStatusUniformly(const ContactStatus& contact_status);
-
-  ///
-  /// @brief Push back the contact status. Discrete events (impulse and lift)
-  /// are also appended to the optimal control problem.
-  /// @param[in] contact_status Contact status.
-  /// @param[in] switching_time Time of the switch of the contact status.
-  ///
-  void pushBackContactStatus(const ContactStatus& contact_status, 
-                             const double switching_time);
-
-  ///
-  /// @brief Sets the contact points to contact statsus with specified contact  
-  /// phase. Also set the contact points of the discrete event just before the  
-  /// contact phase.
-  /// @param[in] contact_phase Contact phase.
-  /// @param[in] contact_points Contact points.
-  ///
-  void setContactPoints(const int contact_phase, 
-                        const std::vector<Eigen::Vector3d>& contact_points);
-
-  ///
-  /// @brief Pop back a contact status. Optionally extrapolates the solution
-  /// over the grids where the contact phase is eliminated.
-  /// @param[in] t Initial time of the horizon. 
-  /// @param[in] extrapolate_solution if true, the solution over the grids
-  /// where the contact phase is eliminated is extrapolated. Defalut is false.
-  ///
-  void popBackContactStatus(const double t, 
-                            const bool extrapolate_solution=false);
-
-  ///
-  /// @brief Pop front a contact status. Optionally extrapolates the solution
-  /// over the grids where the contact phase is eliminated.
-  /// @param[in] t Initial time of the horizon. 
-  /// @param[in] extrapolate_solution if true, the solution over the grids
-  /// where the contact phase is eliminated is extrapolated. Defalut is false.
-  ///
-  void popFrontContactStatus(const double t, 
-                             const bool extrapolate_solution=false);
-
-  ///
   /// @brief Clear the line search filter. 
   ///
   void clearLineSearchFilter();
@@ -240,7 +196,10 @@ public:
 
 private:
   aligned_vector<Robot> robots_;
-  ContactSequence contact_sequence_;
+  std::shared_ptr<ContactSequence> contact_sequence_;
+  ContactSequence contact_sequence_entity_;
+  std::shared_ptr<CostFunction> cost_;
+  std::shared_ptr<Constraints> constraints_;
   DirectMultipleShooting dms_;
   RiccatiRecursion riccati_recursion_;
   LineSearch line_search_;

@@ -30,7 +30,6 @@ PYBIND11_MODULE(mpc_quadrupedal_trotting, m) {
     .def("KKT_error", static_cast<double (MPCQuadrupedalTrotting::*)()>(&MPCQuadrupedalTrotting::KKTError))
     .def("KKT_error", static_cast<double (MPCQuadrupedalTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalTrotting::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
-//     .def("check_formulation", &MPCQuadrupedalTrotting::checkFormulation)
     .def("show_info", &MPCQuadrupedalTrotting::showInfo);
 }
 
