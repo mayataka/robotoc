@@ -98,20 +98,20 @@ public:
   void pop_front();
 
   ///
-  /// @brief Updates the instant of the impulse event. 
+  /// @brief Sets the time of the impulse event. 
   /// @param[in] impulse_index Index of the impulse event. Must be non-negative
   /// and less than numImpulseEvents().
-  /// @param[in] impulse_time Updated time.
+  /// @param[in] impulse_time Impulse time.
   ///
-  void updateImpulseTime(const int impulse_index, const double impulse_time);
+  void setImpulseTime(const int impulse_index, const double impulse_time);
 
   ///
-  /// @brief Updates the instant of the lfit event. 
+  /// @brief Sets the time of the lift event. 
   /// @param[in] lift_index Index of the lift event. Must be non-negative
   /// and less than numLiftEvents().
-  /// @param[in] lift_time Updated time.
+  /// @param[in] lift_time Lift time.
   ///
-  void updateLiftTime(const int lift_index, const double lift_time);
+  void setLiftTime(const int lift_index, const double lift_time);
 
   ///
   /// @brief Checks wheather the STO is enabled for the specified impulse event. 

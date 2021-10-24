@@ -44,6 +44,7 @@ PYBIND11_MODULE(robot, m) {
         self.normalizeConfiguration(q);
       })
     .def("create_contact_status", &Robot::createContactStatus)
+    .def("create_impulse_status", &Robot::createImpulseStatus)
     .def("total_weight", &Robot::totalWeight)
     .def("dimq", &Robot::dimq)
     .def("dimv", &Robot::dimv)

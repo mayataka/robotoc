@@ -178,8 +178,8 @@ inline void ContactSequence::pop_front() {
 }
 
 
-inline void ContactSequence::updateImpulseTime(const int impulse_index, 
-                                               const double impulse_time) {
+inline void ContactSequence::setImpulseTime(const int impulse_index, 
+                                            const double impulse_time) {
   try {
     if (numImpulseEvents() <= 0) {
       throw std::runtime_error(
@@ -204,8 +204,8 @@ inline void ContactSequence::updateImpulseTime(const int impulse_index,
 }
 
 
-inline void ContactSequence::updateLiftTime(const int lift_index, 
-                                            const double lift_time) {
+inline void ContactSequence::setLiftTime(const int lift_index, 
+                                         const double lift_time) {
   try {
     if (numLiftEvents() <= 0) {
       throw std::runtime_error(

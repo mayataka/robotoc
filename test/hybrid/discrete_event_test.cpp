@@ -36,6 +36,9 @@ TEST_F(DiscreteEventTest, constructor1) {
   EXPECT_EQ(contact_status.dimf(), 0);
   EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::None);
+  EXPECT_NO_THROW(
+    std::cout << discrete_event << std::endl;
+  );
 }
 
 
@@ -59,6 +62,9 @@ TEST_F(DiscreteEventTest, constructor2) {
     EXPECT_TRUE(contact_points[i].isApprox(discrete_event.impulseStatus().contactPoints()[i]));
   }
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
+  EXPECT_NO_THROW(
+    std::cout << discrete_event << std::endl;
+  );
 }
 
 
@@ -75,6 +81,9 @@ TEST_F(DiscreteEventTest, impulse) {
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
+  EXPECT_NO_THROW(
+    std::cout << discrete_event << std::endl;
+  );
 }
 
 
@@ -91,6 +100,9 @@ TEST_F(DiscreteEventTest, lift) {
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Lift);
+  EXPECT_NO_THROW(
+    std::cout << discrete_event << std::endl;
+  );
 }
 
 
