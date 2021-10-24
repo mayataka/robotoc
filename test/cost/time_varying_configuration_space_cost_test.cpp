@@ -161,15 +161,15 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   cost->set_qf_weight(qf_weight);
 
   const auto s = SplitSolution::Random(robot);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCostbot, data, t0-dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCostbot, data, tf+dt, s), 0);
-  cost->evalTerminalCostivatives(robot, data, t0-dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t0-dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, tf+dt, s), 0);
+  cost->evalTerminalCostDerivatives(robot, data, t0-dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostivatives(robot, data, tf+dt, s, kkt_res);
+  cost->evalTerminalCostDerivatives(robot, data, tf+dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostsian(robot, data, t0-dt, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, t0-dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalTerminalCostsian(robot, data, tf+dt, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
@@ -177,9 +177,9 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   const double cost_ref = 0.5 * (qf_weight.array()*q_diff.array()*q_diff.array()).sum();
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCostbot, data, t, s), cost_ref);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), cost_ref);
 
-  cost->evalTerminalCostivatives(robot, data, t, s, kkt_res);
+  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -189,7 +189,7 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
     kkt_res_ref.lq() += qf_weight.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostsian(robot, data, t, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
   }

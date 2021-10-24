@@ -677,7 +677,7 @@ public:
       const Eigen::VectorXd& upper_joint_position_limit);
 
   ///
-  /// @brief Displays the point contact onto a ostream.
+  /// @brief Displays the robot model onto a ostream.
   ///
   void disp(std::ostream& os) const;
 

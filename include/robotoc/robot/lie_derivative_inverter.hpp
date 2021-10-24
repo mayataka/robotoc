@@ -55,6 +55,8 @@ public:
       const Eigen::MatrixBase<MatrixType1>& Lie_der,
       const Eigen::MatrixBase<MatrixType2>& Lie_der_inv);
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   Eigen::Matrix3d mat_3d_tmp_;
 

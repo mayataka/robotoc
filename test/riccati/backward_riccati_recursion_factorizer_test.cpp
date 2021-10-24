@@ -61,12 +61,6 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   LQRPolicy lqr_policy(robot);
   lqr_policy.K.setRandom();
   lqr_policy.k.setRandom();
-  factorizer.factorizeHamiltonian(kkt_matrix, riccati);
-  const Eigen::VectorXd hx_ref = kkt_matrix.hx + A.transpose() * riccati_next.P * kkt_matrix.fx;
-  const Eigen::VectorXd hu_ref = kkt_matrix.hu + B.transpose() * riccati_next.P * kkt_matrix.fx;
-  EXPECT_TRUE(kkt_matrix.hx.isApprox(hx_ref));
-  EXPECT_TRUE(kkt_matrix.hu.isApprox(hu_ref));
-  EXPECT_TRUE(riccati.isApprox(riccati_ref));
   factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, lqr_policy, riccati);
   riccati_ref.P = F_ref - lqr_policy.K.transpose() * G_ref * lqr_policy.K;
   riccati_ref.s = A.transpose() * riccati_next.s - A.transpose() * riccati_next.P * kkt_residual_ref.Fx - kkt_residual_ref.lx - H_ref * lqr_policy.k;
