@@ -2,14 +2,14 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/impulse/impulse_split_direction.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseSplitDirectionTest : public ::testing::Test {
 protected:
@@ -21,7 +21,7 @@ protected:
   }
 
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_isApprox(const Robot& robot, const ImpulseStatus& impulse_status);
 
 };
 
@@ -76,10 +76,14 @@ void ImpulseSplitDirectionTest::test(const Robot& robot, const ImpulseStatus& im
   EXPECT_TRUE(d.ddvf().isZero());
   EXPECT_TRUE(d.dlmdgmm.isZero());
   EXPECT_TRUE(d.dbetamu().isZero());
+
+  EXPECT_NO_THROW(
+    std::cout << d << std::endl;
+  );
 }
 
 
-void ImpulseSplitDirectionTest::testIsApprox(const Robot& robot, 
+void ImpulseSplitDirectionTest::test_isApprox(const Robot& robot, 
                                              const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
@@ -135,10 +139,10 @@ TEST_F(ImpulseSplitDirectionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 
@@ -147,16 +151,16 @@ TEST_F(ImpulseSplitDirectionTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

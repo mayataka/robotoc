@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_switching_constraint_residual.hpp"
-#include "idocp/ocp/split_switching_constraint_jacobian.hpp"
-#include "idocp/ocp/switching_constraint.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class SwitchingConstraintTest : public ::testing::Test {
 protected:
@@ -26,14 +26,14 @@ protected:
   virtual void TearDown() {
   }
 
-  void testLinearizeSwitchingConstraint(Robot& robot) const;
-  void testComputeSwitchingConstraintResidual(Robot& robot) const;
+  void test_linearizeSwitchingConstraint(Robot& robot) const;
+  void test_evalSwitchingConstraint(Robot& robot) const;
 
   double dt1, dt2, dt;
 };
 
 
-void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) const {
+void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) const {
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -44,13 +44,15 @@ void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) con
   kkt_residual.lx.setRandom();
   kkt_residual.la.setRandom();
   auto kkt_residual_ref = kkt_residual;
-  SplitSwitchingConstraintJacobian jac(robot);
-  SplitSwitchingConstraintResidual res(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  auto kkt_matrix_ref = kkt_matrix;
+  SwitchingConstraintJacobian jac(robot);
+  SwitchingConstraintResidual res(robot);
   auto jac_ref = jac;
   auto res_ref = res;
   robot.updateKinematics(s.q);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt1, dt2,
-                                                    s, kkt_residual, jac, res);
+                                                    s, kkt_matrix, kkt_residual, jac, res);
   jac_ref.setImpulseStatus(impulse_status);
   res_ref.setImpulseStatus(impulse_status);
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
@@ -73,9 +75,17 @@ void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) con
   }
   kkt_residual_ref.lx += jac_ref.Phix().transpose() * s.xi_stack();
   kkt_residual_ref.la += jac_ref.Phia().transpose() * s.xi_stack();
+  res_ref.dq = s.v + dt1 * s.a;
+  jac_ref.Phit().noalias() = jac_ref.Pq() * res_ref.dq;
+  kkt_residual_ref.h = s.xi_stack().dot(jac_ref.Phit());
+  kkt_matrix_ref.hq().setZero();
+  kkt_matrix_ref.hv().noalias() = jac_ref.Pq().transpose() * s.xi_stack();
+  kkt_matrix_ref.hu.setZero();
+  res_ref.dq.noalias() = dt1 * jac_ref.Pq().transpose() * s.xi_stack();
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(jac.isApprox(jac_ref));
   EXPECT_TRUE(res.isApprox(res_ref));
+  EXPECT_TRUE(res.dq.isApprox(res_ref.dq));
   const double l2 = res.KKTError();
   const double l2_ref = res.P().squaredNorm();
   EXPECT_DOUBLE_EQ(l2, l2_ref);
@@ -85,7 +95,7 @@ void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) con
 }
 
 
-void SwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robot& robot) const {
+void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -93,10 +103,10 @@ void SwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robot& robo
   }
   const SplitSolution s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  SplitSwitchingConstraintResidual res(robot);
+  SwitchingConstraintResidual res(robot);
   auto res_ref = res;
-  switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status, 
-                                                          dt1, dt2, s, res);
+  switchingconstraint::evalSwitchingConstraint(robot, impulse_status, 
+                                                dt1, dt2, s, res);
 
   res_ref.setImpulseStatus(impulse_status);
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
@@ -116,18 +126,18 @@ void SwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robot& robo
 
 TEST_F(SwitchingConstraintTest, fixedbase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testLinearizeSwitchingConstraint(robot);
-  testComputeSwitchingConstraintResidual(robot);
+  test_linearizeSwitchingConstraint(robot);
+  test_evalSwitchingConstraint(robot);
 }
 
 
 TEST_F(SwitchingConstraintTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testLinearizeSwitchingConstraint(robot);
-  testComputeSwitchingConstraintResidual(robot);
+  test_linearizeSwitchingConstraint(robot);
+  test_evalSwitchingConstraint(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

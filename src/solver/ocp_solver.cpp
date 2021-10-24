@@ -1,10 +1,10 @@
-#include "idocp/solver/ocp_solver.hpp"
+#include "robotoc/solver/ocp_solver.hpp"
 
 #include <stdexcept>
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 OCPSolver::OCPSolver(const Robot& robot, 
                      const std::shared_ptr<CostFunction>& cost, 
@@ -269,6 +269,7 @@ void OCPSolver::popBackContactStatus(const double t,
     for (int i=time_stage_after_event; i<=ocp_.discrete().N(); ++i) {
       s_[i].copyPrimal(s_[time_stage_after_event-1]);
       s_[i].copyDual(s_[time_stage_after_event-1]);
+      ocp_[i].initConstraints(ocp_[time_stage_after_event-1]);
     }
   }
   contact_sequence_.pop_back();
@@ -290,6 +291,7 @@ void OCPSolver::popFrontContactStatus(const double t,
     for (int i=0; i<=time_stage_before_event; ++i) {
       s_[i].copyPrimal(s_[time_stage_before_event+1]);
       s_[i].copyDual(s_[time_stage_before_event+1]);
+      ocp_[i].initConstraints(ocp_[time_stage_before_event+1]);
     }
   }
   contact_sequence_.pop_front();
@@ -367,12 +369,6 @@ bool OCPSolver::isSwitchingTimeConsistent(const double t) {
 }
 
 
-void OCPSolver::showInfo() const {
-  contact_sequence_.showInfo();
-  ocp_.discrete().showInfo();
-}
-
-
 void OCPSolver::discretizeSolution() {
   for (int i=0; i<=ocp_.discrete().N(); ++i) {
     s_[i].setContactStatus(
@@ -403,4 +399,16 @@ void OCPSolver::discretizeSolution() {
   }
 }
 
-} // namespace idocp
+
+void OCPSolver::disp(std::ostream& os) const {
+  os << contact_sequence_ << std::endl;
+  os << ocp_.discrete() << std::endl;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const OCPSolver& ocp_solver) {
+  ocp_solver.disp(os);
+  return os;
+}
+
+} // namespace robotoc

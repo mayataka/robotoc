@@ -1,20 +1,20 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/riccati/split_riccati_factorization.hpp"
-#include "idocp/riccati/lqr_policy.hpp"
-#include "idocp/riccati/backward_riccati_recursion_factorizer.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/ocp/split_direction.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/riccati/split_riccati_factorization.hpp"
+#include "robotoc/riccati/lqr_policy.hpp"
+#include "robotoc/riccati/backward_riccati_recursion_factorizer.hpp"
 
 #include "robot_factory.hpp"
 #include "kkt_factory.hpp"
 #include "riccati_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class BackwardRiccatiRecursionFactorizerTest : public ::testing::Test {
 protected:
@@ -28,7 +28,7 @@ protected:
 
   void test(const Robot& robot) const;
 
-  void testImpulse(const Robot& robot) const;
+  void test_impulse(const Robot& robot) const;
 
   double dt;
 };
@@ -44,7 +44,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const auto kkt_residual_ref = kkt_residual;
   BackwardRiccatiRecursionFactorizer factorizer(robot);
   factorizer.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
-  const Eigen::MatrixXd A = kkt_matrix.Fxx;
+  const Eigen::MatrixXd A = kkt_matrix_ref.Fxx;
   Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2*dimv, dimu);
   B.bottomRows(dimv) = kkt_matrix_ref.Fvu;
   const Eigen::MatrixXd F_ref = kkt_matrix_ref.Qxx + A.transpose() * riccati_next.P * A;
@@ -69,7 +69,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
 }
 
 
-void BackwardRiccatiRecursionFactorizerTest::testImpulse(const Robot& robot) const {
+void BackwardRiccatiRecursionFactorizerTest::test_impulse(const Robot& robot) const {
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
@@ -94,17 +94,17 @@ void BackwardRiccatiRecursionFactorizerTest::testImpulse(const Robot& robot) con
 TEST_F(BackwardRiccatiRecursionFactorizerTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   test(robot);
-  testImpulse(robot);
+  test_impulse(robot);
 }
 
 
 TEST_F(BackwardRiccatiRecursionFactorizerTest, floating_base) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   test(robot);
-  testImpulse(robot);
+  test_impulse(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

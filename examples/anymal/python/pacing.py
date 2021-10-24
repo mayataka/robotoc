@@ -1,4 +1,4 @@
-import idocp
+import robotoc
 import numpy as np
 import math
 
@@ -10,8 +10,8 @@ RH_foot_id = 42
 contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.04
-robot = idocp.Robot(path_to_urdf, idocp.BaseJointType.FloatingBase, 
-                    contact_frames, baumgarte_time_step)
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
+                      contact_frames, baumgarte_time_step)
 
 dt = 0.02
 step_length = 0.25
@@ -21,7 +21,7 @@ period_double_support = 0.04
 t0 = 0.1
 cycle = 3
 
-cost = idocp.CostFunction()
+cost = robotoc.CostFunction()
 q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
                        -0.1,  0.7, -1.0, 
                        -0.1, -0.7,  1.0, 
@@ -44,7 +44,7 @@ qi_weight = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                       100, 100, 100,
                       100, 100, 100])
 vi_weight = np.full(robot.dimv(), 100)
-config_cost = idocp.ConfigurationSpaceCost(robot)
+config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
 config_cost.set_qf_weight(q_weight)
@@ -64,22 +64,22 @@ LF_t0 = t0 + period_swing + period_double_support
 LH_t0 = t0 + period_swing + period_double_support
 RF_t0 = t0 
 RH_t0 = t0 
-LF_foot_ref = idocp.PeriodicFootTrackRef(q0_3d_LF, step_length, step_height, 
-                                         LF_t0, period_swing, 
-                                         period_swing+2*period_double_support, False)
-LH_foot_ref = idocp.PeriodicFootTrackRef(q0_3d_LH, step_length, step_height, 
-                                         LH_t0, period_swing, 
-                                         period_swing+2*period_double_support, False)
-RF_foot_ref = idocp.PeriodicFootTrackRef(q0_3d_RF, step_length, step_height, 
-                                         RF_t0, period_swing, 
-                                         period_swing+2*period_double_support, True)
-RH_foot_ref = idocp.PeriodicFootTrackRef(q0_3d_RH, step_length, step_height, 
-                                         RH_t0, period_swing, 
-                                         period_swing+2*period_double_support, True)
-LF_cost = idocp.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
-LH_cost = idocp.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
-RF_cost = idocp.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
-RH_cost = idocp.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
+LF_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_LF, step_length, step_height, 
+                                           LF_t0, period_swing, 
+                                           period_swing+2*period_double_support, False)
+LH_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_LH, step_length, step_height, 
+                                           LH_t0, period_swing, 
+                                           period_swing+2*period_double_support, False)
+RF_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_RF, step_length, step_height, 
+                                           RF_t0, period_swing, 
+                                           period_swing+2*period_double_support, True)
+RH_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_RH, step_length, step_height, 
+                                           RH_t0, period_swing, 
+                                           period_swing+2*period_double_support, True)
+LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
+LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
+RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
+RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
 foot_track_weight = np.full(3, 1.0e06)
 LF_cost.set_q_weight(foot_track_weight)
 LH_cost.set_q_weight(foot_track_weight)
@@ -94,21 +94,21 @@ com_ref0 = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
 com_ref0[2] = robot.com()[2]
 v_com_ref = np.zeros(3)
 v_com_ref[0] = 0.5 * step_length / period_swing
-com_ref = idocp.PeriodicCoMRef(com_ref0, v_com_ref, t0, period_swing, 
-                               period_double_support, True)
-com_cost = idocp.TimeVaryingCoMCost(robot, com_ref)
+com_ref = robotoc.PeriodicCoMRef(com_ref0, v_com_ref, t0, period_swing, 
+                                 period_double_support, True)
+com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_q_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
-constraints           = idocp.Constraints()
-joint_position_lower  = idocp.JointPositionLowerLimit(robot)
-joint_position_upper  = idocp.JointPositionUpperLimit(robot)
-joint_velocity_lower  = idocp.JointVelocityLowerLimit(robot)
-joint_velocity_upper  = idocp.JointVelocityUpperLimit(robot)
-joint_torques_lower   = idocp.JointTorquesLowerLimit(robot)
-joint_torques_upper   = idocp.JointTorquesUpperLimit(robot)
+constraints           = robotoc.Constraints()
+joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
+joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
+joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
+joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
+joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
+joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
 mu = 0.7
-friction_cone         = idocp.FrictionCone(robot, mu)
+friction_cone         = robotoc.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
 constraints.push_back(joint_velocity_lower)
@@ -124,7 +124,7 @@ max_num_impulse_phase = 2*cycle
 
 nthreads = 4
 t = 0
-ocp_solver = idocp.OCPSolver(robot, cost, constraints, T, N, 
+ocp_solver = robotoc.OCPSolver(robot, cost, constraints, T, N, 
                              max_num_impulse_phase, nthreads)
 
 contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
@@ -186,12 +186,13 @@ ocp_solver.set_solution("f", f_init)
 ocp_solver.init_constraints(t)
 
 num_iteration = 70 
-idocp.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
+robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # num_iteration = 1000
-# idocp.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
+# robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
-viewer = idocp.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                      base_joint_type=idocp.BaseJointType.FloatingBase)
+viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+                                      base_joint_type=robotoc.BaseJointType.FloatingBase,
+                                      viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
 viewer.display(dt, ocp_solver.get_solution('q'), 
-               ocp_solver.get_solution('f', 'WORLD'), viewer='gepetto')
+               ocp_solver.get_solution('f', 'WORLD'))

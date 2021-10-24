@@ -1,12 +1,13 @@
-#include "idocp/mpc/mpc_quadrupedal_trotting.hpp"
+#include "robotoc/mpc/mpc_quadrupedal_trotting.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <algorithm>
 
 
-namespace idocp {
+namespace robotoc {
 
 MPCQuadrupedalTrotting::MPCQuadrupedalTrotting(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
@@ -267,7 +268,7 @@ void MPCQuadrupedalTrotting::resetContactPoints(const Eigen::VectorXd& q) {
 
 
 void MPCQuadrupedalTrotting::showInfo() const {
-  ocp_solver_.showInfo();
+  std::cout << ocp_solver_ << std::endl;
 }
 
-} // namespace idocp 
+} // namespace robotoc 

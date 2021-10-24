@@ -3,11 +3,11 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/riccati/riccati_recursion.hpp"
-#include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/direct_multiple_shooting.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/riccati/riccati_recursion.hpp"
+#include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/direct_multiple_shooting.hpp"
 
 #include "test_helper.hpp"
 #include "robot_factory.hpp"
@@ -17,7 +17,7 @@
 #include "constraints_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class DirectMultipleShootingTest : public ::testing::Test {
 protected:
@@ -107,6 +107,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       const double t_impulse = ocp_ref.discrete().t_impulse(impulse_index);
       const double dti = ocp_ref.discrete().dt(i);
       const double dt_aux = ocp_ref.discrete().dt_aux(impulse_index);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       ASSERT_TRUE(dti >= 0);
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
@@ -128,6 +129,16 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.impulse[impulse_index].KKTError(kkt_residual_ref.impulse[impulse_index]);
       kkt_error_ref += ocp_ref.aux[impulse_index].KKTError(kkt_residual_ref.aux[impulse_index], dt_aux);
+      if (sto) {
+        if (i >= 1) {
+          const double hdiff = kkt_residual_ref[i].h + kkt_residual_ref[i-1].h - kkt_residual_ref.aux[impulse_index].h;
+          kkt_error_ref += hdiff * hdiff;
+        }
+        else {
+          const double hdiff = kkt_residual_ref[i].h - kkt_residual_ref.aux[impulse_index].h;
+          kkt_error_ref += hdiff * hdiff;
+        }
+      }
       total_cost_ref += ocp_ref[i].stageCost();
       total_cost_ref += ocp_ref.impulse[impulse_index].stageCost();
       total_cost_ref += ocp_ref.aux[impulse_index].stageCost();
@@ -139,6 +150,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       const double t_lift = ocp_ref.discrete().t_lift(lift_index);
       const double dti = ocp_ref.discrete().dt(i);
       const double dt_lift = ocp_ref.discrete().dt_lift(lift_index);
+      const bool sto = ocp_ref.discrete().isSTOEnabledLift(lift_index);
       ASSERT_TRUE(dti >= 0);
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
@@ -153,6 +165,10 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.lift[lift_index].KKTError(kkt_residual_ref.lift[lift_index], dt_lift);
+      if (sto) {
+        const double hdiff = kkt_residual_ref[i].h - kkt_residual_ref.lift[lift_index].h;
+        kkt_error_ref += hdiff * hdiff;
+      }
       total_cost_ref += ocp_ref[i].stageCost();
       total_cost_ref += ocp_ref.lift[lift_index].stageCost();
     }
@@ -367,14 +383,15 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dt);
-      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i]);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index], sto);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
@@ -387,16 +404,18 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dt);
-      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i]);
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
+      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i], sto);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index], sto);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
     }
     else {
       const double dti = ocp_ref.discrete().dt(i);
-      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i]);
+      const bool sto_false = false;
+      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], sto_false);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
@@ -406,6 +425,14 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   ocp_ref.terminal.updateDual(dual_step_size);
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
+
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+    std::cout << d << std::endl;
+    std::cout << kkt_matrix << std::endl;
+    std::cout << kkt_residual << std::endl;
+  );
 }
 
 
@@ -432,7 +459,7 @@ TEST_F(DirectMultipleShootingTest, floatingBase) {
   test_integrateSolution(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

@@ -1,24 +1,33 @@
-#include "idocp/robot/impulse_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 
-#include <iostream>
 
-namespace idocp {
+namespace robotoc {
 
-void ImpulseStatus::showInfo() const {
-  std::cout << "----- The impulse status -----" << std::endl;
-  std::cout << "active impulses: [";
-  for (int i=0; i<maxPointContacts(); ++i) {
+void ImpulseStatus::disp(std::ostream& os) const {
+  os << "impulse status:" << std::endl;
+  os << "  active impulses: [";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
     if (isImpulseActive(i)) {
-      std::cout << i << ", ";
+      os << i << ", ";
     }
   }
-  std::cout << "]" << std::endl;
-  std::cout << "contact points: [";
-  for (int i=0; i<maxPointContacts(); ++i) {
-    std::cout << "[" << contactPoint(i).transpose() << "], ";
+  if (isImpulseActive(maxPointContacts()-1)) {
+    os << maxPointContacts()-1;
   }
-  std::cout << "]" << std::endl;
-  std::cout << "------------------------------" << std::endl;
+  os << "]" << std::endl;
+  os << "  contact points: [";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
+    os << "[" << contactPoint(i).transpose() << "], ";
+  }
+  os << "[" << contactPoint(maxPointContacts()-1).transpose() << "]";
+  os << "]" << std::flush;
 }
 
-} // namespace idocp 
+
+std::ostream& operator<<(std::ostream& os, 
+                         const ImpulseStatus& impulse_status) {
+  impulse_status.disp(os);
+  return os;
+}
+
+} // namespace robotoc 

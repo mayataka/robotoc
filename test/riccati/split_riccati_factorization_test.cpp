@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/riccati/split_riccati_factorization.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/riccati/split_riccati_factorization.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class RiccatiFactorizationTest : public ::testing::Test {
 protected:
@@ -41,6 +41,7 @@ void RiccatiFactorizationTest::test(const Robot& robot) {
   EXPECT_EQ(riccati.Pvv().cols(), dimv);
   EXPECT_EQ(riccati.sq().size(), dimv);
   EXPECT_EQ(riccati.sv().size(), dimv);
+  EXPECT_EQ(riccati.Gmm.size(), dimx);
 }
 
 
@@ -55,7 +56,7 @@ TEST_F(RiccatiFactorizationTest, floating_base) {
   test(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

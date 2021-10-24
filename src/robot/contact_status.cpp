@@ -1,24 +1,33 @@
-#include "idocp/robot/contact_status.hpp"
+#include "robotoc/robot/contact_status.hpp"
 
-#include <iostream>
 
-namespace idocp {
+namespace robotoc {
 
-void ContactStatus::showInfo() const {
-  std::cout << "----- The contact status -----" << std::endl;
-  std::cout << "active contacts: [";
-  for (int i=0; i<maxPointContacts(); ++i) {
+void ContactStatus::disp(std::ostream& os) const {
+  os << "contact status:" << std::endl;
+  os << "  active contacts: [";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
     if (isContactActive(i)) {
-      std::cout << i << ", ";
+      os << i << ", ";
     }
   }
-  std::cout << "]" << std::endl;
-  std::cout << "contact points: [";
-  for (int i=0; i<maxPointContacts(); ++i) {
-    std::cout << "[" << contactPoint(i).transpose() << "], ";
+  if (isContactActive(maxPointContacts()-1)) {
+    os << maxPointContacts()-1;
   }
-  std::cout << "]" << std::endl;
-  std::cout << "------------------------------" << std::endl;
+  os << "]" << std::endl;
+  os << "  contact points: [";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
+    os << "[" << contactPoint(i).transpose() << "], ";
+  }
+  os << "[" << contactPoint(maxPointContacts()-1).transpose() << "]";
+  os << "]" << std::flush;
 }
 
-} // namespace idocp 
+
+std::ostream& operator<<(std::ostream& os, 
+                         const ContactStatus& contact_status) {
+  contact_status.disp(os);
+  return os;
+}
+
+} // namespace robotoc 

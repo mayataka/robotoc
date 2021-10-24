@@ -3,18 +3,18 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/cost/time_varying_com_cost.hpp"
-#include "idocp/cost/cost_function_data.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/cost_function_data.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 
-#include "idocp/utils/derivative_checker.hpp"
+#include "robotoc/utils/derivative_checker.hpp"
 
 #include "robot_factory.hpp"
 
-namespace idocp {
+namespace robotoc {
 
 class TimeVaryingCoMRef final : public TimeVaryingCoMRefBase {
 public:
@@ -100,23 +100,23 @@ void TimeVaryingCoMCostTest::testStageCost(Robot& robot, const int frame_id) con
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t0-dt, dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, tf+dt, dt, s), 0);
-  cost->computeStageCostDerivatives(robot, data, t0-dt, dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t0-dt, dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, tf+dt, dt, s), 0);
+  cost->evalStageCostDerivatives(robot, data, t0-dt, dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeStageCostDerivatives(robot, data, tf+dt, dt, s, kkt_res);
+  cost->evalStageCostDerivatives(robot, data, tf+dt, dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeStageCostHessian(robot, data, t0-dt, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, data, t0-dt, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->computeStageCostHessian(robot, data, tf+dt, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, data, tf+dt, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d CoM_ref = q0_ref + (t-t0) * v_ref;
   const Eigen::Vector3d q_diff = robot.CoM() - CoM_ref;
   const double l_ref = dt * 0.5 * q_diff.transpose() * q_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), l_ref);
-  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t, dt, s), l_ref);
+  cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->evalStageCostHessian(robot, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += dt * J_3d.transpose() * q_weight.asDiagonal() * q_diff;
@@ -151,23 +151,23 @@ void TimeVaryingCoMCostTest::testTerminalCost(Robot& robot, const int frame_id) 
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t0-dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, tf+dt, s), 0);
-  cost->computeTerminalCostDerivatives(robot, data, t0-dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t0-dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, tf+dt, s), 0);
+  cost->evalTerminalCostDerivatives(robot, data, t0-dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeTerminalCostDerivatives(robot, data, tf+dt, s, kkt_res);
+  cost->evalTerminalCostDerivatives(robot, data, tf+dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeTerminalCostHessian(robot, data, t0-dt, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, t0-dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->computeTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d CoM_ref = q0_ref + (t-t0) * v_ref;
   const Eigen::Vector3d q_diff = robot.CoM() - CoM_ref;
   const double l_ref = 0.5 * q_diff.transpose() * qf_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), l_ref);
-  cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
+  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += J_3d.transpose() * qf_weight.asDiagonal() * q_diff;
@@ -202,23 +202,23 @@ void TimeVaryingCoMCostTest::testImpulseCost(Robot& robot, const int frame_id) c
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t0-dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, tf+dt, s), 0);
-  cost->computeImpulseCostDerivatives(robot, data, t0-dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t0-dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, tf+dt, s), 0);
+  cost->evalImpulseCostDerivatives(robot, data, t0-dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeImpulseCostDerivatives(robot, data, tf+dt, s, kkt_res);
+  cost->evalImpulseCostDerivatives(robot, data, tf+dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeImpulseCostHessian(robot, data, t0-dt, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, data, t0-dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->computeImpulseCostHessian(robot, data, tf+dt, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d CoM_ref = q0_ref + (t-t0) * v_ref;
   const Eigen::Vector3d q_diff = robot.CoM() - CoM_ref;
   const double l_ref = 0.5 * q_diff.transpose() * qi_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t, s), l_ref);
-  cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
-  cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += J_3d.transpose() * qi_weight.asDiagonal() * q_diff;
@@ -249,7 +249,7 @@ TEST_F(TimeVaryingCoMCostTest, floatingBase) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

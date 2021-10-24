@@ -4,24 +4,24 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/impulse/impulse_split_ocp.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_dynamics.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/constraints/constraints.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/impulse/impulse_split_ocp.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_dynamics.hpp"
+#include "robotoc/cost/cost_function.hpp"
+#include "robotoc/constraints/constraints.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
 #include "constraints_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseSplitOCPTest : public ::testing::Test {
 protected:
@@ -157,13 +157,13 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  double impulse_cost_ref = cost->computeImpulseCost(robot, cost_data, t, s);
+  double impulse_cost_ref = cost->evalImpulseCost(robot, cost_data, t, s);
   constraints->evalConstraint(robot, constraints_data, s);
   impulse_cost_ref +=  constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);
-  ImpulseStateEquation::computeStateEquationResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
+  ImpulseStateEquation::evalStateEquation(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
   ImpulseDynamics id(robot);
-  id.computeImpulseDynamicsResidual(robot, impulse_status, s);
+  id.evalImpulseDynamics(robot, impulse_status, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += kkt_residual_ref.constraintViolation();
   constraint_violation_ref += constraints_data.constraintViolation();
@@ -202,7 +202,7 @@ TEST_F(ImpulseSplitOCPTest, floatingBase) {
   test_evalOCP(robot, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

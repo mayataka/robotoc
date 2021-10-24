@@ -2,19 +2,19 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_dynamics_data.hpp"
-#include "idocp/impulse/impulse_dynamics.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/impulse/impulse_dynamics_data.hpp"
+#include "robotoc/impulse/impulse_dynamics.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseDynamicsTest : public ::testing::Test {
 protected:
@@ -25,17 +25,17 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testLinearize(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testCondense(Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_computeResidual(Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_linearize(Robot& robot, const ImpulseStatus& impulse_status);
+  static void test_condense(Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
-void ImpulseDynamicsTest::testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsTest::test_computeResidual(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
-  id.computeImpulseDynamicsResidual(robot, impulse_status, s);
+  id.evalImpulseDynamics(robot, impulse_status, s);
   const double l1norm = id.constraintViolation();
   const double squarednorm = id.KKTError();
   ImpulseDynamicsData data(robot);
@@ -50,7 +50,7 @@ void ImpulseDynamicsTest::testComputeResidual(Robot& robot, const ImpulseStatus&
 }
 
 
-void ImpulseDynamicsTest::testLinearize(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsTest::test_linearize(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
@@ -80,7 +80,7 @@ void ImpulseDynamicsTest::testLinearize(Robot& robot, const ImpulseStatus& impul
 }
 
 
-void ImpulseDynamicsTest::testCondense(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
@@ -144,13 +144,13 @@ TEST_F(ImpulseDynamicsTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testComputeResidual(robot, impulse_status);
-  testLinearize(robot, impulse_status);
-  testCondense(robot, impulse_status);
+  test_computeResidual(robot, impulse_status);
+  test_linearize(robot, impulse_status);
+  test_condense(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  testComputeResidual(robot, impulse_status);
-  testLinearize(robot, impulse_status);
-  testCondense(robot, impulse_status);
+  test_computeResidual(robot, impulse_status);
+  test_linearize(robot, impulse_status);
+  test_condense(robot, impulse_status);
 }
 
 
@@ -158,19 +158,19 @@ TEST_F(ImpulseDynamicsTest, floatingBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testComputeResidual(robot, impulse_status);
-  testLinearize(robot, impulse_status);
-  testCondense(robot, impulse_status);
+  test_computeResidual(robot, impulse_status);
+  test_linearize(robot, impulse_status);
+  test_condense(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  testComputeResidual(robot, impulse_status);
-  testLinearize(robot, impulse_status);
-  testCondense(robot, impulse_status);
+  test_computeResidual(robot, impulse_status);
+  test_linearize(robot, impulse_status);
+  test_condense(robot, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

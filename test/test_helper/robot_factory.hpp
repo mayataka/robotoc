@@ -1,10 +1,10 @@
-#ifndef IDOCP_TEST_HELPER_ROBOT_FACTORY_HPP_
-#define IDOCP_TEST_HELPER_ROBOT_FACTORY_HPP_
+#ifndef ROBOTOC_TEST_HELPER_ROBOT_FACTORY_HPP_
+#define ROBOTOC_TEST_HELPER_ROBOT_FACTORY_HPP_
 
-#include "idocp/robot/robot.hpp"
+#include "robotoc/robot/robot.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 Robot CreateFixedBaseRobot();
@@ -16,6 +16,6 @@ Robot CreateFloatingBaseRobot();
 Robot CreateFloatingBaseRobot(const double time_step);
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc
 
-#endif // IDOCP_TEST_HELPER_ROBOT_FACTORY_HPP_ 
+#endif // ROBOTOC_TEST_HELPER_ROBOT_FACTORY_HPP_ 

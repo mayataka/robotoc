@@ -3,27 +3,27 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/split_ocp.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/split_switching_constraint_residual.hpp"
-#include "idocp/ocp/split_switching_constraint_jacobian.hpp"
-#include "idocp/ocp/switching_constraint.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/constraints/constraints.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/ocp/split_ocp.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_direction.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/ocp/state_equation.hpp"
+#include "robotoc/ocp/contact_dynamics.hpp"
+#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/ocp/switching_constraint.hpp"
+#include "robotoc/cost/cost_function.hpp"
+#include "robotoc/constraints/constraints.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
 #include "constraints_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class SplitOCPTest : public ::testing::Test {
 protected:
@@ -75,8 +75,8 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   ocp.initConstraints(robot, 10, s);
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  SplitSwitchingConstraintJacobian switch_jac(robot);
-  SplitSwitchingConstraintResidual switch_res(robot);
+  SwitchingConstraintJacobian switch_jac(robot);
+  SwitchingConstraintResidual switch_res(robot);
   if (switching_constraint) {
     ocp.computeKKTResidual(robot, contact_status, t, dt, s_prev.q, s, s_next, 
                            kkt_matrix, kkt_residual, 
@@ -104,10 +104,11 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
   if (switching_constraint) {
-    SplitSwitchingConstraintJacobian switch_jac_ref(robot);
-    SplitSwitchingConstraintResidual switch_res_ref(robot);
+    SwitchingConstraintJacobian switch_jac_ref(robot);
+    SwitchingConstraintResidual switch_res_ref(robot);
     switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
-                                                      kkt_residual_ref, switch_jac_ref, switch_res_ref);
+                                                      kkt_matrix_ref, kkt_residual_ref, 
+                                                      switch_jac_ref, switch_res_ref);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
@@ -149,8 +150,8 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  SplitSwitchingConstraintJacobian switch_jac(robot);
-  SplitSwitchingConstraintResidual switch_res(robot);
+  SwitchingConstraintJacobian switch_jac(robot);
+  SwitchingConstraintResidual switch_res(robot);
   if (switching_constraint) {
     ocp.computeKKTSystem(robot, contact_status, t, dt, s_prev.q, s, s_next, kkt_matrix, kkt_residual, 
                      impulse_status, dt_next, switch_jac, switch_res);
@@ -162,8 +163,8 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   SplitKKTResidual kkt_residual_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual_ref.setContactStatus(contact_status);
-  SplitSwitchingConstraintJacobian switch_jac_ref(robot);
-  SplitSwitchingConstraintResidual switch_res_ref(robot);
+  SwitchingConstraintJacobian switch_jac_ref(robot);
+  SwitchingConstraintResidual switch_res_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
@@ -177,17 +178,18 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
   if (switching_constraint) {
-    SplitSwitchingConstraintJacobian switch_jac_ref(robot);
-    SplitSwitchingConstraintResidual switch_res_ref(robot);
+    SwitchingConstraintJacobian switch_jac_ref(robot);
+    SwitchingConstraintResidual switch_res_ref(robot);
     switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
-                                                      kkt_residual_ref, switch_jac_ref, switch_res_ref);
-    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref);
-    cd.condenseSwitchingConstraint(switch_jac_ref, switch_res_ref);
+                                                      kkt_matrix_ref, kkt_residual_ref, 
+                                                      switch_jac_ref, switch_res_ref);
+    cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
+    cd.condenseSwitchingConstraint(switch_jac_ref, switch_res_ref, kkt_matrix_ref);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
   else {
-    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref);
+    cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
   }
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -200,13 +202,14 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   }
   auto d_ref = d;
   const auto d_next = SplitDirection::Random(robot);
-  ocp.expandPrimal(s, d);
+  const bool sto = false;
+  ocp.expandPrimal(dt, s, d, sto);
   cd.expandPrimal(d_ref);
   constraints->expandSlackAndDual(constraints_data, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
-  ocp.expandDual(dt, d_next, d);
+  ocp.expandDual(dt, d_next, d, sto);
   cd.expandDual(dt, d_next, d_ref);
   state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
@@ -246,7 +249,7 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   const double step_size = 0.3;
   ocp.initConstraints(robot, 10, s);
   SplitKKTResidual kkt_residual(robot);
-  SplitSwitchingConstraintResidual switch_res(robot);
+  SwitchingConstraintResidual switch_res(robot);
   double constraint_violation;
   if (switching_constraint) {
     ocp.evalOCP(robot, contact_status, t, dt, s, s_next.q, s_next.v, 
@@ -268,20 +271,19 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->computeStageCost(robot, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
   constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += dt * constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   StateEquation state_equation(robot);
-  state_equation.computeStateEquationResidual(robot, dt, s, s_next.q, 
-                                             s_next.v, kkt_residual_ref);
+  state_equation.evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual_ref);
   ContactDynamics cd(robot);
-  cd.computeContactDynamicsResidual(robot, contact_status, s);
+  cd.evalContactDynamics(robot, contact_status, s);
   double switch_violation_ref = 0;
   if (switching_constraint) {
-    SplitSwitchingConstraintResidual switch_res_ref(robot);
-    switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status, dt, dt_next, 
-                                                            s, switch_res_ref);
+    SwitchingConstraintResidual switch_res_ref(robot);
+    switchingconstraint::evalSwitchingConstraint(robot, impulse_status, dt,  
+                                                 dt_next, s, switch_res_ref);
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
     switch_violation_ref = switch_res_ref.P().lpNorm<1>();
   }
@@ -332,7 +334,7 @@ TEST_F(SplitOCPTest, floatingBase) {
   test_evalOCP(robot, contact_status, true);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

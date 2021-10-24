@@ -1,10 +1,10 @@
-#include "idocp/cost/time_varying_configuration_space_cost.hpp"
+#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 TimeVaryingConfigurationSpaceCost::TimeVaryingConfigurationSpaceCost(
     const Robot& robot,
@@ -91,7 +91,7 @@ bool TimeVaryingConfigurationSpaceCost::useKinematics() const {
 }
 
 
-double TimeVaryingConfigurationSpaceCost::computeStageCost(
+double TimeVaryingConfigurationSpaceCost::evalStageCost(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s) const {
   if (ref_->isActive(t)) {
@@ -107,7 +107,7 @@ double TimeVaryingConfigurationSpaceCost::computeStageCost(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::computeStageCostDerivatives(
+void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
@@ -124,7 +124,7 @@ void TimeVaryingConfigurationSpaceCost::computeStageCostDerivatives(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::computeStageCostHessian(
+void TimeVaryingConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
@@ -139,7 +139,7 @@ void TimeVaryingConfigurationSpaceCost::computeStageCostHessian(
 }
 
 
-double TimeVaryingConfigurationSpaceCost::computeTerminalCost(
+double TimeVaryingConfigurationSpaceCost::evalTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
   if (ref_->isActive(t)) {
@@ -155,7 +155,7 @@ double TimeVaryingConfigurationSpaceCost::computeTerminalCost(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::computeTerminalCostDerivatives(
+void TimeVaryingConfigurationSpaceCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
@@ -171,7 +171,7 @@ void TimeVaryingConfigurationSpaceCost::computeTerminalCostDerivatives(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::computeTerminalCostHessian(
+void TimeVaryingConfigurationSpaceCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
@@ -186,7 +186,7 @@ void TimeVaryingConfigurationSpaceCost::computeTerminalCostHessian(
 }
 
 
-double TimeVaryingConfigurationSpaceCost::computeImpulseCost(
+double TimeVaryingConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   if (ref_->isActive(t)) {
@@ -202,7 +202,7 @@ double TimeVaryingConfigurationSpaceCost::computeImpulseCost(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::computeImpulseCostDerivatives(
+void TimeVaryingConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
@@ -219,7 +219,7 @@ void TimeVaryingConfigurationSpaceCost::computeImpulseCostDerivatives(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::computeImpulseCostHessian(
+void TimeVaryingConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
@@ -233,4 +233,4 @@ void TimeVaryingConfigurationSpaceCost::computeImpulseCostHessian(
   }
 }
 
-} // namespace idocp
+} // namespace robotoc

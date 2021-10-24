@@ -3,27 +3,27 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/constraints_data.hpp"
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/joint_acceleration_lower_limit.hpp"
-#include "idocp/constraints/joint_acceleration_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
-#include "idocp/constraints/pdipm.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_direction.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/constraints/constraints.hpp"
+#include "robotoc/constraints/constraints_data.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
+#include "robotoc/constraints/joint_acceleration_lower_limit.hpp"
+#include "robotoc/constraints/joint_acceleration_upper_limit.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/constraints/pdipm.hpp"
 
 #include "robot_factory.hpp"
 
-namespace idocp {
+namespace robotoc {
 
 class ConstraintsTest : public ::testing::Test {
 protected:
@@ -47,15 +47,15 @@ protected:
 
 
 std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) const {
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
-  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), -10));
-  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), 10));
-  auto friction_cone = std::make_shared<idocp::FrictionCone>(robot, 0.7);
+  auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
+  auto joint_accel_lower = std::make_shared<robotoc::JointAccelerationLowerLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), -10));
+  auto joint_accel_upper = std::make_shared<robotoc::JointAccelerationUpperLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), 10));
+  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot, 0.7);
   auto constraints = std::make_shared<Constraints>();
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
@@ -218,7 +218,7 @@ TEST_F(ConstraintsTest, floatingBase) {
   timeStage2(robot, contact_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

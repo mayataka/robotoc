@@ -2,15 +2,15 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/ocp/split_solution.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseSplitSolutionTest : public ::testing::Test {
 protected:
@@ -136,6 +136,10 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
   }
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 
@@ -254,7 +258,7 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   test_integrate(robot, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

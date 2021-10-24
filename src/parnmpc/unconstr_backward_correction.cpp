@@ -1,11 +1,12 @@
-#include "idocp/parnmpc/unconstr_backward_correction.hpp"
+#include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 
 #include <omp.h>
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrBackwardCorrection::UnconstrBackwardCorrection(const Robot& robot, 
                                                        const double T, 
@@ -60,8 +61,8 @@ void UnconstrBackwardCorrection::initAuxMat(aligned_vector<Robot>& robots,
                                             const double t, const Solution& s, 
                                             KKTMatrix& kkt_matrix,
                                             KKTResidual& kkt_residual) {
-  parnmpc.terminal.computeTerminalCostHessian(robots[0], t+T_, s[N_-1], 
-                                              kkt_matrix[0], kkt_residual[0]);
+  parnmpc.terminal.evalTerminalCostHessian(robots[0], t+T_, s[N_-1], 
+                                           kkt_matrix[0], kkt_residual[0]);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     aux_mat_[i] = kkt_matrix[0].Qxx;
@@ -152,4 +153,4 @@ double UnconstrBackwardCorrection::dualStepSize() const {
   return dual_step_sizes_.minCoeff();
 }
 
-} // namespace idocp
+} // namespace robotoc

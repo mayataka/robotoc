@@ -2,11 +2,11 @@
 
 #include <gtest/gtest.h>
 
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseStatusTest : public ::testing::Test {
 protected:
@@ -90,7 +90,9 @@ TEST_F(ImpulseStatusTest, activate) {
     EXPECT_FALSE(contact_status.isContactActive(i));
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
-  EXPECT_NO_THROW(impulse_status.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << impulse_status << std::endl;
+  );
 }
 
 
@@ -168,7 +170,7 @@ TEST_F(ImpulseStatusTest, deactivateAll) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

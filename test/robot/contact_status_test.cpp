@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "idocp/robot/contact_status.hpp"
+#include "robotoc/robot/contact_status.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ContactStatusTest : public ::testing::Test {
 protected:
@@ -72,7 +72,9 @@ TEST_F(ContactStatusTest, activate) {
   for (int i=7; i<contact_status.maxPointContacts(); ++i) {
     EXPECT_FALSE(contact_status.isContactActive(i));
   }
-  EXPECT_NO_THROW(contact_status.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << contact_status << std::endl;
+  );
 }
 
 
@@ -129,7 +131,7 @@ TEST_F(ContactStatusTest, deactivateAll) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

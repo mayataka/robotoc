@@ -1,10 +1,11 @@
-#include "idocp/riccati/riccati_recursion.hpp"
+#include "robotoc/riccati/riccati_recursion.hpp"
 
 #include <omp.h>
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
-namespace idocp {
+namespace robotoc {
 
 RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N, 
                                    const int max_num_impulse, 
@@ -58,6 +59,7 @@ void RiccatiRecursion::backwardRiccatiRecursion(
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                            kkt_matrix.aux[impulse_index], 
                                            kkt_residual.aux[impulse_index], 
@@ -84,6 +86,7 @@ void RiccatiRecursion::backwardRiccatiRecursion(
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                             kkt_matrix.lift[lift_index], 
                                             kkt_residual.lift[lift_index], 
@@ -110,6 +113,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       if (i-1 >= 0) {
         factorizer_.forwardRiccatiRecursion(kkt_matrix[i-1], kkt_residual[i-1],
                                             lqr_policy_[i-1], d[i-1], d[i]);
@@ -128,6 +132,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], 
                                           d.lift[lift_index]);
@@ -154,26 +159,46 @@ void RiccatiRecursion::computeDirection(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i]);
-      ocp[i].expandPrimal(s[i], d[i]);
-      if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+      if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
+        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
+        ocp[i].expandPrimal(ocp.discrete().dt(i), s[i], d[i], sto);
+      }
+      else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
+        const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
+        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
+        ocp[i].expandPrimal(ocp.discrete().dt(i), s[i], d[i], sto);
+      }
+      else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
+        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
+        ocp[i].expandPrimal(ocp.discrete().dt(i), s[i], d[i], sto);
         d[i].setImpulseStatusByDimension(s[i].dimi());
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
-            factorization.switching[impulse_index], d[i]);
+            factorization.switching[impulse_index], d[i], sto);
+      }
+      else {
+        constexpr bool sto = false;
+        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
+        ocp[i].expandPrimal(ocp.discrete().dt(i), s[i], d[i], sto);
       }
       max_primal_step_sizes_.coeffRef(i) = ocp[i].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) = ocp[i].maxDualStepSize();
     }
     else if (i == N) {
-      RiccatiFactorizer::computeCostateDirection(factorization[N], d[N]);
+      constexpr bool sto = false;
+      RiccatiFactorizer::computeCostateDirection(factorization[N], d[N], sto);
       max_primal_step_sizes_.coeffRef(N) = ocp.terminal.maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(N) = ocp.terminal.maxDualStepSize();
     }
     else if (i < N + 1 + N_impulse) {
-      const int impulse_index  = i - (N+1);
-      RiccatiFactorizer::computeCostateDirection(
-          factorization.impulse[impulse_index], d.impulse[impulse_index]);
+      const int impulse_index = i - (N+1);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+      RiccatiFactorizer::computeCostateDirection(factorization.impulse[impulse_index], 
+                                                 d.impulse[impulse_index], sto);
       ocp.impulse[impulse_index].expandPrimal(s.impulse[impulse_index], 
                                               d.impulse[impulse_index]);
       max_primal_step_sizes_.coeffRef(i) 
@@ -182,11 +207,13 @@ void RiccatiRecursion::computeDirection(
           = ocp.impulse[impulse_index].maxDualStepSize();
     }
     else if (i < N + 1 + 2*N_impulse) {
-      const int impulse_index  = i - (N+1+N_impulse);
-      RiccatiFactorizer::computeCostateDirection(
-          factorization.aux[impulse_index], d.aux[impulse_index]);
-      ocp.aux[impulse_index].expandPrimal(s.aux[impulse_index], 
-                                          d.aux[impulse_index]);
+      const int impulse_index = i - (N+1+N_impulse);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+      RiccatiFactorizer::computeCostateDirection(factorization.aux[impulse_index], 
+                                                 d.aux[impulse_index], sto);
+      ocp.aux[impulse_index].expandPrimal(ocp.discrete().dt_aux(impulse_index),
+                                          s.aux[impulse_index], 
+                                          d.aux[impulse_index], sto);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.aux[impulse_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 
@@ -194,9 +221,12 @@ void RiccatiRecursion::computeDirection(
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
+      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       RiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], 
-                                                 d.lift[lift_index]);
-      ocp.lift[lift_index].expandPrimal(s.lift[lift_index], d.lift[lift_index]);
+                                                 d.lift[lift_index], sto);
+      ocp.lift[lift_index].expandPrimal(ocp.discrete().dt_lift(lift_index),
+                                        s.lift[lift_index], 
+                                        d.lift[lift_index], sto);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.lift[lift_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 
@@ -226,4 +256,4 @@ void RiccatiRecursion::getStateFeedbackGain(const int time_stage,
   Kv = lqr_policy_[time_stage].Kv();
 }
 
-} // namespace idocp
+} // namespace robotoc

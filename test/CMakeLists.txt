@@ -5,7 +5,7 @@ include(cmake/gtest.cmake)
 add_subdirectory(test_helper)
 
 # macto for testing
-macro(add_idocp_test TESTNAME)
+macro(add_robotoc_test TESTNAME)
   add_executable(
     ${TESTNAME} 
     ${TESTNAME}.cpp

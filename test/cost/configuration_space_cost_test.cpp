@@ -3,22 +3,22 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/cost/configuration_space_cost.hpp"
-#include "idocp/cost/cost_function_data.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/cost_function_data.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 
-#include "idocp/utils/derivative_checker.hpp"
+#include "robotoc/utils/derivative_checker.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ConfigurationSpaceCostTest : public ::testing::Test {
 protected:
@@ -84,8 +84,8 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
                             + (v_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
                             + (a_weight.array()*s.a.array()*s.a.array()).sum()
                             + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), cost_ref);
-  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t, dt, s), cost_ref);
+  cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -98,7 +98,7 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   kkt_res_ref.la += dt * a_weight.asDiagonal() * s.a;
   kkt_res_ref.lu += dt * u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, data, t, dt, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
@@ -151,8 +151,8 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   }
   const double cost_ref = 0.5 * ((qf_weight.array()* q_diff.array()*q_diff.array()).sum()
                                 + (vf_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), cost_ref);
-  cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), cost_ref);
+  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -163,7 +163,7 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   }
   kkt_res_ref.lv() += vf_weight.asDiagonal() * (s.v-v_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
   }
@@ -219,8 +219,8 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   const double cost_ref = 0.5 * ((qi_weight.array()* q_diff.array()*q_diff.array()).sum()
                                 + (vi_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
                                 + (dvi_weight.array()* s.dv.array()*s.dv.array()).sum());
-  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t, s), cost_ref);
-  cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t, s), cost_ref);
+  cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -232,7 +232,7 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   kkt_res_ref.lv() += vi_weight.asDiagonal() * (s.v-v_ref);
   kkt_res_ref.ldv += dvi_weight.asDiagonal() * s.dv;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, data, t, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * qi_weight.asDiagonal() * Jq_diff;
   }
@@ -269,7 +269,7 @@ TEST_F(ConfigurationSpaceCostTest, floatingBase) {
   testImpulseCost(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

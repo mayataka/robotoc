@@ -12,13 +12,13 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
 
-#include "idocp/robot/point_contact.hpp"
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
+#include "robotoc/robot/point_contact.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class RobotTest : public ::testing::Test {
 protected:
@@ -149,7 +149,9 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
     EXPECT_EQ(robot_contact.dim_passive(), 0);
   }
   EXPECT_EQ(robot_contact.maxPointContacts(), contact_frames.size());
-  robot_contact.printRobotModel();
+  EXPECT_NO_THROW(
+    std::cout << robot_contact << std::endl;
+  );
   EXPECT_EQ(robot.jointEffortLimit().size(), robot.dimu());
   EXPECT_EQ(robot.jointVelocityLimit().size(), robot.dimu());
   EXPECT_EQ(robot.lowerJointPositionLimit().size(), robot.dimu());
@@ -753,7 +755,7 @@ TEST_F(RobotTest, testFloatingBase) {
   testGenConfiguration(path_to_urdf, BaseJointType::FloatingBase, model, data);
 }
 
-} // namespace idocp 
+} // namespace robotoc 
 
 
 int main(int argc, char** argv) {

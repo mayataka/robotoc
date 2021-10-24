@@ -1,14 +1,14 @@
-## idocp - Inverse Dynamics based Optimal Control Problem solver for rigid body systems 
+## robotoc - efficient ROBOT Optimal Control solvers  
 
-[![build](https://github.com/mayataka/idocp/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/idocp/actions?query=workflow%3Abuild)
-[![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
+[![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
+[![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running_yoko.gif" width="530">
 
-## Features for efficient optimal control for rigid body systems with contacts
-- Direct multiple-shooting method based on inverse dynamics / the lifted contact dynamics.
+## Features for efficient optimal control for robot systems
+- Direct multiple-shooting method based on the lifted contact dynamics / inverse dynamics.
 - Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT systems.
-- Efficient constraint handling method for pure-state equality constraints in Riccati recursion.
+- Efficient pure-state equality constraint handling in the Riccati recursion.
 - Primal-dual interior point method for inequality constraints.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
 
@@ -29,14 +29,14 @@ sudo apt install libeigen3-dev
 ```
 
 2. Install the latest stable version of Pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
-3. Clone this repository and change directory as
+3. Clone this repository and change the directory as
 
 ```
-git clone https://github.com/mayataka/idocp
-cd idocp
+git clone https://github.com/mayataka/robotoc
+cd robotoc 
 ```
 
-4. Build and install `idocp` as
+4. Build and install `robotoc` as
 
 ```
 mkdir build && cd build
@@ -64,7 +64,7 @@ mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make install
 ```
-and add the CMake option for `idocp` as 
+and add the CMake option for `robotoc` as 
 ```
 cmake .. -DBUILD_VIEWER=ON
 ```
@@ -77,9 +77,9 @@ cmake .. -DBUILD_PYTHON_INTERFACE=OFF
 
 ## Usage
 ### C++:
-You can link your exectables to `idocp` by writing `CMakeLists.txt`, e.g., as
+You can link your executables to `robotoc` by writing `CMakeLists.txt`, e.g., as
 ```
-find_package(idocp REQUIRED)
+find_package(robotoc REQUIRED)
 
 add_executable(
     YOUR_EXECTABLE
@@ -88,21 +88,21 @@ add_executable(
 target_link_libraries(
     YOUR_EXECTABLE
     PRIVATE
-    idocp::idocp
+    robotoc::robotoc
 )
 target_include_directories(
     YOUR_EXECTABLE
     PRIVATE
-    ${IDOCP_INCLUDE_DIR}
+    ${ROBOTOC_INCLUDE_DIR}
 )
 ```
 
 ### Python:
-Suppose that the Python version is 3.8. The Python bindings will then be installed at `IDOCP_INSTALL_DIR/lib/python3.8/site-packages` where `IDOCP_INSTALL_DIR` is the install directory of `idocp` configured in CMake (e.g., by `-DCMAKE_INSTALL_PREFIX`).
+Suppose that the Python version is 3.8. The Python bindings will then be installed at `ROBOTOC_INSTALL_DIR/lib/python3.8/site-packages` where `ROBOTOC_INSTALL_DIR` is the install directory of `robotoc` configured in CMake (e.g., by `-DCMAKE_INSTALL_PREFIX`).
 To use the installed Python library, it is convenient to set the environment variable as
 
 ```
-export PYTHONPATH=IDOCP_INSTALL_DIR/lib/python3.8/site-packages:$PYTHONPATH 
+export PYTHONPATH=ROBOTOC_INSTALL_DIR/lib/python3.8/site-packages:$PYTHONPATH 
 ```
 
 e.g., in `~/.bashrc`. Note that if you use another Python version than `python3.8`, please adapt it.
@@ -154,13 +154,23 @@ You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anyma
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/mpc_trotting.gif" width="300">
 
 
-## Citing idocp
+## Citing robotoc
+- Citing `OCPSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp.git)):
+```
+@misc{bib:katayama2021liftedcd,
+  title={Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts}, 
+  author={Sotaro Katayama and Toshiyuki Ohtsuka},
+  url={arXiv:2108.01781},
+  eprint={2108.01781},
+  archivePrefix={arXiv}
+  year={2021}}
+```
 
-Citing `UnconstrOCPSolver` and `UnconstrParNMPCSolver`:
+- Citing `UnconstrOCPSolver` and `UnconstrParNMPCSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp.git)):
 ```
 @inproceedings{katayama2021idocp,
   title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},
-  author={S. Katayama and T. Ohtsuka},
+  author={Sotaro Katayama and Toshiyuki Ohtsuka},
   booktitle={{IEEE International Conference on Robotics and Automation (ICRA)}},
   year={2021}}
 ```

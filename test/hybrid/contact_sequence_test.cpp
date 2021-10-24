@@ -4,16 +4,16 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/hybrid/discrete_event.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/hybrid/discrete_event.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/robot/robot.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ContactSequenceTest : public ::testing::Test {
 protected:
@@ -162,7 +162,9 @@ void ContactSequenceTest::test_push_back(const Robot& robot) const {
     EXPECT_EQ(contact_sequence.numDiscreteEvents(), num_impulse+num_lift);
     EXPECT_EQ(contact_sequence.numContactPhases(), num_impulse+num_lift+1);
   }
-  EXPECT_NO_THROW(contact_sequence.showInfo());
+  EXPECT_NO_THROW(
+    std::cout << contact_sequence << std::endl;
+  );
 }
 
 
@@ -327,7 +329,7 @@ TEST_F(ContactSequenceTest, floatingBase) {
   test_setContactPoints(robot);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

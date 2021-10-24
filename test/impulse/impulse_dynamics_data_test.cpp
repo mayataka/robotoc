@@ -2,14 +2,14 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_dynamics_data.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/impulse/impulse_dynamics_data.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseDynamicsDataTest : public ::testing::Test {
 protected:
@@ -111,7 +111,7 @@ TEST_F(ImpulseDynamicsDataTest, floatingBase) {
   test(robot, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

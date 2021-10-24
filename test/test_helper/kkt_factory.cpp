@@ -1,7 +1,7 @@
 #include "kkt_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
@@ -122,4 +122,4 @@ KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact
 }
 
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

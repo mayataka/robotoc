@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class SplitKKTResidualTest : public ::testing::Test {
 protected:
@@ -18,7 +18,7 @@ protected:
   }
 
   static void test(const Robot& robot, const ContactStatus& contact_status);
-  static void testIsApprox(const Robot& robot, const ContactStatus& contact_status);
+  static void test_isApprox(const Robot& robot, const ContactStatus& contact_status);
 
   virtual void TearDown() {
   }
@@ -66,10 +66,14 @@ void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact
   const double vio = kkt_res.constraintViolation();
   const double vio_ref = kkt_res.Fx.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
+
+  EXPECT_NO_THROW(
+    std::cout << kkt_res << std::endl;
+  );
 }
 
 
-void SplitKKTResidualTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status) {
+void SplitKKTResidualTest::test_isApprox(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
   kkt_res.Fx.setRandom();
@@ -106,6 +110,10 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot, const ContactStatus&
     kkt_res_ref.lf().setRandom();
     EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   }
+  kkt_res.h = Eigen::VectorXd::Random(1)[0];
+  EXPECT_FALSE(kkt_res.isApprox(kkt_res_ref));
+  kkt_res.h = kkt_res_ref.h;
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
 
 
@@ -114,10 +122,10 @@ TEST_F(SplitKKTResidualTest, fixedBase) {
   auto contact_status = robot.createContactStatus();
   contact_status.deactivateContact(0);
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
   contact_status.activateContact(0);
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
 }
 
 
@@ -126,16 +134,16 @@ TEST_F(SplitKKTResidualTest, floatingBase) {
   auto contact_status = robot.createContactStatus();
   contact_status.deactivateContacts();
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
   test(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  test_isApprox(robot, contact_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

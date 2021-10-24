@@ -1,10 +1,10 @@
-#include "idocp/cost/configuration_space_cost.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
   : CostFunctionComponentBase(),
@@ -238,9 +238,10 @@ bool ConfigurationSpaceCost::useKinematics() const {
 }
 
 
-double ConfigurationSpaceCost::computeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s) const {
+double ConfigurationSpaceCost::evalStageCost(Robot& robot, 
+                                             CostFunctionData& data, 
+                                             const double t, const double dt, 
+                                             const SplitSolution& s) const {
   double l = 0;
   robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
   l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
@@ -251,7 +252,7 @@ double ConfigurationSpaceCost::computeStageCost(
 }
 
 
-void ConfigurationSpaceCost::computeStageCostDerivatives(
+void ConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
@@ -270,7 +271,7 @@ void ConfigurationSpaceCost::computeStageCostDerivatives(
 }
 
 
-void ConfigurationSpaceCost::computeStageCostHessian(
+void ConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
@@ -286,9 +287,10 @@ void ConfigurationSpaceCost::computeStageCostHessian(
 }
 
 
-double ConfigurationSpaceCost::computeTerminalCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s) const {
+double ConfigurationSpaceCost::evalTerminalCost(Robot& robot, 
+                                                CostFunctionData& data, 
+                                                const double t, 
+                                                const SplitSolution& s) const {
   double l = 0;
   robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
   l += (qf_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
@@ -297,7 +299,7 @@ double ConfigurationSpaceCost::computeTerminalCost(
 }
 
 
-void ConfigurationSpaceCost::computeTerminalCostDerivatives(
+void ConfigurationSpaceCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
@@ -313,7 +315,7 @@ void ConfigurationSpaceCost::computeTerminalCostDerivatives(
 }
 
 
-void ConfigurationSpaceCost::computeTerminalCostHessian(
+void ConfigurationSpaceCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
@@ -327,7 +329,7 @@ void ConfigurationSpaceCost::computeTerminalCostHessian(
 }
 
 
-double ConfigurationSpaceCost::computeImpulseCost(
+double ConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   double l = 0;
@@ -339,7 +341,7 @@ double ConfigurationSpaceCost::computeImpulseCost(
 }
 
 
-void ConfigurationSpaceCost::computeImpulseCostDerivatives(
+void ConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& 
     s, ImpulseSplitKKTResidual& kkt_residual) const {
@@ -357,7 +359,7 @@ void ConfigurationSpaceCost::computeImpulseCostDerivatives(
 }
 
 
-void ConfigurationSpaceCost::computeImpulseCostHessian(
+void ConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
@@ -371,4 +373,4 @@ void ConfigurationSpaceCost::computeImpulseCostHessian(
   kkt_matrix.Qdvdv.diagonal().noalias() += dvi_weight_;
 }
 
-} // namespace idocp
+} // namespace robotoc

@@ -3,21 +3,21 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/constraints/constraints.hpp"
-#include "idocp/unconstr/split_unconstr_parnmpc.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/ocp/split_direction.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/cost/cost_function.hpp"
+#include "robotoc/constraints/constraints.hpp"
+#include "robotoc/unconstr/split_unconstr_parnmpc.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
 #include "constraints_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class SplitUnconstrParNMPCTest : public ::testing::Test {
 protected:
@@ -136,14 +136,14 @@ TEST_F(SplitUnconstrParNMPCTest, evalOCP) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->computeStageCost(robot, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
   constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += dt * constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,
                                                         s, kkt_residual_ref);
   UnconstrDynamics ud(robot);
-  ud.computeUnconstrDynamicsResidual(robot, s);
+  ud.evalUnconstrDynamics(robot, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += kkt_residual_ref.constraintViolation();
   constraint_violation_ref += dt * constraints_data.constraintViolation();
@@ -152,7 +152,7 @@ TEST_F(SplitUnconstrParNMPCTest, evalOCP) {
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

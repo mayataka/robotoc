@@ -2,15 +2,15 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/ocp/split_solution.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 
 #include "robot_factory.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class SplitSolutionTest : public ::testing::Test {
 protected:
@@ -81,6 +81,10 @@ void SplitSolutionTest::test(const Robot& robot,
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));
   }
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 
@@ -103,6 +107,10 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.xi_stack().size(), impulse_status.dimf());
   EXPECT_EQ(s.dimf(), 0);
   EXPECT_EQ(s.dimi(), impulse_status.dimf());
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 
@@ -131,6 +139,10 @@ void SplitSolutionTest::test(const Robot& robot,
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));
   }
+
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+  );
 }
 
 
@@ -310,7 +322,7 @@ TEST_F(SplitSolutionTest, floatingBase) {
   test(robot, contact_status, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

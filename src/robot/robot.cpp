@@ -1,9 +1,9 @@
-#include "idocp/robot/robot.hpp"
+#include "robotoc/robot/robot.hpp"
 
 #include <stdexcept>
 
 
-namespace idocp {
+namespace robotoc {
 
 Robot::Robot(const std::string& path_to_urdf, 
              const BaseJointType& base_joint_type,
@@ -192,38 +192,47 @@ void Robot::setUpperJointPositionLimit(
 }
 
 
-void Robot::printRobotModel() const {
-  std::cout << "---------- Print robot model ---------- " << std::endl;
-  std::cout << "Name: " << model_.name << std::endl;
-  if (has_floating_base_) 
-    std::cout << "Base joint: floating base" << std::endl;
-  else 
-    std::cout << "Base joint: fixed base" << std::endl;
-  std::cout << "dimq = " << dimq_ << ", ";
-  std::cout << "dimv = " << dimv_ << ", ";
-  std::cout << "dimu = " << dimu_ << std::endl;
-  std::cout << "dim_passive = " << dim_passive_ << std::endl;
+void Robot::disp(std::ostream& os) const {
+  os << "robot model:" << std::endl;
+  os << "  name: " << model_.name << std::endl;
+  if (has_floating_base_) {
+    os << "  base joint: floating base" << std::endl;
+  }
+  else {
+    os << "  base joint: fixed base" << std::endl;
+  }
+  os << "  dimq = " << dimq_ << ", ";
+  os << "  dimv = " << dimv_ << ", ";
+  os << "  dimu = " << dimu_ << ", ";
+  os << "  dim_passive = " << dim_passive_ << std::endl;
+  os << std::endl;
+  os << "  frames:" << std::endl;
   for (int i=0; i<model_.nframes; ++i) {
-    std::cout << "Info of frame " << i << std::endl;
-    std::cout << "name: " << model_.frames[i].name << std::endl;
-    std::cout << "parent joint id: " << model_.frames[i].parent << "\n" 
-              << std::endl;
+    os << "    frame " << i << std::endl;
+    os << "      name: " << model_.frames[i].name << std::endl;
+    os << "      parent joint id: " << model_.frames[i].parent << std::endl;
+    os << std::endl;
   }
-  std::cout << std::endl;
+  os << "  joints:" << std::endl;
   for (int i=0; i<model_.njoints; ++i) {
-    std::cout << "Info of joint " << i << std::endl;
-    std::cout << "name: " << model_.names[i] << std::endl;
-    std::cout << model_.joints[i] << std::endl;
+    os << "    joint " << i << std::endl;
+    os << "      name: " << model_.names[i] << std::endl;
+    os << model_.joints[i] << std::endl;
   }
-  std::cout << "effortLimit = [" << model_.effortLimit.transpose() << "]" 
+  os << "  effort limit = [" << model_.effortLimit.transpose() << "]" 
             << std::endl;
-  std::cout << "velocityLimit = [" << model_.velocityLimit.transpose() << "]"
+  os << "  velocity limit = [" << model_.velocityLimit.transpose() << "]"
             << std::endl;
-  std::cout << "lowerPositionLimit = [" << model_.lowerPositionLimit.transpose() 
+  os << "  lowerl position limit = [" << model_.lowerPositionLimit.transpose() 
             << "]" << std::endl;
-  std::cout << "upperPositionLimit = [" << model_.upperPositionLimit.transpose() 
-            << "]" << std::endl;
-  std::cout << "--------------------------------------- " << std::endl;
+  os << "  upper position limit = [" << model_.upperPositionLimit.transpose() 
+            << "]" << std::flush; 
 }
 
-} // namespace idocp 
+
+std::ostream& operator<<(std::ostream& os, const Robot& robot) {
+  robot.disp(os);
+  return os;
+}
+
+} // namespace robotoc 

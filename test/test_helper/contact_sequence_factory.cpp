@@ -1,9 +1,9 @@
 #include "contact_sequence_factory.hpp"
 
-#include "idocp/hybrid/discrete_event.hpp"
+#include "robotoc/hybrid/discrete_event.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 namespace testhelper {
 
 ContactSequence CreateContactSequence(const Robot& robot, const int N, 
@@ -32,7 +32,10 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
       pre_contact_status = post_contact_status;
     }
     for (int i=0; i<max_num_impulse; ++i) {
-      contact_sequence.push_back(discrete_events[i], event_times[i], false);
+      srand((unsigned int) time(0));
+      std::random_device rnd;
+      const bool sto = (rnd()%2==0);
+      contact_sequence.push_back(discrete_events[i], event_times[i], sto);
     }
     return contact_sequence;
   }
@@ -42,4 +45,4 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
 }
   
 } // namespace testhelper
-} // namespace idocp
+} // namespace robotoc

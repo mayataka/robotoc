@@ -2,13 +2,13 @@
 
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 
 #include "robot_factory.hpp"
 
-namespace idocp {
+namespace robotoc {
 
 class ImpulseSplitKKTResidualTest : public ::testing::Test {
 protected:
@@ -16,7 +16,7 @@ protected:
     srand((unsigned int) time(0));
   }
   static void test(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, 
+  static void test_isApprox(const Robot& robot, 
                            const ImpulseStatus& impulse_status);
 
   virtual void TearDown() {
@@ -65,10 +65,14 @@ void ImpulseSplitKKTResidualTest::test(const Robot& robot, const ImpulseStatus& 
   const double vio = kkt_res.constraintViolation();
   const double vio_ref = kkt_res.Fx.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
+
+  EXPECT_NO_THROW(
+    std::cout << kkt_res << std::endl;
+  );
 }
 
 
-void ImpulseSplitKKTResidualTest::testIsApprox(const Robot& robot, 
+void ImpulseSplitKKTResidualTest::test_isApprox(const Robot& robot, 
                                                const ImpulseStatus& impulse_status) {
   ImpulseSplitKKTResidual kkt_res(robot);
   kkt_res.setImpulseStatus(impulse_status);
@@ -108,10 +112,10 @@ TEST_F(ImpulseSplitKKTResidualTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
 
@@ -120,16 +124,16 @@ TEST_F(ImpulseSplitKKTResidualTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   test(robot, impulse_status);
-  testIsApprox(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

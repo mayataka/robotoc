@@ -1,11 +1,12 @@
-#include "idocp/solver/unconstr_ocp_solver.hpp"
+#include "robotoc/solver/unconstr_ocp_solver.hpp"
 
 #include <omp.h>
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrOCPSolver::UnconstrOCPSolver(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
@@ -170,7 +171,7 @@ void UnconstrOCPSolver::getStateFeedbackGain(const int time_stage,
   assert(Kq.cols() == robots_[0].dimv());
   assert(Kv.rows() == robots_[0].dimv());
   assert(Kv.cols() == robots_[0].dimv());
-  // riccati_solver_.getStateFeedbackGain(time_stage, Kq, Kv);
+  riccati_recursion_.getStateFeedbackGain(time_stage, Kq, Kv);
 }
 
 
@@ -267,4 +268,4 @@ bool UnconstrOCPSolver::isCurrentSolutionFeasible() {
   return true;
 }
 
-} // namespace idocp
+} // namespace robotoc

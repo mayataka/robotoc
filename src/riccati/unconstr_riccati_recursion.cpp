@@ -1,10 +1,11 @@
-#include "idocp/riccati/unconstr_riccati_recursion.hpp"
+#include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 
 #include <omp.h>
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const Robot& robot, 
                                                    const double T, const int N)
@@ -60,13 +61,13 @@ void UnconstrRiccatiRecursion::forwardRiccatiRecursion(
 }
 
 
-void UnconstrRiccatiRecursion::getStateFeedbackGain(const int time_stage, 
-                                                    Eigen::MatrixXd& Kq, 
-                                                    Eigen::MatrixXd& Kv) const {
+void UnconstrRiccatiRecursion::getStateFeedbackGain(
+    const int time_stage, Eigen::MatrixXd& da_dq, 
+    Eigen::MatrixXd& da_dv) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
-  Kq = lqr_policy_[time_stage].Kq();
-  Kv = lqr_policy_[time_stage].Kv();
+  da_dq = lqr_policy_[time_stage].Kq();
+  da_dv = lqr_policy_[time_stage].Kv();
 }
 
-} // namespace idocp
+} // namespace robotoc

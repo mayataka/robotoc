@@ -15,10 +15,10 @@
 #include "pinocchio/algorithm/kinematics-derivatives.hpp"
 #include "pinocchio/algorithm/frames-derivatives.hpp"
 
-#include "idocp/robot/point_contact.hpp"
+#include "robotoc/robot/point_contact.hpp"
 
 
-namespace idocp {
+namespace robotoc {
 
 class PointContactTest : public ::testing::Test {
 protected:
@@ -81,6 +81,9 @@ void PointContactTest::testConstructor(pinocchio::Model& model, pinocchio::Data&
   PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id);
   EXPECT_EQ(contact.parent_joint_id(), model.frames[contact_frame_id].parent);
+  EXPECT_NO_THROW(
+    std::cout << contact << std::endl;
+  );
 }
 
 
@@ -331,7 +334,7 @@ TEST_F(PointContactTest, test) {
   }
 }
 
-} // namespace idocp
+} // namespace robotoc
 
 
 int main(int argc, char** argv) {

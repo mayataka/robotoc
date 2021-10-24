@@ -1,11 +1,12 @@
-#include "idocp/solver/unconstr_parnmpc_solver.hpp"
+#include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 
 #include <omp.h>
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
 
 
-namespace idocp {
+namespace robotoc {
 
 UnconstrParNMPCSolver::UnconstrParNMPCSolver(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
@@ -138,19 +139,6 @@ std::vector<Eigen::VectorXd> UnconstrParNMPCSolver::getSolution(
 }
 
 
-void UnconstrParNMPCSolver::getStateFeedbackGain(const int time_stage, 
-                                                 Eigen::MatrixXd& Kq, 
-                                                 Eigen::MatrixXd& Kv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  assert(Kq.rows() == robots_[0].dimv());
-  assert(Kq.cols() == robots_[0].dimv());
-  assert(Kv.rows() == robots_[0].dimv());
-  assert(Kv.cols() == robots_[0].dimv());
-  // riccati_solver_.getStateFeedbackGain(time_stage, Kq, Kv);
-}
-
-
 void UnconstrParNMPCSolver::setSolution(const std::string& name, 
                                         const Eigen::VectorXd& value) {
   try {
@@ -253,4 +241,4 @@ bool UnconstrParNMPCSolver::isCurrentSolutionFeasible() {
   return true;
 }
 
-} // namespace idocp
+} // namespace robotoc
