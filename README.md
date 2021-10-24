@@ -1,7 +1,7 @@
 ## robotoc - efficient ROBOT Optimal Control solvers  
 
 [![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
-[![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
+[![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/running_yoko.gif" width="530">
 
