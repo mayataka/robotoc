@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
   const double t_period = t_front_swing + t_front_hip_swing + t_hip_swing;
   const int steps = 10;
 
+  // Create the cost function
   auto cost = std::make_shared<robotoc::CostFunction>();
   Eigen::VectorXd v_weight(Eigen::VectorXd::Zero(robot.dimv()));
   v_weight << 0.01, 0.01, 0.01, 0.1, 0.1, 0.1, 
@@ -160,6 +161,7 @@ int main(int argc, char *argv[]) {
   time_varying_config_cost->set_qi_weight(q_weight);
   cost->push_back(time_varying_config_cost);
 
+  // Create the constraints
   auto constraints           = std::make_shared<robotoc::Constraints>();
   auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
@@ -182,23 +184,24 @@ int main(int argc, char *argv[]) {
 
   const double T = 7; 
   const int N = 240;
-  const int max_num_impulse_phase = (steps+3)*2;
+  const int max_num_impulses = (steps+3)*2;
 
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, 2*max_num_impulse_phase);
+  // Create the contact sequence
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
   robot.getContactPoints(contact_points);
-  auto contact_status_initial = robot.createContactStatus();
-  contact_status_initial.activateContacts({0, 1, 2, 3});
+  auto contact_status_standing = robot.createContactStatus();
+  contact_status_standing.activateContacts({0, 1, 2, 3});
   auto contact_status_front_swing = robot.createContactStatus();
   contact_status_front_swing.activateContacts({1, 3});
   auto contact_status_hip_swing = robot.createContactStatus();
   contact_status_hip_swing.activateContacts({0, 2});
   auto contact_status_front_hip_swing = robot.createContactStatus();
 
-  contact_status_initial.setContactPoints(contact_points);
-  contact_sequence->setContactStatusUniformly(contact_status_initial);
+  contact_status_standing.setContactPoints(contact_points);
+  contact_sequence->initContactSequence(contact_status_standing);
 
   const double t_initial_front_swing = 0.125;
   const double t_initial_front_hip_swing = 0.05;
@@ -212,7 +215,8 @@ int main(int argc, char *argv[]) {
   contact_status_front_swing.setContactPoints(contact_points);
   contact_sequence->push_back(contact_status_front_swing, t_start);
   contact_status_front_hip_swing.setContactPoints(contact_points);
-  contact_sequence->push_back(contact_status_front_hip_swing, t_start+t_initial_front_swing);
+  contact_sequence->push_back(contact_status_front_hip_swing, 
+                              t_start+t_initial_front_swing);
 
   contact_points[0].coeffRef(0) += 0.25 * stride;
   contact_points[1].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
@@ -220,12 +224,14 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
 
   contact_status_hip_swing.setContactPoints(contact_points);
-  contact_sequence->push_back(contact_status_hip_swing, t_start+t_initial_front_swing+t_initial_front_hip_swing);
+  contact_sequence->push_back(contact_status_hip_swing, 
+                              t_start+t_initial_front_swing+t_initial_front_hip_swing);
 
   contact_status_front_swing.setContactPoints(contact_points);
   contact_sequence->push_back(contact_status_front_swing, t_start+t_initial);
   contact_status_front_hip_swing.setContactPoints(contact_points);
-  contact_sequence->push_back(contact_status_front_hip_swing, t_start+t_initial+t_initial_front_swing2);
+  contact_sequence->push_back(contact_status_front_hip_swing, 
+                              t_start+t_initial+t_initial_front_swing2);
 
   contact_points[0].coeffRef(0) += 0.5 * stride;
   contact_points[1].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
@@ -233,20 +239,22 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
 
   contact_status_hip_swing.setContactPoints(contact_points);
-  contact_sequence->push_back(contact_status_hip_swing, t_start+t_initial+t_initial_front_swing2+t_initial_front_hip_swing2);
+  contact_sequence->push_back(contact_status_hip_swing, 
+                              t_start+t_initial+t_initial_front_swing2+t_initial_front_hip_swing2);
   const double t_end_init = t_start+t_initial+t_initial2;
 
   for (int i=0; i<steps; ++i) {
     contact_status_front_swing.setContactPoints(contact_points);
     contact_sequence->push_back(contact_status_front_swing, t_end_init+i*t_period);
-    contact_sequence->push_back(contact_status_front_hip_swing, t_end_init+i*t_period+t_front_swing);
+    contact_sequence->push_back(contact_status_front_hip_swing, 
+                                t_end_init+i*t_period+t_front_swing);
     contact_points[0].coeffRef(0) += stride;
     contact_points[2].coeffRef(0) += stride;
     contact_points[1].coeffRef(0) += stride;
     contact_points[3].coeffRef(0) += stride;
     contact_status_hip_swing.setContactPoints(contact_points);
     contact_sequence->push_back(contact_status_hip_swing, 
-                                     t_end_init+i*t_period+t_front_swing+t_front_hip_swing);
+                                t_end_init+i*t_period+t_front_swing+t_front_hip_swing);
   }
 
   contact_status_front_swing.setContactPoints(contact_points);
@@ -259,7 +267,7 @@ int main(int argc, char *argv[]) {
   const double t_end = t_end_front_swing + t_end_front_hip_swing + t_end_hip_swing;
 
   contact_sequence->push_back(contact_status_front_hip_swing, 
-                                   t_end_init+steps*t_period+t_end_front_swing);
+                              t_end_init+steps*t_period+t_end_front_swing);
 
   contact_points[0].coeffRef(0) += 0.75 * stride;
   contact_points[2].coeffRef(0) += 0.75 * stride;
@@ -267,9 +275,12 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += 0.75 * stride - additive_stride_hip;
   contact_status_hip_swing.setContactPoints(contact_points);
   contact_sequence->push_back(contact_status_hip_swing, 
-                                   t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing);
-  contact_status_initial.setContactPoints(contact_points);
-  contact_sequence->push_back(contact_status_initial, t_end_init+steps*t_period+t_end);
+                              t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing);
+  contact_status_standing.setContactPoints(contact_points);
+  contact_sequence->push_back(contact_status_standing, t_end_init+steps*t_period+t_end);
+
+  // you can check the contact sequence via
+  // std::cout << contact_sequence << std::endl;
 
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 

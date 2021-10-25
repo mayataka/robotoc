@@ -16,15 +16,15 @@ OCPSolver::OCPSolver(const Robot& robot,
     contact_sequence_entity_(*contact_sequence.get()),
     cost_(cost),
     constraints_(constraints),
-    dms_(N, contact_sequence->maxNumEvents(), nthreads),
-    riccati_recursion_(robot, N, contact_sequence->maxNumEvents(), nthreads),
-    line_search_(robot, N, contact_sequence->maxNumEvents(), nthreads),
-    ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEvents()),
-    riccati_factorization_(robot, N, contact_sequence->maxNumEvents()),
-    kkt_matrix_(robot, N, contact_sequence->maxNumEvents()),
-    kkt_residual_(robot, N, contact_sequence->maxNumEvents()),
-    s_(robot, N, contact_sequence->maxNumEvents()),
-    d_(robot, N, contact_sequence->maxNumEvents()) {
+    dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
+    riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
+    line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
+    ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
+    riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
+    kkt_matrix_(robot, N, contact_sequence->maxNumEachEvents()),
+    kkt_residual_(robot, N, contact_sequence->maxNumEachEvents()),
+    s_(robot, N, contact_sequence->maxNumEachEvents()),
+    d_(robot, N, contact_sequence->maxNumEachEvents()) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -234,24 +234,6 @@ void OCPSolver::setSolution(const std::string& name,
     std::exit(EXIT_FAILURE);
   }
 }
-
-
-// void OCPSolver::setContactStatusUniformly(const ContactStatus& contact_status) {
-//   contact_sequence_.setContactStatusUniformly(contact_status);
-// }
-
-
-// void OCPSolver::pushBackContactStatus(const ContactStatus& contact_status, 
-//                                       const double switching_time) {
-//   contact_sequence_.push_back(contact_status, switching_time, false);
-// }
-
-
-// void OCPSolver::setContactPoints(
-//     const int contact_phase, 
-//     const std::vector<Eigen::Vector3d>& contact_points) {
-//   contact_sequence_.setContactPoints(contact_phase, contact_points);
-// }
 
 
 // void OCPSolver::popBackContactStatus(const double t,

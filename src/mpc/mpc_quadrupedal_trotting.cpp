@@ -91,7 +91,7 @@ void MPCQuadrupedalTrotting::init(const double t, const Eigen::VectorXd& q,
   current_step_ = 0;
   predict_step_ = 0;
   // Init contact status
-  contact_sequence_->setContactStatusUniformly(cs_standing_);
+  contact_sequence_->initContactSequence(cs_standing_);
   double tt = t0_;
   while (tt < t+T_-dtm_) {
     if (predict_step_%2 != 0) {

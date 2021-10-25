@@ -11,22 +11,23 @@
 namespace robotoc {
 
 inline ContactSequence::ContactSequence(const Robot& robot, 
-                                        const int max_num_events)
-  : max_num_events_(max_num_events),
+                                        const int max_num_each_events)
+  : max_num_each_events_(max_num_each_events),
+    max_num_events_(2*max_num_each_events),
     default_contact_status_(robot.createContactStatus()),
-    contact_statuses_(max_num_events+1),
-    impulse_events_(max_num_events),
-    event_index_impulse_(max_num_events), 
-    event_index_lift_(max_num_events),
-    event_time_(max_num_events),
-    impulse_time_(max_num_events),
-    lift_time_(max_num_events),
-    is_impulse_event_(max_num_events),
-    sto_impulse_(max_num_events), 
-    sto_lift_(max_num_events) {
+    contact_statuses_(2*max_num_each_events+1),
+    impulse_events_(max_num_each_events),
+    event_index_impulse_(max_num_each_events), 
+    event_index_lift_(max_num_each_events),
+    event_time_(2*max_num_each_events),
+    impulse_time_(max_num_each_events),
+    lift_time_(max_num_each_events),
+    is_impulse_event_(2*max_num_each_events),
+    sto_impulse_(max_num_each_events), 
+    sto_lift_(max_num_each_events) {
   try {
-    if (max_num_events <= 0) {
-      throw std::out_of_range("invalid argument: max_num_events must be positive!");
+    if (max_num_each_events < 0) {
+      throw std::out_of_range("invalid argument: max_num_each_events must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -39,7 +40,8 @@ inline ContactSequence::ContactSequence(const Robot& robot,
 
 
 inline ContactSequence::ContactSequence()
-  : max_num_events_(0),
+  : max_num_each_events_(0),
+    max_num_events_(0),
     default_contact_status_(),
     contact_statuses_(),
     impulse_events_(),
@@ -58,7 +60,7 @@ inline ContactSequence::~ContactSequence() {
 }
 
 
-inline void ContactSequence::setContactStatusUniformly(
+inline void ContactSequence::initContactSequence(
     const ContactStatus& contact_status) {
   clear_all();
   contact_statuses_.push_back(contact_status);
@@ -71,7 +73,7 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
   try {
     if (numContactPhases() == 0) {
       throw std::runtime_error(
-          "Call setContactStatusUniformly() before calling push_back()!");
+          "Call initContactSequence() before calling push_back()!");
     }
     if (!discrete_event.existDiscreteEvent()) {
       throw std::runtime_error(
@@ -348,6 +350,11 @@ inline DiscreteEventType ContactSequence::eventType(
   assert(event_index < numImpulseEvents()+numLiftEvents());
   if (is_impulse_event_[event_index]) return DiscreteEventType::Impulse;
   else return DiscreteEventType::Lift;
+}
+
+
+inline int ContactSequence::maxNumEachEvents() const {
+  return max_num_each_events_;
 }
 
 

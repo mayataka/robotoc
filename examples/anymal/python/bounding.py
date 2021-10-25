@@ -16,11 +16,12 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.02
 step_length = 0.275
 step_height = 0.125
-period_swing = 0.26
-period_double_support = 0.04
+swing_time = 0.26
+double_support_time = 0.04
 t0 = 0.1
 cycle = 3
 
+# Create the cost function
 cost = robotoc.CostFunction()
 q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
                        -0.1,  0.7, -1.0, 
@@ -60,22 +61,22 @@ q0_3d_LF = robot.frame_position(LF_foot_id)
 q0_3d_LH = robot.frame_position(LH_foot_id)
 q0_3d_RF = robot.frame_position(RF_foot_id)
 q0_3d_RH = robot.frame_position(RH_foot_id)
-LF_t0 = t0 + period_swing + period_double_support
+LF_t0 = t0 + swing_time + double_support_time
 LH_t0 = t0
-RF_t0 = t0 + period_swing + period_double_support
+RF_t0 = t0 + swing_time + double_support_time
 RH_t0 = t0 
 LF_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_LF, step_length, step_height, 
-                                           LF_t0, period_swing, 
-                                           period_swing+2*period_double_support, False)
+                                           LF_t0, swing_time, 
+                                           swing_time+2*double_support_time, False)
 LH_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_LH, step_length, step_height, 
-                                           LH_t0, period_swing, 
-                                           period_swing+2*period_double_support, False)
+                                           LH_t0, swing_time, 
+                                           swing_time+2*double_support_time, False)
 RF_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_RF, step_length, step_height, 
-                                           RF_t0, period_swing, 
-                                           period_swing+2*period_double_support, False)
+                                           RF_t0, swing_time, 
+                                           swing_time+2*double_support_time, False)
 RH_foot_ref = robotoc.PeriodicFootTrackRef(q0_3d_RH, step_length, step_height, 
-                                           RH_t0, period_swing, 
-                                           period_swing+2*period_double_support, False)
+                                           RH_t0, swing_time, 
+                                           swing_time+2*double_support_time, False)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
@@ -93,13 +94,14 @@ cost.push_back(RH_cost)
 com_ref0 = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
 com_ref0[2] = robot.com()[2]
 v_com_ref = np.zeros(3)
-v_com_ref[0] = 0.5 * step_length / period_swing
-com_ref = robotoc.PeriodicCoMRef(com_ref0, v_com_ref, t0, period_swing, 
-                                 period_double_support, False)
+v_com_ref[0] = 0.5 * step_length / swing_time
+com_ref = robotoc.PeriodicCoMRef(com_ref0, v_com_ref, t0, swing_time, 
+                                 double_support_time, False)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_q_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
+# Create the constraints
 constraints           = robotoc.Constraints()
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
@@ -118,61 +120,63 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-01)
 
-T = t0 + cycle*(2*period_double_support+2*period_swing)
+T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
-max_num_impulse_phase = 2*cycle
+max_num_impulses = 2*cycle
 
-contact_sequence = robotoc.ContactSequence(robot, 2*max_num_impulse_phase)
+# Create the contact sequence
+contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
 
 contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
 contact_status_standing.set_contact_points(contact_points)
-contact_sequence.set_contact_status_uniformly(contact_status_standing)
+contact_sequence.init_contact_sequence(contact_status_standing)
 
-contact_status_even = robot.create_contact_status()
-contact_status_even.activate_contacts([0, 2])
-contact_status_even.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_even, t0)
+contact_status_lhrh_swing = robot.create_contact_status()
+contact_status_lhrh_swing.activate_contacts([0, 2])
+contact_status_lhrh_swing.set_contact_points(contact_points)
+contact_sequence.push_back(contact_status_lhrh_swing, t0)
 
 contact_points[1][0] += step_length
 contact_points[3][0] += step_length
 contact_status_standing.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_standing, t0+period_swing)
+contact_sequence.push_back(contact_status_standing, t0+swing_time)
 
-contact_status_odd = robot.create_contact_status()
-contact_status_odd.activate_contacts([1, 3])
-contact_status_odd.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_odd, 
-                           t0+period_swing+period_double_support)
+contact_status_lfrf_swing = robot.create_contact_status()
+contact_status_lfrf_swing.activate_contacts([1, 3])
+contact_status_lfrf_swing.set_contact_points(contact_points)
+contact_sequence.push_back(contact_status_lfrf_swing, 
+                           t0+swing_time+double_support_time)
 
 contact_points[0][0] += step_length
 contact_points[2][0] += step_length
 contact_status_standing.set_contact_points(contact_points)
 contact_sequence.push_back(contact_status_standing, 
-                           t0+2*period_swing+period_double_support)
-
+                           t0+2*swing_time+double_support_time)
 
 for i in range(cycle-1):
-    t1 = t0 + (i+1)*(2*period_swing+2*period_double_support)
-    contact_status_even.set_contact_points(contact_points)
-    contact_sequence.push_back(contact_status_even, t1)
+    t1 = t0 + (i+1)*(2*swing_time+2*double_support_time)
+    contact_status_lhrh_swing.set_contact_points(contact_points)
+    contact_sequence.push_back(contact_status_lhrh_swing, t1)
 
     contact_points[1][0] += step_length
     contact_points[3][0] += step_length
     contact_status_standing.set_contact_points(contact_points)
-    contact_sequence.push_back(contact_status_standing, t1+period_swing)
+    contact_sequence.push_back(contact_status_standing, t1+swing_time)
 
-    contact_status_odd.set_contact_points(contact_points)
-    contact_sequence.push_back(contact_status_odd, 
-                               t1+period_swing+period_double_support)
+    contact_status_lfrf_swing.set_contact_points(contact_points)
+    contact_sequence.push_back(contact_status_lfrf_swing, 
+                               t1+swing_time+double_support_time)
 
     contact_points[0][0] += step_length
     contact_points[2][0] += step_length
     contact_status_standing.set_contact_points(contact_points)
     contact_sequence.push_back(contact_status_standing, 
-                               t1+2*period_swing+period_double_support)
+                               t1+2*swing_time+double_support_time)
 
+# you can check the contact sequence via 
+# print(contact_sequence)
 
 ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
                                T, N, nthreads=4)

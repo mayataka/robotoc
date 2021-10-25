@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <iostream>
+#include <memory>
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
@@ -21,10 +22,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model. 
-  /// @param[in] max_num_events Maximum number of each discrete events 
+  /// @param[in] max_num_each_events Maximum number of each discrete events 
   /// (impulse and lift). Default is 0 (assumes that there are no discrete events).
   ///
-  ContactSequence(const Robot& robot, const int max_num_events=0);
+  ContactSequence(const Robot& robot, const int max_num_each_events=0);
 
   ///
   /// @brief Default constructor. 
@@ -61,7 +62,7 @@ public:
   /// disable discrete events over all of the time stages.
   /// @param[in] contact_status Contact status.
   ///
-  void setContactStatusUniformly(const ContactStatus& contact_status);
+  void initContactSequence(const ContactStatus& contact_status);
 
   ///
   /// @brief Push back the discrete event. Contact status after discrete event 
@@ -206,6 +207,12 @@ public:
   /// @brief Returns maximum number of each discrete events 
   /// (impulse and lift). 
   ///
+  int maxNumEachEvents() const;
+
+  ///
+  /// @brief Returns maximum number of discrete events (sum of the maximum 
+  /// numbers of impulse events and lift events).
+  ///
   int maxNumEvents() const;
 
   ///
@@ -216,8 +223,12 @@ public:
   friend std::ostream& operator<<(std::ostream& os, 
                                   const ContactSequence& contact_sequence);
 
+  friend std::ostream& operator<<(
+      std::ostream& os, 
+      const std::shared_ptr<ContactSequence>& contact_sequence);
+
 private:
-  int max_num_events_;
+  int max_num_each_events_, max_num_events_;
   ContactStatus default_contact_status_;
   std::deque<ContactStatus> contact_statuses_;
   std::deque<DiscreteEvent> impulse_events_;

@@ -14,8 +14,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(contact_sequence, m) {
   py::class_<ContactSequence, std::shared_ptr<ContactSequence>>(m, "ContactSequence")
     .def(py::init<const Robot&, const int>(),
-         py::arg("robot"), py::arg("max_num_events")=0)
-    .def("set_contact_status_uniformly", &ContactSequence::setContactStatusUniformly)
+         py::arg("robot"), py::arg("max_num_each_events")=0)
+    .def("init_contact_sequence", &ContactSequence::initContactSequence)
     .def("push_back", static_cast<void (ContactSequence::*)(const DiscreteEvent&, const double, const bool)>(&ContactSequence::push_back),
           py::arg("discrete_event"), py::arg("event_time"), py::arg("sto")=false)
     .def("push_back", static_cast<void (ContactSequence::*)(const ContactStatus&, const double, const bool)>(&ContactSequence::push_back),
@@ -47,6 +47,8 @@ PYBIND11_MODULE(contact_sequence, m) {
           py::arg("lift_index"))
     .def("event_type", &ContactSequence::eventType,
           py::arg("event_index"))
+    .def("max_num_each_events", &ContactSequence::maxNumEachEvents)
+    .def("max_num_events", &ContactSequence::maxNumEvents)
     .def("__str__", [](const ContactSequence& self) {
         std::stringstream ss;
         ss << self;
