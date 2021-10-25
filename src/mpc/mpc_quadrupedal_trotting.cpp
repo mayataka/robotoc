@@ -128,9 +128,9 @@ void MPCQuadrupedalTrotting::updateSolution(const double t,
   if (!ts.empty()) {
     if (ts.front().coeff(0) < t+min_dt) {
       ts_last_ = ts.front().coeff(0);
+      ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
-      // ocp_solver_.popFrontContactStatus(t, true);
       ++current_step_;
     }
   }

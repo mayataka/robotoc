@@ -9,9 +9,9 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/solution.hpp"
 #include "robotoc/ocp/direction.hpp"
@@ -135,6 +135,22 @@ public:
   /// @param[in] value Value of the specified variable. 
   ///
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
+
+  ///
+  /// @brief Extrapolates the solution over the grids on the last contact phase.
+  /// Also initializes the slack and dual variables of the inequality 
+  /// constraints on such stages.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void extrapolateSolutionLastPhase(const double t);
+
+  ///
+  /// @brief Extrapolates the solution over the grids on the initial contact 
+  /// phase. Also initializes the slack and dual variables of the inequality 
+  /// constraints on such stages.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void extrapolateSolutionInitialPhase(const double t);
 
   ///
   /// @brief Clear the line search filter. 
