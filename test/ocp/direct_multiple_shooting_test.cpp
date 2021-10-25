@@ -36,8 +36,8 @@ protected:
 
   Solution createSolution(const Robot& robot) const;
   Solution createSolution(const Robot& robot, 
-                          const ContactSequence& contact_sequence) const;
-  ContactSequence createContactSequence(const Robot& robot) const;
+                          const std::shared_ptr<ContactSequence>& contact_sequence) const;
+  std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
 
   void test_computeKKTResidual(const Robot& robot) const;
   void test_computeKKTSystem(const Robot& robot) const;
@@ -53,13 +53,14 @@ Solution DirectMultipleShootingTest::createSolution(const Robot& robot) const {
 }
 
 
-Solution DirectMultipleShootingTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+Solution DirectMultipleShootingTest::createSolution(const Robot& robot, 
+                                                    const std::shared_ptr<ContactSequence>& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
 
-ContactSequence DirectMultipleShootingTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
+std::shared_ptr<ContactSequence> DirectMultipleShootingTest::createContactSequence(const Robot& robot) const {
+  return testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, t, 3*dt);
 }
 
 
@@ -114,16 +115,16 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ASSERT_TRUE(dt_aux <= dt);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref.impulse[impulse_index].initConstraints(robot_ref, s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTResidual(
-          robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, s[i].q, 
+          robot_ref, contact_sequence->impulseStatus(impulse_index), t_impulse, s[i].q, 
           s.impulse[impulse_index], s.aux[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
       ocp_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
       ocp_ref.aux[impulse_index].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
@@ -157,11 +158,11 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ASSERT_TRUE(dt_lift <= dt);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref.lift[lift_index].initConstraints(robot_ref, 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
       kkt_error_ref += ocp_ref.lift[lift_index].KKTError(kkt_residual_ref.lift[lift_index], dt_lift);
@@ -180,10 +181,10 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), 
+          robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
-          contact_sequence.impulseStatus(impulse_index),
+          contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
@@ -195,7 +196,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       const double dti = ocp_ref.discrete().dt(i);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), 
+          robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
       kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
@@ -265,16 +266,16 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       ASSERT_TRUE(dt_aux <= dt);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTSystem(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref.impulse[impulse_index].initConstraints(robot_ref, s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTSystem(
-          robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, s[i].q, 
+          robot_ref, contact_sequence->impulseStatus(impulse_index), t_impulse, s[i].q, 
           s.impulse[impulse_index], s.aux[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
       ocp_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
       ocp_ref.aux[impulse_index].computeKKTSystem(
-          robot_ref, contact_sequence.contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
     }
@@ -291,11 +292,11 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       ASSERT_TRUE(dt_lift <= dt);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTSystem(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref.lift[lift_index].initConstraints(robot_ref, 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTSystem(
-          robot_ref, contact_sequence.contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
@@ -306,10 +307,10 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTSystem(
-          robot_ref, contact_sequence.contactStatus(contact_phase), 
+          robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
-          contact_sequence.impulseStatus(impulse_index),
+          contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index],
           kkt_residual_ref.switching[impulse_index]);
     } 
@@ -318,7 +319,7 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       const double dti = ocp_ref.discrete().dt(i);
       ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTSystem(
-          robot_ref, contact_sequence.contactStatus(contact_phase), 
+          robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
     }

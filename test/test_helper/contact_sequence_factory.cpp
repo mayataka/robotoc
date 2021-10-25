@@ -43,6 +43,13 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
     return ContactSequence(robot, N);
   }
 }
+
+
+std::shared_ptr<ContactSequence> CreateContactSequenceSharedPtr(
+    const Robot& robot, const int N, const int max_num_impulse, 
+    const double t0, const double event_period) {
+  return std::make_shared<ContactSequence>(CreateContactSequence(robot, N, max_num_impulse, t0, event_period));
+}
   
 } // namespace testhelper
 } // namespace robotoc
