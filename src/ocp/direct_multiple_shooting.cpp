@@ -42,7 +42,8 @@ DirectMultipleShooting::~DirectMultipleShooting() {
 
 void DirectMultipleShooting::initConstraints(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const ContactSequence& contact_sequence, const Solution& s) const {
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const Solution& s) const {
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -76,9 +77,9 @@ void DirectMultipleShooting::initConstraints(
 
 void DirectMultipleShooting::computeKKTResidual(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
-    const Eigen::VectorXd& v, const Solution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
   runParallel<internal::ComputeKKTResidual>(ocp, robots, contact_sequence, q, v,  
                                             s, kkt_matrix, kkt_residual);
 }
@@ -86,9 +87,9 @@ void DirectMultipleShooting::computeKKTResidual(
 
 void DirectMultipleShooting::computeKKTSystem(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
-    const Eigen::VectorXd& v, const Solution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
   runParallel<internal::ComputeKKTSystem>(ocp, robots, contact_sequence, q, v, 
                                           s, kkt_matrix, kkt_residual);
 }

@@ -140,6 +140,14 @@ public:
   ///
   DiscreteEventType eventType() const;
 
+  ///
+  /// @brief Displays the discrete event onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const DiscreteEvent& discrete_event);
+
 private:
   ContactStatus pre_contact_status_, post_contact_status_;
   ImpulseStatus impulse_status_;

@@ -40,14 +40,14 @@ protected:
   virtual void TearDown() {
   }
 
-  ContactSequence createContactSequence(const Robot& robot) const;
+  std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
   Solution createSolution(const Robot& robot) const;
   Solution createSolution(const Robot& robot, 
-                          const ContactSequence& contact_sequence) const;
+                          const std::shared_ptr<ContactSequence>& contact_sequence) const;
   KKTMatrix createKKTMatrix(const Robot& robot, 
-                            const ContactSequence& contact_sequence) const;
+                            const std::shared_ptr<ContactSequence>& contact_sequence) const;
   KKTResidual createKKTResidual(const Robot& robot, 
-                                const ContactSequence& contact_sequence) const;
+                                const std::shared_ptr<ContactSequence>& contact_sequence) const;
   void test_riccatiRecursion(const Robot& robot) const;
   void test_computeDirection(const Robot& robot) const;
 
@@ -56,8 +56,8 @@ protected:
 };
 
 
-ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
+std::shared_ptr<ContactSequence > RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
+  return testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, t, 3*dt);
 }
 
 
@@ -67,19 +67,19 @@ Solution RiccatiRecursionTest::createSolution(const Robot& robot) const {
 
 
 Solution RiccatiRecursionTest::createSolution(const Robot& robot, 
-                                              const ContactSequence& contact_sequence) const {
+                                              const std::shared_ptr<ContactSequence>& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
 
 KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, 
-                                                const ContactSequence& contact_sequence) const {
+                                                const std::shared_ptr<ContactSequence>& contact_sequence) const {
   return testhelper::CreateKKTMatrix(robot, contact_sequence, N, max_num_impulse);
 }
 
 
 KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot, 
-                                                    const ContactSequence& contact_sequence) const {
+                                                    const std::shared_ptr<ContactSequence>& contact_sequence) const {
   return testhelper::CreateKKTResidual(robot, contact_sequence, N, max_num_impulse);
 }
 
@@ -317,7 +317,7 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
         const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        d_ref[i].setImpulseStatus(contact_sequence.impulseStatus(impulse_index));
+        d_ref[i].setImpulseStatus(contact_sequence->impulseStatus(impulse_index));
         RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization.switching[impulse_index], 
                                                               d_ref[i], sto);
       }

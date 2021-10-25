@@ -3,8 +3,9 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/robot/robot.hpp"
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/robot/robot.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/local_contact_force_cost.hpp"
@@ -34,12 +35,12 @@ int main () {
 
   // Create a cost function.
   auto cost = std::make_shared<robotoc::CostFunction>();
-  Eigen::VectorXd q_ref(robot.dimq());
-  q_ref << 0, 0, 0.4792, 0, 0, 0, 1, 
-           -0.1,  0.7, -1.0, 
-           -0.1, -0.7,  1.0, 
-            0.1,  0.7, -1.0, 
-            0.1, -0.7,  1.0;
+  Eigen::VectorXd q_standing(robot.dimq());
+  q_standing << 0, 0, 0.4792, 0, 0, 0, 1, 
+                -0.1,  0.7, -1.0, 
+                -0.1, -0.7,  1.0, 
+                 0.1,  0.7, -1.0, 
+                 0.1, -0.7,  1.0;
   Eigen::VectorXd v_ref(robot.dimv());
   v_ref << 0, 0, 0, 0, 0, 0, 
            0, 0, 0, 
@@ -48,7 +49,7 @@ int main () {
            0, 0, 0;
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  config_cost->set_q_ref(q_ref);
+  config_cost->set_q_ref(q_standing);
   config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
@@ -89,32 +90,25 @@ int main () {
   // Create OCPSolver
   const double T = 0.5;
   const int N = 20;
-  const int max_num_impulse_phase = 4;
+  const int max_num_impulses = 4;
+
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
+
+  auto contact_status_standing = robot.createContactStatus();
+  contact_status_standing.activateContacts({0, 1, 2, 3});
+  robot.updateFrameKinematics(q_standing);
+  robot.getContactPoints(contact_status_standing);
+  contact_sequence->initContactSequence(contact_status_standing);
+
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, 
-                                max_num_impulse_phase, nthreads);
+  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
+                                T, N, nthreads);
 
   // Initial time and initial state
   const double t = 0;
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  q << 0, 0, 0.4792, 0, 0, 0, 1, 
-       -0.1,  0.7, -1.0, 
-       -0.1, -0.7,  1.0, 
-        0.1,  0.7, -1.0, 
-        0.1, -0.7,  1.0;
-  Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  v << 0, 0, 0, 0, 0, 0, 
-       0.0, 0.0, 0.0, 
-       0.0, 0.0, 0.0, 
-       0.0, 0.0, 0.0,
-       0.0, 0.0, 0.0;
+  const Eigen::VectorXd q = q_standing;
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
-  // Initialize OCPSolver
-  auto contact_status = robot.createContactStatus();
-  contact_status.activateContacts({0, 1, 2, 3});
-  robot.updateFrameKinematics(q);
-  robot.getContactPoints(contact_status);
-  ocp_solver.setContactStatusUniformly(contact_status);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
@@ -123,7 +117,7 @@ int main () {
 
   ocp_solver.initConstraints(t);
 
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
+  // robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
   robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
   // std::cout << robot << std::endl;

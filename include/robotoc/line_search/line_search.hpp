@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_LINE_SEARCH_HPP_
 #define ROBOTOC_LINE_SEARCH_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -73,18 +75,18 @@ public:
   /// @brief Compute primal step size by fliter line search method. 
   /// @param[in, out] ocp optimal control problem.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
   /// @param[in] d Direction. 
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
-  double computeStepSize(OCP& ocp, aligned_vector<Robot>& robots,
-                         const ContactSequence& contact_sequence, 
-                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                         const Solution& s, const Direction& d,
-                         const double max_primal_step_size);
+  double computeStepSize(
+      OCP& ocp, aligned_vector<Robot>& robots,
+      const std::shared_ptr<ContactSequence>& contact_sequence, 
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+      const Direction& d, const double max_primal_step_size);
 
   ///
   /// @brief Clear the line search filter. 
@@ -106,11 +108,11 @@ private:
   Solution s_trial_;
   KKTResidual kkt_residual_;
 
-  void computeCostAndViolation(OCP& ocp, aligned_vector<Robot>& robots,
-                               const ContactSequence& contact_sequence, 
-                               const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, const Solution& s,
-                               const double primal_step_size_for_barrier=0);
+  void computeCostAndViolation(
+      OCP& ocp, aligned_vector<Robot>& robots, 
+      const std::shared_ptr<ContactSequence>& contact_sequence, 
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+      const double primal_step_size_for_barrier=0);
 
   void computeSolutionTrial(const OCP& ocp, const aligned_vector<Robot>& robots, 
                             const Solution& s, const Direction& d, 

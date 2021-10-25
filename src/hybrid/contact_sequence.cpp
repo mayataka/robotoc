@@ -32,4 +32,12 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
+
+std::ostream& operator<<(
+    std::ostream& os, 
+    const std::shared_ptr<ContactSequence>& contact_sequence) {
+  contact_sequence->disp(os);
+  return os;
+}
+
 } // namespace robotoc 
