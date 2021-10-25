@@ -9,6 +9,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 
@@ -134,6 +135,7 @@ public:
 
 private:
   Robot robot_;
+  std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
   std::vector<Eigen::Vector3d> contact_points_;

@@ -16,12 +16,13 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.01
 jump_length = 0.5
 jump_height = 0.1
-period_flying_up = 0.15
-period_flying_down = period_flying_up
-period_flying = period_flying_up + period_flying_down
-period_ground = 0.30
+flying_up_time = 0.15
+flying_down_time = flying_up_time
+period_flying = flying_up_time + flying_down_time
+ground_time = 0.30
 t0 = 0
 
+# Create the cost function
 cost = robotoc.CostFunction()
 q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
                        -0.1,  0.7, -1.0, 
@@ -64,10 +65,10 @@ q0_3d_RH = robot.frame_position(RH_foot_id)
 
 com_ref0_flying_up = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
 com_ref0_flying_up[2] = robot.com()[2]
-v_com_ref_flying_up = np.array([(0.5*jump_length/period_flying_up), 0, (jump_height/period_flying_up)])
+v_com_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
 com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, v_com_ref_flying_up, 
-                                           t0+period_ground, period_flying_up, 
-                                           period_flying_down+2*period_ground, False)
+                                           t0+ground_time, flying_up_time, 
+                                           flying_down_time+2*ground_time, False)
 com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
 com_cost_flying_up.set_q_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_flying_up)
@@ -77,12 +78,13 @@ com_ref0_landed[0] += jump_length
 com_ref0_landed[2] = robot.com()[2]
 v_com_ref_landed = np.zeros(3)
 com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, v_com_ref_landed, 
-                                        t0+period_ground+period_flying, period_ground, 
-                                        period_ground+period_flying, False)
+                                        t0+ground_time+period_flying, ground_time, 
+                                        ground_time+period_flying, False)
 com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
 com_cost_landed.set_q_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_landed)
 
+# Create the constraints
 constraints           = robotoc.Constraints()
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
@@ -101,31 +103,36 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-01)
 
-T = t0 + period_flying + 2*period_ground
+T = t0 + period_flying + 2*ground_time
 N = math.floor(T/dt) 
-max_num_impulse_phase = 1
+max_num_impulses = 1
 
-nthreads = 4
-t = 0
-ocp_solver = robotoc.OCPSolver(robot, cost, constraints, T, N, 
-                               max_num_impulse_phase, nthreads)
+# Create the contact sequence
+contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
 
 contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
-contact_status_initial = robot.create_contact_status()
-contact_status_initial.activate_contacts([0, 1, 2, 3])
-contact_status_initial.set_contact_points(contact_points)
-ocp_solver.set_contact_status_uniformly(contact_status_initial)
+contact_status_standing = robot.create_contact_status()
+contact_status_standing.activate_contacts([0, 1, 2, 3])
+contact_status_standing.set_contact_points(contact_points)
+contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
-ocp_solver.push_back_contact_status(contact_status_flying, t0+period_ground)
+contact_sequence.push_back(contact_status_flying, t0+ground_time)
 
 contact_points[0][0] += jump_length
 contact_points[1][0] += jump_length
 contact_points[2][0] += jump_length
 contact_points[3][0] += jump_length
-contact_status_initial.set_contact_points(contact_points)
-ocp_solver.push_back_contact_status(contact_status_initial, t0+period_ground+period_flying)
+contact_status_standing.set_contact_points(contact_points)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+period_flying)
 
+# you can check the contact sequence via 
+# print(contact_sequence)
+
+ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
+                               T, N, nthreads=4)
+
+t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
 
@@ -142,8 +149,8 @@ robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                      base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                      viewer_type='gepetto')
+                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
+                                        viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
 viewer.display(dt, ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

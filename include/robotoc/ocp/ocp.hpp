@@ -95,7 +95,8 @@ public:
     return data[i];
   }
 
-  void discretize(const ContactSequence& contact_sequence, const double t) {
+  void discretize(const std::shared_ptr<ContactSequence>& contact_sequence, 
+                  const double t) {
     time_discretization_.discretize(contact_sequence, t);
   }
 

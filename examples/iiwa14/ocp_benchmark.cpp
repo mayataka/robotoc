@@ -42,7 +42,9 @@ int main() {
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  robotoc::OCPSolver ocp_solver(robot, cost, constraints, T, N, 0, nthreads);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
+  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
+                                T, N, nthreads);
 
   // Solves the OCP.
   ocp_solver.setSolution("q", q);

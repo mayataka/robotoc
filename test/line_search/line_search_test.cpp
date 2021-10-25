@@ -40,10 +40,12 @@ protected:
   }
 
   Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
+  Solution createSolution(const Robot& robot, 
+                          const std::shared_ptr<ContactSequence>& contact_sequence) const;
   Direction createDirection(const Robot& robot) const;
-  Direction createDirection(const Robot& robot, const ContactSequence& contact_sequence) const;
-  ContactSequence createContactSequence(const Robot& robot) const;
+  Direction createDirection(const Robot& robot, 
+                            const std::shared_ptr<ContactSequence>& contact_sequence) const;
+  std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
 
   void test(const Robot& robot) const;
 
@@ -58,7 +60,7 @@ Solution LineSearchTest::createSolution(const Robot& robot) const {
 
 
 Solution LineSearchTest::createSolution(const Robot& robot, 
-                                        const ContactSequence& contact_sequence) const {
+                                        const std::shared_ptr<ContactSequence>& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
@@ -69,13 +71,13 @@ Direction LineSearchTest::createDirection(const Robot& robot) const {
 
 
 Direction LineSearchTest::createDirection(const Robot& robot, 
-                                          const ContactSequence& contact_sequence) const {
+                                          const std::shared_ptr<ContactSequence>& contact_sequence) const {
   return testhelper::CreateDirection(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
 
-ContactSequence LineSearchTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
+std::shared_ptr<ContactSequence> LineSearchTest::createContactSequence(const Robot& robot) const {
+  return testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, t, 3*dt);
 }
 
 

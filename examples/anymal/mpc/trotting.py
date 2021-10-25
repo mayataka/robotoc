@@ -16,7 +16,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.02
 step_length = 0.15
 step_height = 0.1
-period_swing = 0.5
+swing_time = 0.5
 t0 = 0.5
 
 cost = robotoc.CostFunction()
@@ -60,18 +60,18 @@ q0_3d_LF = robot.frame_position(LF_foot_id)
 q0_3d_LH = robot.frame_position(LH_foot_id)
 q0_3d_RF = robot.frame_position(RF_foot_id)
 q0_3d_RH = robot.frame_position(RH_foot_id)
-LF_t0 = t0 + period_swing 
+LF_t0 = t0 + swing_time 
 LH_t0 = t0
 RF_t0 = t0
-RH_t0 = t0 + period_swing 
+RH_t0 = t0 + swing_time 
 LF_foot_ref = robotoc.PeriodicFootTrackRef2(q0_3d_LF, step_length, step_height, 
-                                            LF_t0, period_swing, period_swing, False)
+                                            LF_t0, swing_time, swing_time, False)
 LH_foot_ref = robotoc.PeriodicFootTrackRef2(q0_3d_LH, step_length, step_height, 
-                                            LH_t0, period_swing, period_swing, True)
+                                            LH_t0, swing_time, swing_time, True)
 RF_foot_ref = robotoc.PeriodicFootTrackRef2(q0_3d_RF, step_length, step_height, 
-                                            RF_t0, period_swing, period_swing, True)
+                                            RF_t0, swing_time, swing_time, True)
 RH_foot_ref = robotoc.PeriodicFootTrackRef2(q0_3d_RH, step_length, step_height, 
-                                            RH_t0, period_swing, period_swing, False)
+                                            RH_t0, swing_time, swing_time, False)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
@@ -89,8 +89,8 @@ cost.push_back(RH_cost)
 com_ref0 = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
 com_ref0[2] = robot.com()[2]
 v_com_ref = np.zeros(3)
-v_com_ref[0] = 0.5 * step_length / period_swing
-com_ref = robotoc.PeriodicCoMRef2(com_ref0, v_com_ref, t0, period_swing, 0., True)
+v_com_ref[0] = 0.5 * step_length / swing_time
+com_ref = robotoc.PeriodicCoMRef2(com_ref0, v_com_ref, t0, swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_q_weight(np.full(3, 1.0e04))
 cost.push_back(com_cost)
@@ -117,7 +117,7 @@ max_steps = 3
 nthreads = 4
 mpc = robotoc.MPCQuadrupedalTrotting(robot, cost, constraints, T, N, 
                                      max_steps, nthreads)
-mpc.set_gait_pattern(step_length, step_height, period_swing, t0)
+mpc.set_gait_pattern(step_length, step_height, swing_time, t0)
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0

@@ -16,7 +16,7 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
     ContactStatus pre_contact_status = robot.createContactStatus();
     pre_contact_status.setRandom();
     ContactSequence contact_sequence(robot, max_num_impulse);
-    contact_sequence.setContactStatusUniformly(pre_contact_status);
+    contact_sequence.initContactSequence(pre_contact_status);
     ContactStatus post_contact_status = pre_contact_status;
     std::random_device rnd;
     for (int i=0; i<max_num_impulse; ++i) {
@@ -42,6 +42,13 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
   else {
     return ContactSequence(robot, N);
   }
+}
+
+
+std::shared_ptr<ContactSequence> CreateContactSequenceSharedPtr(
+    const Robot& robot, const int N, const int max_num_impulse, 
+    const double t0, const double event_period) {
+  return std::make_shared<ContactSequence>(CreateContactSequence(robot, N, max_num_impulse, t0, event_period));
 }
   
 } // namespace testhelper

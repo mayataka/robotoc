@@ -8,8 +8,8 @@
 namespace robotoc {
 
 inline HybridOCPDiscretization::HybridOCPDiscretization(const double T, 
-                                                          const int N, 
-                                                          const int max_events) 
+                                                        const int N, 
+                                                        const int max_events) 
   : T_(T),
     dt_ideal_(T/N), 
     max_dt_(dt_ideal_-min_dt),
@@ -70,7 +70,7 @@ inline HybridOCPDiscretization::~HybridOCPDiscretization() {
 
 
 inline void HybridOCPDiscretization::discretize(
-    const ContactSequence& contact_sequence, const double t) {
+    const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
   countDiscreteEvents(contact_sequence, t);
   countTimeSteps(t);
   countTimeStages();
@@ -323,24 +323,24 @@ inline bool HybridOCPDiscretization::isSwitchingTimeConsistent() const {
 
 
 inline void HybridOCPDiscretization::countDiscreteEvents(
-    const ContactSequence& contact_sequence, const double t) {
-  N_impulse_ = contact_sequence.numImpulseEvents();
+    const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
+  N_impulse_ = contact_sequence->numImpulseEvents();
   assert(N_impulse_ <= max_events_);
   for (int i=0; i<N_impulse_; ++i) {
-    t_impulse_[i] = contact_sequence.impulseTime(i);
+    t_impulse_[i] = contact_sequence->impulseTime(i);
     time_stage_before_impulse_[i] = std::floor((t_impulse_[i]-t)/dt_ideal_);
-    sto_impulse_[i] = contact_sequence.isSTOEnabledImpulse(i);
+    sto_impulse_[i] = contact_sequence->isSTOEnabledImpulse(i);
   }
-  N_lift_ = contact_sequence.numLiftEvents();
+  N_lift_ = contact_sequence->numLiftEvents();
   assert(N_lift_ <= max_events_);
   for (int i=0; i<N_lift_; ++i) {
-    t_lift_[i] = contact_sequence.liftTime(i);
+    t_lift_[i] = contact_sequence->liftTime(i);
     time_stage_before_lift_[i] = std::floor((t_lift_[i]-t)/dt_ideal_);
-    sto_lift_[i] = contact_sequence.isSTOEnabledLift(i);
+    sto_lift_[i] = contact_sequence->isSTOEnabledLift(i);
   }
   N_ = N_ideal_;
   for (int i=0; i<N_impulse_+N_lift_; ++i) {
-    event_types_[i] = contact_sequence.eventType(i);
+    event_types_[i] = contact_sequence->eventType(i);
   } 
   assert(isFormulationTractable());
 }

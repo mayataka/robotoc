@@ -134,6 +134,7 @@ public:
 
 private:
   Robot robot_;
+  std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   ContactStatus cs_standing_, cs_lf_, cs_lh_, cs_rf_, cs_rh_;
   std::vector<Eigen::Vector3d> contact_points_;

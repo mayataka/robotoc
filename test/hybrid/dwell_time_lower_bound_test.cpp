@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 #include "robotoc/hybrid/dwell_time_lower_bound.hpp"
 
