@@ -244,7 +244,8 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, 20, line_search);
+  // robotoc::benchmark::convergence(ocp_solver, t, q, v, 20, line_search);
+  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);

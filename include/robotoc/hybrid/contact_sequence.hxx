@@ -85,14 +85,14 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
     }
     if (numDiscreteEvents()+1 > max_num_events_) {
       throw std::runtime_error(
-          "Number of discrete events=" + std::to_string(numDiscreteEvents()+1)  
+          "Number of discrete events " + std::to_string(numDiscreteEvents()+1)  
           + " exceeds predefined max_num_events=" 
           + std::to_string(max_num_events_) + "!");
     }
     if (numImpulseEvents() > 0 || numLiftEvents() > 0) {
       if (event_time <= event_time_.back()) {
         throw std::runtime_error(
-            "event_time=" + std::to_string(event_time) 
+            "The input event_time " + std::to_string(event_time) 
             + " must be larger than the last event time=" 
             + std::to_string(event_time_.back()) + "!");
       }
@@ -100,6 +100,8 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
+    std::cerr << "c.f. the current contact sequence is " << "\n";
+    std::cerr << *this << "\n";
     std::exit(EXIT_FAILURE);
   }
   contact_statuses_.push_back(discrete_event.postContactStatus());
@@ -192,13 +194,15 @@ inline void ContactSequence::setImpulseTime(const int impulse_index,
     }
     if (impulse_index >= numImpulseEvents()) {
       throw std::runtime_error(
-          "impulse_index=" + std::to_string(impulse_index) 
+          "The input impulse_index " + std::to_string(impulse_index) 
           + " must be less than numImpulseEvents()=" 
           + std::to_string(numImpulseEvents()) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
+    std::cerr << "c.f. the current contact sequence is " << "\n";
+    std::cerr << *this << "\n";
     std::exit(EXIT_FAILURE);
   }
   impulse_time_[impulse_index] = impulse_time;
@@ -218,13 +222,15 @@ inline void ContactSequence::setLiftTime(const int lift_index,
     }
     if (lift_index >= numLiftEvents()) {
       throw std::runtime_error(
-          "lift_index=" + std::to_string(lift_index) 
+          "The input lift_index " + std::to_string(lift_index) 
           + " must be less than numLiftEvents()=" 
           + std::to_string(numLiftEvents()) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
+    std::cerr << "c.f. the current contact sequence is " << "\n";
+    std::cerr << *this << "\n";
     std::exit(EXIT_FAILURE);
   }
   lift_time_[lift_index] = lift_time;
@@ -256,13 +262,15 @@ inline void ContactSequence::setContactPoints(
   try {
     if (contact_phase >= numContactPhases()) {
       throw std::runtime_error(
-          "contact_phase=" + std::to_string(contact_phase) 
+          "The input contact_phase " + std::to_string(contact_phase) 
           + " must be smaller than numContactPhases()" 
           + std::to_string(numContactPhases()) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
+    std::cerr << "c.f. the current contact sequence is " << "\n";
+    std::cerr << *this << "\n";
     std::exit(EXIT_FAILURE);
   }
   contact_statuses_[contact_phase].setContactPoints(contact_points);

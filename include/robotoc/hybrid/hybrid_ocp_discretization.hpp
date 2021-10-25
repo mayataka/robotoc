@@ -2,6 +2,7 @@
 #define ROBOTOC_HYBRID_OCP_DISCRETIZATION_HPP_
 
 #include <vector>
+#include <memory>
 #include <limits>
 #include <cmath>
 #include <iostream>
@@ -61,10 +62,11 @@ public:
   ///
   /// @brief Discretizes the finite horizon taking into account the discrete 
   /// events. 
-  /// @param[in] contact_sequence Contact sequence.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence.
   /// @param[in] t Initial time of the horizon.
   ///
-  void discretize(const ContactSequence& contact_sequence, const double t);
+  void discretize(const std::shared_ptr<ContactSequence>& contact_sequence, 
+                  const double t);
 
   ///
   /// @return Number of the time stages on the horizon. 
@@ -303,8 +305,8 @@ private:
   std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
   std::vector<DiscreteEventType> event_types_;
 
-  void countDiscreteEvents(const ContactSequence& contact_sequence, 
-                           const double t);
+  void countDiscreteEvents(
+      const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
 
   void countTimeSteps(const double t);
 

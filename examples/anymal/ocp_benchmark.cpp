@@ -117,7 +117,7 @@ int main () {
 
   ocp_solver.initConstraints(t);
 
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
+  // robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
   robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
   // std::cout << robot << std::endl;

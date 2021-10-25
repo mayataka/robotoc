@@ -13,7 +13,6 @@ OCPSolver::OCPSolver(const Robot& robot,
                      const double T, const int N, const int nthreads)
   : robots_(nthreads, robot),
     contact_sequence_(contact_sequence),
-    contact_sequence_entity_(*contact_sequence.get()),
     cost_(cost),
     constraints_(constraints),
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
@@ -56,10 +55,9 @@ OCPSolver::~OCPSolver() {
 
 
 void OCPSolver::initConstraints(const double t) {
-  contact_sequence_entity_ = *contact_sequence_.get();
-  ocp_.discretize(contact_sequence_entity_, t);
+  ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
-  dms_.initConstraints(ocp_, robots_, contact_sequence_entity_, s_);
+  dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
 }
 
 
@@ -68,10 +66,9 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const bool line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  contact_sequence_entity_ = *contact_sequence_.get();
-  ocp_.discretize(contact_sequence_entity_, t);
+  ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
-  dms_.computeKKTSystem(ocp_, robots_, contact_sequence_entity_, q, v, s_, 
+  dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
                         kkt_matrix_, kkt_residual_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
@@ -83,7 +80,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   if (line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
-                                                    contact_sequence_entity_, 
+                                                    contact_sequence_, 
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
@@ -300,10 +297,9 @@ double OCPSolver::cost() const {
 
 void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q, 
                                    const Eigen::VectorXd& v) {
-  contact_sequence_entity_ = *contact_sequence_.get();
-  ocp_.discretize(contact_sequence_entity_, t);
+  ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
-  dms_.computeKKTResidual(ocp_, robots_, contact_sequence_entity_, q, v, s_, 
+  dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
                           kkt_matrix_, kkt_residual_);
 }
 
@@ -344,15 +340,13 @@ bool OCPSolver::isCurrentSolutionFeasible() {
 
 
 bool OCPSolver::isFormulationTractable(const double t) {
-  contact_sequence_entity_ = *contact_sequence_.get();
-  ocp_.discretize(contact_sequence_entity_, t);
+  ocp_.discretize(contact_sequence_, t);
   return ocp_.discrete().isFormulationTractable();
 }
 
 
 bool OCPSolver::isSwitchingTimeConsistent(const double t) {
-  contact_sequence_entity_ = *contact_sequence_.get();
-  ocp_.discretize(contact_sequence_entity_, t);
+  ocp_.discretize(contact_sequence_, t);
   return ocp_.discrete().isSwitchingTimeConsistent();
 }
 

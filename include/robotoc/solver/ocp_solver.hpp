@@ -197,7 +197,6 @@ public:
 private:
   aligned_vector<Robot> robots_;
   std::shared_ptr<ContactSequence> contact_sequence_;
-  ContactSequence contact_sequence_entity_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;
   DirectMultipleShooting dms_;

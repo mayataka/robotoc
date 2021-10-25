@@ -114,7 +114,7 @@ namespace robotoc {
 template <typename Algorithm>
 inline void DirectMultipleShooting::runParallel(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const ContactSequence& contact_sequence, 
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
   assert(robots.size() == nthreads_);
@@ -131,7 +131,7 @@ inline void DirectMultipleShooting::runParallel(
         assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
-            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
@@ -140,7 +140,7 @@ inline void DirectMultipleShooting::runParallel(
         assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
-            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
@@ -150,17 +150,17 @@ inline void DirectMultipleShooting::runParallel(
             = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
-            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s[i+1], kkt_matrix[i], kkt_residual[i], 
-            contact_sequence.impulseStatus(impulse_index), 
+            contact_sequence->impulseStatus(impulse_index), 
             ocp.discrete().dt(i+1), kkt_matrix.switching[impulse_index],
             kkt_residual.switching[impulse_index]);
       }
       else {
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
-            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
       }
@@ -175,7 +175,7 @@ inline void DirectMultipleShooting::runParallel(
       const int time_stage_before_impulse 
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
       Algorithm::run(ocp.impulse[impulse_index], robots[omp_get_thread_num()], 
-                     contact_sequence.impulseStatus(impulse_index), 
+                     contact_sequence->impulseStatus(impulse_index), 
                      ocp.discrete().t_impulse(impulse_index), 
                      s[time_stage_before_impulse].q, s.impulse[impulse_index], 
                      s.aux[impulse_index], kkt_matrix.impulse[impulse_index], 
@@ -187,7 +187,7 @@ inline void DirectMultipleShooting::runParallel(
           = ocp.discrete().timeStageAfterImpulse(impulse_index);
       Algorithm::run(
           ocp.aux[impulse_index], robots[omp_get_thread_num()], 
-          contact_sequence.contactStatus(
+          contact_sequence->contactStatus(
               ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
           ocp.discrete().t_impulse(impulse_index), 
           ocp.discrete().dt_aux(impulse_index), s.impulse[impulse_index].q, 
@@ -200,7 +200,7 @@ inline void DirectMultipleShooting::runParallel(
           = ocp.discrete().timeStageAfterLift(lift_index);
       Algorithm::run(
           ocp.lift[lift_index], robots[omp_get_thread_num()], 
-          contact_sequence.contactStatus(
+          contact_sequence->contactStatus(
               ocp.discrete().contactPhaseAfterLift(lift_index)), 
           ocp.discrete().t_lift(lift_index), 
           ocp.discrete().dt_lift(lift_index), s[time_stage_after_lift-1].q, 
