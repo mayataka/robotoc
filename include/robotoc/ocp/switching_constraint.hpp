@@ -12,6 +12,11 @@
 
 namespace robotoc {
 
+///
+/// @class SwitchingConstraint
+/// @brief The pure-state constraint representing switching constraint that is 
+///  transformed into the mixed state-control equality constraint .
+///
 class SwitchingConstraint {
 public:
   ///
