@@ -122,8 +122,8 @@ void evalDerivatives(
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
-/// and condense the slack and dual variables.
+/// @brief Condenses the slack and dual variables. linearizeConstraints() must 
+/// be called before this function.
 /// @param[in] constraints Vector of the constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -141,8 +141,8 @@ void condenseSlackAndDual(
     SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
-/// and condense the slack and dual variables.
+/// @brief Condenses the slack and dual variables. linearizeConstraints() must 
+/// be called before this function.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.

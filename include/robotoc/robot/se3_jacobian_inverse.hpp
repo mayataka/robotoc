@@ -44,9 +44,9 @@ public:
 
   ///
   /// @brief Computes the inverse of the Jacobian of SE3.
-  /// @param[in] Jac The Lie derivative matrix. 
-  /// Size must be larger than 6 x 6.
-  /// @param[out] Jac_inv The inverse of the Lie derivatives. 
+  /// @param[in] Jac The Jacobian of SE3. Size must be larger than 6 x 6. 
+  /// The Jacobian is assumed to be stored in the 6 x 6 top left corner.
+  /// @param[out] Jac_inv The inverse of the Jacobian os SE3. 
   /// Size must be larger than 6 x 6. Result is stored in the 6 x 6 top left 
   /// corner.
   ///

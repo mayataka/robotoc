@@ -187,8 +187,8 @@ public:
                             ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
-  /// and condense the slack and dual variables.
+  /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
+  /// be called before this function.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
@@ -204,8 +204,8 @@ public:
                             SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
-  /// and condense the slack and dual variables.
+  /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
+  /// be called before this function.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
