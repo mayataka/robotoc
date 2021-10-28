@@ -376,6 +376,7 @@ private:
   ConstraintsData constraints_data_;
   StateEquation state_equation_;
   ContactDynamics contact_dynamics_;
+  SwitchingConstraint switching_constraint_;
   double stage_cost_;
 
 };

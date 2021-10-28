@@ -143,7 +143,7 @@ inline void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot, const double t,
                                                   kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, dt);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+  constraints_->condenseSlackAndDual(constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }

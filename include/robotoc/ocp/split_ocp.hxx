@@ -16,6 +16,7 @@ inline SplitOCP::SplitOCP(const Robot& robot,
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     state_equation_(robot),
     contact_dynamics_(robot),
+    switching_constraint_(robot),
     stage_cost_(0) {
 }
 
@@ -27,6 +28,7 @@ inline SplitOCP::SplitOCP()
     constraints_data_(),
     state_equation_(),
     contact_dynamics_(),
+    switching_constraint_(),
     stage_cost_(0) {
 }
 
@@ -89,8 +91,8 @@ inline void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
                               SwitchingConstraintResidual& sc_residual) {
   assert(dt_next > 0);
   evalOCP(robot, contact_status, t, dt, s, q_next, v_next, kkt_residual);
-  switchingconstraint::evalSwitchingConstraint(robot, impulse_status,  dt, 
-                                               dt_next, s, sc_residual);
+  switching_constraint_.evalSwitchingConstraint(robot, impulse_status,  dt, 
+                                                dt_next, s, sc_residual);
 }
 
 
@@ -136,10 +138,10 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   assert(dt_next > 0);
   computeKKTResidual(robot, contact_status, t, dt, q_prev, s, s_next,
                      kkt_matrix, kkt_residual);
-  switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
-                                                    dt_next, s, kkt_matrix, 
-                                                    kkt_residual, sc_jacobian, 
-                                                    sc_residual);
+  switching_constraint_.linearizeSwitchingConstraint(robot, impulse_status, dt, 
+                                                     dt_next, s, kkt_matrix, 
+                                                     kkt_residual, sc_jacobian, 
+                                                     sc_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual);
 }
 
@@ -170,7 +172,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
                                              kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+  constraints_->condenseSlackAndDual(constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, s, 
                                             kkt_matrix, kkt_residual);
@@ -208,12 +210,12 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
                                              kkt_residual);
-  switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
-                                                    dt_next, s, kkt_matrix, 
-                                                    kkt_residual, sc_jacobian, 
-                                                    sc_residual);
+  switching_constraint_.linearizeSwitchingConstraint(robot, impulse_status, dt, 
+                                                     dt_next, s, kkt_matrix, 
+                                                     kkt_residual, sc_jacobian, 
+                                                     sc_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+  constraints_->condenseSlackAndDual(constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, s,
                                             kkt_matrix, kkt_residual);
