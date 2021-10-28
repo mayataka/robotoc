@@ -103,12 +103,14 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual);
   if (switching_constraint) {
     SwitchingConstraintJacobian switch_jac_ref(robot);
     SwitchingConstraintResidual switch_res_ref(robot);
     switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
                                                       kkt_matrix_ref, kkt_residual_ref, 
                                                       switch_jac_ref, switch_res_ref);
+    kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, switch_res_ref);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
@@ -170,10 +172,12 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += dt * constraints_data.logBarrier();
   StateEquation state_equation(robot);
-  state_equation.linearizeStateEquationAlongLieGroup(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquation(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
@@ -191,6 +195,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   else {
     cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
   }
+  kkt_residual.kkt_error = 0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d;

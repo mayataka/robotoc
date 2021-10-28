@@ -125,8 +125,6 @@ inline void condenseSlackAndDual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->evalConstraint(robot, data[i], s);
-    constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
     constraints[i]->condenseSlackAndDual(robot, data[i], dt, s, kkt_matrix, 
                                          kkt_residual);
   }
@@ -142,8 +140,6 @@ inline void condenseSlackAndDual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->evalConstraint(robot, data[i], s);
-    constraints[i]->evalDerivatives(robot, data[i], s, kkt_residual);
     constraints[i]->condenseSlackAndDual(robot, data[i], s, kkt_matrix, 
                                          kkt_residual);
   }

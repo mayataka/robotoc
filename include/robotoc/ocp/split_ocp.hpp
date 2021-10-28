@@ -312,6 +312,24 @@ public:
   /// @brief Returns the KKT residual of this time stage. Before calling this 
   /// function, SplitOCP::computeKKTResidual() must be called.
   /// @param[in] kkt_residual KKT residual of this time stage.
+  /// @return The squared norm of the kKT residual.
+  ///
+  double KKTError(const SplitKKTResidual& kkt_residual) const;
+
+  ///
+  /// @brief Returns the KKT residual of this time stage. Before calling this 
+  /// function, SplitOCP::computeKKTResidual() must be called.
+  /// @param[in] kkt_residual KKT residual of this time stage.
+  /// @param[in] sc_residual Residual of the switching constraint. 
+  /// @return The squared norm of the kKT residual.
+  ///
+  double KKTError(const SplitKKTResidual& kkt_residual,
+                  const SwitchingConstraintResidual& sc_residual) const;
+
+  ///
+  /// @brief Returns the KKT residual of this time stage. Before calling this 
+  /// function, SplitOCP::computeKKTResidual() must be called.
+  /// @param[in] kkt_residual KKT residual of this time stage.
   /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///

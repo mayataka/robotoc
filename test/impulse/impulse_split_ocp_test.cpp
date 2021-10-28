@@ -71,6 +71,7 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual);
   const double kkt_error_ref = kkt_residual_ref.KKTError()
                                 + id.KKTError() + constraints_data.KKTError();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -103,14 +104,18 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   double impulse_cost = cost->quadratizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
+  constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
-  state_equation.linearizeStateEquationAlongLieGroup(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.correctLinearizedStateEquation(robot, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref );
   id.condenseImpulseDynamics(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
+
+  kkt_residual.kkt_error = 0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
