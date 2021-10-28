@@ -83,6 +83,20 @@ public:
   void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
+  /// @brief Initializes the constraints, i.e., copies the slack and dual 
+  /// variables from another time stage. 
+  /// @param[in] other Impulse split optimal control problem at another impulse 
+  /// stage.
+  ///
+  void initConstraints(const ImpulseSplitOCP& other);
+
+  ///
+  /// @brief Gets the const reference to the constraints data. 
+  /// @return const reference to the constraints data. 
+  ///
+  const ConstraintsData& constraintsData() const;
+
+  ///
   /// @brief Computes the impulse stage cost and constraint violation.
   /// Used in the line search.
   /// @param[in] robot Robot model. 

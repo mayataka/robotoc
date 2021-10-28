@@ -48,6 +48,16 @@ inline void ImpulseSplitOCP::initConstraints(Robot& robot,
 }
 
 
+inline void ImpulseSplitOCP::initConstraints(const ImpulseSplitOCP& other) { 
+  constraints_data_.copySlackAndDual(other.constraintsData());
+}
+
+
+inline const ConstraintsData& ImpulseSplitOCP::constraintsData() const {
+  return constraints_data_;
+}
+
+
 inline void ImpulseSplitOCP::evalOCP(Robot& robot, 
                                      const ImpulseStatus& impulse_status, 
                                      const double t, 
