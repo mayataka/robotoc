@@ -105,7 +105,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   robot.updateKinematics(s.q, v_after_impulse);
   double impulse_cost = cost->quadratizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
-  constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
+  constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);

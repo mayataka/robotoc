@@ -94,7 +94,7 @@ void ConstraintsTest::timeStage0(Robot& robot,
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(robot, data, dt, s, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(data, dt, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa.isZero());
@@ -135,7 +135,7 @@ void ConstraintsTest::timeStage1(Robot& robot,
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(robot, data, dt, s, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(data, dt, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa.isZero());
@@ -177,7 +177,7 @@ void ConstraintsTest::timeStage2(Robot& robot,
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(robot, data, dt, s, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(data, dt, s, kkt_matrix, kkt_residual);
   EXPECT_FALSE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa.isZero());

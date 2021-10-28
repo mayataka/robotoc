@@ -36,22 +36,22 @@ protected:
   virtual void TearDown() {
   }
 
-  void testKinematics(Robot& robot, const ImpulseStatus& impulse_status) const;
+  void test_kinematics(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testfLocal2World(Robot& robot, const ImpulseStatus& impulse_status) const;
-  void testIsFeasible(Robot& robot, const ImpulseStatus& impulse_status) const;
-  void testSetSlack(Robot& robot, const ImpulseStatus& impulse_status) const;
+  void test_isFeasible(Robot& robot, const ImpulseStatus& impulse_status) const;
+  void test_setSlack(Robot& robot, const ImpulseStatus& impulse_status) const;
   void test_evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status) const;
   void test_evalConstraint(Robot& robot, const ImpulseStatus& impulse_status) const;
-  void testCondenseSlackAndDual(Robot& robot, 
+  void test_condenseSlackAndDual(Robot& robot, 
                                 const ImpulseStatus& impulse_status) const;
-  void testExpandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const;
+  void test_expandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const;
 
   double barrier, dt, mu, fraction_to_boundary_rule;
   Eigen::MatrixXd cone;
 };
 
 
-void ImpulseFrictionConeTest::testKinematics(Robot& robot, 
+void ImpulseFrictionConeTest::test_kinematics(Robot& robot, 
                                              const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
@@ -72,7 +72,7 @@ void ImpulseFrictionConeTest::testfLocal2World(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, 
+void ImpulseFrictionConeTest::test_isFeasible(Robot& robot, 
                                              const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
@@ -98,7 +98,7 @@ void ImpulseFrictionConeTest::testIsFeasible(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testSetSlack(Robot& robot, const ImpulseStatus& impulse_status) const {
+void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   constr.allocateExtraData(data);
@@ -194,7 +194,7 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
 }
 
 
-void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, 
+void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
                                                        const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
@@ -216,7 +216,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, s, kkt_mat, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -251,7 +251,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
+void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   constr.allocateExtraData(data);
@@ -270,7 +270,7 @@ void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const Impulse
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, data, s);
   constr.evalDerivatives(robot, data, s, kkt_res);
-  constr.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, s, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
   constr.expandSlackAndDual(data, s, d);
@@ -322,23 +322,23 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testKinematics(robot, impulse_status);
+  test_kinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
-  testIsFeasible(robot, impulse_status);
-  testSetSlack(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
   test_evalConstraint(robot, impulse_status);
   test_evalDerivatives(robot, impulse_status);
-  testCondenseSlackAndDual(robot, impulse_status);
-  testExpandSlackAndDual(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  testKinematics(robot, impulse_status);
+  test_kinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
-  testIsFeasible(robot, impulse_status);
-  testSetSlack(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
   test_evalConstraint(robot, impulse_status);
   test_evalDerivatives(robot, impulse_status);
-  testCondenseSlackAndDual(robot, impulse_status);
-  testExpandSlackAndDual(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
 }
 
 
@@ -346,23 +346,23 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testKinematics(robot, impulse_status);
+  test_kinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
-  testIsFeasible(robot, impulse_status);
-  testSetSlack(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
   test_evalConstraint(robot, impulse_status);
   test_evalDerivatives(robot, impulse_status);
-  testCondenseSlackAndDual(robot, impulse_status);
-  testExpandSlackAndDual(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
   impulse_status.setRandom();
-  testKinematics(robot, impulse_status);
+  test_kinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
-  testIsFeasible(robot, impulse_status);
-  testSetSlack(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
   test_evalConstraint(robot, impulse_status);
   test_evalDerivatives(robot, impulse_status);
-  testCondenseSlackAndDual(robot, impulse_status);
-  testExpandSlackAndDual(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
 }
 
 } // namespace robotoc

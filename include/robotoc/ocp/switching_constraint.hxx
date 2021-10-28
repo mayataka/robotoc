@@ -51,11 +51,6 @@ inline void SwitchingConstraint::linearizeSwitchingConstraint(
   }
   kkt_residual.lx.noalias() += sc_jacobian.Phix().transpose() * s.xi_stack();
   kkt_residual.la.noalias() += sc_jacobian.Phia().transpose() * s.xi_stack();
-  // linearize Hamitonian 
-  dq_ = s.v + dt1 * s.a;
-  sc_jacobian.Phit().noalias() = sc_jacobian.Pq() * dq_;
-  kkt_residual.h += s.xi_stack().dot(sc_jacobian.Phit());
-  kkt_matrix.hv().noalias() += sc_jacobian.Pq().transpose() * s.xi_stack();
 }
 
 

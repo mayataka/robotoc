@@ -59,7 +59,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
-  constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
+  constraints->condenseSlackAndDual(constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += dt * constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);

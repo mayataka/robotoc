@@ -26,26 +26,26 @@ protected:
   virtual void TearDown() {
   }
 
-  void testKinematics(Robot& robot) const;
-  void testIsFeasible(Robot& robot) const;
-  void testSetSlack(Robot& robot) const;
+  void test_kinematics(Robot& robot) const;
+  void test_isFeasible(Robot& robot) const;
+  void test_setSlack(Robot& robot) const;
   void test_evalDerivatives(Robot& robot) const;
   void test_evalConstraint(Robot& robot) const;
-  void testCondenseSlackAndDual(Robot& robot) const;
-  void testExpandSlackAndDual(Robot& robot) const;
+  void test_condenseSlackAndDual(Robot& robot) const;
+  void test_expandSlackAndDual(Robot& robot) const;
 
   double barrier, dt;
 };
 
 
-void JointPositionUpperLimitTest::testKinematics(Robot& robot) const {
+void JointPositionUpperLimitTest::test_kinematics(Robot& robot) const {
   JointPositionUpperLimit constr(robot); 
   EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::PositionLevel);
 }
 
 
-void JointPositionUpperLimitTest::testIsFeasible(Robot& robot) const {
+void JointPositionUpperLimitTest::test_isFeasible(Robot& robot) const {
   JointPositionUpperLimit constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
@@ -56,7 +56,7 @@ void JointPositionUpperLimitTest::testIsFeasible(Robot& robot) const {
 }
 
 
-void JointPositionUpperLimitTest::testSetSlack(Robot& robot) const {
+void JointPositionUpperLimitTest::test_setSlack(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -102,7 +102,7 @@ void JointPositionUpperLimitTest::test_evalDerivatives(Robot& robot) const {
 }
 
 
-void JointPositionUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
+void JointPositionUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -114,7 +114,7 @@ void JointPositionUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
   data_ref.residual = s.q.tail(dimc) - qmax + data_ref.slack;
   kkt_res_ref.lq().tail(dimc).array() 
       += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
@@ -126,7 +126,7 @@ void JointPositionUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 }
 
 
-void JointPositionUpperLimitTest::testExpandSlackAndDual(Robot& robot) const {
+void JointPositionUpperLimitTest::test_expandSlackAndDual(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -146,25 +146,25 @@ void JointPositionUpperLimitTest::testExpandSlackAndDual(Robot& robot) const {
 
 TEST_F(JointPositionUpperLimitTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testKinematics(robot);
-  testIsFeasible(robot);
-  testSetSlack(robot);
+  test_kinematics(robot);
+  test_isFeasible(robot);
+  test_setSlack(robot);
   test_evalConstraint(robot);
   test_evalDerivatives(robot);
-  testCondenseSlackAndDual(robot);
-  testExpandSlackAndDual(robot);
+  test_condenseSlackAndDual(robot);
+  test_expandSlackAndDual(robot);
 }
 
 
 TEST_F(JointPositionUpperLimitTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testKinematics(robot);
-  testIsFeasible(robot);
-  testSetSlack(robot);
+  test_kinematics(robot);
+  test_isFeasible(robot);
+  test_setSlack(robot);
   test_evalConstraint(robot);
   test_evalDerivatives(robot);
-  testCondenseSlackAndDual(robot);
-  testExpandSlackAndDual(robot);
+  test_condenseSlackAndDual(robot);
+  test_expandSlackAndDual(robot);
 }
 
 } // namespace robotoc
