@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/lie_derivative_inverter.hpp"
+#include "robotoc/robot/se3_jacobian_inverse.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -89,26 +89,24 @@ public:
       SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the state equation, and multiplies the inverse of the
-  /// Lie derivative to SplitKKTMatrix::Fqq, SplitKKTMatrix::Fqv, and 
-  /// SplitKKTResidual::Fq.
+  /// @brief Corrects the linearized state equation using the Jacobian of the 
+  /// Lie group. 
   /// @param[in] robot Robot model. 
   /// @param[in] dt Time step. 
-  /// @param[in] q_prev Configuration at the previous time stage. 
   /// @param[in] s Solution at the current stage. 
   /// @param[in] s_next Solution at the next time stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
-  template <typename ConfigVectorType, typename SplitSolutionType>
-  void linearizeStateEquationAlongLieGroup(
-      const Robot& robot, const double dt, 
-      const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
-      const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
-      SplitKKTResidual& kkt_residual);
+  template <typename SplitSolutionType>
+  void correctLinearizedStateEquation(const Robot& robot, const double dt, 
+                                      const SplitSolution& s, 
+                                      const SplitSolutionType& s_next, 
+                                      SplitKKTMatrix& kkt_matrix, 
+                                      SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Corrects the costate direction using the derivatives of the Lie group. 
+  /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
   /// @param[in, out] d Split direction. 
   ///
   void correctCostateDirection(SplitDirection& d);
@@ -131,7 +129,7 @@ public:
 private:
   Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_, Fqq_tmp_;  
   Eigen::VectorXd Fq_tmp_;
-  LieDerivativeInverter lie_der_inverter_;
+  SE3JacobianInverse se3_jac_inverse_;
   bool has_floating_base_;
 
 };

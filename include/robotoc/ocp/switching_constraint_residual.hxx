@@ -10,9 +10,7 @@ namespace robotoc {
 
 inline SwitchingConstraintResidual::SwitchingConstraintResidual(
     const Robot& robot)
-  : q(Eigen::VectorXd::Zero(robot.dimq())),
-    dq(Eigen::VectorXd::Zero(robot.dimv())),
-    P_full_(robot.max_dimf()),
+  : P_full_(robot.max_dimf()),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     dimi_(0) {
@@ -20,9 +18,7 @@ inline SwitchingConstraintResidual::SwitchingConstraintResidual(
 
 
 inline SwitchingConstraintResidual::SwitchingConstraintResidual() 
-  : q(),
-    dq(),
-    P_full_(),
+  : P_full_(),
     dimq_(0),
     dimv_(0), 
     dimi_(0) {
@@ -73,13 +69,6 @@ inline void SwitchingConstraintResidual::setZero() {
 
 inline int SwitchingConstraintResidual::dimi() const {
   return dimi_;
-}
-
-
-inline bool SwitchingConstraintResidual::isDimensionConsistent() const {
-  if(q.size() != dimq_) return false;
-  if(dq.size() != dimv_) return false;
-  return true;
 }
 
 
