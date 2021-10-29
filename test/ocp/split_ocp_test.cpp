@@ -103,7 +103,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
-  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, dt);
   if (switching_constraint) {
     SwitchingConstraint sc(robot);
     SwitchingConstraintJacobian switch_jac_ref(robot);
@@ -111,7 +111,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
     sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
                                     kkt_matrix_ref, kkt_residual_ref, 
                                     switch_jac_ref, switch_res_ref);
-    kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, switch_res_ref);
+    kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, switch_res_ref, dt);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
