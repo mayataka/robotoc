@@ -13,6 +13,7 @@ void ImpulseSplitKKTResidual::disp(std::ostream& os) const {
   if (dimi_ > 0) {
     os << "  lf = " << lf().transpose() << std::endl;
   }
+  os << "  kkt_error = " << kkt_error << std::flush;
 }
 
 

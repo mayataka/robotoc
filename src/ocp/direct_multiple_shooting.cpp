@@ -11,8 +11,7 @@ DirectMultipleShooting::DirectMultipleShooting(const int N,
                                                const int max_num_impulse, 
                                                const int nthreads) 
   : max_num_impulse_(max_num_impulse),
-    nthreads_(nthreads),
-    kkt_error_(Eigen::VectorXd::Zero(N+1+4*max_num_impulse)) {
+    nthreads_(nthreads) {
   try {
     if (max_num_impulse < 0) {
       throw std::out_of_range(
@@ -31,8 +30,7 @@ DirectMultipleShooting::DirectMultipleShooting(const int N,
 
 DirectMultipleShooting::DirectMultipleShooting()
   : max_num_impulse_(0),
-    nthreads_(0),
-    kkt_error_() {
+    nthreads_(0) {
 }
 
 
