@@ -56,7 +56,7 @@ public:
                             ImpulseSplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            condenseSlackAndDual, 
-                           robot, data, s, kkt_matrix, kkt_residual);
+                           data, s, kkt_matrix, kkt_residual);
   }
 
   void expandSlackAndDual(ConstraintComponentData& data, 

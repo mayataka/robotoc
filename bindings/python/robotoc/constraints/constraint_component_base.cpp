@@ -61,7 +61,7 @@ public:
                             SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            condenseSlackAndDual, 
-                           robot, data, dt, s, kkt_matrix, kkt_residual);
+                           data, dt, s, kkt_matrix, kkt_residual);
   }
 
   void expandSlackAndDual(ConstraintComponentData& data, const SplitSolution& s, 

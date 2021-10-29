@@ -194,12 +194,12 @@ void ImpulseFrictionCone::evalDerivatives(
 
 
 void ImpulseFrictionCone::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isImpulseActive(i)) {
       const int idx = 5*i;
       computeCondensingCoeffcient<5>(data, idx);
