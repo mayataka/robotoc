@@ -210,35 +210,35 @@ inline void Constraints::linearizeConstraints(
 
 
 inline void Constraints::condenseSlackAndDual(
-    ConstraintsData& data, const double dt, const SplitSolution& s, 
+    Robot& robot, ConstraintsData& data, const double dt, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   if (data.isPositionLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(position_level_constraints_, 
-                                          data.position_level_data, 
-                                          dt, s, kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        position_level_constraints_, robot, data.position_level_data, 
+        dt, s, kkt_matrix, kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(velocity_level_constraints_, 
-                                          data.velocity_level_data, 
-                                          dt, s, kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        velocity_level_constraints_, robot, data.velocity_level_data, 
+        dt, s, kkt_matrix, kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(acceleration_level_constraints_, 
-                                          data.acceleration_level_data, 
-                                          dt, s, kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        acceleration_level_constraints_, robot, data.acceleration_level_data, 
+        dt, s, kkt_matrix, kkt_residual);
   }
 }
 
 
 inline void Constraints::condenseSlackAndDual(
-     ConstraintsData& data, const ImpulseSplitSolution& s, 
-     ImpulseSplitKKTMatrix& kkt_matrix, 
-     ImpulseSplitKKTResidual& kkt_residual) const {
+    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(impulse_level_constraints_, 
-                                          data.impulse_level_data, 
-                                          s, kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        impulse_level_constraints_, robot, data.impulse_level_data, 
+        s, kkt_matrix, kkt_residual);
   }
 }
 

@@ -117,7 +117,7 @@ inline void linearizeConstraints(
 
 
 inline void condenseSlackAndDual(
-    const std::vector<ConstraintComponentBasePtr>& constraints, 
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
     std::vector<ConstraintComponentData>& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
@@ -125,20 +125,27 @@ inline void condenseSlackAndDual(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->condenseSlackAndDual(data[i], dt, s, kkt_matrix, kkt_residual);
+    constraints[i]->evalConstraint(robot, data[i], s);
+    constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
+    constraints[i]->condenseSlackAndDual(robot, data[i], dt, s, kkt_matrix, 
+                                         kkt_residual);
   }
 }
 
 
 inline void condenseSlackAndDual(
     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->condenseSlackAndDual(data[i], s, kkt_matrix, kkt_residual);
+    constraints[i]->evalConstraint(robot, data[i], s);
+    constraints[i]->evalDerivatives(robot, data[i], s, kkt_residual);
+    constraints[i]->condenseSlackAndDual(robot, data[i], s, kkt_matrix, 
+                                         kkt_residual);
   }
 }
 

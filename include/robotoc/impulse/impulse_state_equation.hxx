@@ -12,7 +12,7 @@ inline ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
     Fqq_prev_inv_(),
     Fqq_tmp_(),
     Fq_tmp_(),
-    se3_jac_inverse_(),
+    lie_der_inverter_(),
     has_floating_base_(robot.hasFloatingBase()) {
   if (robot.hasFloatingBase()) {
     Fqq_inv_.resize(6, 6);
@@ -32,7 +32,7 @@ inline ImpulseStateEquation::ImpulseStateEquation()
     Fqq_prev_inv_(),
     Fqq_tmp_(),
     Fq_tmp_(),
-    se3_jac_inverse_(),
+    lie_der_inverter_(),
     has_floating_base_(false) {
 }
 
@@ -82,14 +82,17 @@ inline void ImpulseStateEquation::linearizeStateEquation(
 }
 
 
-inline void ImpulseStateEquation::correctLinearizedStateEquation(
-    const Robot& robot, const ImpulseSplitSolution& s, 
-    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
+template <typename ConfigVectorType>
+inline void ImpulseStateEquation::linearizeStateEquationAlongLieGroup(
+    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const ImpulseSplitSolution& s, const SplitSolution& s_next, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+  linearizeStateEquation(robot, q_prev, s, s_next, kkt_matrix, kkt_residual);
   if (has_floating_base_) {
-    se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
+                                                  Fqq_prev_inv_);
     robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);
-    se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_inv_);
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, Fqq_inv_);
     Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
     Fq_tmp_  = kkt_residual.Fq().template head<6>();
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;

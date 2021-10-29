@@ -187,8 +187,9 @@ public:
                             ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
-  /// be called before this function.
+  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+  /// and condense the slack and dual variables.
+  /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -197,13 +198,15 @@ public:
   /// @param[out] kkt_residual Split KKT residual. The condensed residual are 
   /// added to this data.
   ///
-  void condenseSlackAndDual(ConstraintsData& data, const double dt, 
-                            const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+  void condenseSlackAndDual(Robot& robot, ConstraintsData& data,
+                            const double dt, const SplitSolution& s,
+                            SplitKKTMatrix& kkt_matrix, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
-  /// be called before this function.
+  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+  /// and condense the slack and dual variables.
+  /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
   /// @param[out] kkt_matrix Impulse split KKT matrix. The condensed Hessians   
@@ -211,7 +214,8 @@ public:
   /// @param[out] kkt_residual Impulse split KKT residual. The condensed  
   /// residual are added to this data.
   ///
-  void condenseSlackAndDual(ConstraintsData& data, const ImpulseSplitSolution& s,
+  void condenseSlackAndDual(Robot& robot, ConstraintsData& data,
+                            const ImpulseSplitSolution& s,
                             ImpulseSplitKKTMatrix& kkt_matrix, 
                             ImpulseSplitKKTResidual& kkt_residual) const;
 

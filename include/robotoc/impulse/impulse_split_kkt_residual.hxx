@@ -3,8 +3,6 @@
 
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 
-#include <cmath>
-
 
 namespace robotoc {
 
@@ -13,9 +11,6 @@ inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot)
     lx(Eigen::VectorXd::Zero(2*robot.dimv())),
     ldv(Eigen::VectorXd::Zero(robot.dimv())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    kkt_error(0.0),
-    cost(0.0),
-    constraint_violation(0.0),
     dimv_(robot.dimv()), 
     dimi_(0) {
 }
@@ -26,9 +21,6 @@ inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual()
     lx(),
     ldv(),
     lf_full_(),
-    kkt_error(0.0),
-    cost(0.0),
-    constraint_violation(0.0),
     dimv_(0), 
     dimi_(0) {
 }
@@ -128,9 +120,6 @@ inline void ImpulseSplitKKTResidual::setZero() {
   lx.setZero();
   ldv.setZero();
   lf().setZero();
-  kkt_error = 0.0;
-  cost = 0.0;
-  constraint_violation = 0.0;
 }
 
 
@@ -155,10 +144,6 @@ inline bool ImpulseSplitKKTResidual::isApprox(
   if (!lx.isApprox(other.lx)) return false;
   if (!ldv.isApprox(other.ldv)) return false;
   if (!lf().isApprox(other.lf())) return false;
-  Eigen::VectorXd vec(3), other_vec(3);
-  vec << kkt_error, cost, constraint_violation;
-  other_vec << other.kkt_error, other.cost, other.constraint_violation;
-  if (!vec.isApprox(other_vec)) return false;
   return true;
 }
 
@@ -169,9 +154,6 @@ inline bool ImpulseSplitKKTResidual::hasNaN() const {
   if (lx.hasNaN()) return true;
   if (ldv.hasNaN()) return true;
   if (lf().hasNaN()) return true;
-  Eigen::VectorXd vec(3), other_vec(3);
-  vec << kkt_error, cost, constraint_violation;
-  if (vec.hasNaN()) return true;
   return false;
 }
 
@@ -181,10 +163,6 @@ inline void ImpulseSplitKKTResidual::setRandom() {
   lx.setRandom();
   ldv.setRandom();
   lf().setRandom();
-  const Eigen::VectorXd vec = Eigen::VectorXd::Random(3);
-  kkt_error = std::abs(vec.coeff(0));
-  cost = std::abs(vec.coeff(1));
-  constraint_violation = std::abs(vec.coeff(2));
 }
 
 

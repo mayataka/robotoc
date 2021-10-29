@@ -196,14 +196,14 @@ void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void FrictionCone::condenseSlackAndDual(ConstraintComponentData& data, 
-                                        const double dt, const SplitSolution& s, 
-                                        SplitKKTMatrix& kkt_matrix, 
-                                        SplitKKTResidual& kkt_residual) const {
+void FrictionCone::condenseSlackAndDual(
+    Robot& robot, ConstraintComponentData& data, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   data.cond.setZero();
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const int idx = 5*i;
       computeCondensingCoeffcient<5>(data, idx);

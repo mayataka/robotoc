@@ -77,6 +77,18 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
 
   ///
+  /// @brief Predicted configuration used for computing the switching 
+  /// constraint. Size is Robot::dimq().
+  ///
+  Eigen::VectorXd q;
+
+  ///
+  /// @brief Predicted difference of the configuration used for computing the 
+  /// switching constraint. Size is Robot::dimv().
+  ///
+  Eigen::VectorXd dq;
+
+  ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual of the switching constraint. 
   /// @return Squared norm of the KKT residual in the switching constraint.
@@ -105,6 +117,12 @@ public:
   /// @return Dimension of the stack of impulse forces.
   ///
   int dimi() const;
+
+  ///
+  /// @brief Checks dimensional consistency of each component. 
+  /// @return true if the dimension is consistent. false if not.
+  ///
+  bool isDimensionConsistent() const;
 
   ///
   /// @brief Checks the equivalence of two SwitchingConstraintResidual.
