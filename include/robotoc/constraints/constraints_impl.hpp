@@ -122,9 +122,10 @@ void evalDerivatives(
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Condenses the slack and dual variables. linearizeConstraints() must 
-/// be called before this function.
+/// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+/// and condense the slack and dual variables.
 /// @param[in] constraints Vector of the constraints. 
+/// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] dt Time step.
 /// @param[in] s Split solution.
@@ -134,15 +135,16 @@ void evalDerivatives(
 /// added to this object.
 ///
 void condenseSlackAndDual(
-    const std::vector<ConstraintComponentBasePtr>& constraints, 
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
     std::vector<ConstraintComponentData>& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Condenses the slack and dual variables. linearizeConstraints() must 
-/// be called before this function.
+/// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
+/// and condense the slack and dual variables.
 /// @param[in] constraints Vector of the impulse constraints. 
+/// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Impulse split solution.
 /// @param[in, out] kkt_matrix Impulse split KKT matrix. The condensed Hessians are 
@@ -152,8 +154,9 @@ void condenseSlackAndDual(
 ///
 void condenseSlackAndDual(
     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual);
 
 ///
 /// @brief Expands the slack and dual, i.e., computes the directions of the 

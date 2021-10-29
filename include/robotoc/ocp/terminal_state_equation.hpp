@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/se3_jacobian_inverse.hpp"
+#include "robotoc/robot/lie_derivative_inverter.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -71,14 +71,23 @@ public:
       SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Corrects the linearized state equation using the Jacobian of the 
-  /// Lie group. 
+  /// @brief Linearizes the state equation, and multiplies the inverse of the
+  /// Lie derivative to SplitKKTMatrix::Fqq, SplitKKTMatrix::Fqv, and 
+  /// SplitKKTResidual::Fq.
+  /// @param[in] robot Robot model. 
+  /// @param[in] q_prev Configuration at the previous time stage. 
+  /// @param[in] s Solution at the current stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
+  /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
-  void correctLinearizedStateEquation(SplitKKTMatrix& kkt_matrix);
+  template <typename ConfigVectorType>
+  void linearizeStateEquationAlongLieGroup(
+      const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+      const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+      SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
+  /// @brief Corrects the costate direction using the derivatives of the Lie group. 
   /// @param[in, out] d Split direction at the terminal stage. 
   ///
   void correctCostateDirection(SplitDirection& d);
@@ -86,7 +95,7 @@ public:
 private:
   Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_;  
   Eigen::VectorXd Fq_tmp_;
-  SE3JacobianInverse se3_jac_inverse_;
+  LieDerivativeInverter lie_der_inverter_;
   bool has_floating_base_;
 
 };

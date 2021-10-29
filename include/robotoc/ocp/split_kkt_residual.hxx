@@ -3,8 +3,6 @@
 
 #include "robotoc/ocp/split_kkt_residual.hpp"
 
-#include <cmath>
-
 
 namespace robotoc {
 
@@ -14,9 +12,6 @@ inline SplitKKTResidual::SplitKKTResidual(const Robot& robot)
     la(Eigen::VectorXd::Zero(robot.dimv())),
     lu(Eigen::VectorXd::Zero(robot.dimu())),
     h(0.0),
-    kkt_error(0.0),
-    cost(0.0),
-    constraint_violation(0.0),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()),
@@ -30,9 +25,6 @@ inline SplitKKTResidual::SplitKKTResidual()
     la(),
     lu(),
     h(0.0),
-    kkt_error(0.0),
-    cost(0.0),
-    constraint_violation(0.0),
     lf_full_(),
     dimv_(0), 
     dimu_(0),
@@ -128,9 +120,6 @@ inline void SplitKKTResidual::setZero() {
   lu.setZero();
   lf().setZero();
   h = 0.0;
-  kkt_error = 0.0;
-  cost = 0.0;
-  constraint_violation = 0.0;
 }
 
 
@@ -158,9 +147,9 @@ inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (dimf_ > 0) {
     if (!lf().isApprox(other.lf())) return false;
   }
-  Eigen::VectorXd vec(4), other_vec(4);
-  vec << h, kkt_error, cost, constraint_violation;
-  other_vec << other.h, other.kkt_error, other.cost, other.constraint_violation;
+  Eigen::VectorXd vec(1), other_vec(1);
+  vec << h;
+  other_vec << other.h;
   if (!vec.isApprox(other_vec)) return false;
   return true;
 }
@@ -173,8 +162,8 @@ inline bool SplitKKTResidual::hasNaN() const {
   if (la.hasNaN()) return true;
   if (lu.hasNaN()) return true;
   if (lf().hasNaN()) return true;
-  Eigen::VectorXd vec(4), other_vec(4);
-  vec << h, kkt_error, cost, constraint_violation;
+  Eigen::VectorXd vec(1);
+  vec << h;
   if (vec.hasNaN()) return true;
   return false;
 }
@@ -186,11 +175,7 @@ inline void SplitKKTResidual::setRandom() {
   la.setRandom();
   lu.setRandom();
   lf().setRandom();
-  const Eigen::VectorXd vec = Eigen::VectorXd::Random(4);
-  h = vec.coeff(0);
-  kkt_error = std::abs(vec.coeff(1));
-  cost = std::abs(vec.coeff(2));
-  constraint_violation = std::abs(vec.coeff(3));
+  h = Eigen::VectorXd::Random(1)[0];
 }
 
 

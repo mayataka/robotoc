@@ -89,7 +89,7 @@ public:
                        const ImpulseSplitSolution& s,
                        ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(ConstraintComponentData& data, 
+  void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const ImpulseSplitSolution& s,
                             ImpulseSplitKKTMatrix& kkt_matrix,
                             ImpulseSplitKKTResidual& kkt_residual) const override;

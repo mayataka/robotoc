@@ -12,7 +12,7 @@ inline StateEquation::StateEquation(const Robot& robot)
     Fqq_prev_inv_(),
     Fqq_tmp_(),
     Fq_tmp_(),
-    se3_jac_inverse_(),
+    lie_der_inverter_(),
     has_floating_base_(robot.hasFloatingBase()) {
   if (robot.hasFloatingBase()) {
     Fqq_inv_.resize(6, 6);
@@ -32,7 +32,7 @@ inline StateEquation::StateEquation()
     Fqq_prev_inv_(),
     Fqq_tmp_(),
     Fq_tmp_(),
-    se3_jac_inverse_(),
+    lie_der_inverter_(),
     has_floating_base_(false) {
 }
 
@@ -87,29 +87,34 @@ inline void StateEquation::linearizeStateEquation(
   // linearize Hamiltonian
   kkt_residual.h += s_next.lmd.dot(s.v);
   kkt_residual.h += s_next.gmm.dot(s.a);
+}
+
+
+template <typename ConfigVectorType, typename SplitSolutionType>
+inline void StateEquation::linearizeStateEquationAlongLieGroup(
+    const Robot& robot, const double dt, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
+    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
+  linearizeStateEquation(robot, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  if (has_floating_base_) {
+    assert(dt > 0);
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
+                                                  Fqq_prev_inv_);
+    robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, Fqq_inv_);
+    Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+    Fq_tmp_  = kkt_residual.Fq().template head<6>();
+    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
+    kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * Fqq_inv_;
+    kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
+  }
   // linearize the Hamiltonian derivatives
   kkt_matrix.hv().noalias() += s_next.lmd;
   kkt_matrix.fq() = s.v;
   kkt_matrix.fv() = s.a;
-}
-
-
-template <typename SplitSolutionType>
-inline void StateEquation::correctLinearizedStateEquation(
-    const Robot& robot, const double dt, const SplitSolution& s, 
-    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  if (has_floating_base_) {
-    assert(dt > 0);
-    se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
-    robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);
-    se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_inv_);
-    Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
-    kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * Fqq_inv_;
-    Fq_tmp_  = kkt_residual.Fq().template head<6>();
-    kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
-    Fq_tmp_ = kkt_matrix.fq().template head<6>();
+  if (robot.hasFloatingBase()) {
+    Fq_tmp_.template head<6>() = kkt_matrix.fq().template head<6>();
     kkt_matrix.fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
   }
 }
