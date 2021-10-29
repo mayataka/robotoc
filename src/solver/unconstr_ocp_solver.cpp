@@ -26,8 +26,7 @@ UnconstrOCPSolver::UnconstrOCPSolver(
     T_(T),
     dt_(T/N),
     primal_step_size_(Eigen::VectorXd::Zero(N)), 
-    dual_step_size_(Eigen::VectorXd::Zero(N)), 
-    kkt_error_(Eigen::VectorXd::Zero(N+1)) {
+    dual_step_size_(Eigen::VectorXd::Zero(N)) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -232,18 +231,11 @@ void UnconstrOCPSolver::computeKKTResidual(const double t,
 
 
 double UnconstrOCPSolver::KKTError() {
-  #pragma omp parallel for num_threads(nthreads_)
+  double kkt_error = 0;
   for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      kkt_error_.coeffRef(i) 
-          = ocp_[i].KKTError(kkt_residual_[i], dt_);
-    }
-    else {
-      kkt_error_.coeffRef(N_) 
-          = ocp_.terminal.KKTError(kkt_residual_[N_]);
-    }
+    kkt_error += kkt_residual_[i].kkt_error;
   }
-  return std::sqrt(kkt_error_.sum());
+  return std::sqrt(kkt_error);
 }
 
 

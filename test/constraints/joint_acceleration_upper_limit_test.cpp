@@ -26,26 +26,26 @@ protected:
   virtual void TearDown() {
   }
 
-  void testKinematics(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testIsFeasible(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testSetSlack(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_kinematics(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_isFeasible(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_setSlack(Robot& robot, const Eigen::VectorXd& amax) const;
   void test_evalConstraint(Robot& robot, const Eigen::VectorXd& amax) const;
   void test_evalDerivatives(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_condenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
+  void test_expandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
 
   double barrier, dt;
 };
 
 
-void JointAccelerationUpperLimitTest::testKinematics(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_kinematics(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
-void JointAccelerationUpperLimitTest::testIsFeasible(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_isFeasible(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
@@ -56,7 +56,7 @@ void JointAccelerationUpperLimitTest::testIsFeasible(Robot& robot, const Eigen::
 }
 
 
-void JointAccelerationUpperLimitTest::testSetSlack(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_setSlack(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -100,7 +100,7 @@ void JointAccelerationUpperLimitTest::test_evalDerivatives(Robot& robot, const E
 }
 
 
-void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_condenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -111,7 +111,7 @@ void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, con
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
   kkt_res_ref.la.tail(dimc).array() 
       += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
@@ -122,7 +122,7 @@ void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, con
 }
 
 
-void JointAccelerationUpperLimitTest::testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::test_expandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -142,26 +142,26 @@ void JointAccelerationUpperLimitTest::testExpandSlackAndDual(Robot& robot, const
 TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  testKinematics(robot, amax);
-  testIsFeasible(robot, amax);
-  testSetSlack(robot, amax);
+  test_kinematics(robot, amax);
+  test_isFeasible(robot, amax);
+  test_setSlack(robot, amax);
   test_evalConstraint(robot, amax);
   test_evalDerivatives(robot, amax);
-  testCondenseSlackAndDual(robot, amax);
-  testExpandSlackAndDual(robot, amax);
+  test_condenseSlackAndDual(robot, amax);
+  test_expandSlackAndDual(robot, amax);
 }
 
 
 TEST_F(JointAccelerationUpperLimitTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimu(), 10);
-  testKinematics(robot, amax);
-  testIsFeasible(robot, amax);
-  testSetSlack(robot, amax);
+  test_kinematics(robot, amax);
+  test_isFeasible(robot, amax);
+  test_setSlack(robot, amax);
   test_evalConstraint(robot, amax);
   test_evalDerivatives(robot, amax);
-  testCondenseSlackAndDual(robot, amax);
-  testExpandSlackAndDual(robot, amax);
+  test_condenseSlackAndDual(robot, amax);
+  test_expandSlackAndDual(robot, amax);
 }
 
 } // namespace robotoc

@@ -10,7 +10,7 @@ namespace robotoc {
 inline TerminalStateEquation::TerminalStateEquation(const Robot& robot)
   : Fqq_prev_inv_(),
     Fq_tmp_(),
-    lie_der_inverter_(),
+    se3_jac_inverse_(),
     has_floating_base_(robot.hasFloatingBase()) {
   if (robot.hasFloatingBase()) {
     Fqq_prev_inv_.resize(6, 6);
@@ -24,7 +24,7 @@ inline TerminalStateEquation::TerminalStateEquation(const Robot& robot)
 inline TerminalStateEquation::TerminalStateEquation()
   : Fqq_prev_inv_(),
     Fq_tmp_(),
-    lie_der_inverter_(),
+    se3_jac_inverse_(),
     has_floating_base_(false) {
 }
 
@@ -54,15 +54,10 @@ inline void TerminalStateEquation::linearizeStateEquation(
 }
 
 
-template <typename ConfigVectorType>
-inline void TerminalStateEquation::linearizeStateEquationAlongLieGroup(
-    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  linearizeStateEquation(robot, q_prev, s, kkt_matrix, kkt_residual);
+inline void TerminalStateEquation::correctLinearizedStateEquation(
+    SplitKKTMatrix& kkt_matrix) {
   if (has_floating_base_) {
-    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
-                                                  Fqq_prev_inv_);
+    se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
   }
 }
 

@@ -115,8 +115,9 @@ inline double ImpulseDynamics::KKTError() const {
 }
 
 
+template <int p>
 inline double ImpulseDynamics::constraintViolation() const {
-  return data_.ImDC().lpNorm<1>();
+  return data_.ImDC().template lpNorm<p>();
 }
 
 } // namespace robotoc 

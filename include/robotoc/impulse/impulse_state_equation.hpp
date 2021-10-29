@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/lie_derivative_inverter.hpp"
+#include "robotoc/robot/se3_jacobian_inverse.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
@@ -92,11 +92,9 @@ public:
       ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the impulse state equation, and multiplies the inverse
-  /// of the Lie derivative to ImpulseSplitKKTMatrix::Fqq and 
-  /// ImpulseSplitKKTResidual::Fq.
+  /// @brief Corrects the linearized state equation using the Jacobian of the 
+  /// Lie group. 
   /// @param[in] robot Robot model. 
-  /// @param[in] q_prev Configuration at the previous time stage. 
   /// @param[in] s Solution at the current impulse stage. 
   /// @param[in] s_next Solution at the next time stage. 
   /// @param[in, out] kkt_matrix Impulse split KKT matrix at the current impulse 
@@ -104,15 +102,14 @@ public:
   /// @param[in, out] kkt_residual Impulse split KKT residual at the current 
   /// impulse stage. 
   ///
-  template <typename ConfigVectorType>
-  void linearizeStateEquationAlongLieGroup(
-      const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-      const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-      ImpulseSplitKKTMatrix& kkt_matrix, 
-      ImpulseSplitKKTResidual& kkt_residual);
+  void correctLinearizedStateEquation(const Robot& robot, 
+                                      const ImpulseSplitSolution& s, 
+                                      const SplitSolution& s_next, 
+                                      ImpulseSplitKKTMatrix& kkt_matrix, 
+                                      ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Corrects the costate direction using the derivatives of the Lie group. 
+  /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
   /// @param[in, out] d Split direction. 
   ///
   void correctCostateDirection(ImpulseSplitDirection& d);
@@ -120,7 +117,7 @@ public:
 private:
   Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_, Fqq_tmp_;  
   Eigen::VectorXd Fq_tmp_;
-  LieDerivativeInverter lie_der_inverter_;
+  SE3JacobianInverse se3_jac_inverse_;
   bool has_floating_base_;
 
 };

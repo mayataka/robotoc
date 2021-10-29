@@ -142,7 +142,8 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// UnconstrOCPsolver::computeKKTResidual() must be computed.  
+  /// UnconstrOCPsolver::updateSolution() or  
+  /// UnconstrOCPsolver::computeKKTResidual()must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();
@@ -173,7 +174,7 @@ private:
   UnconstrRiccatiFactorization riccati_factorization_;
   int N_, nthreads_;
   double T_, dt_;
-  Eigen::VectorXd primal_step_size_, dual_step_size_, kkt_error_;
+  Eigen::VectorXd primal_step_size_, dual_step_size_ ;
 
 };
 

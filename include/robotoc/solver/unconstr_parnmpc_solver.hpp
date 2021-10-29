@@ -136,7 +136,8 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// UnconstrParNMPCsolver::computeKKTResidual() must be computed.  
+  /// UnconstrParNMPCsolver::updateSolution() or 
+  /// UnconstrParNMPCsolver::computeKKTResidual() must be called.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();
@@ -166,7 +167,6 @@ private:
   Direction d_;
   int N_, nthreads_;
   double T_, dt_;
-  Eigen::VectorXd kkt_error_;
 
 };
 

@@ -27,26 +27,26 @@ protected:
   }
 
 
-  void testKinematics(Robot& robot) const;
-  void testIsFeasible(Robot& robot) const;
-  void testSetSlack(Robot& robot) const;
+  void test_kinematics(Robot& robot) const;
+  void test_isFeasible(Robot& robot) const;
+  void test_setSlack(Robot& robot) const;
   void test_evalConstraint(Robot& robot) const;
   void test_evalDerivatives(Robot& robot) const;
-  void testCondenseSlackAndDual(Robot& robot) const;
-  void testExpandSlackAndDual(Robot& robot) const;
+  void test_condenseSlackAndDual(Robot& robot) const;
+  void test_expandSlackAndDual(Robot& robot) const;
 
   double barrier, dt;
 };
 
 
-void JointTorquesUpperLimitTest::testKinematics(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_kinematics(Robot& robot) const {
   JointTorquesUpperLimit constr(robot); 
   EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
-void JointTorquesUpperLimitTest::testIsFeasible(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_isFeasible(Robot& robot) const {
   JointTorquesUpperLimit constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   EXPECT_EQ(constr.dimc(), robot.dimu());
@@ -57,7 +57,7 @@ void JointTorquesUpperLimitTest::testIsFeasible(Robot& robot) const {
 }
 
 
-void JointTorquesUpperLimitTest::testSetSlack(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_setSlack(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -103,7 +103,7 @@ void JointTorquesUpperLimitTest::test_evalDerivatives(Robot& robot) const {
 }
 
 
-void JointTorquesUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -115,7 +115,7 @@ void JointTorquesUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
   kkt_res_ref.lu.array() 
       += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
@@ -126,7 +126,7 @@ void JointTorquesUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 }
 
 
-void JointTorquesUpperLimitTest::testExpandSlackAndDual(Robot& robot) const {
+void JointTorquesUpperLimitTest::test_expandSlackAndDual(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -146,25 +146,25 @@ void JointTorquesUpperLimitTest::testExpandSlackAndDual(Robot& robot) const {
 
 TEST_F(JointTorquesUpperLimitTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testKinematics(robot);
-  testIsFeasible(robot);
-  testSetSlack(robot);
+  test_kinematics(robot);
+  test_isFeasible(robot);
+  test_setSlack(robot);
   test_evalConstraint(robot);
   test_evalDerivatives(robot);
-  testCondenseSlackAndDual(robot);
-  testExpandSlackAndDual(robot);
+  test_condenseSlackAndDual(robot);
+  test_expandSlackAndDual(robot);
 }
 
 
 TEST_F(JointTorquesUpperLimitTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testKinematics(robot);
-  testIsFeasible(robot);
-  testSetSlack(robot);
+  test_kinematics(robot);
+  test_isFeasible(robot);
+  test_setSlack(robot);
   test_evalConstraint(robot);
   test_evalDerivatives(robot);
-  testCondenseSlackAndDual(robot);
-  testExpandSlackAndDual(robot);
+  test_condenseSlackAndDual(robot);
+  test_expandSlackAndDual(robot);
 }
 
 } // namespace robotoc

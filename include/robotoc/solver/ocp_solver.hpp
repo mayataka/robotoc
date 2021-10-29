@@ -168,7 +168,8 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// OCPsolver::computeKKTResidual() must be called.  
+  /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
+  /// called.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();

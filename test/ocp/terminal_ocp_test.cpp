@@ -77,7 +77,9 @@ void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   TerminalStateEquation state_equation(robot);
-  state_equation.linearizeStateEquationAlongLieGroup(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
+  state_equation.correctLinearizedStateEquation(kkt_matrix_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   auto d = SplitDirection::Random(robot);

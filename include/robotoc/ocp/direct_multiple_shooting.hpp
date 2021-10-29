@@ -168,7 +168,6 @@ private:
                    KKTResidual& kkt_residual) const;
 
   int max_num_impulse_, nthreads_;
-  Eigen::VectorXd kkt_error_;
 };
 
 } // namespace robotoc 
