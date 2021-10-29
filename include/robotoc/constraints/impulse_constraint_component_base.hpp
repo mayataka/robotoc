@@ -123,6 +123,7 @@ public:
   /// @brief Condenses the slack and dual variables, i.e., factorizes the  
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
+  /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
   /// @param[out] kkt_matrix Impulse split KKT matrix. The condensed Hessians   
@@ -131,8 +132,8 @@ public:
   /// residual are added to this data.
   ///
   virtual void condenseSlackAndDual(
-      ConstraintComponentData& data, const ImpulseSplitSolution& s, 
-      ImpulseSplitKKTMatrix& kkt_matrix, 
+      Robot& robot, ConstraintComponentData& data,
+      const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
       ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///

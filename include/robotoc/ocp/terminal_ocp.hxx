@@ -89,10 +89,8 @@ inline void TerminalOCP::computeKKTSystem(Robot& robot, const double t,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
                                                  kkt_residual, kkt_matrix);
-  state_equation_.linearizeStateEquation(robot, q_prev, s, 
-                                         kkt_matrix, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual);
-  state_equation_.correctLinearizedStateEquation(kkt_matrix);
+  state_equation_.linearizeStateEquationAlongLieGroup(robot, q_prev, s, 
+                                                      kkt_matrix, kkt_residual);
 }
 
  
@@ -140,7 +138,7 @@ inline void TerminalOCP::updateDual(const double step_size) {
 }
 
 
-inline double TerminalOCP::KKTError(const SplitKKTResidual& kkt_residual) {
+inline double TerminalOCP::KKTError(const SplitKKTResidual& kkt_residual) const {
   double err = 0;
   err += kkt_residual.lx.squaredNorm();
   return err;

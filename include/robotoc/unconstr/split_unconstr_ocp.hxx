@@ -106,7 +106,6 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, dt);
 }
 
 
@@ -124,15 +123,12 @@ inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const double t,
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
                                            kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, constraints_data_, dt, s, 
-                                     kkt_residual);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+                                     kkt_matrix, kkt_residual);
   stage_cost_ += dt * constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, dt);
-  constraints_->condenseSlackAndDual(constraints_data_, dt, s, 
-                                     kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 

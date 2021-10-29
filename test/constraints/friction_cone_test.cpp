@@ -36,22 +36,22 @@ protected:
   virtual void TearDown() {
   }
 
-  void test_kinematics(Robot& robot, const ContactStatus& contact_status) const;
+  void testKinematics(Robot& robot, const ContactStatus& contact_status) const;
   void testfLocal2World(Robot& robot, const ContactStatus& contact_status) const;
-  void test_isFeasible(Robot& robot, const ContactStatus& contact_status) const;
-  void test_setSlack(Robot& robot, const ContactStatus& contact_status) const;
+  void testIsFeasible(Robot& robot, const ContactStatus& contact_status) const;
+  void testSetSlack(Robot& robot, const ContactStatus& contact_status) const;
   void test_evalConstraint(Robot& robot, const ContactStatus& contact_status) const;
   void test_evalDerivatives(Robot& robot, const ContactStatus& contact_status) const;
-  void test_condenseSlackAndDual(Robot& robot, 
+  void testCondenseSlackAndDual(Robot& robot, 
                                 const ContactStatus& contact_status) const;
-  void test_expandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
+  void testExpandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
 
   double barrier, dt, mu, fraction_to_boundary_rule;
   Eigen::MatrixXd cone;
 };
 
 
-void FrictionConeTest::test_kinematics(Robot& robot, 
+void FrictionConeTest::testKinematics(Robot& robot, 
                                       const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   EXPECT_TRUE(constr.useKinematics());
@@ -73,7 +73,7 @@ void FrictionConeTest::testfLocal2World(Robot& robot,
 }
 
 
-void FrictionConeTest::test_isFeasible(Robot& robot, 
+void FrictionConeTest::testIsFeasible(Robot& robot, 
                                       const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
@@ -99,7 +99,7 @@ void FrictionConeTest::test_isFeasible(Robot& robot,
 }
 
 
-void FrictionConeTest::test_setSlack(Robot& robot, const ContactStatus& contact_status) const {
+void FrictionConeTest::testSetSlack(Robot& robot, const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   constr.allocateExtraData(data);
@@ -194,7 +194,7 @@ void FrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& c
 }
 
 
-void FrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
+void FrictionConeTest::testCondenseSlackAndDual(Robot& robot, 
                                                 const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
@@ -216,7 +216,7 @@ void FrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -251,7 +251,7 @@ void FrictionConeTest::test_condenseSlackAndDual(Robot& robot,
 }
 
 
-void FrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
+void FrictionConeTest::testExpandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
   FrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   constr.allocateExtraData(data);
@@ -270,7 +270,7 @@ void FrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
   constr.evalConstraint(robot, data, s);
   constr.evalDerivatives(robot, data, dt, s, kkt_res);
-  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot, contact_status);
   constr.expandSlackAndDual(data, s, d);
@@ -321,46 +321,46 @@ TEST_F(FrictionConeTest, frictionConeResidual) {
 TEST_F(FrictionConeTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  test_kinematics(robot, contact_status);
+  testKinematics(robot, contact_status);
   testfLocal2World(robot, contact_status);
-  test_isFeasible(robot, contact_status);
-  test_setSlack(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlack(robot, contact_status);
   test_evalConstraint(robot, contact_status);
   test_evalDerivatives(robot, contact_status);
-  test_condenseSlackAndDual(robot, contact_status);
-  test_expandSlackAndDual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testExpandSlackAndDual(robot, contact_status);
   contact_status.activateContact(0);
-  test_kinematics(robot, contact_status);
+  testKinematics(robot, contact_status);
   testfLocal2World(robot, contact_status);
-  test_isFeasible(robot, contact_status);
-  test_setSlack(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlack(robot, contact_status);
   test_evalConstraint(robot, contact_status);
   test_evalDerivatives(robot, contact_status);
-  test_condenseSlackAndDual(robot, contact_status);
-  test_expandSlackAndDual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testExpandSlackAndDual(robot, contact_status);
 }
 
 
 TEST_F(FrictionConeTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  test_kinematics(robot, contact_status);
+  testKinematics(robot, contact_status);
   testfLocal2World(robot, contact_status);
-  test_isFeasible(robot, contact_status);
-  test_setSlack(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlack(robot, contact_status);
   test_evalConstraint(robot, contact_status);
   test_evalDerivatives(robot, contact_status);
-  test_condenseSlackAndDual(robot, contact_status);
-  test_expandSlackAndDual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testExpandSlackAndDual(robot, contact_status);
   contact_status.setRandom();
-  test_kinematics(robot, contact_status);
+  testKinematics(robot, contact_status);
   testfLocal2World(robot, contact_status);
-  test_isFeasible(robot, contact_status);
-  test_setSlack(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlack(robot, contact_status);
   test_evalConstraint(robot, contact_status);
   test_evalDerivatives(robot, contact_status);
-  test_condenseSlackAndDual(robot, contact_status);
-  test_expandSlackAndDual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testExpandSlackAndDual(robot, contact_status);
 }
 
 } // namespace robotoc

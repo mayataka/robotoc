@@ -82,8 +82,9 @@ public:
                        const double dt, const SplitSolution& s,
                        SplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(ConstraintComponentData& data, const double dt, 
-                            const SplitSolution& s, SplitKKTMatrix& kkt_matrix,
+  void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
+                            const double dt, const SplitSolution& s,
+                            SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
   void expandSlackAndDual(ConstraintComponentData& data, const SplitSolution& s,
