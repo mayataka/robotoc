@@ -135,33 +135,6 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
-  /// @brief The squared norm of the KKT residual.
-  ///
-  double kkt_error;
-
-  ///
-  /// @brief The value of the stage cost.
-  ///
-  double cost;
-
-  ///
-  /// @brief The l1-norm of the constraint violation.
-  ///
-  double constraint_violation;
-
-  ///
-  /// @brief Computes the squared norm of the KKT residual. The result is 
-  /// stored in ImpulseSplitKKTResidual::kkt_error.
-  ///
-  void computeKKTError();
-
-  ///
-  /// @brief Computes l1-norm. The result is 
-  /// stored in ImpulseSplitKKTResidual::constraint_violation,
-  ///
-  void computeConstraintViolation();
-
-  ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual. 
   /// @return The squared norm of the KKT residual.

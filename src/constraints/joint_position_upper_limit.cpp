@@ -68,8 +68,9 @@ void JointPositionUpperLimit::evalDerivatives(
 
 
 void JointPositionUpperLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, ConstraintComponentData& data, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
   computeCondensingCoeffcient(data);
