@@ -69,9 +69,8 @@ void JointTorquesLowerLimit::evalDerivatives(
 
 
 void JointTorquesLowerLimit::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) const {
+    ConstraintComponentData& data, const double dt, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Quu.diagonal().array()
       += dt * data.dual.array() / data.slack.array();
   computeCondensingCoeffcient(data);

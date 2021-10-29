@@ -72,8 +72,9 @@ inline double ConstraintComponentData::KKTError() const {
 }
 
 
+template <int p>
 inline double ConstraintComponentData::constraintViolation() const {
-  return residual.template lpNorm<1>();
+  return residual.template lpNorm<p>();
 }
 
 

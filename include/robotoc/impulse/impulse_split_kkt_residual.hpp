@@ -135,6 +135,21 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
+  /// @brief The squared norm of the KKT residual.
+  ///
+  double kkt_error;
+
+  ///
+  /// @brief The value of the stage cost.
+  ///
+  double cost;
+
+  ///
+  /// @brief Some norm of the constraint violation.
+  ///
+  double constraint_violation;
+
+  ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual. 
   /// @return The squared norm of the KKT residual.
@@ -142,10 +157,14 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Returns the l1 norm of the constraint violation, that is,
-  /// the primal residual in the state equation. 
-  /// @return The l1 norm of the constraint violation.
+  /// @brief Returns the lp norm of the constraint violation, that is,
+  /// the primal residual in the state equation. Default norm is l1-norm.
+  /// You can specify l-infty norm by passing Eigen::Infinity as the 
+  /// template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the constraint violation.
   ///
+  template <int p=1>
   double constraintViolation() const;
 
   ///

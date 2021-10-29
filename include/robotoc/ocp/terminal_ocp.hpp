@@ -174,7 +174,7 @@ public:
   /// @param[in] kkt_residual KKT residual of the terminal stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double KKTError(const SplitKKTResidual& kkt_residual) const;
+  static double KKTError(const SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the terminal cost for the line search.

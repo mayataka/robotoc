@@ -77,18 +77,6 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
 
   ///
-  /// @brief Predicted configuration used for computing the switching 
-  /// constraint. Size is Robot::dimq().
-  ///
-  Eigen::VectorXd q;
-
-  ///
-  /// @brief Predicted difference of the configuration used for computing the 
-  /// switching constraint. Size is Robot::dimv().
-  ///
-  Eigen::VectorXd dq;
-
-  ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual of the switching constraint. 
   /// @return Squared norm of the KKT residual in the switching constraint.
@@ -96,10 +84,14 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Returns l1-norm of the constraint violation, that is, the primal
-  /// residual in the switchign constraint. 
-  /// @return l1-norm of the constraint violation.
+  /// @brief Returns the lp norm of the constraint violation, that is,
+  /// the primal residual in the switching constraint. Default norm is l1-norm.
+  /// You can specify l-infty norm by passing Eigen::Infinity as the 
+  /// template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the constraint violation.
   ///
+  template <int p=1>
   double constraintViolation() const;
 
   ///
@@ -113,12 +105,6 @@ public:
   /// @return Dimension of the stack of impulse forces.
   ///
   int dimi() const;
-
-  ///
-  /// @brief Checks dimensional consistency of each component. 
-  /// @return true if the dimension is consistent. false if not.
-  ///
-  bool isDimensionConsistent() const;
 
   ///
   /// @brief Checks the equivalence of two SwitchingConstraintResidual.

@@ -46,9 +46,7 @@ TEST_F(TerminalStateEquationTest, fixedbase) {
   EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_matrix.Fqq().isZero());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
-  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, kkt_matrix, kkt_residual);
+  state_equation.correctLinearizedStateEquation(kkt_matrix);
   EXPECT_TRUE(kkt_residual.Fq().isZero());
   EXPECT_TRUE(kkt_residual.Fv().isZero());
   EXPECT_TRUE(kkt_residual.lq().isApprox((-s.lmd)));
@@ -83,9 +81,7 @@ TEST_F(TerminalStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isZero());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
-  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, kkt_matrix, kkt_residual);
+  state_equation.correctLinearizedStateEquation(kkt_matrix);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.inverse();
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;

@@ -26,26 +26,26 @@ protected:
   virtual void TearDown() {
   }
 
-  void testKinematics(Robot& robot) const;
-  void testIsFeasible(Robot& robot) const;
-  void testSetSlack(Robot& robot) const;
+  void test_kinematics(Robot& robot) const;
+  void test_isFeasible(Robot& robot) const;
+  void test_setSlack(Robot& robot) const;
   void test_evalConstraint(Robot& robot) const;
   void test_evalDerivatives(Robot& robot) const;
-  void testCondenseSlackAndDual(Robot& robot) const;
-  void testExpandSlackAndDual(Robot& robot) const;
+  void test_condenseSlackAndDual(Robot& robot) const;
+  void test_expandSlackAndDual(Robot& robot) const;
 
   double barrier, dt;
 };
 
 
-void JointVelocityLowerLimitTest::testKinematics(Robot& robot) const {
+void JointVelocityLowerLimitTest::test_kinematics(Robot& robot) const {
   JointVelocityLowerLimit constr(robot); 
   EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::VelocityLevel);
 }
 
 
-void JointVelocityLowerLimitTest::testIsFeasible(Robot& robot) const {
+void JointVelocityLowerLimitTest::test_isFeasible(Robot& robot) const {
   JointVelocityLowerLimit constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
@@ -56,7 +56,7 @@ void JointVelocityLowerLimitTest::testIsFeasible(Robot& robot) const {
 }
 
 
-void JointVelocityLowerLimitTest::testSetSlack(Robot& robot) const {
+void JointVelocityLowerLimitTest::test_setSlack(Robot& robot) const {
   JointVelocityLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -102,7 +102,7 @@ void JointVelocityLowerLimitTest::test_evalDerivatives(Robot& robot) const {
 }
 
 
-void JointVelocityLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
+void JointVelocityLowerLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   JointVelocityLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -114,7 +114,7 @@ void JointVelocityLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
   kkt_res_ref.lv().tail(dimc).array() 
       -= dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
@@ -125,7 +125,7 @@ void JointVelocityLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 }
 
 
-void JointVelocityLowerLimitTest::testExpandSlackAndDual(Robot& robot) const {
+void JointVelocityLowerLimitTest::test_expandSlackAndDual(Robot& robot) const {
   JointVelocityLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
@@ -145,25 +145,25 @@ void JointVelocityLowerLimitTest::testExpandSlackAndDual(Robot& robot) const {
 
 TEST_F(JointVelocityLowerLimitTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  testKinematics(robot);
-  testIsFeasible(robot);
-  testSetSlack(robot);
+  test_kinematics(robot);
+  test_isFeasible(robot);
+  test_setSlack(robot);
   test_evalConstraint(robot);
   test_evalDerivatives(robot);
-  testCondenseSlackAndDual(robot);
-  testExpandSlackAndDual(robot);
+  test_condenseSlackAndDual(robot);
+  test_expandSlackAndDual(robot);
 }
 
 
 TEST_F(JointVelocityLowerLimitTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  testKinematics(robot);
-  testIsFeasible(robot);
-  testSetSlack(robot);
+  test_kinematics(robot);
+  test_isFeasible(robot);
+  test_setSlack(robot);
   test_evalConstraint(robot);
   test_evalDerivatives(robot);
-  testCondenseSlackAndDual(robot);
-  testExpandSlackAndDual(robot);
+  test_condenseSlackAndDual(robot);
+  test_expandSlackAndDual(robot);
 }
 
 } // namespace robotoc

@@ -127,19 +127,9 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
-      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
-      kkt_error_ref += ocp_ref.impulse[impulse_index].KKTError(kkt_residual_ref.impulse[impulse_index]);
-      kkt_error_ref += ocp_ref.aux[impulse_index].KKTError(kkt_residual_ref.aux[impulse_index], dt_aux);
-      if (sto) {
-        if (i >= 1) {
-          const double hdiff = kkt_residual_ref[i].h + kkt_residual_ref[i-1].h - kkt_residual_ref.aux[impulse_index].h;
-          kkt_error_ref += hdiff * hdiff;
-        }
-        else {
-          const double hdiff = kkt_residual_ref[i].h - kkt_residual_ref.aux[impulse_index].h;
-          kkt_error_ref += hdiff * hdiff;
-        }
-      }
+      kkt_error_ref += kkt_residual_ref[i].kkt_error;
+      kkt_error_ref += kkt_residual_ref.impulse[impulse_index].kkt_error;
+      kkt_error_ref += kkt_residual_ref.aux[impulse_index].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
       total_cost_ref += ocp_ref.impulse[impulse_index].stageCost();
       total_cost_ref += ocp_ref.aux[impulse_index].stageCost();
@@ -164,12 +154,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ocp_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
-      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
-      kkt_error_ref += ocp_ref.lift[lift_index].KKTError(kkt_residual_ref.lift[lift_index], dt_lift);
-      if (sto) {
-        const double hdiff = kkt_residual_ref[i].h - kkt_residual_ref.lift[lift_index].h;
-        kkt_error_ref += hdiff * hdiff;
-      }
+      kkt_error_ref += kkt_residual_ref[i].kkt_error;
+      kkt_error_ref += kkt_residual_ref.lift[lift_index].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
       total_cost_ref += ocp_ref.lift[lift_index].stageCost();
     }
@@ -187,8 +173,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
-      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
-      kkt_error_ref += kkt_residual_ref.switching[impulse_index].KKTError();
+      kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     } 
     else {
@@ -199,7 +184,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      kkt_error_ref += ocp_ref[i].KKTError(kkt_residual_ref[i], dti);
+      kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     }
   }
@@ -207,7 +192,7 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
                                       s[ocp_ref.discrete().N()], 
                                       kkt_matrix_ref[ocp_ref.discrete().N()], 
                                       kkt_residual_ref[ocp_ref.discrete().N()]);
-  kkt_error_ref += ocp_ref.terminal.KKTError(kkt_residual_ref[ocp_ref.discrete().N()]);
+  kkt_error_ref += kkt_residual_ref[ocp_ref.discrete().N()].kkt_error;
   total_cost_ref += ocp_ref.terminal.terminalCost();
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));

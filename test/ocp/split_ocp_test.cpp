@@ -103,12 +103,15 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, dt);
   if (switching_constraint) {
+    SwitchingConstraint sc(robot);
     SwitchingConstraintJacobian switch_jac_ref(robot);
     SwitchingConstraintResidual switch_res_ref(robot);
-    switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
-                                                      kkt_matrix_ref, kkt_residual_ref, 
-                                                      switch_jac_ref, switch_res_ref);
+    sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
+                                    kkt_matrix_ref, kkt_residual_ref, 
+                                    switch_jac_ref, switch_res_ref);
+    kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, switch_res_ref, dt);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
@@ -170,19 +173,22 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
+  constraints->condenseSlackAndDual(constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += dt * constraints_data.logBarrier();
   StateEquation state_equation(robot);
-  state_equation.linearizeStateEquationAlongLieGroup(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquation(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
   if (switching_constraint) {
+    SwitchingConstraint sc(robot);
     SwitchingConstraintJacobian switch_jac_ref(robot);
     SwitchingConstraintResidual switch_res_ref(robot);
-    switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
-                                                      kkt_matrix_ref, kkt_residual_ref, 
-                                                      switch_jac_ref, switch_res_ref);
+    sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
+                                    kkt_matrix_ref, kkt_residual_ref, 
+                                    switch_jac_ref, switch_res_ref);
     cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
     cd.condenseSwitchingConstraint(switch_jac_ref, switch_res_ref, kkt_matrix_ref);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
@@ -191,6 +197,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   else {
     cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
   }
+  kkt_residual.kkt_error = 0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d;
@@ -281,9 +288,9 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   cd.evalContactDynamics(robot, contact_status, s);
   double switch_violation_ref = 0;
   if (switching_constraint) {
+    SwitchingConstraint sc(robot);
     SwitchingConstraintResidual switch_res_ref(robot);
-    switchingconstraint::evalSwitchingConstraint(robot, impulse_status, dt,  
-                                                 dt_next, s, switch_res_ref);
+    sc.evalSwitchingConstraint(robot, impulse_status, dt, dt_next, s, switch_res_ref);
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
     switch_violation_ref = switch_res_ref.P().lpNorm<1>();
   }

@@ -120,8 +120,9 @@ inline double UnconstrDynamics::KKTError() const {
 }
 
 
+template <int p>
 inline double UnconstrDynamics::constraintViolation() const {
-  return ID_.lpNorm<1>();
+  return ID_.template lpNorm<p>();
 }
 
 
