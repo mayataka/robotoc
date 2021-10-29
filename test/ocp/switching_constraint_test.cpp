@@ -46,20 +46,23 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
   auto kkt_residual_ref = kkt_residual;
   SplitKKTMatrix kkt_matrix(robot);
   auto kkt_matrix_ref = kkt_matrix;
+  SwitchingConstraint sc(robot);
   SwitchingConstraintJacobian jac(robot);
   SwitchingConstraintResidual res(robot);
   auto jac_ref = jac;
   auto res_ref = res;
   robot.updateKinematics(s.q);
-  switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt1, dt2,
-                                                    s, kkt_matrix, kkt_residual, jac, res);
+  sc.linearizeSwitchingConstraint(robot, impulse_status, dt1, dt2,
+                                  s, kkt_matrix, kkt_residual, jac, res);
   jac_ref.setImpulseStatus(impulse_status);
   res_ref.setImpulseStatus(impulse_status);
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), res_ref.P());
+  robot.computeContactPositionResidual(impulse_status, 
+                                       impulse_status.contactPoints(), 
+                                       res_ref.P());
   robot.computeContactPositionDerivative(impulse_status, jac_ref.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegrateTransport_dq(s.q, dq, jac_ref.Pq(), jac_ref.Phiq());
@@ -75,17 +78,9 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
   }
   kkt_residual_ref.lx += jac_ref.Phix().transpose() * s.xi_stack();
   kkt_residual_ref.la += jac_ref.Phia().transpose() * s.xi_stack();
-  res_ref.dq = s.v + dt1 * s.a;
-  jac_ref.Phit().noalias() = jac_ref.Pq() * res_ref.dq;
-  kkt_residual_ref.h = s.xi_stack().dot(jac_ref.Phit());
-  kkt_matrix_ref.hq().setZero();
-  kkt_matrix_ref.hv().noalias() = jac_ref.Pq().transpose() * s.xi_stack();
-  kkt_matrix_ref.hu.setZero();
-  res_ref.dq.noalias() = dt1 * jac_ref.Pq().transpose() * s.xi_stack();
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(jac.isApprox(jac_ref));
   EXPECT_TRUE(res.isApprox(res_ref));
-  EXPECT_TRUE(res.dq.isApprox(res_ref.dq));
   const double l2 = res.KKTError();
   const double l2_ref = res.P().squaredNorm();
   EXPECT_DOUBLE_EQ(l2, l2_ref);
@@ -103,17 +98,18 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   }
   const SplitSolution s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
+  SwitchingConstraint sc(robot);
   SwitchingConstraintResidual res(robot);
   auto res_ref = res;
-  switchingconstraint::evalSwitchingConstraint(robot, impulse_status, 
-                                                dt1, dt2, s, res);
-
+  sc.evalSwitchingConstraint(robot, impulse_status, dt1, dt2, s, res);
   res_ref.setImpulseStatus(impulse_status);
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), res_ref.P());
+  robot.computeContactPositionResidual(impulse_status, 
+                                       impulse_status.contactPoints(), 
+                                       res_ref.P());
   EXPECT_TRUE(res.isApprox(res_ref));
   const double l2 = res.KKTError();
   const double l2_ref = res.P().squaredNorm();

@@ -318,6 +318,18 @@ public:
   double KKTError(const SplitKKTResidual& kkt_residual, const double dt) const;
 
   ///
+  /// @brief Returns the KKT residual of this time stage. Before calling this 
+  /// function, SplitOCP::computeKKTResidual() must be called.
+  /// @param[in] kkt_residual KKT residual of this time stage.
+  /// @param[in] sc_residual Residual of the switching constraint. 
+  /// @param[in] dt Time step of this time stage.
+  /// @return The squared norm of the kKT residual.
+  ///
+  double KKTError(const SplitKKTResidual& kkt_residual,
+                  const SwitchingConstraintResidual& sc_residual,
+                  const double dt) const;
+
+  ///
   /// @brief Returns the stage cost of this time stage for the line search.
   /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
@@ -358,6 +370,7 @@ private:
   ConstraintsData constraints_data_;
   StateEquation state_equation_;
   ContactDynamics contact_dynamics_;
+  SwitchingConstraint switching_constraint_;
   double stage_cost_;
 
 };
