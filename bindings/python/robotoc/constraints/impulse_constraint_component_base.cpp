@@ -50,13 +50,13 @@ public:
                            robot, data, s, kkt_residual);
   }
 
-  void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data,
+  void condenseSlackAndDual(ConstraintComponentData& data,
                             const ImpulseSplitSolution& s, 
                             ImpulseSplitKKTMatrix& kkt_matrix,
                             ImpulseSplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            condenseSlackAndDual, 
-                           robot, data, s, kkt_matrix, kkt_residual);
+                           data, s, kkt_matrix, kkt_residual);
   }
 
   void expandSlackAndDual(ConstraintComponentData& data, 
