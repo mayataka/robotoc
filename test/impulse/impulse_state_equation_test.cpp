@@ -44,10 +44,8 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isIdentity());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
-  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, s_next, 
-                                                     kkt_matrix, kkt_residual);
+  state_equation.correctLinearizedStateEquation(robot, s, s_next, 
+                                                kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
@@ -87,10 +85,8 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
-  state_equation.linearizeStateEquationAlongLieGroup(robot, q_prev, s, s_next, 
-                                                     kkt_matrix, kkt_residual);
+  state_equation.correctLinearizedStateEquation(robot, s, s_next, 
+                                                kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
