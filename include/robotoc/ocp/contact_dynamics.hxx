@@ -243,8 +243,9 @@ inline double ContactDynamics::KKTError() const {
 }
 
 
+template <int p>
 inline double ContactDynamics::constraintViolation() const {
-  return data_.IDC().lpNorm<1>();
+  return data_.IDC().template lpNorm<p>();
 }
 
 } // namespace robotoc 

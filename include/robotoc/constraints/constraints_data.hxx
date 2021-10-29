@@ -150,26 +150,27 @@ inline double ConstraintsData::logBarrier() const {
 }
 
 
+template <int p>
 inline double ConstraintsData::constraintViolation() const {
   double vio = 0.0;
   if (isPositionLevelValid()) {
     for (const auto& data : position_level_data) {
-      vio += data.constraintViolation();
+      vio += data.constraintViolation<p>();
     }
   }
   if (isVelocityLevelValid()) {
     for (const auto& data : velocity_level_data) {
-      vio += data.constraintViolation();
+      vio += data.constraintViolation<p>();
     }
   }
   if (isAccelerationLevelValid()) {
     for (const auto& data : acceleration_level_data) {
-      vio += data.constraintViolation();
+      vio += data.constraintViolation<p>();
     }
   }
   if (isImpulseLevelValid()) {
     for (const auto& data : impulse_level_data) {
-      vio += data.constraintViolation();
+      vio += data.constraintViolation<p>();
     }
   }
   return vio;

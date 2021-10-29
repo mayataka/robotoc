@@ -56,6 +56,22 @@ public:
   SwitchingConstraint& operator=(SwitchingConstraint&&) noexcept = default;
 
   ///
+  /// @brief Computes the residual in the switching constraint, i.e., the 
+  /// contact position constraint. Note that the internal kinematics data 
+  /// of robot is updated.  
+  /// @param[in] robot Robot model. Kinematics must be updated.
+  /// @param[in] impulse_status Impulse status. 
+  /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.
+  /// @param[in] dt2 Time step of the time stage just before the impulse.
+  /// @param[in] s Split solution of the time stage 2 stage before the impulse.
+  /// @param[in, out] sc_residual Residual of the switching constraint. 
+  ///
+  void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+                               const double dt1, const double dt2, 
+                               const SplitSolution& s, 
+                               SwitchingConstraintResidual& sc_residual);
+
+  ///
   /// @brief Linearizes the switching constraint, i.e., the contact position 
   /// constraint. Note that the internal kinematics data of robot is updated.
   /// @param[in] robot Robot model. Kinematics must be updated.
@@ -76,22 +92,6 @@ public:
       SplitKKTResidual& kkt_residual, 
       SwitchingConstraintJacobian& sc_jacobian,
       SwitchingConstraintResidual& sc_residual);
-
-  ///
-  /// @brief Computes the residual in the switching constraint, i.e., the 
-  /// contact position constraint. Note that the internal kinematics data 
-  /// of robot is updated.  
-  /// @param[in] robot Robot model. Kinematics must be updated.
-  /// @param[in] impulse_status Impulse status. 
-  /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.
-  /// @param[in] dt2 Time step of the time stage just before the impulse.
-  /// @param[in] s Split solution of the time stage 2 stage before the impulse.
-  /// @param[in, out] sc_residual Residual of the switching constraint. 
-  ///
-  void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
-                               const double dt1, const double dt2, 
-                               const SplitSolution& s, 
-                               SwitchingConstraintResidual& sc_residual);
 
 private:
   Eigen::VectorXd q_, dq_;

@@ -166,21 +166,9 @@ public:
   double cost;
 
   ///
-  /// @brief The l1-norm of the constraint violation.
+  /// @brief Some norm of the constraint violation.
   ///
   double constraint_violation;
-
-  ///
-  /// @brief Computes the squared norm of the KKT residual. The result is 
-  /// stored in SplitKKTResidual::kkt_error.
-  ///
-  void computeKKTError();
-
-  ///
-  /// @brief Computes l1-norm. The result is 
-  /// stored in SplitKKTResidual::constraint_violation,
-  ///
-  void computeConstraintViolation();
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
@@ -190,10 +178,14 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Returns the l1 norm of the constraint violation, that is,
-  /// the primal residual in the state equation. 
-  /// @return The l1 norm of the constraint violation.
+  /// @brief Returns the lp norm of the constraint violation, that is,
+  /// the primal residual in the state equation. Default norm is l1-norm.
+  /// You can specify l-infty norm by passing Eigen::Infinity as the 
+  /// template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the constraint violation.
   ///
+  template <int p=1>
   double constraintViolation() const;
 
   ///

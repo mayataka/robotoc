@@ -107,16 +107,6 @@ ImpulseSplitKKTResidual::lf() const {
 }
 
 
-inline void ImpulseSplitKKTResidual::computeKKTError() {
-  kkt_error = KKTError();
-}
-
-
-inline void ImpulseSplitKKTResidual::computeConstraintViolation() {
-  constraint_violation = constraintViolation();
-}
-
-
 inline double ImpulseSplitKKTResidual::KKTError() const {
   double err = 0;
   err += Fx.squaredNorm();
@@ -127,8 +117,9 @@ inline double ImpulseSplitKKTResidual::KKTError() const {
 }
 
 
+template <int p>
 inline double ImpulseSplitKKTResidual::constraintViolation() const {
-  return Fx.template lpNorm<1>();
+  return Fx.template lpNorm<p>();
 }
 
 

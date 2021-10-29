@@ -91,10 +91,14 @@ public:
   double logBarrier() const;
 
   ///
-  /// @brief Returns the sum of the l1-norm of the primal violations in the 
-  /// constraints.
-  /// @return The sum of the l1-norm of the violations in the constraints. 
+  /// @brief Returns the lp norm of the constraint violation, that is,
+  /// the primal residual in the constraints. Default norm is l1-norm.
+  /// You can specify l-infty norm by passing Eigen::Infinity as the 
+  /// template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the constraint violation.
   ///
+  template <int p=1>
   double constraintViolation() const;
 
   ///

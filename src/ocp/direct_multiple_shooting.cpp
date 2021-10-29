@@ -97,67 +97,18 @@ void DirectMultipleShooting::computeKKTSystem(
 
 double DirectMultipleShooting::KKTError(const OCP& ocp, 
                                         const KKTResidual& kkt_residual) {
-  const int N = ocp.discrete().N();
-  const int N_impulse = ocp.discrete().N_impulse();
-  const int N_lift = ocp.discrete().N_lift();
-  const int N_all = N + 1 + 3*N_impulse + N_lift;
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all; ++i) {
-    if (i < N) {
-      kkt_error_.coeffRef(i) 
-          = ocp[i].KKTError(kkt_residual[i], ocp.discrete().dt(i));
-    }
-    else if (i == N) {
-      kkt_error_.coeffRef(N) 
-          = ocp.terminal.KKTError(kkt_residual[N]);
-    }
-    else if (i < N+1+N_impulse) {
-      const int impulse_index = i - (N+1);
-      const int time_stage_before_impulse 
-          = ocp.discrete().timeStageBeforeImpulse(impulse_index);
-      kkt_error_.coeffRef(i) 
-          = ocp.impulse[impulse_index].KKTError(kkt_residual.impulse[impulse_index]);
-    }
-    else if (i < N+1+2*N_impulse) {
-      const int impulse_index = i - (N+1+N_impulse);
-      kkt_error_.coeffRef(i) 
-          = ocp.aux[impulse_index].KKTError(kkt_residual.aux[impulse_index], 
-                                            ocp.discrete().dt_aux(impulse_index));
-      const int time_stage_before_impulse 
-          = ocp.discrete().timeStageBeforeImpulse(impulse_index);
-      if (ocp.discrete().isSTOEnabledImpulse(impulse_index)) {
-        if (time_stage_before_impulse >= 1) {
-          const double hdiff = kkt_residual[time_stage_before_impulse-1].h 
-                                + kkt_residual[time_stage_before_impulse].h 
-                                - kkt_residual.aux[impulse_index].h;
-          kkt_error_.coeffRef(i) += hdiff*hdiff;
-        }
-        else {
-          const double hdiff = kkt_residual[time_stage_before_impulse].h 
-                                - kkt_residual.aux[impulse_index].h;
-          kkt_error_.coeffRef(i) += hdiff*hdiff;
-        }
-      }
-    }
-    else if (i < N+1+2*N_impulse+N_lift) {
-      const int lift_index = i - (N+1+2*N_impulse);
-      kkt_error_.coeffRef(i) 
-          = ocp.lift[lift_index].KKTError(kkt_residual.lift[lift_index], 
-                                          ocp.discrete().dt_lift(lift_index));
-      const int time_stage_before_lift
-          = ocp.discrete().timeStageBeforeLift(lift_index);
-      if (ocp.discrete().isSTOEnabledLift(lift_index)) {
-        const double hdiff = kkt_residual[time_stage_before_lift].h 
-                              - kkt_residual.lift[lift_index].h;
-        kkt_error_.coeffRef(i) += hdiff*hdiff;
-      }
-    }
-    else {
-      const int impulse_index = i - (N+1+2*N_impulse+N_lift);
-      kkt_error_.coeffRef(i) = kkt_residual.switching[impulse_index].KKTError();
-    }
+  double kkt_error = 0;
+  for (int i=0; i<=ocp.discrete().N(); ++i) {
+    kkt_error += kkt_residual[i].kkt_error;
   }
-  return std::sqrt(kkt_error_.head(N_all).sum());
+  for (int i=0; i<ocp.discrete().N_impulse(); ++i) {
+    kkt_error += kkt_residual.impulse[i].kkt_error;
+    kkt_error += kkt_residual.aux[i].kkt_error;
+  }
+  for (int i=0; i<ocp.discrete().N_lift(); ++i) {
+    kkt_error += kkt_residual.lift[i].kkt_error;
+  }
+  return std::sqrt(kkt_error);
 }
 
 

@@ -25,6 +25,22 @@ inline SwitchingConstraint::~SwitchingConstraint() {
 }
 
 
+inline void SwitchingConstraint::evalSwitchingConstraint(
+    Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
+    const double dt2, const SplitSolution& s, 
+    SwitchingConstraintResidual& sc_residual) {
+  assert(dt1 > 0);
+  assert(dt2 > 0);
+  sc_residual.setImpulseStatus(impulse_status);
+  dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
+  robot.integrateConfiguration(s.q, dq_, 1.0, q_);
+  robot.updateKinematics(q_);
+  robot.computeContactPositionResidual(impulse_status, 
+                                       impulse_status.contactPoints(), 
+                                       sc_residual.P());
+}
+
+
 inline void SwitchingConstraint::linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
@@ -51,22 +67,6 @@ inline void SwitchingConstraint::linearizeSwitchingConstraint(
   }
   kkt_residual.lx.noalias() += sc_jacobian.Phix().transpose() * s.xi_stack();
   kkt_residual.la.noalias() += sc_jacobian.Phia().transpose() * s.xi_stack();
-}
-
-
-inline void SwitchingConstraint::evalSwitchingConstraint(
-    Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
-    const double dt2, const SplitSolution& s, 
-    SwitchingConstraintResidual& sc_residual) {
-  assert(dt1 > 0);
-  assert(dt2 > 0);
-  sc_residual.setImpulseStatus(impulse_status);
-  dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
-  robot.integrateConfiguration(s.q, dq_, 1.0, q_);
-  robot.updateKinematics(q_);
-  robot.computeContactPositionResidual(impulse_status, 
-                                       impulse_status.contactPoints(), 
-                                       sc_residual.P());
 }
 
 } // namespace robotoc

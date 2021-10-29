@@ -56,8 +56,9 @@ inline double SwitchingConstraintResidual::KKTError() const {
 }
 
 
+template <int p>
 inline double SwitchingConstraintResidual::constraintViolation() const {
-  return P().template lpNorm<1>();
+  return P().template lpNorm<p>();
 }
 
 
