@@ -98,6 +98,7 @@ int main () {
                                                        robot.framePosition(LH_foot),
                                                        robot.framePosition(RF_foot),
                                                        robot.framePosition(RH_foot)};
+  contact_status_standing.setContactPoints(contact_points);
   contact_sequence->initContactSequence(contact_status_standing);
 
   // Create OCPSolver
