@@ -123,10 +123,10 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
 
 
 inline void ContactSequence::push_back(const ContactStatus& contact_status, 
-                                       const double event_time,
+                                       const double switching_time,
                                        const bool sto) {
   DiscreteEvent discrete_event(contact_statuses_.back(), contact_status);
-  push_back(discrete_event, event_time, sto);
+  push_back(discrete_event, switching_time, sto);
 }
 
 

@@ -35,6 +35,7 @@ protected:
   void test_constructor(const Robot& robot) const;
   void test_discretizeOCP(const Robot& robot) const;
   void test_discretizeOCPOnGrid(const Robot& robot) const;
+  void test_eventTimeIsLargerThanHorizon(const Robot& robot) const;
 
   int N, max_num_events;
   double t, T, dt, min_dt;
@@ -181,7 +182,6 @@ void HybridOCPDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
       EXPECT_EQ(discretization.liftIndexAfterTimeStage(i), -1);
     }
   }
-  const double dt = T/N;
   for (int i=0; i<=N; ++i) {
     EXPECT_DOUBLE_EQ(discretization.t(i), t+i*dt);
   }
@@ -234,11 +234,127 @@ void HybridOCPDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) c
 }
 
 
+void HybridOCPDiscretizationTest::test_eventTimeIsLargerThanHorizon(const Robot& robot) const {
+  const double T_short = 0.5 * T;
+  const double dt_short = T_short / N;
+  HybridOCPDiscretization discretization(T_short, N, max_num_events);
+  const auto contact_sequence = createContactSequence(robot);
+  discretization.discretize(contact_sequence, t);
+  EXPECT_EQ(discretization.N(), N);
+  EXPECT_TRUE(discretization.N_impulse() <= contact_sequence->numImpulseEvents());
+  EXPECT_TRUE(discretization.N_lift() <= contact_sequence->numLiftEvents());
+  std::vector<double> t_impulse, t_lift;
+  std::vector<int> time_stage_before_impulse, time_stage_before_lift;
+  for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
+    if (contact_sequence->impulseTime(i) > t+T_short-min_dt) {
+      break;
+    }
+    t_impulse.push_back(contact_sequence->impulseTime(i));
+    time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt_short));
+  }
+  for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
+    if (contact_sequence->liftTime(i) > t+T_short-min_dt) {
+      break;
+    }
+    t_lift.push_back(contact_sequence->liftTime(i));
+    time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt_short));
+  }
+  const int N_impulse = t_impulse.size();
+  const int N_lift = t_lift.size();
+  EXPECT_EQ(discretization.N_impulse(), N_impulse);
+  EXPECT_EQ(discretization.N_lift(), N_lift);
+  for (int i=0; i<N_impulse; ++i) {
+    EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt_short-t, discretization.dt(time_stage_before_impulse[i]));
+    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_impulse[i])+discretization.dt_aux(i), dt_short);
+    EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
+  }
+  for (int i=0; i<N_lift; ++i) {
+    EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt_short-t, discretization.dt(time_stage_before_lift[i]));
+    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_lift[i])+discretization.dt_lift(i), dt_short);
+    EXPECT_FALSE(discretization.isSTOEnabledLift(i));
+  }
+  std::vector<int> time_stage_before_events;
+  for (auto e :  time_stage_before_impulse) {
+    time_stage_before_events.push_back(e);
+  }
+  for (auto e :  time_stage_before_lift) {
+    time_stage_before_events.push_back(e);
+  }
+  std::sort(time_stage_before_events.begin(), time_stage_before_events.end());
+  time_stage_before_events.push_back(N+1);
+  int contact_phase_ref = 0;
+  for (int i=0; i<=N; ++i) {
+    EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
+    if (i == time_stage_before_events[contact_phase_ref]) {
+      ++contact_phase_ref;
+    }
+  }
+  for (int i=0; i<discretization.N_impulse(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeImpulse(i)+1, 
+              discretization.timeStageAfterImpulse(i));
+    EXPECT_EQ(discretization.contactPhaseAfterImpulse(i), 
+              discretization.contactPhase(discretization.timeStageAfterImpulse(i)));
+  }
+  for (int i=0; i<discretization.N_lift(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeLift(i)+1, 
+              discretization.timeStageAfterLift(i));
+    EXPECT_EQ(discretization.contactPhaseAfterLift(i), 
+              discretization.contactPhase(discretization.timeStageAfterLift(i)));
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeImpulse(discretization.impulseIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.impulseIndexAfterTimeStage(i), -1);
+    }
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeLift(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeLift(discretization.liftIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.liftIndexAfterTimeStage(i), -1);
+    }
+  }
+  for (int i=0; i<=N; ++i) {
+    EXPECT_DOUBLE_EQ(discretization.t(i), t+i*dt_short);
+  }
+  for (int i=0; i<N; ++i) {
+    if (!discretization.isTimeStageBeforeImpulse(i) && !discretization.isTimeStageBeforeLift(i)) {
+      EXPECT_DOUBLE_EQ(discretization.dt(i), dt_short);
+    }
+  }
+  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  int impulse_index = 0;
+  int lift_index = 0;
+  for (int event_index=0; event_index<num_events; ++event_index) {
+    EXPECT_FALSE(discretization.eventType(event_index)==DiscreteEventType::None);
+    if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      EXPECT_EQ(discretization.eventIndexImpulse(impulse_index), event_index);
+      ++impulse_index;
+    }
+    else {
+      EXPECT_EQ(discretization.eventIndexLift(lift_index), event_index);
+      ++lift_index;
+    }
+  }
+  EXPECT_NO_THROW(
+    std::cout << discretization << std::endl;
+  );
+}
+
+
 TEST_F(HybridOCPDiscretizationTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   test_constructor(robot);
   test_discretizeOCP(robot);
   test_discretizeOCPOnGrid(robot);
+  test_eventTimeIsLargerThanHorizon(robot);
 }
 
 
@@ -247,6 +363,7 @@ TEST_F(HybridOCPDiscretizationTest, floatingBase) {
   test_constructor(robot);
   test_discretizeOCP(robot);
   test_discretizeOCPOnGrid(robot);
+  test_eventTimeIsLargerThanHorizon(robot);
 }
 
 } // namespace robotoc

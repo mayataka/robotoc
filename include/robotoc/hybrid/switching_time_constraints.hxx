@@ -466,7 +466,7 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
 
 inline double SwitchingTimeConstraints::maxPrimalStepSize() const {
   if (num_switches_ > 0) {
-    return primal_step_size_.head(num_switches_).minCoeff();
+    return primal_step_size_.head(num_switches_+1).minCoeff();
   }
   else {
     return 1.0;
@@ -476,7 +476,7 @@ inline double SwitchingTimeConstraints::maxPrimalStepSize() const {
 
 inline double SwitchingTimeConstraints::maxDualStepSize() const {
   if (num_switches_ > 0) {
-    return dual_step_size_.head(num_switches_).minCoeff();
+    return dual_step_size_.head(num_switches_+1).minCoeff();
   }
   else {
     return 1.0;
@@ -485,14 +485,14 @@ inline double SwitchingTimeConstraints::maxDualStepSize() const {
 
 
 inline void SwitchingTimeConstraints::updateSlack(const double step_size) {
-  for (int i=0; i<num_switches_; ++i) {
+  for (int i=0; i<num_switches_+1; ++i) {
     dtlb_[i].updateSlack(step_size);
   }
 }
 
 
 inline void SwitchingTimeConstraints::updateDual(const double step_size) {
-  for (int i=0; i<num_switches_; ++i) {
+  for (int i=0; i<num_switches_+1; ++i) {
     dtlb_[i].updateDual(step_size);
   }
 }

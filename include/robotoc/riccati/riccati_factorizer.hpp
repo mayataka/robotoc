@@ -172,7 +172,6 @@ public:
 private:
   bool has_floating_base_;
   int dimv_, dimu_;
-  static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
   LQRPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
