@@ -4,7 +4,7 @@
 
 @tableofcontents
 
-\section robotoc robotoc - efficient roboto optimal control solvers
+\section robotoc robotoc - efficient robot optimal control solvers
 `robotoc` (efficient **ROBOT** <b>O</b>ptimal <b>C</b>ontrol solvers) is a collection of C++ (with Python bindings) efficient optimal control problem solvers for multibody robot systems with rigid contacts. <br>
 The main apllication purposes are trajectory optimization and model predictive control (MPC). 
 The followings are examples:
