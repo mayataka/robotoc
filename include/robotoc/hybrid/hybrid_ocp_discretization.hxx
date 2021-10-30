@@ -12,7 +12,7 @@ inline HybridOCPDiscretization::HybridOCPDiscretization(const double T,
                                                         const int max_events) 
   : T_(T),
     dt_ideal_(T/N), 
-    max_dt_(dt_ideal_-min_dt),
+    max_dt_(dt_ideal_-k_min_dt),
     N_(N),
     N_ideal_(N),
     N_impulse_(0),
@@ -92,11 +92,6 @@ inline int HybridOCPDiscretization::N_impulse() const {
 
 inline int HybridOCPDiscretization::N_lift() const {
   return N_lift_;
-}
-
-
-inline int HybridOCPDiscretization::N_all() const {
-  return (N()+1+2*N_impulse()+N_lift());
 }
 
 
@@ -307,14 +302,12 @@ inline bool HybridOCPDiscretization::isFormulationTractable() const {
 
 inline bool HybridOCPDiscretization::isSwitchingTimeConsistent() const {
   for (int i=0; i<N_impulse(); ++i) {
-    // if (t_impulse(i) <= t(0) || t_impulse(i) >= t(N())) {
-    if (t_impulse(i) < t(0)+min_dt || t_impulse(i) >= t(N())-min_dt) {
+    if (t_impulse(i) < t(0)+k_min_dt || t_impulse(i) >= t(N())-k_min_dt) {
       return false;
     }
   }
   for (int i=0; i<N_lift(); ++i) {
-    // if (t_lift(i) <= t(0) || t_lift(i) >= t(N())) {
-    if (t_lift(i) < t(0)+min_dt || t_lift(i) > t(N())-min_dt) {
+    if (t_lift(i) < t(0)+k_min_dt || t_lift(i) > t(N())-k_min_dt) {
       return false;
     }
   }
@@ -324,19 +317,31 @@ inline bool HybridOCPDiscretization::isSwitchingTimeConsistent() const {
 
 inline void HybridOCPDiscretization::countDiscreteEvents(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
-  N_impulse_ = contact_sequence->numImpulseEvents();
-  assert(N_impulse_ <= max_events_);
-  for (int i=0; i<N_impulse_; ++i) {
-    t_impulse_[i] = contact_sequence->impulseTime(i);
-    time_stage_before_impulse_[i] = std::floor((t_impulse_[i]-t)/dt_ideal_);
-    sto_impulse_[i] = contact_sequence->isSTOEnabledImpulse(i);
+  const int max_num_impulse_events = contact_sequence->numImpulseEvents();
+  assert(max_num_impulse_events <= max_events_);
+  N_impulse_ = 0;
+  for (int impulse_index=0; impulse_index<max_num_impulse_events; ++impulse_index) {
+    const double t_impulse = contact_sequence->impulseTime(impulse_index);
+    if (t_impulse >= t+T_-k_min_dt) {
+      break;
+    }
+    t_impulse_[impulse_index] = t_impulse;
+    time_stage_before_impulse_[impulse_index] = std::floor((t_impulse-t)/dt_ideal_);
+    sto_impulse_[impulse_index] = contact_sequence->isSTOEnabledImpulse(impulse_index);
+    ++N_impulse_;
   }
-  N_lift_ = contact_sequence->numLiftEvents();
-  assert(N_lift_ <= max_events_);
-  for (int i=0; i<N_lift_; ++i) {
-    t_lift_[i] = contact_sequence->liftTime(i);
-    time_stage_before_lift_[i] = std::floor((t_lift_[i]-t)/dt_ideal_);
-    sto_lift_[i] = contact_sequence->isSTOEnabledLift(i);
+  const int max_num_lift_events = contact_sequence->numLiftEvents();
+  assert(max_num_lift_events <= max_events_);
+  N_lift_ = 0;
+  for (int lift_index=0; lift_index<max_num_lift_events; ++lift_index) {
+    const double t_lift = contact_sequence->liftTime(lift_index);
+    if (t_lift >= t+T_-k_min_dt) {
+      break;
+    }
+    t_lift_[lift_index] = t_lift;
+    time_stage_before_lift_[lift_index] = std::floor((t_lift-t)/dt_ideal_);
+    sto_lift_[lift_index] = contact_sequence->isSTOEnabledLift(lift_index);
+    ++N_lift_;
   }
   N_ = N_ideal_;
   for (int i=0; i<N_impulse_+N_lift_; ++i) {
@@ -354,9 +359,9 @@ inline void HybridOCPDiscretization::countTimeSteps(const double t) {
     const int stage = i - num_events_on_grid;
     if (i == time_stage_before_impulse_[impulse_index]) {
       dt_[stage] = t_impulse_[impulse_index] - i * dt_ideal_ - t;
-      assert(dt_[stage] >= -min_dt);
-      assert(dt_[stage] <= dt_ideal_+min_dt);
-      if (dt_[stage] <= min_dt) {
+      assert(dt_[stage] >= -k_min_dt);
+      assert(dt_[stage] <= dt_ideal_+k_min_dt);
+      if (dt_[stage] <= k_min_dt) {
         time_stage_before_impulse_[impulse_index] = stage - 1;
         dt_aux_[impulse_index] = dt_ideal_;
         t_[stage] = t + (i-1) * dt_ideal_;
@@ -376,9 +381,9 @@ inline void HybridOCPDiscretization::countTimeSteps(const double t) {
     }
     else if (i == time_stage_before_lift_[lift_index]) {
       dt_[stage] = t_lift_[lift_index] - i * dt_ideal_ - t;
-      assert(dt_[stage] >= -min_dt);
-      assert(dt_[stage] <= dt_ideal_+min_dt);
-      if (dt_[stage] <= min_dt) {
+      assert(dt_[stage] >= -k_min_dt);
+      assert(dt_[stage] <= dt_ideal_+k_min_dt);
+      if (dt_[stage] <= k_min_dt) {
         time_stage_before_lift_[lift_index] = stage - 1;
         dt_lift_[lift_index] = dt_ideal_;
         t_[stage] = t + (i-1) * dt_ideal_;

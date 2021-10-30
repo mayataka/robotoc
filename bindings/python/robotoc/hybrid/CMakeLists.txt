@@ -3,5 +3,6 @@ pybind11_add_robotoc_module(switching_time_cost_function_component_base)
 pybind11_add_robotoc_module(periodic_switching_time_cost)
 pybind11_add_robotoc_module(discrete_event)
 pybind11_add_robotoc_module(contact_sequence)
+pybind11_add_robotoc_module(hybrid_ocp_discretization)
 
 install_robotoc_pybind_module(hybrid)

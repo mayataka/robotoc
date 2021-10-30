@@ -84,12 +84,6 @@ public:
   int N_lift() const; 
 
   ///
-  /// @return Total number of the time stages, impulse stages, auxiliary stages, 
-  /// lift stages, and terminal stage on the horizon. 
-  ///
-  int N_all() const;
-
-  ///
   /// @return Ideal number of the discretization grids on the horizon. 
   ///
   int N_ideal() const;
@@ -290,7 +284,7 @@ public:
   ///
   /// @brief Minimum step size of the discretization grid. 
   ///
-  static constexpr double min_dt 
+  static constexpr double k_min_dt 
       = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:
