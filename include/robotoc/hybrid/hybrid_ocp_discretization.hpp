@@ -22,10 +22,10 @@ public:
   /// @brief Constructor. 
   /// @param[in] T Length of the horizon.
   /// @param[in] N Ideal number of the discretization grids of the horizon. 
-  /// Note that the actual number of the grids can differ from this value 
-  /// depending on the discrete events.
   /// @param[in] max_events Maximum number of each discrete events 
   /// (impulse and lift). 
+  /// @note The actual number of the grids can differ from N depending on the 
+  /// discrete events.
   ///
   HybridOCPDiscretization(const double T, const int N, const int max_events);
 
