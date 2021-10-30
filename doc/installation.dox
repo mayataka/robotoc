@@ -1,0 +1,81 @@
+/*!
+
+\page page_installation Installation
+
+@tableofcontents
+
+\section install_prerequisite 0. Prerequisite
+
+First, please confirm that your OS is Ubuntu 18.04 or 20.04. 
+Next, please confirm that gcc and CMake are installed. 
+If not, they can be installed, e.g., via 
+
+```
+sudo apt install build-essential
+```
+
+\section install_pinocchio 1. Install Pinocchio
+First, install the latest stable version of Eigen3 by 
+
+```
+sudo apt install libeigen3-dev
+```
+
+Then install the latest stable version of Pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
+
+\section install_python_viewer 2. (Optional, but recommended) Install gepetto-viewer-corba and/or meshcat
+If you want to visualize the solution trajectory with Python, you have to install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) by
+```
+sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba -y
+```
+and/or [meshcat-python](https://github.com/rdeits/meshcat-python) by
+```
+pip install meshcat
+```
+
+\section install_cpp_viewer 3. (Optional) Install pinocchio-gepetto-viewer
+If you want to visualize the solution trajectory with C++, in addition to [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), you have to install  [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
+```
+git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive && cd pinocchio-gepetto-viewer
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make install
+```
+
+\section install_robotoc 4. Install robotoc
+Clone `robotoc` repository and change the directory as
+
+```
+git clone https://github.com/mayataka/robotoc
+cd robotoc 
+```
+
+Then build `robotoc` library as
+
+```
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release 
+make install -j$(nproc)
+```
+
+If you want to maximize the performance (recommended), use CMake option
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DOPTIMIZE_FOR_NATIVE=ON
+```
+
+This option enables the vectorization of Eigen.
+
+If you want to visualize the solution trajectory through C++, add the CMake option as 
+
+```
+cmake .. -DBUILD_VIEWER=ON
+```
+
+If you do not want to install the Python bindings, change the CMake configuration as
+```
+cmake .. -DBUILD_PYTHON_INTERFACE=OFF
+```
+However, we highly recommend installing Python bindings.
+
+*/

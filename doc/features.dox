@@ -1,0 +1,64 @@
+/*!
+
+\page page_features Features of optimal control solvers
+
+@tableofcontents
+
+\section solvers_list The list of the optimal control solvers 
+The following three solvers are available:
+- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base.
+- `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
+- `robotoc::UnconstrParNMPCSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. Possibly very efficient when the number of available CPU cores is very large.
+
+\section common_features The common features among solvers
+The common features in mathematical formulation, algorithms, and implementation among these three solvers are as follows: 
+- <b>Direct multiple shooting method</b>:
+    - has a nice convergence property.
+    - fully leverages parallel computation of the KKT system with OpenMP.
+- <b>Primal-dual interior point method</b>: 
+    - can treat many inequality constraints including nonlinear ones very efficiently.
+    - allows infeasible initial guess of the solution.
+    - enables us to perform very fast suboptimal MPC by fixing the barrier parameter.
+- <b>Structure-exploting algorithms to compute Newton steps</b>: 
+    - can compute the Newton steps with linear time complexity with respect to the length of the horizon.
+- <b>Very fast rigid body kinematics and dynamics computation</b> thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
+    - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) provides very efficient forward kinematics, kinematics Jacobians, the recursive Newton Euler algorithm (RNEA), and derivatives of the RNEA.
+    - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) also gives us an interface to construct a robot model (`robotoc::Robot`) via URDF files.
+
+\section ocp_solver robotoc::OCPSolver
+
+`robotoc::OCPSolver` is an optimal control solver for robot systems with rigid contacts and/or a floating base.
+This is the main solver of `robotoc`.
+The additional features of `robotoc::OCPSolver` are:
+- <b>Multiphase optimal control problem</b> construction through contact sequence interface: 
+    - `robotoc::ContactSequence` enables us to formulate the complicated optimal control problems involving changes of dynamics and state jumps due to rigid contacts.
+- <b>Lifted contact dynamics</b> [1]: 
+    - Relaxes the high nonlinearity in optimization problems typically caused by inequality constraints treated by the interior point methods.
+- <b>Riccati recursion to compute Newton steps</b>: 
+    - Computes the Newton steps with linear time complexity with respect to the length of the horizon.
+- <b>Constraint transformation of pure-state constraints for efficient Riccati recursion</b> [2]: 
+    - The pure-state equality constraints representing the switching constraints are treated very efficiently while preserving accuracy and guaranteeing optimality by the constraint transformation.
+
+\section unconstr_ocp_solver robotoc::UnconstrOCPSolver
+`robotoc::UnconstrOCPSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::OCPSolver` for such systems.
+- <b>Inverse dynamics based formulation</b> [3]: 
+    - Inverse dynamics-based formulation enables very fast computation compared with the forward dynamics-based formulation. You can check this fact easily by comparing `robotoc::UnconstrOCPSolver` and `robotoc::OCPSolver`.
+- <b>Riccati recursion to compute Newton steps</b>: 
+    - Computes the Newton steps with linear time complexity with respect to the length of the horizon.
+
+\section unconstr_parnmpc_solver robotoc::UnconstrParNMPCSolver
+`robotoc::UnconstrParNMPCSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::OCPSolver` and `robotoc::UnconstrOCPSolver` for such systems and if the available number of CPU cores are very large.
+- <b>Inverse dynamics based formulation</b> [3]: 
+    - Inverse dynamics-based formulation enables very fast computation compared with the forward dynamics-based formulation. 
+- <b>highly parallelizable Newton-type method</b> [4]: 
+    - This method can parallelize all steps of Newton-step computation while the Riccati recursion needs serial computation in solving the KKT system. Note that the convergence speed can decrease because this method introduces an approximation for parallelization.
+
+
+\section features_references References
+
+[1] S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021 <br>
+[2] S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021 <br>
+[3] S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021 <br>
+[4] H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019 <br>
+
+*/
