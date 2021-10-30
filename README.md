@@ -115,6 +115,9 @@ The following three solvers are provided:
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 
+## Documentation
+More detailed documentation is available at https://mayataka.github.io/robotoc/.
+
 ## Optimal control examples
 Examples of these solvers are found in `examples` directory.
 The following animations are the solution trajectory of the `UnconstrOCPSolver` for a robot manipulator iiwa14.
