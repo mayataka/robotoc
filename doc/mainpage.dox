@@ -18,8 +18,10 @@ The followings are examples:
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="250"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="250">
 
+More examples are found in @ref page_examples.
 
-\section solvers Brief overview of the optimal control solvers 
+
+\section solvers Brief overview of optimal control solvers 
 The following three solvers are available:
 - `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base.
 - `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
@@ -38,6 +40,13 @@ The common features among these three solvers are as follows:
 - <b>Very fast rigid body kinematics and dynamics computation</b> thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
     - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) enables us to compute the rigid body kinematics, dynamics, and their sensitivities (Jacobians) very efficiently.
     - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) also gives us an inteface to construct robot model (`robotoc::Robot`) via URDF files.
+
+The detailed features are found in @ref page_features.
+
+
+\section installation Installation
+Please see @ref page_installation.
+
 
 \section citiation Citing robotoc
 

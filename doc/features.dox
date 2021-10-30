@@ -4,13 +4,13 @@
 
 @tableofcontents
 
-\section solvers_list The list of the optimal control solvers 
+\section solvers_list List of optimal control solvers 
 The following three solvers are available:
 - `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base.
 - `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
 - `robotoc::UnconstrParNMPCSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. Possibly very efficient when the number of available CPU cores is very large.
 
-\section common_features The common features among solvers
+\section common_features Common features among solvers
 The common features in mathematical formulation, algorithms, and implementation among these three solvers are as follows: 
 - <b>Direct multiple shooting method</b>:
     - has a nice convergence property.
@@ -19,19 +19,27 @@ The common features in mathematical formulation, algorithms, and implementation 
     - can treat many inequality constraints including nonlinear ones very efficiently.
     - allows infeasible initial guess of the solution.
     - enables us to perform very fast suboptimal MPC by fixing the barrier parameter.
+- <b>Gauss-Newton method</b>:
+    - improves computational speed and numerical conditioning.
 - <b>Structure-exploting algorithms to compute Newton steps</b>: 
     - can compute the Newton steps with linear time complexity with respect to the length of the horizon.
 - <b>Very fast rigid body kinematics and dynamics computation</b> thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
     - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) provides very efficient forward kinematics, kinematics Jacobians, the recursive Newton Euler algorithm (RNEA), and derivatives of the RNEA.
     - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) also gives us an interface to construct a robot model (`robotoc::Robot`) via URDF files.
+- <b>Versatile cost function and constraints interface</b>:
+    - new cost compoments can be easily defined by inheriting `robotoc::CostFunctionComponentBase`.
+    - The cost function can be easily be constructed by collecting cost components into `robotoc::CostFunction`
+    - new constraint compoments can be easily defined by inheriting `robotoc::ConstraintComponentBase` or `robotoc::ImpulseConstraintComponentBase`.
+    - The constraints can be easily be constructed by collecting constraint components into `robotoc::Constraints`
 
 \section ocp_solver robotoc::OCPSolver
 
+\subsection ocp_solver_features Features
 `robotoc::OCPSolver` is an optimal control solver for robot systems with rigid contacts and/or a floating base.
 This is the main solver of `robotoc`.
-The additional features of `robotoc::OCPSolver` are:
+The unique features of `robotoc::OCPSolver` are:
 - <b>Multiphase optimal control problem</b> construction through contact sequence interface: 
-    - `robotoc::ContactSequence` enables us to formulate the complicated optimal control problems involving changes of dynamics and state jumps due to rigid contacts.
+    - `robotoc::ContactSequence` interface enables us to formulate the complicated optimal control problems involving changes of dynamics and state jumps due to rigid contacts.
 - <b>Lifted contact dynamics</b> [1]: 
     - Relaxes the high nonlinearity in optimization problems typically caused by inequality constraints treated by the interior point methods.
 - <b>Riccati recursion to compute Newton steps</b>: 
@@ -39,19 +47,43 @@ The additional features of `robotoc::OCPSolver` are:
 - <b>Constraint transformation of pure-state constraints for efficient Riccati recursion</b> [2]: 
     - The pure-state equality constraints representing the switching constraints are treated very efficiently while preserving accuracy and guaranteeing optimality by the constraint transformation.
 
+\subsection ocp_solver_formulation Methematical formulation
+TODO 
+
+\subsection ocp_solver_algorithm Solution algorithm
+TODO 
+ 
+
 \section unconstr_ocp_solver robotoc::UnconstrOCPSolver
+\subsection unconstr_ocp_solver_features Features
 `robotoc::UnconstrOCPSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::OCPSolver` for such systems.
+The unique features of `robotoc::UnconstrOCPSolver` are:
 - <b>Inverse dynamics based formulation</b> [3]: 
     - Inverse dynamics-based formulation enables very fast computation compared with the forward dynamics-based formulation. You can check this fact easily by comparing `robotoc::UnconstrOCPSolver` and `robotoc::OCPSolver`.
 - <b>Riccati recursion to compute Newton steps</b>: 
     - Computes the Newton steps with linear time complexity with respect to the length of the horizon.
 
+\subsection unconstr_ocp_solver_formulation Methematical formulation
+TODO 
+
+\subsection unconstr_ocp_solver_algorithm Solution algorithm
+TODO 
+
+
 \section unconstr_parnmpc_solver robotoc::UnconstrParNMPCSolver
-`robotoc::UnconstrParNMPCSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::OCPSolver` and `robotoc::UnconstrOCPSolver` for such systems and if the available number of CPU cores are very large.
+\subsection unconstr_parnmpc_solver_features Features
+`robotoc::UnconstrParNMPCSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::UnconstrOCPSolver` if the available number of CPU cores are very large.
+The unique features of `robotoc::UnconstrParNMPCSolver` are:
 - <b>Inverse dynamics based formulation</b> [3]: 
     - Inverse dynamics-based formulation enables very fast computation compared with the forward dynamics-based formulation. 
 - <b>highly parallelizable Newton-type method</b> [4]: 
     - This method can parallelize all steps of Newton-step computation while the Riccati recursion needs serial computation in solving the KKT system. Note that the convergence speed can decrease because this method introduces an approximation for parallelization.
+
+\subsection unconstr_parnmpc_solver_formulation Methematical formulation
+TODO 
+
+\subsection unconstr_parnmpc_solver_algorithm Solution algorithm
+TODO 
 
 
 \section features_references References

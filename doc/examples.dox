@@ -4,6 +4,8 @@
 
 @tableofcontents
 
-TODO: write examples for C++/Python and explain the usage of robotoc here
+\subpage subpage_ocp_solver_example_cpp 
+
+\subpage subpage_ocp_solver_example_py
 
 */

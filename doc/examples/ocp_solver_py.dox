@@ -1,0 +1,219 @@
+/*!
+
+\page subpage_ocp_solver_example_py Quadrupedal jumping example of robotoc::OCPSolver in Python
+
+This page explains the example code in examples/anymal/python/jumping.py.
+Required imports are as follows.
+```
+import robotoc
+import numpy as np
+import math
+
+```
+
+First, define the robot model with contact frames (in this case, the contact frames are the frames of all feet).
+```
+LF_foot_id = 12
+LH_foot_id = 22
+RF_foot_id = 32
+RH_foot_id = 42
+contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
+baumgarte_time_step = 0.04
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
+                      contact_frames, baumgarte_time_step)
+```
+@note 
+- If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
+```
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
+                      [0, 1, 2, 3], baumgarte_time_step)
+print(robot)
+```
+- `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
+The best choice of `baumgarte_time_step` may be the time step of the optimal control problem. 
+However, it is often too small to make the optimization problem high nonlinear. 
+A moderate value such as several times of the time step of optimal control problem may be sufficient 
+
+Then set the parameters for the optimal control problem of the jumping motion such as the jump length
+```
+dt = 0.01
+jump_length = 0.5
+jump_height = 0.1
+flying_up_time = 0.15
+flying_down_time = flying_up_time
+flying_time = flying_up_time + flying_down_time
+ground_time = 0.30
+t0 = 0
+```
+
+Next, we construct the cost function (TODO: write details about the cost function components).
+```
+cost = robotoc.CostFunction()
+q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
+                       -0.1,  0.7, -1.0, 
+                       -0.1, -0.7,  1.0, 
+                        0.1,  0.7, -1.0, 
+                        0.1, -0.7,  1.0])
+q_weight = np.array([0, 0, 0, 250000, 250000, 250000, 
+                     0.0001, 0.0001, 0.0001, 
+                     0.0001, 0.0001, 0.0001,
+                     0.0001, 0.0001, 0.0001,
+                     0.0001, 0.0001, 0.0001])
+v_weight = np.array([100, 100, 100, 100, 100, 100, 
+                     1, 1, 1, 
+                     1, 1, 1,
+                     1, 1, 1,
+                     1, 1, 1])
+u_weight = np.full(robot.dimu(), 1.0e-01)
+qi_weight = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+                      100, 100, 100, 
+                      100, 100, 100,
+                      100, 100, 100,
+                      100, 100, 100])
+vi_weight = np.full(robot.dimv(), 100)
+config_cost = robotoc.ConfigurationSpaceCost(robot)
+config_cost.set_q_ref(q_standing)
+config_cost.set_q_weight(q_weight)
+config_cost.set_qf_weight(q_weight)
+config_cost.set_qi_weight(qi_weight)
+config_cost.set_v_weight(v_weight)
+config_cost.set_vf_weight(v_weight)
+config_cost.set_vi_weight(vi_weight)
+config_cost.set_u_weight(u_weight)
+cost.push_back(config_cost)
+
+robot.forward_kinematics(q_standing)
+q0_3d_LF = robot.frame_position(LF_foot_id)
+q0_3d_LH = robot.frame_position(LH_foot_id)
+q0_3d_RF = robot.frame_position(RF_foot_id)
+q0_3d_RH = robot.frame_position(RH_foot_id)
+
+com_ref0_flying_up = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
+com_ref0_flying_up[2] = robot.com()[2]
+v_com_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
+com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, v_com_ref_flying_up, 
+                                           t0+ground_time, flying_up_time, 
+                                           flying_down_time+2*ground_time, False)
+com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
+com_cost_flying_up.set_q_weight(np.full(3, 1.0e06))
+cost.push_back(com_cost_flying_up)
+
+com_ref0_landed = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
+com_ref0_landed[0] += jump_length
+com_ref0_landed[2] = robot.com()[2]
+v_com_ref_landed = np.zeros(3)
+com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, v_com_ref_landed, 
+                                        t0+ground_time+flying_time, ground_time, 
+                                        ground_time+flying_time, False)
+com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
+com_cost_landed.set_q_weight(np.full(3, 1.0e06))
+cost.push_back(com_cost_landed)
+```
+
+Next, we construct the constraints.
+```
+constraints           = robotoc.Constraints()
+joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
+joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
+joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
+joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
+joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
+joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
+mu = 0.7
+friction_cone         = robotoc.FrictionCone(robot, mu)
+constraints.push_back(joint_position_lower)
+constraints.push_back(joint_position_upper)
+constraints.push_back(joint_velocity_lower)
+constraints.push_back(joint_velocity_upper)
+constraints.push_back(joint_torques_lower)
+constraints.push_back(joint_torques_upper)
+constraints.push_back(friction_cone)
+constraints.set_barrier(1.0e-01)
+```
+
+Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 
+```
+max_num_impulses = 1
+contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+```
+Then we can set an impulse event and a lift event to the contact sequence.
+`robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
+
+We set the initial contact status of the robot. 
+In the beginning, the robot is standing, so all the contacts are active.
+```
+contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
+contact_status_standing = robot.create_contact_status()
+contact_status_standing.activate_contacts([0, 1, 2, 3])
+contact_status_standing.set_contact_points(contact_points)
+contact_sequence.init_contact_sequence(contact_status_standing)
+```
+
+Next, we set the contact status when the robot is flying. 
+Then the all the contacts are inactive.
+```
+contact_status_flying = robot.create_contact_status()
+contact_sequence.push_back(contact_status_flying, t0+ground_time)
+```
+Then a lift event is appended into the back of the contact sequence.
+Finally, we set the contact status after touch-down as
+```
+contact_points[0][0] += jump_length
+contact_points[1][0] += jump_length
+contact_points[2][0] += jump_length
+contact_points[3][0] += jump_length
+contact_status_standing.set_contact_points(contact_points)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
+```
+Then an impulse event is appended into the back of the contact sequence.
+
+@note We can check the contact sequence via 
+```
+std::cout << contact_sequence << std::endl;
+```
+
+Finally, we can construct the optimal control solver!
+```
+T = t0 + flying_time + 2*ground_time
+N = math.floor(T/dt) 
+ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
+                               T, N, nthreads=4)
+```
+
+So, let's run the solver! 
+```
+
+t = 0.
+q = q_standing # initial state.
+v = np.zeros(robot.dimv()) # initial state.
+
+ocp_solver.set_solution("q", q) # set the initial guess of the solution.
+ocp_solver.set_solution("v", v) # set the initial guess of the solution.
+f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
+ocp_solver.set_solution("f", f_init) # set the initial guess of the solution.
+
+ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
+
+line_search = False
+num_iteration = 50
+
+ocp_solver.compute_KKT_residual(t, q, v)
+print('Initial KKT error = {:.6g}'.format(ocp_solver.KKT_error()))
+for i in range(num_iteration):
+    ocp_solver.update_solution(t, q, v, line_search)
+    ocp_solver.compute_KKT_residual(t, q, v)
+    print('KKT error after iteration ' + str(i+1) + ' = {:.6g}'.format(ocp_solver.KKT_error()))
+```
+
+We can visualize the solution trajectory as
+```
+viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
+                                        viewer_type='gepetto')
+viewer.set_contact_info(contact_frames, mu)
+viewer.display(dt, ocp_solver.get_solution('q'), 
+               ocp_solver.get_solution('f', 'WORLD'))
+```
+
+*/

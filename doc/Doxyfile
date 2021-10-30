@@ -116,7 +116,9 @@ INPUT                  = ../include \
                          mainpage.dox \
                          installation.dox \ 
                          features.dox \ 
-                         examples.dox 
+                         examples.dox \
+                         examples/ocp_solver_cpp.dox \
+                         examples/ocp_solver_py.dox 
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \
                          *.cc \
