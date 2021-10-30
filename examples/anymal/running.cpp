@@ -182,11 +182,8 @@ int main(int argc, char *argv[]) {
   constraints->push_back(impulse_friction_cone);
   constraints->setBarrier(1.0e-01);
 
-  const double T = 7; 
-  const int N = 240;
-  const int max_num_impulses = (steps+3)*2;
-
   // Create the contact sequence
+  const int max_num_impulses = (steps+3)*2;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   robot.updateFrameKinematics(q_standing);
@@ -282,6 +279,8 @@ int main(int argc, char *argv[]) {
   // you can check the contact sequence via
   // std::cout << contact_sequence << std::endl;
 
+  const double T = 7; 
+  const int N = 240;
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
                                 T, N, nthreads);

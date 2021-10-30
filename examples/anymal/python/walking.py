@@ -120,11 +120,8 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-01)
 
-T = t0 + cycle*(2*double_support_time+4*swing_time)
-N = math.floor(T/dt) 
-max_num_impulses = 4*cycle
-
 # Create the contact sequence
+max_num_impulses = 4*cycle
 contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
 
 contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
@@ -196,6 +193,8 @@ for i in range (cycle-1):
 # you can check the contact sequence via 
 # print(contact_sequence)
 
+T = t0 + cycle*(2*double_support_time+4*swing_time)
+N = math.floor(T/dt) 
 ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
                                T, N, nthreads=4)
 

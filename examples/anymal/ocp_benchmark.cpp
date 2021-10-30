@@ -87,11 +87,8 @@ int main () {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
 
-  // Create OCPSolver
-  const double T = 0.5;
-  const int N = 20;
+  // Create the contact sequence
   const int max_num_impulses = 4;
-
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   auto contact_status_standing = robot.createContactStatus();
@@ -100,6 +97,9 @@ int main () {
   robot.getContactPoints(contact_status_standing);
   contact_sequence->initContactSequence(contact_status_standing);
 
+  // Create OCPSolver
+  const double T = 0.5;
+  const int N = 20;
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
                                 T, N, nthreads);

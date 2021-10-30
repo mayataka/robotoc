@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   const double jump_height = 0.1;
   const double flying_up_time = 0.15;
   const double flying_down_time = flying_up_time;
-  const double period_flying = flying_up_time + flying_down_time;
+  const double flying_time = flying_up_time + flying_down_time;
   const double ground_time = 0.30;
   const double t0 = 0;
 
@@ -109,8 +109,8 @@ int main(int argc, char *argv[]) {
   CoM_ref0_landed(2) = robot.CoM()(2);
   const Eigen::Vector3d v_CoM_ref_landed = Eigen::Vector3d::Zero();
   auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_landed, v_CoM_ref_landed, 
-                                                                  t0+ground_time+period_flying, ground_time, 
-                                                                  ground_time+period_flying, false);
+                                                                  t0+ground_time+flying_time, ground_time, 
+                                                                  ground_time+flying_time, false);
   auto com_cost_landed = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_landed);
   com_cost_landed->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_landed);
@@ -134,11 +134,8 @@ int main(int argc, char *argv[]) {
   constraints->push_back(friction_cone);
   constraints->setBarrier(1.0e-01);
 
-  const double T = t0 + period_flying + 2 * ground_time; 
-  const int N = T / dt;
-  const int max_num_impulses = 1;
-
   // Create the contact sequence
+  const int max_num_impulses = 1;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
@@ -156,11 +153,13 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += jump_length;
   contact_status_standing.setContactPoints(contact_points);
   contact_sequence->push_back(contact_status_standing, 
-                              t0+ground_time+period_flying);
+                              t0+ground_time+flying_time);
 
   // you can check the contact sequence via
   // std::cout << contact_sequence << std::endl;
 
+  const double T = t0 + flying_time + 2 * ground_time; 
+  const int N = T / dt;
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
                                 T, N, nthreads);
