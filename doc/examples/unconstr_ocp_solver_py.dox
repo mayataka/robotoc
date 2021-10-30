@@ -1,0 +1,100 @@
+/*!
+
+\page subpage_unconstr_ocp_solver_example_py Robot manipulator example of robotoc::UnconstrOCPSolver and robotoc::UnconstrParNMPCSolver in Python
+
+This page explains the example code in examples/iiwa14/python/config_space_ocp.py.
+Required imports are as follows.
+```
+import robotoc
+import numpy as np
+import math
+
+```
+
+First, define the robot model.
+```
+path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf"
+robot = robotoc.Robot(path_to_urdf)
+robot.set_joint_effort_limit(np.full(robot.dimu(), 50))
+robot.set_joint_velocity_limit(np.full(robot.dimv(), 0.5*math.pi))
+```
+
+Next, we construct the cost function.
+```
+cost = robotoc.CostFunction()
+config_cost = robotoc.ConfigurationSpaceCost(robot)
+q_ref = np.array([0, 0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi, 0]) 
+config_cost.set_q_ref(q_ref)
+config_cost.set_q_weight(np.full(robot.dimv(), 10))
+config_cost.set_qf_weight(np.full(robot.dimv(), 10))
+config_cost.set_v_weight(np.full(robot.dimv(), 0.01))
+config_cost.set_vf_weight(np.full(robot.dimv(), 0.01))
+config_cost.set_a_weight(np.full(robot.dimv(), 0.01))
+cost.push_back(config_cost)
+```
+
+Next, we construct the constraints.
+```
+constraints          = robotoc.Constraints()
+joint_position_lower = robotoc.JointPositionLowerLimit(robot)
+joint_position_upper = robotoc.JointPositionUpperLimit(robot)
+joint_velocity_lower = robotoc.JointVelocityLowerLimit(robot)
+joint_velocity_upper = robotoc.JointVelocityUpperLimit(robot)
+joint_torques_lower  = robotoc.JointTorquesLowerLimit(robot)
+joint_torques_upper  = robotoc.JointTorquesUpperLimit(robot)
+constraints.push_back(joint_position_lower)
+constraints.push_back(joint_position_upper)
+constraints.push_back(joint_velocity_lower)
+constraints.push_back(joint_velocity_upper)
+constraints.push_back(joint_torques_lower)
+constraints.push_back(joint_torques_upper)
+```
+
+Finally, we can construct the optimal control solver!
+```
+T = 3.0
+N = 60
+nthreads = 4
+ocp_solver = robotoc.UnconstrOCPSolver(robot, cost, constraints, T, N, nthreads)
+```
+or ParNMPC solver!
+```
+T = 3.0
+N = 60
+nthreads = 4
+ocp_solver = robotoc.UnconstrParNMPCSolver(robot, cost, constraints, T, N, nthreads)
+```
+
+So, let's run the solver! 
+```
+t = 0.
+q = np.array([0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi]) # initial state. 
+v = np.zeros(robot.dimv()) # initial state.
+
+ocp_solver.set_solution("q", q) # set the initial guess of the solution.
+ocp_solver.set_solution("v", v) # set the initial guess of the solution.
+
+ocp_solver.init_constraints() # initialize the slack and dual variables of the primal-dual interior point method.
+
+line_search = False
+num_iteration = 50
+
+ocp_solver.compute_KKT_residual(t, q, v)
+print('Initial KKT error = {:.6g}'.format(ocp_solver.KKT_error()))
+for i in range(num_iteration):
+    ocp_solver.update_solution(t, q, v, line_search)
+    ocp_solver.compute_KKT_residual(t, q, v)
+    print('KKT error after iteration ' + str(i+1) + ' = {:.6g}'.format(ocp_solver.KKT_error()))
+```
+
+We can visualize the solution trajectory as
+```
+num_iteration = 60
+robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
+
+viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')
+viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)
+viewer.display((T/N), ocp_solver.get_solution('q'))
+```
+
+*/

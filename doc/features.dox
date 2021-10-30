@@ -88,14 +88,14 @@ TODO
 
 \section features_references References
 
-[1] H. Bock and K. Plitt, A multiple shooting algorithm for direct solution of optimal control problems, in 9th IFAC World Congress, pp.1603–1608, 1984. <br>
-[2] J. B. Rawlings, D. Q. Mayne, and M. Diehl, Model Predictive Control: Theory, Computation, and Design, Nob Hill Publishing, 2nd edition, 2017. <br>
-[3] J. Nocedal and S. J. Wright, Numerical Optimization, 2nd edition, Springer, 2006. <br>
-[4] C. Rao, S. J. Wright, and J. B. Rawlings, Application of interior-point methods to model predictive control, Journal of Optimization Theory and Applications, vol. 99, no. 3, pp. 723–757, 1998. <br>
-[5] H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019. <br>
-[6] J. Carpentier and N. Mansard, Analytical derivatives of rigid body dynamics algorithms, Robotics: Science and Systems, 2018. <br>
-[7] S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021 <br>
-[8] S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021 <br>
-[9] S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021. <br>
+[1] H. Bock and K. Plitt, "A multiple shooting algorithm for direct solution of optimal control problems," in 9th IFAC World Congress, pp.1603–1608, 1984. <br>
+[2] J. B. Rawlings, D. Q. Mayne, and M. Diehl, <i>Model Predictive Control: Theory, Computation, and Design</i>, 2nd edition, Nob Hill Publishing, 2017. <br>
+[3] J. Nocedal and S. J. Wright, <i>Numerical Optimization</i>, 2nd edition, Springer, 2006. <br>
+[4] C. Rao, S. J. Wright, and J. B. Rawlings, "Application of interior-point methods to model predictive control," <i>Journal of Optimization Theory and Applications</i>, vol. 99, no. 3, pp. 723–757, 1998. <br>
+[5] H. Deng and T. Ohtsuka, "A parallel Newton-type method for nonlinear model predictive control," <i>Automatica</i>, Vol. 109, pp. 108560, 2019. <br>
+[6] J. Carpentier and N. Mansard, "Analytical derivatives of rigid body dynamics algorithms," Robotics: Science and Systems, 2018. <br>
+[7] S. Katayama and T. Ohtsuka, "Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts," https://arxiv.org/abs/2108.01781, 2021 <br>
+[8] S. Katayama and T. Ohtsuka, "Efficient Riccati recursion for optimal control problems with pure-state equality constraints," https://arxiv.org/abs/2102.09731, 2021 <br>
+[9] S. Katayama and T. Ohtsuka, "Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems," IEEE International Conference on Robotics and Automation (ICRA), 2021. <br>
 
 */

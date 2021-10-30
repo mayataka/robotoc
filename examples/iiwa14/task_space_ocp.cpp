@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
   // Create joint constraints.
   robotoc::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
+  constraints->setBarrier(1.0e-03);
 
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 6;
@@ -91,7 +92,8 @@ int main(int argc, char *argv[]) {
   // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
-  const int num_iteration = 30;
+  ocp_solver.initConstraints();
+  const int num_iteration = 50;
   const bool line_search = false;
   robotoc::benchmark::convergence(ocp_solver, t, q, v, num_iteration, line_search);
 

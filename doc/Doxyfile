@@ -118,7 +118,9 @@ INPUT                  = ../include \
                          features.dox \ 
                          examples.dox \
                          examples/ocp_solver_cpp.dox \
-                         examples/ocp_solver_py.dox 
+                         examples/ocp_solver_py.dox \
+                         examples/unconstr_ocp_solver_cpp.dox \
+                         examples/unconstr_ocp_solver_py.dox 
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \
                          *.cc \

@@ -94,7 +94,10 @@ int main () {
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
-  robot.getContactPoints(contact_status_standing);
+  const std::vector<Eigen::Vector3d> contact_points = {robot.framePosition(LF_foot), 
+                                                       robot.framePosition(LH_foot),
+                                                       robot.framePosition(RF_foot),
+                                                       robot.framePosition(RH_foot)};
   contact_sequence->initContactSequence(contact_status_standing);
 
   // Create OCPSolver

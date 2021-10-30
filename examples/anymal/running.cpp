@@ -187,8 +187,10 @@ int main(int argc, char *argv[]) {
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   robot.updateFrameKinematics(q_standing);
-  std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
-  robot.getContactPoints(contact_points);
+  std::vector<Eigen::Vector3d> contact_points = {robot.framePosition(LF_foot_id), 
+                                                 robot.framePosition(LH_foot_id),
+                                                 robot.framePosition(RF_foot_id),
+                                                 robot.framePosition(RH_foot_id)};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   auto contact_status_front_swing = robot.createContactStatus();

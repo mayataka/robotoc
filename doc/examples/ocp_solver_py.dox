@@ -170,7 +170,7 @@ Then an impulse event is appended into the back of the contact sequence.
 
 @note We can check the contact sequence via 
 ```
-std::cout << contact_sequence << std::endl;
+print(contact_sequence)
 ```
 
 Finally, we can construct the optimal control solver!
