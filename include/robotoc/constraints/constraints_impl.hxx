@@ -147,20 +147,6 @@ template <typename ConstraintComponentBaseTypePtr,
           typename SplitSolutionType, typename SplitDirectionType>
 inline void expandSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-    std::vector<ConstraintComponentData>& data, const double dt, 
-    const double dts, const SplitSolutionType& s, const SplitDirectionType& d) {
-  for (auto& e : data) {
-    e.residual.array() *= (1+(dts/dt));
-    e.cmpl.array() *= (1+(dts/dt));
-  }
-  expandSlackAndDual(constraints, data, s, d);
-}
-
-
-template <typename ConstraintComponentBaseTypePtr, 
-          typename SplitSolutionType, typename SplitDirectionType>
-inline void expandSlackAndDual(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     std::vector<ConstraintComponentData>& data, 
     const SplitSolutionType& s, const SplitDirectionType& d) {
   assert(constraints.size() == data.size());

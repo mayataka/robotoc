@@ -229,20 +229,6 @@ public:
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraints data. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] dts The direction of the switching time regarding of this time 
-  /// stage. 
-  /// @param[in] s Split solution.
-  /// @param[in] d Split direction.
-  ///
-  void expandSlackAndDual(ConstraintsData& data, const double dt, 
-                          const double dts, const SplitSolution& s, 
-                          const SplitDirection& d) const;
-
-  ///
-  /// @brief Expands the slack and dual, i.e., computes the directions of the 
-  /// slack and dual variables from the directions of the primal variables.
-  /// @param[in, out] data Constraints data. 
   /// @param[in] s Impulse split solution.
   /// @param[in] d Impulse split direction.
   ///

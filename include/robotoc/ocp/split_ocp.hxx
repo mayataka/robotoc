@@ -117,7 +117,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, s, 
                                              kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, dt);
 }
@@ -169,7 +169,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
                                              kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, dt);
   constraints_->condenseSlackAndDual(constraints_data_, dt, s, 
@@ -208,7 +208,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   stage_cost_ += dt * constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
                                              kkt_residual);
   switching_constraint_.linearizeSwitchingConstraint(robot, impulse_status, dt, 
                                                      dt_next, s, kkt_matrix, 
@@ -235,32 +235,27 @@ inline void SplitOCP::computeInitialStateDirection(const Robot& robot,
 }
 
 
-inline void SplitOCP::expandPrimal(const double dt, const SplitSolution& s, 
-                                   SplitDirection& d, const bool sto) {
+inline void SplitOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
   d.setContactStatusByDimension(s.dimf());
-  if (sto) {
-    assert(dt > 0);
-    contact_dynamics_.expandPrimal(dt, d.dts, d);
-    constraints_->expandSlackAndDual(constraints_data_, dt, d.dts, s, d);
-  }
-  else {
-    contact_dynamics_.expandPrimal(d);
-    constraints_->expandSlackAndDual(constraints_data_, s, d);
-  }
+  contact_dynamics_.expandPrimal(d);
+  constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
 
 template <typename SplitDirectionType>
 inline void SplitOCP::expandDual(const double dt, 
                                  const SplitDirectionType& d_next, 
-                                 SplitDirection& d, const bool sto) {
+                                 SplitDirection& d, const double dts) {
   assert(dt > 0);
-  if (sto) {
-    contact_dynamics_.expandDual(dt, d.dts, d_next, d);
-  }
-  else {
-    contact_dynamics_.expandDual(dt, d_next, d);
-  }
+  contact_dynamics_.expandDual(dt, dts, d_next, d);
+  state_equation_.correctCostateDirection(d);
+}
+
+
+inline void SplitOCP::expandDual(const double dt, const SplitDirection& d_next, 
+                                 const SwitchingConstraintJacobian& sc_jacobian,
+                                 SplitDirection& d, const double dts) {
+  contact_dynamics_.expandDual(dt, dts, d_next, sc_jacobian, d);
   state_equation_.correctCostateDirection(d);
 }
 

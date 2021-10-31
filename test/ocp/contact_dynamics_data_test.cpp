@@ -73,6 +73,9 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   EXPECT_EQ(data.laf().size(), dimv+dimf);
   EXPECT_EQ(data.la().size(), dimv);
   EXPECT_EQ(data.lf().size(), dimf);
+  EXPECT_EQ(data.haf().size(), dimv+dimf);
+  EXPECT_EQ(data.ha().size(), dimv);
+  EXPECT_EQ(data.hf().size(), dimf);
   const Eigen::MatrixXd dIDda_ref = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd dCda_ref = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd dIDCdqv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimx);
@@ -83,6 +86,7 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   const Eigen::VectorXd IDC_ref = Eigen::VectorXd::Random(dimv+dimf);
   const Eigen::VectorXd MJtJinv_IDC_ref = Eigen::VectorXd::Random(dimv+dimf);
   const Eigen::VectorXd laf_ref = Eigen::VectorXd::Random(dimv+dimf);
+  const Eigen::VectorXd haf_ref = Eigen::VectorXd::Random(dimv+dimf);
   data.dIDda = dIDda_ref;
   data.dCda() = dCda_ref;
   data.dIDCdqv() = dIDCdqv_ref;
@@ -93,6 +97,7 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   data.IDC() = IDC_ref;
   data.MJtJinv_IDC() = MJtJinv_IDC_ref;
   data.laf() = laf_ref;
+  data.haf() = haf_ref;
   EXPECT_TRUE(data.dIDda.isApprox(dIDda_ref));
   EXPECT_TRUE(data.dCda().isApprox(dCda_ref));
   EXPECT_TRUE(data.dIDCdqv().isApprox(dIDCdqv_ref));
@@ -115,6 +120,9 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   EXPECT_TRUE(data.laf().isApprox(laf_ref));
   EXPECT_TRUE(data.la().isApprox(laf_ref.head(dimv)));
   EXPECT_TRUE(data.lf().isApprox(laf_ref.tail(dimf)));
+  EXPECT_TRUE(data.haf().isApprox(haf_ref));
+  EXPECT_TRUE(data.ha().isApprox(haf_ref.head(dimv)));
+  EXPECT_TRUE(data.hf().isApprox(haf_ref.tail(dimf)));
 }
 
 

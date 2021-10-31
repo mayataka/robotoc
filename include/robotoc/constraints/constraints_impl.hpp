@@ -160,24 +160,6 @@ void condenseSlackAndDual(
 /// slack and dual variables from the directions of the primal variables.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in, out] data Vector of the constraints data.
-/// @param[in] dt Time step of this time stage. 
-/// @param[in] dts The direction of the switching time regarding of this time 
-/// stage. 
-/// @param[in] s Split solution.
-/// @param[in] d Split direction.
-///
-template <typename ConstraintComponentBaseTypePtr, 
-          typename SplitSolutionType, typename SplitDirectionType>
-void expandSlackAndDual(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, const double dt, 
-    const double dts, const SplitSolutionType& s, const SplitDirectionType& d);
-
-///
-/// @brief Expands the slack and dual, i.e., computes the directions of the 
-/// slack and dual variables from the directions of the primal variables.
-/// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
 /// @param[in] d Split direction.
 ///

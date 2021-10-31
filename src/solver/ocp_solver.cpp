@@ -84,7 +84,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
-  dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, d_, s_);
+  dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
+                         kkt_matrix_, d_, s_);
 } 
 
 

@@ -261,25 +261,6 @@ inline void Constraints::expandSlackAndDual(ConstraintsData& data,
 }
 
 
-inline void Constraints::expandSlackAndDual(ConstraintsData& data, 
-                                            const double dt, const double dts,
-                                            const SplitSolution& s, 
-                                            const SplitDirection& d) const {
-  if (data.isPositionLevelValid()) {
-    constraintsimpl::expandSlackAndDual(position_level_constraints_, 
-                                        data.position_level_data, dt, dts, s, d);
-  }
-  if (data.isVelocityLevelValid()) {
-    constraintsimpl::expandSlackAndDual(velocity_level_constraints_, 
-                                        data.velocity_level_data, dt, dts, s, d);
-  }
-  if (data.isAccelerationLevelValid()) {
-    constraintsimpl::expandSlackAndDual(acceleration_level_constraints_, 
-                                        data.acceleration_level_data, dt, dts, s, d);
-  }
-}
-
-
 inline void Constraints::expandSlackAndDual(
     ConstraintsData& data, const ImpulseSplitSolution& s, 
     const ImpulseSplitDirection& d) const {

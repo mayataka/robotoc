@@ -147,11 +147,23 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
+  Eigen::VectorBlock<Eigen::VectorXd> haf();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> haf() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> ha();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> ha() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> hf();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> hf() const;
+
 private:
   Eigen::MatrixXd dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 
                   Qafu_full_full_;
-  Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_full_;
+  Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_full_, haf_full_;
   int dimv_, dimu_, dimf_, dimvf_, dim_passive_;
 
 };

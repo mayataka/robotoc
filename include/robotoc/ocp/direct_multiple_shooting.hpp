@@ -148,12 +148,14 @@ public:
   /// @param[in] robots aligned_vector of Robot.
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
+  /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in, out] d Direction. 
   /// @param[in, out] s Solution. 
   ///
   void integrateSolution(OCP& ocp, const aligned_vector<Robot>& robots,
                          const double primal_step_size,
                          const double dual_step_size,
+                         const KKTMatrix& kkt_matrix,
                          Direction& d, Solution& s) const;
 
   static const Eigen::VectorXd& q_prev(const OCP& ocp, const Eigen::VectorXd& q, 
