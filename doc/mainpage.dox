@@ -1,0 +1,107 @@
+/*!
+
+\mainpage Overview of robotoc
+
+@tableofcontents
+
+\section robotoc robotoc - efficient robot optimal control solvers
+`robotoc` (efficient **ROBOT** <b>O</b>ptimal <b>C</b>ontrol solvers) is a collection of C++ (with Python bindings) efficient optimal control problem solvers for multibody robot systems with rigid contacts. <br>
+The main apllication purposes are trajectory optimization and model predictive control (MPC). 
+The followings are examples:
+
+- A <b>trajectory optimization</b> example of quadrupedal running
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/running_yoko.gif" width="530">
+
+- <b>Whole-body MPC</b> (400 Hz sampling rate) examples of quadrupedal walking and trotting on a physical simulator [PyBullet] (https://pybullet.org/wordpress/).
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="250">
+
+More examples are found in @ref page_examples.
+
+
+\section solvers Brief overview of optimal control solvers 
+The following three solvers are available:
+- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base.
+- `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
+- `robotoc::UnconstrParNMPCSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. Possibly very efficient when the number of available CPU cores is very large.
+
+The common features among these three solvers are as follows: 
+- <b>Direct multiple shooting method</b>:
+    - has a nice convergence property.
+    - fully leverages parallel computation.
+- <b>Primal-dual interior point method</b>: 
+    - can treat many inequality constraints including nonlinear ones very efficiently.
+    - allows infeasible initial guess of the solution.
+    - enables us to perform very fast suboptimal MPC by fixing the barrier parameter.
+- <b>Structure-exploting algorithms to compute Newton steps</b>: 
+    - can compute the Newton steps with linear time complexity with respect to the length of the horizon.
+- <b>Very fast rigid body kinematics and dynamics computation</b> thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
+    - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) enables us to compute the rigid body kinematics, dynamics, and their sensitivities (Jacobians) very efficiently.
+    - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) also gives us an interface to construct robot model (`robotoc::Robot`) via URDF files.
+
+The detailed features are found in @ref page_features.
+
+
+\section installation Installation
+Please see @ref page_installation.
+
+
+\section citiation Citing robotoc
+
+- Citing `robotoc::OCPSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
+```
+@misc{katayama2021liftedcd,
+  title={Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts}, 
+  author={Sotaro Katayama and Toshiyuki Ohtsuka},
+  url={arXiv:2108.01781},
+  eprint={2108.01781},
+  archivePrefix={arXiv}
+  year={2021}}
+```
+
+- Citing `robotoc::UnconstrOCPSolver` and `UnconstrParNMPCSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
+```
+@inproceedings{katayama2021idocp,
+  title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},
+  author={Sotaro Katayama and Toshiyuki Ohtsuka},
+  booktitle={{IEEE International Conference on Robotics and Automation (ICRA)}},
+  year={2021}}
+```
+
+Moreover, there are many pieces of literature the solvers basing on.
+For example, 
+- `robotoc::OCPSolver` uses the Riccati recursion algorithm with the pure-state equality constraints 
+```
+@misc{katayama2021purestate,
+  title={Efficient {R}iccati recursion for optimal control problems with pure-state equality constraints},
+  author={Sotaro Katayama and Toshiyuki Ohtsuka},
+  url={arXiv:2102.09731},
+  eprint={2102.09731},
+  archivePrefix={arXiv}
+  year={2021}}
+```
+- `robotoc::UnconstrParNMPCSolver` uses the highly parallelizable Newton-type method 
+```
+@article{deng2019parnmpc,
+  title={A parallel {N}ewton-type method for nonlinear model predictive control},
+  author={Haoyang Deng and Toshiyuki Ohtsuka},
+  journal={Automatica},
+  volume={109},
+  pages={108560},
+  year={2019}}
+```
+- Moreover, `robotoc` heavily relies on [Pinocchio](https://github.com/stack-of-tasks/pinocchio), so we'd like you to cite it as
+```
+@inproceedings{carpentier-sii19,
+  title={The {P}inocchio {C}++ library -- {A} fast and flexible implementation of rigid body dynamics algorithms and their analytical derivatives},
+  author={J. Carpentier and G. Saurel and G. Buondonno and J. Mirabel and F. Lamiraux and O. Stasse and N. Mansard},
+  booktitle={International Symposium on System Integration (SII)}
+  year={2019}}
+```
+
+\section source_code Source code
+Source code is available at github https://github.com/mayataka/robotoc.
+
+*/

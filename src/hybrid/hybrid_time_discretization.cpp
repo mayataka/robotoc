@@ -10,7 +10,7 @@ void HybridOCPDiscretization::disp(std::ostream& os) const {
   os << "  N = " << N() << std::endl;
   os << "  N_impulse = " << N_impulse() << std::endl;
   os << "  N_lift = " << N_lift() << std::endl;
-  os << "  N_all = " << N_all() << std::endl;
+  os << "  N_all = " << (N()+1+2*N_impulse()+N_lift()) << std::endl;
   os << "  isFormulationTractable: ";
   if (isFormulationTractable()) os << "true" << std::endl;
   else os << "false" << std::endl;

@@ -22,10 +22,10 @@ public:
   /// @brief Constructor. 
   /// @param[in] T Length of the horizon.
   /// @param[in] N Ideal number of the discretization grids of the horizon. 
-  /// Note that the actual number of the grids can differ from this value 
-  /// depending on the discrete events.
   /// @param[in] max_events Maximum number of each discrete events 
   /// (impulse and lift). 
+  /// @note The actual number of the grids can differ from N depending on the 
+  /// discrete events.
   ///
   HybridOCPDiscretization(const double T, const int N, const int max_events);
 
@@ -82,12 +82,6 @@ public:
   /// @return Number of the lift stages on the horizon. 
   ///
   int N_lift() const; 
-
-  ///
-  /// @return Total number of the time stages, impulse stages, auxiliary stages, 
-  /// lift stages, and terminal stage on the horizon. 
-  ///
-  int N_all() const;
 
   ///
   /// @return Ideal number of the discretization grids on the horizon. 
@@ -290,7 +284,7 @@ public:
   ///
   /// @brief Minimum step size of the discretization grid. 
   ///
-  static constexpr double min_dt 
+  static constexpr double k_min_dt 
       = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:

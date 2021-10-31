@@ -150,11 +150,8 @@ int main(int argc, char *argv[]) {
   constraints->push_back(friction_cone);
   constraints->setBarrier(1.0e-01);
 
-  const double T = t0 + cycle*(2*double_support_time+2*swing_time);
-  const int N = T / dt; 
-  const int max_num_impulses = 2*cycle;
-
   // Create the contact sequence
+  const int max_num_impulses = 2*cycle;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
@@ -209,6 +206,8 @@ int main(int argc, char *argv[]) {
   // you can check the contact sequence via
   // std::cout << contact_sequence << std::endl;
 
+  const double T = t0 + cycle*(2*double_support_time+2*swing_time);
+  const int N = T / dt; 
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
                                 T, N, nthreads);

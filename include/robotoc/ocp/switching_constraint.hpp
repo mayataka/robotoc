@@ -57,8 +57,8 @@ public:
 
   ///
   /// @brief Computes the residual in the switching constraint, i.e., the 
-  /// contact position constraint. Note that the internal kinematics data 
-  /// of robot is updated.  
+  /// contact position constraint. 
+  /// @note The internal kinematics data of robot is updated.  
   /// @param[in] robot Robot model. Kinematics must be updated.
   /// @param[in] impulse_status Impulse status. 
   /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.
@@ -73,7 +73,8 @@ public:
 
   ///
   /// @brief Linearizes the switching constraint, i.e., the contact position 
-  /// constraint. Note that the internal kinematics data of robot is updated.
+  /// constraint. 
+  /// @note The internal kinematics data of robot is updated.  
   /// @param[in] robot Robot model. Kinematics must be updated.
   /// @param[in] impulse_status Impulse status. 
   /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.

@@ -1,8 +1,18 @@
+/*!
+
+\page subpage_ocp_solver_example_py Quadrupedal jumping example of robotoc::OCPSolver in Python
+
+This page explains the example code in examples/anymal/python/jumping.py.
+Required imports are as follows.
+```
 import robotoc
 import numpy as np
 import math
 
+```
 
+First, define the robot model with contact frames (in this case, the contact frames are the frames of all feet).
+```
 LF_foot_id = 12
 LH_foot_id = 22
 RF_foot_id = 32
@@ -12,7 +22,21 @@ path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.04
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, baumgarte_time_step)
+```
+@note 
+- If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
+```
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
+                      [0, 1, 2, 3], baumgarte_time_step)
+print(robot)
+```
+- `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
+The best choice of `baumgarte_time_step` may be the time step of the optimal control problem. 
+However, it is often too small to make the optimization problem high nonlinear. 
+A moderate value such as several times of the time step of optimal control problem may be sufficient 
 
+Then set the parameters for the optimal control problem of the jumping motion such as the jump length
+```
 dt = 0.01
 jump_length = 0.5
 jump_height = 0.1
@@ -21,8 +45,10 @@ flying_down_time = flying_up_time
 flying_time = flying_up_time + flying_down_time
 ground_time = 0.30
 t0 = 0
+```
 
-# Create the cost function
+Next, we construct the cost function (TODO: write details about the cost function components).
+```
 cost = robotoc.CostFunction()
 q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
                        -0.1,  0.7, -1.0, 
@@ -83,8 +109,10 @@ com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, v_com_ref_landed,
 com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
 com_cost_landed.set_q_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_landed)
+```
 
-# Create the constraints
+Next, we construct the constraints.
+```
 constraints           = robotoc.Constraints()
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
@@ -102,54 +130,98 @@ constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-01)
+```
 
-# Create the contact sequence
+Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 
+```
 max_num_impulses = 1
 contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+```
+Then we can set an impulse event and a lift event to the contact sequence.
+`robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
 
+We set the initial contact status of the robot. 
+In the beginning, the robot is standing, so all the contacts are active.
+```
 contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
 contact_status_standing.set_contact_points(contact_points)
 contact_sequence.init_contact_sequence(contact_status_standing)
+```
 
+Next, we set the contact status when the robot is flying. 
+Then the all the contacts are inactive.
+```
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time)
-
+```
+Then a lift event is appended into the back of the contact sequence.
+Finally, we set the contact status after touch-down as
+```
 contact_points[0][0] += jump_length
 contact_points[1][0] += jump_length
 contact_points[2][0] += jump_length
 contact_points[3][0] += jump_length
 contact_status_standing.set_contact_points(contact_points)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
+```
+Then an impulse event is appended into the back of the contact sequence.
 
-# you can check the contact sequence via 
-# print(contact_sequence)
+@note We can check the contact sequence via 
+```
+print(contact_sequence)
+```
 
+Finally, we can construct the optimal control solver!
+```
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
 ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
                                T, N, nthreads=4)
+```
+
+So, let's run the solver! 
+```
 
 t = 0.
-q = q_standing
-v = np.zeros(robot.dimv())
+q = q_standing # initial state.
+v = np.zeros(robot.dimv()) # initial state.
 
-ocp_solver.set_solution("q", q)
-ocp_solver.set_solution("v", v)
+ocp_solver.set_solution("q", q) # set the initial guess of the solution.
+ocp_solver.set_solution("v", v) # set the initial guess of the solution.
 f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
-ocp_solver.set_solution("f", f_init)
+ocp_solver.set_solution("f", f_init) # set the initial guess of the solution.
 
-ocp_solver.init_constraints(t)
+ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
 
+line_search = False
 num_iteration = 50
-robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
-# num_iteration = 1000
-# robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
+ocp_solver.compute_KKT_residual(t, q, v)
+print('Initial KKT error = {:.6g}'.format(ocp_solver.KKT_error()))
+for i in range(num_iteration):
+    ocp_solver.update_solution(t, q, v, line_search)
+    ocp_solver.compute_KKT_residual(t, q, v)
+    print('KKT error after iteration ' + str(i+1) + ' = {:.6g}'.format(ocp_solver.KKT_error()))
+```
+
+We can visualize the solution trajectory as
+```
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
 viewer.display(dt, ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))
+```
+
+@note We can check the formulation of the discretized optimal control problem 
+before running it via
+```
+ocp_discretization = robotoc.HybridOCPDiscretization(T, N, max_num_impulses*2)
+ocp_discretization.discretize(contact_sequence, t)
+print(ocp_discretization)
+```
+
+*/

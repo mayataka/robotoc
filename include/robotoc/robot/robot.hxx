@@ -649,24 +649,6 @@ inline ImpulseStatus Robot::createImpulseStatus() const {
   return ImpulseStatus(maxPointContacts());
 }
 
-
-template <typename ContactStatusType>
-inline void Robot::getContactPoints(ContactStatusType& contact_status) const {
-  assert(contact_status.maxPointContacts() == maxPointContacts());
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    contact_status.setContactPoint(i, point_contacts_[i].contactPoint(data_));
-  }
-}
-
-
-inline void Robot::getContactPoints(
-    std::vector<Eigen::Vector3d>& contact_points) const {
-  assert(contact_points.size() == maxPointContacts());
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    contact_points[i] = point_contacts_[i].contactPoint(data_);
-  }
-}
-
 } // namespace robotoc
 
 #endif // ROBOTOC_ROBOT_HXX_ 
