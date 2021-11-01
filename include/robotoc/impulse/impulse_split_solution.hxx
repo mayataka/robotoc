@@ -196,6 +196,17 @@ inline void ImpulseSplitSolution::copyDual(const ImpulseSplitSolution& other) {
   set_mu_stack();
 }
 
+inline double ImpulseSplitSolution::lagrangeMultiplierLinfNorm() const {
+  const double lmd_linf = lmd.array().abs().maxCoeff();
+  const double gmm_linf = gmm.array().abs().maxCoeff();
+  const double beta_linf = beta.array().abs().maxCoeff();
+  double mu_linf = 0;
+  for (int i=0; i<f.size(); ++i) {
+    const double linf = mu[i].array().abs().maxCoeff();
+    mu_linf = ((mu_linf < linf) ? linf : mu_linf);
+  }
+  return std::max({lmd_linf, gmm_linf, beta_linf, mu_linf});
+}
 
 inline bool ImpulseSplitSolution::isApprox(
     const ImpulseSplitSolution& other) const {

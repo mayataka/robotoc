@@ -268,6 +268,12 @@ public:
   bool isApprox(const SplitSolution& other) const;
 
   ///
+  /// @brief Return L-infinity Norm of the lagrange multipliers. Used in
+  /// line search.
+  ///
+  double lagrangeMultiplierLinfNorm() const;
+
+  ///
   /// @brief Set each component vector by random value based on the current 
   /// contact status. 
   /// @param[in] robot Robot model.

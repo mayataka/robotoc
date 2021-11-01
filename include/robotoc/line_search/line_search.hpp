@@ -15,6 +15,7 @@
 #include "robotoc/ocp/direction.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
+#include "robotoc/line_search/line_search_settings.hpp"
 
 
 namespace robotoc {
@@ -33,13 +34,11 @@ public:
   /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
-  /// @param[in] step_size_reduction_rate Reduction rate of the step size. 
-  /// Defalt is 0.75.
-  /// @param[in] min_step_size Minimum step size. Default is 0.05.
+  /// @param[in] line_search_settings Line search settings.
   ///
   LineSearch(const Robot& robot, const int N, const int max_num_impulse=0, 
-             const int nthreads=1, const double step_size_reduction_rate=0.75, 
-             const double min_step_size=0.05);
+             const int nthreads=1, 
+             const LineSearchSettings& line_search_settings=LineSearchSettings::defaultSettings());
 
   ///
   /// @brief Default constructor. 
@@ -98,11 +97,16 @@ public:
   /// @return true if the filter is empty. false if not.
   ///
   bool isFilterEmpty() const;
+  
+  ///
+  /// @brief Set line search settings.
+  ///
+  void set(const LineSearchSettings& settings);
 
 private:
   LineSearchFilter filter_;
   int max_num_impulse_, nthreads_;
-  double step_size_reduction_rate_, min_step_size_;
+  LineSearchSettings settings_;
   Eigen::VectorXd costs_, costs_impulse_, costs_aux_, costs_lift_, violations_, 
                   violations_impulse_, violations_aux_, violations_lift_; 
   Solution s_trial_;
@@ -111,8 +115,7 @@ private:
   void computeCostAndViolation(
       OCP& ocp, aligned_vector<Robot>& robots, 
       const std::shared_ptr<ContactSequence>& contact_sequence, 
-      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-      const double primal_step_size_for_barrier=0);
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s);
 
   void computeSolutionTrial(const OCP& ocp, const aligned_vector<Robot>& robots, 
                             const Solution& s, const Direction& d, 
@@ -169,6 +172,26 @@ private:
     return (violations_.sum()+violations_impulse_.sum()+violations_aux_.sum()
             +violations_lift_.sum());
   }
+
+  double lineSearchFilterMethod(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+    const Direction& d, const double initial_primal_step_size);
+
+  double meritBacktrackingLineSearch(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+    const Direction& d, const double initial_primal_step_size);
+
+  bool armijoCond(const double merit_now, const double merit_next, 
+                  const double dd, const double step_size, 
+                  const double armijo_control_rate) const;
+
+  double merit(const double penalty_param) const;
+
+  double penaltyParam(const OCP& ocp, const Solution& s) const;
 
 };
 

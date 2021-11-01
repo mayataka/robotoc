@@ -273,6 +273,18 @@ inline void SplitSolution::copyDual(const SplitSolution& other) {
   }
 }
 
+inline double SplitSolution::lagrangeMultiplierLinfNorm() const {
+  const double lmd_linf = lmd.array().abs().maxCoeff();
+  const double gmm_linf = gmm.array().abs().maxCoeff();
+  const double beta_linf = beta.array().abs().maxCoeff();
+  const double nu_passive_linf = (has_floating_base_ ? nu_passive.array().abs().maxCoeff() : 0);
+  double mu_linf = 0;
+  for (int i=0; i<f.size(); ++i) {
+    const double linf = mu[i].array().abs().maxCoeff();
+    mu_linf = ((mu_linf < linf) ? linf : mu_linf);
+  }
+  return std::max({lmd_linf, gmm_linf, beta_linf, nu_passive_linf, mu_linf});
+}
 
 inline bool SplitSolution::isApprox(const SplitSolution& other) const {
   if (!q.isApprox(other.q)) {
