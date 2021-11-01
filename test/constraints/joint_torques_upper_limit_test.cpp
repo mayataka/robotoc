@@ -97,8 +97,8 @@ void JointTorquesUpperLimitTest::test_evalDerivatives(Robot& robot) const {
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_res_ref = kkt_res;
-  constr.evalDerivatives(robot, data, dt, s, kkt_res);
-  kkt_res_ref.lu += dt * data_ref.dual;
+  constr.evalDerivatives(robot, data, s, kkt_res);
+  kkt_res_ref.lu += data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
 
@@ -115,12 +115,12 @@ void JointTorquesUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(data, dt, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(data, s, kkt_mat, kkt_res);
   kkt_res_ref.lu.array() 
-      += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
+      += (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
   kkt_mat_ref.Quu.diagonal().array() 
-      += dt * data_ref.dual.array() / data_ref.slack.array();
+      += data_ref.dual.array() / data_ref.slack.array();
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 }

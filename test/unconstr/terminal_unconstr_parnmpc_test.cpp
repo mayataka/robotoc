@@ -58,9 +58,9 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
-  constraints->condenseSlackAndDual(constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
-  stage_cost += dt * constraints_data.logBarrier();
+  constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
+  constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
+  stage_cost += constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
@@ -107,15 +107,15 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   stage_cost += cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
-  constraints->linearizeConstraints(robot, constraints_data, dt, s, kkt_residual_ref);
-  stage_cost += dt * constraints_data.logBarrier();
+  constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
+  stage_cost += constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
   kkt_error_ref += kkt_residual_ref.KKTError();
   kkt_error_ref += (dt*dt) * ud.KKTError();
-  kkt_error_ref += (dt*dt) * constraints_data.KKTError();
+  kkt_error_ref += constraints_data.KKTError();
   kkt_residual_ref.kkt_error = kkt_error_ref;
   EXPECT_DOUBLE_EQ(kkt_error_ref, parnmpc.KKTError(kkt_residual, dt));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
@@ -143,7 +143,7 @@ TEST_F(TerminalUnconstrParNMPCTest, evalOCP) {
   double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
   stage_cost_ref += cost->evalTerminalCost(robot, cost_data, t, s);
   constraints->evalConstraint(robot, constraints_data, s);
-  stage_cost_ref += dt * constraints_data.logBarrier();
+  stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,
                                                         s, kkt_residual_ref);

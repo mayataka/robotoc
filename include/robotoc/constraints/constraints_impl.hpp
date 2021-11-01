@@ -98,7 +98,6 @@ void linearizeConstraints(
 /// be called before this function.
 /// @param[in] constraints Vector of the constraints. 
 /// @param[in, out] data Vector of the constraints data.
-/// @param[in] dt Time step.
 /// @param[in] s Split solution.
 /// @param[in, out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
 /// to this object.
