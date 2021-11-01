@@ -86,7 +86,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
     ocp.computeKKTResidual(robot, contact_status, t, dt, s_prev.q, s, s_next, 
                            kkt_matrix, kkt_residual);
   }
-  const double kkt_error = ocp.KKTError(kkt_residual, dt);
+  const double kkt_error = ocp.KKTError(kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
@@ -103,7 +103,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, s, kkt_residual_ref);
-  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, dt);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual);
   if (switching_constraint) {
     SwitchingConstraint sc(robot);
     SwitchingConstraintJacobian switch_jac_ref(robot);
@@ -111,7 +111,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
     sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
                                     kkt_matrix_ref, kkt_residual_ref, 
                                     switch_jac_ref, switch_res_ref);
-    kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, switch_res_ref, dt);
+    kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual, switch_res_ref);
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
@@ -260,11 +260,11 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   if (switching_constraint) {
     ocp.evalOCP(robot, contact_status, t, dt, s, s_next.q, s_next.v, 
                     kkt_residual, impulse_status, dt_next, switch_res);
-    constraint_violation = ocp.constraintViolation(kkt_residual, dt, switch_res);
+    constraint_violation = ocp.constraintViolation(kkt_residual, switch_res);
   }
   else {
     ocp.evalOCP(robot, contact_status, t, dt, s, s_next.q, s_next.v, kkt_residual);
-    constraint_violation = ocp.constraintViolation(kkt_residual, dt);
+    constraint_violation = ocp.constraintViolation(kkt_residual);
   }
   const double stage_cost = ocp.stageCost();
 

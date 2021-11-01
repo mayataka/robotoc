@@ -176,7 +176,7 @@ void RiccatiRecursion::computeDirection(
         const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
         RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
         ocp[i].expandPrimal(s[i], d[i]);
-        d[i].setImpulseStatusByDimension(s[i].dimi());
+        d[i].setImpulseDimension(s[i].dimi());
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization.switching[impulse_index], d[i], sto);
       }

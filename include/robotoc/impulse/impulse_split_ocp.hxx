@@ -132,7 +132,7 @@ inline void ImpulseSplitOCP::computeKKTSystem(
 
 inline void ImpulseSplitOCP::expandPrimal(const ImpulseSplitSolution& s, 
                                           ImpulseSplitDirection& d) {
-  d.setImpulseStatusByDimension(s.dimi());
+  d.setImpulseDimension(s.dimi());
   impulse_dynamics_.expandPrimal(d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }

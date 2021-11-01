@@ -45,26 +45,14 @@ inline SplitDirection::~SplitDirection() {
 }
 
 
-inline void SplitDirection::setContactStatus(
-    const ContactStatus& contact_status) {
-  dimf_ = contact_status.dimf();
-}
-
-
-inline void SplitDirection::setContactStatusByDimension(const int dimf) {
+inline void SplitDirection::setContactDimension(const int dimf) {
   assert(dimf >= 0);
   assert(dimf % 3 == 0);
   dimf_ = dimf;
 }
 
 
-inline void SplitDirection::setImpulseStatus(
-    const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
-}
-
-
-inline void SplitDirection::setImpulseStatusByDimension(const int dimi) {
+inline void SplitDirection::setImpulseDimension(const int dimi) {
   assert(dimi >= 0);
   assert(dimi % 3 == 0);
   dimi_ = dimi;
@@ -281,21 +269,21 @@ inline void SplitDirection::setRandom() {
 
 
 inline void SplitDirection::setRandom(const ContactStatus& contact_status) {
-  setContactStatus(contact_status);
+  setContactDimension(contact_status.dimf());
   setRandom();
 }
 
 
 inline void SplitDirection::setRandom(const ImpulseStatus& impulse_status) {
-  setImpulseStatus(impulse_status);
+  setImpulseDimension(impulse_status.dimf());
   setRandom();
 }
 
 
 inline void SplitDirection::setRandom(const ContactStatus& contact_status, 
                                       const ImpulseStatus& impulse_status) {
-  setContactStatus(contact_status);
-  setImpulseStatus(impulse_status);
+  setContactDimension(contact_status.dimf());
+  setImpulseDimension(impulse_status.dimf());
   setRandom();
 }
 

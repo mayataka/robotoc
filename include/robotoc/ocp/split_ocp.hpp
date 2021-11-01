@@ -321,22 +321,19 @@ public:
   /// @brief Returns the KKT residual of this time stage. Before calling this 
   /// function, SplitOCP::computeKKTResidual() must be called.
   /// @param[in] kkt_residual KKT residual of this time stage.
-  /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double KKTError(const SplitKKTResidual& kkt_residual, const double dt) const;
+  double KKTError(const SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
   /// function, SplitOCP::computeKKTResidual() must be called.
   /// @param[in] kkt_residual KKT residual of this time stage.
   /// @param[in] sc_residual Residual of the switching constraint. 
-  /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
   double KKTError(const SplitKKTResidual& kkt_residual,
-                  const SwitchingConstraintResidual& sc_residual,
-                  const double dt) const;
+                  const SwitchingConstraintResidual& sc_residual) const;
 
   ///
   /// @brief Returns the stage cost of this time stage for the line search.
@@ -352,11 +349,9 @@ public:
   /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
-  /// @param[in] dt Time step of this time stage. 
   /// @return The constraint violation of this time stage.
   ///
-  double constraintViolation(const SplitKKTResidual& kkt_residual, 
-                             const double dt) const;
+  double constraintViolation(const SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the constraint violation of this time stage for the 
@@ -364,12 +359,11 @@ public:
   /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
-  /// @param[in] dt Time step of this time stage. 
   /// @param[in] sc_residual Residual of the switching constraint. 
   /// @return The constraint violation of this time stage.
   ///
   double constraintViolation(
-      const SplitKKTResidual& kkt_residual, const double dt,
+      const SplitKKTResidual& kkt_residual,
       const SwitchingConstraintResidual& sc_residual) const;
 
 private:

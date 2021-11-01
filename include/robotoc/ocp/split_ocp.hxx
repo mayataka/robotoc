@@ -118,7 +118,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s, 
                                              kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, dt);
+  kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
 
@@ -141,7 +141,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                                      dt_next, s, kkt_matrix, 
                                                      kkt_residual, sc_jacobian, 
                                                      sc_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual, dt);
+  kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual);
 }
 
 
@@ -169,7 +169,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
                                              kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, dt);
+  kkt_residual.kkt_error = KKTError(kkt_residual);
   constraints_->condenseSlackAndDual(constraints_data_, s, kkt_matrix, 
                                      kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, s, 
@@ -211,7 +211,7 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
                                                      dt_next, s, kkt_matrix, 
                                                      kkt_residual, sc_jacobian, 
                                                      sc_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual, dt);
+  kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual);
   constraints_->condenseSlackAndDual(constraints_data_, s, kkt_matrix, 
                                      kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, s,
@@ -233,7 +233,7 @@ inline void SplitOCP::computeInitialStateDirection(const Robot& robot,
 
 
 inline void SplitOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
-  d.setContactStatusByDimension(s.dimf());
+  d.setContactDimension(s.dimf());
   contact_dynamics_.expandPrimal(d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
@@ -285,9 +285,7 @@ inline void SplitOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline double SplitOCP::KKTError(const SplitKKTResidual& kkt_residual, 
-                                 const double dt) const {
-  assert(dt > 0);
+inline double SplitOCP::KKTError(const SplitKKTResidual& kkt_residual) const {
   double err = 0;
   err += kkt_residual.KKTError();
   err += contact_dynamics_.KKTError();
@@ -298,9 +296,9 @@ inline double SplitOCP::KKTError(const SplitKKTResidual& kkt_residual,
 
 inline double SplitOCP::KKTError(
     const SplitKKTResidual& kkt_residual, 
-    const SwitchingConstraintResidual& sc_residual, const double dt) const {
+    const SwitchingConstraintResidual& sc_residual) const {
   double err = 0;
-  err += KKTError(kkt_residual, dt);
+  err += KKTError(kkt_residual);
   err += sc_residual.KKTError();
   return err;
 }
@@ -311,8 +309,8 @@ inline double SplitOCP::stageCost() const {
 } 
 
 
-inline double SplitOCP::constraintViolation(const SplitKKTResidual& kkt_residual, 
-                                            const double dt) const {
+inline double SplitOCP::constraintViolation(
+    const SplitKKTResidual& kkt_residual) const {
   double vio = 0;
   vio += kkt_residual.constraintViolation();
   vio += contact_dynamics_.constraintViolation();
@@ -322,10 +320,10 @@ inline double SplitOCP::constraintViolation(const SplitKKTResidual& kkt_residual
 
 
 inline double SplitOCP::constraintViolation(
-    const SplitKKTResidual& kkt_residual, const double dt,
+    const SplitKKTResidual& kkt_residual, 
     const SwitchingConstraintResidual& sc_residual) const {
   double vio = 0;
-  vio += constraintViolation(kkt_residual, dt);
+  vio += constraintViolation(kkt_residual);
   vio += sc_residual.constraintViolation();
   return vio;
 }

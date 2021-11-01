@@ -197,7 +197,7 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
   c_riccati.setImpulseStatus(impulse_status.dimf());
   c_riccati.M().setRandom();
   c_riccati.m().setRandom();
-  d.setImpulseStatus(impulse_status);
+  d.setImpulseDimension(impulse_status.dimf());
   d.dxi().setRandom();
   d_ref = d;
   factorizer.computeLagrangeMultiplierDirection(c_riccati, d);

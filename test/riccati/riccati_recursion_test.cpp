@@ -317,7 +317,7 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
         const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        d_ref[i].setImpulseStatus(contact_sequence->impulseStatus(impulse_index));
+        d_ref[i].setImpulseDimension(contact_sequence->impulseStatus(impulse_index).dimf());
         RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization.switching[impulse_index], 
                                                               d_ref[i], sto);
       }

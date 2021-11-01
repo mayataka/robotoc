@@ -57,8 +57,8 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_EQ(d.dxi().size(), 0);
   EXPECT_EQ(d.dimf(), 0);
   EXPECT_EQ(d.dimi(), 0);
-  d.setContactStatus(contact_status);
-  d.setImpulseStatus(impulse_status);
+  d.setContactDimension(contact_status.dimf());
+  d.setImpulseDimension(impulse_status.dimf());
   EXPECT_EQ(d.dx.size(), dimx);
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);
