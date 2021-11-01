@@ -101,7 +101,7 @@ constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
-constraints.set_barrier(1.0e-01)
+constraints.set_barrier(1.0e-03)
 
 # Create the contact sequence
 max_num_impulses = 1

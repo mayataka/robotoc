@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-01);
+  constraints->setBarrier(1.0e-03);
 
   // Create the contact sequence
   const int max_num_impulses = 1;

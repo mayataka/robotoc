@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   // Create joint constraints.
   robotoc::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
-  constraints->setBarrier(1.0e-03);
+  constraints->setBarrier(1.0e-04);
 
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 6;

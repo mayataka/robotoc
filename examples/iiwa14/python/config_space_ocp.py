@@ -36,6 +36,7 @@ constraints.push_back(joint_velocity_lower)
 constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
+constraints.set_barrier(1.0e-06)
 
 # Create the OCP solver for unconstrained rigid-body systems.
 T = 3.0

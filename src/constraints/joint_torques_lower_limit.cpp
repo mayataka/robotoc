@@ -62,19 +62,19 @@ void JointTorquesLowerLimit::evalConstraint(Robot& robot,
 
 
 void JointTorquesLowerLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, const double dt, 
+    Robot& robot, ConstraintComponentData& data, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  kkt_residual.lu.noalias() -= dt * data.dual;
+  kkt_residual.lu.noalias() -= data.dual;
 }
 
 
 void JointTorquesLowerLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const double dt, const SplitSolution& s, 
+    ConstraintComponentData& data, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Quu.diagonal().array()
-      += dt * data.dual.array() / data.slack.array();
+      += data.dual.array() / data.slack.array();
   computeCondensingCoeffcient(data);
-  kkt_residual.lu.noalias() -= dt * data.cond;
+  kkt_residual.lu.noalias() -= data.cond;
 }
 
 

@@ -34,6 +34,7 @@ int main() {
   // Create joint constraints.
   robotoc::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
+  constraints->setBarrier(1.0e-03);
 
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
@@ -49,7 +50,7 @@ int main() {
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);
   parnmpc_solver.initBackwardCorrection(t);
-  const int num_iteration = 100;
+  const int num_iteration = 50;
   const bool line_search = false;
   robotoc::benchmark::convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;

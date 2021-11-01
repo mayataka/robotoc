@@ -79,10 +79,10 @@ public:
                       const SplitSolution& s) const override;
 
   void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
-                       const double dt, const SplitSolution& s,
+                       const SplitSolution& s,
                        SplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(ConstraintComponentData& data, const double dt, 
+  void condenseSlackAndDual(ConstraintComponentData& data,  
                             const SplitSolution& s, SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
