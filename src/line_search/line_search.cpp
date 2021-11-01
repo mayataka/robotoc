@@ -331,7 +331,7 @@ double LineSearch::penaltyParam(const OCP& ocp, const Solution& s) const {
 }
 
 double LineSearch::merit(const double penalty_param) const {
-  const double res = (costs_ + penalty_param * violations_).sum();
+  const double res = (costs_.head(violations_.size()) + penalty_param * violations_).sum() + costs_[violations_.size()];
   const double res_impulse = (costs_impulse_ + penalty_param * violations_impulse_).sum();
   const double res_aux = (costs_aux_ + penalty_param * violations_aux_).sum();
   const double res_lift = (costs_lift_ + penalty_param * violations_lift_).sum();                                       
