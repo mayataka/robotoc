@@ -218,10 +218,12 @@ public:
   bool isSwitchingTimeConsistent(const double t);
 
   ///
-  /// @brief Set settings for line search.
+  /// @brief Set settings for line search. Defalt is 
+  /// LineSearchSettings::defaultSettings().
   /// @param[in] settings Line search settings.
   ///
-  void setLineSearchSettings(const LineSearchSettings& settings=LineSearchSettings::defaultSettings());
+  void setLineSearchSettings(
+      const LineSearchSettings& settings=LineSearchSettings::defaultSettings());
 
   ///
   /// @brief Displays the optimal control problem solver onto a ostream.

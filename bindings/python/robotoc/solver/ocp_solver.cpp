@@ -34,6 +34,7 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("KKT_error", &OCPSolver::KKTError)
     .def("cost", &OCPSolver::cost)
     .def("is_formulation_tractable", &OCPSolver::isFormulationTractable)
+    .def("set_line_search_settings", &OCPSolver::setLineSearchSettings)
     .def("__str__", [](const OCPSolver& self) {
         std::stringstream ss;
         ss << self;
