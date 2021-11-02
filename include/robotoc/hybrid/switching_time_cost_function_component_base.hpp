@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_SWITCHING_TIME_COST_FUNCTION_COMPONENT_BASE_HPP_
 #define ROBOTOC_SWITCHING_TIME_COST_FUNCTION_COMPONENT_BASE_HPP_
 
+#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+
 #include "Eigen/Core"
 
 
@@ -48,36 +50,28 @@ public:
 
   ///
   /// @brief Computes the cost on the switching times. 
-  /// @param[in] t0 Initial time of the horizon.
-  /// @param[in] tf Terminal time of the horizon.
-  /// @param[in] ts Switching times.
+  /// @param[in] discretization Discretization of the optimal control problem.
   /// @return Cost on the switching times.
   ///
-  virtual double computeCost(const double t0, const double tf, 
-                             const Eigen::VectorXd& ts) const = 0;
+  virtual double evalCost(
+      const HybridOCPDiscretization& discretization) const = 0;
 
   ///
   /// @brief Computes the derivative of the cost on the switching times. 
-  /// @param[in] t0 Initial time of the horizon.
-  /// @param[in] tf Terminal time of the horizon.
-  /// @param[in] ts Switching times.
-  /// @param[in] hts Derivative of the cost w.r.t. the switching times.
+  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[out] lts Derivative of the cost w.r.t. the switching times.
   ///
-  virtual void computeCostDerivatives(const double t0, const double tf, 
-                                      const Eigen::VectorXd& ts,
-                                      Eigen::VectorXd& hts) const = 0;
+  virtual void evalCostDerivatives(const HybridOCPDiscretization& discretization,
+                                   Eigen::VectorXd& lts) const = 0;
 
   ///
   /// @brief Computes the twice-time derivative (Hessian) of the cost on the 
   /// switching times. 
-  /// @param[in] t0 Initial time of the horizon.
-  /// @param[in] tf Terminal time of the horizon.
-  /// @param[in] ts Switching times.
-  /// @param[in] Qts Hessian of the cost w.r.t. the switching times.
+  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[out] Qts Hessian of the cost w.r.t. the switching times.
   ///
-  virtual void computeCostHessian(const double t0, const double tf, 
-                                  const Eigen::VectorXd& ts,
-                                  Eigen::MatrixXd& Qts) const = 0;
+  virtual void evalCostHessian(const HybridOCPDiscretization& discretization,
+                               Eigen::MatrixXd& Qts) const = 0;
 
 };
 

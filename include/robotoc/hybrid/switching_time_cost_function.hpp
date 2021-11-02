@@ -73,7 +73,7 @@ public:
   /// @param[in] discretization Discretization of the optimal control problem.
   /// @return Cost on the switching times.
   ///
-  double computeCost(const HybridOCPDiscretization& discretization);
+  double evalCost(const HybridOCPDiscretization& discretization);
 
   ///
   /// @brief Computes the cost on the switching times and its first-order 
@@ -99,18 +99,14 @@ public:
 
 private:
   std::vector<SwitchingTimeCostFunctionComponentBasePtr> costs_;
-  Eigen::VectorXd ts_, hts_;
+  Eigen::VectorXd lts_;
   Eigen::MatrixXd Qts_;
 
-  void setNumSwitches(const int num_switches);
+  void setToKKT(const HybridOCPDiscretization& discretization,
+                KKTResidual& kkt_residual);
 
-  void setSwitchingTimes(const HybridOCPDiscretization& discretization);
-
-  void setKKT(const HybridOCPDiscretization& discretization,
-              KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
-
-  void setKKT(const HybridOCPDiscretization& discretization,
-              KKTResidual& kkt_residual);
+  void setToKKT(const HybridOCPDiscretization& discretization,
+                KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 };
 

@@ -12,6 +12,15 @@
 
 namespace robotoc {
 
+/// 
+/// @enum DiscretizationMethod
+/// @brief Discretization method of the optimal control problem.
+///
+enum class DiscretizationMethod {
+  GridBased,
+  PhaseBased
+};
+
 ///
 /// @class HybridOCPDiscretization
 /// @brief Non-uniform time discretization of the hybrid optimal control problem.

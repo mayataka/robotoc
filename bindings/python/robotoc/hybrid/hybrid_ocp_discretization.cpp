@@ -14,6 +14,11 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(hybrid_ocp_discretization, m) {
+  py::enum_<DiscretizationMethod>(m, "DiscretizationMethod", py::arithmetic())
+    .value("GridBased",  DiscretizationMethod::GridBased)
+    .value("PhaseBased", DiscretizationMethod::PhaseBased)
+    .export_values();
+
   py::class_<HybridOCPDiscretization>(m, "HybridOCPDiscretization")
     .def(py::init<const double, const int, const int>())
     .def("discretize", &HybridOCPDiscretization::discretize)

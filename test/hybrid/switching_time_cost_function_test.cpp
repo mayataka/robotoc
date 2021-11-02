@@ -52,7 +52,7 @@ TEST_F(SwitchingTimeCostFunctionTest, test) {
   const double period = 0.1;
   auto period_cost = std::make_shared<PeriodicSwitchingTimeCost>(period, t_start);
   cost->push_back(period_cost);
-  const double cost_value1 = cost->computeCost(discretization);
+  const double cost_value1 = cost->evalCost(discretization);
   const double cost_value2 = cost->linearizeCost(discretization, kkt_residual);
   const double cost_value3 = cost->quadratizeCost(discretization, kkt_matrix, kkt_residual);
   EXPECT_DOUBLE_EQ(cost_value1, cost_value2);
