@@ -39,6 +39,12 @@ PYBIND11_MODULE(robot, m) {
     .def("frame_rotation", &Robot::frameRotation)
     .def("frame_placement", &Robot::framePlacement)
     .def("com", &Robot::CoM)
+    .def("transform_from_local_to_world", [](const Robot& self, 
+                                             const int frame_id, 
+                                             const Eigen::Vector3d& vec_local,
+                                             Eigen::Vector3d& vec_world) {
+        self.transformFromLocalToWorld(frame_id, vec_local, vec_world);
+      })
     .def("generate_feasible_configuration", &Robot::generateFeasibleConfiguration)
     .def("normalize_configuration", [](const Robot& self, Eigen::VectorXd& q) {
         self.normalizeConfiguration(q);
