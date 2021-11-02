@@ -23,12 +23,14 @@ public:
   /// sets the slope of the linear approximation in the Armijo condition.
   /// @param[in] margin_rate Margin rate to determine penalty parameter in
   /// the merit function.
+  /// @param[in] eps  A small positive value. Used to calculate directional derivative.
   ///
   LineSearchSettings(const std::string& line_search_method,
                      const double step_size_reduction_rate, 
                      const double min_step_size, 
                      const double armijo_control_rate,
-                     const double margin_rate);
+                     const double margin_rate,
+                     const double eps);
 
   ///
   /// @brief Default constructor. 
@@ -86,7 +88,13 @@ public:
   ///
   /// @brief Margin rate to determine penalty parameter in
   /// the merit function.
+  ///
   double margin_rate;
+  
+  ///
+  /// @brief A small positive value. Used to calculate directional derivative.
+  ///
+  double eps;
 
   ///
   /// @brief Returns settings with default parameters.

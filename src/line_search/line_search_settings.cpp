@@ -11,12 +11,14 @@ LineSearchSettings::LineSearchSettings(const std::string& line_search_method,
                                        const double step_size_reduction_rate, 
                                        const double min_step_size, 
                                        const double armijo_control_rate,
-                                       const double margin_rate)
+                                       const double margin_rate,
+                                       const double eps)
   : line_search_method(line_search_method),
     step_size_reduction_rate(step_size_reduction_rate),
     min_step_size(min_step_size),
     armijo_control_rate(armijo_control_rate),
-    margin_rate(margin_rate) {
+    margin_rate(margin_rate),
+    eps(eps) {
   try {
     if (line_search_method != "filter" && line_search_method != "merit-backtracking") {
       throw std::out_of_range("invalid value: line_search_method must be either \"filter\" or \"merit-backtracking\"!");
@@ -53,7 +55,7 @@ LineSearchSettings::~LineSearchSettings() {
 }
 
 LineSearchSettings LineSearchSettings::defaultSettings() {
-  LineSearchSettings s("filter", 0.75, 0.05, 0.001, 0.05);
+  LineSearchSettings s("filter", 0.75, 0.05, 0.001, 0.05, 1.0e-08);
   return s;
 }
 

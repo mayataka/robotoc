@@ -129,8 +129,8 @@ TEST_P(LineSearchTest, floatingBase) {
   test(robot, settings);
 }
 
-LineSearchSettings filter_settings("filter", 0.75, 0.05, 0.001, 0.05);
-LineSearchSettings backtrack_settings("merit-backtracking", 0.75, 0.05, 0.001, 0.05);
+LineSearchSettings filter_settings = LineSearchSettings::defaultSettings();
+LineSearchSettings backtrack_settings("merit-backtracking", 0.75, 0.05, 0.001, 0.05, 1.0e-08);
 
 INSTANTIATE_TEST_SUITE_P(ParamtererizedTest, LineSearchTest, 
                          ::testing::Values(filter_settings, backtrack_settings));

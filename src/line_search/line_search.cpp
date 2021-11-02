@@ -276,11 +276,10 @@ double LineSearch::meritBacktrackingLineSearch(
   computeCostAndViolation(ocp, robots, contact_sequence, q, v, s);
   const double penalty_param = penaltyParam(ocp, s);
   const double merit_now = merit(penalty_param);
-  const double eps = 1.0e-08;
-  computeSolutionTrial(ocp, robots, s, d, eps);
+  computeSolutionTrial(ocp, robots, s, d, settings_.eps);
   computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_trial_);
   const double merit_eps = merit(penalty_param);
-  const double directional_derivative =  (1.0 / eps) * (merit_eps - merit_now);
+  const double directional_derivative =  (1.0 / settings_.eps) * (merit_eps - merit_now);
   double primal_step_size = initial_primal_step_size;
   while (primal_step_size > settings_.min_step_size) {
     computeSolutionTrial(ocp, robots, s, d, primal_step_size);
