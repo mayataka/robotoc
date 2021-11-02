@@ -20,6 +20,8 @@ PYBIND11_MODULE(ocp_solver, m) {
          py::arg("robot"), py::arg("contact_sequence"), py::arg("cost"), 
          py::arg("constraints"), py::arg("T"), py::arg("N"), 
          py::arg("nthreads")=1)
+    .def("set_discretization_method", &OCPSolver::setDiscretizationMethod)
+    .def("mesh_refinement", &OCPSolver::meshRefinement)
     .def("init_constraints", &OCPSolver::initConstraints)
     .def("update_solution", &OCPSolver::updateSolution,
           py::arg("t"), py::arg("q"), py::arg("v"), 

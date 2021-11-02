@@ -54,6 +54,21 @@ OCPSolver::~OCPSolver() {
 }
 
 
+void OCPSolver::setDiscretizationMethod(
+    const DiscretizationMethod discretization_method) {
+  ocp_.setDiscretizationMethod(discretization_method);
+}
+
+
+void OCPSolver::meshRefinement(const double t) {
+  ocp_.meshRefinement(contact_sequence_, t);
+  if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
+    discretizeSolution();
+    dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+  }
+}
+
+
 void OCPSolver::initConstraints(const double t) {
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();

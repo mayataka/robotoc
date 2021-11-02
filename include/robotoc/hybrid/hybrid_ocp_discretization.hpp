@@ -86,7 +86,7 @@ public:
   ///
   /// @brief Applies the mesh refinement that reduces the numbers of the grids
   /// from the phases where the solution is relatively accurate and increases
-  /// them at the phases where the solution is relatively accurate. 
+  /// them on the phases where the solution is relatively inaccurate. 
   /// @param[in] contact_sequence Contact sequence.
   /// @param[in] t Initial time of the horizon.
   ///
