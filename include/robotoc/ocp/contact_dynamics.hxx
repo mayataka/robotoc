@@ -44,36 +44,33 @@ inline void ContactDynamics::evalContactDynamics(
 
 
 inline void ContactDynamics::linearizeContactDynamics(
-    Robot& robot, const ContactStatus& contact_status, const double dt, 
+    Robot& robot, const ContactStatus& contact_status, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) { 
-  assert(dt > 0);
   evalContactDynamics(robot, contact_status, s);
   robot.RNEADerivatives(s.q, s.v, s.a, data_.dIDdq(), data_.dIDdv(), data_.dIDda);
   robot.computeBaumgarteDerivatives(contact_status, data_.dCdq(), data_.dCdv(), 
                                     data_.dCda());
   // augment inverse dynamics constraint
-  kkt_residual.lq().noalias() += dt * data_.dIDdq().transpose() * s.beta;
-  kkt_residual.lv().noalias() += dt * data_.dIDdv().transpose() * s.beta;
-  kkt_residual.la.noalias()   += dt * data_.dIDda.transpose() * s.beta;
+  kkt_residual.lq().noalias() += data_.dIDdq().transpose() * s.beta;
+  kkt_residual.lv().noalias() += data_.dIDdv().transpose() * s.beta;
+  kkt_residual.la.noalias()   += data_.dIDda.transpose() * s.beta;
   if (has_active_contacts_) {
-    kkt_residual.lf().noalias() -= dt * data_.dCda() * s.beta;
+    kkt_residual.lf().noalias() -= data_.dCda() * s.beta;
   }
   if (has_floating_base_) {
     // augment floating base constraint
-    data_.lu_passive            = dt * s.nu_passive;
-    data_.lu_passive.noalias() -= dt * s.beta.template head<kDimFloatingBase>(); 
-    kkt_residual.lu.noalias()  -= dt * s.beta.tail(robot.dimu()); 
+    data_.lu_passive            = s.nu_passive;
+    data_.lu_passive.noalias() -= s.beta.template head<kDimFloatingBase>(); 
+    kkt_residual.lu.noalias()  -= s.beta.tail(robot.dimu()); 
   }
   else {
-    kkt_residual.lu.noalias() -= dt * s.beta; 
+    kkt_residual.lu.noalias() -= s.beta; 
   }
   // augment acceleration-level contact constraint
   if (has_active_contacts_) {
-    kkt_residual.lq().noalias() 
-        += dt * data_.dCdq().transpose() * s.mu_stack();
-    kkt_residual.lv().noalias() 
-        += dt * data_.dCdv().transpose() * s.mu_stack();
-    kkt_residual.la.noalias() += dt * data_.dCda().transpose() * s.mu_stack();
+    kkt_residual.lq().noalias() += data_.dCdq().transpose() * s.mu_stack();
+    kkt_residual.lv().noalias() += data_.dCdv().transpose() * s.mu_stack();
+    kkt_residual.la.noalias()   += data_.dCda().transpose() * s.mu_stack();
   }
 }
 
@@ -171,35 +168,45 @@ inline void ContactDynamics::expandPrimal(SplitDirection& d) const {
 }
 
 
-inline void ContactDynamics::expandPrimal(const double dt, const double dts, 
-                                          SplitDirection& d) const {
-  assert(dt > 0);
-  d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx;
-  d.daf().noalias() 
-      += data_.MJtJinv().middleCols(dim_passive_, dimu_) * d.du;
-  d.daf().noalias() -= (1+(dts/dt)) * data_.MJtJinv_IDC();
-  d.df().array()    *= -1;
-}
-
-
 template <typename SplitDirectionType>
 inline void ContactDynamics::expandDual(const double dt, 
                                         const SplitDirectionType& d_next, 
                                         SplitDirection& d) {
   assert(dt > 0);
   if (has_floating_base_) {
-    d.dnu_passive            = data_.lu_passive;
-    d.dnu_passive.noalias() += data_.Quu_passive_topRight * d.du;
-    d.dnu_passive.noalias() += data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive            = - data_.lu_passive;
+    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
     d.dnu_passive.noalias() 
-        += dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
               * d_next.dgmm();
-    d.dnu_passive.array() *= - (1/dt);
   }
   data_.laf().noalias() += data_.Qafqv() * d.dx;
   data_.laf().noalias() += data_.Qafu() * d.du;
   data_.la().noalias()  += dt * d_next.dgmm();
-  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf() * (1/dt);
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
+}
+
+
+template <typename SplitDirectionType>
+inline void ContactDynamics::expandDual(const double dt, 
+                                        const SplitDirectionType& d_next, 
+                                        const SwitchingConstraintJacobian& sc_jacobian,
+                                        SplitDirection& d) {
+  assert(dt > 0);
+  if (has_floating_base_) {
+    d.dnu_passive            = - data_.lu_passive;
+    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive.noalias() 
+        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+              * d_next.dgmm();
+  }
+  data_.laf().noalias() += data_.Qafqv() * d.dx;
+  data_.laf().noalias() += data_.Qafu() * d.du;
+  data_.la().noalias()  += dt * d_next.dgmm();
+  data_.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
 }
 
 
@@ -209,19 +216,45 @@ inline void ContactDynamics::expandDual(const double dt, const double dts,
                                         SplitDirection& d) {
   assert(dt > 0);
   if (has_floating_base_) {
-    d.dnu_passive            = (1+(dts/dt)) * data_.lu_passive;
-    d.dnu_passive.noalias() += data_.Quu_passive_topRight * d.du;
-    d.dnu_passive.noalias() += data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive            = - data_.lu_passive;
+    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
     d.dnu_passive.noalias() 
-        += dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
               * d_next.dgmm();
-    d.dnu_passive.array() *= - (1/dt);
   }
-  data_.laf().array()   *= (1+(dts/dt));
   data_.laf().noalias() += data_.Qafqv() * d.dx;
   data_.laf().noalias() += data_.Qafu() * d.du;
   data_.la().noalias()  += dt * d_next.dgmm();
-  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf() * (1/dt);
+  if (dts != 0.) {
+    data_.laf().noalias() += dts * data_.haf();
+  }
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
+}
+
+
+template <typename SplitDirectionType>
+inline void ContactDynamics::expandDual(const double dt, const double dts,
+                                        const SplitDirectionType& d_next, 
+                                        const SwitchingConstraintJacobian& sc_jacobian,
+                                        SplitDirection& d) {
+  assert(dt > 0);
+  if (has_floating_base_) {
+    d.dnu_passive            = - data_.lu_passive;
+    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive.noalias() 
+        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+              * d_next.dgmm();
+  }
+  data_.laf().noalias() += data_.Qafqv() * d.dx;
+  data_.laf().noalias() += data_.Qafu() * d.du;
+  data_.la().noalias()  += dt * d_next.dgmm();
+  data_.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
+  if (dts != 0.) {
+    data_.laf().noalias() += dts * data_.haf();
+  }
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
 }
 
 

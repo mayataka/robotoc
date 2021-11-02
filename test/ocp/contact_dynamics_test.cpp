@@ -60,7 +60,7 @@ void ContactDynamicsTest::test_linearize(Robot& robot, const ContactStatus& cont
   ContactDynamics cd(robot);
   auto kkt_residual = SplitKKTResidual::Random(robot, contact_status);
   auto kkt_residual_ref = kkt_residual;
-  cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
+  cd.linearizeContactDynamics(robot, contact_status, s, kkt_residual);
   const double l1norm = cd.constraintViolation();
   const double squarednorm = cd.KKTError();
   ContactDynamicsData data(robot);
@@ -71,18 +71,18 @@ void ContactDynamicsTest::test_linearize(Robot& robot, const ContactStatus& cont
   robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), data.C());
   robot.RNEADerivatives(s.q, s.v, s.a, data.dIDdq(), data.dIDdv(), data.dIDda);
   robot.computeBaumgarteDerivatives(contact_status, data.dCdq(), data.dCdv(), data.dCda());
-  kkt_residual_ref.lq() += dt * data.dIDdq().transpose() * s.beta;
-  kkt_residual_ref.lv() += dt * data.dIDdv().transpose() * s.beta;
-  kkt_residual_ref.la   += dt * data.dIDda.transpose() * s.beta;
-  kkt_residual_ref.lf() -= dt * data.dCda() * s.beta;
+  kkt_residual_ref.lq() += data.dIDdq().transpose() * s.beta;
+  kkt_residual_ref.lv() += data.dIDdv().transpose() * s.beta;
+  kkt_residual_ref.la   += data.dIDda.transpose() * s.beta;
+  kkt_residual_ref.lf() -= data.dCda() * s.beta;
   Eigen::VectorXd lu_full = Eigen::VectorXd::Zero(robot.dimv());
   lu_full.head(robot.dim_passive()).setZero();
   lu_full.tail(robot.dimu()) = kkt_residual_ref.lu;
-  lu_full -= dt * s.beta;
-  kkt_residual_ref.lq() += dt * data.dCdq().transpose() * s.mu_stack();
-  kkt_residual_ref.lv() += dt * data.dCdv().transpose() * s.mu_stack(); 
-  kkt_residual_ref.la   += dt * data.dCda().transpose() * s.mu_stack();
-  lu_full.head(robot.dim_passive()) += dt * s.nu_passive;
+  lu_full -= s.beta;
+  kkt_residual_ref.lq() += data.dCdq().transpose() * s.mu_stack();
+  kkt_residual_ref.lv() += data.dCdv().transpose() * s.mu_stack(); 
+  kkt_residual_ref.la   += data.dCda().transpose() * s.mu_stack();
+  lu_full.head(robot.dim_passive()) += s.nu_passive;
   data.lu_passive     = lu_full.head(robot.dim_passive());
   kkt_residual_ref.lu = lu_full.tail(robot.dimu());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -98,7 +98,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics cd(robot);
   auto kkt_residual = SplitKKTResidual::Random(robot, contact_status);
-  cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
+  cd.linearizeContactDynamics(robot, contact_status, s, kkt_residual);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   robot.setContactForces(contact_status, s.f);
@@ -152,7 +152,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   kkt_residual_ref.lx -= data.MJtJinv_dIDCdqv().transpose() * data.laf();
   kkt_residual_ref.lq() += kkt_matrix_ref.Qqf() * data.MJtJinv_IDC().tail(dimf);
   Eigen::VectorXd lu_full = Eigen::VectorXd::Zero(dimv);
-  lu_full.head(dim_passive) = dt * s.nu_passive - dt * s.beta.head(dim_passive);
+  lu_full.head(dim_passive) = s.nu_passive - s.beta.head(dim_passive);
   lu_full.tail(dimu)        = kkt_residual_ref.lu;
   lu_full += IO_mat.transpose() * data.MJtJinv() * data.laf();
   data.lu_passive     = lu_full.head(dim_passive);
@@ -187,12 +187,12 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
     du_full.tail(dimu) = d_ref.du; 
     d_ref.dnu_passive = - (data.lu_passive + data.Qxu_passive.transpose() * d_ref.dx 
                             + data.Quu_passive_topRight * d_ref.du
-                            + (IO_mat.transpose() * data.MJtJinv() * OOIO_mat.transpose() * d_next.dlmdgmm).head(dim_passive)) / dt;
+                            + (IO_mat.transpose() * data.MJtJinv() * OOIO_mat.transpose() * d_next.dlmdgmm).head(dim_passive));
   }
   d_ref.dbetamu() = - data.MJtJinv() * (data.Qafqv() * d_ref.dx 
                                         + data.Qafu_full() * du_full 
                                         + OOIO_mat.transpose() * d_next.dlmdgmm
-                                        + data.laf()) / dt;
+                                        + data.laf());
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 

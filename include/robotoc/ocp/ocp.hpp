@@ -95,9 +95,18 @@ public:
     return data[i];
   }
 
+  void setDiscretizationMethod(const DiscretizationMethod discretization_method) {
+    time_discretization_.setDiscretizationMethod(discretization_method);
+  }
+
   void discretize(const std::shared_ptr<ContactSequence>& contact_sequence, 
                   const double t) {
     time_discretization_.discretize(contact_sequence, t);
+  }
+
+  void meshRefinement(const std::shared_ptr<ContactSequence>& contact_sequence, 
+                      const double t) {
+    time_discretization_.meshRefinement(contact_sequence, t);
   }
 
   const HybridOCPDiscretization& discrete() const {

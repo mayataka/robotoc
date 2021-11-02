@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 
 #include "robotoc/hybrid/switching_time_cost_function_component_base.hpp"
+#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 
 namespace robotoc {
@@ -11,27 +12,24 @@ public:
   // Inherit the constructors
   using SwitchingTimeCostFunctionComponentBase::SwitchingTimeCostFunctionComponentBase;
 
-  double computeCost(const double t0, const double tf, 
-                     const Eigen::VectorXd& ts) const override {
+  double evalCost(const HybridOCPDiscretization& discretization) const override {
     PYBIND11_OVERRIDE_PURE(double, SwitchingTimeCostFunctionComponentBase, 
-                           computeCost, 
-                           t0, tf, ts);
+                           evalCost, 
+                           discretization);
   }
 
-  void computeCostDerivatives(const double t0, const double tf, 
-                              const Eigen::VectorXd& ts,
-                              Eigen::VectorXd& hts) const override {
+  void evalCostDerivatives(const HybridOCPDiscretization& discretization,
+                           Eigen::VectorXd& lts) const override {
     PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
-                           computeCostDerivatives, 
-                           t0, tf, ts, hts);
+                           evalCostDerivatives, 
+                           discretization, lts);
   }
 
-  void computeCostHessian(const double t0, const double tf, 
-                          const Eigen::VectorXd& ts,
-                          Eigen::MatrixXd& Qts) const override {
+  void evalCostHessian(const HybridOCPDiscretization& discretization,
+                       Eigen::MatrixXd& Qts) const override {
     PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
                            evalStageCostHessian, 
-                           t0, tf, ts, Qts);
+                           discretization, Qts);
   }
 };
 

@@ -160,9 +160,8 @@ void FrictionCone::evalConstraint(Robot& robot, ConstraintComponentData& data,
 
 
 void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data, 
-                                   const double dt, const SplitSolution& s, 
+                                   const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const {
-  assert(dt > 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
@@ -183,13 +182,13 @@ void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data,
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       dgi_dq.noalias() = cone_ * dfWi_dq.template topRows<3>();
       kkt_residual.lq().noalias()
-          += dt * dgi_dq.transpose() * data.dual.template segment<5>(idx);
+          += dgi_dq.transpose() * data.dual.template segment<5>(idx);
       // Jacobian of the frition cone constraint with respect to the contact
       // force expressed in the local frame, i.e., s.f[i].
       Eigen::MatrixXd& dgi_df = dg_df(data, i);
       dgi_df.noalias() = cone_ * robot.frameRotation(contact_frame_[i]);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dt * dgi_df.transpose() * data.dual.template segment<5>(idx);
+          += dgi_df.transpose() * data.dual.template segment<5>(idx);
       dimf_stack += 3;
     }
   }
@@ -197,10 +196,9 @@ void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data,
 
 
 void FrictionCone::condenseSlackAndDual(ConstraintComponentData& data, 
-                                        const double dt, const SplitSolution& s, 
+                                        const SplitSolution& s, 
                                         SplitKKTMatrix& kkt_matrix, 
                                         SplitKKTResidual& kkt_residual) const {
-  assert(dt > 0);
   data.cond.setZero();
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
@@ -210,9 +208,9 @@ void FrictionCone::condenseSlackAndDual(ConstraintComponentData& data,
       const Vector5d& condi = data.cond.template segment<5>(idx);
       const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       const Eigen::MatrixXd& dgi_df = dg_df(data, i);
-      kkt_residual.lq().noalias() += dt * dgi_dq.transpose() * condi;
+      kkt_residual.lq().noalias() += dgi_dq.transpose() * condi;
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dt * dgi_df.transpose() * condi;
+          += dgi_df.transpose() * condi;
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
       Eigen::MatrixXd& r_dgi_df = r_dg_df(data, i);
       Eigen::VectorXd& ri = r(data, i);
@@ -221,11 +219,11 @@ void FrictionCone::condenseSlackAndDual(ConstraintComponentData& data,
       dfWi_dq.template topRows<5>().noalias() = ri.asDiagonal() * dgi_dq;
       r_dgi_df.noalias() = ri.asDiagonal() * dgi_df;
       kkt_matrix.Qqq().noalias()
-          += dt * dgi_dq.transpose() * dfWi_dq.template topRows<5>();
+          += dgi_dq.transpose() * dfWi_dq.template topRows<5>();
       kkt_matrix.Qqf().template middleCols<3>(dimf_stack).noalias()
-          += dt * dgi_dq.transpose() * r_dgi_df; 
+          += dgi_dq.transpose() * r_dgi_df; 
       kkt_matrix.Qff().template block<3, 3>(dimf_stack, dimf_stack).noalias()
-          += dt * dgi_df.transpose() * r_dgi_df;
+          += dgi_df.transpose() * r_dgi_df;
       dimf_stack += 3;
     }
   }

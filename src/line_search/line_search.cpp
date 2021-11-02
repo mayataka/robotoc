@@ -107,8 +107,7 @@ void LineSearch::computeCostAndViolation(
                        s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].v,
                        kkt_residual_[i]);
         costs_.coeffRef(i) = ocp[i].stageCost();
-        violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], 
-                                                             ocp.discrete().dt(i));
+        violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
@@ -118,8 +117,7 @@ void LineSearch::computeCostAndViolation(
                        s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].v,
                        kkt_residual_[i]);
         costs_.coeffRef(i) = ocp[i].stageCost();
-        violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], 
-                                                             ocp.discrete().dt(i));
+        violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i]);
       }
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index  
@@ -132,7 +130,6 @@ void LineSearch::computeCostAndViolation(
                        ocp.discrete().dt(i+1), kkt_residual_.switching[impulse_index]);
         costs_.coeffRef(i) = ocp[i].stageCost();
         violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], 
-                                                             ocp.discrete().dt(i),
                                                              kkt_residual_.switching[impulse_index]);
       }
       else {
@@ -141,8 +138,7 @@ void LineSearch::computeCostAndViolation(
                        ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
                        s[i+1].q, s[i+1].v, kkt_residual_[i]);
         costs_.coeffRef(i) = ocp[i].stageCost();
-        violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], 
-                                                             ocp.discrete().dt(i));
+        violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i]);
       }
     }
     else if (i == N) {
@@ -180,8 +176,7 @@ void LineSearch::computeCostAndViolation(
                                      kkt_residual_.aux[impulse_index]);
       costs_aux_.coeffRef(impulse_index) = ocp.aux[impulse_index].stageCost();
       violations_aux_.coeffRef(impulse_index) 
-          = ocp.aux[impulse_index].constraintViolation(kkt_residual_.aux[impulse_index], 
-                                                       ocp.discrete().dt_aux(impulse_index));
+          = ocp.aux[impulse_index].constraintViolation(kkt_residual_.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
@@ -197,8 +192,7 @@ void LineSearch::computeCostAndViolation(
                                    s[time_stage_after_lift].v,
                                    kkt_residual_.lift[lift_index]);
       violations_lift_.coeffRef(lift_index) 
-          = ocp.lift[lift_index].constraintViolation(kkt_residual_.lift[lift_index], 
-                                                      ocp.discrete().dt_lift(lift_index));
+          = ocp.lift[lift_index].constraintViolation(kkt_residual_.lift[lift_index]);
       costs_lift_.coeffRef(lift_index) = ocp.lift[lift_index].stageCost();
     }
   }

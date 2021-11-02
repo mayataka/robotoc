@@ -147,6 +147,41 @@ public:
   ///
   void updateDual(const double step_size);
 
+  ///
+  /// @brief Returns the sum of the squared norm of the KKT error 
+  /// (primal residual and complementary slackness) of all the constraints. 
+  /// @return KKT error. 
+  ///
+  double KKTError() const;
+
+  ///
+  /// @brief Sets the barrier parameter for all the constraint components.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  ///
+  void setBarrier(const double barrier);
+
+  ///
+  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
+  /// constraint components.
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995.
+  ///
+  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
+
+  ///
+  /// @brief Sets the minimum margins of the dwell times.
+  /// @param[in] min_dt Minimum dwell-time. Default is 
+  /// std::sqrt(std::numeric_limits<double>::epsilon()).
+  /// @param[in] min_dt0 Minimum time margin between the initial time of the 
+  /// horizon and initial switching time. Default is 
+  /// std::sqrt(std::numeric_limits<double>::epsilon()).
+  /// @param[in] min_dtf Minimum time margin between the terminal time of the 
+  /// horizon and last switching time. Default is 
+  /// std::sqrt(std::numeric_limits<double>::epsilon()).
+  ///
+  void setDwellTimeMargin(const double min_dt, const double min_dt0,
+                          const double min_dtf);
+
 private:
   std::vector<DwellTimeLowerBound> dtlb_;
   double min_dt_, min_dt0_, min_dtf_;

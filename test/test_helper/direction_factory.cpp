@@ -40,7 +40,7 @@ Direction CreateDirection(const Robot& robot,
     for (int i=0; i<num_impulse; ++i) {
       const int time_stage_before_impulse = discretization.timeStageBeforeImpulse(i);
       if (time_stage_before_impulse-1 >= 0) {
-        d[time_stage_before_impulse-1].setImpulseStatus(contact_sequence->impulseStatus(i));
+        d[time_stage_before_impulse-1].setImpulseDimension(contact_sequence->impulseStatus(i).dimf());
         d[time_stage_before_impulse-1].dxi().setRandom();
       }
     }

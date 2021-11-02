@@ -72,13 +72,12 @@ public:
   /// constraint and derivatives of it. 
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void linearizeContactDynamics(Robot& robot, 
                                 const ContactStatus& contact_status, 
-                                const double dt, const SplitSolution& s, 
+                                const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual);
 
   ///
@@ -106,17 +105,6 @@ public:
   void expandPrimal(SplitDirection& d) const;
 
   ///
-  /// @brief Expands the primal variables, i.e., computes the Newton direction 
-  /// of the condensed primal variables (acceleration a and the contact forces 
-  /// f) of this stage.
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] dts The direction of the switching time regarding of this time 
-  /// stage. 
-  /// @param[in, out] d Split direction of this time stage.
-  /// 
-  void expandPrimal(const double dt, const double dts, SplitDirection& d) const;
-
-  ///
   /// @brief Expands the dual variables, i.e., computes the Newton direction 
   /// of the condensed dual variables (Lagrange multipliers) of this stage.
   /// @param[in] dt Time step of this time stage. 
@@ -131,6 +119,19 @@ public:
   /// @brief Expands the dual variables, i.e., computes the Newton direction 
   /// of the condensed dual variables (Lagrange multipliers) of this stage.
   /// @param[in] dt Time step of this time stage. 
+  /// @param[in] d_next Split direction of the next stage.
+  /// @param[in] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] d Split direction of this time stage.
+  /// 
+  template <typename SplitDirectionType>
+  void expandDual(const double dt, const SplitDirectionType& d_next, 
+                  const SwitchingConstraintJacobian& sc_jacobian,
+                  SplitDirection& d);
+
+  ///
+  /// @brief Expands the dual variables, i.e., computes the Newton direction 
+  /// of the condensed dual variables (Lagrange multipliers) of this stage.
+  /// @param[in] dt Time step of this time stage. 
   /// @param[in] dts Direction of the switching time regarding of this time stage. 
   /// @param[in] d_next Split direction of the next stage.
   /// @param[in, out] d Split direction of this time stage.
@@ -138,6 +139,21 @@ public:
   template <typename SplitDirectionType>
   void expandDual(const double dt, const double dts, 
                   const SplitDirectionType& d_next, SplitDirection& d);
+
+  ///
+  /// @brief Expands the dual variables, i.e., computes the Newton direction 
+  /// of the condensed dual variables (Lagrange multipliers) of this stage.
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] dts Direction of the switching time regarding of this time stage. 
+  /// @param[in] d_next Split direction of the next stage.
+  /// @param[in] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] d Split direction of this time stage.
+  /// 
+  template <typename SplitDirectionType>
+  void expandDual(const double dt, const double dts, 
+                  const SplitDirectionType& d_next, 
+                  const SwitchingConstraintJacobian& sc_jacobian,
+                  SplitDirection& d);
 
   ///
   /// @brief Condenses the switching constraint. 

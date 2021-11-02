@@ -19,21 +19,25 @@ bool IsApprox(const hybrid_container<Type, ImpulseType, SwitchingType>& rhs,
   const int N = rhs.data.size()-1;
   const int max_num_impulse = rhs.impulse.size();
   for (int i=0; i<=N; ++i) {
+    std::cout << "i = " << i << std::endl;
     if (!rhs[i].isApprox(lhs[i])) {
       return false;
     } 
   }
   for (int i=0; i<max_num_impulse; ++i) {
+    std::cout << "impulse = " << i << std::endl;
     if (!rhs.impulse[i].isApprox(lhs.impulse[i])) {
       return false;
     }
   }
   for (int i=0; i<max_num_impulse; ++i) {
+    std::cout << "aux = " << i << std::endl;
     if (!rhs.aux[i].isApprox(lhs.aux[i])) {
       return false;
     }
   }
   for (int i=0; i<max_num_impulse; ++i) {
+    std::cout << "lift = " << i << std::endl;
     if (!rhs.lift[i].isApprox(lhs.lift[i])) {
       return false;
     }
@@ -47,21 +51,25 @@ bool HasNaN(const hybrid_container<Type, ImpulseType, SwitchingType>& obj) {
   const int N = obj.data.size()-1;
   const int max_num_impulse = obj.impulse.size();
   for (int i=0; i<=N; ++i) {
+    std::cout << "i = " << i << std::endl;
     if (obj[i].hasNaN()) {
       return true;
     }
   }
   for (int i=0; i<max_num_impulse; ++i) {
+    std::cout << "impulse = " << i << std::endl;
     if (obj.impulse[i].hasNaN()) {
       return true;
     }
   }
   for (int i=0; i<max_num_impulse; ++i) {
+    std::cout << "aux = " << i << std::endl;
     if (obj.aux[i].hasNaN()) {
       return true;
     }
   }
   for (int i=0; i<max_num_impulse; ++i) {
+    std::cout << "lift = " << i << std::endl;
     if (obj.lift[i].hasNaN()) {
       return true;
     }

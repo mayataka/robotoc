@@ -3,6 +3,10 @@
 
 #include "robotoc/hybrid/switching_time_constraints.hpp"
 
+#include <cassert>
+#include <stdexcept>
+#include <iostream>
+
 
 namespace robotoc {
 
@@ -18,6 +22,24 @@ inline SwitchingTimeConstraints::SwitchingTimeConstraints(
     num_switches_(0),
     primal_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)), 
     dual_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)) {
+  try {
+    if (barrier <= 0) {
+      throw std::out_of_range(
+          "Invalid argment: barrirer must be positive!");
+    }
+    if (fraction_to_boundary_rule <= 0) {
+      throw std::out_of_range(
+          "Invalid argment: fraction_to_boundary_rule must be positive!");
+    }
+    if (fraction_to_boundary_rule >= 1) {
+      throw std::out_of_range(
+          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -39,6 +61,7 @@ inline SwitchingTimeConstraints::~SwitchingTimeConstraints() {
 inline void SwitchingTimeConstraints::setSlack(
     const HybridOCPDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
     return;
@@ -95,6 +118,7 @@ inline void SwitchingTimeConstraints::setSlack(
 inline void SwitchingTimeConstraints::evalConstraint(
     const HybridOCPDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
     return;
@@ -168,6 +192,7 @@ inline void SwitchingTimeConstraints::linearizeConstraints(
     const HybridOCPDiscretization& discretization, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
     return;
@@ -254,23 +279,18 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
     const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
     return;
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(0)) {
-      dtlb_[0].evalConstraint(min_dt0_, discretization.t(0), 
-                              discretization.t_impulse(0));
-      dtlb_[0].evalDerivatives_lb(kkt_residual.aux[0]);
       dtlb_[0].condenseSlackAndDual_lb(kkt_matrix.aux[0], kkt_residual.aux[0]);
     }
   }
   else {
     if (discretization.isSTOEnabledLift(0)) {
-      dtlb_[0].evalConstraint(min_dt0_, discretization.t(0), 
-                              discretization.t_lift(0));
-      dtlb_[0].evalDerivatives_lb(kkt_residual.lift[0]);
       dtlb_[0].condenseSlackAndDual_lb(kkt_matrix.lift[0], kkt_residual.lift[0]);
     }
   }
@@ -282,21 +302,11 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
-          dtlb_[event_index+1].evalConstraint(
-              min_dt_, discretization.t_impulse(impulse_index), 
-              discretization.t_impulse(impulse_index+1));
-          dtlb_[event_index+1].evalDerivatives_lub(
-              kkt_residual.aux[impulse_index], kkt_residual.aux[impulse_index+1]);
           dtlb_[event_index+1].condenseSlackAndDual_lub(
               kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index], 
               kkt_matrix.aux[impulse_index+1], kkt_residual.aux[impulse_index+1]);
         }
         else {
-          dtlb_[event_index+1].evalConstraint(
-              min_dt_, discretization.t_impulse(impulse_index), 
-              discretization.t_lift(lift_index));
-          dtlb_[event_index+1].evalDerivatives_lub(
-              kkt_residual.aux[impulse_index], kkt_residual.lift[lift_index]);
           dtlb_[event_index+1].condenseSlackAndDual_lub(
               kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index], 
               kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
@@ -307,21 +317,11 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
     else {
       if (discretization.isSTOEnabledLift(lift_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
-          dtlb_[event_index+1].evalConstraint(
-              min_dt_, discretization.t_lift(lift_index), 
-              discretization.t_impulse(impulse_index));
-          dtlb_[event_index+1].evalDerivatives_lub(
-              kkt_residual.lift[lift_index], kkt_residual.aux[impulse_index]);
           dtlb_[event_index+1].condenseSlackAndDual_lub(
               kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
               kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
         }
         else {
-          dtlb_[event_index+1].evalConstraint(
-              min_dt_, discretization.t_lift(lift_index), 
-              discretization.t_lift(lift_index+1));
-          dtlb_[event_index+1].evalDerivatives_lub(
-              kkt_residual.lift[lift_index], kkt_residual.lift[lift_index+1]);
           dtlb_[event_index+1].condenseSlackAndDual_lub(
               kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index],
               kkt_matrix.lift[lift_index+1], kkt_residual.lift[lift_index+1]);
@@ -332,20 +332,12 @@ inline void SwitchingTimeConstraints::condenseSlackAndDual(
   }
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
-      dtlb_[num_events].evalConstraint(min_dtf_, 
-                                       discretization.t_impulse(impulse_index), 
-                                       discretization.t(discretization.N()));
-      dtlb_[num_events].evalDerivatives_ub(kkt_residual.aux[impulse_index]);
       dtlb_[num_events].condenseSlackAndDual_ub(
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
     }
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
-      dtlb_[num_events].evalConstraint(min_dtf_, 
-                                       discretization.t_lift(lift_index), 
-                                       discretization.t(discretization.N()));
-      dtlb_[num_events].evalDerivatives_ub(kkt_residual.lift[lift_index]);
       dtlb_[num_events].condenseSlackAndDual_ub(
           kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
     }
@@ -361,15 +353,13 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
   if (num_events <= 0) {
     return;
   } 
+  primal_step_size_.fill(1.0);
+  dual_step_size_.fill(1.0);
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(0)) {
       dtlb_[0].expandSlackAndDual_lb(d.aux[0].dts);
       primal_step_size_.coeffRef(0) = dtlb_[0].maxSlackStepSize();
       dual_step_size_.coeffRef(0) = dtlb_[0].maxDualStepSize();
-    }
-    else {
-      primal_step_size_.coeffRef(0) = 1.0;
-      dual_step_size_.coeffRef(0) = 1.0;
     }
   }
   else {
@@ -377,10 +367,6 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
       dtlb_[0].expandSlackAndDual_lb(d.lift[0].dts);
       primal_step_size_.coeffRef(0) = dtlb_[0].maxSlackStepSize();
       dual_step_size_.coeffRef(0) = dtlb_[0].maxDualStepSize();
-    }
-    else {
-      primal_step_size_.coeffRef(0) = 1.0;
-      dual_step_size_.coeffRef(0) = 1.0;
     }
   }
   int impulse_index = 0;
@@ -390,75 +376,39 @@ inline void SwitchingTimeConstraints::expandSlackAndDual(
     const auto next_event_type = discretization.eventType(event_index+1);
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
-        if (next_event_type == DiscreteEventType::Impulse) {
-          dtlb_[event_index+1].expandSlackAndDual_lub((-d.aux[impulse_index].dts),
-                                                      (-d.aux[impulse_index+1].dts));
-        }
-        else {
-          dtlb_[event_index+1].expandSlackAndDual_lub((-d.aux[impulse_index].dts),
-                                                      (-d.lift[lift_index].dts));
-        }
+        dtlb_[event_index+1].expandSlackAndDual_lub(d.aux[impulse_index].dts,
+                                                    d.aux[impulse_index].dts_next);
         primal_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxSlackStepSize();
         dual_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxDualStepSize();
-      }
-      else {
-        primal_step_size_.coeffRef(event_index+1) = 1.0;
-        dual_step_size_.coeffRef(event_index+1) = 1.0;
       }
       ++impulse_index;
     }
     else {
       if (discretization.isSTOEnabledLift(lift_index)) {
-        if (next_event_type == DiscreteEventType::Impulse) {
-          dtlb_[event_index+1].expandSlackAndDual_lub((-d.lift[lift_index].dts),
-                                                      (-d.aux[impulse_index+1].dts));
-        }
-        else {
-          dtlb_[event_index+1].expandSlackAndDual_lub((-d.lift[lift_index].dts),
-                                                      (-d.lift[lift_index+1].dts));
-        }
+        dtlb_[event_index+1].expandSlackAndDual_lub(d.lift[lift_index].dts,
+                                                    d.lift[lift_index].dts_next);
         primal_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxSlackStepSize();
         dual_step_size_.coeffRef(event_index+1) 
             = dtlb_[event_index+1].maxDualStepSize();
-      }
-      else {
-        primal_step_size_.coeffRef(event_index+1) = 1.0;
-        dual_step_size_.coeffRef(event_index+1) = 1.0;
       }
       ++lift_index;
     }
   }
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
-      dtlb_[num_events].expandSlackAndDual_ub(-d.aux[impulse_index].dts);
-      primal_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxSlackStepSize();
-      dual_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxDualStepSize();
-    }
-    else {
-      primal_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxSlackStepSize();
-      dual_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxDualStepSize();
-    }
+      dtlb_[num_events].expandSlackAndDual_ub(d.aux[impulse_index].dts);
+      primal_step_size_.coeffRef(num_events) = dtlb_[num_events].maxSlackStepSize();
+      dual_step_size_.coeffRef(num_events) = dtlb_[num_events].maxDualStepSize();
+    } 
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
-      dtlb_[num_events].expandSlackAndDual_ub(-d.lift[lift_index].dts);
-      primal_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxSlackStepSize();
-      dual_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxDualStepSize();
-    }
-    else {
-      primal_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxSlackStepSize();
-      dual_step_size_.coeffRef(num_events) 
-          = dtlb_[num_events].maxDualStepSize();
+      dtlb_[num_events].expandSlackAndDual_ub(d.lift[lift_index].dts);
+      primal_step_size_.coeffRef(num_events) = dtlb_[num_events].maxSlackStepSize();
+      dual_step_size_.coeffRef(num_events) = dtlb_[num_events].maxDualStepSize();
     }
   }
 }
@@ -495,6 +445,42 @@ inline void SwitchingTimeConstraints::updateDual(const double step_size) {
   for (int i=0; i<num_switches_+1; ++i) {
     dtlb_[i].updateDual(step_size);
   }
+}
+
+
+inline double SwitchingTimeConstraints::KKTError() const {
+  double err = 0;
+  for (int i=0; i<num_switches_+1; ++i) {
+    err += dtlb_[i].KKTError();
+  }
+  return err;
+}
+
+
+inline void SwitchingTimeConstraints::setBarrier(const double barrier) {
+  for (auto& e : dtlb_) {
+    e.setBarrier(barrier);
+  }
+}
+
+
+inline void SwitchingTimeConstraints::setFractionToBoundaryRule(
+    const double fraction_to_boundary_rule) {
+  for (auto& e : dtlb_) {
+    e.setFractionToBoundaryRule(fraction_to_boundary_rule);
+  }
+}
+
+
+inline void SwitchingTimeConstraints::setDwellTimeMargin(const double min_dt, 
+                                                         const double min_dt0, 
+                                                         const double min_dtf) {
+  assert(min_dt >= 0.);
+  assert(min_dt0 >= 0.);
+  assert(min_dtf >= 0.);
+  min_dt_ = min_dt;
+  min_dt0_ = min_dt0;
+  min_dtf_ = min_dtf;
 }
 
 } // namespace robotoc

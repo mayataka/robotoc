@@ -24,6 +24,7 @@ inline ContactDynamicsData::ContactDynamicsData(const Robot& robot)
     IDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     MJtJinv_IDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     laf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
+    haf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
     dimf_(0),
@@ -45,6 +46,7 @@ inline ContactDynamicsData::ContactDynamicsData()
     IDC_full_(),
     MJtJinv_IDC_full_(),
     laf_full_(),
+    haf_full_(),
     dimv_(0),
     dimu_(0),
     dimf_(0),
@@ -292,6 +294,39 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamicsData::lf() {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ContactDynamicsData::lf() const {
   return laf_full_.segment(dimv_, dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamicsData::haf() {
+  return haf_full_.head(dimvf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ContactDynamicsData::haf() const {
+  return haf_full_.head(dimvf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamicsData::ha() {
+  return haf_full_.head(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ContactDynamicsData::ha() const {
+  return haf_full_.head(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamicsData::hf() {
+  return haf_full_.segment(dimv_, dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ContactDynamicsData::hf() const {
+  return haf_full_.segment(dimv_, dimf_);
 }
 
 } // namespace robotoc 

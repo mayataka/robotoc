@@ -44,7 +44,7 @@ void ImpulseSplitDirectionTest::test(const Robot& robot, const ImpulseStatus& im
   EXPECT_EQ(d.dbeta().size(), dimv);
   EXPECT_EQ(d.dmu().size(), 0);
   EXPECT_EQ(d.dimi(), 0);
-  d.setImpulseStatus(impulse_status);
+  d.setImpulseDimension(impulse_status.dimf());
   EXPECT_EQ(d.dx.size(), dimx);
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);

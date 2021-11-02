@@ -14,7 +14,7 @@
 
 namespace robotoc {
 
-class HybridOCPDiscretizationTest : public ::testing::Test {
+class HybridOCPDiscretizationTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -31,11 +31,6 @@ protected:
 
   std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
   std::shared_ptr<ContactSequence> createContactSequenceOnGrid(const Robot& robot) const;
-
-  void test_constructor(const Robot& robot) const;
-  void test_discretizeOCP(const Robot& robot) const;
-  void test_discretizeOCPOnGrid(const Robot& robot) const;
-  void test_eventTimeIsLargerThanHorizon(const Robot& robot) const;
 
   int N, max_num_events;
   double t, T, dt, min_dt;
@@ -88,7 +83,7 @@ std::shared_ptr<ContactSequence> HybridOCPDiscretizationTest::createContactSeque
 }
 
 
-void HybridOCPDiscretizationTest::test_constructor(const Robot& robot) const {
+TEST_P(HybridOCPDiscretizationTest, constructor) {
   HybridOCPDiscretization discretization(T, N, max_num_events);
   EXPECT_EQ(discretization.N(), N);
   EXPECT_EQ(discretization.N_impulse(), 0);
@@ -107,8 +102,9 @@ void HybridOCPDiscretizationTest::test_constructor(const Robot& robot) const {
 }
 
 
-void HybridOCPDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
+TEST_P(HybridOCPDiscretizationTest, discretizeGridBased) {
   HybridOCPDiscretization discretization(T, N, max_num_events);
+  const auto robot = GetParam();
   const auto contact_sequence = createContactSequence(robot);
   discretization.discretize(contact_sequence, t);
   EXPECT_EQ(discretization.N(), N);
@@ -190,7 +186,6 @@ void HybridOCPDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
       EXPECT_DOUBLE_EQ(discretization.dt(i), dt);
     }
   }
-
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   int impulse_index = 0;
   int lift_index = 0;
@@ -211,8 +206,9 @@ void HybridOCPDiscretizationTest::test_discretizeOCP(const Robot& robot) const {
 }
 
 
-void HybridOCPDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) const {
+TEST_P(HybridOCPDiscretizationTest, discretizeGridBased_switchingTimesOnGrids) {
   HybridOCPDiscretization discretization(T, N, max_num_events);
+  const auto robot = GetParam();
   const auto contact_sequence = createContactSequenceOnGrid(robot);
   discretization.discretize(contact_sequence, t);
   EXPECT_EQ(discretization.N(), N-max_num_events);
@@ -234,10 +230,11 @@ void HybridOCPDiscretizationTest::test_discretizeOCPOnGrid(const Robot& robot) c
 }
 
 
-void HybridOCPDiscretizationTest::test_eventTimeIsLargerThanHorizon(const Robot& robot) const {
+TEST_P(HybridOCPDiscretizationTest, discretizeGridBased_eventTimesAreLargerThanHorizon) {
   const double T_short = 0.5 * T;
   const double dt_short = T_short / N;
   HybridOCPDiscretization discretization(T_short, N, max_num_events);
+  const auto robot = GetParam();
   const auto contact_sequence = createContactSequence(robot);
   discretization.discretize(contact_sequence, t);
   EXPECT_EQ(discretization.N(), N);
@@ -349,22 +346,313 @@ void HybridOCPDiscretizationTest::test_eventTimeIsLargerThanHorizon(const Robot&
 }
 
 
-TEST_F(HybridOCPDiscretizationTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
-  test_constructor(robot);
-  test_discretizeOCP(robot);
-  test_discretizeOCPOnGrid(robot);
-  test_eventTimeIsLargerThanHorizon(robot);
+TEST_P(HybridOCPDiscretizationTest, discretizePhaseBased) {
+  HybridOCPDiscretization discretization(T, N, max_num_events);
+  discretization.setDiscretizationMethod(DiscretizationMethod::PhaseBased);
+  const auto robot = GetParam();
+  const auto contact_sequence = createContactSequence(robot);
+  discretization.meshRefinement(contact_sequence, t);
+  EXPECT_EQ(discretization.N(), N);
+  EXPECT_EQ(discretization.N_impulse(), contact_sequence->numImpulseEvents());
+  EXPECT_EQ(discretization.N_lift(), contact_sequence->numLiftEvents());
+  std::vector<double> t_impulse, t_lift;
+  std::vector<int> time_stage_before_impulse, time_stage_before_lift;
+  for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
+    t_impulse.push_back(contact_sequence->impulseTime(i));
+    time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt));
+  }
+  for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
+    t_lift.push_back(contact_sequence->liftTime(i));
+    time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt));
+  }
+  for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
+    EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
+    EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
+    EXPECT_EQ(discretization.isSTOEnabledImpulse(i), 
+              discretization.isSTOEnabledEvent(discretization.eventIndexImpulse(i)));
+    EXPECT_EQ(discretization.isSTOEnabledImpulse(i), 
+              discretization.isSTOEnabledEvent(discretization.eventIndexImpulse(i)));
+  }
+  for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
+    EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
+    EXPECT_FALSE(discretization.isSTOEnabledLift(i));
+    EXPECT_EQ(discretization.isSTOEnabledLift(i), 
+              discretization.isSTOEnabledEvent(discretization.eventIndexLift(i)));
+  }
+  EXPECT_EQ(discretization.isSTOEnabledPhase(0), 
+            discretization.isSTOEnabledEvent(0));
+  for (int i=1; i<contact_sequence->numDiscreteEvents(); ++i) {
+    EXPECT_EQ(discretization.isSTOEnabledPhase(i), 
+              (discretization.isSTOEnabledEvent(i-1)||discretization.isSTOEnabledEvent(i)));
+  }
+  EXPECT_EQ(discretization.isSTOEnabledPhase(contact_sequence->numDiscreteEvents()), 
+            discretization.isSTOEnabledEvent(contact_sequence->numDiscreteEvents()-1));
+  std::vector<int> time_stage_before_events;
+  for (auto e :  time_stage_before_impulse) {
+    time_stage_before_events.push_back(e);
+  }
+  for (auto e :  time_stage_before_lift) {
+    time_stage_before_events.push_back(e);
+  }
+  std::sort(time_stage_before_events.begin(), time_stage_before_events.end());
+  time_stage_before_events.push_back(N+1);
+  int contact_phase_ref = 0;
+  for (int i=0; i<=N; ++i) {
+    EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
+    if (i == time_stage_before_events[contact_phase_ref]) {
+      ++contact_phase_ref;
+    }
+  }
+  for (int i=0; i<discretization.N_impulse(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeImpulse(i)+1, 
+              discretization.timeStageAfterImpulse(i));
+    EXPECT_EQ(discretization.contactPhaseAfterImpulse(i), 
+              discretization.contactPhase(discretization.timeStageAfterImpulse(i)));
+  }
+  for (int i=0; i<discretization.N_lift(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeLift(i)+1, 
+              discretization.timeStageAfterLift(i));
+    EXPECT_EQ(discretization.contactPhaseAfterLift(i), 
+              discretization.contactPhase(discretization.timeStageAfterLift(i)));
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeImpulse(discretization.impulseIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.impulseIndexAfterTimeStage(i), -1);
+    }
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeLift(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeLift(discretization.liftIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.liftIndexAfterTimeStage(i), -1);
+    }
+  }
+  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  int impulse_index = 0;
+  int lift_index = 0;
+  int time_stage_before_event = 0;
+  double t_prev_event = t;
+  double dt_prev_aux = discretization.dt(0);
+  for (int event_index=0; event_index<num_events; ++event_index) {
+    ASSERT_FALSE(discretization.eventType(event_index)==DiscreteEventType::None);
+    if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      EXPECT_EQ(discretization.eventIndexImpulse(impulse_index), event_index);
+      const int grids_phase = discretization.timeStageBeforeImpulse(impulse_index) 
+                              - time_stage_before_event + 1;
+      EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
+      const double dt_phase = (discretization.t_impulse(impulse_index)-t_prev_event) / grids_phase;
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
+        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+      }
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeImpulse(impulse_index)-1; ++stage) {
+        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+      }
+      EXPECT_NEAR(discretization.t_impulse(impulse_index)-discretization.t(discretization.timeStageBeforeImpulse(impulse_index)), 
+                  dt_phase, min_dt);
+      EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
+      time_stage_before_event = discretization.timeStageBeforeImpulse(impulse_index);
+      t_prev_event = discretization.t_impulse(impulse_index);
+      dt_prev_aux = discretization.dt_aux(impulse_index);
+      ++impulse_index;
+    }
+    else {
+      EXPECT_EQ(discretization.eventIndexLift(lift_index), event_index);
+      const int grids_phase = discretization.timeStageBeforeLift(lift_index) 
+                              - time_stage_before_event + 1;
+      EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
+      const double dt_phase = (discretization.t_lift(lift_index)-t_prev_event) / grids_phase;
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeLift(lift_index); ++stage) {
+        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+      }
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeLift(lift_index)-1; ++stage) {
+        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+      }
+      EXPECT_NEAR(discretization.t_lift(lift_index)-discretization.t(discretization.timeStageBeforeLift(lift_index)), 
+                  dt_phase, min_dt);
+      EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
+      time_stage_before_event = discretization.timeStageBeforeLift(lift_index);
+      t_prev_event = discretization.t_lift(lift_index);
+      dt_prev_aux = discretization.dt_lift(lift_index);
+      ++lift_index;
+    }
+  }
+  EXPECT_NO_THROW(
+    std::cout << discretization << std::endl;
+  );
 }
 
 
-TEST_F(HybridOCPDiscretizationTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  test_constructor(robot);
-  test_discretizeOCP(robot);
-  test_discretizeOCPOnGrid(robot);
-  test_eventTimeIsLargerThanHorizon(robot);
+TEST_P(HybridOCPDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHorizon) {
+  const double T_short = 0.5 * T;
+  const double dt_short = T_short / N;
+  HybridOCPDiscretization discretization(T_short, N, max_num_events);
+  discretization.setDiscretizationMethod(DiscretizationMethod::PhaseBased);
+  const auto robot = GetParam();
+  const auto contact_sequence = createContactSequence(robot);
+  discretization.meshRefinement(contact_sequence, t);
+  EXPECT_EQ(discretization.N(), N);
+  std::vector<double> t_impulse, t_lift;
+  std::vector<int> time_stage_before_impulse, time_stage_before_lift;
+  for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
+    if (contact_sequence->impulseTime(i) >= t+T_short-min_dt) {
+      break;
+    }
+    t_impulse.push_back(contact_sequence->impulseTime(i));
+    time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt_short));
+  }
+  for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
+    if (contact_sequence->liftTime(i) >= t+T_short-min_dt) {
+      break;
+    }
+    t_lift.push_back(contact_sequence->liftTime(i));
+    time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt_short));
+  }
+  const int N_impulse = t_impulse.size();
+  const int N_lift = t_lift.size();
+  EXPECT_EQ(discretization.N_impulse(), N_impulse);
+  EXPECT_EQ(discretization.N_lift(), N_lift);
+  for (int i=0; i<N_impulse; ++i) {
+    EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
+    EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
+    EXPECT_EQ(discretization.isSTOEnabledImpulse(i), 
+              discretization.isSTOEnabledEvent(discretization.eventIndexImpulse(i)));
+    EXPECT_EQ(discretization.isSTOEnabledImpulse(i), 
+              discretization.isSTOEnabledEvent(discretization.eventIndexImpulse(i)));
+  }
+  for (int i=0; i<N_lift; ++i) {
+    EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
+    EXPECT_FALSE(discretization.isSTOEnabledLift(i));
+    EXPECT_EQ(discretization.isSTOEnabledLift(i), 
+              discretization.isSTOEnabledEvent(discretization.eventIndexLift(i)));
+  }
+  EXPECT_EQ(discretization.isSTOEnabledPhase(0), 
+            discretization.isSTOEnabledEvent(0));
+  for (int i=1; i<N_lift+N_impulse; ++i) {
+    EXPECT_EQ(discretization.isSTOEnabledPhase(i), 
+              (discretization.isSTOEnabledEvent(i-1)||discretization.isSTOEnabledEvent(i)));
+  }
+  EXPECT_EQ(discretization.isSTOEnabledPhase(N_lift+N_impulse), 
+            discretization.isSTOEnabledEvent(N_lift+N_impulse-1));
+  std::vector<int> time_stage_before_events;
+  for (auto e :  time_stage_before_impulse) {
+    time_stage_before_events.push_back(e);
+  }
+  for (auto e :  time_stage_before_lift) {
+    time_stage_before_events.push_back(e);
+  }
+  std::sort(time_stage_before_events.begin(), time_stage_before_events.end());
+  time_stage_before_events.push_back(N+1);
+  int contact_phase_ref = 0;
+  for (int i=0; i<=N; ++i) {
+    EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
+    if (i == time_stage_before_events[contact_phase_ref]) {
+      ++contact_phase_ref;
+    }
+  }
+  for (int i=0; i<discretization.N_impulse(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeImpulse(i)+1, 
+              discretization.timeStageAfterImpulse(i));
+    EXPECT_EQ(discretization.contactPhaseAfterImpulse(i), 
+              discretization.contactPhase(discretization.timeStageAfterImpulse(i)));
+  }
+  for (int i=0; i<discretization.N_lift(); ++i) {
+    EXPECT_EQ(discretization.timeStageBeforeLift(i)+1, 
+              discretization.timeStageAfterLift(i));
+    EXPECT_EQ(discretization.contactPhaseAfterLift(i), 
+              discretization.contactPhase(discretization.timeStageAfterLift(i)));
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeImpulse(discretization.impulseIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.impulseIndexAfterTimeStage(i), -1);
+    }
+  }
+  for (int i=0; i<N; ++i) {
+    if (discretization.isTimeStageBeforeLift(i)) {
+      EXPECT_EQ(discretization.timeStageBeforeLift(discretization.liftIndexAfterTimeStage(i)), i);
+    }
+    else {
+      EXPECT_EQ(discretization.liftIndexAfterTimeStage(i), -1);
+    }
+  }
+  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  int impulse_index = 0;
+  int lift_index = 0;
+  int time_stage_before_event = 0;
+  double t_prev_event = t;
+  double dt_prev_aux = discretization.dt(0);
+  for (int event_index=0; event_index<num_events; ++event_index) {
+    ASSERT_FALSE(discretization.eventType(event_index)==DiscreteEventType::None);
+    if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      EXPECT_EQ(discretization.eventIndexImpulse(impulse_index), event_index);
+      const int grids_phase = discretization.timeStageBeforeImpulse(impulse_index) 
+                              - time_stage_before_event + 1;
+      EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
+      const double dt_phase = (discretization.t_impulse(impulse_index)-t_prev_event) / grids_phase;
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
+        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+      }
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeImpulse(impulse_index)-1; ++stage) {
+        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+      }
+      EXPECT_NEAR(discretization.t_impulse(impulse_index)-discretization.t(discretization.timeStageBeforeImpulse(impulse_index)), 
+                  dt_phase, min_dt);
+      EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
+      time_stage_before_event = discretization.timeStageBeforeImpulse(impulse_index);
+      t_prev_event = discretization.t_impulse(impulse_index);
+      dt_prev_aux = discretization.dt_aux(impulse_index);
+      ++impulse_index;
+    }
+    else {
+      EXPECT_EQ(discretization.eventIndexLift(lift_index), event_index);
+      const int grids_phase = discretization.timeStageBeforeLift(lift_index) 
+                              - time_stage_before_event + 1;
+      EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
+      const double dt_phase = (discretization.t_lift(lift_index)-t_prev_event) / grids_phase;
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeLift(lift_index); ++stage) {
+        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+      }
+      for (int stage=time_stage_before_event+1; 
+            stage<discretization.timeStageBeforeLift(lift_index)-1; ++stage) {
+        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+      }
+      EXPECT_NEAR(discretization.t_lift(lift_index)-discretization.t(discretization.timeStageBeforeLift(lift_index)), 
+                  dt_phase, min_dt);
+      EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
+      time_stage_before_event = discretization.timeStageBeforeLift(lift_index);
+      t_prev_event = discretization.t_lift(lift_index);
+      dt_prev_aux = discretization.dt_lift(lift_index);
+      ++lift_index;
+    }
+  }
+  EXPECT_NO_THROW(
+    std::cout << discretization << std::endl;
+  );
 }
+
+
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, HybridOCPDiscretizationTest, 
+  ::testing::Values(testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+);
 
 } // namespace robotoc
 

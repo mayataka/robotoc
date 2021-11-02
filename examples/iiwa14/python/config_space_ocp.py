@@ -36,6 +36,7 @@ constraints.push_back(joint_velocity_lower)
 constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
+constraints.set_barrier(1.0e-03)
 
 # Create the OCP solver for unconstrained rigid-body systems.
 T = 3.0
@@ -51,7 +52,7 @@ ocp_solver.set_solution("v", v)
 ocp_solver.init_constraints()
 
 print("----- Solves the OCP by Riccati recursion algorithm. -----")
-num_iteration = 30
+num_iteration = 20
 robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 
 # Solves the OCP by ParNMPC algorithm.
@@ -62,7 +63,7 @@ parnmpc_solver.set_solution("v", v)
 parnmpc_solver.init_constraints()
 
 print("\n----- Solves the OCP by ParNMPC algorithm. -----")
-num_iteration = 60
+num_iteration = 40
 robotoc.utils.benchmark.convergence(parnmpc_solver, t, q, v, num_iteration)
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')

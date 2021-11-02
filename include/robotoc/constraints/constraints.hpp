@@ -166,12 +166,11 @@ public:
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
-  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
   void linearizeConstraints(Robot& robot, ConstraintsData& data, 
-                            const double dt, const SplitSolution& s, 
+                            const SplitSolution& s, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
@@ -190,15 +189,14 @@ public:
   /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
   /// be called before this function.
   /// @param[in] data Constraints data. 
-  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
   /// to this data.
   /// @param[out] kkt_residual Split KKT residual. The condensed residual are 
   /// added to this data.
   ///
-  void condenseSlackAndDual(ConstraintsData& data, const double dt, 
-                            const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+  void condenseSlackAndDual(ConstraintsData& data, const SplitSolution& s, 
+                            SplitKKTMatrix& kkt_matrix, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
@@ -223,20 +221,6 @@ public:
   /// @param[in] d Split direction.
   ///
   void expandSlackAndDual(ConstraintsData& data, const SplitSolution& s, 
-                          const SplitDirection& d) const;
-
-  ///
-  /// @brief Expands the slack and dual, i.e., computes the directions of the 
-  /// slack and dual variables from the directions of the primal variables.
-  /// @param[in, out] data Constraints data. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @param[in] dts The direction of the switching time regarding of this time 
-  /// stage. 
-  /// @param[in] s Split solution.
-  /// @param[in] d Split direction.
-  ///
-  void expandSlackAndDual(ConstraintsData& data, const double dt, 
-                          const double dts, const SplitSolution& s, 
                           const SplitDirection& d) const;
 
   ///

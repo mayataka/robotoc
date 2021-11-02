@@ -253,15 +253,10 @@ public:
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
   /// direction of the condensed primal variables of this stage.
-  /// @param[in] dt Time step of this time stage. This is used only when sto is 
-  /// true.
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] d Split direction of this time stage.
-  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
-  /// considered. If false, it is not considered. 
   /// 
-  void expandPrimal(const double dt, const SplitSolution& s, 
-                    SplitDirection& d, const bool sto);
+  void expandPrimal(const SplitSolution& s, SplitDirection& d);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
@@ -269,12 +264,26 @@ public:
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
-  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
-  /// considered. If false, it is not considered. 
+  /// @param[in] dts Direction of the switching time regarding of this time 
+  /// stage. Default is zero.
   /// 
   template <typename SplitDirectionType>
   void expandDual(const double dt, const SplitDirectionType& d_next, 
-                  SplitDirection& d, const bool sto);
+                  SplitDirection& d, const double dts=0);
+
+  ///
+  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
+  /// direction of the condensed dual variables of this stage.
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] d_next Split direction of the next time stage.
+  /// @param[in] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] d Split direction of this time stage.
+  /// @param[in] dts Direction of the switching time regarding of this time 
+  /// stage. Default is zero.
+  /// 
+  void expandDual(const double dt, const SplitDirection& d_next, 
+                  const SwitchingConstraintJacobian& sc_jacobian,
+                  SplitDirection& d, const double dts=0);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -312,22 +321,19 @@ public:
   /// @brief Returns the KKT residual of this time stage. Before calling this 
   /// function, SplitOCP::computeKKTResidual() must be called.
   /// @param[in] kkt_residual KKT residual of this time stage.
-  /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double KKTError(const SplitKKTResidual& kkt_residual, const double dt) const;
+  double KKTError(const SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
   /// function, SplitOCP::computeKKTResidual() must be called.
   /// @param[in] kkt_residual KKT residual of this time stage.
   /// @param[in] sc_residual Residual of the switching constraint. 
-  /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
   double KKTError(const SplitKKTResidual& kkt_residual,
-                  const SwitchingConstraintResidual& sc_residual,
-                  const double dt) const;
+                  const SwitchingConstraintResidual& sc_residual) const;
 
   ///
   /// @brief Returns the stage cost of this time stage for the line search.
@@ -343,11 +349,9 @@ public:
   /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
-  /// @param[in] dt Time step of this time stage. 
   /// @return The constraint violation of this time stage.
   ///
-  double constraintViolation(const SplitKKTResidual& kkt_residual, 
-                             const double dt) const;
+  double constraintViolation(const SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the constraint violation of this time stage for the 
@@ -355,12 +359,11 @@ public:
   /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
   /// @param[in] kkt_residual KKT residual of this impulse stage.
-  /// @param[in] dt Time step of this time stage. 
   /// @param[in] sc_residual Residual of the switching constraint. 
   /// @return The constraint violation of this time stage.
   ///
   double constraintViolation(
-      const SplitKKTResidual& kkt_residual, const double dt,
+      const SplitKKTResidual& kkt_residual,
       const SwitchingConstraintResidual& sc_residual) const;
 
 private:

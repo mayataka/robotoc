@@ -73,7 +73,7 @@ public:
   /// for this discrete event. if false, it is disabled. Default is false.
   /// @note If event_time is larger than the terminal time of the optimal 
   /// control problem (t+T), then the discrete event and the contact status
-  /// after the discrete event is not considered.
+  /// after the discrete event is not considered in the optimization problem.
   ///
   void push_back(const DiscreteEvent& discrete_event, const double event_time,
                  const bool sto=false);
@@ -87,9 +87,9 @@ public:
   /// this contact sequence and the input contact status. 
   /// @param[in] sto if true, the switching time optimization (STO) is enabled
   /// for this discrete event. if false, it is disabled. Default is false.
-  /// @note If event_time is larger than the terminal time of the optimal 
+  /// @note If switching_time is larger than the terminal time of the optimal 
   /// control problem (t+T), then the discrete event and the contact status
-  /// after the discrete event is not considered.
+  /// after the discrete event is not considered in the optimization problem.
   ///
   void push_back(const ContactStatus& contact_status, 
                  const double switching_time, const bool sto=false);

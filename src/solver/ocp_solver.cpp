@@ -54,6 +54,21 @@ OCPSolver::~OCPSolver() {
 }
 
 
+void OCPSolver::setDiscretizationMethod(
+    const DiscretizationMethod discretization_method) {
+  ocp_.setDiscretizationMethod(discretization_method);
+}
+
+
+void OCPSolver::meshRefinement(const double t) {
+  ocp_.meshRefinement(contact_sequence_, t);
+  if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
+    discretizeSolution();
+    dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+  }
+}
+
+
 void OCPSolver::initConstraints(const double t) {
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
@@ -84,7 +99,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
-  dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, d_, s_);
+  dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
+                         kkt_matrix_, d_, s_);
 } 
 
 

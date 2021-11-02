@@ -127,12 +127,11 @@ public:
   /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
   /// @param[in] data Constraint data.
-  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual Split KKT residual.
   ///
   virtual void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
-                               const double dt, const SplitSolution& s, 
+                               const SplitSolution& s, 
                                SplitKKTResidual& kkt_residual) const = 0;
 
   ///
@@ -140,7 +139,6 @@ public:
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
   /// @param[in] data Constraint data.
-  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
   /// to this object.
@@ -148,7 +146,7 @@ public:
   /// added to this object.
   ///
   virtual void condenseSlackAndDual(ConstraintComponentData& data,
-                                    const double dt, const SplitSolution& s, 
+                                    const SplitSolution& s, 
                                     SplitKKTMatrix& kkt_matrix,
                                     SplitKKTResidual& kkt_residual) const = 0;
 

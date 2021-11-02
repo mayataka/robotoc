@@ -173,6 +173,24 @@ inline void DwellTimeLowerBound::updateDual(const double step_size) {
   dual_ += step_size * ddual_;
 }
 
+
+inline void DwellTimeLowerBound::setBarrier(const double barrier) {
+  assert(barrier > 0.0);
+  barrier_ = barrier;
+}
+
+
+inline void DwellTimeLowerBound::setFractionToBoundaryRule(
+    const double fraction_to_boundary_rule) {
+  assert(fraction_to_boundary_rule > 0.0);
+  fraction_to_boundary_rule_ = fraction_to_boundary_rule;
+}
+
+
+inline double DwellTimeLowerBound::KKTError() const {
+  return (residual_*residual_) + (cmpl_*cmpl_);
+}
+
 } // namespace robotoc
 
 #endif // ROBOTOC_DWELL_TIME_LOWER_BOUND_HXX_ 

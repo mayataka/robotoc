@@ -108,7 +108,7 @@ constraints.push_back(joint_velocity_lower)
 constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
-constraints.set_barrier(1.0e-01)
+constraints.set_barrier(1.0e-03)
 
 T = 0.5
 N = 20

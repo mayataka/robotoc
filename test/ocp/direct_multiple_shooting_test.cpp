@@ -358,7 +358,7 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  dms.integrateSolution(ocp, robots, primal_step_size, dual_step_size, d, s);
+  dms.integrateSolution(ocp, robots, primal_step_size, dual_step_size, kkt_matrix, d, s);
   auto robot_ref = robot;
   for (int i=0; i<ocp_ref.discrete().N(); ++i) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
@@ -370,14 +370,14 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dt);
       const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i], sto);
+      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index], sto);
+      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
@@ -391,34 +391,50 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dt);
       const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i], sto);
+      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index], sto);
-      ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, d_ref.lift[lift_index], s_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, 
+                                            d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
+    }
+    else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
+      const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
+      const double dti = ocp_ref.discrete().dt(i);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
+      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+      ocp_ref[i].expandDual(dti, d_ref[i+1], kkt_matrix_ref.switching[impulse_index], 
+                            d_ref[i]);
+      ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
+      ocp_ref[i].updateDual(dual_step_size);
     }
     else {
       const double dti = ocp_ref.discrete().dt(i);
       const bool sto_false = false;
-      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], sto_false);
+      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
   }
   ocp_ref.terminal.expandDual(d_ref[ocp_ref.discrete().N()]);
-  ocp_ref.terminal.updatePrimal(robot_ref, primal_step_size, d_ref[ocp_ref.discrete().N()], s_ref[ocp_ref.discrete().N()]);
+  ocp_ref.terminal.updatePrimal(robot_ref, primal_step_size, 
+                                d_ref[ocp_ref.discrete().N()], s_ref[ocp_ref.discrete().N()]);
   ocp_ref.terminal.updateDual(dual_step_size);
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
 
 
-  EXPECT_NO_THROW(
-    std::cout << s << std::endl;
-    std::cout << d << std::endl;
-    std::cout << kkt_matrix << std::endl;
-    std::cout << kkt_residual << std::endl;
-  );
+  std::cout << d[0] << std::endl;
+  std::cout << d_ref[0] << std::endl;
+
+  // EXPECT_NO_THROW(
+  //   std::cout << s << std::endl;
+  //   std::cout << d << std::endl;
+  //   std::cout << kkt_matrix << std::endl;
+  //   std::cout << kkt_residual << std::endl;
+  // );
 }
 
 

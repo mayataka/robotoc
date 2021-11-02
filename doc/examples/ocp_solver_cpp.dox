@@ -154,7 +154,7 @@ Next, we construct the constraints.
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-01);
+  constraints->setBarrier(1.0e-03);
 ```
 
 Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 

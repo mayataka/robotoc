@@ -274,6 +274,11 @@ public:
   double Qtt;
 
   ///
+  /// @brief Hessian of the Lagrangian w.r.t. the previoius switching time. 
+  ///
+  double Qtt_prev;
+
+  ///
   /// @brief Derivative of the Hamiltonian w.r.t. the state. 
   ///
   Eigen::VectorXd hx;

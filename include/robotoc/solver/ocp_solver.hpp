@@ -79,6 +79,20 @@ public:
   OCPSolver& operator=(OCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Sets the discretization method of the optimal contro problem. 
+  /// @param[in] discretization_method The discretization method.
+  ///
+  void setDiscretizationMethod(const DiscretizationMethod discretization_method);
+
+  ///
+  /// @brief Applies mesh refinement if the discretization method is   
+  /// DiscretizationMethod::PhaseBased. Also initializes the constraints 
+  /// if the mesh refiement is carried out.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void meshRefinement(const double t);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   /// @param[in] t Initial time of the horizon. 

@@ -88,24 +88,12 @@ inline void evalConstraint(
 }
 
 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType,
+          typename SplitKKTResidualType>
 inline void linearizeConstraints(
-   const std::vector<ConstraintComponentBasePtr>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, const double dt,
-   const SplitSolution& s, SplitKKTResidual& kkt_residual) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->evalConstraint(robot, data[i], s);
-    constraints[i]->evalDerivatives(robot, data[i], dt, s, kkt_residual);
-  }
-}
-
-
-inline void linearizeConstraints(
-   const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
+   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
+   const SplitSolutionType& s, SplitKKTResidualType& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -116,44 +104,18 @@ inline void linearizeConstraints(
 }
 
 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType,
+          typename SplitKKTMatrixType, typename SplitKKTResidualType>
 inline void condenseSlackAndDual(
-    const std::vector<ConstraintComponentBasePtr>& constraints, 
-    std::vector<ConstraintComponentData>& data, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->condenseSlackAndDual(data[i], dt, s, kkt_matrix, kkt_residual);
-  }
-}
-
-
-inline void condenseSlackAndDual(
-    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s, 
+    SplitKKTMatrixType& kkt_matrix, SplitKKTResidualType& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
     constraints[i]->condenseSlackAndDual(data[i], s, kkt_matrix, kkt_residual);
   }
-}
-
-
-template <typename ConstraintComponentBaseTypePtr, 
-          typename SplitSolutionType, typename SplitDirectionType>
-inline void expandSlackAndDual(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-    std::vector<ConstraintComponentData>& data, const double dt, 
-    const double dts, const SplitSolutionType& s, const SplitDirectionType& d) {
-  for (auto& e : data) {
-    e.residual.array() *= (1+(dts/dt));
-    e.cmpl.array() *= (1+(dts/dt));
-  }
-  expandSlackAndDual(constraints, data, s, d);
 }
 
 
