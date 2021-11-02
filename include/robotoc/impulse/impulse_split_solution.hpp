@@ -201,6 +201,12 @@ public:
   void copyDual(const ImpulseSplitSolution& another);
 
   ///
+  /// @brief Return L-infinity Norm of the lagrange multipliers. Used in
+  /// line search.
+  ///
+  double lagrangeMultiplierLinfNorm() const;
+
+  ///
   /// @brief Return true if two ImpulseSplitSolution have the same value and  
   /// false if not. 
   /// @param[in] other Impulse split solution that is compared with this object.

@@ -9,6 +9,7 @@
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
+#include "robotoc/line_search/line_search_settings.hpp"
 #include "robotoc/line_search/line_search.hpp"
 
 #include "test_helper.hpp"
@@ -22,7 +23,7 @@
 
 namespace robotoc {
 
-class LineSearchTest : public ::testing::Test {
+class LineSearchTest : public ::testing::TestWithParam<LineSearchSettings> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -47,7 +48,7 @@ protected:
                             const std::shared_ptr<ContactSequence>& contact_sequence) const;
   std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
 
-  void test(const Robot& robot) const;
+  void test(const Robot& robot, const LineSearchSettings& settings) const;
 
   int N, max_num_impulse, nthreads;
   double T, t, dt, step_size_reduction_rate, min_step_size;
@@ -81,7 +82,7 @@ std::shared_ptr<ContactSequence> LineSearchTest::createContactSequence(const Rob
 }
 
 
-void LineSearchTest::test(const Robot& robot) const {
+void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
@@ -96,33 +97,43 @@ void LineSearchTest::test(const Robot& robot) const {
   ocp.discretize(contact_sequence, t);
   DirectMultipleShooting dms(N, max_num_impulse, nthreads);
   dms.initConstraints(ocp, robots, contact_sequence, s);
-  LineSearch line_search(robot, N, max_num_impulse, nthreads);
+  LineSearch line_search(robot, N, max_num_impulse, nthreads, settings);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
-  EXPECT_FALSE(line_search.isFilterEmpty());
+  if (settings.line_search_method == "filter") {
+    EXPECT_FALSE(line_search.isFilterEmpty());
+  }
   const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
   EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, very_small_max_primal_step_size),
                    min_step_size);
 }
 
 
-TEST_F(LineSearchTest, fixedBase) {
+TEST_P(LineSearchTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
-  test(robot);
+  auto settings = GetParam();
+  test(robot, settings);
   robot = testhelper::CreateFixedBaseRobot(dt);
-  test(robot);
+  test(robot, settings);
 }
 
 
-TEST_F(LineSearchTest, floatingBase) {
+TEST_P(LineSearchTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot();
-  test(robot);
+  auto settings = GetParam();
+  test(robot, settings);
   robot = testhelper::CreateFloatingBaseRobot(dt);
-  test(robot);
+  test(robot, settings);
 }
+
+LineSearchSettings filter_settings = LineSearchSettings::defaultSettings();
+LineSearchSettings backtrack_settings("merit-backtracking", 0.75, 0.05, 0.001, 0.05, 1.0e-08);
+
+INSTANTIATE_TEST_SUITE_P(ParamtererizedTest, LineSearchTest, 
+                         ::testing::Values(filter_settings, backtrack_settings));
 
 } // namespace robotoc
 

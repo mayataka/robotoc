@@ -20,7 +20,7 @@
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/riccati/riccati_recursion.hpp"
 #include "robotoc/line_search/line_search.hpp"
-
+#include "robotoc/line_search/line_search_settings.hpp"
 
 namespace robotoc {
 
@@ -202,6 +202,12 @@ public:
   /// @return true if the switching times are consistent. false if not.
   ///
   bool isSwitchingTimeConsistent(const double t);
+
+  ///
+  /// @brief Set settings for line search.
+  /// @param[in] settings Line search settings.
+  ///
+  void setLineSearchSettings(const LineSearchSettings& settings=LineSearchSettings::defaultSettings());
 
   ///
   /// @brief Displays the optimal control problem solver onto a ostream.

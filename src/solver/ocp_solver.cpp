@@ -379,6 +379,10 @@ void OCPSolver::discretizeSolution() {
   }
 }
 
+void OCPSolver::setLineSearchSettings(const LineSearchSettings& settings) {
+  line_search_.set(settings);
+}
+
 
 void OCPSolver::disp(std::ostream& os) const {
   os << contact_sequence_ << std::endl;
