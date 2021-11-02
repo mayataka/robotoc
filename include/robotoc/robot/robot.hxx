@@ -226,6 +226,32 @@ inline void Robot::getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const 
 }
 
 
+template <typename Vector3dType>
+inline void Robot::transformFromLocalToWorld(
+    const int frame_id, const Eigen::Vector3d& vec_local, 
+    const Eigen::MatrixBase<Vector3dType>& vec_world) const {
+  assert(vec_world.size() == 3);
+  const_cast<Eigen::MatrixBase<Vector3dType>&>(vec_world).noalias()
+      = frameRotation(frame_id) * vec_local;
+}
+
+
+template <typename Vector3dType, typename MatrixType>
+inline void Robot::getJacobianTransformFromLocalToWorld(
+    const int frame_id, const Eigen::MatrixBase<Vector3dType>& vec_world,
+    const Eigen::MatrixBase<MatrixType>& J) {
+  assert(vec_world.size() == 3);
+  assert(J.rows() == 6);
+  assert(J.cols() == dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType>&>(J).setZero();
+  getFrameJacobian(frame_id, const_cast<Eigen::MatrixBase<MatrixType>&>(J));
+  for (int i=0; i<dimv_; ++i) {
+    const_cast<Eigen::MatrixBase<MatrixType>&>(J).template topRows<3>().col(i).noalias()
+        = J.template bottomRows<3>().col(i).cross(vec_world.template head<3>());
+  }
+}
+
+
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, 

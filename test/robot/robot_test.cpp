@@ -62,6 +62,10 @@ protected:
                            const BaseJointType& base_joint_type,
                            pinocchio::Model& model, pinocchio::Data& data, 
                            const int frame_id) const;
+  void testTransformFromLocalToWorld(const std::string& path_to_urdf, 
+                                     const BaseJointType& base_joint_type,
+                                     pinocchio::Model& model, pinocchio::Data& data, 
+                                     const int frame_id) const;
   void testBaumgarte(const std::string& path_to_urdf, 
                      const BaseJointType& base_joint_type,
                      pinocchio::Model& model, pinocchio::Data& data, 
@@ -286,6 +290,34 @@ void RobotTest::testFrameKinematics(const std::string& path_to_urdf,
   Eigen::MatrixXd Jcom = Eigen::MatrixXd::Zero(3, model.nv);
   robot.getCoMJacobian(Jcom);
   EXPECT_TRUE(Jcom.isApprox(data.Jcom));
+}
+
+
+void RobotTest::testTransformFromLocalToWorld(const std::string& path_to_urdf, 
+                                              const BaseJointType& base_joint_type,
+                                              pinocchio::Model& model, 
+                                              pinocchio::Data& data, 
+                                              const int frame_id) const {
+  Robot robot(path_to_urdf, base_joint_type);
+  const Eigen::VectorXd q = pinocchio::randomConfiguration(
+      model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
+  robot.updateKinematics(q, v);
+  const auto frame_rotation = robot.frameRotation(frame_id);
+  const Eigen::Vector3d vec_local = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vec_world_ref = frame_rotation * vec_local;
+  Eigen::Vector3d vec_world = Eigen::Vector3d::Zero();
+  robot.transformFromLocalToWorld(frame_id, vec_local, vec_world);
+  EXPECT_TRUE(vec_world.isApprox(vec_world_ref));
+  Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(6, model.nv);
+  robot.getFrameJacobian(frame_id, J_ref);
+  for (int i=0; i<model.nv; ++i) {
+    J_ref.template topRows<3>().col(i) 
+        = J_ref.template bottomRows<3>().col(i).cross(vec_world);
+  }
+  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, model.nv);
+  robot.getJacobianTransformFromLocalToWorld(frame_id, vec_world, J);
+  EXPECT_TRUE(J.isApprox(J_ref));
 }
 
 
@@ -720,6 +752,7 @@ TEST_F(RobotTest, testFixedbase) {
   testSubtractConfigurationDerivatives(path_to_urdf, BaseJointType::FixedBase, model);
   for (const auto frame : contact_frames) {
     testFrameKinematics(path_to_urdf, BaseJointType::FixedBase, model, data, frame);
+    testTransformFromLocalToWorld(path_to_urdf, BaseJointType::FixedBase, model, data, frame);
   }
   testBaumgarte(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
   testImpulseVelocity(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
@@ -744,6 +777,7 @@ TEST_F(RobotTest, testFloatingBase) {
   testSubtractConfigurationDerivatives(path_to_urdf, BaseJointType::FloatingBase, model);
   for (const auto frame : contact_frames) {
     testFrameKinematics(path_to_urdf, BaseJointType::FloatingBase, model, data, frame);
+    testTransformFromLocalToWorld(path_to_urdf, BaseJointType::FloatingBase, model, data, frame);
   }
   testBaumgarte(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
   testImpulseVelocity(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
