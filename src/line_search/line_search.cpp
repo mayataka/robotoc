@@ -299,7 +299,7 @@ double LineSearch::meritBacktrackingLineSearch(
 bool LineSearch::armijoCond(const double merit_now, const double merit_next, 
                             const double dd, const double step_size, 
                             const double armijo_control_rate) const {
-  const double diff = armijo_control_rate * step_size * dd * merit_now - merit_next;
+  const double diff = armijo_control_rate * step_size * dd + merit_now - merit_next;
   return ((diff <= 0) ? true : false);
 }
 
