@@ -15,6 +15,53 @@ OCPSolver::OCPSolver(const Robot& robot,
     contact_sequence_(contact_sequence),
     cost_(cost),
     constraints_(constraints),
+    sto_cost_(std::make_shared<STOCostFunction>()),
+    sto_constraints_(std::make_shared<STOConstraints>()),
+    dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
+    riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
+    sto_reg_(STORegularization::defaultSTORegularization()),
+    line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
+    ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
+    riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
+    kkt_matrix_(robot, N, contact_sequence->maxNumEachEvents()),
+    kkt_residual_(robot, N, contact_sequence->maxNumEachEvents()),
+    s_(robot, N, contact_sequence->maxNumEachEvents()),
+    d_(robot, N, contact_sequence->maxNumEachEvents()) {
+  try {
+    if (T <= 0) {
+      throw std::out_of_range("invalid value: T must be positive!");
+    }
+    if (N <= 0) {
+      throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  for (auto& e : s_.data)    { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
+}
+
+
+OCPSolver::OCPSolver(const Robot& robot, 
+                     const std::shared_ptr<ContactSequence>& contact_sequence,
+                     const std::shared_ptr<CostFunction>& cost, 
+                     const std::shared_ptr<Constraints>& constraints, 
+                     const std::shared_ptr<STOCostFunction>& sto_cost, 
+                     const std::shared_ptr<STOConstraints>& sto_constraints, 
+                     const double T, const int N, const int nthreads)
+  : robots_(nthreads, robot),
+    contact_sequence_(contact_sequence),
+    cost_(cost),
+    constraints_(constraints),
+    sto_cost_(sto_cost),
+    sto_constraints_(sto_constraints),
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
     riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
     sto_reg_(STORegularization::defaultSTORegularization()),

@@ -18,8 +18,16 @@ PYBIND11_MODULE(ocp_solver, m) {
                   const std::shared_ptr<Constraints>&, 
                   const double, const int, const int>(),
          py::arg("robot"), py::arg("contact_sequence"), py::arg("cost"), 
-         py::arg("constraints"), py::arg("T"), py::arg("N"), 
-         py::arg("nthreads")=1)
+         py::arg("constraints"), py::arg("T"), py::arg("N"), py::arg("nthreads")=1)
+    .def(py::init<const Robot&, const std::shared_ptr<ContactSequence>&, 
+                  const std::shared_ptr<CostFunction>&,
+                  const std::shared_ptr<Constraints>&, 
+                  const std::shared_ptr<STOCostFunction>&,
+                  const std::shared_ptr<STOConstraints>&, 
+                  const double, const int, const int>(),
+         py::arg("robot"), py::arg("contact_sequence"), py::arg("cost"), 
+         py::arg("constraints"), py::arg("sto_cost"), py::arg("sto_constraints"), 
+         py::arg("T"), py::arg("N"), py::arg("nthreads")=1)
     .def("set_discretization_method", &OCPSolver::setDiscretizationMethod)
     .def("mesh_refinement", &OCPSolver::meshRefinement)
     .def("init_constraints", &OCPSolver::initConstraints)
