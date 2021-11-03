@@ -68,6 +68,7 @@ class TrajectoryViewer:
         if camera_angle is not None:
             self.camera_angle = camera_angle
 
+
     def set_camera_transform_meshcat(self, camera_tf_vec=None, zoom=None):
         if camera_tf_vec is not None:
             self.camera_tf = meshcat.transformations.translation_matrix(camera_tf_vec) 
@@ -136,8 +137,11 @@ class TrajectoryViewer:
                              self.force_radius, self.force_length, self.force_color)
                 gui.setFloatProperty('world/contact_forces/contact_force_'+str(i), 'Alpha', 1.0)
                 gui.setVisibility('world/contact_forces/contact_force_'+str(i), 'ALWAYS_ON_TOP')
-        # set camera and play speed
-        sleep_time = dt / self.play_speed
+        # set time steps if dt is a scalar value
+        if not (isinstance(dt, list) or isinstance(dt, np.array)):
+            time_steps = dt * np.ones(len(q_traj)-1)
+            dt = time_steps
+        # set camera 
         camera = self.camera_pos
         camera.extend(self.camera_angle)
         gui.setCameraTransform(self.robot.viz.windowID, camera)
@@ -145,7 +149,7 @@ class TrajectoryViewer:
         if f_traj is not None:
             robot = robotoc.Robot(self.path_to_urdf, self.base_joint_type, 
                                 self.contact_frames)
-            for q, f in zip(q_traj, f_traj):
+            for q, f, dts in zip(q_traj, f_traj, dt):
                 robot.forward_kinematics(q)
                 for i in range(len(self.contact_frames)):
                     fi = f[3*i:3*(i+1)]
@@ -166,11 +170,15 @@ class TrajectoryViewer:
                         gui.setVisibility('world/contact_forces/contact_force_'+str(i), 'OFF')
                     gui.refresh()
                 self.robot.display(q)
+                sleep_time = dts / self.play_speed
                 time.sleep(sleep_time)
+            self.robot.display(q[-1])
         else:
-            for q in q_traj:
+            for q, dts in zip(q_traj, dt):
                 self.robot.display(q)
+                sleep_time = dts / self.play_speed
                 time.sleep(sleep_time)
+            self.robot.display(q[-1])
 
 
     def display_meshcat(self, dt, q_traj, open=True):
@@ -182,8 +190,12 @@ class TrajectoryViewer:
         self.viewer.viewer["/Background"].set_property("visible", True)
         self.viewer.viewer["/Background"].set_property("top_color", [0.9, 0.9, 0.9])
         self.viewer.viewer["/Background"].set_property("bottom_color", [0.9, 0.9, 0.9])
-
-        sleep_time = dt / self.play_speed
-        for q in q_traj:
+        # set time steps if dt is a scalar value
+        if not isinstance(dt, list) or isinstance(dt, np.array):
+            time_steps = dt * np.ones(len(q_traj)-1)
+            dt = time_steps
+        for q, dts in zip(q_traj, dt):
             self.robot.display(q)
+            sleep_time = dts / self.play_speed
             time.sleep(sleep_time)
+        self.robot.display(q[-1])

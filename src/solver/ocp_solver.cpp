@@ -167,48 +167,129 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
   if (name == "q") {
     for (int i=0; i<=ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].q);
+      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+        sol.push_back(s_.aux[impulse_index].q);
+      }
+      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+        sol.push_back(s_.lift[lift_index].q);
+      }
     }
   }
-  if (name == "v") {
+  else if (name == "v") {
     for (int i=0; i<=ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].v);
+      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+        sol.push_back(s_.aux[impulse_index].v);
+      }
+      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+        sol.push_back(s_.lift[lift_index].v);
+      }
     }
   }
-  if (name == "a") {
+  else if (name == "a") {
     for (int i=0; i<ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].a);
+      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+        sol.push_back(s_.aux[impulse_index].a);
+      }
+      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+        sol.push_back(s_.lift[lift_index].a);
+      }
     }
   }
-  if (name == "f") {
+  else if (name == "f" && option == "WORLD") {
     Robot robot = robots_[0];
     for (int i=0; i<ocp_.discrete().N(); ++i) {
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-      if (option == "WORLD") {
-        robot.updateFrameKinematics(s_[i].q);
-        for (int j=0; j<robot.maxPointContacts(); ++j) {
-          if (s_[i].isContactActive(j)) {
-            const int contact_frame = robot.contactFrames()[j];
-            f.template segment<3>(3*j).noalias() 
-                = robot.frameRotation(contact_frame) * s_[i].f[j];
-          }
-        }
-      }
-      else {
-        for (int j=0; j<robot.maxPointContacts(); ++j) {
-          if (s_[i].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_[i].f[j];
-          }
+      robot.updateFrameKinematics(s_[i].q);
+      for (int j=0; j<robot.maxPointContacts(); ++j) {
+        if (s_[i].isContactActive(j)) {
+          const int contact_frame = robot.contactFrames()[j];
+          robot.transformFromLocalToWorld(contact_frame, s_[i].f[j],
+                                          f.template segment<3>(3*j));
         }
       }
       sol.push_back(f);
+      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        robot.updateFrameKinematics(s_.aux[impulse_index].q);
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          if (s_.aux[impulse_index].isContactActive(j)) {
+            const int contact_frame = robot.contactFrames()[j];
+            robot.transformFromLocalToWorld(contact_frame, s_.aux[impulse_index].f[j],
+                                            f.template segment<3>(3*j));
+          }
+        }
+        sol.push_back(f);
+      }
+      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        robot.updateFrameKinematics(s_.lift[lift_index].q);
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          if (s_.lift[lift_index].isContactActive(j)) {
+            const int contact_frame = robot.contactFrames()[j];
+            robot.transformFromLocalToWorld(contact_frame, s_.lift[lift_index].f[j],
+                                            f.template segment<3>(3*j));
+          }
+        }
+        sol.push_back(f);
+      }
     }
   }
-  if (name == "u") {
+  else if (name == "f") {
+    Robot robot = robots_[0];
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+      for (int j=0; j<robot.maxPointContacts(); ++j) {
+        if (s_[i].isContactActive(j)) {
+          f.template segment<3>(3*j) = s_[i].f[j];
+        }
+      }
+      sol.push_back(f);
+      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          if (s_.aux[impulse_index].isContactActive(j)) {
+            f.template segment<3>(3*j) = s_.aux[impulse_index].f[j];
+          }
+        }
+        sol.push_back(f);
+      }
+      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          if (s_.lift[lift_index].isContactActive(j)) {
+            f.template segment<3>(3*j) = s_.lift[lift_index].f[j];
+          }
+        }
+        sol.push_back(f);
+      }
+    }
+  }
+  else if (name == "u") {
     for (int i=0; i<ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].u);
+      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+        sol.push_back(s_.aux[impulse_index].u);
+      }
+      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+        sol.push_back(s_.lift[lift_index].u);
+      }
     }
   }
-  if (name == "ts") {
+  else if (name == "ts") {
     const int num_events = ocp_.discrete().N_impulse()+ocp_.discrete().N_lift();
     int impulse_index = 0;
     int lift_index = 0;

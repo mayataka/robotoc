@@ -49,10 +49,21 @@ public:
   /// @param[in] q_traj Std vector of the solution trajectory of the
   /// configuration q. (e.g., returned value of OCPSolver::getSolution("q") or
   /// ParNMPCSolver::getSolution("q")).
-  /// @param[in] sampling_period_in_sec Sampling period.
+  /// @param[in] dt Time steps.
   ///
   void display(const std::vector<Eigen::VectorXd>& q_traj, 
-               const double sampling_period_in_sec);
+               const std::vector<double>& dt);
+
+  ///
+  /// @brief Displays the solution trajectory.
+  /// @param[in] q_traj Std vector of the solution trajectory of the
+  /// configuration q. (e.g., returned value of OCPSolver::getSolution("q") or
+  /// ParNMPCSolver::getSolution("q")).
+  /// @param[in] dt Time step.
+  /// @note All time steps are assumed to be equivalent.
+  ///
+  void display(const std::vector<Eigen::VectorXd>& q_traj, 
+               const double dt);
 
   ///
   /// @brief Displays the solution trajectory with contact forces and friction
@@ -66,14 +77,34 @@ public:
   /// inactive, the corresponding contact force must be set as 3D zero-vector.
   /// (e.g., returned value of OCPSolver::getSolution("f", "WORLD") or
   /// ParNMPCSolver::getSolution("f", "WORLD")).
-  /// @param[in] sampling_period_in_sec Sampling period.
+  /// @param[in] dt Time steps.
   /// @param[in] mu Friction coefficient. If set by a positive value, the 
   /// friction cones are also displayed. If set by zero, they are not displayed.
   /// Default is zero.
   ///
   void display(Robot& robot, const std::vector<Eigen::VectorXd>& q_traj, 
-               const std::vector<Eigen::VectorXd>& f_traj,
-               const double sampling_period_in_sec,
+               const std::vector<Eigen::VectorXd>& f_traj, 
+               const std::vector<double>& dt, const double mu=0);
+
+  ///
+  /// @brief Displays the solution trajectory with contact forces and friction
+  /// cones (optional).
+  /// @param[in] robot Robot model.
+  /// @param[in] q_traj Std vector of the solution trajectory of the
+  /// configuration q. (returned value of OCPSolver::getSolution("q") or
+  /// ParNMPCSolver::getSolution("q"))
+  /// @param[in] f_traj Std vector of the solution trajectory of the stack of 
+  /// the contact forces expressed in the world frame f. If the contact is 
+  /// inactive, the corresponding contact force must be set as 3D zero-vector.
+  /// (e.g., returned value of OCPSolver::getSolution("f", "WORLD") or
+  /// ParNMPCSolver::getSolution("f", "WORLD")).
+  /// @param[in] dt Time step.
+  /// @param[in] mu Friction coefficient. If set by a positive value, the 
+  /// friction cones are also displayed. If set by zero, they are not displayed.
+  /// Default is zero.
+  ///
+  void display(Robot& robot, const std::vector<Eigen::VectorXd>& q_traj, 
+               const std::vector<Eigen::VectorXd>& f_traj, const double dt, 
                const double mu=0);
 
   ///
