@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <cmath>
+#include <stdexcept>
 
 #include <boost/filesystem.hpp>
 
@@ -98,7 +99,17 @@ void TrajectoryViewer::setFrictionConeProperties() {
 
 
 void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj, 
-                               const double sampling_period_in_sec) {
+                               const std::vector<double>& dt) {
+  try {
+    if (dt.size()+1 != q_traj.size()) {
+      throw std::out_of_range("invalid value: dt.size()+1 == q_traj.size() must hold!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+
   pinocchio::gepetto::Viewer viewer(model_, &vmodel_, NULL);
   const bool success = viewer.initViewer("robotoc::TrajectoryViewer");
   if(!success) {
@@ -124,18 +135,48 @@ void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj,
 
   setCameraTransform();
 
-  for (const auto& q : q_traj) {
-    viewer.display(q);
-    std::this_thread::sleep_for(std::chrono::duration<double>(sampling_period_in_sec));
+  const int N = dt.size();
+  for (int i=0; i<N; ++i) {
+    viewer.display(q_traj[i]);
+    std::this_thread::sleep_for(std::chrono::duration<double>(dt[i]));
   }
+  viewer.display(q_traj[N]);
+}
+
+
+void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj, 
+                               const double dt) {
+  try {
+    if (dt < 0) {
+      throw std::out_of_range("invalid value: dt must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  std::vector<double> time_step(q_traj.size()-1, dt);
+  display(q_traj, time_step);
 }
 
 
 void TrajectoryViewer::display(Robot& robot, 
                                const std::vector<Eigen::VectorXd>& q_traj, 
                                const std::vector<Eigen::VectorXd>& f_traj, 
-                               const double sampling_period_in_sec,
-                               const double mu) {
+                               const std::vector<double>& dt, const double mu) {
+  try {
+    if (dt.size()+1 != q_traj.size()) {
+      throw std::out_of_range("invalid value: dt.size()+1 == q_traj.size() must hold!");
+    }
+    if (dt.size() != f_traj.size()) {
+      throw std::out_of_range("invalid value: dt.size() == f_traj.size() must hold!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+
   pinocchio::gepetto::Viewer viewer(model_, &vmodel_, NULL);
   const bool success = viewer.initViewer("robotoc::TrajectoryViewer");
   if(!success) {
@@ -207,8 +248,8 @@ void TrajectoryViewer::display(Robot& robot,
   }
 
   setCameraTransform();
-
-  for (int i=0; i<f_traj.size(); ++i) {
+  const int N = dt.size();
+  for (int i=0; i<N; ++i) {
     robot.updateFrameKinematics(q_traj[i]);
     for (int j=0; j<robot.maxPointContacts(); ++j) {
       const Eigen::Vector3d& f = f_traj[i].template segment<3>(3*j);
@@ -254,8 +295,27 @@ void TrajectoryViewer::display(Robot& robot,
       gui->refresh();
     }
     viewer.display(q_traj[i]);
-    std::this_thread::sleep_for(std::chrono::duration<double>(sampling_period_in_sec));
+    std::this_thread::sleep_for(std::chrono::duration<double>(dt[i]));
   }
+  viewer.display(q_traj[N]);
+}
+
+
+void TrajectoryViewer::display(Robot& robot, 
+                               const std::vector<Eigen::VectorXd>& q_traj, 
+                               const std::vector<Eigen::VectorXd>& f_traj, 
+                               const double dt, const double mu) {
+  try {
+    if (dt < 0) {
+      throw std::out_of_range("invalid value: dt must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  std::vector<double> time_step(q_traj.size()-1, dt);
+  display(robot, q_traj, f_traj, time_step, mu);
 }
 
 

@@ -21,6 +21,10 @@
 #include "robotoc/riccati/riccati_recursion.hpp"
 #include "robotoc/line_search/line_search.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/hybrid/sto_cost_function.hpp"
+#include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/hybrid/sto_regularization.hpp"
+
 
 namespace robotoc {
 
@@ -40,13 +44,37 @@ public:
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
+  /// @note If you consider the switching time optimization (STO) problem,
+  /// please use the other constructor.
   ///
   OCPSolver(const Robot& robot, 
             const std::shared_ptr<ContactSequence>& contact_sequence,
             const std::shared_ptr<CostFunction>& cost,
-            const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int nthreads=1);
+            const std::shared_ptr<Constraints>& constraints, 
+            const double T, const int N, const int nthreads=1);
 
+  ///
+  /// @brief Construct optimal control problem solver.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_sequence Shared ptr to the contact sequence.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] sto_cost Shared ptr to the STO cost function.
+  /// @param[in] sto_constraints Shared ptr to the STO constraints.
+  /// @param[in] T Length of the horizon. Must be positive.
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
+  /// @note If you consider the switching time optimization (STO) problem,
+  /// please use this constructor.
+  ///
+  OCPSolver(const Robot& robot, 
+            const std::shared_ptr<ContactSequence>& contact_sequence,
+            const std::shared_ptr<CostFunction>& cost,
+            const std::shared_ptr<Constraints>& constraints, 
+            const std::shared_ptr<STOCostFunction>& sto_cost,
+            const std::shared_ptr<STOConstraints>& sto_constraints, 
+            const double T, const int N, const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -200,22 +228,20 @@ public:
   /// @return true if the current solution is feasible subject to the 
   /// inequality constraints. Return false if it is not feasible.
   ///
-  bool isCurrentSolutionFeasible();
+  bool isCurrentSolutionFeasible(const bool verbose=false);
 
   ///
-  /// @brief Checks wheather the formulation of the discretized optimal control 
-  /// problem is tractable or not.
-  /// @param[in] t Initial time of the horizon. 
-  /// @return true if the optimal control problem is tractable. false if not.
+  /// @brief Returns internal OCP discretization as a value. 
+  /// @return Internal OCP discretization. 
   ///
-  bool isFormulationTractable(const double t);
+  HybridOCPDiscretization getOCPDiscretization() const;
 
+  //
+  /// @brief Set the regularization for the STO problem
+  /// @param[in] sto_reg Regularization for the STO problem.
   ///
-  /// @brief Checks wheather the switching times are consistent. 
-  /// @param[in] t Initial time of the horizon. 
-  /// @return true if the switching times are consistent. false if not.
-  ///
-  bool isSwitchingTimeConsistent(const double t);
+  void setSTORegularization(
+      const STORegularization& sto_reg=STORegularization::defaultSTORegularization());
 
   ///
   /// @brief Set settings for line search. Defalt is 
@@ -238,6 +264,9 @@ private:
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;
+  std::shared_ptr<STOCostFunction> sto_cost_;
+  std::shared_ptr<STOConstraints> sto_constraints_;
+  STORegularization sto_reg_;
   DirectMultipleShooting dms_;
   RiccatiRecursion riccati_recursion_;
   LineSearch line_search_;

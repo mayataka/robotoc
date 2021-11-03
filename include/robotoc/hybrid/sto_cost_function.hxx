@@ -1,33 +1,33 @@
-#ifndef ROBOTOC_SWITCHING_TIME_COST_FUNCTION_HXX_
-#define ROBOTOC_SWITCHING_TIME_COST_FUNCTION_HXX_
+#ifndef ROBOTOC_STO_COST_FUNCTION_HXX_
+#define ROBOTOC_STO_COST_FUNCTION_HXX_
 
-#include "robotoc/hybrid/switching_time_cost_function.hpp"
+#include "robotoc/hybrid/sto_cost_function.hpp"
 
 namespace robotoc {
 
-inline SwitchingTimeCostFunction::SwitchingTimeCostFunction()
+inline STOCostFunction::STOCostFunction()
   : costs_(),
     lts_(),
     Qts_() {
 }
 
 
-inline SwitchingTimeCostFunction::~SwitchingTimeCostFunction() {
+inline STOCostFunction::~STOCostFunction() {
 }
 
 
-inline void SwitchingTimeCostFunction::push_back(
-    const SwitchingTimeCostFunctionComponentBasePtr& cost) {
+inline void STOCostFunction::push_back(
+    const STOCostFunctionComponentBasePtr& cost) {
   costs_.push_back(cost);
 }
 
 
-inline void SwitchingTimeCostFunction::clear() {
+inline void STOCostFunction::clear() {
   costs_.clear();
 }
 
 
-inline double SwitchingTimeCostFunction::evalCost(
+inline double STOCostFunction::evalCost(
     const HybridOCPDiscretization& discretization) {
   if (!costs_.empty()) {
     double cost = 0;
@@ -42,7 +42,7 @@ inline double SwitchingTimeCostFunction::evalCost(
 }
 
 
-inline double SwitchingTimeCostFunction::linearizeCost(
+inline double STOCostFunction::linearizeCost(
     const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -62,7 +62,7 @@ inline double SwitchingTimeCostFunction::linearizeCost(
 }
 
 
-inline double SwitchingTimeCostFunction::quadratizeCost(
+inline double STOCostFunction::quadratizeCost(
     const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
@@ -90,7 +90,7 @@ inline double SwitchingTimeCostFunction::quadratizeCost(
 }
 
 
-inline void SwitchingTimeCostFunction::setToKKT(
+inline void STOCostFunction::setToKKT(
     const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
@@ -119,7 +119,7 @@ inline void SwitchingTimeCostFunction::setToKKT(
 }
 
 
-inline void SwitchingTimeCostFunction::setToKKT(
+inline void STOCostFunction::setToKKT(
     const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -162,4 +162,4 @@ inline void SwitchingTimeCostFunction::setToKKT(
 
 } // namespace robotoc
 
-#endif // ROBOTOC_SWITCHING_TIME_COST_FUNCTION_HXX_ 
+#endif // ROBOTOC_STO_COST_FUNCTION_HXX_ 

@@ -1,33 +1,35 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
+#include <pybind11/numpy.h>
 
-#include "robotoc/hybrid/switching_time_cost_function_component_base.hpp"
+#include "robotoc/hybrid/sto_cost_function_component_base.hpp"
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 
 namespace robotoc {
 namespace python {
 
-class PySwitchingTimeCostFunctionComponentBase : public SwitchingTimeCostFunctionComponentBase {
+class PySTOCostFunctionComponentBase : public STOCostFunctionComponentBase {
 public:
   // Inherit the constructors
-  using SwitchingTimeCostFunctionComponentBase::SwitchingTimeCostFunctionComponentBase;
+  using STOCostFunctionComponentBase::STOCostFunctionComponentBase;
 
   double evalCost(const HybridOCPDiscretization& discretization) const override {
-    PYBIND11_OVERRIDE_PURE(double, SwitchingTimeCostFunctionComponentBase, 
+    PYBIND11_OVERRIDE_PURE(double, STOCostFunctionComponentBase, 
                            evalCost, 
                            discretization);
   }
 
   void evalCostDerivatives(const HybridOCPDiscretization& discretization,
                            Eigen::VectorXd& lts) const override {
-    PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
+    PYBIND11_OVERRIDE_PURE(void, STOCostFunctionComponentBase, 
                            evalCostDerivatives, 
                            discretization, lts);
   }
 
   void evalCostHessian(const HybridOCPDiscretization& discretization,
                        Eigen::MatrixXd& Qts) const override {
-    PYBIND11_OVERRIDE_PURE(void, SwitchingTimeCostFunctionComponentBase, 
+    PYBIND11_OVERRIDE_PURE(void, STOCostFunctionComponentBase, 
                            evalStageCostHessian, 
                            discretization, Qts);
   }
@@ -36,10 +38,10 @@ public:
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(switching_time_cost_function_component_base, m) {
-  py::class_<SwitchingTimeCostFunctionComponentBase, 
-             PySwitchingTimeCostFunctionComponentBase, 
-             std::shared_ptr<SwitchingTimeCostFunctionComponentBase>>(m, "SwitchingTimeCostFunctionComponentBase")
+PYBIND11_MODULE(sto_cost_function_component_base, m) {
+  py::class_<STOCostFunctionComponentBase, 
+             PySTOCostFunctionComponentBase, 
+             std::shared_ptr<STOCostFunctionComponentBase>>(m, "STOCostFunctionComponentBase")
     .def(py::init<>());
 
 }

@@ -305,17 +305,19 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
+  const auto ocp_discretization = ocp_solver.getOCPDiscretization();
+  const auto time_steps = ocp_discretization.timeSteps();
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
   camera_pos << 0.119269, -7.96283, 1.95978;
   camera_quat << 0.609016, 0.00297497, 0.010914, 0.793077;
   viewer.setCameraTransform(camera_pos, camera_quat);
-  viewer.display(ocp_solver.getSolution("q"), (T/N));
+  viewer.display(ocp_solver.getSolution("q"), time_steps);
   camera_pos << 5.10483, -3.98692, 1.59321;
   camera_quat << 0.547037, 0.243328, 0.314829, 0.736495;
   viewer.setCameraTransform(camera_pos, camera_quat);
   viewer.display(robot, ocp_solver.getSolution("q"), 
-                 ocp_solver.getSolution("f", "WORLD"), (T/N), mu);
+                 ocp_solver.getSolution("f", "WORLD"), time_steps, mu);
 #endif 
 
   return 0;

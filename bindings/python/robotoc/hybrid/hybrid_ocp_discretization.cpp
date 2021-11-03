@@ -61,6 +61,7 @@ PYBIND11_MODULE(hybrid_ocp_discretization, m) {
     .def("event_index_lift", &HybridOCPDiscretization::eventIndexLift)
     .def("event_type", &HybridOCPDiscretization::eventType)
     .def("discretization_method", &HybridOCPDiscretization::discretizationMethod)
+    .def("time_steps", &HybridOCPDiscretization::timeSteps)
     .def("is_formulation_tractable", &HybridOCPDiscretization::isFormulationTractable)
     .def("is_switching_time_consistent", &HybridOCPDiscretization::isSwitchingTimeConsistent)
     .def("__str__", [](const HybridOCPDiscretization& self) {

@@ -24,6 +24,7 @@ PYBIND11_MODULE(sto_regularization, m) {
   py::class_<STORegularization>(m, "STORegularization")
     .def(py::init<const STORegularizationType&, const double>(),
          py::arg("reg_type"), py::arg("w"))
+    .def(py::init(&STORegularization::defaultSTORegularization))
     .def("set_regularization", &STORegularization::setRegularization);
 }
 

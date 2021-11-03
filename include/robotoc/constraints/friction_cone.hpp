@@ -101,24 +101,6 @@ public:
   int dimc() const override;
 
   ///
-  /// @brief Transforms the contact force from the local coordinate to the 
-  /// world coordinate.
-  /// @param[in] robot Robot model. Kinematics must be updated.
-  /// @param[in] contact_frame_id Index of the contact frame.
-  /// @param[in] f_local Contact force expressed in the local frame.
-  /// @param[out] f_world Contact force expressed in the world frame. Size must 
-  /// be 3.
-  ///
-  template <typename VectorType>
-  static void fLocal2World(const Robot& robot, const int contact_frame_id, 
-                           const Eigen::Vector3d& f_local,
-                           const Eigen::MatrixBase<VectorType>& f_world) {
-    assert(f_world.size() == 3);
-    const_cast<Eigen::MatrixBase<VectorType>&>(f_world).noalias()
-        = robot.frameRotation(contact_frame_id) * f_local;
-  }
-
-  ///
   /// @brief Computes the friction cone residual.
   /// @param[in] mu Friction coefficient. Must be positive.
   /// @param[in] f Contact force expressed in the world frame. Size must be 3.

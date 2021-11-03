@@ -9,52 +9,52 @@ RF_foot_id = 32
 RH_foot_id = 42
 contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
-baumgarte_time_step = 0.04
+baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, baumgarte_time_step)
 
-dt = 0.01
-jump_length = 0.5
-jump_height = 0.1
+dt = 0.02
+jump_length = 0.8
 flying_up_time = 0.15
 flying_down_time = flying_up_time
 flying_time = flying_up_time + flying_down_time
-ground_time = 0.30
-t0 = 0
+ground_time = 0.7
+t0 = 0.
 
 # Create the cost function
 cost = robotoc.CostFunction()
-q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
+q_standing = np.array([0., 0., 0.4792, 0., 0., 0., 1.0, 
                        -0.1,  0.7, -1.0, 
                        -0.1, -0.7,  1.0, 
                         0.1,  0.7, -1.0, 
                         0.1, -0.7,  1.0])
-q_weight = np.array([0, 0, 0, 250000, 250000, 250000, 
-                     0.0001, 0.0001, 0.0001, 
-                     0.0001, 0.0001, 0.0001,
-                     0.0001, 0.0001, 0.0001,
-                     0.0001, 0.0001, 0.0001])
-v_weight = np.array([100, 100, 100, 100, 100, 100, 
-                     1, 1, 1, 
-                     1, 1, 1,
-                     1, 1, 1,
-                     1, 1, 1])
-u_weight = np.full(robot.dimu(), 1.0e-01)
-qi_weight = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-                      100, 100, 100, 
-                      100, 100, 100,
-                      100, 100, 100,
-                      100, 100, 100])
-vi_weight = np.full(robot.dimv(), 100)
+q_ref = q_standing.copy()
+q_ref[0] += jump_length
+q_weight = np.array([1.0, 0., 0., 1.0, 1.0, 1.0, 
+                     0.001, 0.001, 0.001, 
+                     0.001, 0.001, 0.001,
+                     0.001, 0.001, 0.001,
+                     0.001, 0.001, 0.001])
+v_weight = np.full(robot.dimv(), 1.0)
+u_weight = np.full(robot.dimu(), 1.0e-06)
+a_weight = np.full(robot.dimv(), 1.0e-06)
+qi_weight = np.array([0., 0., 0., 100., 100., 100., 
+                      0.1, 0.1, 0.1, 
+                      0.1, 0.1, 0.1,
+                      0.1, 0.1, 0.1,
+                      0.1, 0.1, 0.1])
+vi_weight = np.full(robot.dimv(), 1.0)
+dvi_weight = np.full(robot.dimv(), 1.0e-06)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
-config_cost.set_q_ref(q_standing)
+config_cost.set_q_ref(q_ref)
 config_cost.set_q_weight(q_weight)
 config_cost.set_qf_weight(q_weight)
 config_cost.set_qi_weight(qi_weight)
 config_cost.set_v_weight(v_weight)
 config_cost.set_vf_weight(v_weight)
 config_cost.set_vi_weight(vi_weight)
-config_cost.set_u_weight(u_weight)
+config_cost.set_dvi_weight(dvi_weight)
+config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 
 robot.forward_kinematics(q_standing)
@@ -62,27 +62,6 @@ q0_3d_LF = robot.frame_position(LF_foot_id)
 q0_3d_LH = robot.frame_position(LH_foot_id)
 q0_3d_RF = robot.frame_position(RF_foot_id)
 q0_3d_RH = robot.frame_position(RH_foot_id)
-
-com_ref0_flying_up = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
-com_ref0_flying_up[2] = robot.com()[2]
-v_com_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
-com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, v_com_ref_flying_up, 
-                                           t0+ground_time, flying_up_time, 
-                                           flying_down_time+2*ground_time, False)
-com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
-com_cost_flying_up.set_q_weight(np.full(3, 1.0e06))
-cost.push_back(com_cost_flying_up)
-
-com_ref0_landed = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
-com_ref0_landed[0] += jump_length
-com_ref0_landed[2] = robot.com()[2]
-v_com_ref_landed = np.zeros(3)
-com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, v_com_ref_landed, 
-                                        t0+ground_time+flying_time, ground_time, 
-                                        ground_time+flying_time, False)
-com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
-com_cost_landed.set_q_weight(np.full(3, 1.0e06))
-cost.push_back(com_cost_landed)
 
 # Create the constraints
 constraints           = robotoc.Constraints()
@@ -114,22 +93,27 @@ contact_status_standing.set_contact_points(contact_points)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
-contact_sequence.push_back(contact_status_flying, t0+ground_time)
+contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
 
 contact_points[0][0] += jump_length
 contact_points[1][0] += jump_length
 contact_points[2][0] += jump_length
 contact_points[3][0] += jump_length
 contact_status_standing.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 
 # you can check the contact sequence via 
 # print(contact_sequence)
 
+# Create the empty STO cost function
+sto_cost = robotoc.STOCost()
+# Create the STO constraints 
+sto_constraints = robotoc.STOConstraints()
+
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
 ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
-                               T, N, nthreads=4)
+                               sto_cost, sto_constraints, T, N, nthreads=4)
 
 t = 0.
 q = q_standing
@@ -140,10 +124,15 @@ ocp_solver.set_solution("v", v)
 f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
+ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased) 
+ocp_solver.mesh_refinement(t)
 ocp_solver.init_constraints(t)
 
+sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Quad, w=0.1)
+ocp_solver.set_STO_regularization(sto_reg)
+
 num_iteration = 50
-robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
+robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration)
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 

@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_SWITCHING_TIME_CONSTRAINTS_HPP_
-#define ROBOTOC_SWITCHING_TIME_CONSTRAINTS_HPP_
+#ifndef ROBOTOC_STO_CONSTRAINTS_HPP_
+#define ROBOTOC_STO_CONSTRAINTS_HPP_
 
 #include <limits>
 #include <cmath>
@@ -17,66 +17,72 @@
 namespace robotoc {
 
 ///
-/// @class SwitchingTimeConstraints
+/// @class STOConstraints
 /// @brief Constraintn on the switching times.
 ///
-class SwitchingTimeConstraints {
+class STOConstraints {
 public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_num_switches Maximum number of switches on the horizon. 
-  /// @param[in] min_dt Minimum dwell-time. Default is 
-  /// std::sqrt(std::numeric_limits<double>::epsilon()).
-  /// @param[in] min_dt0 Minimum time margin between the initial time of the 
-  /// horizon and initial switching time. Default is 
-  /// std::sqrt(std::numeric_limits<double>::epsilon()).
-  /// @param[in] min_dtf Minimum time margin between the terminal time of the 
-  /// horizon and last switching time. Default is 
-  /// std::sqrt(std::numeric_limits<double>::epsilon()).
+  /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
+  /// minimum dwell times are set to this value. Default is 
+  /// STOConstraints::k_min_dt.
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-04.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  SwitchingTimeConstraints(
-      const int max_num_switches,
-      const double min_dt=std::sqrt(std::numeric_limits<double>::epsilon()),
-      const double min_dt0=std::sqrt(std::numeric_limits<double>::epsilon()),
-      const double min_dtf=std::sqrt(std::numeric_limits<double>::epsilon()),
-      const double barrier=1.0e-04, 
-      const double fraction_to_boundary_rule=0.995);
+  STOConstraints(const int max_num_switches, const double min_dt=k_min_dt,
+                 const double barrier=1.0e-04, 
+                 const double fraction_to_boundary_rule=0.995);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] max_num_switches Maximum number of switches on the horizon. 
+  /// @param[in] min_dt Minimum dwell times. Each component must be 
+  /// non-negative. 
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rule Parameter of the 
+  /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
+  /// Should be between 0.9 and 0.995. Default is 0.995.
+  ///
+  STOConstraints(const int max_num_switches, const std::vector<double>& min_dt,
+                 const double barrier=1.0e-04, 
+                 const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Default constructor. 
   ///
-  SwitchingTimeConstraints();
+  STOConstraints();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SwitchingTimeConstraints();
+  ~STOConstraints();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SwitchingTimeConstraints(const SwitchingTimeConstraints&) = default;
+  STOConstraints(const STOConstraints&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  SwitchingTimeConstraints& operator=(const SwitchingTimeConstraints&) = default;
+  STOConstraints& operator=(const STOConstraints&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SwitchingTimeConstraints(SwitchingTimeConstraints&&) noexcept = default;
+  STOConstraints(STOConstraints&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SwitchingTimeConstraints& operator=(
-      SwitchingTimeConstraints&&) noexcept = default;
+  STOConstraints& operator=(
+      STOConstraints&&) noexcept = default;
 
   ///
   /// @brief Sets the slack variables. 
@@ -169,29 +175,37 @@ public:
   void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
 
   ///
-  /// @brief Sets the minimum margins of the dwell times.
-  /// @param[in] min_dt Minimum dwell-time. Default is 
-  /// std::sqrt(std::numeric_limits<double>::epsilon()).
-  /// @param[in] min_dt0 Minimum time margin between the initial time of the 
-  /// horizon and initial switching time. Default is 
-  /// std::sqrt(std::numeric_limits<double>::epsilon()).
-  /// @param[in] min_dtf Minimum time margin between the terminal time of the 
-  /// horizon and last switching time. Default is 
-  /// std::sqrt(std::numeric_limits<double>::epsilon()).
+  /// @brief Sets the minimum dwell time. 
+  /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
+  /// minimum dwell times are set to this value. Default is 
+  /// STOConstraints::k_min_dt.
   ///
-  void setDwellTimeMargin(const double min_dt, const double min_dt0,
-                          const double min_dtf);
+  void setMinimumDwellTimes(const double min_dt=k_min_dt);
+
+  ///
+  /// @brief Sets the minimum dwell time. 
+  /// @param[in] min_dt Minimum dwell times. Each component must be 
+  /// non-negative.
+  ///
+  void setMinimumDwellTimes(const std::vector<double>& min_dt);
+
+  ///
+  /// @brief Minimum value of the minimum dwell times.  
+  ///
+  static constexpr double k_min_dt 
+      = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:
   std::vector<DwellTimeLowerBound> dtlb_;
-  double min_dt_, min_dt0_, min_dtf_;
-  int num_switches_;
+  std::vector<double> min_dt_;
+  double k_min_dt_; // this is for Pybind11
+  int max_num_switches_, num_switches_;
   Eigen::VectorXd primal_step_size_, dual_step_size_;
 
 };
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/switching_time_constraints.hxx"
+#include "robotoc/hybrid/sto_constraints.hxx"
 
-#endif // ROBOTOC_SWITCHING_TIME_CONSTRAINTS_HPP_ 
+#endif // ROBOTOC_STO_CONSTRAINTS_HPP_ 

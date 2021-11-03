@@ -113,7 +113,7 @@ bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data,
     if (s.isContactActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
-      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
@@ -130,7 +130,7 @@ void FrictionCone::setSlack(Robot& robot, ConstraintComponentData& data,
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
-    fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+    robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
     frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
     data.slack.template segment<5>(idx)
         = - data.residual.template segment<5>(idx);
@@ -148,7 +148,7 @@ void FrictionCone::evalConstraint(Robot& robot, ConstraintComponentData& data,
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
-      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
@@ -171,12 +171,7 @@ void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data,
       // Jacobian of the contact force expressed in the world frame fWi 
       // with respect to the configuration q.
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
-      dfWi_dq.setZero();
-      robot.getFrameJacobian(contact_frame_[i], dfWi_dq);
-      for (int j=0; j<dimv_; ++j) {
-        dfWi_dq.template topRows<3>().col(j)
-            = dfWi_dq.template bottomRows<3>().col(j).cross(fWi.template head<3>());
-      }
+      robot.getJacobianTransformFromLocalToWorld(contact_frame_[i], fWi, dfWi_dq);
       // Jacobian of the frition cone constraint with respect to the 
       // configuration, i.e., s.q.
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
