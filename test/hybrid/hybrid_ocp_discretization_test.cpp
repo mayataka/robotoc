@@ -343,6 +343,21 @@ TEST_P(HybridOCPDiscretizationTest, discretizeGridBased_eventTimesAreLargerThanH
   EXPECT_NO_THROW(
     std::cout << discretization << std::endl;
   );
+  const auto time_steps = discretization.timeSteps();
+  int j=0;
+  for (int i=0; i<discretization.N(); ++i, ++j) {
+    EXPECT_DOUBLE_EQ(time_steps[j], discretization.dt(i));
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      ++j;
+      EXPECT_DOUBLE_EQ(time_steps[j], 
+                       discretization.dt_aux(discretization.impulseIndexAfterTimeStage(i)));
+    }
+    else if (discretization.isTimeStageBeforeLift(i)) {
+      ++j;
+      EXPECT_DOUBLE_EQ(time_steps[j], 
+                       discretization.dt_lift(discretization.liftIndexAfterTimeStage(i)));
+    }
+  }
 }
 
 
@@ -645,6 +660,21 @@ TEST_P(HybridOCPDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThan
   EXPECT_NO_THROW(
     std::cout << discretization << std::endl;
   );
+  const auto time_steps = discretization.timeSteps();
+  int j=0;
+  for (int i=0; i<discretization.N(); ++i, ++j) {
+    EXPECT_DOUBLE_EQ(time_steps[j], discretization.dt(i));
+    if (discretization.isTimeStageBeforeImpulse(i)) {
+      ++j;
+      EXPECT_DOUBLE_EQ(time_steps[j], 
+                       discretization.dt_aux(discretization.impulseIndexAfterTimeStage(i)));
+    }
+    else if (discretization.isTimeStageBeforeLift(i)) {
+      ++j;
+      EXPECT_DOUBLE_EQ(time_steps[j], 
+                       discretization.dt_lift(discretization.liftIndexAfterTimeStage(i)));
+    }
+  }
 }
 
 

@@ -370,6 +370,21 @@ HybridOCPDiscretization::discretizationMethod() const {
 }
 
 
+inline std::vector<double> HybridOCPDiscretization::timeSteps() const {
+  std::vector<double> time_steps;
+  for (int i=0; i<N(); ++i) {
+    time_steps.push_back(dt(i));
+    if (isTimeStageBeforeImpulse(i)) {
+      time_steps.push_back(dt_aux(impulseIndexAfterTimeStage(i)));
+    }
+    else if (isTimeStageBeforeLift(i)) {
+      time_steps.push_back(dt_lift(liftIndexAfterTimeStage(i)));
+    }
+  }
+  return time_steps;
+}
+
+
 inline bool HybridOCPDiscretization::isFormulationTractable() const {
   for (int i=0; i<N(); ++i) {
     if (isTimeStageBeforeImpulse(i) && isTimeStageBeforeLift(i)) {

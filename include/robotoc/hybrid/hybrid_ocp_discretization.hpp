@@ -340,6 +340,12 @@ public:
   DiscretizationMethod discretizationMethod() const;
 
   ///
+  /// @brief Returns the time steps of the discretization over the horzion. 
+  /// @return Time steps.
+  ///
+  std::vector<double> timeSteps() const;
+
+  ///
   /// @brief Checks wheather the optimal control problem is tractable. 
   /// @return true if the optimal control problem is consistent. false if not.
   ///

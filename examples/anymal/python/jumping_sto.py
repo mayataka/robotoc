@@ -105,10 +105,15 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 # you can check the contact sequence via 
 # print(contact_sequence)
 
+# Create the empty STO cost function
+sto_cost = robotoc.STOCost()
+# Create the STO constraints 
+sto_constraints = robotoc.STOConstraints()
+
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
 ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
-                               T, N, nthreads=4)
+                               sto_cost, sto_constraints, T, N, nthreads=4)
 
 t = 0.
 q = q_standing
@@ -121,13 +126,10 @@ ocp_solver.set_solution("f", f_init)
 
 ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased) 
 ocp_solver.mesh_refinement(t)
-ocp_solver.set_STO_constraints(1.0e-03, 0.95, 0.1, 0.1, 0.65)
-
 ocp_solver.init_constraints(t)
 
-reg_type = robotoc.STORegularizationType.Quad
-reg_w = 0.1
-ocp_solver.set_STO_regularization(reg_type, reg_w)
+sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Quad, w=0.1)
+ocp_solver.set_STO_regularization(sto_reg)
 
 num_iteration = 50
 robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration)

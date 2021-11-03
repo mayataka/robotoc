@@ -212,19 +212,18 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const int num_events = ocp_.discrete().N_impulse()+ocp_.discrete().N_lift();
     int impulse_index = 0;
     int lift_index = 0;
-    Eigen::VectorXd ts(1);
+    Eigen::VectorXd ts(num_events);
     for (int event_index=0; event_index<num_events; ++event_index) {
       if (ocp_.discrete().eventType(event_index) == DiscreteEventType::Impulse) {
-        ts.coeffRef(0) = contact_sequence_->impulseTime(impulse_index);
-        sol.push_back(ts);
+        ts.coeffRef(event_index) = contact_sequence_->impulseTime(impulse_index);
         ++impulse_index;
       }
       else {
-        ts.coeffRef(0) = contact_sequence_->liftTime(lift_index);
-        sol.push_back(ts);
+        ts.coeffRef(event_index) = contact_sequence_->liftTime(lift_index);
         ++lift_index;
       }
     }
+    sol.push_back(ts);
   }
   return sol;
 }
@@ -368,50 +367,48 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 }
 
 
-bool OCPSolver::isCurrentSolutionFeasible() {
+bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
+  bool feasible = true;
   for (int i=0; i<ocp_.discrete().N(); ++i) {
-    const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at time stage " << i << std::endl;
-      return false;
+    if (!ocp_[i].isFeasible(robots_[0], s_[i])) {
+      if (verbose) {
+        std::cout << "INFEASIBLE at time stage " << i << std::endl;
+      }
+      feasible = false;
     }
   }
-  const int num_impulse = contact_sequence_->numImpulseEvents();
+  const int num_impulse = ocp_.discrete().N_impulse();
   for (int i=0; i<num_impulse; ++i) {
-    const bool feasible = ocp_.impulse[i].isFeasible(robots_[0], s_.impulse[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at impulse " << i << std::endl;
-      return false;
+    if (!ocp_.impulse[i].isFeasible(robots_[0], s_.impulse[i])) {
+      if (verbose) {
+        std::cout << "INFEASIBLE at impulse " << i << std::endl;
+      }
+      feasible = false;
     }
   }
   for (int i=0; i<num_impulse; ++i) {
-    const bool feasible = ocp_.aux[i].isFeasible(robots_[0], s_.aux[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at aux " << i << std::endl;
-      return false;
+    if (!ocp_.aux[i].isFeasible(robots_[0], s_.aux[i])) {
+      if (verbose) {
+        std::cout << "INFEASIBLE at aux " << i << std::endl;
+      }
+      feasible = false;
     }
   }
-  const int num_lift = contact_sequence_->numLiftEvents();
+  const int num_lift = ocp_.discrete().N_lift();
   for (int i=0; i<num_lift; ++i) {
-    const bool feasible = ocp_.lift[i].isFeasible(robots_[0], s_.lift[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at lift " << i << std::endl;
-      return false;
+    if (!ocp_.lift[i].isFeasible(robots_[0], s_.lift[i])) {
+      if (verbose) {
+        std::cout << "INFEASIBLE at lift " << i << std::endl;
+      }
+      feasible = false;
     }
   }
-  return true;
+  return feasible;
 }
 
 
-bool OCPSolver::isFormulationTractable(const double t) {
-  ocp_.discretize(contact_sequence_, t);
-  return ocp_.discrete().isFormulationTractable();
-}
-
-
-bool OCPSolver::isSwitchingTimeConsistent(const double t) {
-  ocp_.discretize(contact_sequence_, t);
-  return ocp_.discrete().isSwitchingTimeConsistent();
+HybridOCPDiscretization OCPSolver::getOCPDiscretization() const {
+  return ocp_.discrete();
 }
 
 

@@ -228,24 +228,15 @@ public:
   /// @return true if the current solution is feasible subject to the 
   /// inequality constraints. Return false if it is not feasible.
   ///
-  bool isCurrentSolutionFeasible();
+  bool isCurrentSolutionFeasible(const bool verbose=false);
 
   ///
-  /// @brief Checks wheather the formulation of the discretized optimal control 
-  /// problem is tractable or not.
-  /// @param[in] t Initial time of the horizon. 
-  /// @return true if the optimal control problem is tractable. false if not.
+  /// @brief Returns internal OCP discretization as a value. 
+  /// @return Internal OCP discretization. 
   ///
-  bool isFormulationTractable(const double t);
+  HybridOCPDiscretization getOCPDiscretization() const;
 
-  ///
-  /// @brief Checks wheather the switching times are consistent. 
-  /// @param[in] t Initial time of the horizon. 
-  /// @return true if the switching times are consistent. false if not.
-  ///
-  bool isSwitchingTimeConsistent(const double t);
-
-  ///
+  //
   /// @brief Set the regularization for the STO problem
   /// @param[in] sto_reg Regularization for the STO problem.
   ///

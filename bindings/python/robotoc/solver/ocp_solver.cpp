@@ -41,7 +41,10 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("compute_KKT_residual", &OCPSolver::computeKKTResidual)
     .def("KKT_error", &OCPSolver::KKTError)
     .def("cost", &OCPSolver::cost)
-    .def("is_formulation_tractable", &OCPSolver::isFormulationTractable)
+    .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
+          py::arg("verbose")=false)
+    .def("get_OCP_discretization", &OCPSolver::getOCPDiscretization)
+    .def("set_STO_regularization", &OCPSolver::setSTORegularization)
     .def("set_line_search_settings", &OCPSolver::setLineSearchSettings)
     .def("__str__", [](const OCPSolver& self) {
         std::stringstream ss;
