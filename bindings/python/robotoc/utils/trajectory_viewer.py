@@ -84,6 +84,12 @@ class TrajectoryViewer:
 
 
     def display_gepetto(self, dt, q_traj, f_traj):
+        if isinstance(dt, float):
+            time_steps = dt * np.ones(len(q_traj)-1)
+            dt = time_steps
+        assert len(q_traj)-1 == len(dt)
+        if f_traj is not None:
+            assert len(dt) == len(f_traj)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(windowName=self.window_name, loadModel=False)
         self.robot.loadViewerModel(rootNodeName=self.window_name)
@@ -137,10 +143,6 @@ class TrajectoryViewer:
                              self.force_radius, self.force_length, self.force_color)
                 gui.setFloatProperty('world/contact_forces/contact_force_'+str(i), 'Alpha', 1.0)
                 gui.setVisibility('world/contact_forces/contact_force_'+str(i), 'ALWAYS_ON_TOP')
-        # set time steps if dt is a scalar value
-        if not (isinstance(dt, list) or isinstance(dt, np.array)):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
         # set camera 
         camera = self.camera_pos
         camera.extend(self.camera_angle)
@@ -172,16 +174,20 @@ class TrajectoryViewer:
                 self.robot.display(q)
                 sleep_time = dts / self.play_speed
                 time.sleep(sleep_time)
-            self.robot.display(q[-1])
+            self.robot.display(q_traj[-1])
         else:
             for q, dts in zip(q_traj, dt):
                 self.robot.display(q)
                 sleep_time = dts / self.play_speed
                 time.sleep(sleep_time)
-            self.robot.display(q[-1])
+            self.robot.display(q_traj[-1])
 
 
     def display_meshcat(self, dt, q_traj, open=True):
+        if isinstance(dt, float):
+            time_steps = dt * np.ones(len(q_traj)-1)
+            dt = time_steps
+        assert len(q_traj)-1 == len(dt)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(open=open)
         self.robot.loadViewerModel(rootNodeName='robotoc.TrajectoryViewer')
@@ -190,12 +196,8 @@ class TrajectoryViewer:
         self.viewer.viewer["/Background"].set_property("visible", True)
         self.viewer.viewer["/Background"].set_property("top_color", [0.9, 0.9, 0.9])
         self.viewer.viewer["/Background"].set_property("bottom_color", [0.9, 0.9, 0.9])
-        # set time steps if dt is a scalar value
-        if not isinstance(dt, list) or isinstance(dt, np.array):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
         for q, dts in zip(q_traj, dt):
             self.robot.display(q)
             sleep_time = dts / self.play_speed
             time.sleep(sleep_time)
-        self.robot.display(q[-1])
+        self.robot.display(q_traj[-1])
