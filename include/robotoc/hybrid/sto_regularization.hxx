@@ -97,6 +97,11 @@ inline double STORegularization::getRegularization(const double kkt_error) const
   }
 }
 
+
+inline STORegularization STORegularization::defaultSTORegularization() {
+  return STORegularization(STORegularizationType::Quad, 0.1);
+}
+
 } // namespace robotoc 
 
 #endif // ROBOTOC_STO_REGULARIZATION_HXX_ 

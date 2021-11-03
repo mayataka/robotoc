@@ -1,6 +1,6 @@
 add_robotoc_test(discrete_event_test)
 add_robotoc_test(contact_sequence_test)
 add_robotoc_test(hybrid_ocp_discretization_test)
+add_robotoc_test(sto_cost_function_test)
 add_robotoc_test(dwell_time_lower_bound_test)
-add_robotoc_test(switching_time_constraints_test)
-add_robotoc_test(switching_time_cost_function_test)
+add_robotoc_test(sto_constraints_test)

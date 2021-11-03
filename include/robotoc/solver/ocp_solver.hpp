@@ -21,6 +21,8 @@
 #include "robotoc/riccati/riccati_recursion.hpp"
 #include "robotoc/line_search/line_search.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/hybrid/sto_regularization.hpp"
+
 
 namespace robotoc {
 
@@ -218,6 +220,13 @@ public:
   bool isSwitchingTimeConsistent(const double t);
 
   ///
+  /// @brief Set the regularization for the STO problem
+  /// @param[in] sto_reg Regularization for the STO problem.
+  ///
+  void setSTORegularization(
+      const STORegularization& sto_reg=STORegularization::defaultSTORegularization());
+
+  ///
   /// @brief Set settings for line search. Defalt is 
   /// LineSearchSettings::defaultSettings().
   /// @param[in] settings Line search settings.
@@ -240,6 +249,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   DirectMultipleShooting dms_;
   RiccatiRecursion riccati_recursion_;
+  STORegularization sto_reg_;
   LineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;

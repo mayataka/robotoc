@@ -8,7 +8,7 @@ namespace robotoc {
 
 PeriodicSwitchingTimeCost::PeriodicSwitchingTimeCost(const double period, 
                                                      const double t_start)
-  : SwitchingTimeCostFunctionComponentBase(),
+  : STOCostFunctionComponentBase(),
     period_(0),
     t_start_(0),
     weight_(0) {
@@ -26,7 +26,7 @@ PeriodicSwitchingTimeCost::PeriodicSwitchingTimeCost(const double period,
 
 
 PeriodicSwitchingTimeCost::PeriodicSwitchingTimeCost()
-  : SwitchingTimeCostFunctionComponentBase(),
+  : STOCostFunctionComponentBase(),
     period_(0),
     t_start_(0) {
 }

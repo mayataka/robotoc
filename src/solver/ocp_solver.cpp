@@ -17,6 +17,7 @@ OCPSolver::OCPSolver(const Robot& robot,
     constraints_(constraints),
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
     riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
+    sto_reg_(STORegularization::defaultSTORegularization()),
     line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
     ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
     riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
@@ -85,6 +86,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   discretizeSolution();
   dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
                         kkt_matrix_, kkt_residual_);
+  const double kkt_error = dms_.KKTError(ocp_, kkt_residual_);
+  sto_reg_.applyRegularization(ocp_, kkt_error, kkt_matrix_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
   dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
@@ -394,6 +397,12 @@ void OCPSolver::discretizeSolution() {
     }
   }
 }
+
+
+void OCPSolver::setSTORegularization(const STORegularization& sto_reg) {
+  sto_reg_ = sto_reg;
+}
+
 
 void OCPSolver::setLineSearchSettings(const LineSearchSettings& settings) {
   line_search_.set(settings);

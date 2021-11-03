@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/switching_time_cost_function.hpp"
+#include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/periodic_switching_time_cost.hpp"
 
 #include "robot_factory.hpp"
@@ -13,7 +13,7 @@
 
 namespace robotoc {
 
-class SwitchingTimeCostFunctionTest : public ::testing::Test {
+class STOCostFunctionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -46,8 +46,8 @@ protected:
 };
 
 
-TEST_F(SwitchingTimeCostFunctionTest, test) {
-  auto cost = std::make_shared<SwitchingTimeCostFunction>();
+TEST_F(STOCostFunctionTest, test) {
+  auto cost = std::make_shared<STOCostFunction>();
   const double t_start = 0.5;
   const double period = 0.1;
   auto period_cost = std::make_shared<PeriodicSwitchingTimeCost>(period, t_start);

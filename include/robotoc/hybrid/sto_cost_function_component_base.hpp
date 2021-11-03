@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_SWITCHING_TIME_COST_FUNCTION_COMPONENT_BASE_HPP_
-#define ROBOTOC_SWITCHING_TIME_COST_FUNCTION_COMPONENT_BASE_HPP_
+#ifndef ROBOTOC_STO_COST_FUNCTION_COMPONENT_BASE_HPP_
+#define ROBOTOC_STO_COST_FUNCTION_COMPONENT_BASE_HPP_
 
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
@@ -9,44 +9,44 @@
 namespace robotoc {
 
 ///
-/// @class SwitchingTimeCostFunctionComponentBase
-/// @brief Base class of components of the cost function on the switching time.
+/// @class STOCostFunctionComponentBase
+/// @brief Base class of components of the cost function of the switching time
+/// optimization (STO) problem.
 ///
-class SwitchingTimeCostFunctionComponentBase {
+class STOCostFunctionComponentBase {
 public:
   ///
   /// @brief Default constructor. 
   ///
-  SwitchingTimeCostFunctionComponentBase() {}
+  STOCostFunctionComponentBase() {}
 
   ///
   /// @brief Destructor. 
   ///
-  virtual ~SwitchingTimeCostFunctionComponentBase() {}
+  virtual ~STOCostFunctionComponentBase() {}
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SwitchingTimeCostFunctionComponentBase(
-      const SwitchingTimeCostFunctionComponentBase&) = default;
+  STOCostFunctionComponentBase(const STOCostFunctionComponentBase&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  SwitchingTimeCostFunctionComponentBase& operator=(
-      const SwitchingTimeCostFunctionComponentBase&) = default;
+  STOCostFunctionComponentBase& operator=(
+      const STOCostFunctionComponentBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SwitchingTimeCostFunctionComponentBase(
-      SwitchingTimeCostFunctionComponentBase&&) noexcept = default;
+  STOCostFunctionComponentBase(
+      STOCostFunctionComponentBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SwitchingTimeCostFunctionComponentBase& operator=(
-      SwitchingTimeCostFunctionComponentBase&&) noexcept = default;
+  STOCostFunctionComponentBase& operator=(
+      STOCostFunctionComponentBase&&) noexcept = default;
 
   ///
   /// @brief Computes the cost on the switching times. 
@@ -77,4 +77,4 @@ public:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_SWITCHING_TIME_COST_FUNCTION_COMPONENT_BASE_HPP_ 
+#endif // ROBOTOC_STO_COST_FUNCTION_COMPONENT_BASE_HPP_ 

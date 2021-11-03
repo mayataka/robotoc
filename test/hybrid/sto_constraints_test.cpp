@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/switching_time_constraints.hpp"
+#include "robotoc/hybrid/sto_constraints.hpp"
 
 #include "robot_factory.hpp"
 #include "contact_sequence_factory.hpp"
@@ -12,7 +12,7 @@
 
 namespace robotoc {
 
-class SwitchingTimeConstraintsTest : public ::testing::Test {
+class STOConstraintsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -21,8 +21,6 @@ protected:
     T = 1.0;
     t = 0.1; 
     min_dt  = std::abs(Eigen::VectorXd::Random(1)[0]);
-    min_dt0 = std::abs(Eigen::VectorXd::Random(1)[0]);
-    min_dtf = std::abs(Eigen::VectorXd::Random(1)[0]);
 
     auto robot = testhelper::CreateFloatingBaseRobot();
     kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
@@ -41,7 +39,7 @@ protected:
   }
 
   int N, max_num_impulse;
-  double T, t, min_dt, min_dt0, min_dtf;
+  double T, t, min_dt;
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
   Direction d;
@@ -50,10 +48,9 @@ protected:
 };
 
 
-TEST_F(SwitchingTimeConstraintsTest, test) {
+TEST_F(STOConstraintsTest, test) {
   const int max_num_switches = 2 * max_num_impulse;
-  auto constraints = SwitchingTimeConstraints(max_num_switches, 
-                                              min_dt, min_dt0, min_dtf);
+  auto constraints = STOConstraints(max_num_switches, min_dt);
   constraints.setSlack(discretization);
   constraints.evalConstraint(discretization);
   constraints.linearizeConstraints(discretization, kkt_residual);

@@ -1,7 +1,7 @@
 #ifndef ROBOTOC_PERIODIC_SWITCHING_TIME_COST_HPP_
 #define ROBOTOC_PERIODIC_SWITCHING_TIME_COST_HPP_
 
-#include "robotoc/hybrid/switching_time_cost_function_component_base.hpp"
+#include "robotoc/hybrid/sto_cost_function_component_base.hpp"
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 #include "Eigen/Core"
@@ -13,7 +13,7 @@ namespace robotoc {
 /// @class PeriodicSwitchingTimeCost
 /// @brief Cost on the deviation from the periodic reference switching time.
 ///
-class PeriodicSwitchingTimeCost : public SwitchingTimeCostFunctionComponentBase {
+class PeriodicSwitchingTimeCost : public STOCostFunctionComponentBase {
 public:
   PeriodicSwitchingTimeCost(const double period, const double t_start);
 

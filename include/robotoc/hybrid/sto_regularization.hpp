@@ -1,5 +1,5 @@
-#ifndef robotoc_sto_regularization_hpp_
-#define robotoc_sto_regularization_hpp_
+#ifndef ROBOTOC_STO_REGULARIZATION_HPP_
+#define ROBOTOC_STO_REGULARIZATION_HPP_
 
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
@@ -9,7 +9,8 @@ namespace robotoc {
 
 /// 
 /// @enum STORegularizationType
-/// @brief type of the regularization for switching time optimization (sto).
+/// @brief Type of the regularization for switching time optimization (STO) 
+/// problem.
 ///
 enum class STORegularizationType {
   Const,
@@ -22,12 +23,12 @@ enum class STORegularizationType {
 
 ///
 /// @class STORegularization
-/// @brief regularization for switching time optimization (sto) problems.
+/// @brief Regularization for switching time optimization (STO) problem.
 ///
 class STORegularization {
 public:
   ///
-  /// @brief constructs regularization.
+  /// @brief Constructs regularization.
   /// @param[in] reg_type regularization type. 
   /// @param[in] w weight parameter (a.k.a. scaling parameter) of the 
   /// regularization.
@@ -35,37 +36,37 @@ public:
   STORegularization(const STORegularizationType& reg_type, const double w);
 
   ///
-  /// @brief default constructor. 
+  /// @brief Default constructor. 
   ///
   STORegularization();
 
   ///
-  /// @brief destructor. 
+  /// @brief Destructor. 
   ///
   ~STORegularization();
 
   ///
-  /// @brief default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   STORegularization(const STORegularization&) = default;
 
   ///
-  /// @brief default copy assign operator. 
+  /// @brief Default copy assign operator. 
   ///
   STORegularization& operator=(const STORegularization&) = default;
 
   ///
-  /// @brief default move constructor. 
+  /// @brief Default move constructor. 
   ///
   STORegularization(STORegularization&&) noexcept = default;
 
   ///
-  /// @brief default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   STORegularization& operator=(STORegularization&&) noexcept = default;
 
   ///
-  /// @brief sets regularization method.
+  /// @brief Sets regularization method.
   /// @param[in] reg_type regularization type. 
   /// @param[in] w weight parameter (a.k.a. scaling parameter) of the 
   /// regularization.
@@ -92,6 +93,12 @@ public:
   /// @param[in] kkt_error KKT error. 
   ///
   double getRegularization(const double kkt_error) const;
+
+  ///
+  /// @return Default STO regularization. STORegularizationType is 
+  /// STORegularizationType::Quad and weight parameter is 0.1.
+  ///
+  static STORegularization defaultSTORegularization();
 
 private:
   STORegularizationType reg_type_;

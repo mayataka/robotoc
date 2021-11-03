@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_SWITCHING_TIME_COST_FUNCTION_HPP_
-#define ROBOTOC_SWITCHING_TIME_COST_FUNCTION_HPP_
+#ifndef ROBOTOC_STO_COST_FUNCTION_HPP_
+#define ROBOTOC_STO_COST_FUNCTION_HPP_
 
 #include <vector>
 #include <memory>
@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
-#include "robotoc/hybrid/switching_time_cost_function_component_base.hpp"
+#include "robotoc/hybrid/sto_cost_function_component_base.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
 
@@ -15,53 +15,54 @@
 namespace robotoc {
 
 ///
-/// @class SwitchingTimeCostFunction
-/// @brief Stack of the cost function on the switchig times. Composed by cost 
-/// function components that inherits SwitchingTimeCostFunctionComponentBase.
+/// @class STOCostFunction
+/// @brief Stack of the cost function of the switching time optimization (STO)
+///  problem. Composed by cost function components that inherits 
+/// STOCostFunctionComponentBase.
 ///
-class SwitchingTimeCostFunction {
+class STOCostFunction {
 public:
-  using SwitchingTimeCostFunctionComponentBasePtr 
-      = std::shared_ptr<SwitchingTimeCostFunctionComponentBase>;
+  using STOCostFunctionComponentBasePtr 
+      = std::shared_ptr<STOCostFunctionComponentBase>;
 
   ///
   /// @brief Default constructor. 
   ///
-  SwitchingTimeCostFunction();
+  STOCostFunction();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SwitchingTimeCostFunction();
+  ~STOCostFunction();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SwitchingTimeCostFunction(const SwitchingTimeCostFunction&) = default;
+  STOCostFunction(const STOCostFunction&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  SwitchingTimeCostFunction& operator=(
-      const SwitchingTimeCostFunction&) = default;
+  STOCostFunction& operator=(
+      const STOCostFunction&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SwitchingTimeCostFunction(SwitchingTimeCostFunction&&) noexcept = default;
+  STOCostFunction(STOCostFunction&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SwitchingTimeCostFunction& operator=(
-      SwitchingTimeCostFunction&&) noexcept = default;
+  STOCostFunction& operator=(
+      STOCostFunction&&) noexcept = default;
 
   ///
   /// @brief Append a cost function component to the cost function.
   /// @param[in] cost shared pointer to the switching tmie cost function  
   /// component appended to the cost.
   ///
-  void push_back(const SwitchingTimeCostFunctionComponentBasePtr& cost);
+  void push_back(const STOCostFunctionComponentBasePtr& cost);
 
   ///
   /// @brief Clear cost function by removing all components.
@@ -98,7 +99,7 @@ public:
                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 private:
-  std::vector<SwitchingTimeCostFunctionComponentBasePtr> costs_;
+  std::vector<STOCostFunctionComponentBasePtr> costs_;
   Eigen::VectorXd lts_;
   Eigen::MatrixXd Qts_;
 
@@ -112,6 +113,6 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/switching_time_cost_function.hxx"
+#include "robotoc/hybrid/sto_cost_function.hxx"
 
-#endif // IROBOTOC_SWITCHING_TIME_COST_FUNCTION_HPP
+#endif // ROBOTOC_STO_COST_FUNCTION_HPP_ 
