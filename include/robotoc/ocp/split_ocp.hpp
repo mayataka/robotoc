@@ -366,6 +366,19 @@ public:
       const SplitKKTResidual& kkt_residual,
       const SwitchingConstraintResidual& sc_residual) const;
 
+  static void setHamiltonianDerivatives(const double dt, 
+                                        SplitKKTMatrix& kkt_matrix,
+                                        const SplitKKTResidual& kkt_residual);
+
+  static void correctSTOSensitivities(SplitKKTMatrix& kkt_matrix,
+                                      SplitKKTResidual& kkt_residual,
+                                      const int N_phase);
+
+  static void correctSTOSensitivities(SplitKKTMatrix& kkt_matrix, 
+                                      SplitKKTResidual& kkt_residual,
+                                      SwitchingConstraintJacobian& sc_jacobian, 
+                                      const int N_phase);
+
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

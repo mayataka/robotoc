@@ -165,6 +165,16 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   kkt_matrix_ref.Fvu = Fxu_full.bottomRows(dimv).rightCols(dimu);
   kkt_residual_ref.Fx -= (OOIO_mat * data.MJtJinv() * data.IDC());
 
+  data.ha() = kkt_matrix_ref.ha;
+  data.hf() = - kkt_matrix_ref.hf();
+  kkt_residual_ref.h -= data.MJtJinv_IDC().dot(data.haf());
+  kkt_matrix_ref.hx -= data.MJtJinv_dIDCdqv().transpose() * data.haf();
+  kkt_matrix_ref.hq() += (1.0/dt) * kkt_matrix_ref.Qqf() * data.MJtJinv_IDC().tail(dimf);
+  Eigen::VectorXd hu_full = Eigen::VectorXd::Zero(dimv);
+  hu_full.tail(dimu)        = kkt_matrix_ref.hu;
+  hu_full += IO_mat.transpose() * data.MJtJinv() * data.haf();
+  kkt_matrix_ref.hu = hu_full.tail(dimu);
+
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));

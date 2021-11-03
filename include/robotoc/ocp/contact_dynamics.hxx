@@ -156,6 +156,15 @@ inline void ContactDynamics::condenseContactDynamics(
           + Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvu = dt * data_.MJtJinv().block(0, dim_passive, dimv, dimu);
   kkt_residual.Fv().noalias() -= dt * data_.MJtJinv_IDC().head(dimv);
+
+  data_.ha() = kkt_matrix.ha;
+  data_.hf() = - kkt_matrix.hf();
+  kkt_residual.h -= data_.MJtJinv_IDC().dot(data_.haf()); 
+  kkt_matrix.hx.noalias() -= data_.MJtJinv_dIDCdqv().transpose() * data_.haf();
+  kkt_matrix.hq().noalias()
+      += (1.0/dt) * kkt_matrix.Qqf() * data_.MJtJinv_IDC().tail(dimf);
+  kkt_matrix.hu.noalias() 
+      += data_.MJtJinv().middleRows(dim_passive, dimu) * data_.haf();
 }
 
 
