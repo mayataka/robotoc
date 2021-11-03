@@ -1,0 +1,3 @@
+pybind11_add_robotoc_module(line_search_settings)
+
+install_robotoc_pybind_module(line_search)

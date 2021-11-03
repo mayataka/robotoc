@@ -112,6 +112,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
                                           kkt_residual);
+  kkt_residual.h = (1.0/dt) * stage_cost_;
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
@@ -163,8 +164,10 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
                                            kkt_residual, kkt_matrix);
+  kkt_residual.h = (1.0/dt) * stage_cost_;
+  setHamiltonianDerivatives(dt, kkt_matrix, kkt_residual);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
-  stage_cost_ += dt * constraints_data_.logBarrier();
+  stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
@@ -201,8 +204,10 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
                                            kkt_residual, kkt_matrix);
+  kkt_residual.h = (1.0/dt) * stage_cost_;
+  setHamiltonianDerivatives(dt, kkt_matrix, kkt_residual);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
-  stage_cost_ += dt * constraints_data_.logBarrier();
+  stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
@@ -326,6 +331,43 @@ inline double SplitOCP::constraintViolation(
   vio += constraintViolation(kkt_residual);
   vio += sc_residual.constraintViolation();
   return vio;
+}
+
+
+inline void SplitOCP::setHamiltonianDerivatives(
+    const double dt, SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual) {
+  assert(dt > 0);
+  const double coeff = 1.0 / dt;
+  kkt_matrix.hx = coeff * kkt_residual.lx;
+  kkt_matrix.hu = coeff * kkt_residual.lu;
+  kkt_matrix.ha = coeff * kkt_residual.la;
+  kkt_matrix.hf() = coeff * kkt_residual.lf();
+}
+
+
+inline void SplitOCP::correctSTOSensitivities(SplitKKTMatrix& kkt_matrix,
+                                              SplitKKTResidual& kkt_residual,
+                                              const int N_phase) {
+  assert(N_phase > 0);
+  const double coeff = 1.0 / N_phase;
+  kkt_residual.h        *= coeff;
+  kkt_matrix.hx.array() *= coeff;
+  kkt_matrix.hu.array() *= coeff;
+  kkt_matrix.fx.array() *= coeff;
+  const double coeff2 = 1.0 / (N_phase*N_phase);
+  kkt_matrix.Qtt        *= coeff2;
+  kkt_matrix.Qtt_prev    = - kkt_matrix.Qtt;
+}
+
+
+inline void SplitOCP::correctSTOSensitivities(
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
+    SwitchingConstraintJacobian& sc_jacobian, const int N_phase) {
+  assert(N_phase > 0);
+  correctSTOSensitivities(kkt_matrix, kkt_residual, N_phase);
+  const double coeff = 1.0 / N_phase;
+  sc_jacobian.Phit().array() *= coeff;
 }
 
 } // namespace robotoc

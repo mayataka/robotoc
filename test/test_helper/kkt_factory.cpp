@@ -27,6 +27,10 @@ SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
   kkt_matrix.Qxx = H.topLeftCorner(dimx, dimx);
   kkt_matrix.Qxu = H.topRightCorner(dimx, dimu);
   kkt_matrix.Quu = H.bottomRightCorner(dimu, dimu);
+  kkt_matrix.hx.setRandom();
+  kkt_matrix.hu.setRandom();
+  kkt_matrix.ha.setRandom();
+  kkt_matrix.hf().setRandom();
   return kkt_matrix;
 }
 
@@ -55,6 +59,7 @@ SplitKKTResidual CreateSplitKKTResidual(const Robot& robot) {
   kkt_residual.Fx.setRandom();
   kkt_residual.lx.setRandom();
   kkt_residual.lu.setRandom();
+  kkt_residual.h = Eigen::VectorXd::Random(1)[0];
   return kkt_residual;
 }
 

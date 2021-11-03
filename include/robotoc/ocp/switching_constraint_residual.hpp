@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_SWITCHING_CONSTRAINT_RESIDUAL_HPP_ 
 #define ROBOTOC_SWITCHING_CONSTRAINT_RESIDUAL_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -118,6 +120,14 @@ public:
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;
+
+  ///
+  /// @brief Displays the switching constraint residual onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const SwitchingConstraintResidual& sc_residual);
 
 private:
   Eigen::VectorXd P_full_;
