@@ -182,11 +182,9 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   EXPECT_FALSE(kkt_matrix_ref.hx.isZero());
   EXPECT_FALSE(kkt_matrix_ref.hu.isZero());
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
-  constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
   StateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, s, kkt_residual_ref);
@@ -197,10 +195,12 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
     sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
                                     kkt_matrix_ref, kkt_residual_ref, 
                                     switch_jac_ref, switch_res_ref);
+    constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
     cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
     cd.condenseSwitchingConstraint(switch_jac_ref, switch_res_ref, kkt_matrix_ref);
-    EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
-    EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
+    state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+    std::cout << switch_jac << std::endl;
+    std::cout << switch_jac_ref << std::endl;
     // correct STO sensitivities
     kkt_residual_ref.h *= (1.0 / N_phase);
     kkt_matrix_ref.hx *= (1.0 / N_phase);
@@ -208,17 +208,21 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
     kkt_matrix_ref.fx *= (1.0 / N_phase);
     switch_jac_ref.Phit() *= (1.0 / N_phase);
     kkt_matrix_ref.Qtt *= (1.0 / (N_phase*N_phase));
-    kkt_matrix_ref.Qtt_prev = kkt_matrix_ref.Qtt;
+    kkt_matrix_ref.Qtt_prev = - kkt_matrix_ref.Qtt;
+    EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
+    EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
   else {
+    constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
     cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
+    state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
     // correct STO sensitivities
     kkt_residual_ref.h *= (1.0 / N_phase);
     kkt_matrix_ref.hx *= (1.0 / N_phase);
     kkt_matrix_ref.hu *= (1.0 / N_phase);
     kkt_matrix_ref.fx *= (1.0 / N_phase);
     kkt_matrix_ref.Qtt *= (1.0 / (N_phase*N_phase));
-    kkt_matrix_ref.Qtt_prev = kkt_matrix_ref.Qtt;
+    kkt_matrix_ref.Qtt_prev = - kkt_matrix_ref.Qtt;
   }
   EXPECT_FALSE(kkt_matrix_ref.hx.isZero());
   EXPECT_FALSE(kkt_matrix_ref.hu.isZero());

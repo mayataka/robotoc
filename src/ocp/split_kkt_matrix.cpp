@@ -22,9 +22,10 @@ void SplitKKTMatrix::disp(std::ostream& os) const {
   os << "  Qtt_prev = " << Qtt_prev << std::endl;
   os << "  hq = " << hq().transpose() << std::endl;
   os << "  hv = " << hv().transpose() << std::endl;
-  os << "  hu = " << hu.transpose() << std::flush;
+  os << "  hu = " << hu.transpose() << std::endl;
   os << "  ha = " << ha.transpose() << std::flush;
   if (dimf_ > 0) {
+    os << std::endl;
     os << "  hf = " << hf().transpose() << std::flush;
   }
 }

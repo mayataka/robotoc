@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HPP_ 
 #define ROBOTOC_SWITCHING_CONSTRAINT_JACOBIAN_HPP_
 
+#include <iostream>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -172,6 +174,14 @@ public:
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;
+
+  ///
+  /// @brief Displays the switching constraint Jacobian onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const SwitchingConstraintJacobian& sc_jacobian);
 
 private:
   Eigen::MatrixXd Pq_full_, Phix_full_, Phia_full_, Phiu_full_;

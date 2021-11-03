@@ -157,6 +157,7 @@ inline void ContactDynamics::condenseContactDynamics(
   kkt_matrix.Fvu = dt * data_.MJtJinv().block(0, dim_passive, dimv, dimu);
   kkt_residual.Fv().noalias() -= dt * data_.MJtJinv_IDC().head(dimv);
 
+  // STO sensitivities
   data_.ha() = kkt_matrix.ha;
   data_.hf() = - kkt_matrix.hf();
   kkt_residual.h -= data_.MJtJinv_IDC().dot(data_.haf()); 
@@ -275,6 +276,8 @@ inline void ContactDynamics::condenseSwitchingConstraint(
       -= sc_jacobian.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);
   sc_jacobian.Phiu().noalias()  
       = sc_jacobian.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
+  sc_jacobian.Phit().noalias() 
+      -= sc_jacobian.Phia() * data_.MJtJinv_IDC().head(dimv_);
   sc_residual.P().noalias() 
       -= sc_jacobian.Phia() * data_.MJtJinv_IDC().head(dimv_);
 }
