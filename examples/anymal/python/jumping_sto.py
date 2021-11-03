@@ -140,5 +140,6 @@ viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf,
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
-viewer.display(dt, ocp_solver.get_solution('q'), 
+ocp_discretization = ocp_solver.get_OCP_discretization()
+viewer.display(ocp_discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))
