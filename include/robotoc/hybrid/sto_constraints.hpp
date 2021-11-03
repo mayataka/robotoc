@@ -23,12 +23,6 @@ namespace robotoc {
 class STOConstraints {
 public:
   ///
-  /// @brief Minimum value of the minimum dwell times.  
-  ///
-  static constexpr double k_min_dt 
-      = std::sqrt(std::numeric_limits<double>::epsilon());
-
-  ///
   /// @brief Constructor. 
   /// @param[in] max_num_switches Maximum number of switches on the horizon. 
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
@@ -195,9 +189,16 @@ public:
   ///
   void setMinimumDwellTimes(const std::vector<double>& min_dt);
 
+  ///
+  /// @brief Minimum value of the minimum dwell times.  
+  ///
+  static constexpr double k_min_dt 
+      = std::sqrt(std::numeric_limits<double>::epsilon());
+
 private:
   std::vector<DwellTimeLowerBound> dtlb_;
   std::vector<double> min_dt_;
+  double k_min_dt_; // this is for Pybind11
   int max_num_switches_, num_switches_;
   Eigen::VectorXd primal_step_size_, dual_step_size_;
 
