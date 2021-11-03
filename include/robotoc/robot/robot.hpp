@@ -302,6 +302,35 @@ public:
   void getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const;
 
   ///
+  /// @brief Transforms 3D quantity from local frame to the world frame. 
+  /// @param[in] frame_id Index of the frame whose local coordinate is of 
+  /// interest.
+  /// @param[in] vec_local 3-dimensional vector-valued quantity expressed at the 
+  /// local frame.
+  /// @param[out] vec_world 3-dimensional vector-valued quantity expressed at 
+  /// the world frame.
+  ///
+  template <typename Vector3dType>
+  void transformFromLocalToWorld(
+      const int frame_id, const Eigen::Vector3d& vec_local, 
+      const Eigen::MatrixBase<Vector3dType>& vec_world) const;
+
+  ///
+  /// @brief Jacobian of the transformation mapping of a 3D quantity from local 
+  /// frame to the world frame. 
+  /// @param[in] frame_id Index of the frame whose local coordinate is of 
+  /// interest.
+  /// @param[in] vec_world 3-dimensional vector-valued quantity expressed at 
+  /// the world frame.
+  /// @param[out] J The Jacobian. Size must be 6 x Robot::dimv(). The result is
+  /// stored at the top 3 rows. 
+  ///
+  template <typename Vector3dType, typename MatrixType>
+  void getJacobianTransformFromLocalToWorld(
+      const int frame_id, const Eigen::MatrixBase<Vector3dType>& vec_world,
+      const Eigen::MatrixBase<MatrixType>& J);
+
+  ///
   /// @brief Computes the residual of the contact constriants represented by 
   /// Baumgarte's stabilization method. Before calling this function, 
   /// updateKinematics() must be called.
