@@ -78,7 +78,7 @@ void ImpulseFrictionConeTest::test_isFeasible(Robot& robot,
         }
       }
     }
-    EXPECT_EQ(constr.isFeasible(robot, data, s), feasible);
+    EXPECT_EQ(constr.isFeasible(robot, impulse_status, data, s), feasible);
   }
 }
 
@@ -91,7 +91,7 @@ void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& i
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateFrameKinematics(s.q);
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, impulse_status, data, s);
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
     robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
@@ -117,7 +117,7 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
-  constr.evalConstraint(robot, data, s);
+  constr.evalConstraint(robot, impulse_status, data, s);
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
@@ -145,16 +145,16 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, impulse_status, data, s);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
-  constr.evalConstraint(robot, data, s);
+  constr.evalConstraint(robot, impulse_status, data, s);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
   auto data_ref = data;
   auto kkt_res_ref = kkt_res;
-  constr.evalDerivatives(robot, data, s, kkt_res);
+  constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -187,7 +187,7 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, impulse_status, data, s);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -196,12 +196,12 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   data.cmpl.setRandom();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
-  constr.evalConstraint(robot, data, s);
-  constr.evalDerivatives(robot, data, s, kkt_res);
+  constr.evalConstraint(robot, impulse_status, data, s);
+  constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(data, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(impulse_status, data, kkt_mat, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -242,7 +242,7 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, impulse_status, data, s);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -253,12 +253,12 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   data.ddual.setRandom();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
-  constr.evalConstraint(robot, data, s);
-  constr.evalDerivatives(robot, data, s, kkt_res);
-  constr.condenseSlackAndDual(data, s, kkt_mat, kkt_res);
+  constr.evalConstraint(robot, impulse_status, data, s);
+  constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
+  constr.condenseSlackAndDual(impulse_status, data, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
-  constr.expandSlackAndDual(data, s, d);
+  constr.expandSlackAndDual(impulse_status, data, d);
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
   int dimf_stack = 0;

@@ -49,10 +49,11 @@ void JointTorquesLowerLimitTest::test_isFeasible(Robot& robot) const {
   JointTorquesLowerLimit constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   EXPECT_EQ(constr.dimc(), robot.dimu());
+  const auto contact_status = robot.createContactStatus();
   SplitSolution s(robot);
-  EXPECT_TRUE(constr.isFeasible(robot, data, s));
+  EXPECT_TRUE(constr.isFeasible(robot, contact_status, data, s));
   s.u = - 2*robot.jointEffortLimit();
-  EXPECT_FALSE(constr.isFeasible(robot, data, s));
+  EXPECT_FALSE(constr.isFeasible(robot, contact_status, data, s));
 }
 
 
@@ -60,9 +61,10 @@ void JointTorquesLowerLimitTest::test_setSlack(Robot& robot) const {
   JointTorquesLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
+  const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd umin = - robot.jointEffortLimit();
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, contact_status, data, s);
   data_ref.slack = -umin + s.u;
   EXPECT_TRUE(data.isApprox(data_ref));
 }
@@ -71,6 +73,7 @@ void JointTorquesLowerLimitTest::test_setSlack(Robot& robot) const {
 void JointTorquesLowerLimitTest::test_evalConstraint(Robot& robot) const {
   JointTorquesLowerLimit constr(robot); 
   const int dimc = constr.dimc();
+  const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd umin = - robot.jointEffortLimit();
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
@@ -79,7 +82,7 @@ void JointTorquesLowerLimitTest::test_evalConstraint(Robot& robot) const {
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
   auto data_ref = data;
-  constr.evalConstraint(robot, data, s);
+  constr.evalConstraint(robot, contact_status, data, s);
   data_ref.residual = - s.u + umin + data_ref.slack;
   pdipm::computeComplementarySlackness(barrier, data_ref);
   data_ref.log_barrier = pdipm::logBarrier(barrier, data_ref.slack);
@@ -91,12 +94,13 @@ void JointTorquesLowerLimitTest::test_evalDerivatives(Robot& robot) const {
   JointTorquesLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
+  const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, contact_status, data, s);
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_res_ref = kkt_res;
-  constr.evalDerivatives(robot, data, s, kkt_res);
+  constr.evalDerivatives(robot, contact_status, data, s, kkt_res);
   kkt_res_ref.lu -= data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
@@ -106,15 +110,16 @@ void JointTorquesLowerLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   JointTorquesLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
+  const auto contact_status = robot.createContactStatus();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd umin = - robot.jointEffortLimit();
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, contact_status, data, s);
   auto data_ref = data;
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(data, s, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(contact_status, data, kkt_mat, kkt_res);
   kkt_res_ref.lu.array() 
       -= (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
@@ -129,14 +134,15 @@ void JointTorquesLowerLimitTest::test_expandSlackAndDual(Robot& robot) const {
   JointTorquesLowerLimit constr(robot);
   ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
   const int dimc = constr.dimc();
+  const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd umax = robot.jointEffortLimit();
-  constr.setSlack(robot, data, s);
+  constr.setSlack(robot, contact_status, data, s);
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot);
-  constr.expandSlackAndDual(data, s, d);
+  constr.expandSlackAndDual(contact_status, data, d);
   data_ref.dslack = d.du - data_ref.residual;
   pdipm::computeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));

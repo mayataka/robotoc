@@ -33,6 +33,7 @@ KinematicsLevel JointPositionUpperLimit::kinematicsLevel() const {
 
 
 bool JointPositionUpperLimit::isFeasible(Robot& robot, 
+                                         const ContactStatus& contact_status,
                                          ConstraintComponentData& data, 
                                          const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -45,6 +46,7 @@ bool JointPositionUpperLimit::isFeasible(Robot& robot,
 
 
 void JointPositionUpperLimit::setSlack(Robot& robot, 
+                                       const ContactStatus& contact_status,
                                        ConstraintComponentData& data, 
                                        const SplitSolution& s) const {
   data.slack = qmax_ - s.q.tail(dimc_);
@@ -52,6 +54,7 @@ void JointPositionUpperLimit::setSlack(Robot& robot,
 
 
 void JointPositionUpperLimit::evalConstraint(Robot& robot, 
+                                             const ContactStatus& contact_status,
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {
   data.residual = s.q.tail(dimc_) - qmax_ + data.slack;
@@ -61,14 +64,15 @@ void JointPositionUpperLimit::evalConstraint(Robot& robot,
 
 
 void JointPositionUpperLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status, 
+    ConstraintComponentData& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   kkt_residual.lq().tail(dimc_).noalias() += data.dual;
 }
 
 
 void JointPositionUpperLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
       += data.dual.array() / data.slack.array();
@@ -78,7 +82,7 @@ void JointPositionUpperLimit::condenseSlackAndDual(
 
 
 void JointPositionUpperLimit::expandSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   data.dslack = - d.dq().tail(dimc_) - data.residual;
   computeDualDirection(data);

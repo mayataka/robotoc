@@ -88,18 +88,18 @@ void RiccatiRecursion::backwardRiccatiRecursion(
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
       const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
-                                            kkt_matrix.lift[lift_index], 
-                                            kkt_residual.lift[lift_index], 
-                                            factorization.lift[lift_index], 
-                                            lqr_policy_.lift[lift_index]);
+                                           kkt_matrix.lift[lift_index], 
+                                           kkt_residual.lift[lift_index], 
+                                           factorization.lift[lift_index], 
+                                           lqr_policy_.lift[lift_index]);
       factorizer_.backwardRiccatiRecursion(factorization.lift[lift_index], 
                                            kkt_matrix[i], kkt_residual[i], 
                                            factorization[i], lqr_policy_[i]);
     }
     else if (!ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
-                                            kkt_matrix[i], kkt_residual[i], 
-                                            factorization[i], lqr_policy_[i]);
+                                           kkt_matrix[i], kkt_residual[i], 
+                                           factorization[i], lqr_policy_[i]);
     }
   }
 }
@@ -150,8 +150,8 @@ void RiccatiRecursion::forwardRiccatiRecursion(
 
 
 void RiccatiRecursion::computeDirection(
-    OCP& ocp, const RiccatiFactorization& factorization, 
-    const Solution& s, Direction& d) {
+    OCP& ocp, const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const RiccatiFactorization& factorization, Direction& d) {
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -163,27 +163,31 @@ void RiccatiRecursion::computeDirection(
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
         const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
         RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
-        ocp[i].expandPrimal(s[i], d[i]);
+        ocp[i].expandPrimal(
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
         const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
         RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
-        ocp[i].expandPrimal(s[i], d[i]);
+        ocp[i].expandPrimal(
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
         RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
-        ocp[i].expandPrimal(s[i], d[i]);
-        d[i].setImpulseDimension(s[i].dimi());
+        ocp[i].expandPrimal(
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
+        d[i].setImpulseDimension(contact_sequence->impulseStatus(impulse_index).dimf());
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization.switching[impulse_index], d[i], sto);
       }
       else {
         constexpr bool sto = false;
         RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
-        ocp[i].expandPrimal(s[i], d[i]);
+        ocp[i].expandPrimal(
+            contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
       }
       max_primal_step_sizes_.coeffRef(i) = ocp[i].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) = ocp[i].maxDualStepSize();
@@ -199,8 +203,9 @@ void RiccatiRecursion::computeDirection(
       const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       RiccatiFactorizer::computeCostateDirection(factorization.impulse[impulse_index], 
                                                  d.impulse[impulse_index], sto);
-      ocp.impulse[impulse_index].expandPrimal(s.impulse[impulse_index], 
-                                              d.impulse[impulse_index]);
+      ocp.impulse[impulse_index].expandPrimal(
+          contact_sequence->impulseStatus(impulse_index), 
+          d.impulse[impulse_index]);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.impulse[impulse_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 
@@ -211,8 +216,10 @@ void RiccatiRecursion::computeDirection(
       const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       RiccatiFactorizer::computeCostateDirection(factorization.aux[impulse_index], 
                                                  d.aux[impulse_index], sto);
-      ocp.aux[impulse_index].expandPrimal(s.aux[impulse_index], 
-                                          d.aux[impulse_index]);
+      ocp.aux[impulse_index].expandPrimal(
+          contact_sequence->contactStatus(
+              ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
+          d.aux[impulse_index]);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.aux[impulse_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 
@@ -223,8 +230,10 @@ void RiccatiRecursion::computeDirection(
       const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       RiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], 
                                                  d.lift[lift_index], sto);
-      ocp.lift[lift_index].expandPrimal(s.lift[lift_index], 
-                                        d.lift[lift_index]);
+      ocp.lift[lift_index].expandPrimal(
+          contact_sequence->contactStatus(
+              ocp.discrete().contactPhaseAfterLift(lift_index)), 
+          d.lift[lift_index]);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.lift[lift_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 

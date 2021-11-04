@@ -34,6 +34,7 @@ KinematicsLevel JointAccelerationLowerLimit::kinematicsLevel() const {
 
 
 bool JointAccelerationLowerLimit::isFeasible(Robot& robot, 
+                                             const ContactStatus& contact_status,
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -46,6 +47,7 @@ bool JointAccelerationLowerLimit::isFeasible(Robot& robot,
 
 
 void JointAccelerationLowerLimit::setSlack(Robot& robot, 
+                                           const ContactStatus& contact_status,
                                            ConstraintComponentData& data, 
                                            const SplitSolution& s) const {
   data.slack = s.a.tail(dimc_) - amin_;
@@ -53,6 +55,7 @@ void JointAccelerationLowerLimit::setSlack(Robot& robot,
 
 
 void JointAccelerationLowerLimit::evalConstraint(Robot& robot, 
+                                                 const ContactStatus& contact_status,
                                                  ConstraintComponentData& data, 
                                                  const SplitSolution& s) const {
   data.residual = amin_ - s.a.tail(dimc_) + data.slack;
@@ -62,14 +65,15 @@ void JointAccelerationLowerLimit::evalConstraint(Robot& robot,
 
 
 void JointAccelerationLowerLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status,
+    ConstraintComponentData& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   kkt_residual.la.tail(dimc_).noalias() -= data.dual;
 }
 
 
 void JointAccelerationLowerLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qaa.diagonal().tail(dimc_).array()
       += data.dual.array() / data.slack.array();
@@ -79,7 +83,7 @@ void JointAccelerationLowerLimit::condenseSlackAndDual(
 
 
 void JointAccelerationLowerLimit::expandSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   data.dslack = d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);

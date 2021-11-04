@@ -41,90 +41,100 @@ void createConstraintsData(
 /// @brief Checks whether the current solution s is feasible or not. 
 /// @param[in] constraints Vector of the constraints. 
 /// @param[in] robot Robot model.
+/// @param[in] contact_status Contact status.
 /// @param[in, out] data Vector of the constraints data. 
 /// @param[in] s Split solution.
 /// @return true if s is feasible. false if not.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
+          typename SplitSolutionType>
 bool isFeasible(const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-                Robot& robot, std::vector<ConstraintComponentData>& data, 
+                Robot& robot, const ContactStatusType& contact_status, 
+                std::vector<ConstraintComponentData>& data, 
                 const SplitSolutionType& s);
 
 ///
 /// @brief Sets the slack and dual variables of each constraint components. 
 /// @param[in] constraints Vector of the constraints. 
 /// @param[in] robot Robot model.
+/// @param[in] contact_status Contact status.
 /// @param[in, out] data Vector of the constraints data. 
 /// @param[in] s Split solution.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
+          typename SplitSolutionType>
 void setSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const SplitSolutionType& s);
+    Robot& robot, const ContactStatusType& contact_status, 
+    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s);
 
 ///
 /// @brief Computes the primal residual, residual in the complementary 
 /// slackness, and the log-barrier function of the slack varible.
 /// @param[in] constraints Vector of the constraint components. 
 /// @param[in] robot Robot model.
+/// @param[in] contact_status Contact status.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
+          typename SplitSolutionType>
 void evalConstraint(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const SplitSolutionType& s);
+    Robot& robot, const ContactStatusType& contact_status, 
+    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s);
 
 ///
 /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
 /// the products of the Jacobian of the constraints and Lagrange multipliers.
 /// @param[in] constraints Vector of the constraint components. 
 /// @param[in] robot Robot model.
+/// @param[in] contact_status Contact status.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
 /// @param[in, out] kkt_residual Split KKT residual.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType,
-          typename SplitKKTResidualType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
+          typename SplitSolutionType, typename SplitKKTResidualType>
 void linearizeConstraints(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data,
-    const SplitSolutionType& s, SplitKKTResidualType& kkt_residual);
+    Robot& robot, const ContactStatusType& contact_status, 
+    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s, 
+    SplitKKTResidualType& kkt_residual);
 
 ///
 /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
 /// be called before this function.
 /// @param[in] constraints Vector of the constraints. 
+/// @param[in] contact_status Contact status.
 /// @param[in, out] data Vector of the constraints data.
-/// @param[in] s Split solution.
 /// @param[in, out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
 /// to this object.
 /// @param[in, out] kkt_residual Split KKT residual. The condensed residuals are 
 /// added to this object.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType,
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType,
           typename SplitKKTMatrixType, typename SplitKKTResidualType>
 void condenseSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s, 
-    SplitKKTMatrixType& kkt_matrix, SplitKKTResidualType& kkt_residual);
+    const ContactStatusType& contact_status,
+    std::vector<ConstraintComponentData>& data, SplitKKTMatrixType& kkt_matrix, 
+    SplitKKTResidualType& kkt_residual);
 
 ///
 /// @brief Expands the slack and dual, i.e., computes the directions of the 
 /// slack and dual variables from the directions of the primal variables.
 /// @param[in] constraints Vector of the constraint components. 
+/// @param[in] contact_status Contact status.
 /// @param[in, out] data Vector of the constraints data.
-/// @param[in] s Split solution.
 /// @param[in] d Split direction.
 ///
-template <typename ConstraintComponentBaseTypePtr, 
-          typename SplitSolutionType, typename SplitDirectionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType,
+          typename SplitDirectionType>
 void expandSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, 
-    const SplitSolutionType& s, const SplitDirectionType& d);
+    const ContactStatusType& contact_status, 
+    std::vector<ConstraintComponentData>& data, const SplitDirectionType& d);
 
 ///
 /// @brief Computes and returns the maximum step size by applying 

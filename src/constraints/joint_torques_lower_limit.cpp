@@ -34,6 +34,7 @@ KinematicsLevel JointTorquesLowerLimit::kinematicsLevel() const {
 
 
 bool JointTorquesLowerLimit::isFeasible(Robot& robot, 
+                                        const ContactStatus& contact_status, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -46,6 +47,7 @@ bool JointTorquesLowerLimit::isFeasible(Robot& robot,
 
 
 void JointTorquesLowerLimit::setSlack(Robot& robot, 
+                                      const ContactStatus& contact_status, 
                                       ConstraintComponentData& data, 
                                       const SplitSolution& s) const {
   data.slack = s.u - umin_;
@@ -53,6 +55,7 @@ void JointTorquesLowerLimit::setSlack(Robot& robot,
 
 
 void JointTorquesLowerLimit::evalConstraint(Robot& robot, 
+                                            const ContactStatus& contact_status, 
                                             ConstraintComponentData& data, 
                                             const SplitSolution& s) const {
   data.residual = umin_ - s.u + data.slack;
@@ -62,14 +65,15 @@ void JointTorquesLowerLimit::evalConstraint(Robot& robot,
 
 
 void JointTorquesLowerLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status, 
+    ConstraintComponentData& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   kkt_residual.lu.noalias() -= data.dual;
 }
 
 
 void JointTorquesLowerLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Quu.diagonal().array()
       += data.dual.array() / data.slack.array();
@@ -79,7 +83,7 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
 
 
 void JointTorquesLowerLimit::expandSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   data.dslack = d.du - data.residual;
   computeDualDirection(data);

@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
@@ -76,26 +77,30 @@ public:
 
   void allocateExtraData(ConstraintComponentData& data) const override;
 
-  bool isFeasible(Robot& robot, ConstraintComponentData& data, 
+  bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+                  ConstraintComponentData& data, 
                   const ImpulseSplitSolution& s) const override;
 
-  void setSlack(Robot& robot, ConstraintComponentData& data, 
+  void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
+                ConstraintComponentData& data, 
                 const ImpulseSplitSolution& s) const override;
 
-  void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+  void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+                      ConstraintComponentData& data, 
                       const ImpulseSplitSolution& s) const override;
 
-  void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
+  void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                       ConstraintComponentData& data, 
                        const ImpulseSplitSolution& s,
                        ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(ConstraintComponentData& data, 
-                            const ImpulseSplitSolution& s,
+  void condenseSlackAndDual(const ImpulseStatus& impulse_status,
+                            ConstraintComponentData& data, 
                             ImpulseSplitKKTMatrix& kkt_matrix,
                             ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void expandSlackAndDual(ConstraintComponentData& data, 
-                          const ImpulseSplitSolution& s,
+  void expandSlackAndDual(const ImpulseStatus& impulse_status, 
+                          ConstraintComponentData& data, 
                           const ImpulseSplitDirection& d) const override; 
 
   int dimc() const override;

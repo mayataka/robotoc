@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
@@ -94,30 +95,36 @@ public:
   ///
   /// @brief Checks whether the current solution s is feasible or not. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraint data.
   /// @param[in] s Split solution.
   /// @return true if s is feasible. false if not.
   ///
-  virtual bool isFeasible(Robot& robot, ConstraintComponentData& data, 
+  virtual bool isFeasible(Robot& robot, const ContactStatus& contact_status, 
+                          ConstraintComponentData& data, 
                           const SplitSolution& s) const = 0;
 
   ///
   /// @brief Sets the slack variables of each constraint components. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[out] data Constraint data. 
   /// @param[in] s Split solution.
   ///
-  virtual void setSlack(Robot& robot, ConstraintComponentData& data, 
+  virtual void setSlack(Robot& robot, const ContactStatus& contact_status, 
+                        ConstraintComponentData& data, 
                         const SplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraint data.
   /// @param[in] s Split solution.
   ///
-  virtual void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+  virtual void evalConstraint(Robot& robot, const ContactStatus& contact_status, 
+                              ConstraintComponentData& data, 
                               const SplitSolution& s) const = 0;
 
   ///
@@ -126,11 +133,13 @@ public:
   /// Jacobian and the dual variable to the KKT residual. This function is 
   /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraint data.
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual Split KKT residual.
   ///
-  virtual void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
+  virtual void evalDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                               ConstraintComponentData& data, 
                                const SplitSolution& s, 
                                SplitKKTResidual& kkt_residual) const = 0;
 
@@ -138,27 +147,27 @@ public:
   /// @brief Condenses the slack and dual variables, i.e., factorizes the  
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraint data.
-  /// @param[in] s Split solution.
   /// @param[out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
   /// to this object.
   /// @param[out] kkt_residual Split KKT residual. The condensed residuals are 
   /// added to this object.
   ///
-  virtual void condenseSlackAndDual(ConstraintComponentData& data,
-                                    const SplitSolution& s, 
+  virtual void condenseSlackAndDual(const ContactStatus& contact_status,
+                                    ConstraintComponentData& data,
                                     SplitKKTMatrix& kkt_matrix,
                                     SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
+  /// @param[in] contact_status Contact status.
   /// @param[in, out] data Constraint data.
-  /// @param[in] s Split solution.
   /// @param[in] d Split direction.
   ///
-  virtual void expandSlackAndDual(ConstraintComponentData& data, 
-                                  const SplitSolution& s, 
+  virtual void expandSlackAndDual(const ContactStatus& contact_status, 
+                                  ConstraintComponentData& data, 
                                   const SplitDirection& d) const = 0;
 
   ///
