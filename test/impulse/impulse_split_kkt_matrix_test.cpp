@@ -29,7 +29,7 @@ void ImpulseSplitKKTMatrixTest::test(const Robot& robot, const ImpulseStatus& im
   ImpulseSplitKKTMatrix kkt_mat(robot);
   kkt_mat.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   const int dimx = 2 * robot.dimv();
   EXPECT_EQ(kkt_mat.dimi(), dimi);
   EXPECT_EQ(kkt_mat.Fxx.rows(), 2*dimv);
@@ -93,7 +93,7 @@ void ImpulseSplitKKTMatrixTest::test_isApprox(const Robot& robot, const ImpulseS
   ImpulseSplitKKTMatrix kkt_mat(robot);
   kkt_mat.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   const int dimx = 2 * robot.dimv();
   kkt_mat.Fxx.setRandom();
   kkt_mat.Qxx.setRandom();

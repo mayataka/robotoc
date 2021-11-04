@@ -46,7 +46,7 @@ void ContactDynamicsTest::test_computeResidual(Robot& robot, const ContactStatus
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), data.C());
+  robot.computeBaumgarteResidual(contact_status, data.C());
   double l1norm_ref = data.IDC().lpNorm<1>();
   double squarednorm_ref = data.IDC().squaredNorm();
   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
@@ -68,7 +68,7 @@ void ContactDynamicsTest::test_linearize(Robot& robot, const ContactStatus& cont
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), data.C());
+  robot.computeBaumgarteResidual(contact_status, data.C());
   robot.RNEADerivatives(s.q, s.v, s.a, data.dIDdq(), data.dIDdv(), data.dIDda);
   robot.computeBaumgarteDerivatives(contact_status, data.dCdq(), data.dCdv(), data.dCda());
   kkt_residual_ref.lq() += data.dIDdq().transpose() * s.beta;
@@ -104,7 +104,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), data.C());
+  robot.computeBaumgarteResidual(contact_status, data.C());
   robot.RNEADerivatives(s.q, s.v, s.a, data.dIDdq(), data.dIDdv(), data.dIDda);
   robot.computeBaumgarteDerivatives(contact_status, data.dCdq(), data.dCdv(), data.dCda());
   const int dimv = robot.dimv();
@@ -123,7 +123,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   kkt_matrix.Fqv() = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   auto kkt_residual_ref = kkt_residual;
   auto kkt_matrix_ref = kkt_matrix;
-  cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix, kkt_residual);
+  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual);
   robot.computeMJtJinv(data.dIDda, data.dCda(), data.MJtJinv());
   data.MJtJinv_dIDCdqv() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC()     = data.MJtJinv() * data.IDC();

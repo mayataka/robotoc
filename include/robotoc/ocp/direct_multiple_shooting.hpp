@@ -68,6 +68,17 @@ public:
   DirectMultipleShooting& operator=(DirectMultipleShooting&&) noexcept = default;
 
   ///
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in, out] ocp Optimal control problem.
+  /// @param[in] robots aligned_vector of Robot.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in] s Solution. 
+  ///
+  bool isFeasible(OCP& ocp, aligned_vector<Robot>& robots,
+                  const std::shared_ptr<ContactSequence>& contact_sequence, 
+                  const Solution& s) const;
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   /// @param[in, out] ocp Optimal control problem.

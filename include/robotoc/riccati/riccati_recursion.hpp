@@ -4,14 +4,13 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/hybrid_container.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 #include "robotoc/riccati/riccati_factorizer.hpp"
 #include "robotoc/ocp/ocp.hpp"
-#include "robotoc/ocp/solution.hpp"
 #include "robotoc/ocp/direction.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
@@ -106,12 +105,13 @@ public:
   /// RiccatiRecursion::backwardRiccatiRecursion() and 
   /// RiccatiRecursion::forwardRiccatiRecursion().
   /// @param[in] ocp Optimal control problem.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] factorization Riccati factorization. 
-  /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
-  void computeDirection(OCP& ocp, const RiccatiFactorization& factorization, 
-                        const Solution& s, Direction& d);
+  void computeDirection(OCP& ocp, 
+                        const std::shared_ptr<ContactSequence>& contact_sequence, 
+                        const RiccatiFactorization& factorization, Direction& d);
 
   ///
   /// @brief Returns max primal step size.

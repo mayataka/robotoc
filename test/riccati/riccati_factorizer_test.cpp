@@ -78,7 +78,7 @@ void RiccatiFactorizerTest::test_backwardRecursionWithSwitchingConstraint(const 
   }
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
   auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
@@ -194,10 +194,10 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
     impulse_status.activateImpulse(0);
   }
   SplitConstrainedRiccatiFactorization c_riccati(robot);
-  c_riccati.setImpulseStatus(impulse_status.dimf());
+  c_riccati.setImpulseStatus(impulse_status.dimi());
   c_riccati.M().setRandom();
   c_riccati.m().setRandom();
-  d.setImpulseDimension(impulse_status.dimf());
+  d.setImpulseStatus(impulse_status);
   d.dxi().setRandom();
   d_ref = d;
   factorizer.computeLagrangeMultiplierDirection(c_riccati, d);

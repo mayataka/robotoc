@@ -248,7 +248,7 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   d_ref = d;
   auto ocp_ref = ocp;
-  riccati_recursion.computeDirection(ocp, factorization, s, d);
+  riccati_recursion.computeDirection(ocp, contact_sequence, factorization, d);
   const double primal_step_size = riccati_recursion.maxPrimalStepSize();
   const double dual_step_size = riccati_recursion.maxDualStepSize();
   const Eigen::VectorXd dx0 = d_ref[0].dx;
@@ -260,7 +260,8 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
       const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], sto);
-      ocp_ref[i].expandPrimal(s[i], d_ref[i]);
+      ocp_ref[i].expandPrimal(
+          contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
@@ -268,8 +269,9 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       // impulse
       RiccatiFactorizer::computeCostateDirection(factorization.impulse[impulse_index], 
                                                  d_ref.impulse[impulse_index], sto);
-      ocp_ref.impulse[impulse_index].expandPrimal(s.impulse[impulse_index], 
-                                                  d_ref.impulse[impulse_index]);
+      ocp_ref.impulse[impulse_index].expandPrimal(
+          contact_sequence->impulseStatus(impulse_index), 
+          d_ref.impulse[impulse_index]);
       if (ocp_ref.impulse[impulse_index].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref.impulse[impulse_index].maxPrimalStepSize();
       if (ocp_ref.impulse[impulse_index].maxDualStepSize() < dual_step_size_ref) 
@@ -277,8 +279,9 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       // aux 
       RiccatiFactorizer::computeCostateDirection(factorization.aux[impulse_index], 
                                                  d_ref.aux[impulse_index], sto);
-      ocp_ref.aux[impulse_index].expandPrimal(s.aux[impulse_index], 
-                                              d_ref.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].expandPrimal(
+          contact_sequence->contactStatus(ocp.discrete().contactPhase(i)+1), 
+          d_ref.aux[impulse_index]);
       if (ocp_ref.aux[impulse_index].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref.aux[impulse_index].maxPrimalStepSize();
       if (ocp_ref.aux[impulse_index].maxDualStepSize() < dual_step_size_ref) 
@@ -288,7 +291,8 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
       const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], sto);
-      ocp_ref[i].expandPrimal(s[i], d_ref[i]);
+      ocp_ref[i].expandPrimal(
+          contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
@@ -296,8 +300,10 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       // lift
       RiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], 
                                                  d_ref.lift[lift_index], sto);
-      ocp_ref.lift[lift_index].expandPrimal(s.lift[lift_index], 
-                                            d_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].expandPrimal(
+          contact_sequence->contactStatus(
+              ocp.discrete().contactPhaseAfterLift(lift_index)), 
+          d_ref.lift[lift_index]);
       if (ocp_ref.lift[lift_index].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref.lift[lift_index].maxPrimalStepSize();
       if (ocp_ref.lift[lift_index].maxDualStepSize() < dual_step_size_ref) 
@@ -309,7 +315,8 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
     else {
       const bool sto_false = false;
       RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], sto_false);
-      ocp_ref[i].expandPrimal(s[i], d_ref[i]);
+      ocp_ref[i].expandPrimal(
+          contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
@@ -317,7 +324,7 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
         const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        d_ref[i].setImpulseDimension(contact_sequence->impulseStatus(impulse_index).dimf());
+        d_ref[i].setImpulseStatus(contact_sequence->impulseStatus(impulse_index));
         RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization.switching[impulse_index], 
                                                               d_ref[i], sto);
       }

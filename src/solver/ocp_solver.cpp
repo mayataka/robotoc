@@ -139,7 +139,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                               riccati_factorization_);
   dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
   riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
-  riccati_recursion_.computeDirection(ocp_, riccati_factorization_, s_, d_);
+  riccati_recursion_.computeDirection(ocp_, contact_sequence_, 
+                                      riccati_factorization_, d_);
   double primal_step_size = riccati_recursion_.maxPrimalStepSize();
   const double dual_step_size = riccati_recursion_.maxDualStepSize();
   if (line_search) {
@@ -449,42 +450,9 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 
 
 bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  bool feasible = true;
-  for (int i=0; i<ocp_.discrete().N(); ++i) {
-    if (!ocp_[i].isFeasible(robots_[0], s_[i])) {
-      if (verbose) {
-        std::cout << "INFEASIBLE at time stage " << i << std::endl;
-      }
-      feasible = false;
-    }
-  }
-  const int num_impulse = ocp_.discrete().N_impulse();
-  for (int i=0; i<num_impulse; ++i) {
-    if (!ocp_.impulse[i].isFeasible(robots_[0], s_.impulse[i])) {
-      if (verbose) {
-        std::cout << "INFEASIBLE at impulse " << i << std::endl;
-      }
-      feasible = false;
-    }
-  }
-  for (int i=0; i<num_impulse; ++i) {
-    if (!ocp_.aux[i].isFeasible(robots_[0], s_.aux[i])) {
-      if (verbose) {
-        std::cout << "INFEASIBLE at aux " << i << std::endl;
-      }
-      feasible = false;
-    }
-  }
-  const int num_lift = ocp_.discrete().N_lift();
-  for (int i=0; i<num_lift; ++i) {
-    if (!ocp_.lift[i].isFeasible(robots_[0], s_.lift[i])) {
-      if (verbose) {
-        std::cout << "INFEASIBLE at lift " << i << std::endl;
-      }
-      feasible = false;
-    }
-  }
-  return feasible;
+  // ocp_.discretize(contact_sequence_, t);
+  // discretizeSolution();
+  return dms_.isFeasible(ocp_, robots_, contact_sequence_, s_);
 }
 
 

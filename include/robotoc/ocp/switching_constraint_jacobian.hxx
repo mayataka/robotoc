@@ -43,7 +43,7 @@ inline SwitchingConstraintJacobian::~SwitchingConstraintJacobian() {
 
 inline void SwitchingConstraintJacobian::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimi();
 }
 
 

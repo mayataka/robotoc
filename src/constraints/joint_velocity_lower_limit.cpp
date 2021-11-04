@@ -34,6 +34,7 @@ KinematicsLevel JointVelocityLowerLimit::kinematicsLevel() const {
 
 
 bool JointVelocityLowerLimit::isFeasible(Robot& robot, 
+                                         const ContactStatus& contact_status,
                                          ConstraintComponentData& data, 
                                          const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -46,6 +47,7 @@ bool JointVelocityLowerLimit::isFeasible(Robot& robot,
 
 
 void JointVelocityLowerLimit::setSlack(Robot& robot, 
+                                       const ContactStatus& contact_status,
                                        ConstraintComponentData& data, 
                                        const SplitSolution& s) const {
   data.slack = s.v.tail(dimc_) - vmin_;
@@ -53,8 +55,9 @@ void JointVelocityLowerLimit::setSlack(Robot& robot,
 
 
 void JointVelocityLowerLimit::evalConstraint(Robot& robot, 
-                                                 ConstraintComponentData& data, 
-                                                 const SplitSolution& s) const {
+                                             const ContactStatus& contact_status,
+                                             ConstraintComponentData& data, 
+                                             const SplitSolution& s) const {
   data.residual = vmin_ - s.v.tail(dimc_) + data.slack;
   computeComplementarySlackness(data);
   data.log_barrier = logBarrier(data.slack);
@@ -62,14 +65,15 @@ void JointVelocityLowerLimit::evalConstraint(Robot& robot,
 
 
 void JointVelocityLowerLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data,  
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status, 
+    ConstraintComponentData& data,  const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   kkt_residual.lv().tail(dimc_).noalias() -= data.dual;
 }
 
 
 void JointVelocityLowerLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qvv().diagonal().tail(dimc_).array()
       += data.dual.array() / data.slack.array();
@@ -79,7 +83,7 @@ void JointVelocityLowerLimit::condenseSlackAndDual(
 
 
 void JointVelocityLowerLimit::expandSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   data.dslack = d.dv().tail(dimc_) - data.residual;
   computeDualDirection(data);

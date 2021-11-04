@@ -7,6 +7,8 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/cost/cost_function_component_base.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/ocp/split_solution.hpp"
@@ -90,18 +92,21 @@ public:
   ///
   /// @brief Computes the stage cost. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double evalStageCost(Robot& robot, CostFunctionData& data, const double t, 
+  double evalStageCost(Robot& robot, const ContactStatus& contact_status,
+                       CostFunctionData& data, const double t, 
                        const double dt, const SplitSolution& s) const;
 
   ///
   /// @brief Computes the stage cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
@@ -110,15 +115,16 @@ public:
   /// are added to this object.
   /// @return Stage cost.
   ///
-  double linearizeStageCost(Robot& robot, CostFunctionData& data, 
-                            const double t, const double dt, 
-                            const SplitSolution& s, 
+  double linearizeStageCost(Robot& robot, const ContactStatus& contact_status, 
+                            CostFunctionData& data, const double t, 
+                            const double dt, const SplitSolution& s, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the stage cost, its first-order partial derivatives, and 
   /// its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
@@ -129,9 +135,9 @@ public:
   /// this object.
   /// @return Stage cost.
   ///
-  double quadratizeStageCost(Robot& robot, CostFunctionData& data, 
-                             const double t, const double dt, 
-                             const SplitSolution& s, 
+  double quadratizeStageCost(Robot& robot, const ContactStatus& contact_status, 
+                             CostFunctionData& data, const double t, 
+                             const double dt, const SplitSolution& s, 
                              SplitKKTResidual& kkt_residual,
                              SplitKKTMatrix& kkt_matrix) const;
 
@@ -181,17 +187,20 @@ public:
   ///
   /// @brief Computes the impulse cost. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double evalImpulseCost(Robot& robot, CostFunctionData& data, 
-                         const double t, const ImpulseSplitSolution& s) const;
+  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                         CostFunctionData& data, const double t, 
+                         const ImpulseSplitSolution& s) const;
 
   ///
   /// @brief Computes the impulse cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
@@ -199,14 +208,16 @@ public:
   /// are added to this object.
   /// @return Stage cost.
   ///
-  double linearizeImpulseCost(Robot& robot, CostFunctionData& data, 
-                               const double t, const ImpulseSplitSolution& s, 
-                               ImpulseSplitKKTResidual& kkt_residual) const;
+  double linearizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                              CostFunctionData& data, const double t, 
+                              const ImpulseSplitSolution& s, 
+                              ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the impulse cost, its first-order partial derivatives, 
   /// and its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
@@ -216,8 +227,9 @@ public:
   /// this object.
   /// @return Stage cost.
   ///
-  double quadratizeImpulseCost(Robot& robot, CostFunctionData& data, 
-                               const double t, const ImpulseSplitSolution& s, 
+  double quadratizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                               CostFunctionData& data, const double t, 
+                               const ImpulseSplitSolution& s, 
                                ImpulseSplitKKTResidual& kkt_residual,
                                ImpulseSplitKKTMatrix& kkt_matrix) const;
 

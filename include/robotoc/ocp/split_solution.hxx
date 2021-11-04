@@ -81,7 +81,7 @@ inline void SplitSolution::setContactStatus(const SplitSolution& other) {
 inline void SplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   has_active_impulse_ = impulse_status.hasActiveImpulse();
-  dimi_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimi();
 }
 
 

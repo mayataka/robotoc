@@ -26,48 +26,53 @@ public:
                            data);
   }
 
-  bool isFeasible(Robot& robot, ConstraintComponentData& data, 
+  bool isFeasible(Robot& robot, const ContactStatus& contact_status, 
+                  ConstraintComponentData& data, 
                   const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(bool, ConstraintComponentBase, 
                            isFeasible, 
-                           robot, data, s);
+                           robot, contact_status, data, s);
   }
 
-  void setSlack(Robot& robot, ConstraintComponentData& data, 
+  void setSlack(Robot& robot, const ContactStatus& contact_status, 
+                ConstraintComponentData& data, 
                 const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            setSlack, 
-                           robot, data, s);
+                           robot, contact_status, data, s);
   }
 
-  void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+  void evalConstraint(Robot& robot, const ContactStatus& contact_status, 
+                      ConstraintComponentData& data, 
                       const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            evalConstraint, 
-                           robot, data, s);
+                           robot, contact_status, data, s);
   }
 
-  void evalDerivatives(Robot& robot, ConstraintComponentData& data,
-                       const SplitSolution& s,
+  void evalDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                       ConstraintComponentData& data, const SplitSolution& s,
                        SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            evalDerivatives, 
-                           robot, data, s, kkt_residual);
+                           robot, contact_status, data, s, kkt_residual);
   }
 
-  void condenseSlackAndDual(ConstraintComponentData& data, 
-                            const SplitSolution& s, SplitKKTMatrix& kkt_matrix,
+  void condenseSlackAndDual(const ContactStatus& contact_status,
+                            ConstraintComponentData& data, 
+                            SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            condenseSlackAndDual, 
-                           data, s, kkt_matrix, kkt_residual);
+                           contact_status, data, kkt_matrix, kkt_residual);
   }
 
-  void expandSlackAndDual(ConstraintComponentData& data, const SplitSolution& s, 
+  void expandSlackAndDual(const ContactStatus& contact_status, 
+                          ConstraintComponentData& data, 
                           const SplitDirection& d) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            expandSlackAndDual, 
-                           data, s, d);
+                           contact_status, data, d);
   }
 
   int dimc() const override {

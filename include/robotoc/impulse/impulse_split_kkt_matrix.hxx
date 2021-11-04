@@ -43,7 +43,7 @@ inline ImpulseSplitKKTMatrix::~ImpulseSplitKKTMatrix() {
 
 inline void ImpulseSplitKKTMatrix::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimi();
 }
 
 

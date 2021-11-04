@@ -5,6 +5,8 @@
 #include <memory>
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -103,41 +105,46 @@ public:
   ///
   /// @brief Checks whether the current split solution s is feasible or not. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraints data. 
   /// @param[in] s Split solution.
   /// @return true if s is feasible. false if not.
   ///
-  bool isFeasible(Robot& robot, ConstraintsData& data,
-                  const SplitSolution& s) const;
+  bool isFeasible(Robot& robot, const ContactStatus& contact_status,
+                  ConstraintsData& data, const SplitSolution& s) const;
 
   ///
   /// @brief Checks whether the current impulse split solution s is feasible or 
   /// not. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraints data. 
   /// @param[in] s Split solution.
   /// @return true if s is feasible. false if not.
   ///
-  bool isFeasible(Robot& robot, ConstraintsData& data,
-                  const ImpulseSplitSolution& s) const;
+  bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+                  ConstraintsData& data, const ImpulseSplitSolution& s) const;
 
   ///
   /// @brief Sets the slack and dual variables of each constraint components. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[out] data Constraints data. 
   /// @param[in] s Split solution.
   ///
-  void setSlackAndDual(Robot& robot, ConstraintsData& data, 
-                       const SplitSolution& s) const;
+  void setSlackAndDual(Robot& robot, const ContactStatus& contact_status, 
+                       ConstraintsData& data, const SplitSolution& s) const;
 
   ///
   /// @brief Sets the slack and dual variables of each impulse constraint 
   /// components. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[out] data Constraints data. 
   /// @param[in] s Split solution.
   ///
-  void setSlackAndDual(Robot& robot, ConstraintsData& data, 
+  void setSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status, 
+                       ConstraintsData& data, 
                        const ImpulseSplitSolution& s) const;
 
   ///
@@ -145,92 +152,99 @@ public:
   /// slackness, and the log-barrier function of the slack varible.
   /// @brief Computes the primal and dual residuals of the constraints. 
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
   ///
-  void evalConstraint(Robot& robot, ConstraintsData& data, 
-                      const SplitSolution& s) const;
+  void evalConstraint(Robot& robot, const ContactStatus& contact_status, 
+                      ConstraintsData& data, const SplitSolution& s) const;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
   ///
-  void evalConstraint(Robot& robot, ConstraintsData& data, 
+  void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+                      ConstraintsData& data, 
                       const ImpulseSplitSolution& s) const;
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
   /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraints data. 
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(Robot& robot, ConstraintsData& data, 
-                            const SplitSolution& s, 
+  void linearizeConstraints(Robot& robot, const ContactStatus& contact_status, 
+                            ConstraintsData& data, const SplitSolution& s, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraints data. 
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(Robot& robot, ConstraintsData& data, 
-                            const ImpulseSplitSolution& s,
+  void linearizeConstraints(Robot& robot, const ImpulseStatus& impulse_status, 
+                            ConstraintsData& data, const ImpulseSplitSolution& s,
                             ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
   /// be called before this function.
+  /// @param[in] contact_status Contact status.
   /// @param[in] data Constraints data. 
-  /// @param[in] s Split solution.
   /// @param[out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
   /// to this data.
   /// @param[out] kkt_residual Split KKT residual. The condensed residual are 
   /// added to this data.
   ///
-  void condenseSlackAndDual(ConstraintsData& data, const SplitSolution& s, 
-                            SplitKKTMatrix& kkt_matrix, 
+  void condenseSlackAndDual(const ContactStatus& contact_status, 
+                            ConstraintsData& data, SplitKKTMatrix& kkt_matrix, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
   /// be called before this function.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraints data.
-  /// @param[in] s Split solution.
   /// @param[out] kkt_matrix Impulse split KKT matrix. The condensed Hessians   
   /// are added to this data.
   /// @param[out] kkt_residual Impulse split KKT residual. The condensed  
   /// residual are added to this data.
   ///
-  void condenseSlackAndDual(ConstraintsData& data, const ImpulseSplitSolution& s,
+  void condenseSlackAndDual(const ImpulseStatus& impulse_status, 
+                            ConstraintsData& data, 
                             ImpulseSplitKKTMatrix& kkt_matrix, 
                             ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
+  /// @param[in] contact_status Contact status.
   /// @param[in, out] data Constraints data. 
-  /// @param[in] s Split solution.
   /// @param[in] d Split direction.
   ///
-  void expandSlackAndDual(ConstraintsData& data, const SplitSolution& s, 
-                          const SplitDirection& d) const;
+  void expandSlackAndDual(const ContactStatus& contact_status, 
+                          ConstraintsData& data, const SplitDirection& d) const;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in, out] data Constraints data. 
-  /// @param[in] s Impulse split solution.
   /// @param[in] d Impulse split direction.
   ///
-  void expandSlackAndDual(ConstraintsData& data, const ImpulseSplitSolution& s,
+  void expandSlackAndDual(const ImpulseStatus& impulse_status, 
+                          ConstraintsData& data, 
                           const ImpulseSplitDirection& d) const;
 
   ///

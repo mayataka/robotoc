@@ -73,18 +73,21 @@ public:
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
   /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] s Split solution of this time stage.
   ///
-  bool isFeasible(Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const ContactStatus& contact_status,
+                  const SplitSolution& s);
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
   /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] time_stage Time stage.
   /// @param[in] s Split solution of this time stage.
   ///
-  void initConstraints(Robot& robot, const int time_stage, 
-                       const SplitSolution& s);
+  void initConstraints(Robot& robot, const ContactStatus& contact_status, 
+                       const int time_stage, const SplitSolution& s);
 
   ///
   /// @brief Initializes the constraints, i.e., copies the slack and dual 
@@ -253,10 +256,10 @@ public:
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
   /// direction of the condensed primal variables of this stage.
-  /// @param[in] s Split solution of this time stage.
+  /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void expandPrimal(const SplitSolution& s, SplitDirection& d);
+  void expandPrimal(const ContactStatus& contact_status, SplitDirection& d);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 

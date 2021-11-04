@@ -341,7 +341,7 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf,
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v, a);
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual.head(contact_status.dimf()));
+  robot.computeBaumgarteResidual(contact_status, residual.head(contact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
@@ -400,9 +400,9 @@ void RobotTest::testBaumgarteTimeStep(const std::string& path_to_urdf,
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot_time_step.updateKinematics(q, v, a);
-  robot_time_step.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual);
+  robot_time_step.computeBaumgarteResidual(contact_status, residual);
   robot.updateKinematics(q, v, a);
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual_ref);
+  robot.computeBaumgarteResidual(contact_status, residual_ref);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::MatrixXd baumgarte_partial_q_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
   Eigen::MatrixXd baumgarte_partial_v_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
@@ -437,7 +437,7 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf,
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeImpulseVelocityResidual(impulse_status, residual.head(impulse_status.dimf()));
+  robot.computeImpulseVelocityResidual(impulse_status, residual.head(impulse_status.dimi()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -464,8 +464,8 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf,
   }
   Eigen::MatrixXd velocity_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd velocity_partial_v = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeImpulseVelocityDerivatives(impulse_status, velocity_partial_q.topRows(impulse_status.dimf()), 
-                                          velocity_partial_v.topRows(impulse_status.dimf()));
+  robot.computeImpulseVelocityDerivatives(impulse_status, velocity_partial_q.topRows(impulse_status.dimi()), 
+                                          velocity_partial_v.topRows(impulse_status.dimi()));
   EXPECT_TRUE(velocity_partial_q.isApprox(velocity_partial_q_ref));
   EXPECT_TRUE(velocity_partial_v.isApprox(velocity_partial_v_ref));
 }
@@ -491,7 +491,7 @@ void RobotTest::testContactPosition(const std::string& path_to_urdf,
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
+  robot.computeContactPositionResidual(impulse_status, residual.head(impulse_status.dimi()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -515,7 +515,7 @@ void RobotTest::testContactPosition(const std::string& path_to_urdf,
     }
   }
   Eigen::MatrixXd contact_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeContactPositionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
+  robot.computeContactPositionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimi()));
   EXPECT_TRUE(contact_partial_q.isApprox(contact_partial_q_ref));
 }
 

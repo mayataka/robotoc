@@ -38,8 +38,7 @@ inline void ContactDynamics::evalContactDynamics(
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data_.ID_full());
   data_.ID().noalias() -= s.u;
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), 
-                                 data_.C());
+  robot.computeBaumgarteResidual(contact_status, data_.C());
 }
 
 
@@ -77,8 +76,7 @@ inline void ContactDynamics::linearizeContactDynamics(
 
 inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dt,
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();

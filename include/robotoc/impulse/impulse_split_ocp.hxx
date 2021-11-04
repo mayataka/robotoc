@@ -36,15 +36,17 @@ inline ImpulseSplitOCP::~ImpulseSplitOCP() {
 
 
 inline bool ImpulseSplitOCP::isFeasible(Robot& robot, 
+                                        const ImpulseStatus& impulse_status,
                                         const ImpulseSplitSolution& s) {
-  return constraints_->isFeasible(robot, constraints_data_, s);
+  return constraints_->isFeasible(robot, impulse_status, constraints_data_, s);
 }
 
 
 inline void ImpulseSplitOCP::initConstraints(Robot& robot,
+                                             const ImpulseStatus& impulse_status,
                                              const ImpulseSplitSolution& s) { 
   constraints_data_ = constraints_->createConstraintsData(robot, -1);
-  constraints_->setSlackAndDual(robot, constraints_data_, s);
+  constraints_->setSlackAndDual(robot, impulse_status, constraints_data_, s);
 }
 
 
@@ -70,8 +72,8 @@ inline void ImpulseSplitOCP::evalOCP(Robot& robot,
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
-  stage_cost_ = cost_->evalImpulseCost(robot, cost_data_, t, s);
-  constraints_->evalConstraint(robot, constraints_data_, s);
+  stage_cost_ = cost_->evalImpulseCost(robot, impulse_status, cost_data_, t, s);
+  constraints_->evalConstraint(robot, impulse_status, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   state_equation_.evalStateEquation(robot, s, q_next, v_next, kkt_residual);
   impulse_dynamics_.evalImpulseDynamics(robot, impulse_status, s);
@@ -89,9 +91,10 @@ inline void ImpulseSplitOCP::computeKKTResidual(
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeImpulseCost(robot, cost_data_, t, s, 
-                                            kkt_residual);
-  constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
+  stage_cost_ = cost_->linearizeImpulseCost(robot, impulse_status, cost_data_, 
+                                            t, s, kkt_residual);
+  constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
+                                     s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
@@ -112,16 +115,17 @@ inline void ImpulseSplitOCP::computeKKTSystem(
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->quadratizeImpulseCost(robot, cost_data_, t, s, 
-                                             kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
+  stage_cost_ = cost_->quadratizeImpulseCost(robot, impulse_status, cost_data_,  
+                                             t, s, kkt_residual, kkt_matrix);
+  constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
+                                     s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
                                              kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
-  constraints_->condenseSlackAndDual(constraints_data_, s, 
+  constraints_->condenseSlackAndDual(impulse_status, constraints_data_, 
                                      kkt_matrix, kkt_residual);
   impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status,
                                             kkt_matrix, kkt_residual);
@@ -130,11 +134,11 @@ inline void ImpulseSplitOCP::computeKKTSystem(
 }
 
 
-inline void ImpulseSplitOCP::expandPrimal(const ImpulseSplitSolution& s, 
+inline void ImpulseSplitOCP::expandPrimal(const ImpulseStatus& impulse_status, 
                                           ImpulseSplitDirection& d) {
-  d.setImpulseDimension(s.dimi());
+  d.setImpulseStatus(impulse_status);
   impulse_dynamics_.expandPrimal(d);
-  constraints_->expandSlackAndDual(constraints_data_, s, d);
+  constraints_->expandSlackAndDual(impulse_status, constraints_data_, d);
 }
 
 

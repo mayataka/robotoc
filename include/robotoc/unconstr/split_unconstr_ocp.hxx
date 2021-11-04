@@ -16,6 +16,7 @@ inline SplitUnconstrOCP::SplitUnconstrOCP(
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
+    contact_status_(robot.createContactStatus()),
     use_kinematics_(false),
     stage_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
@@ -44,6 +45,7 @@ inline SplitUnconstrOCP::SplitUnconstrOCP()
     constraints_(),
     constraints_data_(),
     unconstr_dynamics_(),
+    contact_status_(),
     use_kinematics_(false),
     stage_cost_(0) {
 }
@@ -54,7 +56,7 @@ inline SplitUnconstrOCP::~SplitUnconstrOCP() {
 
 
 inline bool SplitUnconstrOCP::isFeasible(Robot& robot, const SplitSolution& s) {
-  return constraints_->isFeasible(robot, constraints_data_, s);
+  return constraints_->isFeasible(robot, contact_status_, constraints_data_, s);
 }
 
 
@@ -62,7 +64,7 @@ inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step,
                                               const SplitSolution& s) { 
   assert(time_step >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
-  constraints_->setSlackAndDual(robot, constraints_data_, s);
+  constraints_->setSlackAndDual(robot, contact_status_, constraints_data_, s);
 }
 
 
@@ -78,8 +80,8 @@ inline void SplitUnconstrOCP::evalOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->evalStageCost(robot, cost_data_, t, dt, s);
-  constraints_->evalConstraint(robot, constraints_data_, s);
+  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, t, dt, s);
+  constraints_->evalConstraint(robot, contact_status_, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
                                                        kkt_residual);
@@ -98,9 +100,9 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
-                                          kkt_residual);
-  constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
+                                          t, dt, s, kkt_residual);
+  constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
@@ -121,16 +123,17 @@ inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const double t,
   }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
-                                           kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
+  stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 
+                                           t, dt, s, kkt_residual, kkt_matrix);
+  constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
+                                     s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, dt);
-  constraints_->condenseSlackAndDual(constraints_data_, s, kkt_matrix, 
-                                     kkt_residual);
+  constraints_->condenseSlackAndDual(contact_status_, constraints_data_, 
+                                     kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 
@@ -141,7 +144,7 @@ inline void SplitUnconstrOCP::expandPrimalAndDual(
   assert(dt > 0);
   unconstr_dynamics_.expandPrimal(d);
   unconstr_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d);
-  constraints_->expandSlackAndDual(constraints_data_, s, d);
+  constraints_->expandSlackAndDual(contact_status_, constraints_data_, d);
 }
 
 

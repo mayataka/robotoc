@@ -4,11 +4,16 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/cost/cost_function_component_base.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace robotoc {
@@ -150,17 +155,18 @@ public:
 
   bool useKinematics() const override;
 
-  double evalStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                       const double dt, const SplitSolution& s) const override;
+  double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
+                       CostFunctionData& data, const double t, const double dt, 
+                       const SplitSolution& s) const override;
 
-  void evalStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                const double t, const double dt, 
-                                const SplitSolution& s, 
+  void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                                CostFunctionData& data, const double t, 
+                                const double dt, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override;
 
-  void evalStageCostHessian(Robot& robot, CostFunctionData& data, 
-                            const double t, const double dt, 
-                            const SplitSolution& s, 
+  void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
+                            CostFunctionData& data, const double t, 
+                            const double dt, const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override;
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 
@@ -174,16 +180,18 @@ public:
                                const double t, const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, CostFunctionData& data, 
-                         const double t, 
+  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                         CostFunctionData& data, const double t, 
                          const ImpulseSplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                  const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                                  CostFunctionData& data, const double t, 
+                                  const ImpulseSplitSolution& s, 
                                   ImpulseSplitKKTResidual& kkt_residual) const;
 
-  void evalImpulseCostHessian(Robot& robot, CostFunctionData& data, 
-                              const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+                              CostFunctionData& data, const double t, 
+                              const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
 private:

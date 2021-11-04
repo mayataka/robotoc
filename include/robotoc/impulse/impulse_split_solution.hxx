@@ -50,7 +50,7 @@ inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   assert(impulse_status.maxPointContacts() == is_impulse_active_.size());
   is_impulse_active_ = impulse_status.isImpulseActive();
-  dimi_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimi();
 }
 
 

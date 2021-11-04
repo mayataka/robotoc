@@ -54,12 +54,13 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
-  constraints->setSlackAndDual(robot, constraints_data, s);
+  const auto contact_status = robot.createContactStatus();
+  constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
-  constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
+  constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
@@ -72,7 +73,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
   parnmpc.expandPrimalAndDual(dt, s, kkt_matrix, kkt_residual, d);
-  constraints->expandSlackAndDual(constraints_data, s, d_ref);
+  constraints->expandSlackAndDual(contact_status, constraints_data, d_ref);
   ud.expandPrimal(d_ref);
   ud.expandDual(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
@@ -103,11 +104,12 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   SplitKKTMatrix kkt_matrix_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
-  constraints->setSlackAndDual(robot, constraints_data, s);
+  const auto contact_status = robot.createContactStatus();
+  constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref);
   stage_cost += cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
-  constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
@@ -138,11 +140,12 @@ TEST_F(TerminalUnconstrParNMPCTest, evalOCP) {
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
-  constraints->setSlackAndDual(robot, constraints_data, s);
+  const auto contact_status = robot.createContactStatus();
+  constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, t, dt, s);
   stage_cost_ref += cost->evalTerminalCost(robot, cost_data, t, s);
-  constraints->evalConstraint(robot, constraints_data, s);
+  constraints->evalConstraint(robot, contact_status, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,

@@ -103,11 +103,12 @@ void ImpulseFrictionCone::allocateExtraData(
 
 
 bool ImpulseFrictionCone::isFeasible(Robot& robot, 
+                                     const ImpulseStatus& impulse_status,
                                      ConstraintComponentData& data, 
                                      const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
       robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
@@ -121,10 +122,12 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
 }
 
 
-void ImpulseFrictionCone::setSlack(Robot& robot, ConstraintComponentData& data, 
+void ImpulseFrictionCone::setSlack(Robot& robot, 
+                                   const ImpulseStatus& impulse_status,
+                                   ConstraintComponentData& data, 
                                    const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
     robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
@@ -136,13 +139,14 @@ void ImpulseFrictionCone::setSlack(Robot& robot, ConstraintComponentData& data,
 
 
 void ImpulseFrictionCone::evalConstraint(Robot& robot, 
+                                         const ImpulseStatus& impulse_status,
                                          ConstraintComponentData& data, 
                                          const ImpulseSplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
@@ -158,11 +162,12 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
 
 
 void ImpulseFrictionCone::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+    Robot& robot, const ImpulseStatus& impulse_status,
+    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       const Eigen::VectorXd& fWi = fW(data, i);
@@ -189,13 +194,13 @@ void ImpulseFrictionCone::evalDerivatives(
 
 
 void ImpulseFrictionCone::condenseSlackAndDual(
-    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+    const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isImpulseActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       computeCondensingCoeffcient<5>(data, idx);
       const Vector5d& condi = data.cond.template segment<5>(idx);
@@ -224,7 +229,7 @@ void ImpulseFrictionCone::condenseSlackAndDual(
 
 
 void ImpulseFrictionCone::expandSlackAndDual(
-    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+     const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
     const ImpulseSplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
@@ -233,7 +238,7 @@ void ImpulseFrictionCone::expandSlackAndDual(
   data.ddual.fill(1.0);
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isImpulseActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       const Eigen::MatrixXd& dgi_df = dg_df(data, i);
