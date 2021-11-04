@@ -246,7 +246,7 @@ inline void SplitOCP::computeInitialStateDirection(const Robot& robot,
 
 inline void SplitOCP::expandPrimal(const ContactStatus& contact_status, 
                                    SplitDirection& d) {
-  d.setContactDimension(contact_status.dimf());
+  d.setContactStatus(contact_status);
   contact_dynamics_.expandPrimal(d);
   constraints_->expandSlackAndDual(contact_status, constraints_data_, d);
 }

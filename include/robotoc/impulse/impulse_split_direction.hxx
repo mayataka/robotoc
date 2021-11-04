@@ -35,10 +35,9 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 }
 
 
-inline void ImpulseSplitDirection::setImpulseDimension(const int dimi) {
-  assert(dimi >= 0);
-  assert(dimi % 3 == 0);
-  dimi_ = dimi;
+inline void ImpulseSplitDirection::setImpulseStatus(
+    const ImpulseStatus& impulse_status) {
+  dimi_ = impulse_status.dimi();
 }
 
 
@@ -206,7 +205,7 @@ inline void ImpulseSplitDirection::setRandom() {
 inline void ImpulseSplitDirection::setRandom(
     const ImpulseStatus& impulse_status) {
   assert(isDimensionConsistent());
-  setImpulseDimension(impulse_status.dimf());
+  setImpulseStatus(impulse_status);
   setRandom();
 }
 

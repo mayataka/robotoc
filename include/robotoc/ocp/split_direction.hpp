@@ -57,15 +57,15 @@ public:
 
   ///
   /// @brief Sets contact status, i.e., set dimension of the contact forces.
-  /// @param[in] dimf Dimension of the contact.
+  /// @param[in] contact_status Contact status.
   ///
-  void setContactDimension(const int dimf);
+  void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Sets impulse status, i.e., set dimension of the impulse forces.
-  /// @param[in] dimi Total dimension of the impulse.
+  /// @brief Sets the impulse status, i.e., set the dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
   ///
-  void setImpulseDimension(const int dimi);
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Stack of the Newton directions of SplitSolution::q and 

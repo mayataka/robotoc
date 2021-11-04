@@ -107,7 +107,7 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
                                      ConstraintComponentData& data, 
                                      const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
@@ -127,7 +127,7 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
                                    ConstraintComponentData& data, 
                                    const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
     robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
@@ -145,7 +145,7 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
@@ -166,7 +166,7 @@ void ImpulseFrictionCone::evalDerivatives(
     ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.

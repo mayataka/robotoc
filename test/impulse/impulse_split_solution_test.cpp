@@ -39,9 +39,9 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_EQ(s.beta.size(), robot.dimv());
   EXPECT_EQ(s.f.size(), robot.maxPointContacts());
   EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
-  EXPECT_EQ(s.f_stack().size(), impulse_status.dimf());
-  EXPECT_EQ(s.mu_stack().size(), impulse_status.dimf());
-  EXPECT_EQ(s.dimi(), impulse_status.dimf());
+  EXPECT_EQ(s.f_stack().size(), impulse_status.dimi());
+  EXPECT_EQ(s.mu_stack().size(), impulse_status.dimi());
+  EXPECT_EQ(s.dimi(), impulse_status.dimi());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.f[i].size(), 3);
     EXPECT_EQ(s.mu[i].size(), 3);
@@ -69,8 +69,8 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
     EXPECT_TRUE(s.f[i].isZero());
     EXPECT_TRUE(s.mu[i].isZero());
   }
-  const Eigen::VectorXd f_stack = Eigen::VectorXd::Random(impulse_status.dimf());
-  const Eigen::VectorXd mu_stack = Eigen::VectorXd::Random(impulse_status.dimf());
+  const Eigen::VectorXd f_stack = Eigen::VectorXd::Random(impulse_status.dimi());
+  const Eigen::VectorXd mu_stack = Eigen::VectorXd::Random(impulse_status.dimi());
   s.f_stack() = f_stack;
   s.mu_stack() = mu_stack;
   s.set_f_vector();
@@ -116,9 +116,9 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_EQ(s.beta.size(), robot.dimv());
   EXPECT_EQ(s.f.size(), robot.maxPointContacts());
   EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
-  EXPECT_EQ(s.f_stack().size(), impulse_status.dimf());
-  EXPECT_EQ(s.mu_stack().size(), impulse_status.dimf());
-  EXPECT_EQ(s.dimi(), impulse_status.dimf());
+  EXPECT_EQ(s.f_stack().size(), impulse_status.dimi());
+  EXPECT_EQ(s.mu_stack().size(), impulse_status.dimi());
+  EXPECT_EQ(s.dimi(), impulse_status.dimi());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.f[i].size(), 3);
     EXPECT_EQ(s.mu[i].size(), 3);

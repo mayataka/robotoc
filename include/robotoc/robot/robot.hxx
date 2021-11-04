@@ -303,7 +303,7 @@ template <typename VectorType>
 inline void Robot::computeImpulseVelocityResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
-  assert(velocity_residual.size() == impulse_status.dimf());
+  assert(velocity_residual.size() == impulse_status.dimi());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -322,9 +322,9 @@ inline void Robot::computeImpulseVelocityDerivatives(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
-  assert(velocity_partial_dq.rows() == impulse_status.dimf());
+  assert(velocity_partial_dq.rows() == impulse_status.dimi());
   assert(velocity_partial_dq.cols() == dimv_);
-  assert(velocity_partial_dv.rows() == impulse_status.dimf());
+  assert(velocity_partial_dv.rows() == impulse_status.dimi());
   assert(velocity_partial_dv.cols() == dimv_);
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -345,7 +345,7 @@ template <typename VectorType>
 inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  assert(contact_residual.size() == impulse_status.dimf());
+  assert(contact_residual.size() == impulse_status.dimi());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -363,7 +363,7 @@ template <typename MatrixType>
 inline void Robot::computeContactPositionDerivative(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.rows() == impulse_status.dimf());
+  assert(contact_partial_dq.rows() == impulse_status.dimi());
   assert(contact_partial_dq.cols() == dimv_);
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {

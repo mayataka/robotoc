@@ -110,7 +110,7 @@ bool FrictionCone::isFeasible(Robot& robot, const ContactStatus& contact_status,
                               ConstraintComponentData& data, 
                               const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
@@ -129,7 +129,7 @@ void FrictionCone::setSlack(Robot& robot, const ContactStatus& contact_status,
                             ConstraintComponentData& data, 
                             const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
     robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
@@ -147,7 +147,7 @@ void FrictionCone::evalConstraint(Robot& robot,
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
@@ -169,7 +169,7 @@ void FrictionCone::evalDerivatives(Robot& robot,
                                    const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.

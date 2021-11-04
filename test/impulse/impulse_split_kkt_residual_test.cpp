@@ -30,7 +30,7 @@ void ImpulseSplitKKTResidualTest::test(const Robot& robot, const ImpulseStatus& 
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   EXPECT_EQ(kkt_res.dimi(), dimi);
   EXPECT_EQ(kkt_res.Fx.size(), dimx);
   EXPECT_EQ(kkt_res.Fq().size(), dimv);

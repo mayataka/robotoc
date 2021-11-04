@@ -339,7 +339,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
   const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
-  const int dimf = impulse_status.dimf();
+  const int dimf = impulse_status.dimi();
   ImpulseSplitKKTResidual kkt_residual(robot_);
   kkt_residual.setImpulseStatus(impulse_status);
   CostFunctionData data(robot_);
@@ -408,7 +408,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
   const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
-  const int dimf = impulse_status.dimf();
+  const int dimf = impulse_status.dimi();
   ImpulseSplitKKTMatrix kkt_matrix(robot_);
   kkt_matrix.setImpulseStatus(impulse_status);
   ImpulseSplitKKTResidual kkt_residual0(robot_);

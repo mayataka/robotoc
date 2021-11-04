@@ -46,7 +46,7 @@ inline ImpulseDynamicsData::~ImpulseDynamicsData() {
 
 inline void ImpulseDynamicsData::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimf();
+  dimf_ = impulse_status.dimi();
   dimvf_ = dimv_ + dimf_;
 }
 

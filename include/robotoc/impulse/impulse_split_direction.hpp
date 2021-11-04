@@ -56,9 +56,9 @@ public:
 
   ///
   /// @brief Sets the impulse status, i.e., set the dimension of the impulse.
-  /// @param[in] dimi Dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
   ///
-  void setImpulseDimension(const int dimi);
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Stack of the Newton directions of ImpulseSplitSolution::q and 

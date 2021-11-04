@@ -179,7 +179,7 @@ void RiccatiRecursion::computeDirection(
         RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], sto);
         ocp[i].expandPrimal(
             contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
-        d[i].setImpulseDimension(contact_sequence->impulseStatus(impulse_index).dimf());
+        d[i].setImpulseStatus(contact_sequence->impulseStatus(impulse_index));
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization.switching[impulse_index], d[i], sto);
       }
