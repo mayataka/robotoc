@@ -335,15 +335,12 @@ public:
   /// Baumgarte's stabilization method. Before calling this function, 
   /// updateKinematics() must be called.
   /// @param[in] contact_status Contact status.
-  /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::maxPointContacts(). 
   /// @param[out] baumgarte_residual Residuals in the contact constraints. Size
   /// must be ContactStatus::dimf().
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
       const ContactStatus& contact_status, 
-      const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
@@ -396,15 +393,12 @@ public:
   /// @brief Computes the residual of the contact position constraint at the 
   /// impulse. Before calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::maxPointContacts(). 
   /// @param[out] contact_residual Residuals in the contact position constraint.
   /// Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
   void computeContactPositionResidual(
       const ImpulseStatus& impulse_status, 
-      const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///

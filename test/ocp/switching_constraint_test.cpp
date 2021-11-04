@@ -64,9 +64,7 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, 
-                                       impulse_status.contactPoints(), 
-                                       res_ref.P());
+  robot.computeContactPositionResidual(impulse_status, res_ref.P());
   robot.computeContactPositionDerivative(impulse_status, jac_ref.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegrateTransport_dq(s.q, dq, jac_ref.Pq(), jac_ref.Phiq());
@@ -118,9 +116,7 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, 
-                                       impulse_status.contactPoints(), 
-                                       res_ref.P());
+  robot.computeContactPositionResidual(impulse_status, res_ref.P());
   EXPECT_TRUE(res.isApprox(res_ref));
   const double l2 = res.KKTError();
   const double l2_ref = res.P().squaredNorm();

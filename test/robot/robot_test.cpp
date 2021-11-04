@@ -341,7 +341,7 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf,
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v, a);
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual.head(contact_status.dimf()));
+  robot.computeBaumgarteResidual(contact_status, residual.head(contact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
@@ -400,9 +400,9 @@ void RobotTest::testBaumgarteTimeStep(const std::string& path_to_urdf,
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot_time_step.updateKinematics(q, v, a);
-  robot_time_step.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual);
+  robot_time_step.computeBaumgarteResidual(contact_status, residual);
   robot.updateKinematics(q, v, a);
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual_ref);
+  robot.computeBaumgarteResidual(contact_status, residual_ref);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::MatrixXd baumgarte_partial_q_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
   Eigen::MatrixXd baumgarte_partial_v_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
@@ -491,7 +491,7 @@ void RobotTest::testContactPosition(const std::string& path_to_urdf,
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
+  robot.computeContactPositionResidual(impulse_status, residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));

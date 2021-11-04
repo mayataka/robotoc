@@ -255,15 +255,13 @@ inline void Robot::getJacobianTransformFromLocalToWorld(
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, 
-    const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
-  assert(contact_points.size() == maxPointContacts());
   assert(baumgarte_residual.size() == contact_status.dimf());
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, contact_points[i],
+          model_, data_, contact_status.contactPoint(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -346,15 +344,13 @@ inline void Robot::computeImpulseVelocityDerivatives(
 template <typename VectorType>
 inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
-    const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  assert(contact_points.size() == point_contacts_.size());
   assert(contact_residual.size() == impulse_status.dimf());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactPositionResidual(
-          model_, data_, contact_points[i],
+          model_, data_, impulse_status.contactPoint(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
               .template segment<3>(3*num_active_impulse));
       ++num_active_impulse;

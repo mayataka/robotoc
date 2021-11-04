@@ -38,8 +38,7 @@ inline void ContactDynamics::evalContactDynamics(
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data_.ID_full());
   data_.ID().noalias() -= s.u;
-  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), 
-                                 data_.C());
+  robot.computeBaumgarteResidual(contact_status, data_.C());
 }
 
 
