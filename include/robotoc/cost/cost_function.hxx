@@ -41,41 +41,47 @@ inline CostFunctionData CostFunction::createCostFunctionData(
 }
 
 
-inline double CostFunction::evalStageCost(Robot& robot, CostFunctionData& data, 
+inline double CostFunction::evalStageCost(Robot& robot, 
+                                          const ContactStatus& contact_status, 
+                                          CostFunctionData& data, 
                                           const double t, const double dt, 
                                           const SplitSolution& s) const {
   assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalStageCost(robot, data, t, dt, s);
+    l += cost->evalStageCost(robot, contact_status, data, t, dt, s);
   }
   return l;
 }
 
 
 inline double CostFunction::linearizeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalStageCost(robot, data, t, dt, s);
-    cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_residual);
+    l += cost->evalStageCost(robot, contact_status, data, t, dt, s);
+    cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, 
+                                   kkt_residual);
   }
   return l;
 }
 
 
 inline double CostFunction::quadratizeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual,
-    SplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual, SplitKKTMatrix& kkt_matrix) const {
   assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalStageCost(robot, data, t, dt, s);
-    cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_residual);
-    cost->evalStageCostHessian(robot, data, t, dt, s, kkt_matrix);
+    l += cost->evalStageCost(robot, contact_status, data, t, dt, s);
+    cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, 
+                                   kkt_residual);
+    cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, 
+                               kkt_matrix);
   }
   return l;
 }
@@ -120,38 +126,41 @@ inline double CostFunction::quadratizeTerminalCost(
 
 
 inline double CostFunction::evalImpulseCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s) const {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s) const {
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalImpulseCost(robot, data, t, s);
+    l += cost->evalImpulseCost(robot, impulse_status, data, t, s);
   }
   return l;
 }
 
 
 inline double CostFunction::linearizeImpulseCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, 
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalImpulseCost(robot, data, t, s);
-    cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_residual);
+    l += cost->evalImpulseCost(robot, impulse_status, data, t, s);
+    cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, 
+                                     kkt_residual);
   }
   return l;
 }
 
 
 inline double CostFunction::quadratizeImpulseCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual,
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalImpulseCost(robot, data, t, s);
-    cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_residual);
-    cost->evalImpulseCostHessian(robot, data, t, s, kkt_matrix);
+    l += cost->evalImpulseCost(robot, impulse_status, data, t, s);
+    cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, 
+                                     kkt_residual);
+    cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_matrix);
   }
   return l;
 }

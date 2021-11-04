@@ -57,7 +57,8 @@ TEST_F(SplitUnconstrParNMPCTest, computeKKTSystem) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  const auto contact_status = robot.createContactStatus();
+  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
@@ -106,7 +107,8 @@ TEST_F(SplitUnconstrParNMPCTest, computeKKTResidual) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  const auto contact_status = robot.createContactStatus();
+  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
   unconstr::stateequation::linearizeBackwardEuler(dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
@@ -140,7 +142,8 @@ TEST_F(SplitUnconstrParNMPCTest, evalOCP) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
+  const auto contact_status = robot.createContactStatus();
+  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, t, dt, s);
   constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);

@@ -72,7 +72,7 @@ inline void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
   robot.updateKinematics(s.q, s.v, s.a);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.setZero();
-  stage_cost_ = cost_->evalStageCost(robot, cost_data_, t, dt, s);
+  stage_cost_ = cost_->evalStageCost(robot, contact_status, cost_data_, t, dt, s);
   constraints_->evalConstraint(robot, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   state_equation_.evalStateEquation(robot, dt, s, q_next, v_next, kkt_residual);
@@ -110,8 +110,8 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
-                                          kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, contact_status, cost_data_,  
+                                          t, dt, s, kkt_residual);
   kkt_residual.h = (1.0/dt) * stage_cost_;
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
@@ -162,8 +162,8 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   kkt_residual.setContactStatus(contact_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
-                                           kkt_residual, kkt_matrix);
+  stage_cost_ = cost_->quadratizeStageCost(robot, contact_status, cost_data_,  
+                                           t, dt, s, kkt_residual, kkt_matrix);
   kkt_residual.h = (1.0/dt) * stage_cost_;
   setHamiltonianDerivatives(dt, kkt_matrix, kkt_residual);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
@@ -202,8 +202,8 @@ inline void SplitOCP::computeKKTSystem(Robot& robot,
   kkt_residual.setContactStatus(contact_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
-                                           kkt_residual, kkt_matrix);
+  stage_cost_ = cost_->quadratizeStageCost(robot, contact_status, cost_data_,  
+                                           t, dt, s, kkt_residual, kkt_matrix);
   kkt_residual.h = (1.0/dt) * stage_cost_;
   setHamiltonianDerivatives(dt, kkt_matrix, kkt_residual);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);

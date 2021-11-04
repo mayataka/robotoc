@@ -56,7 +56,8 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  const auto contact_status = robot.createContactStatus();
+  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
@@ -105,7 +106,8 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  const auto contact_status = robot.createContactStatus();
+  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref);
   stage_cost += cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
@@ -140,7 +142,8 @@ TEST_F(TerminalUnconstrParNMPCTest, evalOCP) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
+  const auto contact_status = robot.createContactStatus();
+  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, t, dt, s);
   stage_cost_ref += cost->evalTerminalCost(robot, cost_data, t, s);
   constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();

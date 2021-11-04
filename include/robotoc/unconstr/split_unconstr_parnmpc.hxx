@@ -17,6 +17,7 @@ inline SplitUnconstrParNMPC::SplitUnconstrParNMPC(
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
+    contact_status_(robot.createContactStatus()),
     use_kinematics_(false),
     stage_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
@@ -45,6 +46,7 @@ inline SplitUnconstrParNMPC::SplitUnconstrParNMPC()
     constraints_(),
     constraints_data_(),
     unconstr_dynamics_(),
+    contact_status_(),
     use_kinematics_(false),
     stage_cost_(0) {
 }
@@ -82,7 +84,7 @@ inline void SplitUnconstrParNMPC::evalOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->evalStageCost(robot, cost_data_, t, dt, s);
+  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, t, dt, s);
   constraints_->evalConstraint(robot, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
@@ -106,8 +108,8 @@ inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const double 
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
-                                          kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
+                                          t, dt, s, kkt_residual);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::linearizeBackwardEuler(dt, q_prev, v_prev, s, s_next, 
@@ -133,8 +135,8 @@ inline void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot, const double t,
   }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
-                                           kkt_residual, kkt_matrix);
+  stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 
+                                           t, dt, s, kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::linearizeBackwardEuler(dt, q_prev, v_prev, s, s_next, 

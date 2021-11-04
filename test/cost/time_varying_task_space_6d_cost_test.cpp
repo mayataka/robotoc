@@ -107,15 +107,16 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t0-dt, dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, tf+dt, dt, s), 0);
-  cost->evalStageCostDerivatives(robot, data, t0-dt, dt, s, kkt_res);
+  const auto contact_status = robot.createContactStatus();
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t0-dt, dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, tf+dt, dt, s), 0);
+  cost->evalStageCostDerivatives(robot, contact_status, data, t0-dt, dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostDerivatives(robot, data, tf+dt, dt, s, kkt_res);
+  cost->evalStageCostDerivatives(robot, contact_status, data, tf+dt, dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostHessian(robot, data, t0-dt, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, data, t0-dt, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalStageCostHessian(robot, data, tf+dt, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, data, tf+dt, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
@@ -124,9 +125,9 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   const SE3 diff_SE3 = ref_placement.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
   const double l_ref = dt * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, data, t, dt, s), l_ref);
-  cost->evalStageCostDerivatives(robot, data, t, dt, s, kkt_res);
-  cost->evalStageCostHessian(robot, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   computeJLog6Map(diff_SE3, J_66);
@@ -221,15 +222,16 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t0-dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, tf+dt, s), 0);
-  cost->evalImpulseCostDerivatives(robot, data, t0-dt, s, kkt_res);
+  const auto impulse_status = robot.createImpulseStatus();
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t0-dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, tf+dt, s), 0);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t0-dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostDerivatives(robot, data, tf+dt, s, kkt_res);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, tf+dt, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostHessian(robot, data, t0-dt, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, t0-dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalImpulseCostHessian(robot, data, tf+dt, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
@@ -238,9 +240,9 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   const SE3 diff_SE3 = ref_placement.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
   const double l_ref = 0.5 * diff_6d.transpose() * qi_weight.asDiagonal() * diff_6d;
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, data, t, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, data, t, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   computeJLog6Map(diff_SE3, J_66);

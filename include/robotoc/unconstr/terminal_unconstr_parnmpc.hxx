@@ -17,6 +17,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
+    contact_status_(robot.createContactStatus()),
     use_kinematics_(false),
     stage_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
@@ -45,6 +46,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC()
     constraints_(),
     constraints_data_(),
     unconstr_dynamics_(),
+    contact_status_(),
     use_kinematics_(false),
     stage_cost_(0) {
 }
@@ -82,7 +84,7 @@ inline void TerminalUnconstrParNMPC::evalOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_  = cost_->evalStageCost(robot, cost_data_, t, dt, s);
+  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, t, dt, s);
   stage_cost_ += cost_->evalTerminalCost(robot, cost_data_, t, s);
   constraints_->evalConstraint(robot, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
@@ -104,8 +106,8 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_  = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
-                                           kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
+                                          t, dt, s, kkt_residual);
   stage_cost_ += cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
                                               kkt_residual);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);
@@ -130,8 +132,8 @@ inline void TerminalUnconstrParNMPC::computeKKTSystem(
   }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_  = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
-                                            kkt_residual, kkt_matrix);
+  stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 
+                                           t, dt, s, kkt_residual, kkt_matrix);
   stage_cost_ += cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
                                                kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, constraints_data_, s, kkt_residual);

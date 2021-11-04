@@ -97,7 +97,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref);
   kkt_residual_ref.h = (1.0/dt) * stage_cost;
   constraints->linearizeConstraints(robot, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
@@ -176,7 +176,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   kkt_residual_ref.h = (1.0/dt) * stage_cost;
   SplitOCP::setHamiltonianDerivatives(dt, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_FALSE(kkt_matrix_ref.hx.isZero());
@@ -306,7 +306,7 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->evalStageCost(robot, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, t, dt, s);
   constraints->evalConstraint(robot, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);

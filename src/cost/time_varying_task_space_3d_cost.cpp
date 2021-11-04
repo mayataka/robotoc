@@ -58,10 +58,9 @@ bool TimeVaryingTaskSpace3DCost::useKinematics() const {
 }
 
 
-double TimeVaryingTaskSpace3DCost::evalStageCost(Robot& robot, 
-                                                 CostFunctionData& data, 
-                                                 const double t, const double dt, 
-                                                 const SplitSolution& s) const {
+double TimeVaryingTaskSpace3DCost::evalStageCost(
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s) const {
   if (ref_->isActive(t)) {
     double l = 0;
     ref_->update_q_3d_ref(t, data.q_3d_ref);
@@ -76,8 +75,9 @@ double TimeVaryingTaskSpace3DCost::evalStageCost(Robot& robot,
 
 
 void TimeVaryingTaskSpace3DCost::evalStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
@@ -90,8 +90,9 @@ void TimeVaryingTaskSpace3DCost::evalStageCostDerivatives(
 
 
 void TimeVaryingTaskSpace3DCost::evalStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
     kkt_matrix.Qqq().noalias()
         += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
@@ -140,8 +141,8 @@ void TimeVaryingTaskSpace3DCost::evalTerminalCostHessian(
 
 
 double TimeVaryingTaskSpace3DCost::evalImpulseCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s) const {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s) const {
   if (ref_->isActive(t)) {
     double l = 0;
     ref_->update_q_3d_ref(t, data.q_3d_ref);
@@ -156,8 +157,8 @@ double TimeVaryingTaskSpace3DCost::evalImpulseCost(
 
 
 void TimeVaryingTaskSpace3DCost::evalImpulseCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, 
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
     data.J_6d.setZero();
@@ -171,8 +172,9 @@ void TimeVaryingTaskSpace3DCost::evalImpulseCostDerivatives(
 
 
 void TimeVaryingTaskSpace3DCost::evalImpulseCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * qi_3d_weight_.asDiagonal() * data.J_3d;
