@@ -86,14 +86,12 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void condenseContactDynamics(Robot& robot, 
                                const ContactStatus& contact_status, 
-                               const double dt, const SplitSolution& s, 
-                               SplitKKTMatrix& kkt_matrix, 
+                               const double dt, SplitKKTMatrix& kkt_matrix, 
                                SplitKKTResidual& kkt_residual);
 
   ///

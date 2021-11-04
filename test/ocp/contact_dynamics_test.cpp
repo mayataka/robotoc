@@ -123,7 +123,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   kkt_matrix.Fqv() = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   auto kkt_residual_ref = kkt_residual;
   auto kkt_matrix_ref = kkt_matrix;
-  cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix, kkt_residual);
+  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual);
   robot.computeMJtJinv(data.dIDda, data.dCda(), data.MJtJinv());
   data.MJtJinv_dIDCdqv() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC()     = data.MJtJinv() * data.IDC();

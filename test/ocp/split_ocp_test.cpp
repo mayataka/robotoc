@@ -196,7 +196,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
                                     kkt_matrix_ref, kkt_residual_ref, 
                                     switch_jac_ref, switch_res_ref);
     constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
-    cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
+    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref);
     cd.condenseSwitchingConstraint(switch_jac_ref, switch_res_ref, kkt_matrix_ref);
     state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
     std::cout << switch_jac << std::endl;
@@ -214,7 +214,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   }
   else {
     constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
-    cd.condenseContactDynamics(robot, contact_status, dt, s, kkt_matrix_ref, kkt_residual_ref);
+    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref);
     state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
     // correct STO sensitivities
     kkt_residual_ref.h *= (1.0 / N_phase);
