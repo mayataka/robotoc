@@ -172,6 +172,12 @@ public:
   static const Eigen::VectorXd& q_prev(const OCP& ocp, const Eigen::VectorXd& q, 
                                        const Solution& s, const int time_stage);
 
+  static double dts_stage(const OCP& ocp, const Direction& d, const int time_stage);
+
+  static double dts_aux(const OCP& ocp, const Direction& d, const int impulse_index);
+
+  static double dts_lift(const OCP& ocp, const Direction& d, const int lift_index);
+
 private:
   template <typename Algorithm>
   void runParallel(OCP& ocp, aligned_vector<Robot>& robots,

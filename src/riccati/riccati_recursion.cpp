@@ -15,6 +15,7 @@ RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N,
     N_all_(N+1),
     factorizer_(robot),
     lqr_policy_(robot, N, max_num_impulse),
+    sto_policy_(2*max_num_impulse+1, STOPolicy(robot)),
     riccati_m_(robot),
     max_primal_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)), 
     max_dual_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
@@ -41,6 +42,8 @@ RiccatiRecursion::RiccatiRecursion()
     N_(0),
     N_all_(0),
     factorizer_(),
+    lqr_policy_(),
+    sto_policy_(),
     riccati_m_(),
     max_primal_step_sizes_(), 
     max_dual_step_sizes_() {
@@ -61,19 +64,25 @@ void RiccatiRecursion::backwardRiccatiRecursion(
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
+      const bool sto_next_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                            kkt_matrix.aux[impulse_index], 
                                            kkt_residual.aux[impulse_index], 
                                            factorization.aux[impulse_index], 
-                                           lqr_policy_.aux[impulse_index]);
+                                           lqr_policy_.aux[impulse_index],
+                                           sto_next, sto_next_next);
       factorizer_.backwardRiccatiRecursion(factorization.aux[impulse_index], 
                                            kkt_matrix.impulse[impulse_index], 
                                            kkt_residual.impulse[impulse_index], 
-                                           factorization.impulse[impulse_index]);
+                                           factorization.impulse[impulse_index],
+                                           sto);
       factorizer_.backwardRiccatiRecursion(factorization.impulse[impulse_index], 
                                            kkt_matrix[i], kkt_residual[i], 
-                                           factorization[i], lqr_policy_[i]);
+                                           factorization[i], lqr_policy_[i],
+                                           sto, sto_next);
       if (i-1 >= 0) {
         factorizer_.backwardRiccatiRecursion(factorization[i], kkt_matrix[i-1], 
                                              kkt_residual[i-1],
@@ -81,27 +90,36 @@ void RiccatiRecursion::backwardRiccatiRecursion(
                                              kkt_residual.switching[impulse_index], 
                                              factorization[i-1], 
                                              factorization.switching[impulse_index], 
-                                             lqr_policy_[i-1]);
+                                             lqr_policy_[i-1],
+                                             sto, sto_next);
       }
-
     }
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
+      const bool sto_next_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                            kkt_matrix.lift[lift_index], 
                                            kkt_residual.lift[lift_index], 
                                            factorization.lift[lift_index], 
-                                           lqr_policy_.lift[lift_index]);
+                                           lqr_policy_.lift[lift_index],
+                                           sto_next, sto_next_next);
       factorizer_.backwardRiccatiRecursion(factorization.lift[lift_index], 
                                            kkt_matrix[i], kkt_residual[i], 
-                                           factorization[i], lqr_policy_[i]);
+                                           factorization[i], lqr_policy_[i],
+                                           sto, sto_next);
     }
     else if (!ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
       factorizer_.backwardRiccatiRecursion(factorization[i+1], 
                                            kkt_matrix[i], kkt_residual[i], 
-                                           factorization[i], lqr_policy_[i]);
+                                           factorization[i], lqr_policy_[i],
+                                           sto, sto_next);
     }
   }
 }
@@ -110,13 +128,19 @@ void RiccatiRecursion::backwardRiccatiRecursion(
 void RiccatiRecursion::forwardRiccatiRecursion(
     const OCP& ocp, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, Direction& d) const {
+  d[0].dts = 0.0;
+  if (ocp.discrete().isSTOEnabledPhase(0)) {
+    factorizer_.computeSwitchingTimeDirection(sto_policy_[0], d[0], false);
+  }
   const int N = ocp.discrete().N();
   for (int i=0; i<N; ++i) {
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-      const bool sto_next = false;
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
+      const bool sto_next_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
       if (i-1 >= 0) {
         factorizer_.forwardRiccatiRecursion(kkt_matrix[i-1], kkt_residual[i-1],
                                             lqr_policy_[i-1], d[i-1], d[i], 
@@ -130,7 +154,6 @@ void RiccatiRecursion::forwardRiccatiRecursion(
                                           kkt_residual.impulse[impulse_index],
                                           d.impulse[impulse_index], 
                                           d.aux[impulse_index]);
-      const bool sto_next_next = false;
       factorizer_.forwardRiccatiRecursion(kkt_matrix.aux[impulse_index], 
                                           kkt_residual.aux[impulse_index],
                                           lqr_policy_.aux[impulse_index], 
@@ -140,12 +163,13 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
       assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-      const bool sto_next = false;
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
+      const bool sto_next_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], 
                                           d.lift[lift_index], sto, sto_next);
-      const bool sto_next_next = ocp.discrete().isSTOEnabledLift(lift_index);
       factorizer_.forwardRiccatiRecursion(kkt_matrix.lift[lift_index], 
                                           kkt_residual.lift[lift_index], 
                                           lqr_policy_.lift[lift_index], 
@@ -153,8 +177,9 @@ void RiccatiRecursion::forwardRiccatiRecursion(
                                           sto_next, sto_next_next);
     }
     else if (!ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
-      const bool sto = ocp.discrete().isSTOEnabledStage(i);
-      const bool sto_next = false;
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], d[i+1], 
                                           sto, sto_next);
@@ -173,30 +198,23 @@ void RiccatiRecursion::computeDirection(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
+      const int phase = ocp.discrete().contactPhase(i);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase+1);
+      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
+                                                 sto, sto_next);
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        const bool sto_next = false;
-        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
-                                                   sto, sto_next);
         ocp[i].expandPrimal(
             contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-        const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-        const bool sto_next = false;
-        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
-                                                   sto, sto_next);
         ocp[i].expandPrimal(
             contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
-        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        const bool sto_next = false;
-        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
-                                                   sto, sto_next);
         ocp[i].expandPrimal(
             contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
         d[i].setImpulseStatus(contact_sequence->impulseStatus(impulse_index));
@@ -204,10 +222,6 @@ void RiccatiRecursion::computeDirection(
             factorization.switching[impulse_index], d[i], sto, sto_next);
       }
       else {
-        constexpr bool sto = false;
-        const bool sto_next = false;
-        RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
-                                                   sto, sto_next);
         ocp[i].expandPrimal(
             contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), d[i]);
       }
@@ -224,9 +238,11 @@ void RiccatiRecursion::computeDirection(
     }
     else if (i < N + 1 + N_impulse) {
       const int impulse_index = i - (N+1);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-      RiccatiFactorizer::computeCostateDirection(factorization.impulse[impulse_index], 
-                                                 d.impulse[impulse_index], sto);
+      const int phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
+      RiccatiFactorizer::computeCostateDirection(
+          factorization.impulse[impulse_index], d.impulse[impulse_index], sto);
       ocp.impulse[impulse_index].expandPrimal(
           contact_sequence->impulseStatus(impulse_index), 
           d.impulse[impulse_index]);
@@ -237,8 +253,9 @@ void RiccatiRecursion::computeDirection(
     }
     else if (i < N + 1 + 2*N_impulse) {
       const int impulse_index = i - (N+1+N_impulse);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-      constexpr bool sto_next = false;
+      const int phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
       RiccatiFactorizer::computeCostateDirection(factorization.aux[impulse_index], 
                                                  d.aux[impulse_index], 
                                                  sto, sto_next);
@@ -253,8 +270,9 @@ void RiccatiRecursion::computeDirection(
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
-      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-      constexpr bool sto_next = false;
+      const int phase = ocp.discrete().contactPhaseAfterLift(lift_index);
+      const bool sto = ocp.discrete().isSTOEnabledPhase(phase);
+      const bool sto_next = ocp.discrete().isSTOEnabledNextPhase(phase);
       RiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], 
                                                  d.lift[lift_index], 
                                                  sto, sto_next);

@@ -213,23 +213,23 @@ void DirectMultipleShooting::integrateSolution(
     if (i < N) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        ocp[i].expandDual(ocp.discrete().dt(i), d.impulse[impulse_index], d[i]);
+        ocp[i].expandDual(ocp.discrete().dt(i), d.impulse[impulse_index], d[i], 
+                          dts_stage(ocp, d, i));
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-        const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-        ocp[i].expandDual(ocp.discrete().dt(i), d.lift[lift_index], d[i]);
+        ocp[i].expandDual(ocp.discrete().dt(i), d.lift[lift_index], d[i], 
+                          dts_stage(ocp, d, i));
       }
       else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
-        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
         ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], 
-                          kkt_matrix.switching[impulse_index], d[i]);
+                          kkt_matrix.switching[impulse_index], d[i], 
+                          dts_stage(ocp, d, i));
       }
       else {
-        constexpr bool sto = false;
-        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i]);
+        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i], 
+                          dts_stage(ocp, d, i));
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                           d[i], s[i]);
@@ -253,11 +253,10 @@ void DirectMultipleShooting::integrateSolution(
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       ocp.aux[impulse_index].expandDual(
           ocp.discrete().dt_aux(impulse_index), 
           d[ocp.discrete().timeStageAfterImpulse(impulse_index)], 
-          d.aux[impulse_index]);
+          d.aux[impulse_index], dts_aux(ocp, d, impulse_index));
       ocp.aux[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                           primal_step_size, 
                                           d.aux[impulse_index], 
@@ -266,11 +265,10 @@ void DirectMultipleShooting::integrateSolution(
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
-      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       ocp.lift[lift_index].expandDual(
           ocp.discrete().dt_lift(lift_index), 
           d[ocp.discrete().timeStageAfterLift(lift_index)], 
-          d.lift[lift_index]);
+          d.lift[lift_index], dts_lift(ocp, d, lift_index));
       ocp.lift[lift_index].updatePrimal(robots[omp_get_thread_num()], 
                                         primal_step_size, d.lift[lift_index], 
                                         s.lift[lift_index]);

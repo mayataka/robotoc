@@ -218,6 +218,16 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
+inline void RiccatiFactorizer::computeSwitchingTimeDirection(
+    const STOPolicy& sto_policy, SplitDirection& d, 
+    const bool has_prev_sto_phase) {
+  d.dts_next = sto_policy.dtsdx.dot(d.dx) + sto_policy.dts0;
+  if (has_prev_sto_phase) {
+    d.dts_next += sto_policy.dtsdts * d.dts;
+  }
+}
+
+
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
@@ -237,16 +247,8 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
   if (sto) {
     d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
   }
-}
-
-
-inline void RiccatiFactorizer::computeSwitchingTimeDirection(
-    const STOPolicy& sto_policy, SplitDirection& d, 
-    const bool has_prev_sto_phase) {
-  d.dts_next = sto_policy.dtsdx.dot(d.dx) + sto_policy.dts0;
-  if (has_prev_sto_phase) {
-    d.dts_next += sto_policy.dtsdts * d.dts;
-  }
+  d_next.dts = d.dts;
+  d_next.dts_next = d.dts_next;
 }
 
 
@@ -256,6 +258,8 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx = kkt_residual.Fx;
   d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;
+  d_next.dts = d.dts;
+  d_next.dts_next = d.dts_next;
 }
 
 
