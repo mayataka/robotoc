@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_SWING_FOOT_COST_HPP_
 #define ROBOTOC_SWING_FOOT_COST_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -19,17 +21,66 @@
 namespace robotoc {
 
 ///
+/// @class SwingFootRefBase
+/// @brief Base class of reference position of the swing foot. 
+///
+class SwingFootRefBase {
+public:
+  ///
+  /// @brief Default constructor. 
+  ///
+  SwingFootRefBase() {}
+
+  ///
+  /// @brief Destructor. 
+  ///
+  virtual ~SwingFootRefBase() {}
+
+  ///
+  /// @brief Default copy constructor. 
+  ///
+  SwingFootRefBase(const SwingFootRefBase&) = default;
+
+  ///
+  /// @brief Default copy operator. 
+  ///
+  SwingFootRefBase& operator=(const SwingFootRefBase&) = default;
+
+  ///
+  /// @brief Default move constructor. 
+  ///
+  SwingFootRefBase(SwingFootRefBase&&) noexcept = default;
+
+  ///
+  /// @brief Default move assign operator. 
+  ///
+  SwingFootRefBase& operator=(SwingFootRefBase&&) noexcept = default;
+
+  ///
+  /// @brief Computes the reference position of the swing foot. 
+  /// @param[in] contact_status Contact status.
+  /// @param[in] q_3d_ref Reference position. Size is 3.
+  ///
+  virtual void update_q_3d_ref(const ContactStatus& contact_status, 
+                               Eigen::VectorXd& q_3d_ref) const = 0;
+
+};
+
+
+///
 /// @class SwingFootCost
-/// @brief Cost on the task space position. 
+/// @brief Cost on the swing foot position. 
 ///
 class SwingFootCost final : public CostFunctionComponentBase {
 public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] frame_id Frame of interest.
+  /// @param[in] contact_index Contact index of the foot of interest.
+  /// @param[in] ref Reference position.
   ///
-  SwingFootCost(const Robot& robot, const int frame_id);
+  SwingFootCost(const Robot& robot, const int contact_index,
+                const std::shared_ptr<SwingFootRefBase>& ref);
 
   ///
   /// @brief Default constructor. 
@@ -63,9 +114,9 @@ public:
 
   ///
   /// @brief Sets the reference position. 
-  /// @param[in] q_3d_ref Reference position.
+  /// @param[in] ref Reference position.
   ///
-  void set_q_3d_ref(const Eigen::Vector3d& q_3d_ref);
+  void set_ref(const std::shared_ptr<SwingFootRefBase>& ref);
 
   ///
   /// @brief Sets the weight vector. 
@@ -73,17 +124,7 @@ public:
   ///
   void set_q_weight(const Eigen::Vector3d& q_3d_weight);
 
-  ///
-  /// @brief Sets the terminal weight vector. 
-  /// @param[in] qf_3d_weight Terminal weight vector on the position error. 
-  ///
-  void set_qf_weight(const Eigen::Vector3d& qf_3d_weight);
-
-  ///
-  /// @brief Sets the weight vector at impulse. 
-  /// @param[in] qi_3d_weight Weight vector on the position error at impulse. 
-  ///
-  void set_qi_weight(const Eigen::Vector3d& qi_3d_weight);
+  bool useKinematics() const override;
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
                        CostFunctionData& data, const double t, const double dt, 
@@ -127,8 +168,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int frame_id_;
-  Eigen::Vector3d q_3d_ref_, q_3d_weight_, qf_3d_weight_, qi_3d_weight_;
+  int contact_index_, contact_frame_id_;
+  std::shared_ptr<SwingFootRefBase> ref_;
+  Eigen::Vector3d q_3d_weight_;
 
 };
 
