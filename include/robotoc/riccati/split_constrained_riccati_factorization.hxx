@@ -19,6 +19,7 @@ SplitConstrainedRiccatiFactorization(const Robot& robot)
     M_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
     m_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mt_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    mt_next_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
@@ -38,6 +39,7 @@ SplitConstrainedRiccatiFactorization()
     M_full_(),
     m_full_(),
     mt_full_(),
+    mt_next_full_(),
     dimv_(0),
     dimx_(0),
     dimu_(0),
@@ -144,6 +146,18 @@ SplitConstrainedRiccatiFactorization::mt() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+SplitConstrainedRiccatiFactorization::mt_next() {
+  return mt_next_full_.head(dimi_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitConstrainedRiccatiFactorization::mt_next() const {
+  return mt_next_full_.head(dimi_);
+}
+
+
 inline bool SplitConstrainedRiccatiFactorization::isApprox(
     const SplitConstrainedRiccatiFactorization& other) const {
   if (dimi() != other.dimi()) return false;
@@ -154,6 +168,7 @@ inline bool SplitConstrainedRiccatiFactorization::isApprox(
   if (!M().isApprox(other.M())) return false;
   if (!m().isApprox(other.m())) return false;
   if (!mt().isApprox(other.mt())) return false;
+  if (!mt_next().isApprox(other.mt_next())) return false;
   if (!Ginv.isApprox(other.Ginv)) return false;
   if (!DtM.isApprox(other.DtM)) return false;
   if (!KtDtM.isApprox(other.KtDtM)) return false;
@@ -169,6 +184,7 @@ inline bool SplitConstrainedRiccatiFactorization::hasNaN() const {
   if (M().hasNaN()) return true;
   if (m().hasNaN()) return true;
   if (mt().hasNaN()) return true;
+  if (mt_next().hasNaN()) return true;
   if (Ginv.hasNaN()) return true;
   if (DtM.hasNaN()) return true;
   if (KtDtM.hasNaN()) return true;

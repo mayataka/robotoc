@@ -75,6 +75,20 @@ public:
                           SplitKKTResidual& kkt_residual);
 
   ///
+  /// @brief Factorizes the derivatives of the Hamiltonian of a time stage for 
+  /// the backward Riccati recursion.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] riccati Riccati factorization of time time stage.
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
+  ///
+  void factorizeHamiltonian(const SplitRiccatiFactorization& riccati_next,
+                            const SplitKKTMatrix& kkt_matrix, 
+                            SplitRiccatiFactorization& riccati,
+                            const bool has_next_sto_phase) const;
+
+  ///
   /// @brief Factorizes the split KKT matrix and split KKT residual of 
   /// this impulse stage for the backward Riccati recursion.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
@@ -98,6 +112,23 @@ public:
       const LQRPolicy& lqr_policy, SplitRiccatiFactorization& riccati);
 
   ///
+  /// @brief Factorizes the STO factorization vector and scalars.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] lqr_policy The state feedback control policy of the LQR 
+  /// subproblem.
+  /// @param[in, out] riccati The Riccati factorization of this time stage.
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
+  ///
+  void factorizeSTOFactorization(
+      const SplitRiccatiFactorization& riccati_next, 
+      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+      const LQRPolicy& lqr_policy, SplitRiccatiFactorization& riccati,
+      const bool has_next_sto_phase);
+
+  ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
   /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
@@ -111,10 +142,24 @@ public:
       const ImpulseSplitKKTResidual& kkt_residual, 
       SplitRiccatiFactorization& riccati);
 
+  ///
+  /// @brief Factorizes the STO factorization vector and scalars.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
+  /// @param[in, out] riccati The Riccati factorization of this time stage.
+  ///
+  void factorizeSTOFactorization(
+      const SplitRiccatiFactorization& riccati_next, 
+      const ImpulseSplitKKTMatrix& kkt_matrix, 
+      const ImpulseSplitKKTResidual& kkt_residual, 
+      SplitRiccatiFactorization& riccati);
+
 private:
   int dimv_, dimu_;
   MatrixXdRowMajor AtP_, BtP_;
   Eigen::MatrixXd GK_;
+  Eigen::VectorXd Pf_;
 
 };
 

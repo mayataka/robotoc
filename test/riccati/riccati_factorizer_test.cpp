@@ -179,13 +179,16 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
   auto d_next = SplitDirection::Random(robot);
   auto d_ref = d;
   auto d_next_ref = d_next;
-  factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, lqr_policy, d, d_next);
+  const bool sto = false;
+  const bool sto_next = false;
+  factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, lqr_policy, 
+                                     d, d_next, sto, sto_next);
   d_ref.du = lqr_policy_ref.K * d_ref.dx + lqr_policy_ref.k;
   d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx;
   d_next_ref.dv() += kkt_matrix_ref.Fvu * d_ref.du;
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
-  factorizer.computeCostateDirection(riccati, d);
+  factorizer.computeCostateDirection(riccati, d, sto, sto_next);
   d_ref.dlmdgmm = riccati.P * d.dx - riccati.s;
   EXPECT_TRUE(d.isApprox(d_ref));
   auto impulse_status = robot.createImpulseStatus();
@@ -200,7 +203,7 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
   d.setImpulseStatus(impulse_status);
   d.dxi().setRandom();
   d_ref = d;
-  factorizer.computeLagrangeMultiplierDirection(c_riccati, d);
+  factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
   d_ref.dxi() = c_riccati.M() * d.dx + c_riccati.m();
   EXPECT_TRUE(d.isApprox(d_ref));
 }
@@ -225,7 +228,8 @@ void RiccatiFactorizerTest::test_forwardRecursionImpulse(const Robot& robot) con
   d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx;
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   auto d_ref = d;
-  factorizer.computeCostateDirection(riccati, d);
+  const bool sto = false;
+  factorizer.computeCostateDirection(riccati, d, sto);
   d_ref.dlmdgmm = riccati.P * d.dx - riccati.s;
   EXPECT_TRUE(d.isApprox(d_ref));
 }

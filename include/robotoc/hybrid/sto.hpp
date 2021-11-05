@@ -82,14 +82,25 @@ public:
   void computeKKTSystem(const OCP& ocp, KKTMatrix& kkt_matrix, 
                         KKTResidual& kkt_residual);
 
+  ///
+  /// @brief Returns the l2-norm of the KKT residual of STO problem.
+  ///
   double KKTError() const;
 
+  ///
+  /// @brief Returns the l2-norm of the KKT residual of STO problem.
+  /// @param[in] ocp Optimal control problem.
+  /// @param[in] kkt_residual KKT residual. 
+  ///
   double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
+  ///
+  /// @brief Returns the total value of the cost function.
+  ///
   double totalCost() const;
 
   ///
-  /// @brief Integrates the solution (switching times). The internal 
+  /// @brief Integrates the solution (the switching times). The internal 
   /// switching times of contact_sequence are updated. The slack and dual
   /// variables in STO constraints are also updated.
   /// @param[in] ocp Optimal control problem.

@@ -21,6 +21,7 @@ public:
   ///
   STOPolicy(const Robot& robot)
     : dtsdx(Eigen::VectorXd::Zero(2*robot.dimv())),
+      dtsdts(0),
       dts0(0) {
   }
 
@@ -29,6 +30,7 @@ public:
   ///
   STOPolicy() 
     : dtsdx(),
+      dtsdts(0),
       dts0(0) {
   }
 
@@ -63,6 +65,12 @@ public:
   /// state. Size is 2 * Robot::dimv().
   ///
   Eigen::VectorXd dtsdx;
+
+  ///
+  /// @brief Feedback gain of the STO policy, i.e. the sensitivity w.r.t. the 
+  /// previous switching time.
+  ///
+  double dtsdts;
 
   ///
   /// @brief Feedforward term of the STO policy.

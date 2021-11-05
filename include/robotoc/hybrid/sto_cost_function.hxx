@@ -29,16 +29,11 @@ inline void STOCostFunction::clear() {
 
 inline double STOCostFunction::evalCost(
     const HybridOCPDiscretization& discretization) {
-  if (!costs_.empty()) {
-    double cost = 0;
-    for (auto& e : costs_) {
-      cost += e->evalCost(discretization);
-    }
-    return cost;
+  double cost = 0;
+  for (auto& e : costs_) {
+    cost += e->evalCost(discretization);
   }
-  else {
-    return 0;
-  }
+  return cost;
 }
 
 

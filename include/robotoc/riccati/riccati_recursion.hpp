@@ -139,10 +139,11 @@ private:
   int nthreads_, N_, N_all_;
   RiccatiFactorizer factorizer_;
   hybrid_container<LQRPolicy> lqr_policy_;
+  SplitRiccatiFactorization riccati_m_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
 
 } // namespace robotoc
 
-#endif // ROBOTOC_RICCATI_RECURSION_HPP_ 
+#endif // ROBOTkeps_OC_RICCATI_RECURSION_HPP_ 
