@@ -21,6 +21,7 @@
 #include "robotoc/riccati/riccati_recursion.hpp"
 #include "robotoc/line_search/line_search.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/hybrid/sto.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
 #include "robotoc/hybrid/sto_regularization.hpp"
@@ -231,10 +232,10 @@ public:
   bool isCurrentSolutionFeasible(const bool verbose=false);
 
   ///
-  /// @brief Returns internal OCP discretization as a value. 
-  /// @return Internal OCP discretization. 
+  /// @brief OCP discretization. 
+  /// @return Returns const reference to the internal OCP discretization. 
   ///
-  HybridOCPDiscretization getOCPDiscretization() const;
+  const HybridOCPDiscretization& getOCPDiscretization() const;
 
   //
   /// @brief Set the regularization for the STO problem
@@ -262,20 +263,18 @@ public:
 private:
   aligned_vector<Robot> robots_;
   std::shared_ptr<ContactSequence> contact_sequence_;
-  std::shared_ptr<CostFunction> cost_;
-  std::shared_ptr<Constraints> constraints_;
-  std::shared_ptr<STOCostFunction> sto_cost_;
-  std::shared_ptr<STOConstraints> sto_constraints_;
   STORegularization sto_reg_;
   DirectMultipleShooting dms_;
   RiccatiRecursion riccati_recursion_;
   LineSearch line_search_;
   OCP ocp_;
+  STO sto_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;
   Direction d_;
   RiccatiFactorization riccati_factorization_;
+  double kkt_error_;
 
   void discretizeSolution();
 

@@ -44,49 +44,39 @@ inline double STOCostFunction::evalCost(
 
 inline double STOCostFunction::linearizeCost(
     const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
-  if (!costs_.empty()) {
-    const int num_events = discretization.N_impulse() + discretization.N_lift();
-    lts_.resize(num_events);
-    lts_.setZero();
-    double cost = 0;
-    for (auto& e : costs_) {
-      cost += e->evalCost(discretization);
-      e->evalCostDerivatives(discretization, lts_);
-    }
-    setToKKT(discretization, kkt_residual);
-    return cost;
+  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  lts_.resize(num_events);
+  lts_.setZero();
+  double cost = 0;
+  for (auto& e : costs_) {
+    cost += e->evalCost(discretization);
+    e->evalCostDerivatives(discretization, lts_);
   }
-  else {
-    return 0;
-  }
+  setToKKT(discretization, kkt_residual);
+  return cost;
 }
 
 
 inline double STOCostFunction::quadratizeCost(
     const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
-  if (!costs_.empty()) {
-    const int num_events = discretization.N_impulse() + discretization.N_lift();
-    if (lts_.size() != num_events) {
-      lts_.resize(num_events);
-    }
-    if ((Qts_.cols() != num_events) || (Qts_.rows() != num_events)) {
-      Qts_.resize(num_events, num_events);
-    }
-    lts_.setZero();
-    Qts_.setZero();
-    double cost = 0;
-    for (auto& e : costs_) {
-      cost += e->evalCost(discretization);
-      e->evalCostDerivatives(discretization, lts_);
-      e->evalCostHessian(discretization, Qts_);
-    }
-    setToKKT(discretization, kkt_matrix, kkt_residual);
-    return cost;
+  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  if (lts_.size() != num_events) {
+    lts_.resize(num_events);
   }
-  else {
-    return 0;
+  if ((Qts_.cols() != num_events) || (Qts_.rows() != num_events)) {
+    Qts_.resize(num_events, num_events);
   }
+  lts_.setZero();
+  Qts_.setZero();
+  double cost = 0;
+  for (auto& e : costs_) {
+    cost += e->evalCost(discretization);
+    e->evalCostDerivatives(discretization, lts_);
+    e->evalCostHessian(discretization, Qts_);
+  }
+  setToKKT(discretization, kkt_matrix, kkt_residual);
+  return cost;
 }
 
 

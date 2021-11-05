@@ -13,11 +13,8 @@ OCPSolver::OCPSolver(const Robot& robot,
                      const double T, const int N, const int nthreads)
   : robots_(nthreads, robot),
     contact_sequence_(contact_sequence),
-    cost_(cost),
-    constraints_(constraints),
-    sto_cost_(std::make_shared<STOCostFunction>()),
-    sto_constraints_(std::make_shared<STOConstraints>()),
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
+    sto_(),
     riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
     sto_reg_(STORegularization::defaultSTORegularization()),
     line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
@@ -26,7 +23,8 @@ OCPSolver::OCPSolver(const Robot& robot,
     kkt_matrix_(robot, N, contact_sequence->maxNumEachEvents()),
     kkt_residual_(robot, N, contact_sequence->maxNumEachEvents()),
     s_(robot, N, contact_sequence->maxNumEachEvents()),
-    d_(robot, N, contact_sequence->maxNumEachEvents()) {
+    d_(robot, N, contact_sequence->maxNumEachEvents()),
+    kkt_error_(0) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -58,11 +56,8 @@ OCPSolver::OCPSolver(const Robot& robot,
                      const double T, const int N, const int nthreads)
   : robots_(nthreads, robot),
     contact_sequence_(contact_sequence),
-    cost_(cost),
-    constraints_(constraints),
-    sto_cost_(sto_cost),
-    sto_constraints_(sto_constraints),
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
+    sto_(sto_cost, sto_constraints, contact_sequence->maxNumEachEvents()),
     riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
     sto_reg_(STORegularization::defaultSTORegularization()),
     line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
@@ -71,7 +66,8 @@ OCPSolver::OCPSolver(const Robot& robot,
     kkt_matrix_(robot, N, contact_sequence->maxNumEachEvents()),
     kkt_residual_(robot, N, contact_sequence->maxNumEachEvents()),
     s_(robot, N, contact_sequence->maxNumEachEvents()),
-    d_(robot, N, contact_sequence->maxNumEachEvents()) {
+    d_(robot, N, contact_sequence->maxNumEachEvents()),
+    kkt_error_(0) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -113,6 +109,7 @@ void OCPSolver::meshRefinement(const double t) {
   if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
     discretizeSolution();
     dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+    sto_.initConstraints(ocp_);
   }
 }
 
@@ -121,6 +118,7 @@ void OCPSolver::initConstraints(const double t) {
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
   dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+  sto_.initConstraints(ocp_);
 }
 
 
@@ -133,8 +131,9 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   discretizeSolution();
   dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
                         kkt_matrix_, kkt_residual_);
-  const double kkt_error = dms_.KKTError(ocp_, kkt_residual_);
-  sto_reg_.applyRegularization(ocp_, kkt_error, kkt_matrix_);
+  sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
+  kkt_error_ = dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError();
+  sto_reg_.applyRegularization(ocp_, kkt_error_, kkt_matrix_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
   dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
@@ -152,6 +151,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   }
   dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
                          kkt_matrix_, d_, s_);
+  sto_.integrateSolution(ocp_, contact_sequence_, primal_step_size, 
+                         dual_step_size, d_);
 } 
 
 
@@ -431,7 +432,7 @@ void OCPSolver::clearLineSearchFilter() {
 
 
 double OCPSolver::KKTError() {
-  return dms_.KKTError(ocp_, kkt_residual_);
+  return kkt_error_;
 }
 
 
@@ -446,6 +447,8 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
   discretizeSolution();
   dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
                           kkt_matrix_, kkt_residual_);
+  sto_.computeKKTResidual(ocp_, kkt_residual_);
+  kkt_error_ = dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError();
 }
 
 
@@ -456,7 +459,7 @@ bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
 }
 
 
-HybridOCPDiscretization OCPSolver::getOCPDiscretization() const {
+const HybridOCPDiscretization& OCPSolver::getOCPDiscretization() const {
   return ocp_.discrete();
 }
 

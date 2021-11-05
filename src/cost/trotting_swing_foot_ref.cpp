@@ -22,7 +22,7 @@ TrottingSwingFootRef::~TrottingSwingFootRef() {
 void TrottingSwingFootRef::update_q_3d_ref(const ContactStatus& contact_status, 
                                            Eigen::VectorXd& q_3d_ref) const {
   q_3d_ref.coeffRef(0) = contact_status.contactPoint(x_ref_foot_contact_index_).coeff(0);
-  q_3d_ref.coeffRef(0) += 0.5 * step_length_;
+  q_3d_ref.coeffRef(0) += step_length_;
   q_3d_ref.coeffRef(1) = contact_status.contactPoint(y_ref_foot_contact_index_).coeff(1);
   q_3d_ref.coeffRef(2) = step_height_;
 }

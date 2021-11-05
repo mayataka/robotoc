@@ -41,7 +41,9 @@ public:
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
       impulse(N_impulse, ImpulseSplitOCP(robot, cost, constraints)),
       terminal(TerminalOCP(robot, cost, constraints)),
-      time_discretization_(T, N, N_impulse) {
+      time_discretization_(T, N, N_impulse),
+      T_(T),
+      N_(N) {
   }
 
   ///
@@ -53,7 +55,9 @@ public:
       lift(),
       impulse(),
       terminal(),
-      time_discretization_() {
+      time_discretization_(),
+      T_(0),
+      N_(0) {
   }
 
   ///
@@ -95,7 +99,8 @@ public:
     return data[i];
   }
 
-  void setDiscretizationMethod(const DiscretizationMethod discretization_method) {
+  void setDiscretizationMethod(
+      const DiscretizationMethod discretization_method) {
     time_discretization_.setDiscretizationMethod(discretization_method);
   }
 
@@ -113,12 +118,22 @@ public:
     return time_discretization_;
   }
 
+  double T() const {
+    return T_;
+  }
+
+  int N() const {
+    return N_;
+  }
+
   std::vector<SplitOCP> data, aux, lift;
   std::vector<ImpulseSplitOCP> impulse;
   TerminalOCP terminal;
 
 private:
   HybridOCPDiscretization time_discretization_;
+  double T_;
+  int N_;
 
 };
 
