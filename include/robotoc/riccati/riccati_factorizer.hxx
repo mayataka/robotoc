@@ -7,11 +7,12 @@
 
 namespace robotoc {
 
-inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot) 
+inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot, 
+                                            const double max_dts0) 
   : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
-    max_dts0_(1.0),
+    max_dts0_(max_dts0),
     llt_(robot.dimu()),
     llt_s_(),
     backward_recursion_(robot) {
@@ -78,7 +79,6 @@ inline void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
     const SplitRiccatiFactorization& riccati,
     SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy,
     const bool sto) {
-  riccati_m.setZero();
   riccati_m.P = riccati.P;
   riccati_m.s = riccati.s;
   riccati_m.Psi.setZero();

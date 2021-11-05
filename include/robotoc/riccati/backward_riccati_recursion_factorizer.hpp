@@ -82,6 +82,7 @@ public:
   /// @param[in, out] riccati Riccati factorization of time time stage.
   /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
   /// phase involving the STO problem.
+  /// @note Please call factorizeKKTMatrix() before this function.
   ///
   void factorizeHamiltonian(const SplitRiccatiFactorization& riccati_next,
                             const SplitKKTMatrix& kkt_matrix, 

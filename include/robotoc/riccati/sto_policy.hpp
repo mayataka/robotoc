@@ -77,6 +77,20 @@ public:
   ///
   double dts0;
 
+  ///
+  /// @brief Checks the equivalence of two STOPolicy.
+  /// @param[in] other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
+  bool isApprox(const STOPolicy& other) const {
+    if (!dtsdx.isApprox(other.dtsdx)) return false;
+    Eigen::Vector2d vec, vec_other;
+    vec << dtsdts, dts0;
+    vec_other << other.dtsdts, other.dts0;
+    if (!vec.isApprox(vec_other)) return false;
+    return true;
+  }
+
 private:
 
 };

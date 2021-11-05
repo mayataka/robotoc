@@ -54,7 +54,7 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeHamiltonian(
     const bool has_next_sto_phase) const {
   riccati.psi_x.noalias() = AtP_ * kkt_matrix.fx;
   riccati.psi_u.noalias() = BtP_ * kkt_matrix.fx;
-  riccati.psi_x.noalias() += kkt_matrix.hx;;
+  riccati.psi_x.noalias() += kkt_matrix.hx;
   riccati.psi_u.noalias() += kkt_matrix.hu;
   riccati.psi_x.noalias() += kkt_matrix.Fxx.transpose() * riccati_next.Psi;
   riccati.psi_u.noalias() += kkt_matrix.Fvu.transpose() * riccati_next.Psi.tail(dimv_);

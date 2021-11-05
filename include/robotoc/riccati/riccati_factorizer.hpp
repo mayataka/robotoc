@@ -34,8 +34,11 @@ public:
   ///
   /// @brief Constructs a factorizer.
   /// @param[in] robot Robot model. 
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization.
+  /// Must be positive. Default is 1.0.
   ///
-  RiccatiFactorizer(const Robot& robot);
+  RiccatiFactorizer(const Robot& robot, const double max_dts0=1.0);
 
   ///
   /// @brief Default constructor. 
@@ -259,7 +262,7 @@ public:
   static void computeLagrangeMultiplierDirection(
       const SplitConstrainedRiccatiFactorization& c_riccati, SplitDirection& d,
       const bool sto, const bool has_next_sto_phase);
-  
+
 private:
   bool has_floating_base_;
   int dimv_, dimu_;

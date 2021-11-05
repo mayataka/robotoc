@@ -22,28 +22,21 @@
 
 namespace robotoc {
 
-class RiccatiFactorizerTest : public ::testing::Test {
+class RiccatiFactorizerTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
-
   virtual void TearDown() {
   }
-
-  void test_backwardRecursion(const Robot& robot) const;
-  void test_backwardRecursionWithSwitchingConstraint(const Robot& robot) const;
-  void test_backwardRecursionImpulse(const Robot& robot) const;
-  void test_forwardRecursion(const Robot& robot) const;
-  void test_forwardRecursionImpulse(const Robot& robot) const;
-
   double dt;
 };
 
 
-void RiccatiFactorizerTest::test_backwardRecursion(const Robot& robot) const {
+TEST_P(RiccatiFactorizerTest, backwardRecursion) {
+  const auto robot = GetParam();
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
@@ -56,21 +49,77 @@ void RiccatiFactorizerTest::test_backwardRecursion(const Robot& robot) const {
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_ref = riccati;
-  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati, lqr_policy);
+  const bool sto = true;
+  bool has_next_sto_phase = true;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati, lqr_policy, sto, has_next_sto_phase);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref, kkt_residual_ref);
+  backward_recursion_ref.factorizeHamiltonian(riccati_next, kkt_matrix_ref, riccati_ref, has_next_sto_phase);
   Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu.llt().solve(Eigen::MatrixXd::Identity(dimu, dimu));
   lqr_policy_ref.K = - Ginv  * kkt_matrix_ref.Qxu.transpose();
   lqr_policy_ref.k = - Ginv  * kkt_residual.lu;
+  lqr_policy_ref.T = - Ginv  * riccati_ref.psi_u;
+  lqr_policy_ref.W = - Ginv  * riccati_ref.phi_u;
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, lqr_policy_ref, riccati_ref);
+  backward_recursion_ref.factorizeSTOFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, 
+                                                   lqr_policy_ref, riccati_ref, has_next_sto_phase);
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
   EXPECT_TRUE(riccati.P.isApprox(riccati.P.transpose()));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
   EXPECT_TRUE(kkt_matrix.Quu.isApprox(kkt_matrix.Quu.transpose()));
   EXPECT_TRUE(lqr_policy_ref.isApprox(lqr_policy));
+  has_next_sto_phase = false;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati, lqr_policy, sto, has_next_sto_phase);
+  EXPECT_TRUE(lqr_policy.W.isZero());
 }
 
 
-void RiccatiFactorizerTest::test_backwardRecursionWithSwitchingConstraint(const Robot& robot) const {
+TEST_P(RiccatiFactorizerTest, backwardRecursionPhaseTransition) {
+  const auto robot = GetParam();
+  const double max_dts0 = std::abs(Eigen::VectorXd::Random(1)[0]);
+  RiccatiFactorizer factorizer(robot, max_dts0);
+  STOPolicy sto_policy(robot), sto_policy_ref(robot);
+  BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
+  auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
+  auto riccati_ref = riccati;
+  auto riccati_m = testhelper::CreateSplitRiccatiFactorization(robot);
+  auto riccati_m_ref = riccati_m;
+  bool sto = false;
+  factorizer.backwardRiccatiRecursionPhaseTransition(riccati, riccati_m, sto_policy, sto);
+  riccati_m_ref.P = riccati.P;
+  riccati_m_ref.s = riccati.s;
+  riccati_m_ref.Psi.setZero();
+  riccati_m_ref.Phi = riccati.Psi;
+  riccati_m_ref.xi = 0.0;
+  riccati_m_ref.chi = 0.0;
+  riccati_m_ref.rho = riccati.xi;
+  riccati_m_ref.eta = 0.0;
+  riccati_m_ref.iota = riccati.eta;
+  EXPECT_TRUE(riccati.isApprox(riccati_ref));
+  sto = true;
+  factorizer.backwardRiccatiRecursionPhaseTransition(riccati, riccati_m, sto_policy, sto);
+  const double keps = std::sqrt(std::numeric_limits<double>::epsilon());
+  double xi = riccati.xi - 2.0 * riccati.chi + riccati.rho;
+  if (xi*max_dts0 < std::abs(riccati.eta-riccati.iota) || xi < keps) {
+    xi = std::abs(xi) + std::abs(riccati.eta-riccati.iota) / max_dts0;
+  }
+  // STO policy
+  sto_policy.dtsdx  = - (1.0/xi) * (riccati.Psi-riccati.Phi);
+  sto_policy.dtsdts =   (1.0/xi) * (riccati.xi-riccati.chi);
+  sto_policy.dts0   = - (1.0/xi) * (riccati.eta-riccati.iota);
+  riccati_m_ref.s.noalias()   
+      += (1.0/xi) * (riccati.Psi-riccati.Phi) * (riccati.eta-riccati.iota);
+  riccati_m_ref.Phi.noalias() 
+      -= (1.0/xi) * (riccati.Psi-riccati.Phi) * (riccati.xi-riccati.chi);
+  riccati_m_ref.rho
+      = riccati.xi - (1.0/xi) * (riccati.xi-riccati.chi) * (riccati.xi-riccati.chi);
+  riccati_m_ref.iota
+      = riccati.eta - (1.0/xi) * (riccati.xi-riccati.chi)  * (riccati.eta-riccati.iota);
+  EXPECT_TRUE(riccati.isApprox(riccati_ref));
+}
+
+
+TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
+  const auto robot = GetParam();
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -98,9 +147,11 @@ void RiccatiFactorizerTest::test_backwardRecursionWithSwitchingConstraint(const 
   auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_ref = riccati;
   SplitConstrainedRiccatiFactorization c_riccati(robot);
+  bool sto = true;
+  bool has_next_sto_phase = true;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
                                       sc_jacobian, sc_residual, 
-                                      riccati, c_riccati, lqr_policy);
+                                      riccati, c_riccati, lqr_policy, sto, has_next_sto_phase);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref, kkt_residual_ref);
   Eigen::MatrixXd GDtD = Eigen::MatrixXd::Zero(dimu+dimi, dimu+dimi);
   GDtD.topLeftCorner(dimu, dimu) = kkt_matrix.Quu;
@@ -123,6 +174,29 @@ void RiccatiFactorizerTest::test_backwardRecursionWithSwitchingConstraint(const 
   const Eigen::MatrixXd MtKtODtDKM = KM.transpose() * ODtD * KM;
   riccati_ref.P -= MtKtODtDKM;
   riccati_ref.s -= sc_jacobian.Phix().transpose() * km.tail(dimi);
+  backward_recursion_ref.factorizeHamiltonian(riccati_next, kkt_matrix_ref, riccati_ref,
+                                              has_next_sto_phase);
+  Eigen::VectorXd psict = Eigen::VectorXd::Zero(dimu+dimi);
+  psict.head(dimu) = riccati_ref.psi_u;
+  psict.tail(dimi) = sc_jacobian.Phit();
+  const Eigen::VectorXd Tmt = - GDtDinv * psict;
+  Eigen::VectorXd phict = Eigen::VectorXd::Zero(dimu+dimi);
+  phict.head(dimu) = riccati_ref.phi_u;
+  const Eigen::VectorXd Wmt_next = - GDtDinv * phict;
+  lqr_policy_ref.T = Tmt.head(dimu);
+  lqr_policy_ref.W = Wmt_next.head(dimu);
+  const Eigen::MatrixXd M = KM.bottomRows(dimi);
+  const Eigen::VectorXd m = km.tail(dimi);
+  const Eigen::VectorXd mt_ref = Tmt.tail(dimi);
+  const Eigen::VectorXd mt_next_ref = Wmt_next.tail(dimi);
+  backward_recursion_ref.factorizeSTOFactorization(riccati_next, kkt_matrix, 
+                                                   kkt_residual, lqr_policy_ref, 
+                                                   riccati_ref, has_next_sto_phase);
+  riccati.Psi += M.transpose() * psict.tail(dimi);
+  riccati.xi  += mt_ref.dot(psict.tail(dimi));
+  riccati.chi += mt_next_ref.dot(phict.tail(dimi));
+  riccati.eta += m.dot(psict.tail(dimi));
+
   EXPECT_TRUE(c_riccati.DtM.isApprox((sc_jacobian.Phiu().transpose()*KM.bottomRows(dimi))));
   EXPECT_TRUE(c_riccati.KtDtM.isApprox((KM.topRows(dimu).transpose()*sc_jacobian.Phiu().transpose()*KM.bottomRows(dimi))));
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
@@ -131,11 +205,29 @@ void RiccatiFactorizerTest::test_backwardRecursionWithSwitchingConstraint(const 
   EXPECT_TRUE(kkt_matrix.Quu.isApprox(kkt_matrix.Quu.transpose()));
   EXPECT_TRUE(c_riccati.M().isApprox(KM.bottomRows(dimi)));
   EXPECT_TRUE(c_riccati.m().isApprox(km.tail(dimi)));
-  EXPECT_TRUE(lqr_policy_ref.isApprox(lqr_policy));
+  EXPECT_TRUE(c_riccati.mt().isApprox(Tmt.tail(dimi)));
+  EXPECT_TRUE(c_riccati.mt_next().isApprox(Wmt_next.tail(dimi)));
+  EXPECT_TRUE(lqr_policy_ref.isApprox(lqr_policy)); // This sometimes fails because the Schur complement can lack accuracy
+  EXPECT_TRUE(lqr_policy_ref.K.isApprox(lqr_policy.K));
+  EXPECT_TRUE(lqr_policy_ref.k.isApprox(lqr_policy.k));
+  EXPECT_TRUE(lqr_policy_ref.T.isApprox(lqr_policy.T));
+  EXPECT_TRUE(lqr_policy_ref.W.isApprox(lqr_policy.W));
+  std::cout << "impulse_status: " << impulse_status << std::endl;
+  std::cout << (lqr_policy_ref.k - lqr_policy.k).transpose() << std::endl;
+  std::cout << (lqr_policy_ref.T - lqr_policy.T).transpose() << std::endl;
+  std::cout << (lqr_policy_ref.W - lqr_policy.W).transpose() << std::endl;
+
+  has_next_sto_phase = false;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
+                                      sc_jacobian, sc_residual, 
+                                      riccati, c_riccati, lqr_policy, sto, has_next_sto_phase);
+  EXPECT_TRUE(lqr_policy.W.isZero());
+  EXPECT_TRUE(c_riccati.mt_next().isZero());
 }
 
 
-void RiccatiFactorizerTest::test_backwardRecursionImpulse(const Robot& robot) const {
+TEST_P(RiccatiFactorizerTest, backwardRecursionImpulse) {
+  const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
@@ -146,16 +238,20 @@ void RiccatiFactorizerTest::test_backwardRecursionImpulse(const Robot& robot) co
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_ref = riccati;
-  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
+  bool sto = true;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati, sto);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref);
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
+  backward_recursion_ref.factorizeSTOFactorization(riccati_next, kkt_matrix_ref, 
+                                                   kkt_residual_ref, riccati_ref);
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
   EXPECT_TRUE(riccati.P.isApprox(riccati.P.transpose()));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
 }
 
 
-void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
+TEST_P(RiccatiFactorizerTest, forwardRecursion) {
+  const auto robot = GetParam();
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
@@ -179,8 +275,8 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
   auto d_next = SplitDirection::Random(robot);
   auto d_ref = d;
   auto d_next_ref = d_next;
-  const bool sto = false;
-  const bool sto_next = false;
+  bool sto = false;
+  bool sto_next = false;
   factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, lqr_policy, 
                                      d, d_next, sto, sto_next);
   d_ref.du = lqr_policy_ref.K * d_ref.dx + lqr_policy_ref.k;
@@ -188,8 +284,34 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
   d_next_ref.dv() += kkt_matrix_ref.Fvu * d_ref.du;
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
+  sto = true;
+  factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, lqr_policy, 
+                                     d, d_next, sto, sto_next);
+  d_ref.du += lqr_policy_ref.T * (d_ref.dts_next-d_ref.dts);
+  d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx + kkt_matrix_ref.fx * (d_ref.dts_next-d_ref.dts);
+  d_next_ref.dv() += kkt_matrix_ref.Fvu * d_ref.du;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  EXPECT_TRUE(d_next.isApprox(d_next_ref));
+  sto_next = true;
+  factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, lqr_policy, 
+                                     d, d_next, sto, sto_next);
+  d_ref.du -= lqr_policy_ref.W * d_ref.dts_next;
+  d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx + kkt_matrix_ref.fx * (d_ref.dts_next-d_ref.dts);
+  d_next_ref.dv() += kkt_matrix_ref.Fvu * d_ref.du;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  EXPECT_TRUE(d_next.isApprox(d_next_ref));
+  sto = false;
+  sto_next = false;
   factorizer.computeCostateDirection(riccati, d, sto, sto_next);
   d_ref.dlmdgmm = riccati.P * d.dx - riccati.s;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  sto = true;
+  factorizer.computeCostateDirection(riccati, d, sto, sto_next);
+  d_ref.dlmdgmm += riccati.Psi * (d_ref.dts_next-d_ref.dts);
+  EXPECT_TRUE(d.isApprox(d_ref));
+  sto_next = true;
+  factorizer.computeCostateDirection(riccati, d, sto, sto_next);
+  d_ref.dlmdgmm -= riccati.Phi * d_ref.dts_next;
   EXPECT_TRUE(d.isApprox(d_ref));
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
@@ -203,13 +325,24 @@ void RiccatiFactorizerTest::test_forwardRecursion(const Robot& robot) const {
   d.setImpulseStatus(impulse_status);
   d.dxi().setRandom();
   d_ref = d;
+  sto = false;
+  sto_next = false;
   factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
   d_ref.dxi() = c_riccati.M() * d.dx + c_riccati.m();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  sto = true;
+  factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
+  d_ref.dxi() += c_riccati.mt() * (d_ref.dts_next-d_ref.dts);
+  EXPECT_TRUE(d.isApprox(d_ref));
+  sto_next = true;
+  factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
+  d_ref.dxi() -= c_riccati.mt_next() * d_ref.dts_next;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
-void RiccatiFactorizerTest::test_forwardRecursionImpulse(const Robot& robot) const {
+TEST_P(RiccatiFactorizerTest, forwardRecursionImpulse) {
+  const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_next_ref = riccati_next;
@@ -228,31 +361,22 @@ void RiccatiFactorizerTest::test_forwardRecursionImpulse(const Robot& robot) con
   d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx;
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   auto d_ref = d;
-  const bool sto = false;
+  bool sto = false;
   factorizer.computeCostateDirection(riccati, d, sto);
   d_ref.dlmdgmm = riccati.P * d.dx - riccati.s;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  sto = true;
+  factorizer.computeCostateDirection(riccati, d, sto);
+  d_ref.dlmdgmm -= riccati.Phi * d_ref.dts_next;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
-TEST_F(RiccatiFactorizerTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
-  test_backwardRecursion(robot);
-  test_backwardRecursionWithSwitchingConstraint(robot);
-  test_backwardRecursionImpulse(robot);
-  test_forwardRecursion(robot);
-  test_forwardRecursionImpulse(robot);
-}
-
-
-TEST_F(RiccatiFactorizerTest, floating_base) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  test_backwardRecursion(robot);
-  test_backwardRecursionWithSwitchingConstraint(robot);
-  test_backwardRecursionImpulse(robot);
-  test_forwardRecursion(robot);
-  test_forwardRecursionImpulse(robot);
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, RiccatiFactorizerTest, 
+  ::testing::Values(testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+);
 
 } // namespace robotoc
 

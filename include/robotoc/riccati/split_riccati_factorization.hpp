@@ -222,6 +222,23 @@ public:
     iota = 0;
   }
 
+  void setRandom() {
+    P.setRandom();
+    s.setRandom();
+    psi_x.setRandom();
+    psi_u.setRandom();
+    Psi.setRandom();
+    phi_x.setRandom();
+    phi_u.setRandom();
+    Phi.setRandom();
+    const Eigen::VectorXd vec = Eigen::VectorXd::Random(5);
+    xi = vec[0];
+    chi = vec[1];
+    rho = vec[2];
+    eta = vec[3];
+    iota = vec[4];
+  }
+
   ///
   /// @brief Checks the equivalence of two SplitRiccatiFactorization.
   /// @param[in] other object.
@@ -260,6 +277,12 @@ public:
     vec << xi, chi, rho, eta, iota;
     if (vec.hasNaN()) return true;
     return false;
+  }
+
+  static SplitRiccatiFactorization Random(const Robot& robot) {
+    auto riccati = SplitRiccatiFactorization(robot);
+    riccati.setRandom();
+    return riccati;
   }
 
 private:

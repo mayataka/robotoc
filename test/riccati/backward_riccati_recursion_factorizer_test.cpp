@@ -16,25 +16,20 @@
 
 namespace robotoc {
 
-class BackwardRiccatiRecursionFactorizerTest : public ::testing::Test {
+class BackwardRiccatiRecursionFactorizerTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
-
   virtual void TearDown() {
   }
-
-  void test(const Robot& robot) const;
-
-  void test_impulse(const Robot& robot) const;
-
   double dt;
 };
 
 
-void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
+TEST_P(BackwardRiccatiRecursionFactorizerTest, test) {
+  const auto robot = GetParam();
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
@@ -112,7 +107,8 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
 }
 
 
-void BackwardRiccatiRecursionFactorizerTest::test_impulse(const Robot& robot) const {
+TEST_P(BackwardRiccatiRecursionFactorizerTest, test_impulse) {
+  const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
@@ -142,18 +138,11 @@ void BackwardRiccatiRecursionFactorizerTest::test_impulse(const Robot& robot) co
 }
 
 
-TEST_F(BackwardRiccatiRecursionFactorizerTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
-  test(robot);
-  test_impulse(robot);
-}
-
-
-TEST_F(BackwardRiccatiRecursionFactorizerTest, floating_base) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  test(robot);
-  test_impulse(robot);
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, BackwardRiccatiRecursionFactorizerTest, 
+  ::testing::Values(testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+);
 
 } // namespace robotoc
 
