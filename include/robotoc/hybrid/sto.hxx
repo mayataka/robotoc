@@ -90,8 +90,8 @@ inline double STO::KKTError(const OCP& ocp, const KKTResidual& kkt_residual) {
   for (int event_index=0; event_index<N_impulse+N_lift; ++event_index) {
     if (ocp.discrete().eventType(event_index) == DiscreteEventType::Impulse) {
       if (ocp.discrete().isSTOEnabledImpulse(impulse_index)) {
-        const double hdiff = h_phase_.coeff(event_index+1) 
-                              - h_phase_.coeff(event_index);
+        const double hdiff = h_phase_.coeff(event_index) 
+                              - h_phase_.coeff(event_index+1);
         kkt_error += hdiff * hdiff;
       }
       ++impulse_index;
@@ -99,8 +99,8 @@ inline double STO::KKTError(const OCP& ocp, const KKTResidual& kkt_residual) {
     else {
       assert(ocp.discrete().eventType(event_index) == DiscreteEventType::Lift);
       if (ocp.discrete().isSTOEnabledLift(lift_index)) {
-        const double hdiff = h_phase_.coeff(event_index+1) 
-                              - h_phase_.coeff(event_index);
+        const double hdiff = h_phase_.coeff(event_index) 
+                              - h_phase_.coeff(event_index+1);
         kkt_error += hdiff * hdiff;
       }
       ++lift_index;

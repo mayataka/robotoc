@@ -118,6 +118,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.impulse[impulse_index].initConstraints(
           robot_ref, contact_sequence->impulseStatus(impulse_index), s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTResidual(
@@ -130,6 +132,9 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.aux[impulse_index], 
+                                         kkt_residual_ref.aux[impulse_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       kkt_error_ref += kkt_residual_ref.impulse[impulse_index].kkt_error;
       kkt_error_ref += kkt_residual_ref.aux[impulse_index].kkt_error;
@@ -154,11 +159,16 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.lift[lift_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.lift[lift_index], 
+                                         kkt_residual_ref.lift[lift_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       kkt_error_ref += kkt_residual_ref.lift[lift_index].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
@@ -179,6 +189,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     } 
@@ -191,6 +203,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     }
@@ -261,6 +275,8 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       ocp_ref[i].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.impulse[impulse_index].initConstraints(
           robot_ref, contact_sequence->impulseStatus(impulse_index), s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTSystem(
@@ -273,6 +289,9 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.aux[impulse_index], 
+                                         kkt_residual_ref.aux[impulse_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -290,11 +309,16 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       ocp_ref[i].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.lift[lift_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.lift[lift_index], 
+                                         kkt_residual_ref.lift[lift_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -311,6 +335,8 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index],
           kkt_residual_ref.switching[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -321,6 +347,8 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
     }
   }
   ocp_ref.terminal.computeKKTSystem(robot_ref, t+T, s[ocp_ref.discrete().N()-1].q, 
@@ -439,16 +467,15 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
 
-
   std::cout << d[0] << std::endl;
   std::cout << d_ref[0] << std::endl;
 
-  // EXPECT_NO_THROW(
-  //   std::cout << s << std::endl;
-  //   std::cout << d << std::endl;
-  //   std::cout << kkt_matrix << std::endl;
-  //   std::cout << kkt_residual << std::endl;
-  // );
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+    std::cout << d << std::endl;
+    std::cout << kkt_matrix << std::endl;
+    std::cout << kkt_residual << std::endl;
+  );
 }
 
 

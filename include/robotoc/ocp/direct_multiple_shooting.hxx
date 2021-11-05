@@ -135,6 +135,9 @@ inline void DirectMultipleShooting::runParallel(
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
+        SplitOCP::correctSTOSensitivities(
+            kkt_matrix[i], kkt_residual[i], 
+            ocp.discrete().N_phase(ocp.discrete().contactPhase(i)));
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
@@ -144,6 +147,9 @@ inline void DirectMultipleShooting::runParallel(
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
+        SplitOCP::correctSTOSensitivities(
+            kkt_matrix[i], kkt_residual[i], 
+            ocp.discrete().N_phase(ocp.discrete().contactPhase(i)));
       }
       else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index  
@@ -156,6 +162,9 @@ inline void DirectMultipleShooting::runParallel(
             contact_sequence->impulseStatus(impulse_index), 
             ocp.discrete().dt(i+1), kkt_matrix.switching[impulse_index],
             kkt_residual.switching[impulse_index]);
+        SplitOCP::correctSTOSensitivities(
+            kkt_matrix[i], kkt_residual[i], kkt_matrix.switching[impulse_index],
+            ocp.discrete().N_phase(ocp.discrete().contactPhase(i)));
       }
       else {
         Algorithm::run(
@@ -163,6 +172,9 @@ inline void DirectMultipleShooting::runParallel(
             contact_sequence->contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dt(i), q_prev(ocp, q, s, i), 
             s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
+        SplitOCP::correctSTOSensitivities(
+            kkt_matrix[i], kkt_residual[i], 
+            ocp.discrete().N_phase(ocp.discrete().contactPhase(i)));
       }
     }
     else if (i == N) {
@@ -193,6 +205,9 @@ inline void DirectMultipleShooting::runParallel(
           ocp.discrete().dt_aux(impulse_index), s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[time_stage_after_impulse], 
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+      SplitOCP::correctSTOSensitivities(
+          kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index], 
+          ocp.discrete().N_phase(ocp.discrete().contactPhaseAfterImpulse(impulse_index)));
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
@@ -206,6 +221,9 @@ inline void DirectMultipleShooting::runParallel(
           ocp.discrete().dt_lift(lift_index), s[time_stage_after_lift-1].q, 
           s.lift[lift_index], s[time_stage_after_lift], 
           kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
+      SplitOCP::correctSTOSensitivities(
+          kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index],
+          ocp.discrete().N_phase(ocp.discrete().contactPhaseAfterLift(lift_index)));
     }
   }
 }

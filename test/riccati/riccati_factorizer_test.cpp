@@ -103,9 +103,9 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionPhaseTransition) {
     xi = std::abs(xi) + std::abs(riccati.eta-riccati.iota) / max_dts0;
   }
   // STO policy
-  sto_policy.dtsdx  = - (1.0/xi) * (riccati.Psi-riccati.Phi);
-  sto_policy.dtsdts =   (1.0/xi) * (riccati.xi-riccati.chi);
-  sto_policy.dts0   = - (1.0/xi) * (riccati.eta-riccati.iota);
+  sto_policy_ref.dtsdx  = - (1.0/xi) * (riccati.Psi-riccati.Phi);
+  sto_policy_ref.dtsdts =   (1.0/xi) * (riccati.xi-riccati.chi);
+  sto_policy_ref.dts0   = - (1.0/xi) * (riccati.eta-riccati.iota);
   riccati_m_ref.s.noalias()   
       += (1.0/xi) * (riccati.Psi-riccati.Phi) * (riccati.eta-riccati.iota);
   riccati_m_ref.Phi.noalias() 
@@ -114,7 +114,9 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionPhaseTransition) {
       = riccati.xi - (1.0/xi) * (riccati.xi-riccati.chi) * (riccati.xi-riccati.chi);
   riccati_m_ref.iota
       = riccati.eta - (1.0/xi) * (riccati.xi-riccati.chi)  * (riccati.eta-riccati.iota);
+  EXPECT_TRUE(sto_policy.isApprox(sto_policy_ref));
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
+  EXPECT_TRUE(riccati_m.isApprox(riccati_m_ref));
 }
 
 
@@ -247,6 +249,26 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionImpulse) {
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
   EXPECT_TRUE(riccati.P.isApprox(riccati.P.transpose()));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
+}
+
+
+TEST_P(RiccatiFactorizerTest, computeSwitchingTimeDirection) {
+  const auto robot = GetParam();
+  const int dimv = robot.dimv();
+  auto sto_policy = STOPolicy(robot);
+  sto_policy.dtsdx.setRandom();
+  sto_policy.dtsdts = Eigen::VectorXd::Random(1)[0];
+  sto_policy.dts0 = Eigen::VectorXd::Random(1)[0];
+  auto d = SplitDirection::Random(robot);
+  auto d_ref = d;
+  bool has_next_sto_phase = false;
+  RiccatiFactorizer::computeSwitchingTimeDirection(sto_policy, d, has_next_sto_phase);
+  d_ref.dts_next = sto_policy.dtsdx.dot(d.dx) + sto_policy.dts0;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  has_next_sto_phase = true;
+  RiccatiFactorizer::computeSwitchingTimeDirection(sto_policy, d, has_next_sto_phase);
+  d_ref.dts_next += sto_policy.dtsdts * d.dts;
+  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
