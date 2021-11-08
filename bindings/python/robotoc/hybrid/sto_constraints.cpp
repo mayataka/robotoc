@@ -13,7 +13,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(sto_constraints, m) {
   py::class_<STOConstraints, std::shared_ptr<STOConstraints>>(m, "STOConstraints")
     .def(py::init<const int, const double, const double, const double>(),
-         py::arg("max_num_switches"), py::arg("min_dt"),
+         py::arg("max_num_switches"), 
+         py::arg("min_dt")=std::sqrt(std::numeric_limits<double>::epsilon()),
          py::arg("barrier")=1.0e-04, py::arg("fraction_to_boundary_rule")=0.995)
     .def(py::init<const int, const std::vector<double>&, const double, const double>(),
          py::arg("max_num_switches"), py::arg("min_dt"),

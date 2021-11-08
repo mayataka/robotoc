@@ -27,7 +27,8 @@ PYBIND11_MODULE(swing_foot_ref_base, m) {
   py::class_<SwingFootRefBase, PySwingFootRefBase,
              std::shared_ptr<SwingFootRefBase>>(m, "SwingFootRefBase")
     .def(py::init<>())
-    .def("update_q_3d_ref", &SwingFootRefBase::update_q_3d_ref);
+    .def("update_q_3d_ref", &SwingFootRefBase::update_q_3d_ref,
+          py::arg("contact_status"), py::arg("q_3d_rf"));
 }
 
 } // namespace python

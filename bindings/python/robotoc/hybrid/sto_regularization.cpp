@@ -15,9 +15,8 @@ PYBIND11_MODULE(sto_regularization, m) {
   py::enum_<STORegularizationType>(m, "STORegularizationType", py::arithmetic())
     .value("Const",  STORegularizationType::Const)
     .value("Abs", STORegularizationType::Abs)
+    .value("Square", STORegularizationType::Square)
     .value("Quad", STORegularizationType::Quad)
-    .value("Exp", STORegularizationType::Exp)
-    .value("Exp2", STORegularizationType::Exp2)
     .value("None", STORegularizationType::None)
     .export_values();
 
