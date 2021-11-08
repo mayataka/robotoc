@@ -21,7 +21,7 @@
 #include "robotoc/riccati/riccati_recursion.hpp"
 #include "robotoc/line_search/line_search.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
-#include "robotoc/hybrid/sto.hpp"
+#include "robotoc/hybrid/switching_time_optimization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
 #include "robotoc/hybrid/sto_regularization.hpp"
@@ -237,7 +237,7 @@ public:
   ///
   const HybridOCPDiscretization& getOCPDiscretization() const;
 
-  //
+  ///
   /// @brief Set the regularization for the STO problem
   /// @param[in] sto_reg Regularization for the STO problem.
   ///
@@ -263,12 +263,11 @@ public:
 private:
   aligned_vector<Robot> robots_;
   std::shared_ptr<ContactSequence> contact_sequence_;
-  STORegularization sto_reg_;
   DirectMultipleShooting dms_;
+  SwitchingTimeOptimization sto_;
   RiccatiRecursion riccati_recursion_;
   LineSearch line_search_;
   OCP ocp_;
-  STO sto_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;

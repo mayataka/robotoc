@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cassert>
+#include <algorithm>
 
 
 namespace robotoc {
@@ -16,7 +17,6 @@ OCPSolver::OCPSolver(const Robot& robot,
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
     sto_(),
     riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
-    sto_reg_(STORegularization::defaultSTORegularization()),
     line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
     ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
     riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
@@ -59,7 +59,6 @@ OCPSolver::OCPSolver(const Robot& robot,
     dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
     sto_(sto_cost, sto_constraints, contact_sequence->maxNumEachEvents()),
     riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
-    sto_reg_(STORegularization::defaultSTORegularization()),
     line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
     ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
     riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
@@ -133,15 +132,18 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                         kkt_matrix_, kkt_residual_);
   sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
   kkt_error_ = dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError();
-  sto_reg_.applyRegularization(ocp_, kkt_error_, kkt_matrix_);
+  sto_.applyRegularization(ocp_, kkt_error_, kkt_matrix_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
   dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
   riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
   riccati_recursion_.computeDirection(ocp_, contact_sequence_, 
                                       riccati_factorization_, d_);
-  double primal_step_size = riccati_recursion_.maxPrimalStepSize();
-  const double dual_step_size = riccati_recursion_.maxDualStepSize();
+  sto_.computeDirection(ocp_, d_);
+  double primal_step_size = std::min(riccati_recursion_.maxPrimalStepSize(), 
+                                     sto_.maxPrimalStepSize());
+  const double dual_step_size = std::min(riccati_recursion_.maxDualStepSize(),
+                                         sto_.maxDualStepSize());
   if (line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
@@ -432,7 +434,7 @@ void OCPSolver::clearLineSearchFilter() {
 
 
 double OCPSolver::KKTError() {
-  return kkt_error_;
+  return std::sqrt(kkt_error_);
 }
 
 
@@ -496,7 +498,7 @@ void OCPSolver::discretizeSolution() {
 
 
 void OCPSolver::setSTORegularization(const STORegularization& sto_reg) {
-  sto_reg_ = sto_reg;
+  sto_.setSTORegularization(sto_reg);
 }
 
 
