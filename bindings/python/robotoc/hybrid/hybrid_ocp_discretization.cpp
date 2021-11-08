@@ -50,6 +50,7 @@ PYBIND11_MODULE(hybrid_ocp_discretization, m) {
     .def("dt", &HybridOCPDiscretization::dt)
     .def("dt_aux", &HybridOCPDiscretization::dt_aux)
     .def("dt_lift", &HybridOCPDiscretization::dt_lift)
+    .def("dt_max", &HybridOCPDiscretization::dt_max)
     .def("dt_ideal", &HybridOCPDiscretization::dt_ideal)
     .def("is_STO_enabled_event", &HybridOCPDiscretization::isSTOEnabledEvent)
     .def("is_STO_enabled_phase", &HybridOCPDiscretization::isSTOEnabledPhase)

@@ -25,3 +25,21 @@ def convergence(ocp_solver, t, q, v, num_iteration, line_search=False, logger=No
         if logger is not None:
             logger.take_log(ocp_solver)
     print('-----------------------------------')
+
+
+def convergence_sto(ocp_solver, t, q, v, num_iteration, dt_tol_mesh, kkt_tol_mesh, line_search=False, logger=None):
+    print('---------- OCP benchmark : Convergence ----------')
+    ocp_solver.compute_KKT_residual(t, q, v)
+    print('Initial KKT error = {:.6g}'.format(ocp_solver.KKT_error()))
+    if logger is not None:
+        logger.take_log(ocp_solver)
+    for i in range(num_iteration):
+        ocp_solver.update_solution(t, q, v, line_search)
+        if ocp_solver.get_OCP_discretization().dt_max() > dt_tol_mesh and ocp_solver.KKT_error() < kkt_tol_mesh:
+            print('mesh refinement!')
+            ocp_solver.mesh_refinement(t)
+        ocp_solver.compute_KKT_residual(t, q, v)
+        print('KKT error after iteration ' + str(i+1) + ' = {:.6g}'.format(ocp_solver.KKT_error()))
+        if logger is not None:
+            logger.take_log(ocp_solver)
+    print('-----------------------------------')
