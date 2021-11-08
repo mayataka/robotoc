@@ -16,7 +16,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.02
 step_length = 0.15
 step_height = 0.08
-swing_time = 0.35
+swing_time = 0.40
 double_support_time = 0.05
 t0 = 0.1
 cycle = 1
@@ -185,20 +185,12 @@ ocp_solver.init_constraints(t)
 sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Square, 
                                     w=1.0) 
 ocp_solver.set_STO_regularization(sto_reg)
-robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 
-                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1)
 
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, 14)
-# ocp_solver.mesh_refinement(t)
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, 10)
-# ocp_solver.mesh_refinement(t)
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, 16)
+logger = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
+robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 
+                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1, logger=logger)
 
 # print(ocp_solver)
-
-# robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration)
-# num_iteration = 1000
-# robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

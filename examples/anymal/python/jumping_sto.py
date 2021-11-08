@@ -139,22 +139,12 @@ ocp_solver.init_constraints(t)
 sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Square, 
                                     w=1.0e-02) 
 ocp_solver.set_STO_regularization(sto_reg)
-robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=130, 
-                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1)
 
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, 42)
-# ocp_solver.mesh_refinement(t)
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, 40)
-# ocp_solver.mesh_refinement(t)
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, 63)
+logger = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='jumping_sto')
+robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=130, 
+                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1, logger=logger)
 
 # print(ocp_solver)
-
-# num_iteration = 50
-# robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
-# robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration)
-# num_iteration = 1000
-# robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

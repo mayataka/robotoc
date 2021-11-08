@@ -4,9 +4,9 @@ import robotoc
 
 
 class Logger:
-    def __init__(self, vars, root_dir='./'):
+    def __init__(self, vars, log_name, root_dir='./'):
         self.vars = vars
-        self.log_dir = os.path.abspath(root_dir+'_log') 
+        self.log_dir = os.path.abspath(root_dir+log_name+'_log') 
         self.logs = [os.path.join(self.log_dir, var+'.log') for var in vars]
         os.makedirs(self.log_dir, exist_ok=True)
         for log in self.logs:
@@ -19,6 +19,10 @@ class Logger:
             if var == 'KKT':
                 with open(log, 'a') as logf:
                     np.savetxt(logf, np.array([solver.KKT_error()]), delimiter=delimiter)
+            elif var == 'ts' and isinstance(solver, robotoc.OCPSolver):
+                ts = solver.get_solution('ts')
+                with open(log, 'a') as logf:
+                    np.savetxt(logf, ts, fmt=precision, delimiter=delimiter)
             elif var == 'f' and isinstance(solver, robotoc.OCPSolver):
                 fs = solver.get_solution('f', 'WORLD')
                 with open(log, 'a') as logf:
