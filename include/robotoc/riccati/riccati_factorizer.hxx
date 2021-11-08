@@ -72,13 +72,19 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
                                                   kkt_residual, lqr_policy, 
                                                   riccati, has_next_sto_phase);
   }
+  else {
+    riccati.Psi.setZero();
+    riccati.xi = 0.;
+    riccati.chi = 0.;
+    riccati.eta = 0.;
+  }
 }
 
 
 inline void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
-    const SplitRiccatiFactorization& riccati,
-    SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy,
-    const bool sto) {
+    const SplitRiccatiFactorization& riccati, 
+    SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy, 
+    const bool has_next_sto_phase) const {
   riccati_m.P = riccati.P;
   riccati_m.s = riccati.s;
   riccati_m.Psi.setZero();
@@ -88,23 +94,25 @@ inline void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
   riccati_m.rho = riccati.xi;
   riccati_m.eta = 0.0;
   riccati_m.iota = riccati.eta;
-  if (sto) {
-    double xi = riccati.xi - 2.0 * riccati.chi + riccati.rho;
-    if (xi*max_dts0_ < std::abs(riccati.eta-riccati.iota) || xi < keps_) {
-      xi = std::abs(xi) + std::abs(riccati.eta-riccati.iota) / max_dts0_;
+  if (has_next_sto_phase) {
+    double sgm = riccati.xi - 2.0 * riccati.chi + riccati.rho;
+    if ((sgm*max_dts0_) < std::abs(riccati.eta-riccati.iota) || sgm < keps_) {
+      std::cout << "sgm reg ! sgm = " << sgm << std::endl;
+      std::cout << "sgm * max_dts0_ = " << sgm*max_dts0_ << std::endl;
+      std::cout << "std::abs(riccati.eta-riccati.iota) = " << std::abs(riccati.eta-riccati.iota) << std::endl;
+      sgm = std::abs(sgm) + std::abs(riccati.eta-riccati.iota) / max_dts0_;
     }
-    // STO policy
-    sto_policy.dtsdx  = - (1.0/xi) * (riccati.Psi-riccati.Phi);
-    sto_policy.dtsdts =   (1.0/xi) * (riccati.xi-riccati.chi);
-    sto_policy.dts0   = - (1.0/xi) * (riccati.eta-riccati.iota);
+    sto_policy.dtsdx  = - (1.0/sgm) * (riccati.Psi-riccati.Phi);
+    sto_policy.dtsdts =   (1.0/sgm) * (riccati.xi-riccati.chi);
+    sto_policy.dts0   = - (1.0/sgm) * (riccati.eta-riccati.iota);
     riccati_m.s.noalias()   
-        += (1.0/xi) * (riccati.Psi-riccati.Phi) * (riccati.eta-riccati.iota);
+        += (1.0/sgm) * (riccati.Psi-riccati.Phi) * (riccati.eta-riccati.iota);
     riccati_m.Phi.noalias() 
-        -= (1.0/xi) * (riccati.Psi-riccati.Phi) * (riccati.xi-riccati.chi);
+        -= (1.0/sgm) * (riccati.Psi-riccati.Phi) * (riccati.xi-riccati.chi);
     riccati_m.rho
-        = riccati.xi - (1.0/xi) * (riccati.xi-riccati.chi) * (riccati.xi-riccati.chi);
+        = riccati.xi - (1.0/sgm) * (riccati.xi-riccati.chi) * (riccati.xi-riccati.chi);
     riccati_m.iota
-        = riccati.eta - (1.0/xi) * (riccati.xi-riccati.chi)  * (riccati.eta-riccati.iota);
+        = riccati.eta - (1.0/sgm) * (riccati.xi-riccati.chi)  * (riccati.eta-riccati.iota);
   }
 }
 

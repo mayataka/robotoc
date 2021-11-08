@@ -35,8 +35,8 @@ public:
   /// @brief Constructs a factorizer.
   /// @param[in] robot Robot model. 
   /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
-  /// the switching time. Used in a heuristic regularization.
-  /// Must be positive. Default is 1.0.
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. Default is 1.0.
   ///
   RiccatiFactorizer(const Robot& robot, const double max_dts0=1.0);
 
@@ -105,14 +105,15 @@ public:
   ///
   /// @brief Performs the backward Riccati recursion for the phase transition. 
   /// @param[in] riccati Riccati factorization of this stage. 
-  /// @param[in, out] riccati_m Modified Riccati factorization of this stage. 
+  /// @param[in, out] riccati_m Data for modified Riccati factorization. 
   /// @param[in, out] sto_policy STO policy. 
-  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
   ///
   void backwardRiccatiRecursionPhaseTransition(
-      const SplitRiccatiFactorization& riccati,
-      SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy,
-      const bool sto);
+      const SplitRiccatiFactorization& riccati, 
+      SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy, 
+      const bool has_next_sto_phase) const;
 
   ///
   /// @brief Performs the backward Riccati recursion with the switching 

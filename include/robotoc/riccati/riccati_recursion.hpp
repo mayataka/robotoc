@@ -140,7 +140,7 @@ private:
   RiccatiFactorizer factorizer_;
   hybrid_container<LQRPolicy> lqr_policy_;
   aligned_vector<STOPolicy> sto_policy_;
-  SplitRiccatiFactorization riccati_m_;
+  SplitRiccatiFactorization factorization_m_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
