@@ -12,12 +12,14 @@ void ContactSequence::disp(std::ostream& os) const {
     os << contactStatus(event_index) << std::endl;
     os << "  event index: " << event_index << ", type: ";
     if (eventType(event_index) == DiscreteEventType::Impulse) {
-      os << "impulse, time: " << impulseTime(impulse_index) << std::endl;
+      os << "impulse, time: " << impulseTime(impulse_index) 
+         << ", sto: " << std::boolalpha << isSTOEnabledImpulse(impulse_index) <<  std::endl;
       os << impulseStatus(impulse_index) << std::endl;
       ++impulse_index;
     }
     else {
-      os << "lift, time: " << liftTime(lift_index) << std::endl;
+      os << "lift, time: " << liftTime(lift_index) 
+         << ", sto: " << std::boolalpha << isSTOEnabledLift(lift_index) << std::endl;
       ++lift_index;
     }
   }
