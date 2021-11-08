@@ -191,6 +191,24 @@ inline double DwellTimeLowerBound::KKTError() const {
   return (residual_*residual_) + (cmpl_*cmpl_);
 }
 
+
+inline void DwellTimeLowerBound::disp(std::ostream& os) const {
+  os << "barrier = " << barrier_ << std::endl;
+  os << "fraction_to_boundary_rule = " << fraction_to_boundary_rule_ << std::endl;
+  os << "slack = " << slack_ << std::endl;
+  os << "dual = " << dual_ << std::endl;
+  os << "residual_ = " << residual_ << std::endl;
+  os << "cmpl_ = " << cmpl_ << std::flush;
+}
+
+
+inline std::ostream& operator<<(std::ostream& os, 
+                                const DwellTimeLowerBound& dtlb) {
+  os << "DwellTimeLowerBound :" << std::endl;
+  dtlb.disp(os);
+  return os;
+}
+
 } // namespace robotoc
 
 #endif // ROBOTOC_DWELL_TIME_LOWER_BOUND_HXX_ 

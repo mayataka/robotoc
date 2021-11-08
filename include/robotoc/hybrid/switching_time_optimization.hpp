@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_STO_HPP_
-#define ROBOTOC_STO_HPP_
+#ifndef ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HPP_
+#define ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HPP_
 
 #include <memory>
 
@@ -12,15 +12,16 @@
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/hybrid/sto_regularization.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class STO 
+/// @class SwitchingTimeOptimization
 /// @brief The switching time optimization (STO) problem.
 ///
-class STO {
+class SwitchingTimeOptimization {
 public:
   ///
   /// @brief Construct the STO problem. 
@@ -29,34 +30,35 @@ public:
   /// @param[in] max_num_impulse_events Maximum number of the impulse on the 
   /// horizon. Must be non-negative. 
   ///
-  STO(const std::shared_ptr<STOCostFunction>& sto_cost, 
-      const std::shared_ptr<STOConstraints>& sto_constraints,
+  SwitchingTimeOptimization(
+      const std::shared_ptr<STOCostFunction>& sto_cost, 
+      const std::shared_ptr<STOConstraints>& sto_constraints, 
       const int max_num_impulse_events);
 
   ///
   /// @brief Default Constructor.
   ///
-  STO();
+  SwitchingTimeOptimization();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  STO(const STO&) = default;
+  SwitchingTimeOptimization(const SwitchingTimeOptimization&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  STO& operator=(const STO&) = default;
+  SwitchingTimeOptimization& operator=(const SwitchingTimeOptimization&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  STO(STO&&) noexcept = default;
+  SwitchingTimeOptimization(SwitchingTimeOptimization&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  STO& operator=(STO&&) noexcept = default;
+  SwitchingTimeOptimization& operator=(SwitchingTimeOptimization&&) noexcept = default;
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
@@ -81,6 +83,34 @@ public:
   ///
   void computeKKTSystem(const OCP& ocp, KKTMatrix& kkt_matrix, 
                         KKTResidual& kkt_residual);
+
+  ///
+  /// @return Applies the regularization on the KKT matrix.
+  /// @param[in] ocp Optimal control problem.
+  /// @param[in] kkt_error KKT error. 
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  ///
+  void applyRegularization(const OCP& ocp, const double kkt_error, 
+                           KKTMatrix& kkt_matrix) const;
+
+  ///
+  /// @brief Compute the Newton direction.
+  /// @param[in] ocp Optimal control problem.
+  /// @param[in] d Direction. 
+  ///
+  void computeDirection(const OCP& ocp, const Direction& d);
+
+  ///
+  /// @brief Returns max primal step size.
+  /// @return max primal step size.
+  /// 
+  double maxPrimalStepSize() const;
+
+  ///
+  /// @brief Returns max dual step size.
+  /// @return max dual step size.
+  /// 
+  double maxDualStepSize() const;
 
   ///
   /// @brief Returns the l2-norm of the KKT residual of STO problem.
@@ -115,9 +145,25 @@ public:
                          const double dual_step_size,
                          const Direction& d) const;
 
+  ///
+  /// @brief Set the regularization for the STO problem
+  /// @param[in] sto_reg Regularization for the STO problem.
+  ///
+  void setSTORegularization(const STORegularization& sto_reg);
+
+  ///
+  /// @brief Sets regularization method.
+  /// @param[in] reg_type regularization type. 
+  /// @param[in] w weight parameter (a.k.a. scaling parameter) of the 
+  /// regularization. Must be non-negative.
+  ///
+  void setSTORegularization(const STORegularizationType& reg_type,
+                            const double w);
+
 private:
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
+  STORegularization sto_reg_;
   int max_num_impulse_events_;
   double kkt_error_, cost_val_;
   Eigen::VectorXd h_phase_;
@@ -126,6 +172,6 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/sto.hxx"
+#include "robotoc/hybrid/switching_time_optimization.hxx"
 
-#endif // ROBOTOC_STO_HPP_ 
+#endif // ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HPP_ 

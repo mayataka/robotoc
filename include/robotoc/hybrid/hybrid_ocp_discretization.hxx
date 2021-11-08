@@ -93,6 +93,7 @@ inline void HybridOCPDiscretization::discretize(
   }
   countTimeStages();
   countContactPhase();
+  countSTOEvents();
   assert(isFormulationTractable());
   assert(isSwitchingTimeConsistent());
 }
@@ -105,6 +106,7 @@ inline void HybridOCPDiscretization::meshRefinement(
     countTimeStepsPhaseBased(t);
     countTimeStages();
     countContactPhase();
+    countSTOEvents();
     assert(isFormulationTractable());
     assert(isSwitchingTimeConsistent());
   }

@@ -15,9 +15,8 @@ namespace robotoc {
 enum class STORegularizationType {
   Const,
   Abs,
+  Square,
   Quad,
-  Exp,
-  Exp2,
   None
 };
 
@@ -31,7 +30,7 @@ public:
   /// @brief Constructs regularization.
   /// @param[in] reg_type regularization type. 
   /// @param[in] w weight parameter (a.k.a. scaling parameter) of the 
-  /// regularization.
+  /// regularization. Must be non-negative.
   ///
   STORegularization(const STORegularizationType& reg_type, const double w);
 
@@ -69,7 +68,7 @@ public:
   /// @brief Sets regularization method.
   /// @param[in] reg_type regularization type. 
   /// @param[in] w weight parameter (a.k.a. scaling parameter) of the 
-  /// regularization.
+  /// regularization. Must be non-negative.
   ///
   void setRegularization(const STORegularizationType& reg_type,
                          const double w);
@@ -77,8 +76,9 @@ public:
   ///
   /// @return Applies the regularization on the KKT matrix.
   /// @param[in] ocp Optimal control problem.
-  /// @param[in] kkt_error KKT error. 
+  /// @param[in] kkt_error Squared norm of the KKT residual. 
   /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @note KKT error must be the squared norm of the KKT residual.
   ///
   void applyRegularization(const OCP& ocp, const double kkt_error, 
                            KKTMatrix& kkt_matrix) const; 

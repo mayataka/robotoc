@@ -85,13 +85,11 @@ inline double STORegularization::getRegularization(const double kkt_error) const
     case STORegularizationType::Const:
       return w_;
     case STORegularizationType::Abs:
-      return (w_ * std::abs(kkt_error));
+      return (w_ * std::sqrt(kkt_error));
+    case STORegularizationType::Square:
+      return (w_ * kkt_error);
     case STORegularizationType::Quad:
-      return (w_ * kkt_error*kkt_error);
-    case STORegularizationType::Exp:
-      return (w_ * std::exp(std::abs(kkt_error)));
-    case STORegularizationType::Exp2:
-      return (w_ * std::exp(kkt_error*kkt_error));
+      return (w_ * kkt_error * kkt_error);
     default:
       return 0.0;
   }
@@ -99,7 +97,7 @@ inline double STORegularization::getRegularization(const double kkt_error) const
 
 
 inline STORegularization STORegularization::defaultSTORegularization() {
-  return STORegularization(STORegularizationType::Quad, 0.1);
+  return STORegularization(STORegularizationType::Quad, 1.0e-06);
 }
 
 } // namespace robotoc 
