@@ -66,7 +66,7 @@ TEST_F(SwingFootCostTest, testStageCost) {
   }
   Eigen::Vector3d q_ref;
   q_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
-  q_ref[0] += step_length;
+  q_ref[0] += 0.5 * step_length;
   q_ref[1] = contact_status.contactPoint(y_ref_foot_contact_index)[1];
   q_ref[2] = step_height;
   const int frame_id = robot.contactFrames()[contact_index];
