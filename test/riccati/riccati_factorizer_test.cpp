@@ -304,6 +304,8 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
   d_ref.du = lqr_policy_ref.K * d_ref.dx + lqr_policy_ref.k;
   d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx;
   d_next_ref.dv() += kkt_matrix_ref.Fvu * d_ref.du;
+  d_next_ref.dts = d_ref.dts;
+  d_next_ref.dts_next = d_ref.dts_next;
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   sto = true;
@@ -381,6 +383,8 @@ TEST_P(RiccatiFactorizerTest, forwardRecursionImpulse) {
   auto d_next_ref = d_next;
   factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d, d_next);
   d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx;
+  d_next_ref.dts = d.dts;
+  d_next_ref.dts_next = d.dts_next;
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   auto d_ref = d;
   bool sto = false;

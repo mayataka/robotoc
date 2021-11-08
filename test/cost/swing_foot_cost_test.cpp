@@ -50,7 +50,8 @@ TEST_F(SwingFootCostTest, testStageCost) {
   const int y_ref_foot_contact_index = 2;
   const double step_length = 1.5;
   const double step_height = 1.0;
-  auto ref = std::make_shared<TrottingSwingFootRef>(x_ref_foot_contact_index, 
+  auto ref = std::make_shared<TrottingSwingFootRef>(contact_index,
+                                                    x_ref_foot_contact_index, 
                                                     y_ref_foot_contact_index,
                                                     step_length, step_height);
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
@@ -107,7 +108,8 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
   const int y_ref_foot_contact_index = 2;
   const double step_length = 1.5;
   const double step_height = 1.0;
-  auto ref = std::make_shared<TrottingSwingFootRef>(x_ref_foot_contact_index, 
+  auto ref = std::make_shared<TrottingSwingFootRef>(contact_index,
+                                                    x_ref_foot_contact_index, 
                                                     y_ref_foot_contact_index,
                                                     step_length, step_height);
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
@@ -140,7 +142,8 @@ TEST_F(SwingFootCostTest, testImpulseCost) {
   const int y_ref_foot_contact_index = 2;
   const double step_length = 1.5;
   const double step_height = 1.0;
-  auto ref = std::make_shared<TrottingSwingFootRef>(x_ref_foot_contact_index, 
+  auto ref = std::make_shared<TrottingSwingFootRef>(contact_index,
+                                                    x_ref_foot_contact_index, 
                                                     y_ref_foot_contact_index,
                                                     step_length, step_height);
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
