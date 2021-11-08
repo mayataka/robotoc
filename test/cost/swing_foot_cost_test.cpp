@@ -66,8 +66,16 @@ TEST_F(SwingFootCostTest, testStageCost) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
   Eigen::Vector3d q_ref;
-  q_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
-  q_ref[0] += 0.5 * step_length;
+  const double xdiff = contact_status.contactPoint(contact_index)[0] 
+                        - contact_status.contactPoint(x_ref_foot_contact_index)[0];
+  constexpr double eps = std::numeric_limits<double>::epsilon();
+  if (std::abs(xdiff) < eps) {
+    q_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
+    q_ref[0] += 0.25 * step_length;
+  }
+  else {
+    q_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
+  }
   q_ref[1] = contact_status.contactPoint(y_ref_foot_contact_index)[1];
   q_ref[2] = step_height;
   const int frame_id = robot.contactFrames()[contact_index];
