@@ -170,7 +170,7 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
   for (int i=0; i<ocp.discrete().N_lift(); ++i) {
     kkt_error += kkt_residual.lift[i].kkt_error;
   }
-  return std::sqrt(kkt_error);
+  return kkt_error;
 }
 
 
