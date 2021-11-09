@@ -9,6 +9,7 @@
 - Direct multiple-shooting method based on the lifted contact dynamics / inverse dynamics.
 - Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT systems.
 - Efficient pure-state equality constraint handling in the Riccati recursion.
+- Riccati recursion algorithm for switching time optimization (STO) problems.
 - Primal-dual interior point method for inequality constraints.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
 
@@ -109,7 +110,7 @@ e.g., in `~/.bashrc`. Note that if you use another Python version than `python3.
 
 ## Solvers 
 The following three solvers are provided:
-- `OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
+- `OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion. Can optimize the switching times and the trajectories simultaneously. 
 - `UnconstrOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
 - `UnconstrParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
 
@@ -158,7 +159,18 @@ You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anyma
 
 
 ## Citing robotoc
-- Citing `OCPSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
+- Citing the STO algorithm of `OCPSolver`:
+```
+@misc{katayama2021sto,
+  title={Structure-exploiting {N}ewton-type method for direct optimal control of switched systems}, 
+  author={Sotaro Katayama and Toshiyuki Ohtsuka},
+  url={arXiv:--},
+  eprint={--},
+  archivePrefix={arXiv}
+  year={2021}}
+```
+
+- Citing `OCPSolver` without the switching time optimization (STO) (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
 ```
 @misc{katayama2021liftedcd,
   title={Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts}, 
