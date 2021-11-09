@@ -53,7 +53,7 @@ inline void convergence(OCPSolverType& ocp_solver, const double t,
 
 
 template <typename OCPSolverType>
-inline void Convergence(OCPSolverType& ocp_solver, Logger& logger, 
+inline void convergence(OCPSolverType& ocp_solver, Logger& logger, 
                         const double t, const Eigen::VectorXd& q, 
                         const Eigen::VectorXd& v, const int num_iteration, 
                         const bool line_search) {
@@ -63,6 +63,56 @@ inline void Convergence(OCPSolverType& ocp_solver, Logger& logger,
   std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_solver.updateSolution(t, q, v, line_search);
+    ocp_solver.computeKKTResidual(t, q, v);
+    std::cout << "KKT error after iteration " << i+1 << " = " 
+              << ocp_solver.KKTError() << std::endl;
+    logger.takeLog(ocp_solver);
+  }
+  std::cout << "-----------------------------------" << std::endl;
+  std::cout << std::endl;
+}
+
+
+inline void convergence(OCPSolver& ocp_solver, const double t, 
+                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                        const int num_iteration, const double dt_tol_mesh, 
+                        const double kkt_tol_mesh, const bool line_search) {
+  std::cout << "---------- OCP benchmark : Convergence ----------" << std::endl;
+  ocp_solver.computeKKTResidual(t, q, v);
+  std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
+  for (int i=0; i<num_iteration; ++i) {
+    ocp_solver.updateSolution(t, q, v, line_search);
+    const double kkt_error = ocp_solver.KKTError();
+    const double dt_max = ocp_solver.getOCPDiscretization().dt_max();
+    if (dt_max > dt_tol_mesh && kkt_error < kkt_tol_mesh) {
+      std::cout << "Mesh refinement is carried out!" << std::endl;
+      ocp_solver.meshRefinement(t);
+    }
+    ocp_solver.computeKKTResidual(t, q, v);
+    std::cout << "KKT error after iteration " << i+1 << " = " 
+              << ocp_solver.KKTError() << std::endl;
+  }
+  std::cout << "-----------------------------------" << std::endl;
+  std::cout << std::endl;
+}
+
+
+inline void convergence(OCPSolver& ocp_solver, Logger& logger, const double t, 
+                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                        const int num_iteration, const double dt_tol_mesh, 
+                        const double kkt_tol_mesh, const bool line_search) {
+  std::cout << "---------- OCP benchmark : Convergence ----------" << std::endl;
+  ocp_solver.computeKKTResidual(t, q, v);
+  logger.takeLog(ocp_solver);
+  std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
+  for (int i=0; i<num_iteration; ++i) {
+    ocp_solver.updateSolution(t, q, v, line_search);
+    const double kkt_error = ocp_solver.KKTError();
+    const double dt_max = ocp_solver.getOCPDiscretization().dt_max();
+    if (dt_max > dt_tol_mesh && kkt_error < kkt_tol_mesh) {
+      std::cout << "Mesh refinement is carried out!" << std::endl;
+      ocp_solver.meshRefinement(t);
+    }
     ocp_solver.computeKKTResidual(t, q, v);
     std::cout << "KKT error after iteration " << i+1 << " = " 
               << ocp_solver.KKTError() << std::endl;

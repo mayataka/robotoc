@@ -18,15 +18,25 @@ void CPUTime(OCPSolverType& ocp_solver, const double t,
              const int num_iteration=1000, const bool line_search=false);
 
 template <typename OCPSolverType>
-void Convergence(OCPSolverType& ocp_solver, const double t, 
+void convergence(OCPSolverType& ocp_solver, const double t, 
                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                  const int num_iteration=10, const bool line_search=false);
 
 template <typename OCPSolverType>
-void Convergence(OCPSolverType& ocp_solver, Logger& logger, 
+void convergence(OCPSolverType& ocp_solver, Logger& logger, 
                  const double t, const Eigen::VectorXd& q, 
                  const Eigen::VectorXd& v, const int num_iteration=10, 
                  const bool line_search=false);
+
+void convergence(OCPSolver& ocp_solver, const double t, 
+                 const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                 const int num_iteration, const double dt_tol_mesh, 
+                 const double kkt_tol_mesh, const bool line_search=false);
+
+void convergence(OCPSolver& ocp_solver, Logger& logger, const double t, 
+                 const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                 const int num_iteration, const double dt_tol_mesh, 
+                 const double kkt_tol_mesh, const bool line_search=false);
 
 } // namespace benchmark
 } // namespace robotoc 
