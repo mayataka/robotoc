@@ -245,8 +245,15 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
-  ocp.expandDual(dt, d_next, d, sto);
-  cd.expandDual(dt, d_next, d_ref);
+  const double dts = Eigen::VectorXd::Random(1)[0];
+  if (switching_constraint) {
+    ocp.expandDual(dt, d_next, switch_jac, d, dts);
+    cd.expandDual(dt, dts, d_next, switch_jac, d_ref);
+  }
+  else {
+    ocp.expandDual(dt, d_next, d, dts);
+    cd.expandDual(dt, dts, d_next, d_ref);
+  }
   state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
