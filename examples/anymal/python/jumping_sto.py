@@ -112,7 +112,6 @@ sto_cost = robotoc.STOCostFunction()
 sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
 sto_constraints.set_minimum_dwell_times([0.1, 0.1, 0.65])
 sto_constraints.set_barrier(1.0e-03)
-sto_constraints.set_fraction_to_boundary_rule(0.95)
 
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
@@ -145,6 +144,17 @@ robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=130,
                                         dt_tol_mesh=0.02, kkt_tol_mesh=0.1, logger=logger)
 
 # print(ocp_solver)
+
+kkt_data = logger.get_data('KKT')
+ts_data = logger.get_data('ts')
+plot = robotoc.utils.PlotConvergence()
+plot.ylim = [0., 1.5]
+plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto')
+
+plot = robotoc.utils.PlotContactForce(mu=mu)
+plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+          t=ocp_solver.get_OCP_discretization().time_points(), 
+          fig_name='jumping_sto_f')
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

@@ -160,7 +160,7 @@ sto_cost = robotoc.STOCostFunction()
 sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
 sto_constraints.set_minimum_dwell_times(0.04)
 sto_constraints.set_barrier(1.0e-03)
-# sto_constraints.set_fraction_to_boundary_rule(0.95)
+sto_constraints.set_fraction_to_boundary_rule(0.95)
 
 T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
@@ -191,6 +191,18 @@ robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50,
                                         dt_tol_mesh=0.02, kkt_tol_mesh=0.1, logger=logger)
 
 # print(ocp_solver)
+
+kkt_data = logger.get_data('KKT')
+ts_data = logger.get_data('ts')
+plot = robotoc.utils.PlotConvergence()
+plot.ylim = [0., 1.2]
+plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto', 
+          save_dir='trotting_sto_log')
+
+plot = robotoc.utils.PlotContactForce(mu=mu)
+plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+          t=ocp_solver.get_OCP_discretization().time_points(), 
+          fig_name='trotting_sto_f', save_dir='trotting_sto_log')
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

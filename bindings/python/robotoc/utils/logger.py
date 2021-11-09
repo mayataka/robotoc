@@ -31,3 +31,7 @@ class Logger:
                 sols = solver.get_solution(var)
                 with open(log, 'a') as logf:
                     np.savetxt(logf, sols, fmt=precision, delimiter=delimiter)
+
+    def get_data(self, var):
+        log_file = os.path.join(self.log_dir, var+'.log')  
+        return np.genfromtxt(log_file, delimiter=',')

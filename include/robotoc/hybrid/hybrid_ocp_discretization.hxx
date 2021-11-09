@@ -288,6 +288,19 @@ inline double HybridOCPDiscretization::dt_lift(const int lift_index) const {
 }
 
 
+inline double HybridOCPDiscretization::dt_max() const {
+  std::vector<double> dt_phase;
+  dt_phase.push_back(dt(0));
+  for (int impulse_index=0; impulse_index<N_impulse(); ++impulse_index) {
+    dt_phase.push_back(dt_aux(impulse_index));
+  }
+  for (int lift_index=0; lift_index<N_lift(); ++lift_index) {
+    dt_phase.push_back(dt_lift(lift_index));
+  }
+  return *std::max_element(dt_phase.begin(), dt_phase.end());
+}
+
+
 inline double HybridOCPDiscretization::dt_ideal() const {
   return dt_ideal_;
 }
@@ -384,6 +397,22 @@ inline std::vector<double> HybridOCPDiscretization::timeSteps() const {
     }
   }
   return time_steps;
+}
+
+
+inline std::vector<double> HybridOCPDiscretization::timePoints() const {
+  std::vector<double> time_points;
+  for (int i=0; i<N(); ++i) {
+    time_points.push_back(t(i));
+    if (isTimeStageBeforeImpulse(i)) {
+      time_points.push_back(t_impulse(impulseIndexAfterTimeStage(i)));
+    }
+    else if (isTimeStageBeforeLift(i)) {
+      time_points.push_back(t_lift(liftIndexAfterTimeStage(i)));
+    }
+  }
+  time_points.push_back(t(N()));
+  return time_points;
 }
 
 

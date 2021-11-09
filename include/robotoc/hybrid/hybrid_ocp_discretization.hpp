@@ -265,6 +265,12 @@ public:
   double dt_lift(const int lift_index) const;
 
   ///
+  /// @brief Returns the maximum time step. 
+  /// @return The maximum time step.
+  ///
+  double dt_max() const;
+
+  ///
   /// @brief Returns the ideal time step. 
   /// @return The ideal time step.
   ///
@@ -340,10 +346,16 @@ public:
   DiscretizationMethod discretizationMethod() const;
 
   ///
-  /// @brief Returns the time steps of the discretization over the horzion. 
+  /// @brief Returns the time steps of the discretization grids over the horzion. 
   /// @return Time steps.
   ///
   std::vector<double> timeSteps() const;
+
+  ///
+  /// @brief Returns the time points of the discretization grids over the horzion. 
+  /// @return Time points.
+  ///
+  std::vector<double> timePoints() const;
 
   ///
   /// @brief Checks wheather the optimal control problem is tractable. 
