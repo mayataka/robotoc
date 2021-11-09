@@ -177,48 +177,6 @@ inline void ContactDynamics::expandPrimal(SplitDirection& d) const {
 
 
 template <typename SplitDirectionType>
-inline void ContactDynamics::expandDual(const double dt, 
-                                        const SplitDirectionType& d_next, 
-                                        SplitDirection& d) {
-  assert(dt > 0);
-  if (has_floating_base_) {
-    d.dnu_passive            = - data_.lu_passive;
-    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
-    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
-    d.dnu_passive.noalias() 
-        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
-              * d_next.dgmm();
-  }
-  data_.laf().noalias() += data_.Qafqv() * d.dx;
-  data_.laf().noalias() += data_.Qafu() * d.du;
-  data_.la().noalias()  += dt * d_next.dgmm();
-  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
-}
-
-
-template <typename SplitDirectionType>
-inline void ContactDynamics::expandDual(const double dt, 
-                                        const SplitDirectionType& d_next, 
-                                        const SwitchingConstraintJacobian& sc_jacobian,
-                                        SplitDirection& d) {
-  assert(dt > 0);
-  if (has_floating_base_) {
-    d.dnu_passive            = - data_.lu_passive;
-    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
-    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
-    d.dnu_passive.noalias() 
-        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
-              * d_next.dgmm();
-  }
-  data_.laf().noalias() += data_.Qafqv() * d.dx;
-  data_.laf().noalias() += data_.Qafu() * d.du;
-  data_.la().noalias()  += dt * d_next.dgmm();
-  data_.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
-  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
-}
-
-
-template <typename SplitDirectionType>
 inline void ContactDynamics::expandDual(const double dt, const double dts,
                                         const SplitDirectionType& d_next, 
                                         SplitDirection& d) {
