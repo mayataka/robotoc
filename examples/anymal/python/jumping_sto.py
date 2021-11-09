@@ -149,12 +149,13 @@ kkt_data = logger.get_data('KKT')
 ts_data = logger.get_data('ts')
 plot = robotoc.utils.PlotConvergence()
 plot.ylim = [0., 1.5]
-plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto')
+plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto', 
+          save_dir=logger.get_log_dir())
 
 plot = robotoc.utils.PlotContactForce(mu=mu)
 plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
           t=ocp_solver.get_OCP_discretization().time_points(), 
-          fig_name='jumping_sto_f')
+          fig_name='jumping_sto_f', save_dir=logger.get_log_dir())
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

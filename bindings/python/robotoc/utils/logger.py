@@ -35,3 +35,6 @@ class Logger:
     def get_data(self, var):
         log_file = os.path.join(self.log_dir, var+'.log')  
         return np.genfromtxt(log_file, delimiter=',')
+
+    def get_log_dir(self):
+        return self.log_dir
