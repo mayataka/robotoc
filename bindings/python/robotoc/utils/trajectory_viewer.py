@@ -1,12 +1,10 @@
 import robotoc
 import pinocchio
 from pinocchio.robot_wrapper import RobotWrapper
-from pinocchio.visualize import GepettoVisualizer, MeshcatVisualizer
 from os.path import abspath, dirname, join
 import numpy as np
 import math
 import time
-import meshcat.transformations 
 
 class TrajectoryViewer:
     def __init__(self, path_to_urdf, path_to_pkg=None, 
@@ -39,6 +37,7 @@ class TrajectoryViewer:
 
         self.viewer_type = viewer_type
         if viewer_type == 'gepetto':
+            from pinocchio.visualize import GepettoVisualizer
             self.viewer = GepettoVisualizer(self.robot.model, 
                                             self.robot.collision_model,
                                             self.robot.visual_model)
@@ -46,6 +45,8 @@ class TrajectoryViewer:
             self.camera_pos = [2.2, -3.5, 1.13] 
             self.camera_angle = [0.60612, 0.166663, 0.19261, 0.753487] 
         elif viewer_type == 'meshcat':
+            from pinocchio.visualize import MeshcatVisualizer
+            import meshcat.transformations 
             self.viewer = MeshcatVisualizer(self.robot.model, 
                                             self.robot.collision_model, 
                                             self.robot.visual_model)
@@ -70,6 +71,7 @@ class TrajectoryViewer:
 
 
     def set_camera_transform_meshcat(self, camera_tf_vec=None, zoom=None):
+        import meshcat.transformations 
         if camera_tf_vec is not None:
             self.camera_tf = meshcat.transformations.translation_matrix(camera_tf_vec) 
         if zoom is not None:
