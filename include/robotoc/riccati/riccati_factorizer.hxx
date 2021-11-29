@@ -23,7 +23,7 @@ inline RiccatiFactorizer::RiccatiFactorizer()
   : has_floating_base_(false),
     dimv_(0),
     dimu_(0),
-    max_dts0_(1.0),
+    max_dts0_(0),
     llt_(),
     llt_s_(),
     backward_recursion_() {

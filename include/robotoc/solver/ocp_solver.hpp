@@ -241,8 +241,7 @@ public:
   /// @brief Set the regularization for the STO problem
   /// @param[in] sto_reg Regularization for the STO problem.
   ///
-  void setSTORegularization(
-      const STORegularization& sto_reg=STORegularization::defaultSTORegularization());
+  void setSTORegularization(const STORegularization& sto_reg);
 
   ///
   /// @brief Set settings for line search. Defalt is 

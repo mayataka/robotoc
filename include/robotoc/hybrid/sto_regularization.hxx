@@ -25,6 +25,9 @@ inline STORegularization::STORegularization(
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
+  if (reg_type != STORegularizationType::None) {
+    is_reg_valid_ = true;
+  }
 }
 
 
@@ -93,11 +96,6 @@ inline double STORegularization::getRegularization(const double kkt_error) const
     default:
       return 0.0;
   }
-}
-
-
-inline STORegularization STORegularization::defaultSTORegularization() {
-  return STORegularization(STORegularizationType::Quad, 1.0e-06);
 }
 
 } // namespace robotoc 

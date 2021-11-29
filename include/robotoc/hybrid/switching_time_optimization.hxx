@@ -14,7 +14,7 @@ inline SwitchingTimeOptimization::SwitchingTimeOptimization(
     const int max_num_impulse_events)
   : sto_cost_(sto_cost), 
     sto_constraints_(sto_constraints),
-    sto_reg_(STORegularization::defaultSTORegularization()),
+    sto_reg_(STORegularization()),
     max_num_impulse_events_(max_num_impulse_events),
     kkt_error_(0),
     cost_val_(0),

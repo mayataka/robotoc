@@ -36,9 +36,9 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
   /// the switching time. Used in a heuristic regularization on the dynamic 
-  /// programming recursion. Must be positive. Default is 1.0.
+  /// programming recursion. Must be positive. Default is 0.1.
   ///
-  RiccatiFactorizer(const Robot& robot, const double max_dts0=1.0);
+  RiccatiFactorizer(const Robot& robot, const double max_dts0=0.1);
 
   ///
   /// @brief Default constructor. 

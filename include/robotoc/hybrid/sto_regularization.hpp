@@ -94,12 +94,6 @@ public:
   ///
   double getRegularization(const double kkt_error) const;
 
-  ///
-  /// @return Default STO regularization. STORegularizationType is 
-  /// STORegularizationType::Quad and weight parameter is 0.1.
-  ///
-  static STORegularization defaultSTORegularization();
-
 private:
   STORegularizationType reg_type_;
   double w_;

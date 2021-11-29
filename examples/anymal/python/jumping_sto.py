@@ -21,6 +21,7 @@ flying_time = flying_up_time + flying_down_time
 ground_time = 0.7
 t0 = 0.
 
+
 # Create the cost function
 cost = robotoc.CostFunction()
 q_standing = np.array([0., 0., 0.4792, 0., 0., 0., 1.0, 
@@ -110,7 +111,7 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
-sto_constraints.set_minimum_dwell_times([0.1, 0.1, 0.65])
+sto_constraints.set_minimum_dwell_times([0.15, 0.15, 0.65])
 sto_constraints.set_barrier(1.0e-03)
 
 T = t0 + flying_time + 2*ground_time
@@ -131,19 +132,15 @@ ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased)
 ocp_solver.mesh_refinement(t)
 ocp_solver.init_constraints(t)
 
-# Add the regularization for STO problem 
-# (the below is the default STO regularization)
-# sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Square, 
-#                                     w=1.0e-06) 
-sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Square, 
-                                    w=1.0e-02) 
-ocp_solver.set_STO_regularization(sto_reg)
 
 logger = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='jumping_sto')
-robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=130, 
+robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=150, 
                                         dt_tol_mesh=0.02, kkt_tol_mesh=0.1, logger=logger)
 
-# print(ocp_solver)
+logger_f = robotoc.utils.Logger(vars=['f'], log_name='jumping_sto')
+logger_f.take_log(ocp_solver)
+
+print(ocp_solver)
 
 kkt_data = logger.get_data('KKT')
 ts_data = logger.get_data('ts')

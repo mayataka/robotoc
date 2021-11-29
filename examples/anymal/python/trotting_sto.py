@@ -91,7 +91,6 @@ constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 constraints.set_barrier(1.0e-03)
-constraints.set_fraction_to_boundary_rule(0.95)
 
 
 # Create the contact sequence
@@ -119,37 +118,37 @@ contact_sequence.push_back(contact_status=contact_status_lhrf_swing,
 contact_points[1][0] += 0.5 * step_length
 contact_points[2][0] += 0.5 * step_length
 contact_status_standing.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_standing, t0+0.2, sto=True)
+contact_sequence.push_back(contact_status_standing, t0+0.21, sto=True)
 
 contact_status_lfrh_swing = robot.create_contact_status()
 contact_status_lfrh_swing.activate_contacts([1, 2])
 contact_status_lfrh_swing.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_lfrh_swing, t0+0.4, sto=True)
+contact_sequence.push_back(contact_status_lfrh_swing, t0+0.42, sto=True)
 
 contact_points[0][0] += step_length
 contact_points[3][0] += step_length
 contact_status_standing.set_contact_points(contact_points)
-contact_sequence.push_back(contact_status_standing, t0+0.6, sto=True)
+contact_sequence.push_back(contact_status_standing, t0+0.63, sto=True)
 
 for i in range(cycle-1):
-    t1 = t0 + (i+1)*0.8
+    t1 = t0 + (i+1)*0.84
     contact_status_lhrf_swing.set_contact_points(contact_points)
     contact_sequence.push_back(contact_status_lhrf_swing, t1, sto=True)
 
     contact_points[1][0] += step_length
     contact_points[2][0] += step_length
     contact_status_standing.set_contact_points(contact_points)
-    contact_sequence.push_back(contact_status_standing, t1+0.2, sto=True)
+    contact_sequence.push_back(contact_status_standing, t1+0.21, sto=True)
 
     contact_status_lfrh_swing.set_contact_points(contact_points)
     contact_sequence.push_back(contact_status_lfrh_swing, 
-                               t1+0.4, sto=True)
+                               t1+0.42, sto=True)
 
     contact_points[0][0] += step_length
     contact_points[3][0] += step_length
     contact_status_standing.set_contact_points(contact_points)
     contact_sequence.push_back(contact_status_standing, 
-                               t1+0.6, sto=True)
+                               t1+0.63, sto=True)
 
 # you can chech the contact sequence as 
 # print(contact_sequence)
@@ -158,9 +157,8 @@ for i in range(cycle-1):
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
-sto_constraints.set_minimum_dwell_times(0.04)
+sto_constraints.set_minimum_dwell_times([0.02, 0.2, 0.02, 0.2, 0.02])
 sto_constraints.set_barrier(1.0e-03)
-sto_constraints.set_fraction_to_boundary_rule(0.95)
 
 T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
@@ -180,11 +178,6 @@ ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased)
 ocp_solver.mesh_refinement(t)
 ocp_solver.init_constraints(t)
 
-# Add the regularization for STO problem 
-# (the below is the default STO regularization)
-sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Square, 
-                                    w=1.0) 
-ocp_solver.set_STO_regularization(sto_reg)
 
 logger = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
 robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 
