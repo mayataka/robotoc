@@ -26,8 +26,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 @note 
 - If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
 ```
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      [0, 1, 2, 3], baumgarte_time_step)
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase)
 print(robot)
 ```
 - `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
@@ -168,19 +167,14 @@ Finally, we can construct the optimal control solver!
 ```
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
-ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
-                               sto_cost, sto_constraints, T, N, nthreads=4)
+ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
+                  cost=cost, constraints=constraints, 
+                  sto_cost=sto_cost, sto_constraints=sto_constraints, T=T, N=N)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
+                               nthreads=4)
 ```
 @remark Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
-Therefore, even if there are empty (e.g., the STO cost of this example is empty), please pass them to the constructor of OCPSolver.
-```
-print(contact_sequence)
-```
-
-To solve the STO problems, we have to choose the discretization method as DiscretizationMethod::PhaseBased
-```
-ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased) 
-```
+Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
 
 So, let's run the solver! 
 ```
@@ -195,7 +189,7 @@ ocp_solver.set_solution("f", f_init) # set the initial guess of the solution.
 
 ocp_solver.mesh_refinement(t) 
 ```
-@note `ocp_solver.mesh_refinement(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased. This also initializes the slack and dual variables of the primal-dual interior point method.
+@note `ocp_solver.mesh_refinement(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased (this is specified when the is enabled). This also initializes the slack and dual variables of the primal-dual interior point method.
 
 In this example, we want to optimize the switching times as well as the whole-body trajectory of the robot.
 Then we need to carry on mesh refinement because the switching times change over the iterations. 

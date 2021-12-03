@@ -56,14 +56,16 @@ Finally, we can construct the optimal control solver!
 T = 3.0
 N = 60
 nthreads = 4
-ocp_solver = robotoc.UnconstrOCPSolver(robot, cost, constraints, T, N, nthreads)
+ocp = robotoc.UnconstrOCP(robot, cost, constraints, T, N)
+ocp_solver = robotoc.UnconstrOCPSolver(ocp, nthreads)
 ```
 or ParNMPC solver!
 ```
 T = 3.0
 N = 60
 nthreads = 4
-ocp_solver = robotoc.UnconstrParNMPCSolver(robot, cost, constraints, T, N, nthreads)
+parnmpc = robotoc.UnconstrParNMPC(robot, cost, constraints, T, N)
+ocp_solver = robotoc.UnconstrParNMPCSolver(parnmpc, nthreads)
 ```
 
 So, let's run the solver! 

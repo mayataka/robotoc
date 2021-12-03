@@ -134,8 +134,6 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.mesh_refinement(t)
-ocp_solver.init_constraints(t)
-
 
 logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='jumping_sto')
 robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=150, 
@@ -154,7 +152,7 @@ plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto',
 plot = robotoc.utils.PlotContactForce(mu=mu)
 plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
           t=ocp_solver.get_OCP_discretization().time_points(), 
-          fig_name='jumping_sto_f', save_dir=logger.get_log_dir())
+          fig_name='jumping_sto_f', save_dir=logger_f.get_log_dir())
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

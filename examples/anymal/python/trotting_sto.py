@@ -180,8 +180,6 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.mesh_refinement(t)
-ocp_solver.init_constraints(t)
-
 
 logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
 robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 

@@ -12,6 +12,8 @@ Required header files are as follows.
 
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
+#include "robotoc/unconstr/unconstr_ocp.hpp"
+#include "robotoc/unconstr/unconstr_parnmpc.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -110,14 +112,16 @@ Finally, we can construct the optimal control solver!
   const double T = 6;
   const int N = 120;
   const int nthreads = 4;
-  robotoc::UnconstrOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
+  robotoc::UnconstrOCP ocp_solver(robot, cost, constraints, T, N);
+  robotoc::UnconstrOCPSolver ocp_solver(ocp, nthreads);
 ```
 or ParNMPC solver!
 ```
   const double T = 6;
   const int N = 120;
   const int nthreads = 4;
-  robotoc::UnconstrParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
+  robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, nthreads);
 ```
 
 So, let's run the solver!

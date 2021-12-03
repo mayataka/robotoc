@@ -11,6 +11,7 @@ Required header files are as follows.
 #include "Eigen/Core"
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -46,8 +47,7 @@ First, define the robot model with contact frames (in this case, the contact fra
 @note 
 - If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
 ```
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       {0, 1, 2, 3}, baumgarte_time_step);
+  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase);
   std::cout << robot << std::endl;
 ```
 - `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
@@ -204,8 +204,8 @@ Finally, we can construct the optimal control solver!
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = T / dt;
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
-                                T, N, nthreads);
+  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
 ```
 
 So, let's run the solver!

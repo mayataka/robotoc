@@ -26,8 +26,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 @note 
 - If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
 ```
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      [0, 1, 2, 3], baumgarte_time_step)
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase)
 print(robot)
 ```
 - `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
@@ -177,8 +176,10 @@ Finally, we can construct the optimal control solver!
 ```
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
-ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
-                               T, N, nthreads=4)
+ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
+                  cost=cost, constraints=constraints, T=T, N=N)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
+                               nthreads=4)
 ```
 
 So, let's run the solver! 
