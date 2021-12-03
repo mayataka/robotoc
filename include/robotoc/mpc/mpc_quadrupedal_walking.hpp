@@ -23,20 +23,13 @@ class MPCQuadrupedalWalking {
 public:
   ///
   /// @brief Construct MPC solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] ocp Optimal contro problem. 
   /// @param[in] max_num_steps Maximum number of the steps on the horizon. 
   /// Must be positive. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalWalking(const Robot& robot, 
-                        const std::shared_ptr<CostFunction>& cost, 
-                        const std::shared_ptr<Constraints>& constraints, 
-                        const double T, const int N, const int max_num_steps, 
+  MPCQuadrupedalWalking(const OCP& ocp, const int max_num_steps, 
                         const int nthreads);
 
   ///
@@ -122,12 +115,6 @@ public:
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();
-
-  ///
-  /// @brief Shows the information of the discretized optimal control problem
-  /// onto console.
-  ///
-  void showInfo() const;
 
   static constexpr double min_dt 
       = std::sqrt(std::numeric_limits<double>::epsilon());

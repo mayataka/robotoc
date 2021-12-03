@@ -3,6 +3,7 @@ from .impulse import *
 from .ocp import *
 from .cost import *
 from .constraints import *
+from .unconstr import *
 from .hybrid import *
 from .line_search import *
 from .solver import *

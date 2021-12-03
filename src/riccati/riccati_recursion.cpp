@@ -7,25 +7,22 @@
 
 namespace robotoc {
 
-RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N, 
-                                   const int max_num_impulse, 
-                                   const int nthreads)
+RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads)
   : nthreads_(nthreads),
-    N_(N),
-    N_all_(N+1),
-    factorizer_(robot),
-    lqr_policy_(robot, N, max_num_impulse),
-    sto_policy_(2*max_num_impulse+1, STOPolicy(robot)),
-    factorization_m_(robot),
-    max_primal_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)), 
-    max_dual_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
+    N_all_(ocp.N()+1),
+    factorizer_(ocp.robot()),
+    lqr_policy_(ocp.robot(), ocp.N(), 
+                ocp.discrete().maxNumEachDiscreteEvents()),
+    sto_policy_(2*ocp.discrete().maxNumEachDiscreteEvents()+1, 
+                STOPolicy(ocp.robot())),
+    factorization_m_(ocp.robot()),
+    max_primal_step_sizes_(
+        Eigen::VectorXd::Zero(
+            ocp.N()+1+3*ocp.discrete().maxNumEachDiscreteEvents())), 
+    max_dual_step_sizes_(
+        Eigen::VectorXd::Zero(
+            ocp.N()+1+3*ocp.discrete().maxNumEachDiscreteEvents())) {
   try {
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
-    if (max_num_impulse < 0) {
-      throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }
@@ -39,7 +36,6 @@ RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N,
 
 RiccatiRecursion::RiccatiRecursion()
   : nthreads_(0),
-    N_(0),
     N_all_(0),
     factorizer_(),
     lqr_policy_(),
@@ -51,6 +47,22 @@ RiccatiRecursion::RiccatiRecursion()
 
 
 RiccatiRecursion::~RiccatiRecursion() {
+}
+
+
+void RiccatiRecursion::resize(const OCP& ocp) {
+  const int max_num_each_discrete_events 
+      = ocp.discrete().maxNumEachDiscreteEvents();
+  lqr_policy_.resize(ocp.robot(), max_num_each_discrete_events);
+  while (2*max_num_each_discrete_events+1 > sto_policy_.size()) {
+    sto_policy_.emplace_back(ocp.robot());
+  }
+  const int N = ocp.discrete().N();
+  const int max_N_all = N + 1 + 3*max_num_each_discrete_events;
+  if (max_N_all > max_primal_step_sizes_.size()) {
+    max_primal_step_sizes_.resize(max_N_all);
+    max_dual_step_sizes_.resize(max_N_all);
+  }
 }
 
 
@@ -334,7 +346,7 @@ void RiccatiRecursion::getStateFeedbackGain(const int time_stage,
                                             Eigen::MatrixXd& Kq, 
                                             Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);
-  assert(time_stage < N_);
+  assert(time_stage < lqr_policy_.data.size()-1);
   Kq = lqr_policy_[time_stage].Kq();
   Kv = lqr_policy_[time_stage].Kv();
 }

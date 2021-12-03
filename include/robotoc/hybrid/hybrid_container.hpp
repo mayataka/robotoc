@@ -35,9 +35,12 @@ public:
 ///
 /// @class hybrid_container
 /// @brief A container used for formulating the hybrid optimal control problem. 
-/// This container has data for time stages (with Type), data for lift stages 
-/// (with Type), data for aux stages (with Type), data for impulse stages
-/// (with ImpulseType), and data for switching ingredients.
+/// This container has data for time stages with Type, data for lift stages 
+/// (additional time stages just after the lift events) (with Type), data for 
+/// the auxiliary stages (additional time stages just after the impulse events)
+/// (with Type), data for impulse stages (additional time stages at the impulse 
+/// events) (with ImpulseType), and data for switching constraints (with 
+/// SwitchingType).
 /// @tparam Type The type name of the standard data type.
 /// @tparam ImpulseType The type name of the impulse data type. Defalt is 
 /// internal::EmptyType.
@@ -51,15 +54,20 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data. Default is 0.
+  /// @param[in] N Number of the discretization grids of the horizon except for 
+  /// the discrete events. Must be positive.
+  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
+  /// each discrete events on the horizon. OCP data for impulse and lift events 
+  /// are constructed according to this value. Default is 0. 
+  /// Must be non-negative.
   ///
-  hybrid_container(const Robot& robot, const int N, const int N_impulse=0) 
+  hybrid_container(const Robot& robot, const int N, 
+                   const int max_num_each_discrete_events=0) 
     : data(N+1, Type(robot)), 
-      aux(N_impulse, Type(robot)), 
-      lift(N_impulse, Type(robot)),
-      impulse(N_impulse, ImpulseType(robot)),
-      switching(N_impulse, SwitchingType(robot)) {
+      aux(max_num_each_discrete_events, Type(robot)), 
+      lift(max_num_each_discrete_events, Type(robot)),
+      impulse(max_num_each_discrete_events, ImpulseType(robot)),
+      switching(max_num_each_discrete_events, SwitchingType(robot)) {
   }
 
   ///
@@ -94,6 +102,29 @@ public:
   hybrid_container& operator=(hybrid_container&&) noexcept = default;
 
   ///
+  /// @brief Resize the data without reallocating all the data. 
+  /// @param[in] robot Robot model.
+  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
+  /// each discrete events on the horizon. OCP data for impulse and lift events 
+  /// are constructed according to this value. Must be non-negative.
+  /// @remark robot model must be the same as one in the argument of the 
+  /// constructor.
+  ///
+  void resize(const Robot& robot, const int max_num_each_discrete_events) {
+    assert(max_num_each_discrete_events >= 0);
+    assert(impulse.size() == aux.size());
+    assert(impulse.size() == switching.size());
+    while (max_num_each_discrete_events > impulse.size()) {
+      impulse.emplace_back(robot);
+      aux.emplace_back(robot);
+      switching.emplace_back(robot);
+    }
+    while (max_num_each_discrete_events > lift.size()) {
+      lift.emplace_back(robot);
+    }
+  }
+
+  ///
   /// @brief Overload operator[] to access the hybrid_container::data as 
   /// std::vector. 
   ///
@@ -113,6 +144,34 @@ public:
   }
 
   ///
+  /// @brief Data for the time stages.
+  ///
+  std::vector<Type> data;
+
+  ///
+  /// @brief Data for the auxiliary stages 
+  /// (additional time stages just after the impulse events).
+  ///
+  std::vector<Type> aux;
+
+  ///
+  /// @brief Data for the lift stages 
+  /// (additional time stages just after the lift events).
+  ///
+  std::vector<Type> lift;
+
+  ///
+  /// @brief Data for the impulse stages 
+  /// (additional time stages at the impulse events).
+  ///
+  std::vector<ImpulseType> impulse;
+
+  ///
+  /// @brief Data for the switching constraints. 
+  ///
+  std::vector<SwitchingType> switching;
+
+  ///
   /// @brief Displays the elements of the container onto a ostream.
   ///
   void disp(std::ostream& os) const {
@@ -130,6 +189,10 @@ public:
       os << "  aux: " << i << std::endl;
       os << aux[i] << std::endl;
     }
+    for (int i=0; i<max_num_impulses; ++i) {
+      os << "  switching: " << i << std::endl;
+      os << switching[i] << std::endl;
+    }
     const int max_num_lifts = lift.size();
     for (int i=0; i<max_num_lifts; ++i) {
       os << "  lift: " << i << std::endl;
@@ -137,9 +200,6 @@ public:
     }
   }
 
-  std::vector<Type> data, aux, lift;
-  std::vector<ImpulseType> impulse;
-  std::vector<SwitchingType> switching;
 };
 
 } // namespace robotoc

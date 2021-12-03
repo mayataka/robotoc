@@ -14,7 +14,7 @@ namespace robotoc {
 
 /// 
 /// @enum DiscretizationMethod
-/// @brief Discretization method of the optimal control problem.
+/// @brief Discretization method of the hybrid optimal control problem.
 ///
 enum class DiscretizationMethod {
   GridBased,
@@ -23,20 +23,20 @@ enum class DiscretizationMethod {
 
 ///
 /// @class HybridOCPDiscretization
-/// @brief Non-uniform time discretization of the hybrid optimal control problem.
+/// @brief Discretization of the hybrid optimal control problem.
 ///
 class HybridOCPDiscretization {
 public:
   ///
   /// @brief Constructor. 
   /// @param[in] T Length of the horizon.
-  /// @param[in] N Ideal number of the discretization grids of the horizon. 
-  /// @param[in] max_events Maximum number of each discrete events 
-  /// (impulse and lift). 
-  /// @note The actual number of the grids can differ from N depending on the 
-  /// discrete events.
+  /// @param[in] N Number of the discretization grids of the horizon except for 
+  /// the discrete events. Must be positive.
+  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
+  /// each discrete events on the horizon. Must be non-negative.
   ///
-  HybridOCPDiscretization(const double T, const int N, const int max_events);
+  HybridOCPDiscretization(const double T, const int N, 
+                          const int max_num_each_discrete_events);
 
   ///
   /// @brief Default constructor. 
@@ -76,19 +76,32 @@ public:
 
   ///
   /// @brief Discretizes the finite horizon taking into account the discrete 
-  /// events. 
+  /// events.
   /// @param[in] contact_sequence Shared ptr to the contact sequence.
   /// @param[in] t Initial time of the horizon.
+  /// @note If the discretization method is DiscretizationMethod::GridBased, 
+  /// this funtion can change the structure of the discretization, i.e., 
+  /// the number of grids on each contact phase. If the discretization method is 
+  /// DiscretizationMethod::PhaseBased, this function keeps the structure of the 
+  /// discretization. In the latter case, meshRefinement() is needed to chagne 
+  /// the discretization structure.
   ///
   void discretize(const std::shared_ptr<ContactSequence>& contact_sequence, 
                   const double t);
 
   ///
-  /// @brief Applies the mesh refinement that reduces the numbers of the grids
+  /// @brief Applies the mesh refinement and changes the structure of the 
+  /// discretization, i.e., the number of grids on each contact phase for 
+  /// the discretization method DiscretizationMethod::PhaseBased.
+  /// Specifically, this function reduces the numbers of the grids
   /// from the phases where the solution is relatively accurate and increases
-  /// them on the phases where the solution is relatively inaccurate. 
+  /// them to the phases where the solution is relatively inaccurate while 
+  /// keeping the total number of the discretization grids including the 
+  /// discrete events. 
   /// @param[in] contact_sequence Contact sequence.
   /// @param[in] t Initial time of the horizon.
+  /// @note This function do nothing if the discretization method is 
+  /// DiscretizationMethod::GridBased.
   ///
   void meshRefinement(const std::shared_ptr<ContactSequence>& contact_sequence, 
                       const double t);
@@ -120,152 +133,157 @@ public:
   int N_phase(const int phase) const;
 
   ///
-  /// @brief Returns number of contact phases. 
-  /// @return Number of contact phases.
+  /// @brief Returns the total number of the contact phases. 
+  /// @return Total number of the contact phases.
   ///
   int numContactPhases() const;
 
   ///
-  /// @brief Returns number of discrete events. 
-  /// @return Number of discrete events.
+  /// @brief Returns the total number of the discrete events, that is, sum of 
+  /// N_impulse() and N_lift(). 
+  /// @return Total number of the discrete events.
   ///
   int numDiscreteEvents() const;
 
   ///
-  /// @brief Returns the contact phase of the time stage. 
+  /// @brief Returns the contact phase of the specified time stage. 
   /// @param[in] time_stage Time stage of interest. 
   /// @return Contact phase of the time stage. 
   ///
   int contactPhase(const int time_stage) const;
 
   ///
-  /// @brief Returns the contact phase after the impulse. 
-  /// @param[in] impulse_index Index of the impulse of interest. 
-  /// @return Contact phase after the impulse. 
+  /// @brief Returns the contact phase after the specified impulse event. 
+  /// @param[in] impulse_index Index of the impulse event of interest. 
+  /// @return Contact phase after the impulse event. 
   ///
   int contactPhaseAfterImpulse(const int impulse_index) const;
 
   ///
-  /// @brief Returns the contact phase after the lift. 
-  /// @param[in] lift_index Index of the lift of interest. 
-  /// @return Contact phase after the lift. 
+  /// @brief Returns the contact phase after the specified lift event. 
+  /// @param[in] lift_index Index of the lift event of interest. 
+  /// @return Contact phase after the lift event. 
   ///
   int contactPhaseAfterLift(const int lift_index) const;
 
   ///
-  /// @brief Returns the impulse index after the time stage. 
+  /// @brief Returns the impulse event index after the specified time stage. 
   /// @param[in] time_stage Time stage of interest. 
-  /// @return Impulse index after the time stage. 
+  /// @return Impulse event index after the time stage. 
   ///
   int impulseIndexAfterTimeStage(const int time_stage) const;
 
   ///
-  /// @brief Returns the lift index after the time stage. 
+  /// @brief Returns the lift event index after the specified time stage. 
   /// @param[in] time_stage Time stage of interest. 
-  /// @return Lift index after the time stage. 
+  /// @return Lift event index after the time stage. 
   ///
   int liftIndexAfterTimeStage(const int time_stage) const;
 
   ///
-  /// @brief Returns the time stage before the impulse. 
-  /// @param[in] impulse_index Index of the impulse of interest. 
-  /// @return Time stage before the impulse. 
+  /// @brief Returns the time stage before the specified impulse event. 
+  /// @param[in] impulse_index Index of the impulse event of interest. 
+  /// @return Time stage before the impulse event. 
   ///
   int timeStageBeforeImpulse(const int impulse_index) const;
 
   ///
-  /// @brief Returns the time stage after the impulse. 
-  /// @param[in] impulse_index Index of the impulse of interest. 
-  /// @return Time stage after the impulse. 
+  /// @brief Returns the time stage after the specified impulse event. 
+  /// @param[in] impulse_index Index of the impulse event of interest. 
+  /// @return Time stage after the impulse event. 
   ///
   int timeStageAfterImpulse(const int impulse_index) const;
 
   ///
-  /// @brief Returns the time stage before the lift. 
-  /// @param[in] lift_index Index of the lift of interest. 
-  /// @return Time stage before the lift. 
+  /// @brief Returns the time stage before the specified lift event. 
+  /// @param[in] lift_index Index of the lift event of interest. 
+  /// @return Time stage before the lift event. 
   ///
   int timeStageBeforeLift(const int lift_index) const;
 
   ///
-  /// @brief Returns the time stage after the lift. 
-  /// @param[in] lift_index Index of the lift of interest. 
-  /// @return Time stage after the lift. 
+  /// @brief Returns the time stage after the specified lift event. 
+  /// @param[in] lift_index Index of the lift event of interest. 
+  /// @return Time stage after the lift event. 
   ///
   int timeStageAfterLift(const int lift_index) const;
 
   ///
-  /// @brief Checks wheather the time stage is just before the impulse or not. 
+  /// @brief Checks wheather the time stage is just before an impulse event.
   /// @param[in] time_stage Time stage of interest. 
-  /// @return true if the time stage is just before the impulse. false if not.
+  /// @return true if the time stage is just before an impulse event. 
+  /// false if not.
   ///
   bool isTimeStageBeforeImpulse(const int time_stage) const;
 
   ///
-  /// @brief Checks wheather the time stage is just after the impulse or not. 
+  /// @brief Checks wheather the time stage is just after an impulse event.
   /// @param[in] time_stage Time stage of interest. 
-  /// @return true if the time stage is just after the impulse. false if not.
+  /// @return true if the time stage is just after an impulse event. 
+  /// false if not.
   ///
   bool isTimeStageAfterImpulse(const int time_stage) const;
 
   ///
-  /// @brief Checks wheather the time stage is just before the lift or not. 
+  /// @brief Checks wheather the time stage is just before a lift event. 
   /// @param[in] time_stage Time stage of interest. 
   /// @return true if the time stage is just before the lift. false if not.
   ///
   bool isTimeStageBeforeLift(const int time_stage) const;
 
   ///
-  /// @brief Checks wheather the time stage is just after the lift or not. 
+  /// @brief Checks wheather the time stage is just after a lift event. 
   /// @param[in] time_stage Time stage of interest. 
   /// @return true if the time stage is just after the lift. false if not.
   ///
   bool isTimeStageAfterLift(const int time_stage) const;
 
   ///
-  /// @brief Returns the time of the time stage. 
+  /// @brief Returns the time of the specified time stage. 
   /// @param[in] time_stage Time stage of interest. 
   /// @return Time of the time stage of interest.
   ///
   double t(const int time_stage) const;
 
   ///
-  /// @brief Returns the time of the impulse. 
-  /// @param[in] impulse_index Index of impulse of interest. 
-  /// @return Time of the impulse of interest.
+  /// @brief Returns the time of the specified impulse event. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Time of the impulse event of interest.
   ///
   double t_impulse(const int impulse_index) const;
 
   ///
-  /// @brief Returns the time of the lift. 
-  /// @param[in] lift_index Index of lift of interest. 
-  /// @return Time of the lift of interest.
+  /// @brief Returns the time of the specified lift event. 
+  /// @param[in] lift_index Index of lift event of interest. 
+  /// @return Time of the lift event of interest.
   ///
   double t_lift(const int lift_index) const;
 
   ///
-  /// @brief Returns the time step of the time stage. 
+  /// @brief Returns the time step of the specified time stage. 
   /// @param[in] time_stage Time stage of interest. 
   /// @return Time step of the time stage of interest.
   ///
   double dt(const int time_stage) const;
 
   ///
-  /// @brief Returns the time step of the auxiliary stage of the impulse. 
-  /// @param[in] impulse_index Index of impulse of interest. 
-  /// @return Time step of the auxiliary stage of the impulse.
+  /// @brief Returns the time step of the auxiliary stage of the specified 
+  /// impulse event. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Time step of the auxiliary stage of the impulse event.
   ///
   double dt_aux(const int impulse_index) const;
 
   ///
-  /// @brief Returns the time step of the auxiliary stage of the lift. 
-  /// @param[in] lift_index Index of lift of interest. 
-  /// @return Time step of the auxiliary stage of the lift.
+  /// @brief Returns the time step of the auxiliary stage of the specified lift
+  /// event. 
+  /// @param[in] lift_index Index of lift event of interest. 
+  /// @return Time step of the auxiliary stage of the lift event.
   ///
   double dt_lift(const int lift_index) const;
 
   ///
-  /// @brief Returns the maximum time step. 
+  /// @brief Returns the maximum time step over the horizon. 
   /// @return The maximum time step.
   ///
   double dt_max() const;
@@ -334,8 +352,8 @@ public:
   int eventIndexLift(const int lift_index) const;
 
   ///
-  /// @brief Returns the event type of this discrete event.
-  /// @return Event type of this discrete event. 
+  /// @brief Returns the event type of the specified discrete event.
+  /// @return Event type of the discrete event. 
   ///
   DiscreteEventType eventType(const int event_index) const;
 
@@ -344,6 +362,14 @@ public:
   /// @return The current discretization method.
   ///
   DiscretizationMethod discretizationMethod() const;
+
+  ///
+  /// @brief Returns the maximum possible number of the each discrete events on 
+  // the horizon. 
+  /// @return Maximum possible number of the each discrete events on 
+  // the horizon. 
+  ///
+  int maxNumEachDiscreteEvents() const;
 
   ///
   /// @brief Returns the time steps of the discretization grids over the horzion. 
@@ -378,14 +404,14 @@ public:
                                   const HybridOCPDiscretization& discretization);
 
   ///
-  /// @brief Minimum step size of the discretization grid. 
+  /// @brief Minimum time step size of the discretization. 
   ///
   static constexpr double k_min_dt 
       = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:
   double T_, dt_ideal_, max_dt_;
-  int N_, N_ideal_, N_impulse_, N_lift_, max_events_;
+  int N_, N_ideal_, N_impulse_, N_lift_, max_num_each_discrete_events_;
   std::vector<int> N_phase_, contact_phase_from_time_stage_, 
                    impulse_index_after_time_stage_, 
                    lift_index_after_time_stage_, time_stage_before_impulse_, 

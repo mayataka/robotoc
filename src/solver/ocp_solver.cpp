@@ -7,31 +7,25 @@
 
 namespace robotoc {
 
-OCPSolver::OCPSolver(const Robot& robot, 
-                     const std::shared_ptr<ContactSequence>& contact_sequence,
-                     const std::shared_ptr<CostFunction>& cost, 
-                     const std::shared_ptr<Constraints>& constraints, 
-                     const double T, const int N, const int nthreads)
-  : robots_(nthreads, robot),
+OCPSolver::OCPSolver(const OCP& ocp, 
+                     const std::shared_ptr<ContactSequence>& contact_sequence, 
+                     const int nthreads)
+  : robots_(nthreads, ocp.robot()),
     contact_sequence_(contact_sequence),
-    dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
-    sto_(),
-    riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
-    line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
-    ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
-    riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
-    kkt_matrix_(robot, N, contact_sequence->maxNumEachEvents()),
-    kkt_residual_(robot, N, contact_sequence->maxNumEachEvents()),
-    s_(robot, N, contact_sequence->maxNumEachEvents()),
-    d_(robot, N, contact_sequence->maxNumEachEvents()),
+    dms_(nthreads),
+    sto_(ocp),
+    riccati_recursion_(ocp, nthreads),
+    line_search_(ocp.robot(), ocp.N(), 
+                 contact_sequence->maxNumEachEvents(), nthreads),
+    ocp_(ocp),
+    riccati_factorization_(ocp.robot(), ocp.N(), 
+                           contact_sequence->maxNumEachEvents()),
+    kkt_matrix_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
+    kkt_residual_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
+    s_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
+    d_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
     kkt_error_(0) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }
@@ -40,52 +34,10 @@ OCPSolver::OCPSolver(const Robot& robot,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  for (auto& e : s_.data)    { robot.normalizeConfiguration(e.q); }
-  for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
-  for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
-  for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
-}
-
-
-OCPSolver::OCPSolver(const Robot& robot, 
-                     const std::shared_ptr<ContactSequence>& contact_sequence,
-                     const std::shared_ptr<CostFunction>& cost, 
-                     const std::shared_ptr<Constraints>& constraints, 
-                     const std::shared_ptr<STOCostFunction>& sto_cost, 
-                     const std::shared_ptr<STOConstraints>& sto_constraints, 
-                     const double T, const int N, const int nthreads)
-  : robots_(nthreads, robot),
-    contact_sequence_(contact_sequence),
-    dms_(N, contact_sequence->maxNumEachEvents(), nthreads),
-    sto_(sto_cost, sto_constraints, contact_sequence->maxNumEachEvents()),
-    riccati_recursion_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
-    line_search_(robot, N, contact_sequence->maxNumEachEvents(), nthreads),
-    ocp_(robot, cost, constraints, T, N, contact_sequence->maxNumEachEvents()),
-    riccati_factorization_(robot, N, contact_sequence->maxNumEachEvents()),
-    kkt_matrix_(robot, N, contact_sequence->maxNumEachEvents()),
-    kkt_residual_(robot, N, contact_sequence->maxNumEachEvents()),
-    s_(robot, N, contact_sequence->maxNumEachEvents()),
-    d_(robot, N, contact_sequence->maxNumEachEvents()),
-    kkt_error_(0) {
-  try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
-    if (nthreads <= 0) {
-      throw std::out_of_range("invalid value: nthreads must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  for (auto& e : s_.data)    { robot.normalizeConfiguration(e.q); }
-  for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
-  for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
-  for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.data)    { ocp.robot().normalizeConfiguration(e.q); }
+  for (auto& e : s_.impulse) { ocp.robot().normalizeConfiguration(e.q); }
+  for (auto& e : s_.aux)     { ocp.robot().normalizeConfiguration(e.q); }
+  for (auto& e : s_.lift)    { ocp.robot().normalizeConfiguration(e.q); }
 }
 
 
@@ -94,12 +46,6 @@ OCPSolver::OCPSolver() {
 
 
 OCPSolver::~OCPSolver() {
-}
-
-
-void OCPSolver::setDiscretizationMethod(
-    const DiscretizationMethod discretization_method) {
-  ocp_.setDiscretizationMethod(discretization_method);
 }
 
 
@@ -455,7 +401,7 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 
 
 bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  // ocp_.discretize(contact_sequence_, t);
+  // ocp_.discretize(t);
   // discretizeSolution();
   return dms_.isFeasible(ocp_, robots_, contact_sequence_, s_);
 }
@@ -508,8 +454,7 @@ void OCPSolver::setLineSearchSettings(const LineSearchSettings& settings) {
 
 
 void OCPSolver::disp(std::ostream& os) const {
-  os << contact_sequence_ << std::endl;
-  os << ocp_.discrete() << std::endl;
+  os << ocp_ << std::endl;
 }
 
 

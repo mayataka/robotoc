@@ -9,26 +9,26 @@
 
 namespace robotoc {
 
-MPCQuadrupedalTrotting::MPCQuadrupedalTrotting(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints, const double T, 
-    const int N, const int max_num_steps, const int nthreads)
-  : robot_(robot),
-    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_num_steps)),
-    ocp_solver_(robot, contact_sequence_, cost, constraints, T, N, nthreads), 
-    cs_standing_(robot.createContactStatus()),
-    cs_lfrh_(robot.createContactStatus()),
-    cs_rflh_(robot.createContactStatus()),
+MPCQuadrupedalTrotting::MPCQuadrupedalTrotting(const OCP& ocp, 
+                                               const int max_num_steps, 
+                                               const int nthreads)
+  : robot_(ocp.robot()),
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(ocp.robot(), 
+                                                                 max_num_steps)),
+    ocp_solver_(ocp, contact_sequence_, nthreads), 
+    cs_standing_(ocp.robot().createContactStatus()),
+    cs_lfrh_(ocp.robot().createContactStatus()),
+    cs_rflh_(ocp.robot().createContactStatus()),
     contact_points_(),
     step_length_(0),
     step_height_(0),
     swing_time_(0),
     t0_(0),
-    T_(T),
-    dt_(T/N),
-    dtm_(1.5*(T/N)),
+    T_(ocp.T()),
+    dt_(ocp.T()/ocp.N()),
+    dtm_(1.5*(ocp.T()/ocp.N())),
     ts_last_(0),
-    N_(N),
+    N_(ocp.N()),
     current_step_(0),
     predict_step_(0) {
   cs_standing_.activateContacts({0, 1, 2, 3});
@@ -256,11 +256,6 @@ void MPCQuadrupedalTrotting::resetContactPoints(const Eigen::VectorXd& q) {
     }
     contact_sequence_->setContactPoints(step-current_step_, contact_points_);
   }
-}
-
-
-void MPCQuadrupedalTrotting::showInfo() const {
-  std::cout << ocp_solver_ << std::endl;
 }
 
 } // namespace robotoc 

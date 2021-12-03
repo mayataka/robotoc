@@ -5,18 +5,12 @@
 #include <iostream>
 #include <cassert>
 
+
 namespace robotoc{
 
-DirectMultipleShooting::DirectMultipleShooting(const int N, 
-                                               const int max_num_impulse, 
-                                               const int nthreads) 
-  : max_num_impulse_(max_num_impulse),
-    nthreads_(nthreads) {
+DirectMultipleShooting::DirectMultipleShooting(const int nthreads) 
+  : nthreads_(nthreads) {
   try {
-    if (max_num_impulse < 0) {
-      throw std::out_of_range(
-          "invalid value: max_num_impulse must be non-negative!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }
@@ -29,8 +23,7 @@ DirectMultipleShooting::DirectMultipleShooting(const int N,
 
 
 DirectMultipleShooting::DirectMultipleShooting()
-  : max_num_impulse_(0),
-    nthreads_(0) {
+  : nthreads_(0) {
 }
 
 
@@ -50,10 +43,10 @@ bool DirectMultipleShooting::isFeasible(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
+      const int contact_phase = ocp.discrete().contactPhase(i);
       is_feasible[i] = ocp[i].isFeasible(
           robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-          s[i]);
+          contact_sequence->contactStatus(contact_phase), s[i]);
     }
     else if (i == N) {
       is_feasible[i] = ocp.terminal.isFeasible(robots[omp_get_thread_num()], s[N]);
@@ -67,19 +60,17 @@ bool DirectMultipleShooting::isFeasible(
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
+      const int contact_phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
       is_feasible[i] = ocp.aux[impulse_index].isFeasible(
           robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(
-              ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
-          s.aux[impulse_index]);
+          contact_sequence->contactStatus(contact_phase), s.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
+      const int contact_phase = ocp.discrete().contactPhaseAfterLift(lift_index);
       is_feasible[i] = ocp.lift[lift_index].isFeasible(
           robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(
-              ocp.discrete().contactPhaseAfterLift(lift_index)), 
-          s.lift[lift_index]);
+          contact_sequence->contactStatus(lift_index), s.lift[lift_index]);
     }
   }
   for (int i=0; i<N_all; ++i) {
@@ -174,7 +165,7 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
 }
 
 
-double DirectMultipleShooting::totalCost(const OCP& ocp) const {
+double DirectMultipleShooting::totalCost(const OCP& ocp) {
   double total_cost = 0;
   for (int i=0; i<ocp.discrete().N(); ++i) {
     total_cost += ocp[i].stageCost();

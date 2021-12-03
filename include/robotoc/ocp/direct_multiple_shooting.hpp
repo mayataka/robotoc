@@ -28,14 +28,10 @@ class DirectMultipleShooting {
 public:
   ///
   /// @brief Construct the direct multiple shooting method.
-  /// @param[in] N Number of discretization grids of the horizon. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  DirectMultipleShooting(const int N, const int max_num_impulse, 
-                         const int nthreads);
+  DirectMultipleShooting(const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -130,13 +126,13 @@ public:
   /// @param[in] ocp Optimal control problem.
   /// @param[in] kkt_residual KKT residual. 
   ///
-  double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
+  static double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the total value of the cost function.
   /// @param[in] ocp Optimal control problem.
   ///
-  double totalCost(const OCP& ocp) const;
+  static double totalCost(const OCP& ocp);
 
   ///
   /// @brief Computes the initial state direction.
@@ -186,7 +182,7 @@ private:
                    const Solution& s, KKTMatrix& kkt_matrix, 
                    KKTResidual& kkt_residual) const;
 
-  int max_num_impulse_, nthreads_;
+  int nthreads_;
 };
 
 } // namespace robotoc 

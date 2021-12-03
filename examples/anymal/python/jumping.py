@@ -128,8 +128,10 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
-ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
-                               T, N, nthreads=4)
+ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
+                  cost=cost, constraints=constraints, T=T, N=N)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
+                               nthreads=4)
 
 t = 0.
 q = q_standing

@@ -25,15 +25,9 @@ class SwitchingTimeOptimization {
 public:
   ///
   /// @brief Construct the STO problem. 
-  /// @param[in] sto_cost Shared ptr to the STO cost function.
-  /// @param[in] sto_constraints Shared ptr to the STO constraints.
-  /// @param[in] max_num_impulse_events Maximum number of the impulse on the 
-  /// horizon. Must be non-negative. 
+  /// @param[in] ocp Optimal control problem. 
   ///
-  SwitchingTimeOptimization(
-      const std::shared_ptr<STOCostFunction>& sto_cost, 
-      const std::shared_ptr<STOConstraints>& sto_constraints, 
-      const int max_num_impulse_events);
+  SwitchingTimeOptimization(const OCP& ocp);
 
   ///
   /// @brief Default Constructor.

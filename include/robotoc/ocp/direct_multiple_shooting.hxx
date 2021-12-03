@@ -255,14 +255,6 @@ inline double DirectMultipleShooting::dts_stage(const OCP& ocp,
   const int phase = ocp.discrete().contactPhase(time_stage);
   return ((d[time_stage].dts_next-d[time_stage].dts) 
             / ocp.discrete().N_phase(phase));
-  // const int phase = ocp.discrete().contactPhase(time_stage);
-  // if (ocp.discrete().isSTOEnabledPhase(phase)) {
-  //   return ((d[time_stage].dts_next-d[time_stage].dts) 
-  //             / ocp.discrete().N_phase(phase));
-  // }
-  // else {
-  //   return 0.0;
-  // }
 }
 
 
@@ -272,14 +264,6 @@ inline double DirectMultipleShooting::dts_aux(const OCP& ocp,
   const int phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
   return ((d.aux[impulse_index].dts_next-d.aux[impulse_index].dts) 
             / ocp.discrete().N_phase(phase));
-  // const int phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
-  // if (ocp.discrete().isSTOEnabledPhase(phase)) {
-  //   return ((d.aux[impulse_index].dts_next-d.aux[impulse_index].dts) 
-  //             / ocp.discrete().N_phase(phase));
-  // }
-  // else {
-  //   return 0.0;
-  // }
 }
 
 
@@ -289,14 +273,6 @@ inline double DirectMultipleShooting::dts_lift(const OCP& ocp,
   const int phase = ocp.discrete().contactPhaseAfterLift(lift_index);
   return ((d.lift[lift_index].dts_next-d.lift[lift_index].dts) 
             / ocp.discrete().N_phase(phase));
-  // const int phase = ocp.discrete().contactPhaseAfterLift(lift_index);
-  // if (ocp.discrete().isSTOEnabledPhase(phase)) {
-  //   return ((d.lift[lift_index].dts_next-d.lift[lift_index].dts) 
-  //             / ocp.discrete().N_phase(phase));
-  // }
-  // else {
-  //   return 0.0;
-  // }
 }
 
 } // namespace robotoc 

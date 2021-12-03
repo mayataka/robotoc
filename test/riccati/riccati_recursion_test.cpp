@@ -25,7 +25,7 @@
 
 namespace robotoc {
 
-class RiccatiRecursionTest : public ::testing::Test {
+class RiccatiRecursionTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -84,15 +84,16 @@ KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot,
 }
 
 
-void RiccatiRecursionTest::test_riccatiRecursion(const Robot& robot) const {
+TEST_P(RiccatiRecursionTest, riccatiRecursion) {
+  const auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(nthreads);
   const auto contact_sequence = createContactSequence(robot);
   KKTMatrix kkt_matrix(robot, N, max_num_impulse);
   KKTResidual kkt_residual(robot, N, max_num_impulse);
   aligned_vector<Robot> robots(nthreads, robot);
-  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
   ocp.discretize(contact_sequence, t);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
@@ -103,7 +104,7 @@ void RiccatiRecursionTest::test_riccatiRecursion(const Robot& robot) const {
   auto kkt_residual_ref = kkt_residual; 
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   auto factorization_ref = factorization;
-  RiccatiRecursion riccati_recursion(robot, N, max_num_impulse, nthreads);
+  RiccatiRecursion riccati_recursion(ocp, nthreads);
   RiccatiFactorizer factorizer(robot);
   hybrid_container<LQRPolicy> lqr_policy(robot, N, max_num_impulse);
   const auto discretization = ocp.discrete();
@@ -230,7 +231,8 @@ void RiccatiRecursionTest::test_riccatiRecursion(const Robot& robot) const {
 }
 
 
-void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
+TEST_P(RiccatiRecursionTest, computeDirection) {
+  const auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
@@ -239,13 +241,13 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
   ocp.discretize(contact_sequence, t);
-  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(nthreads);
   aligned_vector<Robot> robots(nthreads, robot);
   dms.initConstraints(ocp, robots, contact_sequence, s);
   dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
-  RiccatiRecursion riccati_recursion(robot, N, max_num_impulse, nthreads);
+  RiccatiRecursion riccati_recursion(ocp, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, factorization);
   const int N_impulse = ocp.discrete().N_impulse();
@@ -360,24 +362,13 @@ void RiccatiRecursionTest::test_computeDirection(const Robot& robot) const {
 }
 
 
-TEST_F(RiccatiRecursionTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot();
-  test_riccatiRecursion(robot);
-  test_computeDirection(robot);
-  robot = testhelper::CreateFixedBaseRobot(dt);
-  test_riccatiRecursion(robot);
-  test_computeDirection(robot);
-}
-
-
-TEST_F(RiccatiRecursionTest, floating_base) {
-  auto robot = testhelper::CreateFloatingBaseRobot();
-  test_riccatiRecursion(robot);
-  test_computeDirection(robot);
-  robot = testhelper::CreateFloatingBaseRobot(dt);
-  test_riccatiRecursion(robot);
-  test_computeDirection(robot);
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, RiccatiRecursionTest, 
+  ::testing::Values(testhelper::CreateFixedBaseRobot(),
+                    testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateFloatingBaseRobot(),
+                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+);
 
 } // namespace robotoc
 

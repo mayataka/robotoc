@@ -8,29 +8,21 @@
 
 namespace robotoc {
 
-UnconstrParNMPCSolver::UnconstrParNMPCSolver(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints, 
-    const double T, const int N, const int nthreads)
-  : robots_(nthreads, robot),
-    parnmpc_(robot, cost, constraints, N),
-    backward_correction_(robot, T, N, nthreads),
-    line_search_(robot, T, N, nthreads),
-    kkt_matrix_(robot, N),
-    kkt_residual_(robot, N),
-    s_(robot, N),
-    d_(robot, N),
-    N_(N),
+UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc, 
+                                             const int nthreads)
+  : robots_(nthreads, parnmpc.robot()),
+    parnmpc_(parnmpc),
+    backward_correction_(parnmpc, nthreads),
+    line_search_(parnmpc.robot(), parnmpc.T(), parnmpc.N(), nthreads),
+    kkt_matrix_(parnmpc.robot(), parnmpc.N()),
+    kkt_residual_(parnmpc.robot(), parnmpc.N()),
+    s_(parnmpc.robot(), parnmpc.N()),
+    d_(parnmpc.robot(), parnmpc.N()),
+    N_(parnmpc.N()),
     nthreads_(nthreads),
-    T_(T),
-    dt_(T/N) {
+    T_(parnmpc.T()),
+    dt_(parnmpc.T()/parnmpc.N()) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }

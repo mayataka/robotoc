@@ -53,7 +53,7 @@ Please see @ref page_installation.
 - Citing the switching time optimization (STO) algorithm of `OCPSolver`:
 ```
 @misc{katayama2021sto,
-  title={Structure-exploiting {N}ewton-type method for direct optimal control of switched systems}, 
+  title={Structure-exploiting {N}ewton-type method for optimal control of switched systems}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   url={arXiv:--},
   eprint={--},

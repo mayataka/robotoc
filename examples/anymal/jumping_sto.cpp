@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -84,7 +85,8 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight(v_weight);
   config_cost->set_vf_weight(v_weight);
   config_cost->set_vi_weight(vi_weight);
-  config_cost->set_u_weight(u_weight);
+  config_cost->set_dvi_weight(dvi_weight);
+  config_cost->set_a_weight(a_weight);
   cost->push_back(config_cost);
 
 
@@ -139,7 +141,7 @@ int main(int argc, char *argv[]) {
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
   auto sto_constraints = std::make_shared<robotoc::STOConstraints>(2*max_num_impulses);
-  sto_constraints->setMinimumDwellTimes({0.1, 0.1, 0.65});
+  sto_constraints->setMinimumDwellTimes({0.15, 0.15, 0.65});
   sto_constraints->setBarrier(1.0e-03);
 
   // you can check the contact sequence via
@@ -147,15 +149,10 @@ int main(int argc, char *argv[]) {
 
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
-  // const int nthreads = 4;
-  const int nthreads = 8;
-  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
-                                sto_cost, sto_constraints, T, N, nthreads);
-
-  ocp_solver.setDiscretizationMethod(robotoc::DiscretizationMethod::PhaseBased);
-  const auto sto_reg = robotoc::STORegularization(robotoc::STORegularizationType::Square, 
-                                                  1.0e-02);
-  ocp_solver.setSTORegularization(sto_reg);
+  const int nthreads = 4;
+  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, 
+                   sto_cost, sto_constraints, T, N);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
 
   const double t = 0;
   Eigen::VectorXd q(q_standing);
@@ -168,15 +165,16 @@ int main(int argc, char *argv[]) {
   ocp_solver.setSolution("f", f_init);
 
   ocp_solver.meshRefinement(t);
+  ocp_solver.initConstraints(t);
 
   const bool line_search = false;
   const int num_iteration = 150;
   const double dt_tol_mesh = 0.02;
   const double kkt_tol_mesh = 0.1;
-  // robotoc::benchmark::convergence(ocp_solver, t, q, v, num_iteration, 
-  //                                 dt_tol_mesh, kkt_tol_mesh, line_search);
+  robotoc::benchmark::convergence(ocp_solver, t, q, v, num_iteration, 
+                                  dt_tol_mesh, kkt_tol_mesh, line_search);
 
-  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
+  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);

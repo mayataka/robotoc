@@ -30,14 +30,11 @@ class UnconstrBackwardCorrection {
 public:
   ///
   /// @brief Construct a backward correction.
-  /// @param[in] robot Robot model. 
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. 
+  /// @param[in] parnmpc Optimal control problem. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  UnconstrBackwardCorrection(const Robot& robot, const double T, const int N, 
-                             const int nthreads);
+  UnconstrBackwardCorrection(const UnconstrParNMPC& parnmpc, const int nthreads);
 
   ///
   /// @brief Default constructor. 

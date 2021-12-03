@@ -3,7 +3,6 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/hybrid_container.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
@@ -34,18 +33,13 @@ using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization,
 ///
 class RiccatiRecursion {
 public:
-
   ///
   /// @brief Construct a Riccati recursion solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] N Number of discretization of the horizon. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
+  /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  RiccatiRecursion(const Robot& robot, const int N, const int max_num_impulse, 
-                   const int nthreads);
+  RiccatiRecursion(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -76,6 +70,12 @@ public:
   /// @brief Default move assign operator. 
   ///
   RiccatiRecursion& operator=(RiccatiRecursion&&) noexcept = default;
+
+  ///
+  /// @brief Resizes the internal data. 
+  /// @param[in] ocp Optimal control problem.
+  ///
+  void resize(const OCP& ocp);
 
   ///
   /// @brief Performs the backward Riccati recursion. 
@@ -136,7 +136,7 @@ public:
                             Eigen::MatrixXd& Kv) const;
 
 private:
-  int nthreads_, N_, N_all_;
+  int nthreads_, N_all_;
   RiccatiFactorizer factorizer_;
   hybrid_container<LQRPolicy> lqr_policy_;
   aligned_vector<STOPolicy> sto_policy_;

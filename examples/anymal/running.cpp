@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -284,8 +285,8 @@ int main(int argc, char *argv[]) {
   const double T = 7; 
   const int N = 240;
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
-                                T, N, nthreads);
+  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
 
   const double t = 0;
   Eigen::VectorXd q(q_standing);
@@ -302,6 +303,7 @@ int main(int argc, char *argv[]) {
 
   const bool line_search = false;
   robotoc::benchmark::convergence(ocp_solver, t, q, v, 80, line_search);
+  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);

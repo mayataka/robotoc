@@ -95,7 +95,7 @@ TODO
 [5] H. Deng and T. Ohtsuka, "A parallel Newton-type method for nonlinear model predictive control," <i>Automatica</i>, Vol. 109, pp. 108560, 2019. <br>
 [6] J. Carpentier and N. Mansard, "Analytical derivatives of rigid body dynamics algorithms," Robotics: Science and Systems, 2018. <br>
 [7] S. Katayama and T. Ohtsuka, "Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts," https://arxiv.org/abs/2108.01781, 2021 <br>
-[8] S. Katayama and T. Ohtsuka, "Structure-exploiting {N}ewton-type method for direct optimal control of switched systems, " 2021. <br>
+[8] S. Katayama and T. Ohtsuka, "Structure-exploiting {N}ewton-type method for optimal control of switched systems, " 2021. <br>
 [9] S. Katayama and T. Ohtsuka, "Efficient Riccati recursion for optimal control problems with pure-state equality constraints," https://arxiv.org/abs/2102.09731, 2021 <br>
 [10] S. Katayama and T. Ohtsuka, "Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems," IEEE International Conference on Robotics and Automation (ICRA), 2021. <br>
 

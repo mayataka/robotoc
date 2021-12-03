@@ -31,18 +31,11 @@ class UnconstrParNMPCSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] parnmpc Optimal control problem. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnconstrParNMPCSolver(const Robot& robot, 
-                        const std::shared_ptr<CostFunction>& cost,
-                        const std::shared_ptr<Constraints>& constraints, 
-                        const double T, const int N, const int nthreads=1);
+  UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc, const int nthreads=1);
 
   ///
   /// @brief Default constructor. 

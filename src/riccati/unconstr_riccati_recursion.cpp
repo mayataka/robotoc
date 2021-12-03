@@ -7,28 +7,16 @@
 
 namespace robotoc {
 
-UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const Robot& robot, 
-                                                   const double T, const int N)
-  : N_(N),
-    T_(T),
-    dt_(T/N),
-    factorizer_(robot),
-    lqr_policy_(N, LQRPolicy(robot)) {
-  try {
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
+UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const UnconstrOCP& ocp)
+  : N_(ocp.N()),
+    dt_(ocp.T()/ocp.N()),
+    factorizer_(ocp.robot()),
+    lqr_policy_(ocp.N(), LQRPolicy(ocp.robot())) {
 }
 
 
 UnconstrRiccatiRecursion::UnconstrRiccatiRecursion()
   : N_(0),
-    T_(0),
     dt_(0),
     factorizer_(),
     lqr_policy_() {

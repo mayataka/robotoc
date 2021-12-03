@@ -162,7 +162,7 @@ You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anyma
 - Citing the STO algorithm of `OCPSolver`:
 ```
 @misc{katayama2021sto,
-  title={Structure-exploiting {N}ewton-type method for direct optimal control of switched systems}, 
+  title={Structure-exploiting {N}ewton-type method for optimal control of switched systems}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   url={arXiv:--},
   eprint={--},

@@ -3,6 +3,7 @@
 
 #include "Eigen/Core"
 
+#include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -51,7 +52,8 @@ int main(int argc, char *argv[]) {
   Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
   q << M_PI_2, 0, M_PI_2, 0, M_PI_2, 0, M_PI_2;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  robotoc::UnconstrOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
+  robotoc::UnconstrOCP ocp(robot, cost, constraints, T, N);
+  robotoc::UnconstrOCPSolver ocp_solver(ocp, nthreads);
 
   // Solves the OCP.
   ocp_solver.setSolution("q", q);

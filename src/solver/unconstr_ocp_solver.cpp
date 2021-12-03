@@ -8,32 +8,23 @@
 
 namespace robotoc {
 
-UnconstrOCPSolver::UnconstrOCPSolver(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints, 
-    const double T, const int N, const int nthreads)
-  : robots_(nthreads, robot),
-    ocp_(robot, cost, constraints, N),
-    riccati_recursion_(robot, T, N),
-    line_search_(robot, T, N, nthreads),
-    kkt_matrix_(robot, N),
-    kkt_residual_(robot, N),
-    s_(robot, N),
-    d_(robot, N),
-    riccati_factorization_(N+1, SplitRiccatiFactorization(robot)),
-    N_(N),
+UnconstrOCPSolver::UnconstrOCPSolver(const UnconstrOCP& ocp, const int nthreads)
+  : robots_(nthreads, ocp.robot()),
+    ocp_(ocp),
+    riccati_recursion_(ocp),
+    line_search_(ocp.robot(), ocp.T(), ocp.N(), nthreads),
+    kkt_matrix_(ocp.robot(), ocp.N()),
+    kkt_residual_(ocp.robot(), ocp.N()),
+    s_(ocp.robot(), ocp.N()),
+    d_(ocp.robot(), ocp.N()),
+    riccati_factorization_(ocp.N()+1, SplitRiccatiFactorization(ocp.robot())),
+    N_(ocp.N()),
     nthreads_(nthreads),
-    T_(T),
-    dt_(T/N),
-    primal_step_size_(Eigen::VectorXd::Zero(N)), 
-    dual_step_size_(Eigen::VectorXd::Zero(N)) {
+    T_(ocp.T()),
+    dt_(ocp.T()/ocp.N()),
+    primal_step_size_(Eigen::VectorXd::Zero(ocp.N())), 
+    dual_step_size_(Eigen::VectorXd::Zero(ocp.N())) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }

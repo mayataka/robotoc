@@ -160,9 +160,8 @@ sto_cost = robotoc.STOCostFunction()
 and the minimum dwell-time constraints for the STO problem
 ```
 sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
-sto_constraints.set_minimum_dwell_times([0.1, 0.1, 0.65])
+sto_constraints.set_minimum_dwell_times([0.15, 0.15, 0.65])
 sto_constraints.set_barrier(1.0e-03)
-sto_constraints.set_fraction_to_boundary_rule(0.95)
 ```
 
 Finally, we can construct the optimal control solver!
@@ -181,12 +180,6 @@ print(contact_sequence)
 To solve the STO problems, we have to choose the discretization method as DiscretizationMethod::PhaseBased
 ```
 ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased) 
-```
-Moreover, we often need to introduce a heuristic regularization for the STO
-```
-sto_reg = robotoc.STORegularization(reg_type=robotoc.STORegularizationType.Square, 
-                                    w=1.0e-06) 
-ocp_solver.set_STO_regularization(sto_reg)
 ```
 
 So, let's run the solver! 

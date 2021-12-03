@@ -3,9 +3,10 @@
 
 #include <vector>
 #include <memory>
+#include <stdexcept>
+#include <iostream>
 
 #include "robotoc/robot/robot.hpp"
-
 #include "robotoc/unconstr/split_unconstr_ocp.hpp"
 #include "robotoc/ocp/terminal_ocp.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -26,12 +27,31 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] N number of the discretization grids of the horizon.
+  /// @param[in] T Length of the horizon.
+  /// @param[in] N Number of the discretization grids of the horizon.
   ///
   UnconstrOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-              const std::shared_ptr<Constraints>& constraints, const int N) 
+              const std::shared_ptr<Constraints>& constraints, 
+              const double T, const int N) 
     : data(N, SplitUnconstrOCP(robot, cost, constraints)), 
-      terminal(TerminalOCP(robot, cost, constraints)) {
+      terminal(TerminalOCP(robot, cost, constraints)),
+      robot_(robot),
+      cost_(cost),
+      constraints_(constraints),
+      T_(T),
+      N_(N) {
+    try {
+      if (T <= 0) {
+        throw std::out_of_range("invalid value: T must be positive!");
+      }
+      if (N <= 0) {
+        throw std::out_of_range("invalid value: N must be positive!");
+      }
+    }
+    catch(const std::exception& e) {
+      std::cerr << e.what() << '\n';
+      std::exit(EXIT_FAILURE);
+    }
   }
 
   ///
@@ -39,7 +59,12 @@ public:
   ///
   UnconstrOCP() 
     : data(), 
-      terminal() {
+      terminal(),
+      robot_(),
+      cost_(),
+      constraints_(),
+      T_(0),
+      N_(0) {
   }
 
   ///
@@ -69,6 +94,41 @@ public:
   UnconstrOCP& operator=(UnconstrOCP&&) noexcept = default;
 
   ///
+  /// @return const reference to the Robot model. 
+  ///
+  const Robot& robot() const {
+    return robot_;
+  }
+
+  ///
+  /// @return const reference to the cost function. 
+  ///
+  const std::shared_ptr<CostFunction>& cost() const {
+    return cost_;
+  }
+
+  ///
+  /// @return const reference to the constraints. 
+  ///
+  const std::shared_ptr<Constraints>& constraints() const {
+    return constraints_;
+  }
+
+  ///
+  /// @return Length of the horizon. 
+  ///
+  double T() const {
+    return T_;
+  }
+
+  ///
+  /// @return Number of the discretization grids on the horizon.
+  ///
+  int N() const {
+    return N_;
+  }
+
+  ///
   /// @brief Overload operator[] to access the data as std::vector. 
   ///
   SplitUnconstrOCP& operator[] (const int i) {
@@ -86,8 +146,38 @@ public:
     return data[i];
   }
 
+  ///
+  /// @brief Split optimal control problem data for the time stages.
+  ///
   std::vector<SplitUnconstrOCP> data;
+
+  ///
+  /// @brief Split optimal control problem data for the terminal stage.
+  ///
   TerminalOCP terminal;
+
+  ///
+  /// @brief Displays the optimal control problem onto a ostream.
+  ///
+  void disp(std::ostream& os) const {
+    os << "UnconstrOCP: " << std::endl;
+    os << "T: " << T_ << std::endl;
+    os << "N: " << N_ << std::endl;
+    os << robot_ << std::endl;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const UnconstrOCP& ocp) {
+    ocp.disp(os);
+    return os;
+  }
+
+private:
+  Robot robot_;
+  std::shared_ptr<CostFunction> cost_;
+  std::shared_ptr<Constraints> constraints_;
+  double T_;
+  int N_;
+
 };
 
 } // namespace robotoc

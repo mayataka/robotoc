@@ -41,12 +41,13 @@ constraints.set_barrier(1.0e-03)
 # Create the OCP solver for unconstrained rigid-body systems.
 T = 3.0
 N = 60
-nthreads = 4
 t = 0.0
 q = np.array([0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi]) 
 v = np.zeros(robot.dimv())
 
-ocp_solver = robotoc.UnconstrOCPSolver(robot, cost, constraints, T, N, nthreads)
+ocp = robotoc.UnconstrOCP(robot=robot, cost=cost, constraints=constraints, 
+                          T=T, N=N)
+ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, nthreads=4)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 ocp_solver.init_constraints()
@@ -56,8 +57,9 @@ num_iteration = 20
 robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 
 # Solves the OCP by ParNMPC algorithm.
-nthreads = 8
-parnmpc_solver = robotoc.UnconstrParNMPCSolver(robot, cost, constraints, T, N, nthreads)
+parnmpc = robotoc.UnconstrParNMPC(robot=robot, cost=cost, constraints=constraints, 
+                                  T=T, N=N)
+parnmpc_solver = robotoc.UnconstrParNMPCSolver(parnmpc=parnmpc, nthreads=8)
 parnmpc_solver.set_solution("q", q)
 parnmpc_solver.set_solution("v", v)
 parnmpc_solver.init_constraints()

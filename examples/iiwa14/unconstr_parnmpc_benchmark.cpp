@@ -3,6 +3,7 @@
 
 #include "Eigen/Core"
 
+#include "robotoc/unconstr/unconstr_parnmpc.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -44,7 +45,8 @@ int main() {
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  robotoc::UnconstrParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
+  robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, nthreads);
 
   // Solves the OCP.
   parnmpc_solver.setSolution("q", q);

@@ -11,6 +11,8 @@
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 
 #include "robot_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
 #include "direction_factory.hpp"
 #include "kkt_factory.hpp"
 #include "riccati_factory.hpp"
@@ -62,7 +64,10 @@ TEST_F(UnconstrRiccatiRecursionTest, test) {
   auto riccati_factorization_ref = riccati_factorization;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  UnconstrRiccatiRecursion riccati_recursion(robot, T, N);
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
+  auto ocp = UnconstrOCP(robot, cost, constraints, T, N);
+  UnconstrRiccatiRecursion riccati_recursion(ocp);
   riccati_recursion.backwardRiccatiRecursion(kkt_matrix, kkt_residual, 
                                              riccati_factorization);
   riccati_factorization_ref[N].P = kkt_matrix_ref[N].Qxx;

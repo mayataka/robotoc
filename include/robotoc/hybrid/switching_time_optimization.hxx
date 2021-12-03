@@ -8,18 +8,15 @@
 
 namespace robotoc {
 
-inline SwitchingTimeOptimization::SwitchingTimeOptimization(
-    const std::shared_ptr<STOCostFunction>& sto_cost, 
-    const std::shared_ptr<STOConstraints>& sto_constraints, 
-    const int max_num_impulse_events)
-  : sto_cost_(sto_cost), 
-    sto_constraints_(sto_constraints),
+inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp) 
+  : sto_cost_(ocp.sto_cost()), 
+    sto_constraints_(ocp.sto_constraints()),
     sto_reg_(STORegularization()),
-    max_num_impulse_events_(max_num_impulse_events),
+    max_num_impulse_events_(ocp.discrete().maxNumEachDiscreteEvents()),
     kkt_error_(0),
     cost_val_(0),
-    h_phase_(Eigen::VectorXd::Zero(2*max_num_impulse_events+1)),
-    is_sto_enabled_(true) {
+    h_phase_(Eigen::VectorXd::Zero(2*ocp.discrete().maxNumEachDiscreteEvents()+1)),
+    is_sto_enabled_(ocp.isSTOEnabled()) {
 }
 
 

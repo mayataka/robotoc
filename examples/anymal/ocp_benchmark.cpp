@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -106,8 +107,8 @@ int main () {
   const double T = 0.5;
   const int N = 20;
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
-                                T, N, nthreads);
+  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
 
   // Initial time and initial state
   const double t = 0;

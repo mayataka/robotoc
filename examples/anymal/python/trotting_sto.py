@@ -153,7 +153,7 @@ for i in range(cycle-1):
 # you can chech the contact sequence as 
 # print(contact_sequence)
 
-# Create the STO cost function
+# Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
@@ -162,8 +162,13 @@ sto_constraints.set_barrier(1.0e-03)
 
 T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
-ocp_solver = robotoc.OCPSolver(robot, contact_sequence, cost, constraints, 
-                               sto_cost, sto_constraints, T, N, nthreads=4)
+# Create the OCP with the STO problem
+ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
+                  cost=cost, constraints=constraints, 
+                  sto_cost=sto_cost, sto_constraints=sto_constraints, T=T, N=N)
+# Create the OCP solver
+ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
+                               nthreads=4)
 
 t = 0.
 q = q_standing
@@ -174,28 +179,26 @@ ocp_solver.set_solution("v", v)
 f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
-ocp_solver.set_discretization_method(robotoc.DiscretizationMethod.PhaseBased) 
 ocp_solver.mesh_refinement(t)
 ocp_solver.init_constraints(t)
 
 
-logger = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
+logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
 robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 
-                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1, logger=logger)
+                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1, 
+                                        logger=logger_kkt_ts)
 
-# print(ocp_solver)
-
-kkt_data = logger.get_data('KKT')
-ts_data = logger.get_data('ts')
+kkt_data = logger_kkt_ts.get_data('KKT')
+ts_data = logger_kkt_ts.get_data('ts')
 plot = robotoc.utils.PlotConvergence()
 plot.ylim = [0., 1.2]
 plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto', 
-          save_dir=logger.get_log_dir())
+          save_dir=logger_kkt_ts.get_log_dir())
 
 plot = robotoc.utils.PlotContactForce(mu=mu)
 plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
           t=ocp_solver.get_OCP_discretization().time_points(), 
-          fig_name='trotting_sto_f', save_dir=logger.get_log_dir())
+          fig_name='trotting_sto_f', save_dir=logger_kkt_ts.get_log_dir())
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

@@ -13,11 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(unconstr_ocp_solver, m) {
   py::class_<UnconstrOCPSolver>(m, "UnconstrOCPSolver")
-    .def(py::init<const Robot&, const std::shared_ptr<CostFunction>&,
-                  const std::shared_ptr<Constraints>&, const double, const int, 
-                  const int>(),
-         py::arg("robot"), py::arg("cost"), py::arg("constraints"),
-         py::arg("T"), py::arg("N"), py::arg("nthreads")=1)
+    .def(py::init<const UnconstrOCP&, const int>(),
+         py::arg("ocp"), py::arg("nthreads")=1)
     .def("init_constraints", &UnconstrOCPSolver::initConstraints)
     .def("update_solution", &UnconstrOCPSolver::updateSolution,
           py::arg("t"), py::arg("q"), py::arg("v"), 

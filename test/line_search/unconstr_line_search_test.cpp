@@ -52,7 +52,7 @@ TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   aligned_vector<Robot> robots(nthreads, robot);
-  auto ocp = UnconstrOCP(robot, cost, constraints, N);
+  auto ocp = UnconstrOCP(robot, cost, constraints, T, N);
   for (int i=0; i<N; ++i) {
     ocp[i].initConstraints(robot, i, s[i]);
   }
@@ -77,7 +77,7 @@ TEST_F(UnconstrLineSearchTest, UnconstrParNMPC) {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   aligned_vector<Robot> robots(nthreads, robot);
-  auto parnmpc = UnconstrParNMPC(robot, cost, constraints, N);
+  auto parnmpc = UnconstrParNMPC(robot, cost, constraints, T, N);
   for (int i=0; i<N-1; ++i) {
     parnmpc[i].initConstraints(robot, i+1, s[i]);
   }

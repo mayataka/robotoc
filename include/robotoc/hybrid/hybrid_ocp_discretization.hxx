@@ -9,7 +9,7 @@ namespace robotoc {
 
 inline HybridOCPDiscretization::HybridOCPDiscretization(const double T, 
                                                         const int N, 
-                                                        const int max_events) 
+                                                        const int max_num_each_discrete_events) 
   : T_(T),
     dt_ideal_(T/N), 
     max_dt_(dt_ideal_-k_min_dt),
@@ -17,25 +17,25 @@ inline HybridOCPDiscretization::HybridOCPDiscretization(const double T,
     N_ideal_(N),
     N_impulse_(0),
     N_lift_(0),
-    max_events_(max_events),
-    N_phase_(2*max_events+1, 1),
+    max_num_each_discrete_events_(max_num_each_discrete_events),
+    N_phase_(2*max_num_each_discrete_events+1, 1),
     contact_phase_from_time_stage_(N+1, 0), 
     impulse_index_after_time_stage_(N+1, -1), 
     lift_index_after_time_stage_(N+1, -1), 
-    time_stage_before_impulse_(max_events+1, -1), 
-    time_stage_before_lift_(max_events+1, -1),
+    time_stage_before_impulse_(max_num_each_discrete_events+1, -1), 
+    time_stage_before_lift_(max_num_each_discrete_events+1, -1),
     is_time_stage_before_impulse_(N+1, false),
     is_time_stage_before_lift_(N+1, false),
     t_(N+1, 0),
-    t_impulse_(max_events+1, 0),
-    t_lift_(max_events+1, 0),
+    t_impulse_(max_num_each_discrete_events+1, 0),
+    t_lift_(max_num_each_discrete_events+1, 0),
     dt_(N+1, static_cast<double>(T/N)),
-    dt_aux_(max_events+1, 0),
-    dt_lift_(max_events+1, 0),
-    event_types_(2*max_events+1, DiscreteEventType::None),
-    sto_impulse_(max_events), 
-    sto_lift_(max_events),
-    sto_event_(2*max_events+1),
+    dt_aux_(max_num_each_discrete_events+1, 0),
+    dt_lift_(max_num_each_discrete_events+1, 0),
+    event_types_(2*max_num_each_discrete_events+1, DiscreteEventType::None),
+    sto_impulse_(max_num_each_discrete_events), 
+    sto_lift_(max_num_each_discrete_events),
+    sto_event_(2*max_num_each_discrete_events+1),
     discretization_method_(DiscretizationMethod::GridBased) {
 }
 
@@ -48,7 +48,7 @@ inline HybridOCPDiscretization::HybridOCPDiscretization()
     N_ideal_(0),
     N_impulse_(0),
     N_lift_(0),
-    max_events_(0),
+    max_num_each_discrete_events_(0),
     N_phase_(),
     contact_phase_from_time_stage_(), 
     impulse_index_after_time_stage_(), 
@@ -385,6 +385,11 @@ HybridOCPDiscretization::discretizationMethod() const {
 }
 
 
+inline int HybridOCPDiscretization::maxNumEachDiscreteEvents() const {
+  return max_num_each_discrete_events_;
+}
+
+
 inline std::vector<double> HybridOCPDiscretization::timeSteps() const {
   std::vector<double> time_steps;
   for (int i=0; i<N(); ++i) {
@@ -453,7 +458,7 @@ inline void HybridOCPDiscretization::countDiscreteEvents(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t,
     const bool refine_grids) {
   const int max_num_impulse_events = contact_sequence->numImpulseEvents();
-  assert(max_num_impulse_events <= max_events_);
+  assert(max_num_impulse_events <= max_num_each_discrete_events_);
   const bool is_phase_based 
     = (discretization_method_ == DiscretizationMethod::PhaseBased);
   N_impulse_ = 0;
@@ -471,7 +476,7 @@ inline void HybridOCPDiscretization::countDiscreteEvents(
     ++N_impulse_;
   }
   const int max_num_lift_events = contact_sequence->numLiftEvents();
-  assert(max_num_lift_events <= max_events_);
+  assert(max_num_lift_events <= max_num_each_discrete_events_);
   N_lift_ = 0;
   for (int lift_index=0; lift_index<max_num_lift_events; ++lift_index) {
     const double t_lift = contact_sequence->liftTime(lift_index);

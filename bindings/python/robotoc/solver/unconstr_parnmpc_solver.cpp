@@ -13,11 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
   py::class_<UnconstrParNMPCSolver>(m, "UnconstrParNMPCSolver")
-    .def(py::init<const Robot&, const std::shared_ptr<CostFunction>&,
-                  const std::shared_ptr<Constraints>&, const double, const int, 
-                  const int>(),
-         py::arg("robot"), py::arg("cost"), py::arg("constraints"),
-         py::arg("T"), py::arg("N"), py::arg("nthreads")=1)
+    .def(py::init<const UnconstrParNMPC&, const int>(),
+         py::arg("parnmpc"), py::arg("nthreads")=1)
     .def("init_constraints", &UnconstrParNMPCSolver::initConstraints)
     .def("update_solution", &UnconstrParNMPCSolver::updateSolution,
           py::arg("t"), py::arg("q"), py::arg("v"), 
