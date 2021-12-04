@@ -193,6 +193,9 @@ ocp_solver.set_solution("f", f_init)
 
 ocp_solver.init_constraints(t)
 
+solver_options = robotoc.SolverOptions()
+print(solver_options)
+
 num_iteration = 20
 robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # num_iteration = 1000

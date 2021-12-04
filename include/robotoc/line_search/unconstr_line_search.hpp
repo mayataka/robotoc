@@ -9,7 +9,6 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/solution.hpp"
 #include "robotoc/ocp/direction.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
@@ -29,19 +28,29 @@ class UnconstrLineSearch {
 public:
   ///
   /// @brief Construct a line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   /// @param[in] step_size_reduction_rate Reduction rate of the step size. 
   /// Defalt is 0.75.
   /// @param[in] min_step_size Minimum step size. Default is 0.05.
   ///
-  UnconstrLineSearch(const Robot& robot, const double T, const int N, 
-                     const int nthreads=1, 
+  template <typename UnconstrOCPType>
+  UnconstrLineSearch(const UnconstrOCPType& ocp, const int nthreads=1, 
                      const double step_size_reduction_rate=0.75, 
-                     const double min_step_size=0.05);
+                     const double min_step_size=0.05) 
+    : filter_(),
+      N_(ocp.N()), 
+      nthreads_(nthreads),
+      T_(ocp.T()),
+      dt_(ocp.T()/ocp.N()),
+      step_size_reduction_rate_(step_size_reduction_rate), 
+      min_step_size_(min_step_size),
+      costs_(Eigen::VectorXd::Zero(ocp.N()+1)), 
+      violations_(Eigen::VectorXd::Zero(ocp.N())), 
+      s_trial_(ocp.robot(), ocp.N()), 
+      kkt_residual_(ocp.robot(), ocp.N()) {
+  }
 
   ///
   /// @brief Default constructor. 

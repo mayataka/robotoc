@@ -7,19 +7,11 @@
 #include <cmath>
 #include <iostream>
 
+#include "robotoc/hybrid/discretization_method.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 
 
 namespace robotoc {
-
-/// 
-/// @enum DiscretizationMethod
-/// @brief Discretization method of the hybrid optimal control problem.
-///
-enum class DiscretizationMethod {
-  GridBased,
-  PhaseBased
-};
 
 ///
 /// @class HybridOCPDiscretization
@@ -396,7 +388,8 @@ public:
   bool isSwitchingTimeConsistent() const;
 
   ///
-  /// @brief Displays the hybrid OCP discretization onto a ostream.
+  /// @brief Displays the discretization of the hybrid optimal control problem 
+  /// onto a ostream.
   ///
   void disp(std::ostream& os) const;
 

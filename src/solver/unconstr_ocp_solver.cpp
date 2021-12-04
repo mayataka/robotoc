@@ -12,7 +12,7 @@ UnconstrOCPSolver::UnconstrOCPSolver(const UnconstrOCP& ocp, const int nthreads)
   : robots_(nthreads, ocp.robot()),
     ocp_(ocp),
     riccati_recursion_(ocp),
-    line_search_(ocp.robot(), ocp.T(), ocp.N(), nthreads),
+    line_search_(ocp, nthreads),
     kkt_matrix_(ocp.robot(), ocp.N()),
     kkt_residual_(ocp.robot(), ocp.N()),
     s_(ocp.robot(), ocp.N()),

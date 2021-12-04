@@ -3,6 +3,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 
+#include "robotoc/hybrid/discretization_method.hpp"
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 
 #include <iostream>

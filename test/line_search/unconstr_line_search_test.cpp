@@ -56,7 +56,7 @@ TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
   for (int i=0; i<N; ++i) {
     ocp[i].initConstraints(robot, i, s[i]);
   }
-  UnconstrLineSearch line_search(robot, T, N, nthreads);
+  UnconstrLineSearch line_search(ocp, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(ocp, robots, t, q, v, s, d, max_primal_step_size);
@@ -82,7 +82,7 @@ TEST_F(UnconstrLineSearchTest, UnconstrParNMPC) {
     parnmpc[i].initConstraints(robot, i+1, s[i]);
   }
   parnmpc.terminal.initConstraints(robot, N, s[N-1]);
-  UnconstrLineSearch line_search(robot, T, N, nthreads);
+  UnconstrLineSearch line_search(parnmpc, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(parnmpc, robots, t, q, v, s, d, max_primal_step_size);
