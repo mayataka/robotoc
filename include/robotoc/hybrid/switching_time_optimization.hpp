@@ -12,7 +12,6 @@
 #include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
-#include "robotoc/hybrid/sto_regularization.hpp"
 
 
 namespace robotoc {
@@ -55,6 +54,12 @@ public:
   SwitchingTimeOptimization& operator=(SwitchingTimeOptimization&&) noexcept = default;
 
   ///
+  /// @brief Sets the regularization paremeter on the STO problem. 
+  /// @param[in] sto_reg The regularization paremeter. Must be non-negative.
+  ///
+  void setRegularization(const double sto_reg);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   /// @param[in] ocp Optimal control problem.
@@ -81,11 +86,9 @@ public:
   ///
   /// @return Applies the regularization on the KKT matrix.
   /// @param[in] ocp Optimal control problem.
-  /// @param[in] kkt_error KKT error. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   ///
-  void applyRegularization(const OCP& ocp, const double kkt_error, 
-                           KKTMatrix& kkt_matrix) const;
+  void applyRegularization(const OCP& ocp, KKTMatrix& kkt_matrix) const;
 
   ///
   /// @brief Compute the Newton direction.
@@ -139,27 +142,11 @@ public:
                          const double dual_step_size,
                          const Direction& d) const;
 
-  ///
-  /// @brief Set the regularization for the STO problem
-  /// @param[in] sto_reg Regularization for the STO problem.
-  ///
-  void setSTORegularization(const STORegularization& sto_reg);
-
-  ///
-  /// @brief Sets regularization method.
-  /// @param[in] reg_type regularization type. 
-  /// @param[in] w weight parameter (a.k.a. scaling parameter) of the 
-  /// regularization. Must be non-negative.
-  ///
-  void setSTORegularization(const STORegularizationType& reg_type,
-                            const double w);
-
 private:
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
-  STORegularization sto_reg_;
   int max_num_impulse_events_;
-  double kkt_error_, cost_val_;
+  double sto_reg_, kkt_error_, cost_val_;
   Eigen::VectorXd h_phase_;
   bool is_sto_enabled_;
 };

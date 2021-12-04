@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "robotoc/hybrid/discretization_method.hpp"
-#include "robotoc/hybrid/sto_regularization.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
 
 

@@ -71,6 +71,14 @@ public:
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
   ///
+  /// @brief Sets the regularization on the STO.
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. 
+  ///
+  void setRegularization(const double max_dts0);
+
+  ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 

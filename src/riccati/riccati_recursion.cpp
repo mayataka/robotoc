@@ -7,10 +7,11 @@
 
 namespace robotoc {
 
-RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads)
+RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads, 
+                                   const double max_dts0)
   : nthreads_(nthreads),
     N_all_(ocp.N()+1),
-    factorizer_(ocp.robot()),
+    factorizer_(ocp.robot(), max_dts0),
     lqr_policy_(ocp.robot(), ocp.N(), 
                 ocp.discrete().maxNumEachDiscreteEvents()),
     sto_policy_(2*ocp.discrete().maxNumEachDiscreteEvents()+1, 
@@ -47,6 +48,12 @@ RiccatiRecursion::RiccatiRecursion()
 
 
 RiccatiRecursion::~RiccatiRecursion() {
+}
+
+
+void RiccatiRecursion::setRegularization(const double max_dts0) {
+  assert(max_dts0 > 0);
+  factorizer_.setRegularization(max_dts0);
 }
 
 

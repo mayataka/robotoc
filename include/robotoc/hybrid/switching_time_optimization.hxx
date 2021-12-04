@@ -11,8 +11,8 @@ namespace robotoc {
 inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp) 
   : sto_cost_(ocp.sto_cost()), 
     sto_constraints_(ocp.sto_constraints()),
-    sto_reg_(STORegularization()),
     max_num_impulse_events_(ocp.discrete().maxNumEachDiscreteEvents()),
+    sto_reg_(0),
     kkt_error_(0),
     cost_val_(0),
     h_phase_(Eigen::VectorXd::Zero(2*ocp.discrete().maxNumEachDiscreteEvents()+1)),
@@ -23,12 +23,17 @@ inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp)
 inline SwitchingTimeOptimization::SwitchingTimeOptimization() 
   : sto_cost_(), 
     sto_constraints_(),
-    sto_reg_(),
     max_num_impulse_events_(0),
+    sto_reg_(0),
     kkt_error_(0),
     cost_val_(0),
     h_phase_(),
     is_sto_enabled_(false) {
+}
+
+
+inline void SwitchingTimeOptimization::setRegularization(const double sto_reg) {
+  sto_reg_ = sto_reg;
 }
 
 
@@ -63,9 +68,12 @@ inline void SwitchingTimeOptimization::computeKKTSystem(
 
 
 inline void SwitchingTimeOptimization::applyRegularization(
-    const OCP& ocp, const double kkt_error, KKTMatrix& kkt_matrix) const {
-  if (is_sto_enabled_) {
-    sto_reg_.applyRegularization(ocp, kkt_error, kkt_matrix);
+    const OCP& ocp, KKTMatrix& kkt_matrix) const {
+  for (int i=0; i<ocp.discrete().N_impulse(); ++i) {
+    kkt_matrix.aux[i].Qtt += sto_reg_;
+  }
+  for (int i=0; i<ocp.discrete().N_lift(); ++i) {
+    kkt_matrix.lift[i].Qtt += sto_reg_;
   }
 }
 
@@ -178,18 +186,6 @@ inline void SwitchingTimeOptimization::integrateSolution(
     sto_constraints_->updateSlack(primal_step_size);
     sto_constraints_->updateDual(dual_step_size);
   }
-}
-
-
-inline void SwitchingTimeOptimization::setSTORegularization(
-    const STORegularization& sto_reg) {
-  sto_reg_ = sto_reg;
-}
-
-
-inline void SwitchingTimeOptimization::setSTORegularization(
-    const STORegularizationType& reg_type, const double w) {
-  sto_reg_ = STORegularization(reg_type, w);
 }
 
 } // namespace robotoc

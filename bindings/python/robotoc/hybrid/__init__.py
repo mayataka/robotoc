@@ -5,4 +5,3 @@ from .sto_constraints import *
 from .discrete_event import *
 from .contact_sequence import *
 from .hybrid_ocp_discretization import * 
-from .sto_regularization import * 

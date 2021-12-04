@@ -5,6 +5,5 @@ pybind11_add_robotoc_module(sto_constraints)
 pybind11_add_robotoc_module(discrete_event)
 pybind11_add_robotoc_module(contact_sequence)
 pybind11_add_robotoc_module(hybrid_ocp_discretization)
-pybind11_add_robotoc_module(sto_regularization)
 
 install_robotoc_pybind_module(hybrid)

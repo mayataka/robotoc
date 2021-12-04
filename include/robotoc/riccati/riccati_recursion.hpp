@@ -38,8 +38,12 @@ public:
   /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. Default is 0.1.
   ///
-  RiccatiRecursion(const OCP& ocp, const int nthreads);
+  RiccatiRecursion(const OCP& ocp, const int nthreads, 
+                   const double max_dts0=0.1);
 
   ///
   /// @brief Default constructor. 
@@ -70,6 +74,14 @@ public:
   /// @brief Default move assign operator. 
   ///
   RiccatiRecursion& operator=(RiccatiRecursion&&) noexcept = default;
+
+  ///
+  /// @brief Sets the regularization on the STO.
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. 
+  ///
+  void setRegularization(const double max_dts0);
 
   ///
   /// @brief Resizes the internal data. 

@@ -1,5 +1,7 @@
 #include <pybind11/pybind11.h>
 
+#include <sstream>
+
 #include "robotoc/solver/solver_options.hpp"
 
 

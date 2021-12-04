@@ -24,7 +24,6 @@
 #include "robotoc/hybrid/switching_time_optimization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
-#include "robotoc/hybrid/sto_regularization.hpp"
 #include "robotoc/solver/solver_options.hpp"
 
 
@@ -217,12 +216,6 @@ public:
   /// @return Returns const reference to the internal OCP discretization. 
   ///
   const HybridOCPDiscretization& getOCPDiscretization() const;
-
-  ///
-  /// @brief Set the regularization for the STO problem
-  /// @param[in] sto_reg Regularization for the STO problem.
-  ///
-  void setSTORegularization(const STORegularization& sto_reg);
 
   ///
   /// @brief Set settings for line search. Defalt is 

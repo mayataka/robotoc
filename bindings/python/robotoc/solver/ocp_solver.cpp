@@ -44,7 +44,6 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
           py::arg("verbose")=false)
     .def("get_OCP_discretization", &OCPSolver::getOCPDiscretization)
-    .def("set_STO_regularization", &OCPSolver::setSTORegularization)
     .def("set_line_search_settings", &OCPSolver::setLineSearchSettings)
     .def("__str__", [](const OCPSolver& self) {
         std::stringstream ss;

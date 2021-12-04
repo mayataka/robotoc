@@ -34,6 +34,12 @@ inline RiccatiFactorizer::~RiccatiFactorizer() {
 }
 
 
+inline void RiccatiFactorizer::setRegularization(const double max_dts0) {
+  assert(max_dts0 > 0);
+  max_dts0_ = max_dts0;
+}
+
+
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next,  
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
