@@ -21,6 +21,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
@@ -207,27 +208,32 @@ int main(int argc, char *argv[]) {
   // you can check the contact sequence via
   // std::cout << contact_sequence << std::endl;
 
+  // Create the OCP solver.
   const double T = t0 + cycle*(2*double_support_time+2*swing_time);
   const int N = T / dt; 
-  const int nthreads = 4;
   robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  const int nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
+  // Initial time and initial state
   const double t = 0;
-  Eigen::VectorXd q(q_standing);
-  Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
+  const Eigen::VectorXd q(q_standing);
+  const Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
+  // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
-
   ocp_solver.initConstraints(t);
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
 
-  const bool line_search = false;
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, 20, line_search);
-  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
+  // const int num_iteration = 10000;
+  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);

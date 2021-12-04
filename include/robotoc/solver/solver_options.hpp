@@ -139,10 +139,7 @@ public:
 
   ///
   /// @brief Tolerance of the maximum discretization step size to perform  
-  /// mesh-refinement in the STO problem. If this value is less than 0, 
-  /// T/N is used as this the tolerance, where T is length of the horizon and
-  /// N is the number of the discretization grids of the horizon except for the
-  /// discrete events. Default is -1 (that is, T/N is used as the tolerance).
+  /// mesh-refinement in the STO problem. Default is 0.
   ///
   double max_dt_mesh;
 

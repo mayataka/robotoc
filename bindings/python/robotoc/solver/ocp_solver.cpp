@@ -14,21 +14,32 @@ namespace py = pybind11;
 PYBIND11_MODULE(ocp_solver, m) {
   py::class_<OCPSolver>(m, "OCPSolver")
     .def(py::init<const OCP&, const std::shared_ptr<ContactSequence>&, 
-                  const int>(),
-          py::arg("ocp"), py::arg("contact_sequence"), py::arg("nthreads")=1)
-    .def("mesh_refinement", &OCPSolver::meshRefinement)
-    .def("init_constraints", &OCPSolver::initConstraints)
+                  const SolverOptions&, const int>(),
+          py::arg("ocp"), py::arg("contact_sequence"), 
+          py::arg("solver_options")=SolverOptions::defaultOptions(), 
+          py::arg("nthreads")=1)
+    .def("set_solver_options", &OCPSolver::setSolverOptions,
+          py::arg("solver_options"))
+    .def("mesh_refinement", &OCPSolver::meshRefinement,
+          py::arg("t"))
+    .def("init_constraints", &OCPSolver::initConstraints,
+          py::arg("t"))
     .def("update_solution", &OCPSolver::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"), 
-          py::arg("line_search")=false)
+          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("solve", &OCPSolver::solve,
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=false)
     .def("get_solution", 
-          static_cast<const SplitSolution& (OCPSolver::*)(const int stage) const>(&OCPSolver::getSolution))
+          static_cast<const SplitSolution& (OCPSolver::*)(const int) const>(&OCPSolver::getSolution))
     .def("get_solution", 
           static_cast<std::vector<Eigen::VectorXd> (OCPSolver::*)(const std::string&, const std::string&) const>(&OCPSolver::getSolution),
           py::arg("name"), py::arg("option")="")
-    .def("set_solution", &OCPSolver::setSolution)
-    .def("compute_KKT_residual", &OCPSolver::computeKKTResidual)
-    .def("KKT_error", &OCPSolver::KKTError)
+    .def("set_solution", &OCPSolver::setSolution,
+          py::arg("name"), py::arg("value"))
+    .def("KKT_error", 
+          static_cast<double (OCPSolver::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&OCPSolver::KKTError),
+          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("KKT_error", 
+          static_cast<double (OCPSolver::*)() const>(&OCPSolver::KKTError))
     .def("cost", &OCPSolver::cost)
     .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
           py::arg("verbose")=false)

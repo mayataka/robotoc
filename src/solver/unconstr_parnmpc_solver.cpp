@@ -9,6 +9,7 @@
 namespace robotoc {
 
 UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc, 
+                                             const SolverOptions& solver_options, 
                                              const int nthreads)
   : robots_(nthreads, parnmpc.robot()),
     parnmpc_(parnmpc),
@@ -21,7 +22,8 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc,
     N_(parnmpc.N()),
     nthreads_(nthreads),
     T_(parnmpc.T()),
-    dt_(parnmpc.T()/parnmpc.N()) {
+    dt_(parnmpc.T()/parnmpc.N()),
+    solver_options_(solver_options) {
   try {
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
@@ -40,6 +42,11 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver() {
 
 
 UnconstrParNMPCSolver::~UnconstrParNMPCSolver() {
+}
+
+
+void UnconstrParNMPCSolver::setSolverOptions(const SolverOptions& solver_options) {
+  solver_options_ = solver_options;
 }
 
 
@@ -65,8 +72,7 @@ void UnconstrParNMPCSolver::initBackwardCorrection(const double t) {
 
 void UnconstrParNMPCSolver::updateSolution(const double t, 
                                            const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v, 
-                                           const bool line_search) {
+                                           const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(robots_, parnmpc_, t, q, v, kkt_matrix_,
@@ -75,10 +81,14 @@ void UnconstrParNMPCSolver::updateSolution(const double t,
                                           kkt_residual_, d_);
   double primal_step_size     = backward_correction_.primalStepSize();
   const double dual_step_size = backward_correction_.dualStepSize();
-  if (line_search) {
+  if (solver_options_.enable_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, t, q, v, 
                                                     s_, d_, max_primal_step_size);
+  }
+  if (solver_options_.print_level >= 2) {
+    std::cout << "  primal step size: " << primal_step_size << std::endl;
+    std::cout << "  dual step size  : " << dual_step_size << std::endl;
   }
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
@@ -94,6 +104,30 @@ void UnconstrParNMPCSolver::updateSolution(const double t,
     }
   }
 } 
+
+
+void UnconstrParNMPCSolver::solve(const double t, const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v,
+                                  const bool init_solver) {
+  if (init_solver) {
+    initConstraints();
+    initBackwardCorrection(t);
+    line_search_.clearFilter();
+  }
+  for (int iter=0; iter<solver_options_.max_iter; ++iter) {
+    updateSolution(t, q, v);
+    const double kkt_error = KKTError();
+    if (solver_options_.print_level >= 1) {
+      std::cout << "Iter " << iter+1 << ": KKT error = " << kkt_error << std::endl;
+    }
+    if (kkt_error < solver_options_.kkt_tol) {
+      if (solver_options_.print_level >= 1) {
+        std::cout << "Convergence achieved!" << std::endl;
+      }
+      break;
+    }
+  }
+}
 
 
 const SplitSolution& UnconstrParNMPCSolver::getSolution(const int stage) const {
@@ -157,14 +191,8 @@ void UnconstrParNMPCSolver::setSolution(const std::string& name,
 }
 
 
-void UnconstrParNMPCSolver::clearLineSearchFilter() {
-  line_search_.clearFilter();
-}
-
-
-void UnconstrParNMPCSolver::computeKKTResidual(const double t, 
-                                               const Eigen::VectorXd& q, 
-                                               const Eigen::VectorXd& v) {
+double UnconstrParNMPCSolver::KKTError(const double t, const Eigen::VectorXd& q, 
+                                       const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(nthreads_)
@@ -185,10 +213,11 @@ void UnconstrParNMPCSolver::computeKKTResidual(const double t,
                                            kkt_matrix_[i], kkt_residual_[i]);
     }
   }
+  return KKTError();
 }
 
 
-double UnconstrParNMPCSolver::KKTError() {
+double UnconstrParNMPCSolver::KKTError() const {
   double kkt_error = 0;
   for (int i=0; i<N_; ++i) {
     kkt_error += kkt_residual_[i].kkt_error;

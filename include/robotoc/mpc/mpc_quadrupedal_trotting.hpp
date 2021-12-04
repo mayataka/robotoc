@@ -13,6 +13,7 @@
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 
 namespace robotoc {
@@ -79,22 +80,25 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] num_iteration Number of the iterations. Must be non-negative.
-  /// If num_iteration is zero, only the slack and dual variables of the 
-  /// interior point method are initialized.
+  /// @param[in] solver_options Solver options for the initialization. 
   ///
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-            const int num_iteration);
+            const SolverOptions& solver_options);
+
+  ///
+  /// @brief Sets the solver options. 
+  /// @param[in] solver_options Solver options.  
+  ///
+  void setSolverOptions(const SolverOptions& solver_options);
 
   ///
   /// @brief Updates the solution by iterationg the Newton-type method.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Velocity. Size must be Robot::dimv().
-  /// @param[in] num_iteration Number of the Newton-type iterations.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const int num_iteration);
+                      const Eigen::VectorXd& v);
 
   ///
   /// @brief Get the initial control input.
@@ -116,7 +120,7 @@ public:
   /// MPCQuadrupedalTrotting::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
-  double KKTError();
+  double KKTError() const;
 
   static constexpr double min_dt 
       = std::sqrt(std::numeric_limits<double>::epsilon());
@@ -129,6 +133,7 @@ private:
   std::vector<Eigen::Vector3d> contact_points_;
   double step_length_, step_height_, swing_time_, t0_, T_, dt_, dtm_, ts_last_;
   int N_, current_step_, predict_step_;
+  SolverOptions solver_options_;
 
   bool addStep(const double t);
 
@@ -137,6 +142,5 @@ private:
 };
 
 } // namespace robotoc 
-
 
 #endif // ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_ 

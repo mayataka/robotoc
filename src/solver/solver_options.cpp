@@ -42,7 +42,7 @@ SolverOptions SolverOptions::defaultOptions() {
   options.initial_sto_reg_iter = 0;
   options.initial_sto_reg = 1.0e30;
   options.kkt_tol_mesh = 0.1;
-  options.max_dt_mesh = -1;
+  options.max_dt_mesh = 0;
   options.max_dts_riccati = 0.1;
   options.print_level = 1;
   return options;

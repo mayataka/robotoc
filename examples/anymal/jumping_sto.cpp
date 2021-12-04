@@ -23,6 +23,7 @@
 #include "robotoc/constraints/friction_cone.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
@@ -149,32 +150,34 @@ int main(int argc, char *argv[]) {
 
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
-  const int nthreads = 4;
   robotoc::OCP ocp(robot, contact_sequence, cost, constraints, 
                    sto_cost, sto_constraints, T, N);
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  solver_options.max_dt_mesh = T/N;
+  solver_options.kkt_tol_mesh = 0.1;
+  solver_options.max_iter = 200;
+  const int nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
+  // Initial time and initial state
   const double t = 0;
   Eigen::VectorXd q(q_standing);
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
+  // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
-
   ocp_solver.meshRefinement(t);
   ocp_solver.initConstraints(t);
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
 
-  const bool line_search = false;
-  const int num_iteration = 150;
-  const double dt_tol_mesh = 0.02;
-  const double kkt_tol_mesh = 0.1;
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, num_iteration, 
-                                  dt_tol_mesh, kkt_tol_mesh, line_search);
-
-  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
+  // const int num_iteration = 10000;
+  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);

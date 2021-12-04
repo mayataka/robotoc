@@ -121,9 +121,15 @@ ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence,
                   cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, T=T, N=N)
 # Create the OCP solver
+solver_options = robotoc.SolverOptions()
+solver_options.print_level = 1
+solver_options.kkt_tol_mesh = 0.1
+solver_options.max_dt_mesh = T/N 
+solver_options.max_iter = 200
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
-                               nthreads=4)
+                               solver_options=solver_options, nthreads=4)
 
+# Initial time and intial state 
 t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
@@ -134,6 +140,9 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.mesh_refinement(t)
+# print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+# ocp_solver.solve(t, q, v)
+# print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 
 logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='jumping_sto')
 robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=150, 

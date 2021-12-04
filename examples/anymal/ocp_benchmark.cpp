@@ -18,6 +18,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
@@ -108,7 +109,8 @@ int main () {
   const int N = 20;
   const int nthreads = 4;
   robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;
@@ -122,9 +124,10 @@ int main () {
   ocp_solver.setSolution("f", f_init);
 
   ocp_solver.initConstraints(t);
+  ocp_solver.solve(t, q, v);
 
-  // robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
-  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
+  const int num_iteration = 10000;
+  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
 
   // std::cout << robot << std::endl;
 

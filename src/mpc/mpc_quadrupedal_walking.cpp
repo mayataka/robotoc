@@ -15,7 +15,7 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp,
   : robot_(ocp.robot()),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(ocp.robot(), 
                                                                  max_num_steps)),
-    ocp_solver_(ocp, contact_sequence_, nthreads), 
+    ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
     cs_standing_(ocp.robot().createContactStatus()),
     cs_lf_(ocp.robot().createContactStatus()),
     cs_lh_(ocp.robot().createContactStatus()),
@@ -80,7 +80,7 @@ void MPCQuadrupedalWalking::setGaitPattern(const double step_length,
 
 void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, 
-                                 const int num_iteration) {
+                                 const SolverOptions& solver_options) {
   try {
     if (t >= t0_) {
       throw std::out_of_range(
@@ -120,18 +120,21 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot_.totalWeight();
   ocp_solver_.setSolution("f", f_init);
-  ocp_solver_.initConstraints(t);
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver_.updateSolution(t, q, v);
-  }
+  ocp_solver_.setSolverOptions(solver_options);
+  ocp_solver_.solve(t, q, v, true);
   ts_last_ = t0_;
+}
+
+
+void MPCQuadrupedalWalking::setSolverOptions(
+    const SolverOptions& solver_options) {
+  ocp_solver_.setSolverOptions(solver_options);
 }
 
 
 void MPCQuadrupedalWalking::updateSolution(const double t, 
                                            const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v, 
-                                           const int num_iteration) {
+                                           const Eigen::VectorXd& v) {
   const bool add_step = addStep(t);
   const auto ts = ocp_solver_.getSolution("ts");
   bool remove_step = false;
@@ -149,10 +152,7 @@ void MPCQuadrupedalWalking::updateSolution(const double t,
   if (add_step || remove_step) {
     ocp_solver_.initConstraints(t);
   }
-
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver_.updateSolution(t, q, v);
-  }
+  ocp_solver_.solve(t, q, v, false);
 }
 
 
@@ -163,12 +163,11 @@ const Eigen::VectorXd& MPCQuadrupedalWalking::getInitialControlInput() const {
 
 double MPCQuadrupedalWalking::KKTError(const double t, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v) {
-  ocp_solver_.computeKKTResidual(t, q, v);
-  return ocp_solver_.KKTError();
+  return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCQuadrupedalWalking::KKTError() {
+double MPCQuadrupedalWalking::KKTError() const {
   return ocp_solver_.KKTError();
 }
 

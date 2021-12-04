@@ -9,7 +9,7 @@ namespace robotoc {
 
 OCPSolver::OCPSolver(const OCP& ocp, 
                      const std::shared_ptr<ContactSequence>& contact_sequence, 
-                     const int nthreads)
+                     const SolverOptions& solver_options, const int nthreads)
   : robots_(nthreads, ocp.robot()),
     contact_sequence_(contact_sequence),
     dms_(nthreads),
@@ -22,7 +22,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
     kkt_residual_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
     s_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
     d_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
-    kkt_error_(0) {
+    solver_options_(solver_options) {
   try {
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
@@ -47,6 +47,11 @@ OCPSolver::~OCPSolver() {
 }
 
 
+void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
+  solver_options_ = solver_options;
+}
+
+
 void OCPSolver::meshRefinement(const double t) {
   ocp_.meshRefinement(contact_sequence_, t);
   if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
@@ -66,8 +71,7 @@ void OCPSolver::initConstraints(const double t) {
 
 
 void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, 
-                               const bool line_search) {
+                               const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   ocp_.discretize(contact_sequence_, t);
@@ -75,8 +79,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
                         kkt_matrix_, kkt_residual_);
   sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
-  kkt_error_ = dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError();
-  sto_.applyRegularization(ocp_, kkt_error_, kkt_matrix_);
+  // sto_.applyRegularization(ocp_, kkt_error_, kkt_matrix_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
   dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
@@ -88,18 +91,69 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                      sto_.maxPrimalStepSize());
   const double dual_step_size = std::min(riccati_recursion_.maxDualStepSize(),
                                          sto_.maxDualStepSize());
-  if (line_search) {
+  if (solver_options_.enable_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
                                                     contact_sequence_, 
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
+  if (solver_options_.print_level >= 2) {
+    std::cout << "  primal step size: " << primal_step_size << std::endl;
+    std::cout << "  dual step size  : " << dual_step_size << std::endl;
+  }
   dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
                          kkt_matrix_, d_, s_);
   sto_.integrateSolution(ocp_, contact_sequence_, primal_step_size, 
                          dual_step_size, d_);
 } 
+
+
+void OCPSolver::solve(const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v, const bool init_solver) {
+  if (init_solver) {
+    meshRefinement(t);
+    initConstraints(t);
+    line_search_.clearFilter();
+  }
+  for (int iter=0; iter<solver_options_.max_iter; ++iter) {
+    updateSolution(t, q, v);
+    const double kkt_error = KKTError();
+    if (solver_options_.print_level >= 1) {
+      std::cout << "Iter " << iter+1 << ": KKT error = " << kkt_error << std::endl;
+    }
+    if (ocp_.isSTOEnabled()) {
+      if (kkt_error < solver_options_.kkt_tol_mesh) {
+        if (ocp_.discrete().dt_max() > solver_options_.max_dt_mesh) {
+          if (solver_options_.print_level >= 1) {
+            std::cout << "Mesh-refinement is carried out!" << std::endl;
+          }
+          meshRefinement(t);
+        }
+        else if (kkt_error < solver_options_.kkt_tol) {
+          if (solver_options_.print_level >= 1) {
+            std::cout << "Convergence achieved!" << std::endl;
+          }
+          break;
+        }
+      }
+      else if (kkt_error < solver_options_.kkt_tol) {
+        if (solver_options_.print_level >= 1) {
+          std::cout << "Convergence achieved!" << std::endl;
+        }
+        break;
+      }
+    }
+    else {
+      if (kkt_error < solver_options_.kkt_tol) {
+        if (solver_options_.print_level >= 1) {
+          std::cout << "Convergence achieved!" << std::endl;
+        }
+        break;
+      }
+    }
+  }
+}
 
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
@@ -372,29 +426,24 @@ void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
 }
 
 
-void OCPSolver::clearLineSearchFilter() {
-  line_search_.clearFilter();
-}
-
-
-double OCPSolver::KKTError() {
-  return std::sqrt(kkt_error_);
-}
-
-
-double OCPSolver::cost() const {
-  return dms_.totalCost(ocp_);
-}
-
-
-void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q, 
-                                   const Eigen::VectorXd& v) {
+double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q, 
+                           const Eigen::VectorXd& v) {
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
   dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
                           kkt_matrix_, kkt_residual_);
   sto_.computeKKTResidual(ocp_, kkt_residual_);
-  kkt_error_ = dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError();
+  return KKTError();
+}
+
+
+double OCPSolver::KKTError() const {
+  return std::sqrt(dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError());
+}
+
+
+double OCPSolver::cost() const {
+  return dms_.totalCost(ocp_);
 }
 
 

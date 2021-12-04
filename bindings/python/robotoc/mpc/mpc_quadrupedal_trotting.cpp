@@ -19,13 +19,17 @@ PYBIND11_MODULE(mpc_quadrupedal_trotting, m) {
          py::arg("step_length"), py::arg("step_height"), py::arg("swing_time"), 
          py::arg("t0"))
     .def("init", &MPCQuadrupedalTrotting::init,
-          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("num_iteration"))
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
+    .def("set_solver_options", &MPCQuadrupedalTrotting::setSolverOptions,
+          py::arg("solver_options"))
     .def("update_solution", &MPCQuadrupedalTrotting::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("num_iteration"))
+          py::arg("t"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCQuadrupedalTrotting::getInitialControlInput)
-    .def("KKT_error", static_cast<double (MPCQuadrupedalTrotting::*)()>(&MPCQuadrupedalTrotting::KKTError))
-    .def("KKT_error", static_cast<double (MPCQuadrupedalTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalTrotting::KKTError),
-          py::arg("t"), py::arg("q"), py::arg("v"));
+    .def("KKT_error", 
+          static_cast<double (MPCQuadrupedalTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalTrotting::KKTError),
+          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("KKT_error", 
+          static_cast<double (MPCQuadrupedalTrotting::*)() const>(&MPCQuadrupedalTrotting::KKTError));
 }
 
 } // namespace python

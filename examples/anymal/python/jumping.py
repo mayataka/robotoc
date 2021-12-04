@@ -130,9 +130,12 @@ T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
 ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
                   cost=cost, constraints=constraints, T=T, N=N)
+solver_options = robotoc.SolverOptions()
+solver_options.print_level = 1
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
-                               nthreads=4)
+                               solver_options=solver_options, nthreads=4)
 
+# Initial time and intial state 
 t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
@@ -143,9 +146,10 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.init_constraints(t)
+print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+ocp_solver.solve(t, q, v)
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 
-num_iteration = 50
-robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 

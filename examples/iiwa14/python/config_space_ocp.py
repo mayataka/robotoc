@@ -41,32 +41,41 @@ constraints.set_barrier(1.0e-03)
 # Create the OCP solver for unconstrained rigid-body systems.
 T = 3.0
 N = 60
+ocp = robotoc.UnconstrOCP(robot=robot, cost=cost, constraints=constraints, 
+                          T=T, N=N)
+solver_options = robotoc.SolverOptions()
+solver_options.print_level = 1
+ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, solver_options=solver_options, 
+                                       nthreads=4)
+
+# Initial time and intial state 
 t = 0.0
 q = np.array([0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi, 0, 0.5*math.pi]) 
 v = np.zeros(robot.dimv())
 
-ocp = robotoc.UnconstrOCP(robot=robot, cost=cost, constraints=constraints, 
-                          T=T, N=N)
-ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, nthreads=4)
+print("----- Solves the OCP by Riccati recursion algorithm. -----")
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 ocp_solver.init_constraints()
-
-print("----- Solves the OCP by Riccati recursion algorithm. -----")
-num_iteration = 20
-robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
+print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+ocp_solver.solve(t, q, v, init_solver=True)
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 
 # Solves the OCP by ParNMPC algorithm.
 parnmpc = robotoc.UnconstrParNMPC(robot=robot, cost=cost, constraints=constraints, 
                                   T=T, N=N)
-parnmpc_solver = robotoc.UnconstrParNMPCSolver(parnmpc=parnmpc, nthreads=8)
+parnmpc_solver = robotoc.UnconstrParNMPCSolver(parnmpc=parnmpc, 
+                                               solver_options=solver_options, 
+                                               nthreads=8)
+
+print("\n----- Solves the OCP by ParNMPC algorithm. -----")
 parnmpc_solver.set_solution("q", q)
 parnmpc_solver.set_solution("v", v)
 parnmpc_solver.init_constraints()
-
-print("\n----- Solves the OCP by ParNMPC algorithm. -----")
-num_iteration = 40
-robotoc.utils.benchmark.convergence(parnmpc_solver, t, q, v, num_iteration)
+parnmpc_solver.init_backward_correction(t)
+print("Initial KKT error: ", parnmpc_solver.KKT_error(t, q, v))
+parnmpc_solver.solve(t, q, v, init_solver=True)
+print("KKT error after convergence: ", parnmpc_solver.KKT_error(t, q, v))
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')
 viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)

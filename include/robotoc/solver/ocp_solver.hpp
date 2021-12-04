@@ -25,6 +25,7 @@
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
 #include "robotoc/hybrid/sto_regularization.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 
 namespace robotoc {
@@ -39,6 +40,7 @@ public:
   /// @brief Construct optimal control problem solver.
   /// @param[in] ocp Optimal control problem. 
   /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in] solver_options Solver options. Default is SolverOptions::defaultOptions().
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   /// @note If you consider the switching time optimization (STO) problem,
@@ -46,6 +48,7 @@ public:
   ///
   OCPSolver(const OCP& ocp, 
             const std::shared_ptr<ContactSequence>& contact_sequence, 
+            const SolverOptions& solver_options=SolverOptions::defaultOptions(), 
             const int nthreads=1);
 
   ///
@@ -79,6 +82,12 @@ public:
   OCPSolver& operator=(OCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Sets the solver option. 
+  /// @param[in] solver_options Solver options.  
+  ///
+  void setSolverOptions(const SolverOptions& solver_options);
+
+  ///
   /// @brief Applies mesh refinement if the discretization method is   
   /// DiscretizationMethod::PhaseBased. Also initializes the constraints 
   /// if the mesh refiement is carried out.
@@ -98,11 +107,22 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] line_search If true, filter line search is enabled. If false
-  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const bool line_search=false);
+                      const Eigen::VectorXd& v);
+
+  ///
+  /// @brief Solves the optimal control problem. Internally calls 
+  /// updateSolutio() and meshRefinement().
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @param[in] init_solver If true, initializes the solver, that is, calls
+  /// meshRefinement(), initConstraints(), and clears the line search filter.
+  /// Default is true.
+  ///
+  void solve(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
+             const bool init_solver=true);
 
   ///
   /// @brief Get the split solution of a time stage. For example, the control 
@@ -161,26 +181,22 @@ public:
   void extrapolateSolutionInitialPhase(const double t);
 
   ///
-  /// @brief Clear the line search filter. 
-  ///
-  void clearLineSearchFilter();
-
-  ///
-  /// @brief Computes the KKT residual of the optimal control problem. 
+  /// @brief Computes the KKT residual of the optimal control problem and 
+  /// returns the KKT error, that is, the l2-norm of the KKT residual. 
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @return The KKT error, that is, the l2-norm of the KKT residual.
   ///
-  void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v);
+  double KKTError(const double t, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
 
   ///
-  /// @brief Returns the l2-norm of the KKT residuals.
-  /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
-  /// called.  
+  /// @brief Returns the l2-norm of the KKT residuals using the results of 
+  /// OCPsolver::updateSolution() or OCPsolver::solve().
   /// @return The l2-norm of the KKT residual.
   ///
-  double KKTError();
+  double KKTError() const;
 
   ///
   /// @brief Returns the value of the cost function.
@@ -237,7 +253,7 @@ private:
   Solution s_;
   Direction d_;
   RiccatiFactorization riccati_factorization_;
-  double kkt_error_;
+  SolverOptions solver_options_;
 
   void discretizeSolution();
 
