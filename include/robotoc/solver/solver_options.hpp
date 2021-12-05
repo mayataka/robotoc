@@ -16,20 +16,6 @@ namespace robotoc {
 class SolverOptions {
 public:
   ///
-  /// @brief Constructor. 
-  ///
-  SolverOptions(const int max_iter, const double kkt_tol, const double mu_init,
-                const double mu_min, const double kkt_tol_mu, 
-                const double mu_linear_decrease_factor, 
-                const double mu_superlinear_decrease_power, 
-                const bool enable_line_search, 
-                const LineSearchSettings& line_search_settings, 
-                const DiscretizationMethod& discretization_method, 
-                const int initial_sto_reg_iter, const double initial_sto_reg, 
-                const double kkt_tol_mesh, const double max_dt_mesh, 
-                const double max_dts_riccati, const int print_level);
-
-  ///
   /// @brief Default constructor. 
   ///
   SolverOptions();
@@ -123,9 +109,10 @@ public:
   DiscretizationMethod discretization_method;
 
   ///
-  /// @brief Number of initial iterations in which a large regularization for 
-  /// the STO problem is added. Default is 0. (there is no iterations 
-  /// with large STO regularization).
+  /// @brief Number of initial inner iterations in which a large regularization 
+  /// for the STO problem is added, where the inner iteration means the 
+  /// iterations after each mesh-refinement. Default is 0
+  /// (that is, there is no iterations with large STO regularization).
   /// @note The purpose of a large regularization on the STO problem is to  
   /// stabilize the numerical computation. With sufficiently large  
   /// regularization on the STO, the optimization problem involving the STO 

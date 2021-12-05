@@ -91,7 +91,6 @@ constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
-
 # Create the contact sequence
 max_num_impulses = 2*cycle
 contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
@@ -155,7 +154,9 @@ for i in range(cycle-1):
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(2*max_num_impulses)
+sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
+                                         barrier=1.0e-03, 
+                                         fraction_to_boundary_rule=0.995)
 sto_constraints.set_minimum_dwell_times([0.02, 0.2, 0.02, 0.2, 0.02])
 sto_constraints.set_barrier(1.0e-03)
 

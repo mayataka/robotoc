@@ -30,10 +30,10 @@ inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
     if (other.isImpulseActive(i) != isImpulseActive(i)) {
       return false;
     }
-    if (!other.contactPoints()[i].isApprox(contactPoints()[i])) {
+    if (!other.contactPoint(i).isApprox(contactPoint(i))) {
       return false;
     }
-    if (!other.contactSurfacesNormals()[i].isApprox(contactSurfacesNormals()[i])) {
+    if (!other.contactSurfaceRotation(i).isApprox(contactSurfaceRotation(i))) {
       return false;
     }
   }
@@ -154,27 +154,27 @@ ImpulseStatus::contactPoints() const {
 }
 
 
-inline void ImpulseStatus::setContactSurfaceNormal(
-    const int contact_index, const Eigen::Vector3d& contact_surface_normal) {
-  contact_status_.setContactSurfaceNormal(contact_index, contact_surface_normal);
+inline void ImpulseStatus::setContactSurfaceRotation(
+    const int contact_index, const Eigen::Matrix3d& contact_surface_rotation) {
+  contact_status_.setContactSurfaceRotation(contact_index, contact_surface_rotation);
 }
 
 
-inline void ImpulseStatus::setContactSurfacesNormals(
-    const std::vector<Eigen::Vector3d>& contact_surfaces_normals) {
-  contact_status_.setContactSurfacesNormals(contact_surfaces_normals);
+inline void ImpulseStatus::setContactSurfacesRotations(
+    const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations) {
+  contact_status_.setContactSurfacesRotations(contact_surfaces_rotations);
 }
 
 
-inline const Eigen::Vector3d& ImpulseStatus::contactSurfaceNormal(
+inline const Eigen::Matrix3d& ImpulseStatus::contactSurfaceRotation(
     const int contact_index) const {
-  return contact_status_.contactSurfaceNormal(contact_index);
+  return contact_status_.contactSurfaceRotation(contact_index);
 }
 
 
-inline const std::vector<Eigen::Vector3d>& 
-ImpulseStatus::contactSurfacesNormals() const {
-  return contact_status_.contactSurfacesNormals();
+inline const std::vector<Eigen::Matrix3d>& 
+ImpulseStatus::contactSurfacesRotations() const {
+  return contact_status_.contactSurfacesRotations();
 }
 
 

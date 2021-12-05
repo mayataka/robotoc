@@ -47,13 +47,13 @@ PYBIND11_MODULE(contact_status, m) {
     .def("contact_point", &ContactStatus::contactPoint,
           py::arg("contact_index"))
     .def("contact_points", &ContactStatus::contactPoints)
-    .def("set_contact_surface_normal", &ContactStatus::setContactSurfaceNormal,
-          py::arg("contact_index"), py::arg("contact_surface_normal"))
-    .def("set_contact_surfaces_normals", &ContactStatus::setContactSurfacesNormals,
-          py::arg("contact_surfaces_normals"))
-    .def("contact_surface_normal", &ContactStatus::contactSurfaceNormal,
+    .def("set_contact_surface_rotation", &ContactStatus::setContactSurfaceRotation,
+          py::arg("contact_index"), py::arg("contact_surface_rotation"))
+    .def("set_contact_surfaces_rotations", &ContactStatus::setContactSurfacesRotations,
+          py::arg("contact_surfaces_rotations"))
+    .def("contact_surface_rotation", &ContactStatus::contactSurfaceRotation,
           py::arg("contact_index"))
-    .def("contact_surfaces_normals", &ContactStatus::contactSurfacesNormals)
+    .def("contact_surfaces_rotations", &ContactStatus::contactSurfacesRotations)
     .def("set_contact_id", &ContactStatus::setContactId,
           py::arg("contact_id"))
     .def("contact_id", &ContactStatus::contactId)

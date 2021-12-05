@@ -171,39 +171,38 @@ public:
 
   ///
   /// @brief Gets contact points.
-  /// @return const reference to the vector of contact points. 
+  /// @return const reference to the contact points. 
   ///
   const std::vector<Eigen::Vector3d>& contactPoints() const;
 
   ///
-  /// @brief Sets a contact surface by its normal vector.
+  /// @brief Sets the rotation matrix of a contact surface.
   /// @param[in] contact_index Index of the contact.
-  /// @param[in] contact_surface_normal Normal vector of the contact surface.
+  /// @param[in] contact_surface_rotation Rotation matrix of the contact surface.
   ///
-  void setContactSurfaceNormal(const int contact_index, 
-                               const Eigen::Vector3d& contact_surface_normal);
+  void setContactSurfaceRotation(const int contact_index, 
+                                 const Eigen::Matrix3d& contact_surface_rotation);
 
   ///
-  /// @brief Sets contact surfaces by their normal vectors.
-  /// @param[in] contact_surfaces_normals Normal vectors of the contact surfaces. 
-  /// Size must be ContactStatus::maxPointContacts().
+  /// @brief Sets the rotation matrices of contact surfaces.
+  /// @param[in] contact_surfaces_rotations Rotation matrices of the contact 
+  //// surfaces. Size must be ImpulseStatus::maxPointContacts().
   ///
-  void setContactSurfacesNormals(
-      const std::vector<Eigen::Vector3d>& contact_surfaces_normals);
+  void setContactSurfacesRotations(
+      const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations);
 
   ///
-  /// @brief Gets normal vector of the contact surface.
-  /// @param[in] contact_index Index of the contact .
-  /// @return const reference to the normal vector of the contact surface. 
+  /// @brief Gets rotation matrix of a contact surface.
+  /// @param[in] contact_index Index of the contact.
+  /// @return const reference to the rotation matrix of the contact surface. 
   ///
-  const Eigen::Vector3d& contactSurfaceNormal(const int contact_index) const;
+  const Eigen::Matrix3d& contactSurfaceRotation(const int contact_index) const;
 
   ///
-  /// @brief Gets normal vectors of the contact surfaces.
-  /// @return const reference to the vector of the normal vectors of the contact 
-  /// surfaces. 
+  /// @brief Gets rotation matrices of the contact surfaces.
+  /// @return const reference to the rotation matrices of the contact surfaces. 
   ///
-  const std::vector<Eigen::Vector3d>& contactSurfacesNormals() const;
+  const std::vector<Eigen::Matrix3d>& contactSurfacesRotations() const;
 
   ///
   /// @brief Sets impulse id.

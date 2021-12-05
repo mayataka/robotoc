@@ -140,7 +140,10 @@ int main(int argc, char *argv[]) {
   // Create the STO cost function
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(2*max_num_impulses);
+  const int max_num_switches = 2 * max_num_impulses;
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
+                                                                   barrier, 
+                                                                   fraction_to_boundary_rule);
   sto_constraints->setMinimumDwellTimes({0.15, 0.15, 0.65});
   sto_constraints->setBarrier(1.0e-03);
 

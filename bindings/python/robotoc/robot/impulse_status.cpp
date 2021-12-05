@@ -42,13 +42,13 @@ PYBIND11_MODULE(impulse_status, m) {
     .def("contact_point", &ImpulseStatus::contactPoint,
           py::arg("contact_index"))
     .def("contact_points", &ImpulseStatus::contactPoints)
-    .def("set_contact_surface_normal", &ImpulseStatus::setContactSurfaceNormal,
-          py::arg("contact_index"), py::arg("contact_surface_normal"))
-    .def("set_contact_surfaces_normals", &ImpulseStatus::setContactSurfacesNormals,
-          py::arg("contact_surfaces_normals"))
-    .def("contact_surface_normal", &ImpulseStatus::contactSurfaceNormal,
+    .def("set_contact_surface_rotation", &ImpulseStatus::setContactSurfaceRotation,
+          py::arg("contact_index"), py::arg("contact_surface_rotation"))
+    .def("set_contact_surfaces_rotations", &ImpulseStatus::setContactSurfacesRotations,
+          py::arg("contact_surfaces_rotations"))
+    .def("contact_surface_rotation", &ImpulseStatus::contactSurfaceRotation,
           py::arg("contact_index"))
-    .def("contact_surfaces_normals", &ImpulseStatus::contactSurfacesNormals)
+    .def("contact_surfaces_rotations", &ImpulseStatus::contactSurfacesRotations)
     .def("set_impulse_id", &ImpulseStatus::setImpulseId,
           py::arg("impulse_id"))
     .def("impulse_id", &ImpulseStatus::impulseId)

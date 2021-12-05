@@ -22,11 +22,21 @@ void ImpulseStatus::disp(std::ostream& os) const {
   }
   os << "[" << contactPoint(maxPointContacts()-1).transpose() << "]";
   os << "]" << std::endl;
-  os << "  contact surface normals: [";
+  os << "  contact surfaces rotations: [";
   for (int i=0; i<maxPointContacts()-1; ++i) {
-    os << "[" << contactSurfaceNormal(i).transpose() << "], ";
+    os << "[" << contactSurfaceRotation(i).row(0) << "]  ";
   }
-  os << "[" << contactSurfaceNormal(maxPointContacts()-1).transpose() << "]";
+  os << "[" << contactSurfaceRotation(maxPointContacts()-1).row(0) << "]" << std::endl;
+  os << "                               ";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
+    os << "[" << contactSurfaceRotation(i).row(1) << "]  ";
+  }
+  os << "[" << contactSurfaceRotation(maxPointContacts()-1).row(1) << "]" << std::endl;
+  os << "                               ";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
+    os << "[" << contactSurfaceRotation(i).row(2) << "], ";
+  }
+  os << "[" << contactSurfaceRotation(maxPointContacts()-1).row(2) << "]";
   os << "]" << std::flush;
 }
 
