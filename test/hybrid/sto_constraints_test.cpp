@@ -48,6 +48,20 @@ protected:
 };
 
 
+TEST_F(STOConstraintsTest, testParam) {
+  const int max_num_switches = 2 * max_num_impulse;
+  auto constraints = STOConstraints(max_num_switches, min_dt);
+  EXPECT_DOUBLE_EQ(constraints.barrier(), 1.0e-03);
+  EXPECT_DOUBLE_EQ(constraints.fractionToBoundaryRule(), 0.995);
+  const double barrier = 0.8;
+  const double fraction_to_boundary_rule = 0.5;
+  constraints.setBarrier(barrier);
+  constraints.setFractionToBoundaryRule(fraction_to_boundary_rule);
+  EXPECT_DOUBLE_EQ(constraints.barrier(), barrier);
+  EXPECT_DOUBLE_EQ(constraints.fractionToBoundaryRule(), fraction_to_boundary_rule);
+}
+
+
 TEST_F(STOConstraintsTest, test) {
   const int max_num_switches = 2 * max_num_impulse;
   auto constraints = STOConstraints(max_num_switches, min_dt);

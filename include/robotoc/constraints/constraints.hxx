@@ -44,41 +44,31 @@ inline Constraints::~Constraints() {
 
 inline void Constraints::push_back(
     ConstraintComponentBasePtr constraint_component) {
-    // const ConstraintComponentBasePtr& constraint_component) {
   constraint_component->setBarrier(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
         == KinematicsLevel::PositionLevel) {
     position_level_constraints_.push_back(constraint_component);
-    // position_level_constraints_.back()->setBarrier(barrier_);
-    // position_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
   else if (constraint_component->kinematicsLevel() 
               == KinematicsLevel::VelocityLevel) {
     velocity_level_constraints_.push_back(constraint_component);
-    // velocity_level_constraints_.back()->setBarrier(barrier_);
-    // velocity_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
   else if (constraint_component->kinematicsLevel() 
               == KinematicsLevel::AccelerationLevel) {
     acceleration_level_constraints_.push_back(constraint_component);
-    // acceleration_level_constraints_.back()->setBarrier(barrier_);
-    // acceleration_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
 }
 
 
 inline void Constraints::push_back(
     ImpulseConstraintComponentBasePtr constraint_component) {
-    // const ImpulseConstraintComponentBasePtr& constraint_component) {
   constraint_component->setBarrier(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
         == KinematicsLevel::AccelerationLevel) {
     // Only the acceleration level constraints are valid at impulse stage.
     impulse_level_constraints_.push_back(constraint_component); 
-    // impulse_level_constraints_.back()->setBarrier(barrier_);
-    // impulse_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
 }
 

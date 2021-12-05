@@ -161,20 +161,6 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Sets the barrier parameter for all the constraint components.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
-  ///
-  void setBarrier(const double barrier);
-
-  ///
-  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
-  /// constraint components.
-  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
-  /// than 1. Should be between 0.9 and 0.995.
-  ///
-  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
-
-  ///
   /// @brief Sets the minimum dwell time. 
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
   /// minimum dwell times are set to this value. Default is 
@@ -190,6 +176,32 @@ public:
   void setMinimumDwellTimes(const std::vector<double>& min_dt);
 
   ///
+  /// @brief Sets the barrier parameter for all the constraint components.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  ///
+  void setBarrier(const double barrier);
+
+  ///
+  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
+  /// constraint components.
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995.
+  ///
+  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
+
+  ///
+  /// @brief Gets the barrier parameter.
+  /// @return Barrier parameter. 
+  ///
+  double barrier() const;
+
+  ///
+  /// @brief Gets the parameter of the fraction-to-boundary-rule. 
+  /// @return The parameter of the fraction-to-boundary-rule. 
+  ///
+  double fractionToBoundaryRule() const;
+
+  ///
   /// @brief Minimum value of the minimum dwell times.  
   ///
   static constexpr double k_min_dt 
@@ -199,6 +211,7 @@ private:
   std::vector<DwellTimeLowerBound> dtlb_;
   std::vector<double> min_dt_;
   double k_min_dt_; // this is for Pybind11
+  double barrier_, fraction_to_boundary_rule_;
   int max_num_switches_, num_switches_;
   Eigen::VectorXd primal_step_size_, dual_step_size_;
 

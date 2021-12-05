@@ -10,31 +10,34 @@
 
 namespace robotoc {
 
-inline STOConstraints::STOConstraints(const int max_num_switches, 
-                                      const double min_dt, const double barrier, 
-                                      const double fraction_to_boundary_rule) 
-  : dtlb_(max_num_switches+1, DwellTimeLowerBound(barrier, 
-                                                  fraction_to_boundary_rule)),
-    min_dt_(max_num_switches+1, min_dt), 
+inline STOConstraints::STOConstraints(const int _max_num_switches, 
+                                      const double _min_dt, 
+                                      const double _barrier, 
+                                      const double _fraction_to_boundary_rule) 
+  : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
+                                                   _fraction_to_boundary_rule)),
+    min_dt_(_max_num_switches+1, _min_dt), 
     k_min_dt_(k_min_dt),
-    max_num_switches_(max_num_switches),
+    barrier_(_barrier), 
+    fraction_to_boundary_rule_(_fraction_to_boundary_rule),
+    max_num_switches_(_max_num_switches),
     num_switches_(0),
-    primal_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)), 
-    dual_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)) {
+    primal_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)), 
+    dual_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)) {
   try {
-    if (min_dt < 0) {
+    if (_min_dt < 0) {
       throw std::out_of_range(
           "Invalid argment: min_dt must be non-negative!");
     }
-    if (barrier <= 0) {
+    if (_barrier <= 0) {
       throw std::out_of_range(
           "Invalid argment: barrirer must be positive!");
     }
-    if (fraction_to_boundary_rule <= 0) {
+    if (_fraction_to_boundary_rule <= 0) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be positive!");
     }
-    if (fraction_to_boundary_rule >= 1) {
+    if (_fraction_to_boundary_rule >= 1) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be less than 1!");
     }
@@ -46,34 +49,36 @@ inline STOConstraints::STOConstraints(const int max_num_switches,
 }
 
 
-inline STOConstraints::STOConstraints(const int max_num_switches, 
-                                      const std::vector<double>& min_dt, 
-                                      const double barrier, 
-                                      const double fraction_to_boundary_rule) 
-  : dtlb_(max_num_switches+1, DwellTimeLowerBound(barrier, 
-                                                  fraction_to_boundary_rule)),
-    min_dt_(min_dt), 
+inline STOConstraints::STOConstraints(const int _max_num_switches, 
+                                      const std::vector<double>& _min_dt, 
+                                      const double _barrier, 
+                                      const double _fraction_to_boundary_rule) 
+  : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
+                                                   _fraction_to_boundary_rule)),
+    min_dt_(_min_dt), 
     k_min_dt_(k_min_dt),
-    max_num_switches_(max_num_switches),
+    barrier_(_barrier), 
+    fraction_to_boundary_rule_(_fraction_to_boundary_rule),
+    max_num_switches_(_max_num_switches),
     num_switches_(0),
-    primal_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)), 
-    dual_step_size_(Eigen::VectorXd::Zero(max_num_switches+1)) {
+    primal_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)), 
+    dual_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)) {
   try {
-    for (const auto e : min_dt) {
+    for (const auto e : _min_dt) {
       if (e < 0.) {
         throw std::out_of_range(
             "Invalid argment: min_dt must be non-negative!");
       }
     }
-    if (barrier <= 0) {
+    if (_barrier <= 0) {
       throw std::out_of_range(
           "Invalid argment: barrirer must be positive!");
     }
-    if (fraction_to_boundary_rule <= 0) {
+    if (_fraction_to_boundary_rule <= 0) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be positive!");
     }
-    if (fraction_to_boundary_rule >= 1) {
+    if (_fraction_to_boundary_rule >= 1) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be less than 1!");
     }
@@ -82,7 +87,7 @@ inline STOConstraints::STOConstraints(const int max_num_switches,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  while (min_dt_.size() < (max_num_switches+1)) {
+  while (min_dt_.size() < (_max_num_switches+1)) {
     min_dt_.push_back(k_min_dt_);
   }
 }
@@ -502,21 +507,6 @@ inline double STOConstraints::KKTError() const {
 }
 
 
-inline void STOConstraints::setBarrier(const double barrier) {
-  for (auto& e : dtlb_) {
-    e.setBarrier(barrier);
-  }
-}
-
-
-inline void STOConstraints::setFractionToBoundaryRule(
-    const double fraction_to_boundary_rule) {
-  for (auto& e : dtlb_) {
-    e.setFractionToBoundaryRule(fraction_to_boundary_rule);
-  }
-}
-
-
 inline void STOConstraints::setMinimumDwellTimes(const double min_dt) {
   try {
     if (min_dt < 0) {
@@ -540,6 +530,36 @@ inline void STOConstraints::setMinimumDwellTimes(
   while (min_dt_.size() < (max_num_switches_+1)) {
     min_dt_.push_back(k_min_dt_);
   }
+}
+
+
+inline void STOConstraints::setBarrier(const double _barrier) {
+  assert(_barrier > 0.0);
+  for (auto& e : dtlb_) {
+    e.setBarrier(_barrier);
+  }
+  barrier_ = _barrier;
+}
+
+
+inline void STOConstraints::setFractionToBoundaryRule(
+    const double _fraction_to_boundary_rule) {
+  assert(_fraction_to_boundary_rule > 0.0);
+  assert(_fraction_to_boundary_rule < 1.0);
+  for (auto& e : dtlb_) {
+    e.setFractionToBoundaryRule(_fraction_to_boundary_rule);
+  }
+  fraction_to_boundary_rule_ = _fraction_to_boundary_rule;
+}
+
+
+inline double STOConstraints::barrier() const {
+  return barrier_;
+}
+
+
+inline double STOConstraints::fractionToBoundaryRule() const {
+  return fraction_to_boundary_rule_;
 }
 
 } // namespace robotoc
