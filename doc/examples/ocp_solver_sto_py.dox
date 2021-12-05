@@ -173,8 +173,14 @@ ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence,
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                nthreads=4)
 ```
-@remark Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
+@note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
 Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
+
+@note In this example, we want to optimize the switching times as well as the whole-body trajectory of the robot.
+Then we need to carry on mesh refinement because the switching times change over the iterations. 
+We set `SolverOptions::max_dt_mesh` that the maximum value of the time-steps.
+We also set `SolverOptions::kkt_tol_mesh` and we apply the mesh refinement when the KKT error is less than `SolverOptions::kkt_tol_mesh` and the maximum time step is larger than `SolverOptions::max_dt_mesh`.
+
 
 So, let's run the solver! 
 ```
@@ -182,34 +188,16 @@ t = 0.
 q = q_standing # initial state.
 v = np.zeros(robot.dimv()) # initial state.
 
-ocp_solver.set_solution("q", q) # set the initial guess of the solution.
-ocp_solver.set_solution("v", v) # set the initial guess of the solution.
-f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
-ocp_solver.set_solution("f", f_init) # set the initial guess of the solution.
-
-ocp_solver.mesh_refinement(t) 
-```
-@note `ocp_solver.mesh_refinement(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased (this is specified when the is enabled). This also initializes the slack and dual variables of the primal-dual interior point method.
-
-In this example, we want to optimize the switching times as well as the whole-body trajectory of the robot.
-Then we need to carry on mesh refinement because the switching times change over the iterations. 
-We set `dt_tol_mesh` that the maximum value of the time-steps.
-We also define `kkt_tol_mesh` and we apply the mesh refinement when the KKT error is less than `kkt_tol_mesh` and the maximum time step is larger than `dt_tol_mesh`:
-```
-line_search = False
-num_iteration = 150
-dt_tol_mesh = 0.02
-kkt_tol_mesh = 0.1
-
-ocp_solver.compute_KKT_residual(t, q, v)
-print('Initial KKT error = {:.6g}'.format(ocp_solver.KKT_error()))
-for i in range(num_iteration):
-    ocp_solver.update_solution(t, q, v, line_search)
-    if ocp_solver.get_OCP_discretization().dt_max() > dt_tol_mesh and ocp_solver.KKT_error() < kkt_tol_mesh:
-        print('mesh refinement is carried out!')
-        ocp_solver.mesh_refinement(t)
-    ocp_solver.compute_KKT_residual(t, q, v)
-    print('KKT error after iteration ' + str(i+1) + ' = {:.6g}'.format(ocp_solver.KKT_error()))
+ocp_solver.setSolution("q", q); # set the initial guess of the solution.
+ocp_solver.setSolution("v", v); # set the initial guess of the solution.
+Eigen::Vector3d f_init;
+f_init << 0, 0, 0.25*robot.totalWeight();
+ocp_solver.setSolution("f", f_init); # set the initial guess of the solution.
+ocp_solver.meshRefinement(t);
+ocp_solver.initConstraints(t);
+std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+ocp_solver.solve(t, q, v);
+std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
 ```
 
 We can visualize the solution trajectory as

@@ -30,6 +30,7 @@ Required header files are as follows.
 #include "robotoc/constraints/friction_cone.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 int main(int argc, char *argv[]) {
 ```
@@ -194,55 +195,44 @@ Finally, we can construct the optimal control solver!
 ```
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
+  robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
+                   T, N, max_num_impulses);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  solver_options.max_dt_mesh = T/N;
+  solver_options.kkt_tol_mesh = 0.1;
+  solver_options.max_iter = 200;
   const int nthreads = 4;
-  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, 
-                   sto_cost, sto_constraints, T, N);
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 ```
-@remark Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
+@note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
 Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
+
+@note In this example, we want to optimize the switching times as well as the whole-body trajectory of the robot.
+Then we need to carry on mesh refinement because the switching times change over the iterations. 
+We set `SolverOptions::max_dt_mesh` that the maximum value of the time-steps.
+We also set `SolverOptions::kkt_tol_mesh` and we apply the mesh refinement when the KKT error is less than `SolverOptions::kkt_tol_mesh` and the maximum time step is larger than `SolverOptions::max_dt_mesh`.
 
 So, let's run the solver!
 ```
   const double t = 0;
-  Eigen::VectorXd q(q_standing); // initial state.
-  Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv())); // initial state.
+  const Eigen::VectorXd q(q_standing); // initial state.
+  const Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv())); // initial state.
 
   ocp_solver.setSolution("q", q); // set the initial guess of the solution.
   ocp_solver.setSolution("v", v); // set the initial guess of the solution.
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init); // set the initial guess of the solution.
-
-  ocp_solver.meshRefinement(t); 
-```
-@note `ocp_solver.meshRefinement(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased. This also initializes the slack and dual variables of the primal-dual interior point method.
-
-```
-  const bool line_search = false;
-  const int num_iteration = 150;
-  const double dt_tol_mesh = 0.02;
-  const double kkt_tol_mesh = 0.1;
-  ocp_solver.computeKKTResidual(t, q, v);
-  std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver.updateSolution(t, q, v, line_search);
-    const double kkt_error = ocp_solver.KKTError();
-    const double dt_max = ocp_solver.getOCPDiscretization().dt_max();
-    if (dt_max > dt_tol_mesh && kkt_error < kkt_tol_mesh) {
-      std::cout << "Mesh refinement is carried out!" << std::endl;
-      ocp_solver.meshRefinement(t);
-    }
-    ocp_solver.computeKKTResidual(t, q, v);
-    std::cout << "KKT error after iteration " << i+1 << " = " 
-              << ocp_solver.KKTError() << std::endl;
-  }
-  std::cout << "-----------------------------------" << std::endl;
-  std::cout << std::endl;
+  ocp_solver.meshRefinement(t);
+  ocp_solver.initConstraints(t);
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
 
   return 0;
 }
 ```
+@note `ocp_solver.meshRefinement(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased. This also initializes the slack and dual variables of the primal-dual interior point method.
 
 @note We can check the formulation of the discretized optimal control problem 
 before running it via

@@ -28,6 +28,7 @@ Required header files are as follows.
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 int main(int argc, char *argv[]) {
 ```
@@ -203,37 +204,27 @@ Finally, we can construct the optimal control solver!
 ```
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = T / dt;
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 ```
 
 So, let's run the solver!
 ```
   const double t = 0;
-  Eigen::VectorXd q(q_standing); // initial state.
-  Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv())); // initial state.
+  const Eigen::VectorXd q(q_standing); // initial state.
+  const Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv())); // initial state.
 
   ocp_solver.setSolution("q", q); // set the initial guess of the solution.
   ocp_solver.setSolution("v", v); // set the initial guess of the solution.
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init); // set the initial guess of the solution.
-
-  ocp_solver.initConstraints(t); // initialize the slack and dual variables of the primal-dual interior point method.
-
-  const bool line_search = false;
-  const int num_iteration = 50;
-  ocp_solver.computeKKTResidual(t, q, v);
-  std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver.updateSolution(t, q, v, line_search);
-    ocp_solver.computeKKTResidual(t, q, v);
-    std::cout << "KKT error after iteration " << i+1 << " = " 
-              << ocp_solver.KKTError() << std::endl;
-  }
-  std::cout << "-----------------------------------" << std::endl;
-  std::cout << std::endl;
+  ocp_solver.initConstraints(t);
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
 
   return 0;
 }
