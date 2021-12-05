@@ -93,7 +93,7 @@ TEST_P(RiccatiRecursionTest, riccatiRecursion) {
   KKTMatrix kkt_matrix(robot, N, max_num_impulse);
   KKTResidual kkt_residual(robot, N, max_num_impulse);
   aligned_vector<Robot> robots(nthreads, robot);
-  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
@@ -241,7 +241,7 @@ TEST_P(RiccatiRecursionTest, computeDirection) {
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   DirectMultipleShooting dms(nthreads);
   aligned_vector<Robot> robots(nthreads, robot);

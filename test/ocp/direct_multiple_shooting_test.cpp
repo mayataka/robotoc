@@ -74,7 +74,7 @@ TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
-  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
   dms.initConstraints(ocp, robots, contact_sequence, s);
@@ -237,7 +237,7 @@ TEST_P(DirectMultipleShootingTest, computeKKTSystem) {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
-  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
   dms.initConstraints(ocp, robots, contact_sequence, s);
@@ -374,7 +374,7 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
-  auto ocp = OCP(robot, contact_sequence, cost, constraints, T, N);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   dms.initConstraints(ocp, robots, contact_sequence, s);
   dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
