@@ -9,8 +9,9 @@
 
 namespace robotoc {
 
-inline ImpulseStatus::ImpulseStatus(const int max_point_contacts)
-  : contact_status_(max_point_contacts) {
+inline ImpulseStatus::ImpulseStatus(const int max_point_contacts,
+                                    const int impulse_id)
+  : contact_status_(max_point_contacts, impulse_id) {
 }
 
 
@@ -30,6 +31,9 @@ inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
       return false;
     }
     if (!other.contactPoints()[i].isApprox(contactPoints()[i])) {
+      return false;
+    }
+    if (!other.contactSurfacesNormals()[i].isApprox(contactSurfacesNormals()[i])) {
       return false;
     }
   }
@@ -147,6 +151,40 @@ inline const Eigen::Vector3d& ImpulseStatus::contactPoint(
 inline const std::vector<Eigen::Vector3d>& 
 ImpulseStatus::contactPoints() const {
   return contact_status_.contactPoints();
+}
+
+
+inline void ImpulseStatus::setContactSurfaceNormal(
+    const int contact_index, const Eigen::Vector3d& contact_surface_normal) {
+  contact_status_.setContactSurfaceNormal(contact_index, contact_surface_normal);
+}
+
+
+inline void ImpulseStatus::setContactSurfacesNormals(
+    const std::vector<Eigen::Vector3d>& contact_surfaces_normals) {
+  contact_status_.setContactSurfacesNormals(contact_surfaces_normals);
+}
+
+
+inline const Eigen::Vector3d& ImpulseStatus::contactSurfaceNormal(
+    const int contact_index) const {
+  return contact_status_.contactSurfaceNormal(contact_index);
+}
+
+
+inline const std::vector<Eigen::Vector3d>& 
+ImpulseStatus::contactSurfacesNormals() const {
+  return contact_status_.contactSurfacesNormals();
+}
+
+
+inline void ImpulseStatus::setImpulseId(const int impulse_id) {
+  contact_status_.setContactId(impulse_id);
+}
+
+
+inline int ImpulseStatus::impulseId() const {
+  return contact_status_.contactId();
 }
 
 

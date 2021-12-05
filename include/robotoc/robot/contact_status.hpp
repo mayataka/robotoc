@@ -10,6 +10,16 @@
 namespace robotoc {
 
 ///
+/// @enum ContactType 
+/// @brief Types of contacts 
+///
+enum class ContactType {
+  PointContact,
+  SurfaceContact
+};
+
+
+///
 /// @class ContactStatus
 /// @brief Contact status of robot model.
 ///
@@ -18,8 +28,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
+  /// @param[in] contact_id Identifier number of the contact. Can be used only 
+  /// in user-defined cost and constraints. Default is 0.
   ///
-  ContactStatus(const int max_point_contacts);
+  ContactStatus(const int max_point_contacts, const int contact_id=0);
 
   ///
   /// @brief Default constructor. 
@@ -162,6 +174,48 @@ public:
   const std::vector<Eigen::Vector3d>& contactPoints() const;
 
   ///
+  /// @brief Sets a contact surface by its normal vector.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_surface_normal Normal vector of the contact surface.
+  ///
+  void setContactSurfaceNormal(const int contact_index, 
+                               const Eigen::Vector3d& contact_surface_normal);
+
+  ///
+  /// @brief Sets contact surfaces by their normal vectors.
+  /// @param[in] contact_surfaces_normals Normal vectors of the contact surfaces. 
+  /// Size must be ContactStatus::maxPointContacts().
+  ///
+  void setContactSurfacesNormals(
+      const std::vector<Eigen::Vector3d>& contact_surfaces_normals);
+
+  ///
+  /// @brief Gets normal vector of the contact surface.
+  /// @param[in] contact_index Index of the contact .
+  /// @return const reference to the normal vector of the contact surface. 
+  ///
+  const Eigen::Vector3d& contactSurfaceNormal(const int contact_index) const;
+
+  ///
+  /// @brief Gets normal vectors of the contact surfaces.
+  /// @return const reference to the vector of the normal vectors of the contact 
+  /// surfaces. 
+  ///
+  const std::vector<Eigen::Vector3d>& contactSurfacesNormals() const;
+
+  ///
+  /// @brief Sets contact id.
+  /// @param[in] contact_id Contact id. 
+  ///
+  void setContactId(const int contact_id);
+
+  ///
+  /// @brief Gets contact id.
+  /// @return Contact id. 
+  ///
+  int contactId() const;
+
+  ///
   /// @brief Fills contact status randomly.
   ///
   void setRandom();
@@ -179,7 +233,8 @@ public:
 private:
   std::vector<bool> is_contact_active_;
   std::vector<Eigen::Vector3d> contact_points_;
-  int dimf_, max_point_contacts_;
+  std::vector<Eigen::Vector3d> contact_surfaces_normals_;
+  int dimf_, max_point_contacts_, contact_id_;
   bool has_active_contacts_;
 
   void set_has_active_contacts();

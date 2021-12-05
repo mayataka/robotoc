@@ -18,7 +18,7 @@ std::pair<double, double> zero_baumgarte_weights = {0., 0.};
 
 PYBIND11_MODULE(robot, m) {
   py::enum_<BaseJointType>(m, "BaseJointType", py::arithmetic())
-    .value("FixedBase",  BaseJointType::FixedBase)
+    .value("FixedBase", BaseJointType::FixedBase)
     .value("FloatingBase", BaseJointType::FloatingBase)
     .export_values();
 

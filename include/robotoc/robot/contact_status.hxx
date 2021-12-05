@@ -9,11 +9,14 @@
 
 namespace robotoc {
 
-inline ContactStatus::ContactStatus(const int max_point_contacts)
+inline ContactStatus::ContactStatus(const int max_point_contacts,
+                                    const int contact_id)
   : is_contact_active_(max_point_contacts, false),
     contact_points_(max_point_contacts, Eigen::Vector3d::Zero()),
+    contact_surfaces_normals_(max_point_contacts, Eigen::Vector3d::Zero()),
     dimf_(0),
     max_point_contacts_(max_point_contacts),
+    contact_id_(contact_id),
     has_active_contacts_(false) {
 }
 
@@ -21,8 +24,10 @@ inline ContactStatus::ContactStatus(const int max_point_contacts)
 inline ContactStatus::ContactStatus() 
   : is_contact_active_(),
     contact_points_(),
+    contact_surfaces_normals_(),
     dimf_(0),
     max_point_contacts_(0),
+    contact_id_(0),
     has_active_contacts_(false) {
 }
  
@@ -38,6 +43,9 @@ inline bool ContactStatus::operator==(const ContactStatus& other) const {
       return false;
     }
     if (!other.contactPoints()[i].isApprox(contactPoints()[i])) {
+      return false;
+    }
+    if (!other.contactSurfacesNormals()[i].isApprox(contactSurfacesNormals()[i])) {
       return false;
     }
   }
@@ -188,6 +196,45 @@ inline const Eigen::Vector3d& ContactStatus::contactPoint(
 inline const std::vector<Eigen::Vector3d>& 
 ContactStatus::contactPoints() const {
   return contact_points_;
+}
+
+
+inline void ContactStatus::setContactSurfaceNormal(
+    const int contact_index, const Eigen::Vector3d& contact_surface_normal) {
+  assert(contact_index >= 0);
+  assert(contact_index < max_point_contacts_);
+  contact_surfaces_normals_[contact_index] = contact_surface_normal;
+}
+
+
+inline void ContactStatus::setContactSurfacesNormals(
+    const std::vector<Eigen::Vector3d>& contact_surfaces_normals) {
+  assert(contact_surfaces_normals.size() == max_point_contacts_);
+  for (int i=0; i<max_point_contacts_; ++i) {
+    setContactSurfaceNormal(i, contact_surfaces_normals[i]);
+  }
+}
+
+
+inline const Eigen::Vector3d& ContactStatus::contactSurfaceNormal(
+    const int contact_index) const {
+  return contact_surfaces_normals_[contact_index];
+}
+
+
+inline const std::vector<Eigen::Vector3d>& 
+ContactStatus::contactSurfacesNormals() const {
+  return contact_surfaces_normals_;
+}
+
+
+inline void ContactStatus::setContactId(const int contact_id) {
+  contact_id_ = contact_id;
+}
+
+
+inline int ContactStatus::contactId() const {
+  return contact_id_;
 }
 
 

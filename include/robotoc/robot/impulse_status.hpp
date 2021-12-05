@@ -21,8 +21,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
+  /// @param[in] impulse_id Identifier number of the impulse. Can be used only 
+  /// in user-defined cost and constraints. Default is 0.
   ///
-  ImpulseStatus(const int max_point_contacts);
+  ImpulseStatus(const int max_point_contacts, const int impulse_id=0);
 
   ///
   /// @brief Default constructor. 
@@ -172,6 +174,48 @@ public:
   /// @return const reference to the vector of contact points. 
   ///
   const std::vector<Eigen::Vector3d>& contactPoints() const;
+
+  ///
+  /// @brief Sets a contact surface by its normal vector.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_surface_normal Normal vector of the contact surface.
+  ///
+  void setContactSurfaceNormal(const int contact_index, 
+                               const Eigen::Vector3d& contact_surface_normal);
+
+  ///
+  /// @brief Sets contact surfaces by their normal vectors.
+  /// @param[in] contact_surfaces_normals Normal vectors of the contact surfaces. 
+  /// Size must be ContactStatus::maxPointContacts().
+  ///
+  void setContactSurfacesNormals(
+      const std::vector<Eigen::Vector3d>& contact_surfaces_normals);
+
+  ///
+  /// @brief Gets normal vector of the contact surface.
+  /// @param[in] contact_index Index of the contact .
+  /// @return const reference to the normal vector of the contact surface. 
+  ///
+  const Eigen::Vector3d& contactSurfaceNormal(const int contact_index) const;
+
+  ///
+  /// @brief Gets normal vectors of the contact surfaces.
+  /// @return const reference to the vector of the normal vectors of the contact 
+  /// surfaces. 
+  ///
+  const std::vector<Eigen::Vector3d>& contactSurfacesNormals() const;
+
+  ///
+  /// @brief Sets impulse id.
+  /// @param[in] impulse_id Impulse id. 
+  ///
+  void setImpulseId(const int impulse_id);
+
+  ///
+  /// @brief Gets impulse id.
+  /// @return Impulse id. 
+  ///
+  int impulseId() const;
 
   ///
   /// @brief Fills impulse status randomly.

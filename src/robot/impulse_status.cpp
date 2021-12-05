@@ -5,6 +5,7 @@ namespace robotoc {
 
 void ImpulseStatus::disp(std::ostream& os) const {
   os << "impulse status:" << std::endl;
+  os << "  impulse id: " << contact_status_.contactId() << std::endl;
   os << "  active impulses: [";
   for (int i=0; i<maxPointContacts()-1; ++i) {
     if (isImpulseActive(i)) {
@@ -20,6 +21,12 @@ void ImpulseStatus::disp(std::ostream& os) const {
     os << "[" << contactPoint(i).transpose() << "], ";
   }
   os << "[" << contactPoint(maxPointContacts()-1).transpose() << "]";
+  os << "]" << std::endl;
+  os << "  contact surface normals: [";
+  for (int i=0; i<maxPointContacts()-1; ++i) {
+    os << "[" << contactSurfaceNormal(i).transpose() << "], ";
+  }
+  os << "[" << contactSurfaceNormal(maxPointContacts()-1).transpose() << "]";
   os << "]" << std::flush;
 }
 

@@ -15,14 +15,18 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(impulse_status, m) {
   py::class_<ImpulseStatus>(m, "ImpulseStatus")
-    .def(py::init<const int>())
+    .def(py::init<const int, const int>(),
+          py::arg("max_point_contacts"), py::arg("impulse_id")=0)
     .def("max_point_contacts", &ImpulseStatus::maxPointContacts)
     .def("is_impulse_active", 
-          static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive))
+          static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),
+          py::arg("contact_index"))
     .def("is_impulse_active", 
           static_cast<const std::vector<bool>& (ImpulseStatus::*)() const>(&ImpulseStatus::isImpulseActive))
-    .def("activate_impulse", &ImpulseStatus::activateImpulse)
-    .def("deactivate_impulse", &ImpulseStatus::deactivateImpulse)
+    .def("activate_impulse", &ImpulseStatus::activateImpulse,
+          py::arg("contact_index"))
+    .def("deactivate_impulse", &ImpulseStatus::deactivateImpulse,
+          py::arg("contact_index"))
     .def("activate_impulses", 
           static_cast<void (ImpulseStatus::*)(const std::vector<int>& impulse_indices)>(&ImpulseStatus::activateImpulses))
     .def("deactivate_impulses", 
@@ -31,10 +35,23 @@ PYBIND11_MODULE(impulse_status, m) {
           static_cast<void (ImpulseStatus::*)()>(&ImpulseStatus::activateImpulses))
     .def("deactivate_impulses", 
           static_cast<void (ImpulseStatus::*)()>(&ImpulseStatus::deactivateImpulses))
-    .def("set_contact_point", &ImpulseStatus::setContactPoint)
-    .def("set_contact_points", &ImpulseStatus::setContactPoints)
-    .def("contact_point", &ImpulseStatus::contactPoint)
+    .def("set_contact_point", &ImpulseStatus::setContactPoint,
+          py::arg("contact_index"), py::arg("contact_point"))
+    .def("set_contact_points", &ImpulseStatus::setContactPoints,
+          py::arg("contact_points"))
+    .def("contact_point", &ImpulseStatus::contactPoint,
+          py::arg("contact_index"))
     .def("contact_points", &ImpulseStatus::contactPoints)
+    .def("set_contact_surface_normal", &ImpulseStatus::setContactSurfaceNormal,
+          py::arg("contact_index"), py::arg("contact_surface_normal"))
+    .def("set_contact_surfaces_normals", &ImpulseStatus::setContactSurfacesNormals,
+          py::arg("contact_surfaces_normals"))
+    .def("contact_surface_normal", &ImpulseStatus::contactSurfaceNormal,
+          py::arg("contact_index"))
+    .def("contact_surfaces_normals", &ImpulseStatus::contactSurfacesNormals)
+    .def("set_impulse_id", &ImpulseStatus::setImpulseId,
+          py::arg("impulse_id"))
+    .def("impulse_id", &ImpulseStatus::impulseId)
     .def("__str__", [](const ImpulseStatus& self) {
         std::stringstream ss;
         ss << self;
