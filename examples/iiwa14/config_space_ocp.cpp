@@ -44,7 +44,9 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
 
   // Create joint constraints.
-  auto constraints = std::make_shared<robotoc::Constraints>();
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
@@ -57,7 +59,6 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
-  constraints->setBarrier(1.0e-03);
 
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 3;

@@ -47,7 +47,7 @@ void JointAccelerationLowerLimitTest::test_kinematics(Robot& robot, const Eigen:
 
 void JointAccelerationLowerLimitTest::test_isFeasible(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit constr(robot, amin); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
   const auto contact_status = robot.createContactStatus();
   SplitSolution s(robot);
@@ -59,7 +59,7 @@ void JointAccelerationLowerLimitTest::test_isFeasible(Robot& robot, const Eigen:
 
 void JointAccelerationLowerLimitTest::test_setSlack(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit constr(robot, amin); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier()), data_ref(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -74,7 +74,7 @@ void JointAccelerationLowerLimitTest::test_evalConstraint(Robot& robot, const Ei
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -90,7 +90,7 @@ void JointAccelerationLowerLimitTest::test_evalConstraint(Robot& robot, const Ei
 
 void JointAccelerationLowerLimitTest::test_evalDerivatives(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit constr(robot, amin); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -106,7 +106,7 @@ void JointAccelerationLowerLimitTest::test_evalDerivatives(Robot& robot, const E
 
 void JointAccelerationLowerLimitTest::test_condenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit constr(robot, amin); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -129,7 +129,7 @@ void JointAccelerationLowerLimitTest::test_condenseSlackAndDual(Robot& robot, co
 
 void JointAccelerationLowerLimitTest::test_expandSlackAndDual(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit constr(robot, amin); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);

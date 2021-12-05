@@ -48,7 +48,7 @@ void JointTorquesUpperLimitTest::test_kinematics(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::test_isFeasible(Robot& robot) const {
   JointTorquesUpperLimit constr(robot); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   EXPECT_EQ(constr.dimc(), robot.dimu());
   const auto contact_status = robot.createContactStatus();
   SplitSolution s(robot);
@@ -60,7 +60,7 @@ void JointTorquesUpperLimitTest::test_isFeasible(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::test_setSlack(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier()), data_ref(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -77,7 +77,7 @@ void JointTorquesUpperLimitTest::test_evalConstraint(Robot& robot) const {
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd umax = robot.jointEffortLimit();
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -93,7 +93,7 @@ void JointTorquesUpperLimitTest::test_evalConstraint(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::test_evalDerivatives(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -109,7 +109,7 @@ void JointTorquesUpperLimitTest::test_evalDerivatives(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const SplitSolution s = SplitSolution::Random(robot);
@@ -133,7 +133,7 @@ void JointTorquesUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::test_expandSlackAndDual(Robot& robot) const {
   JointTorquesUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);

@@ -14,7 +14,7 @@ using ImpulseConstraintComponentBasePtr = std::shared_ptr<ImpulseConstraintCompo
 PYBIND11_MODULE(constraints, m) {
   py::class_<Constraints, std::shared_ptr<Constraints>>(m, "Constraints")
     .def(py::init<const double, const double>(),
-          py::arg("barrier"), py::arg("fraction_to_boundary_rule"))
+          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
     .def("push_back", static_cast<void (Constraints::*)(ConstraintComponentBasePtr)>(&Constraints::push_back),
           py::arg("constraint_component"))
     .def("push_back", static_cast<void (Constraints::*)(ImpulseConstraintComponentBasePtr)>(&Constraints::push_back),
