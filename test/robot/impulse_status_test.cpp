@@ -32,6 +32,8 @@ TEST_F(ImpulseStatusTest, constructor) {
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
+  EXPECT_EQ(impulse_status.contactPoints().size(), max_point_contacts);
+  EXPECT_EQ(impulse_status.contactSurfacesNormals().size(), max_point_contacts);
 }
 
 
