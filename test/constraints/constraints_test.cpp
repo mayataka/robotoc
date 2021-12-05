@@ -31,7 +31,7 @@ class ConstraintsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-04;
+    barrier = 1.0e-03;
     mu = 0.7;
   }
 

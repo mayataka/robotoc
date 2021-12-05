@@ -3,10 +3,8 @@
 
 namespace robotoc {
 
-JointVelocityLowerLimit::JointVelocityLowerLimit(
-    const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointVelocityLowerLimit::JointVelocityLowerLimit(const Robot& robot)
+  : ConstraintComponentBase(),
     dimc_(robot.jointVelocityLimit().size()),
     vmin_(-robot.jointVelocityLimit()) {
 }

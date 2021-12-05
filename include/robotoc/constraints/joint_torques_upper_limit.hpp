@@ -24,14 +24,8 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
-  /// Default is 1.0e-04.
-  /// @param[in] fraction_to_boundary_rule Parameter of the 
-  /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
-  /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  JointTorquesUpperLimit(const Robot& robot, const double barrier=1.0e-04,
-                          const double fraction_to_boundary_rule=0.995);
+  JointTorquesUpperLimit(const Robot& robot);
 
   ///
   /// @brief Default constructor. 

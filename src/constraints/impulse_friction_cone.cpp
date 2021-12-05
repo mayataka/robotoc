@@ -6,10 +6,8 @@
 
 namespace robotoc {
 
-ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu,
-                                         const double barrier,
-                                         const double fraction_to_boundary_rule)
-  : ImpulseConstraintComponentBase(barrier, fraction_to_boundary_rule),
+ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu)
+  : ImpulseConstraintComponentBase(),
     dimv_(robot.dimv()),
     dimc_(5*robot.maxPointContacts()),
     max_point_contacts_(robot.maxPointContacts()),

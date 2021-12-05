@@ -31,6 +31,8 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("get_solution", 
           static_cast<const SplitSolution& (OCPSolver::*)(const int) const>(&OCPSolver::getSolution))
     .def("get_solution", 
+          static_cast<const Solution& (OCPSolver::*)() const>(&OCPSolver::getSolution))
+    .def("get_solution", 
           static_cast<std::vector<Eigen::VectorXd> (OCPSolver::*)(const std::string&, const std::string&) const>(&OCPSolver::getSolution),
           py::arg("name"), py::arg("option")="")
     .def("set_solution", &OCPSolver::setSolution,

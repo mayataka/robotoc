@@ -1,6 +1,7 @@
 #ifndef ROBOTOC_CONSTRAINTS_HXX_
 #define ROBOTOC_CONSTRAINTS_HXX_
 
+#include <stdexcept>
 #include <cassert>
 
 #include "robotoc/constraints/constraints_impl.hpp"
@@ -8,11 +9,32 @@
 
 namespace robotoc {
 
-inline Constraints::Constraints() 
+inline Constraints::Constraints(const double barrier, 
+                                const double fraction_to_boundary_rule) 
   : position_level_constraints_(),
     velocity_level_constraints_(),
     acceleration_level_constraints_(),
-    impulse_level_constraints_() {
+    impulse_level_constraints_(),
+    barrier_(barrier), 
+    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
+  try {
+    if (barrier <= 0) {
+      throw std::out_of_range(
+          "Invalid argment: barrirer must be positive!");
+    }
+    if (fraction_to_boundary_rule <= 0) {
+      throw std::out_of_range(
+          "Invalid argment: fraction_to_boundary_rule must be positive!");
+    }
+    if (fraction_to_boundary_rule >= 1) {
+      throw std::out_of_range(
+          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -21,24 +43,42 @@ inline Constraints::~Constraints() {
 
 
 inline void Constraints::push_back(
-    const ConstraintComponentBasePtr& constraint) {
-  if (constraint->kinematicsLevel() == KinematicsLevel::PositionLevel) {
-    position_level_constraints_.push_back(constraint);
+    ConstraintComponentBasePtr constraint_component) {
+    // const ConstraintComponentBasePtr& constraint_component) {
+  constraint_component->setBarrier(barrier_);
+  constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
+  if (constraint_component->kinematicsLevel() 
+        == KinematicsLevel::PositionLevel) {
+    position_level_constraints_.push_back(constraint_component);
+    // position_level_constraints_.back()->setBarrier(barrier_);
+    // position_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
-  else if (constraint->kinematicsLevel() == KinematicsLevel::VelocityLevel) {
-    velocity_level_constraints_.push_back(constraint);
+  else if (constraint_component->kinematicsLevel() 
+              == KinematicsLevel::VelocityLevel) {
+    velocity_level_constraints_.push_back(constraint_component);
+    // velocity_level_constraints_.back()->setBarrier(barrier_);
+    // velocity_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
-  else if (constraint->kinematicsLevel() == KinematicsLevel::AccelerationLevel) {
-    acceleration_level_constraints_.push_back(constraint);
+  else if (constraint_component->kinematicsLevel() 
+              == KinematicsLevel::AccelerationLevel) {
+    acceleration_level_constraints_.push_back(constraint_component);
+    // acceleration_level_constraints_.back()->setBarrier(barrier_);
+    // acceleration_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
 }
 
 
 inline void Constraints::push_back(
-    const ImpulseConstraintComponentBasePtr& constraint) {
-  if (constraint->kinematicsLevel() == KinematicsLevel::AccelerationLevel) {
+    ImpulseConstraintComponentBasePtr constraint_component) {
+    // const ImpulseConstraintComponentBasePtr& constraint_component) {
+  constraint_component->setBarrier(barrier_);
+  constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
+  if (constraint_component->kinematicsLevel() 
+        == KinematicsLevel::AccelerationLevel) {
     // Only the acceleration level constraints are valid at impulse stage.
-    impulse_level_constraints_.push_back(constraint); 
+    impulse_level_constraints_.push_back(constraint_component); 
+    // impulse_level_constraints_.back()->setBarrier(barrier_);
+    // impulse_level_constraints_.back()->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   }
 }
 
@@ -405,16 +445,19 @@ inline void Constraints::updateDual(ConstraintsData& data,
 }
 
 
-inline void Constraints::setBarrier(const double barrier) {
-  constraintsimpl::setBarrier(position_level_constraints_, barrier);
-  constraintsimpl::setBarrier(velocity_level_constraints_, barrier);
-  constraintsimpl::setBarrier(acceleration_level_constraints_, barrier);
-  constraintsimpl::setBarrier(impulse_level_constraints_, barrier);
+inline void Constraints::setBarrier(const double _barrier) {
+  assert(_barrier > 0);
+  constraintsimpl::setBarrier(position_level_constraints_, _barrier);
+  constraintsimpl::setBarrier(velocity_level_constraints_, _barrier);
+  constraintsimpl::setBarrier(acceleration_level_constraints_, _barrier);
+  constraintsimpl::setBarrier(impulse_level_constraints_, _barrier);
+  barrier_ = _barrier;
 }
 
 
 inline void Constraints::setFractionToBoundaryRule(
     const double fraction_to_boundary_rule) {
+  assert(fraction_to_boundary_rule > 0);
   constraintsimpl::setFractionToBoundaryRule(position_level_constraints_, 
                                              fraction_to_boundary_rule);
   constraintsimpl::setFractionToBoundaryRule(velocity_level_constraints_, 
@@ -423,6 +466,17 @@ inline void Constraints::setFractionToBoundaryRule(
                                              fraction_to_boundary_rule);
   constraintsimpl::setFractionToBoundaryRule(impulse_level_constraints_, 
                                              fraction_to_boundary_rule);
+  fraction_to_boundary_rule_ = fraction_to_boundary_rule;
+}
+
+
+inline double Constraints::barrier() const {
+  return barrier_;
+}
+
+
+inline double Constraints::fractionToBoundaryRule() const {
+  return fraction_to_boundary_rule_;
 }
 
 } // namespace robotoc

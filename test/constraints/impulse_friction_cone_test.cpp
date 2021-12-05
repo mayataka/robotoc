@@ -20,7 +20,7 @@ class ImpulseFrictionConeTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-04;
+    barrier = 1.0e-03;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.7;
     fraction_to_boundary_rule = 0.995;

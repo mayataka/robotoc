@@ -90,17 +90,18 @@ int main(int argc, char *argv[]) {
   config_cost->set_a_weight(a_weight);
   cost->push_back(config_cost);
 
-
   // Create the constraints
-  auto constraints           = std::make_shared<robotoc::Constraints>();
-  auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
-  auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower  = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper  = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower   = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints          = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
+  auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   const double mu = 0.7;
-  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -108,8 +109,6 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-03);
-
 
   // Create the contact sequence
   const int max_num_impulses = 1;

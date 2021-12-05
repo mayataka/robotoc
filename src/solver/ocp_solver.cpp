@@ -172,6 +172,11 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
 }
 
 
+const Solution& OCPSolver::getSolution() const {
+  return s_;
+}
+
+
 std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name, const std::string& option) const {
   std::vector<Eigen::VectorXd> sol;

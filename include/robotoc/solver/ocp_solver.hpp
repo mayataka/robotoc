@@ -133,6 +133,12 @@ public:
   const SplitSolution& getSolution(const int stage) const;
 
   ///
+  /// @brief Get the solution over the horizon. 
+  /// @return const reference to the solution.
+  ///
+  const Solution& getSolution() const;
+
+  ///
   /// @brief Get the solution vector over the horizon. 
   /// @param[in] name Name of the variable. 
   /// @param[in] option Option for the solution. If name == "f" and 

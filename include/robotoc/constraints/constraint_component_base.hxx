@@ -10,19 +10,19 @@
 namespace robotoc {
 
 inline ConstraintComponentBase::ConstraintComponentBase(
-    const double barrier, const double fraction_to_boundary_rule) 
-  : barrier_(barrier),
-    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
+    const double _barrier, const double _fraction_to_boundary_rule) 
+  : barrier_(_barrier),
+    fraction_to_boundary_rule_(_fraction_to_boundary_rule) {
   try {
-    if (barrier <= 0) {
+    if (_barrier <= 0) {
       throw std::out_of_range(
           "Invalid argment: barrirer must be positive!");
     }
-    if (fraction_to_boundary_rule <= 0) {
+    if (_fraction_to_boundary_rule <= 0) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be positive!");
     }
-    if (fraction_to_boundary_rule >= 1) {
+    if (_fraction_to_boundary_rule >= 1) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be less than 1!");
     }
@@ -31,12 +31,6 @@ inline ConstraintComponentBase::ConstraintComponentBase(
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-}
-
-
-inline ConstraintComponentBase::ConstraintComponentBase() 
-  : barrier_(0),
-    fraction_to_boundary_rule_(0) {
 }
 
 
@@ -66,7 +60,7 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
 }
 
 
-inline double ConstraintComponentBase::barrierParameter() const {
+inline double ConstraintComponentBase::barrier() const {
   return barrier_;
 }
 

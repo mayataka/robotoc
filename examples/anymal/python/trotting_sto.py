@@ -74,7 +74,7 @@ cost.push_back(RF_cost)
 cost.push_back(RH_cost)
 
 # Create the constraints
-constraints           = robotoc.Constraints()
+constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
 joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
@@ -90,7 +90,6 @@ constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
-constraints.set_barrier(1.0e-03)
 
 
 # Create the contact sequence
