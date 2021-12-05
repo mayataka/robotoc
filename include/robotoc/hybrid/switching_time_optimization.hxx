@@ -11,11 +11,10 @@ namespace robotoc {
 inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp) 
   : sto_cost_(ocp.sto_cost()), 
     sto_constraints_(ocp.sto_constraints()),
-    max_num_impulse_events_(ocp.discrete().maxNumEachDiscreteEvents()),
     sto_reg_(0),
     kkt_error_(0),
     cost_val_(0),
-    h_phase_(Eigen::VectorXd::Zero(2*ocp.discrete().maxNumEachDiscreteEvents()+1)),
+    h_phase_(Eigen::VectorXd::Zero(2*ocp.maxNumEachDiscreteEvents()+1)),
     is_sto_enabled_(ocp.isSTOEnabled()) {
 }
 
@@ -23,7 +22,6 @@ inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp)
 inline SwitchingTimeOptimization::SwitchingTimeOptimization() 
   : sto_cost_(), 
     sto_constraints_(),
-    max_num_impulse_events_(0),
     sto_reg_(0),
     kkt_error_(0),
     cost_val_(0),

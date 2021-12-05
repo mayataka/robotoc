@@ -150,8 +150,8 @@ int main(int argc, char *argv[]) {
 
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
-  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, 
-                   sto_cost, sto_constraints, T, N);
+  robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
+                   T, N, max_num_impulses);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;

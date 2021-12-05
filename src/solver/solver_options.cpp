@@ -3,6 +3,39 @@
 
 namespace robotoc {
 
+SolverOptions::SolverOptions(const int _max_iter, const double _kkt_tol, 
+                             const double _mu_init, const double _mu_min, 
+                             const double _kkt_tol_mu, 
+                             const double _mu_linear_decrease_factor, 
+                             const double _mu_superlinear_decrease_power, 
+                             const bool _enable_line_search, 
+                             const LineSearchSettings& _line_search_settings, 
+                             const DiscretizationMethod& _discretization_method, 
+                             const int _initial_sto_reg_iter, 
+                             const double _initial_sto_reg, 
+                             const double _kkt_tol_mesh, 
+                             const double _max_dt_mesh, 
+                             const double _max_dts_riccati, 
+                             const int _print_level)
+  : max_iter(_max_iter),
+    kkt_tol(_kkt_tol),
+    mu_init(_mu_init),
+    mu_min(_mu_min),
+    kkt_tol_mu(_kkt_tol_mu),
+    mu_linear_decrease_factor(_mu_linear_decrease_factor),
+    mu_superlinear_decrease_power(_mu_superlinear_decrease_power),
+    enable_line_search(_enable_line_search),
+    line_search_settings(_line_search_settings),
+    discretization_method(_discretization_method),
+    initial_sto_reg_iter(_initial_sto_reg_iter),
+    initial_sto_reg(_initial_sto_reg),
+    kkt_tol_mesh(_kkt_tol_mesh),
+    max_dt_mesh(_max_dt_mesh),
+    max_dts_riccati(_max_dts_riccati),
+    print_level(_print_level) {
+}
+
+
 SolverOptions::SolverOptions()
   : max_iter(0),
     kkt_tol(0),

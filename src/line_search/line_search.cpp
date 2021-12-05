@@ -10,27 +10,25 @@ namespace robotoc {
 LineSearch::LineSearch(const OCP& ocp, const int nthreads, 
                        const LineSearchSettings& line_search_settings) 
   : filter_(),
-    max_num_impulse_(ocp.discrete().maxNumEachDiscreteEvents()), 
-    nthreads_(nthreads),
     settings_(line_search_settings),
+    nthreads_(nthreads),
     costs_(Eigen::VectorXd::Zero(ocp.N()+1)), 
-    costs_impulse_(Eigen::VectorXd::Zero(ocp.discrete().maxNumEachDiscreteEvents())), 
-    costs_aux_(Eigen::VectorXd::Zero(ocp.discrete().maxNumEachDiscreteEvents())), 
-    costs_lift_(Eigen::VectorXd::Zero(ocp.discrete().maxNumEachDiscreteEvents())), 
+    costs_impulse_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    costs_aux_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    costs_lift_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
     violations_(Eigen::VectorXd::Zero(ocp.N())), 
-    violations_impulse_(Eigen::VectorXd::Zero(ocp.discrete().maxNumEachDiscreteEvents())), 
-    violations_aux_(Eigen::VectorXd::Zero(ocp.discrete().maxNumEachDiscreteEvents())), 
-    violations_lift_(Eigen::VectorXd::Zero(ocp.discrete().maxNumEachDiscreteEvents())),
-    s_trial_(ocp.robot(), ocp.N(), ocp.discrete().maxNumEachDiscreteEvents()), 
-    kkt_residual_(ocp.robot(), ocp.N(), ocp.discrete().maxNumEachDiscreteEvents()) {
+    violations_impulse_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    violations_aux_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    violations_lift_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())),
+    s_trial_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()), 
+    kkt_residual_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()) {
 }
 
 
 LineSearch::LineSearch() 
   : filter_(),
-    max_num_impulse_(0), 
-    nthreads_(0),
     settings_(),
+    nthreads_(0),
     costs_(), 
     costs_impulse_(), 
     costs_aux_(), 

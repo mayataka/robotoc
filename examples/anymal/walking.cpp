@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
   // Create the OCP solver.
   const double T = t0 + cycle * (4*swing_time+2*double_support_time);
   const int N = T / dt; 
-  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);

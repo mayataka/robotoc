@@ -101,8 +101,8 @@ public:
 
 private:
   LineSearchFilter filter_;
-  int max_num_impulse_, nthreads_;
   LineSearchSettings settings_;
+  int nthreads_;
   Eigen::VectorXd costs_, costs_impulse_, costs_aux_, costs_lift_, violations_, 
                   violations_impulse_, violations_aux_, violations_lift_; 
   Solution s_trial_;

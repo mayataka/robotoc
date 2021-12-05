@@ -11,23 +11,19 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ocp, m) {
   py::class_<OCP>(m, "OCP")
-    .def(py::init<const Robot&, const std::shared_ptr<ContactSequence>&,
-                  const std::shared_ptr<CostFunction>&,
+    .def(py::init<const Robot&, const std::shared_ptr<CostFunction>&,
                   const std::shared_ptr<Constraints>&, 
                   const std::shared_ptr<STOCostFunction>&, 
                   const std::shared_ptr<STOConstraints>&, 
-                  const double, const int>(),
-          py::arg("robot"), py::arg("contact_sequence"), 
-          py::arg("cost"), py::arg("constraints"), 
+                  const double, const int, const int>(),
+          py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
           py::arg("sto_cost"), py::arg("sto_constraints"), 
-          py::arg("T"), py::arg("N"))
-    .def(py::init<const Robot&, const std::shared_ptr<ContactSequence>&, 
-                  const std::shared_ptr<CostFunction>&,
+          py::arg("T"), py::arg("N"), py::arg("max_num_each_discrete_events"))
+    .def(py::init<const Robot&, const std::shared_ptr<CostFunction>&,
                   const std::shared_ptr<Constraints>&, 
-                  const double, const int>(),
-          py::arg("robot"), py::arg("contact_sequence"), 
-          py::arg("cost"), py::arg("constraints"), 
-          py::arg("T"), py::arg("N"))
+                  const double, const int, const int>(),
+          py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
+          py::arg("T"), py::arg("N"), py::arg("max_num_each_discrete_events"))
     .def(py::init<>())
     .def("set_discretization_method", &OCP::setDiscretizationMethod, 
           py::arg("discretization_method"))
@@ -43,6 +39,7 @@ PYBIND11_MODULE(ocp, m) {
     .def("sto_constraints", &OCP::sto_constraints)
     .def("T", &OCP::T)
     .def("N", &OCP::N)
+    .def("max_num_each_discrete_events", &OCP::maxNumEachDiscreteEvents)
     .def("is_sto_enabled", &OCP::isSTOEnabled)
     .def("__str__", [](const OCP& self) {
         std::stringstream ss;

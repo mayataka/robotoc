@@ -9,29 +9,26 @@
 
 namespace robotoc {
 
-inline OCP::OCP(const Robot& robot, 
-                const std::shared_ptr<ContactSequence>& contact_sequence, 
-                const std::shared_ptr<CostFunction>& cost, 
+inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
                 const std::shared_ptr<Constraints>& constraints, 
                 const std::shared_ptr<STOCostFunction>& sto_cost, 
                 const std::shared_ptr<STOConstraints>& sto_constraints, 
-                const double T, const int N) 
+                const double T, const int N, 
+                const int max_num_each_discrete_events) 
   : data(N, SplitOCP(robot, cost, constraints)), 
-    aux(contact_sequence->maxNumEachEvents(), 
-        SplitOCP(robot, cost, constraints)),
-    lift(contact_sequence->maxNumEachEvents(),
-         SplitOCP(robot, cost, constraints)),
-    impulse(contact_sequence->maxNumEachEvents(),
-            ImpulseSplitOCP(robot, cost, constraints)),
+    aux(max_num_each_discrete_events, SplitOCP(robot, cost, constraints)),
+    lift(max_num_each_discrete_events, SplitOCP(robot, cost, constraints)),
+    impulse(max_num_each_discrete_events, ImpulseSplitOCP(robot, cost, constraints)),
     terminal(TerminalOCP(robot, cost, constraints)),
     robot_(robot),
     cost_(cost),
     constraints_(constraints),
     sto_cost_(sto_cost),
     sto_constraints_(sto_constraints),
-    discretization_(T, N, contact_sequence->maxNumEachEvents()),
+    discretization_(T, N, max_num_each_discrete_events),
     T_(T),
     N_(N),
+    max_num_each_discrete_events_(max_num_each_discrete_events),
     is_sto_enabled_(true) {
   try {
     if (T <= 0) {
@@ -39,6 +36,10 @@ inline OCP::OCP(const Robot& robot,
     }
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (max_num_each_discrete_events < 0) {
+      throw std::out_of_range(
+          "invalid argument: max_num_each_discrete_events must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -49,27 +50,24 @@ inline OCP::OCP(const Robot& robot,
 }
 
 
-inline OCP::OCP(const Robot& robot, 
-                const std::shared_ptr<ContactSequence>& contact_sequence, 
-                const std::shared_ptr<CostFunction>& cost, 
+inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
                 const std::shared_ptr<Constraints>& constraints, 
-                const double T, const int N) 
+                const double T, const int N,
+                const int max_num_each_discrete_events) 
   : data(N, SplitOCP(robot, cost, constraints)), 
-    aux(contact_sequence->maxNumEachEvents(), 
-        SplitOCP(robot, cost, constraints)),
-    lift(contact_sequence->maxNumEachEvents(),
-         SplitOCP(robot, cost, constraints)),
-    impulse(contact_sequence->maxNumEachEvents(),
-            ImpulseSplitOCP(robot, cost, constraints)),
+    aux(max_num_each_discrete_events, SplitOCP(robot, cost, constraints)),
+    lift(max_num_each_discrete_events, SplitOCP(robot, cost, constraints)),
+    impulse(max_num_each_discrete_events, ImpulseSplitOCP(robot, cost, constraints)),
     terminal(TerminalOCP(robot, cost, constraints)),
     robot_(robot),
     cost_(cost),
     constraints_(constraints),
     sto_cost_(),
     sto_constraints_(),
-    discretization_(T, N, contact_sequence->maxNumEachEvents()),
+    discretization_(T, N, max_num_each_discrete_events),
     T_(T),
     N_(N),
+    max_num_each_discrete_events_(max_num_each_discrete_events),
     is_sto_enabled_(false) {
   try {
     if (T <= 0) {
@@ -77,6 +75,10 @@ inline OCP::OCP(const Robot& robot,
     }
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (max_num_each_discrete_events < 0) {
+      throw std::out_of_range(
+          "invalid argument: max_num_each_discrete_events must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -104,13 +106,12 @@ inline OCP::OCP()
 }
 
 
-inline void OCP::resize(
-    const std::shared_ptr<ContactSequence>& contact_sequence) {
+inline void OCP::resize(const int max_num_each_discrete_events) {
+  assert(max_num_each_discrete_events >= 0);
   assert(impulse.size() == discretization_.maxNumEachDiscreteEvents());
   assert(aux.size() == discretization_.maxNumEachDiscreteEvents());
   assert(lift.size() == discretization_.maxNumEachDiscreteEvents());
-  const int max_num_each_discrete_events = contact_sequence->maxNumEachEvents();
-  if (max_num_each_discrete_events > discretization_.maxNumEachDiscreteEvents()) {
+  if (max_num_each_discrete_events > max_num_each_discrete_events_) {
     const auto discretization_method = discretization_.discretizationMethod();
     discretization_ 
         = HybridOCPDiscretization(T_, N_, max_num_each_discrete_events);
@@ -122,6 +123,7 @@ inline void OCP::resize(
     while (max_num_each_discrete_events > lift.size()) {
       lift.emplace_back(robot_, cost_, constraints_);
     }
+    max_num_each_discrete_events_ = max_num_each_discrete_events;
   }
 }
 
@@ -188,6 +190,11 @@ inline int OCP::N() const {
 }
 
 
+inline int OCP::maxNumEachDiscreteEvents() const {
+  return max_num_each_discrete_events_;
+}
+
+
 inline bool OCP::isSTOEnabled() const {
   return is_sto_enabled_;
 }
@@ -197,6 +204,7 @@ inline void OCP::disp(std::ostream& os) const {
   os << "OCP: " << std::endl;
   os << "T: " << T_ << std::endl;
   os << "N: " << N_ << std::endl;
+  os << "max_num_each_discrete_events: " << max_num_each_discrete_events_ << std::endl;
   os << robot_ << std::endl;
   os << discretization_ << std::endl;
 }

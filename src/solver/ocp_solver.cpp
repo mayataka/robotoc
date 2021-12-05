@@ -17,11 +17,11 @@ OCPSolver::OCPSolver(const OCP& ocp,
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
     line_search_(ocp, nthreads),
     ocp_(ocp),
-    riccati_factorization_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
-    kkt_matrix_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
-    kkt_residual_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
-    s_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
-    d_(ocp.robot(), ocp.N(), contact_sequence->maxNumEachEvents()),
+    riccati_factorization_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
+    kkt_matrix_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
+    kkt_residual_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
+    s_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
+    d_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
     solver_options_(solver_options) {
   try {
     if (nthreads <= 0) {
@@ -117,8 +117,9 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     initConstraints(t);
     line_search_.clearFilter();
   }
-  for (int iter=0; iter<solver_options_.max_iter; ++iter) {
-    if (iter < solver_options_.initial_sto_reg_iter) {
+  int inner_iter = 0;
+  for (int iter=0; iter<solver_options_.max_iter; ++iter, ++inner_iter) {
+    if (inner_iter < solver_options_.initial_sto_reg_iter) {
       sto_.setRegularization(solver_options_.initial_sto_reg);
     }
     else {
@@ -136,6 +137,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
             std::cout << "Mesh-refinement is carried out!" << std::endl;
           }
           meshRefinement(t);
+          inner_iter = 0;
         }
         else if (kkt_error < solver_options_.kkt_tol) {
           if (solver_options_.print_level >= 1) {

@@ -57,7 +57,8 @@ int main() {
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
   const double T = 1;
   const int N = 20;
-  robotoc::OCP ocp(robot, contact_sequence, cost, constraints, T, N);
+  const int max_num_each_discrete_events = 0;
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   solver_options.print_level = 1;
   const int nthreads = 4;

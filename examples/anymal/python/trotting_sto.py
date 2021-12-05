@@ -163,9 +163,9 @@ sto_constraints.set_barrier(1.0e-03)
 T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
 # Create the OCP with the STO problem
-ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
-                  cost=cost, constraints=constraints, 
-                  sto_cost=sto_cost, sto_constraints=sto_constraints, T=T, N=N)
+ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
+                  sto_cost=sto_cost, sto_constraints=sto_constraints, 
+                  T=T, N=N, max_num_each_discrete_events=max_num_impulses)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
 solver_options.print_level = 1

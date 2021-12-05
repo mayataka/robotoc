@@ -145,7 +145,6 @@ public:
 private:
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
-  int max_num_impulse_events_;
   double sto_reg_, kkt_error_, cost_val_;
   Eigen::VectorXd h_phase_;
   bool is_sto_enabled_;

@@ -12,17 +12,14 @@ RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads,
   : nthreads_(nthreads),
     N_all_(ocp.N()+1),
     factorizer_(ocp.robot(), max_dts0),
-    lqr_policy_(ocp.robot(), ocp.N(), 
-                ocp.discrete().maxNumEachDiscreteEvents()),
-    sto_policy_(2*ocp.discrete().maxNumEachDiscreteEvents()+1, 
+    lqr_policy_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
+    sto_policy_(2*ocp.maxNumEachDiscreteEvents()+1, 
                 STOPolicy(ocp.robot())),
     factorization_m_(ocp.robot()),
     max_primal_step_sizes_(
-        Eigen::VectorXd::Zero(
-            ocp.N()+1+3*ocp.discrete().maxNumEachDiscreteEvents())), 
+        Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.maxNumEachDiscreteEvents())), 
     max_dual_step_sizes_(
-        Eigen::VectorXd::Zero(
-            ocp.N()+1+3*ocp.discrete().maxNumEachDiscreteEvents())) {
+        Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.maxNumEachDiscreteEvents())) {
   try {
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
@@ -58,8 +55,7 @@ void RiccatiRecursion::setRegularization(const double max_dts0) {
 
 
 void RiccatiRecursion::resize(const OCP& ocp) {
-  const int max_num_each_discrete_events 
-      = ocp.discrete().maxNumEachDiscreteEvents();
+  const int max_num_each_discrete_events = ocp.maxNumEachDiscreteEvents();
   lqr_policy_.resize(ocp.robot(), max_num_each_discrete_events);
   while (2*max_num_each_discrete_events+1 > sto_policy_.size()) {
     sto_policy_.emplace_back(ocp.robot());

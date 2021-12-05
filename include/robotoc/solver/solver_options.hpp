@@ -16,6 +16,20 @@ namespace robotoc {
 class SolverOptions {
 public:
   ///
+  /// @brief Constructor. 
+  ///
+  SolverOptions(const int max_iter, const double kkt_tol, const double mu_init,
+                const double mu_min, const double kkt_tol_mu, 
+                const double mu_linear_decrease_factor, 
+                const double mu_superlinear_decrease_power, 
+                const bool enable_line_search, 
+                const LineSearchSettings& line_search_settings, 
+                const DiscretizationMethod& discretization_method, 
+                const int initial_sto_reg_iter, const double initial_sto_reg, 
+                const double kkt_tol_mesh, const double max_dt_mesh, 
+                const double max_dts_riccati, const int print_level);
+
+  ///
   /// @brief Default constructor. 
   ///
   SolverOptions();
@@ -104,7 +118,7 @@ public:
   /// Only used in OCPSolver without the STO problem. Default is 
   /// DiscretizationMethod::GridBased.
   /// @note For the STO problem, discretization method is fixed to 
-  /// DiscretizationMethod::PhaseBased.
+  /// DiscretizationMethod::PhaseBased regardless of this value.
   ///
   DiscretizationMethod discretization_method;
 
