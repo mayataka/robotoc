@@ -179,12 +179,11 @@ N = math.floor(T/dt)
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   T=T, N=N, max_num_each_discrete_events=max_num_impulses)
 solver_options = robotoc.SolverOptions()
-solver_options.print_level = 1
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                solver_options=solver_options, nthreads=4)
 ```
 
-So, let's run the solver! 
+Let's run the solver!
 ```
 
 t = 0.
@@ -199,7 +198,7 @@ ocp_solver.set_solution("f", f_init) # set the initial guess of the solution.
 ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
-print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) # print solver statistics
 ```
 
 We can visualize the solution trajectory as

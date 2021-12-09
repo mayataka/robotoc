@@ -124,7 +124,7 @@ or ParNMPC solver!
   robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, nthreads);
 ```
 
-So, let's run the solver!
+Let's run the solver!
 ```
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
@@ -137,6 +137,7 @@ So, let's run the solver!
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  std::cout << ocp_solver.getSolverStatistics() << std::endl; // print solver statistics
 
   return 0;
 }

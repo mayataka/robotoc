@@ -182,7 +182,7 @@ We set `SolverOptions::max_dt_mesh` that the maximum value of the time-steps.
 We also set `SolverOptions::kkt_tol_mesh` and we apply the mesh refinement when the KKT error is less than `SolverOptions::kkt_tol_mesh` and the maximum time step is larger than `SolverOptions::max_dt_mesh`.
 
 
-So, let's run the solver! 
+Let's run the solver!
 ```
 t = 0.
 q = q_standing # initial state.
@@ -193,14 +193,39 @@ ocp_solver.setSolution("v", v); # set the initial guess of the solution.
 Eigen::Vector3d f_init;
 f_init << 0, 0, 0.25*robot.totalWeight();
 ocp_solver.setSolution("f", f_init); # set the initial guess of the solution.
+
 ocp_solver.meshRefinement(t);
-ocp_solver.initConstraints(t);
-std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
-ocp_solver.solve(t, q, v);
-std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
+print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+ocp_solver.solve(t, q, v)
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) # print solver statistics
 ```
 
-We can visualize the solution trajectory as
+We can plot the convergence and the optimal contact forces as
+```
+kkt_data = ocp_solver.get_solver_statistics().kkt_error + [ocp_solver.KKT_error()] # append KKT after convergence
+ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
+
+plot_ts = robotoc.utils.PlotConvergence()
+plot_ts.ylim = [0., 1.5]
+plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto', 
+             save_dir='jumping_sto_log')
+
+plot_f = robotoc.utils.PlotContactForce(mu=mu)
+plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+            t=ocp_solver.get_OCP_discretization().time_points(), 
+            fig_name='jumping_sto_f', save_dir='jumping_sto_log')
+```
+and then we obtain 
+\image html jumping_sto/jumping_sto.pdf
+\image latex jumping_sto/jumping_sto.pdf
+\image html jumping_sto/jumping_sto_f.pdf
+\image latex jumping_sto/jumping_sto_f.pdf
+The grey hatches in the latter figure indicates the infeasible regions of fx and fy due to the friction cone constraints. 
+We can see that the solution strictly satisfies the friction cone constraints.
+
+
+We can also visualize the solution trajectory as
 ```
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,

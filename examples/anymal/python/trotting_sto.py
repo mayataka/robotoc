@@ -189,8 +189,11 @@ ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
+
+# Plot results
 kkt_data = ocp_solver.get_solver_statistics().kkt_error + [ocp_solver.KKT_error()] # append KKT after convergence
 ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
+
 plot_ts = robotoc.utils.PlotConvergence()
 plot_ts.ylim = [0., 1.3]
 plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto', 
@@ -201,6 +204,8 @@ plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'),
             t=ocp_solver.get_OCP_discretization().time_points(), 
             fig_name='trotting_sto_f', save_dir='trotting_sto_log')
 
+
+# Display results
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')

@@ -212,7 +212,7 @@ Then we need to carry on mesh refinement because the switching times change over
 We set `SolverOptions::max_dt_mesh` that the maximum value of the time-steps.
 We also set `SolverOptions::kkt_tol_mesh` and we apply the mesh refinement when the KKT error is less than `SolverOptions::kkt_tol_mesh` and the maximum time step is larger than `SolverOptions::max_dt_mesh`.
 
-So, let's run the solver!
+Let's run the solver!
 ```
   const double t = 0;
   const Eigen::VectorXd q(q_standing); // initial state.
@@ -228,6 +228,7 @@ So, let's run the solver!
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  std::cout << ocp_solver.getSolverStatistics() << std::endl; // print solver statistics
 
   return 0;
 }
