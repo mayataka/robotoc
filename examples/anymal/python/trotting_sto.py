@@ -168,7 +168,6 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
                   T=T, N=N, max_num_each_discrete_events=max_num_impulses)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
-solver_options.print_level = 1
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
@@ -185,31 +184,32 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.mesh_refinement(t)
-# print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
-# ocp_solver.solve(t, q, v)
-# print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+ocp_solver.solve(t, q, v)
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+print(ocp_solver.get_solver_statistics())
 
-logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
-robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 
-                                        dt_tol_mesh=0.02, kkt_tol_mesh=0.1, 
-                                        logger=logger_kkt_ts)
+# logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='trotting_sto')
+# robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=50, 
+#                                         dt_tol_mesh=0.02, kkt_tol_mesh=0.1, 
+#                                         logger=logger_kkt_ts)
 
-kkt_data = logger_kkt_ts.get_data('KKT')
-ts_data = logger_kkt_ts.get_data('ts')
-plot = robotoc.utils.PlotConvergence()
-plot.ylim = [0., 1.2]
-plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto', 
-          save_dir=logger_kkt_ts.get_log_dir())
+# kkt_data = logger_kkt_ts.get_data('KKT')
+# ts_data = logger_kkt_ts.get_data('ts')
+# plot = robotoc.utils.PlotConvergence()
+# plot.ylim = [0., 1.2]
+# plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto', 
+#           save_dir=logger_kkt_ts.get_log_dir())
 
-plot = robotoc.utils.PlotContactForce(mu=mu)
-plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
-          t=ocp_solver.get_OCP_discretization().time_points(), 
-          fig_name='trotting_sto_f', save_dir=logger_kkt_ts.get_log_dir())
+# plot = robotoc.utils.PlotContactForce(mu=mu)
+# plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+#           t=ocp_solver.get_OCP_discretization().time_points(), 
+#           fig_name='trotting_sto_f', save_dir=logger_kkt_ts.get_log_dir())
 
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                        viewer_type='gepetto')
-viewer.set_contact_info(contact_frames, mu)
-ocp_discretization = ocp_solver.get_OCP_discretization()
-viewer.display(ocp_discretization.time_steps(), ocp_solver.get_solution('q'), 
-               ocp_solver.get_solution('f', 'WORLD'))
+# viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+#                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
+#                                         viewer_type='gepetto')
+# viewer.set_contact_info(contact_frames, mu)
+# ocp_discretization = ocp_solver.get_OCP_discretization()
+# viewer.display(ocp_discretization.time_steps(), ocp_solver.get_solution('q'), 
+#                ocp_solver.get_solution('f', 'WORLD'))

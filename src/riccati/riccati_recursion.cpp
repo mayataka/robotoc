@@ -345,13 +345,8 @@ double RiccatiRecursion::maxDualStepSize() const {
 }
 
 
-void RiccatiRecursion::getStateFeedbackGain(const int time_stage, 
-                                            Eigen::MatrixXd& Kq, 
-                                            Eigen::MatrixXd& Kv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < lqr_policy_.data.size()-1);
-  Kq = lqr_policy_[time_stage].Kq();
-  Kv = lqr_policy_[time_stage].Kv();
+const hybrid_container<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
+  return lqr_policy_;
 }
 
 } // namespace robotoc

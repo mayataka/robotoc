@@ -23,7 +23,7 @@ More examples are found in @ref page_examples.
 
 \section solvers Brief overview of optimal control solvers 
 The following three solvers are available:
-- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base. This solver can optimize the switching times and the trajectory simultaneously.
+- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base. This solver can optimize the trajectory and switching times simultaneously.
 - `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
 - `robotoc::UnconstrParNMPCSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. Possibly very efficient when the number of available CPU cores is very large.
 
@@ -52,7 +52,7 @@ Please see @ref page_installation.
 
 - Citing the switching time optimization (STO) algorithm of `OCPSolver`:
 ```
-@misc{katayama2021sto,
+@misc{katayama2021newtonocss,
   title={Structure-exploiting {N}ewton-type method for optimal control of switched systems}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   url={arXiv:--},

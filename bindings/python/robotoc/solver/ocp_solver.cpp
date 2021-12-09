@@ -28,14 +28,22 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("solve", &OCPSolver::solve,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=false)
-    .def("get_solution", 
-          static_cast<const SplitSolution& (OCPSolver::*)(const int) const>(&OCPSolver::getSolution))
+    .def("get_solver_statistics", &OCPSolver::getSolverStatistics)
     .def("get_solution", 
           static_cast<const Solution& (OCPSolver::*)() const>(&OCPSolver::getSolution))
     .def("get_solution", 
+          static_cast<const SplitSolution& (OCPSolver::*)(const int) const>(&OCPSolver::getSolution),
+          py::arg("stage"))
+    .def("get_solution", 
           static_cast<std::vector<Eigen::VectorXd> (OCPSolver::*)(const std::string&, const std::string&) const>(&OCPSolver::getSolution),
           py::arg("name"), py::arg("option")="")
-    .def("set_solution", &OCPSolver::setSolution,
+    .def("get_LQR_policy", &OCPSolver::getLQRPolicy)
+    .def("get_riccati_factorization", &OCPSolver::getRiccatiFactorization)
+    .def("set_solution", 
+          static_cast<void (OCPSolver::*)(const Solution&)>(&OCPSolver::setSolution),
+          py::arg("s"))
+    .def("set_solution", 
+          static_cast<void (OCPSolver::*)(const std::string&, const Eigen::VectorXd&)>(&OCPSolver::setSolution),
           py::arg("name"), py::arg("value"))
     .def("KKT_error", 
           static_cast<double (OCPSolver::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&OCPSolver::KKTError),
@@ -46,7 +54,6 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
           py::arg("verbose")=false)
     .def("get_OCP_discretization", &OCPSolver::getOCPDiscretization)
-    .def("set_line_search_settings", &OCPSolver::setLineSearchSettings)
     .def("__str__", [](const OCPSolver& self) {
         std::stringstream ss;
         ss << self;

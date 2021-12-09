@@ -61,7 +61,6 @@ int main() {
   const int max_num_each_discrete_events = 0;
   robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
-  solver_options.print_level = 1;
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
@@ -77,6 +76,7 @@ int main() {
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
   // Measures CPU timing
   const int num_iteration_CPU = 10000;

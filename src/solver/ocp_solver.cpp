@@ -22,7 +22,8 @@ OCPSolver::OCPSolver(const OCP& ocp,
     kkt_residual_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
     s_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
     d_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
-    solver_options_(solver_options) {
+    solver_options_(solver_options),
+    solver_statistics_() {
   try {
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
@@ -99,10 +100,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
-  if (solver_options_.print_level >= 2) {
-    std::cout << "  primal step size: " << primal_step_size << std::endl;
-    std::cout << "  dual step size  : " << dual_step_size << std::endl;
-  }
+  solver_statistics_.primal_step_size.push_back(primal_step_size);
+  solver_statistics_.dual_step_size.push_back(dual_step_size);
   dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
                          kkt_matrix_, d_, s_);
   sto_.integrateSolution(ocp_, contact_sequence_, primal_step_size, 
@@ -117,6 +116,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     initConstraints(t);
     line_search_.clearFilter();
   }
+  solver_statistics_.clear(); 
   int inner_iter = 0;
   for (int iter=0; iter<solver_options_.max_iter; ++iter, ++inner_iter) {
     if (inner_iter < solver_options_.initial_sto_reg_iter) {
@@ -127,41 +127,41 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     }
     updateSolution(t, q, v);
     const double kkt_error = KKTError();
-    if (solver_options_.print_level >= 1) {
-      std::cout << "Iter " << iter+1 << ": KKT error = " << kkt_error << std::endl;
-    }
+    solver_statistics_.kkt_error.push_back(kkt_error); 
     if (ocp_.isSTOEnabled()) {
-      if (kkt_error < solver_options_.kkt_tol_mesh) {
-        if (ocp_.discrete().dt_max() > solver_options_.max_dt_mesh) {
-          if (solver_options_.print_level >= 1) {
-            std::cout << "Mesh-refinement is carried out!" << std::endl;
-          }
-          meshRefinement(t);
-          inner_iter = 0;
-        }
-        else if (kkt_error < solver_options_.kkt_tol) {
-          if (solver_options_.print_level >= 1) {
-            std::cout << "Convergence achieved!" << std::endl;
-          }
-          break;
-        }
+      solver_statistics_.ts.emplace_back(contact_sequence_->eventTimes());
+    } 
+    if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
+      if (ocp_.discrete().dt_max() > solver_options_.max_dt_mesh) {
+        meshRefinement(t);
+        inner_iter = 0;
+        solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }
       else if (kkt_error < solver_options_.kkt_tol) {
-        if (solver_options_.print_level >= 1) {
-          std::cout << "Convergence achieved!" << std::endl;
-        }
+        solver_statistics_.convergence = true;
+        solver_statistics_.iter = iter+1;
         break;
       }
     }
-    else {
-      if (kkt_error < solver_options_.kkt_tol) {
-        if (solver_options_.print_level >= 1) {
-          std::cout << "Convergence achieved!" << std::endl;
-        }
-        break;
-      }
+    else if (kkt_error < solver_options_.kkt_tol) {
+      solver_statistics_.convergence = true;
+      solver_statistics_.iter = iter+1;
+      break;
     }
   }
+  if (!solver_statistics_.convergence) {
+    solver_statistics_.iter = solver_options_.max_iter;
+  }
+}
+
+
+const SolverStatistics& OCPSolver::getSolverStatistics() const {
+  return solver_statistics_;
+}
+
+
+const Solution& OCPSolver::getSolution() const {
+  return s_;
 }
 
 
@@ -169,11 +169,6 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
   assert(stage <= ocp_.discrete().N());
   return s_[stage];
-}
-
-
-const Solution& OCPSolver::getSolution() const {
-  return s_;
 }
 
 
@@ -326,15 +321,22 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
 }
 
 
-void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
-                                     Eigen::MatrixXd& Kv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < ocp_.discrete().N());
-  assert(Kq.rows() == robots_[0].dimv());
-  assert(Kq.cols() == robots_[0].dimv());
-  assert(Kv.rows() == robots_[0].dimv());
-  assert(Kv.cols() == robots_[0].dimv());
-  riccati_recursion_.getStateFeedbackGain(time_stage, Kq, Kv);
+const hybrid_container<LQRPolicy>& OCPSolver::getLQRPolicy() const {
+  return riccati_recursion_.getLQRPolicy();
+}
+
+
+const RiccatiFactorization& OCPSolver::getRiccatiFactorization() const {
+  return riccati_factorization_;
+}
+
+
+void OCPSolver::setSolution(const Solution& s) {
+  assert(s.data.size() == s_.data.size());
+  assert(s.lift.size() == s_.lift.size());
+  assert(s.aux.size() == s_.aux.size());
+  assert(s.impulse.size() == s_.impulse.size());
+  s_ = s;
 }
 
 
@@ -501,11 +503,6 @@ void OCPSolver::discretizeSolution() {
           contact_sequence_->impulseStatus(i));
     }
   }
-}
-
-
-void OCPSolver::setLineSearchSettings(const LineSearchSettings& settings) {
-  line_search_.set(settings);
 }
 
 

@@ -158,15 +158,6 @@ public:
   double max_dts_riccati;
 
   ///
-  /// @brief Print level. 
-  /// 0: do not print anything. 
-  /// 1: print the KKT residual at each iterations.
-  /// 2: further prints the step sizes, etc.
-  /// Default is 1.
-  ///
-  int print_level;
-
-  ///
   /// @brief Returns options with default parameters.
   ///
   static SolverOptions defaultOptions();

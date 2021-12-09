@@ -28,7 +28,6 @@ PYBIND11_MODULE(solver_options, m) {
     .def_readwrite("kkt_tol_mesh", &SolverOptions::kkt_tol_mesh)
     .def_readwrite("max_dt_mesh", &SolverOptions::max_dt_mesh)
     .def_readwrite("max_dts_riccati", &SolverOptions::max_dts_riccati)
-    .def_readwrite("print_level", &SolverOptions::print_level)
     .def("__str__", [](const SolverOptions& self) {
         std::stringstream ss;
         ss << self;

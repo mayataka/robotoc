@@ -6,7 +6,7 @@
 
 \section solvers_list List of optimal control solvers 
 The following three solvers are available:
-- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base. This solver can optimize the switching times and the trajectory simultaneously.
+- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base. This solver can optimize the trajectory and switching times simultaneously.
 - `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
 - `robotoc::UnconstrParNMPCSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. Possibly very efficient when the number of available CPU cores is very large.
 
@@ -43,7 +43,7 @@ The unique features of `robotoc::OCPSolver` are:
 - <b>Lifted contact dynamics</b> [7]: 
     - Relaxes the high nonlinearity in optimization problems typically caused by inequality constraints treated by the interior point methods.
 - <b>Riccati recursion for switching time optimization (STO) problems</b> [8]: 
-    - Computes the Newton steps including the switching times with linear time complexity with respect to the length of the horizon.
+    - Computes the Newton steps including the switching times with linear time complexity with respect to the length of the horizon. Moreover, the Riccati-recursion-based Hessian modification improves numerical stability.  
 - <b>Constraint transformation of pure-state constraints for efficient Riccati recursion</b> [9]: 
     - The pure-state equality constraints representing the switching constraints are treated very efficiently while preserving accuracy and guaranteeing optimality by the constraint transformation.
 

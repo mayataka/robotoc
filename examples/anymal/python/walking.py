@@ -197,7 +197,6 @@ N = math.floor(T/dt)
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   T=T, N=N, max_num_each_discrete_events=max_num_impulses)
 solver_options = robotoc.SolverOptions()
-solver_options.print_level = 1
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                solver_options=solver_options, nthreads=4)
 
@@ -215,6 +214,7 @@ ocp_solver.init_constraints(t)
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+print(ocp_solver.get_solver_statistics())
 
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)

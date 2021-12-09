@@ -48,6 +48,7 @@ PYBIND11_MODULE(contact_sequence, m) {
           py::arg("lift_index"))
     .def("event_type", &ContactSequence::eventType,
           py::arg("event_index"))
+    .def("event_times", &ContactSequence::eventTimes)
     .def("max_num_each_events", &ContactSequence::maxNumEachEvents)
     .def("max_num_events", &ContactSequence::maxNumEvents)
     .def("__str__", [](const ContactSequence& self) {

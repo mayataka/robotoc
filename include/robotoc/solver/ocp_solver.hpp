@@ -19,12 +19,14 @@
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/riccati/riccati_recursion.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/line_search/line_search.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
 #include "robotoc/hybrid/switching_time_optimization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/solver/solver_statistics.hpp"
 
 
 namespace robotoc {
@@ -102,7 +104,7 @@ public:
   void initConstraints(const double t);
 
   ///
-  /// @brief Updates the solution by computing the primal-dual Newon direction.
+  /// @brief Performs single Newton-type iteration and updates the solution.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
@@ -124,6 +126,18 @@ public:
              const bool init_solver=true);
 
   ///
+  /// @brief Gets the solver statistics.
+  /// @return Solver statistics.
+  ///
+  const SolverStatistics& getSolverStatistics() const;
+
+  ///
+  /// @brief Get the solution over the horizon. 
+  /// @return const reference to the solution.
+  ///
+  const Solution& getSolution() const;
+
+  ///
   /// @brief Get the split solution of a time stage. For example, the control 
   /// input torques at the initial stage can be obtained by ocp.getSolution(0).u.
   /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
@@ -131,12 +145,6 @@ public:
   /// @return Const reference to the split solution of the specified time stage.
   ///
   const SplitSolution& getSolution(const int stage) const;
-
-  ///
-  /// @brief Get the solution over the horizon. 
-  /// @return const reference to the solution.
-  ///
-  const Solution& getSolution() const;
 
   ///
   /// @brief Get the solution vector over the horizon. 
@@ -151,19 +159,26 @@ public:
                                            const std::string& option="") const;
 
   ///
-  /// @brief Gets the state-feedback gain.
-  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
-  /// than N.
-  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
-  /// Size must be Robot::dimu() x Robot::dimv().
-  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
-  /// Size must be Robot::dimu() x Robot::dimv().
+  /// @brief Gets of the local LQR policies over the horizon. 
+  /// @return const reference to the local LQR policies.
   ///
-  void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
 
   ///
-  /// @brief Sets the solution over the horizon. 
+  /// @brief Gets the Riccati factorizations. This can be interpreted as 
+  /// locally approximated cost-to-go functions. 
+  /// @return const reference to the Riccati factorizations.
+  ///
+  const RiccatiFactorization& getRiccatiFactorization() const;
+
+  ///
+  /// @brief Sets the solution guess over the horizon. 
+  /// @param[in] s Solution. 
+  ///
+  void setSolution(const Solution& s);
+
+  ///
+  /// @brief Sets the solution guess over the horizon. 
   /// @param[in] name Name of the variable. 
   /// @param[in] value Value of the specified variable. 
   ///
@@ -224,14 +239,6 @@ public:
   const HybridOCPDiscretization& getOCPDiscretization() const;
 
   ///
-  /// @brief Set settings for line search. Defalt is 
-  /// LineSearchSettings::defaultSettings().
-  /// @param[in] settings Line search settings.
-  ///
-  void setLineSearchSettings(
-      const LineSearchSettings& settings=LineSearchSettings::defaultSettings());
-
-  ///
   /// @brief Displays the optimal control problem solver onto a ostream.
   ///
   void disp(std::ostream& os) const;
@@ -253,6 +260,7 @@ private:
   Direction d_;
   RiccatiFactorization riccati_factorization_;
   SolverOptions solver_options_;
+  SolverStatistics solver_statistics_;
 
   void discretizeSolution();
 

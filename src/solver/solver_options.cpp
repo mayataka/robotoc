@@ -18,8 +18,7 @@ SolverOptions::SolverOptions()
     initial_sto_reg(),
     kkt_tol_mesh(0),
     max_dt_mesh(0),
-    max_dts_riccati(0),
-    print_level(0) {
+    max_dts_riccati(0) {
 }
 
 
@@ -44,7 +43,6 @@ SolverOptions SolverOptions::defaultOptions() {
   options.kkt_tol_mesh = 0.1;
   options.max_dt_mesh = 0;
   options.max_dts_riccati = 0.1;
-  options.print_level = 1;
   return options;
 }
 
@@ -67,8 +65,7 @@ void SolverOptions::disp(std::ostream& os) const {
   os << "  initial_sto_reg: " << initial_sto_reg << std::endl;
   os << "  kkt_tol_mesh: " << kkt_tol_mesh << std::endl;
   os << "  max_dt_mesh: " << max_dt_mesh << std::endl;
-  os << "  mex_dts_riccati: " << max_dts_riccati << std::endl;
-  os << "  print_level: " << print_level << std::flush;
+  os << "  mex_dts_riccati: " << max_dts_riccati << std::flush;
 }
 
 

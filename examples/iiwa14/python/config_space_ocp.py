@@ -43,7 +43,6 @@ N = 60
 ocp = robotoc.UnconstrOCP(robot=robot, cost=cost, constraints=constraints, 
                           T=T, N=N)
 solver_options = robotoc.SolverOptions()
-solver_options.print_level = 1
 ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, solver_options=solver_options, 
                                        nthreads=4)
 
@@ -59,6 +58,7 @@ ocp_solver.init_constraints()
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v, init_solver=True)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+print(ocp_solver.get_solver_statistics())
 
 # Solves the OCP by ParNMPC algorithm.
 parnmpc = robotoc.UnconstrParNMPC(robot=robot, cost=cost, constraints=constraints, 
@@ -75,6 +75,7 @@ parnmpc_solver.init_backward_correction(t)
 print("Initial KKT error: ", parnmpc_solver.KKT_error(t, q, v))
 parnmpc_solver.solve(t, q, v, init_solver=True)
 print("KKT error after convergence: ", parnmpc_solver.KKT_error(t, q, v))
+print(parnmpc_solver.get_solver_statistics())
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')
 viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)

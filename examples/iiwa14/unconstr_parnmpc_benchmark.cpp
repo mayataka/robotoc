@@ -59,7 +59,6 @@ int main() {
   const int N = 20;
   robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
-  solver_options.print_level = 1;
   const int nthreads = 8; // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
   robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, solver_options, nthreads);
 
@@ -76,6 +75,7 @@ int main() {
   std::cout << "Initial KKT error: " << parnmpc_solver.KKTError(t, q, v) << std::endl;
   parnmpc_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << parnmpc_solver.KKTError(t, q, v) << std::endl;
+  std::cout << parnmpc_solver.getSolverStatistics() << std::endl;
 
   // Measures CPU timing
   const int num_iteration_CPU = 10000;

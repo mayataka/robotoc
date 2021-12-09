@@ -212,6 +212,12 @@ public:
   DiscreteEventType eventType(const int event_index) const;
 
   ///
+  /// @brief Returns the event times of each event. 
+  /// @return const reference to the event times.
+  ///
+  const std::deque<double>& eventTimes() const;
+
+  ///
   /// @brief Returns maximum number of each discrete events 
   /// (impulse and lift). 
   ///

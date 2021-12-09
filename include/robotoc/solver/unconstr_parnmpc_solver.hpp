@@ -18,6 +18,7 @@
 #include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/solver/solver_statistics.hpp"
 
 
 namespace robotoc {
@@ -115,6 +116,12 @@ public:
              const bool init_solver=true);
 
   ///
+  /// @brief Gets the solver statistics.
+  /// @return Solver statistics.
+  ///
+  const SolverStatistics& getSolverStatistics() const;
+
+  ///
   /// @brief Get the split solution of a time stage. For example, the control 
   /// input torques at the initial stage can be obtained by ocp.getSolution(0).u.
   /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
@@ -181,6 +188,7 @@ private:
   int N_, nthreads_;
   double T_, dt_;
   SolverOptions solver_options_;
+  SolverStatistics solver_statistics_;
 
 };
 

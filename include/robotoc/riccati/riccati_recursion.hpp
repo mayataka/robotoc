@@ -5,6 +5,7 @@
 
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/hybrid_container.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
@@ -16,14 +17,6 @@
 
 
 namespace robotoc {
-
-///
-/// @typedef RiccatiFactorization
-/// @brief Riccati factorization matices of the LQR subproblem. 
-///
-using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, 
-                                              SplitRiccatiFactorization, 
-                                              SplitConstrainedRiccatiFactorization>;
 
 ///
 /// @class RiccatiRecursion
@@ -138,14 +131,10 @@ public:
   double maxDualStepSize() const;
 
   ///
-  /// @brief Gets of the state feedback gain of the LQR subproblem of the 
-  /// specified time stage. 
-  /// @param[in] time_stage Time stage of interested. 
-  /// @param[in, out] Kq The state feedback gain with respect to the configuration. 
-  /// @param[in, out] Kv The state feedback gain with respect to the velocity. 
+  /// @brief Gets of the LQR policies over the horizon. 
+  /// @return const reference to the LQR policies.
   ///
-  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
 
 private:
   int nthreads_, N_all_;

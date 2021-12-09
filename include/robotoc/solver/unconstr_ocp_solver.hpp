@@ -18,6 +18,7 @@
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/solver/solver_statistics.hpp"
 
 
 namespace robotoc {
@@ -105,6 +106,11 @@ public:
   ///
   void solve(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
              const bool init_solver=true);
+  ///
+  /// @brief Gets the solver statistics.
+  /// @return Solver statistics.
+  ///
+  const SolverStatistics& getSolverStatistics() const;
 
   ///
   /// @brief Get the split solution of a time stage. For example, the control 
@@ -188,6 +194,7 @@ private:
   double T_, dt_;
   Eigen::VectorXd primal_step_size_, dual_step_size_ ;
   SolverOptions solver_options_;
+  SolverStatistics solver_statistics_;
 
 };
 

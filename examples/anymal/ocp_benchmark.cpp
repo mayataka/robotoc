@@ -124,6 +124,7 @@ int main () {
 
   ocp_solver.initConstraints(t);
   ocp_solver.solve(t, q, v);
+  std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
   const int num_iteration = 10000;
   robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);

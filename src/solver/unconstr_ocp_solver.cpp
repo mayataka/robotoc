@@ -26,7 +26,8 @@ UnconstrOCPSolver::UnconstrOCPSolver(const UnconstrOCP& ocp,
     dt_(ocp.T()/ocp.N()),
     primal_step_size_(Eigen::VectorXd::Zero(ocp.N())), 
     dual_step_size_(Eigen::VectorXd::Zero(ocp.N())),
-    solver_options_(solver_options) {
+    solver_options_(solver_options),
+    solver_statistics_() {
   try {
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
@@ -109,10 +110,8 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
                                                     d_, max_primal_step_size);
   }
-  if (solver_options_.print_level >= 2) {
-    std::cout << "  primal step size: " << primal_step_size << std::endl;
-    std::cout << "  dual step size  : " << dual_step_size << std::endl;
-  }
+  solver_statistics_.primal_step_size.push_back(primal_step_size);
+  solver_statistics_.dual_step_size.push_back(dual_step_size);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
@@ -136,19 +135,25 @@ void UnconstrOCPSolver::solve(const double t, const Eigen::VectorXd& q,
     initConstraints();
     line_search_.clearFilter();
   }
+  solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {
     updateSolution(t, q, v);
     const double kkt_error = KKTError();
-    if (solver_options_.print_level >= 1) {
-      std::cout << "Iter " << iter+1 << ": KKT error = " << kkt_error << std::endl;
-    }
+    solver_statistics_.kkt_error.push_back(kkt_error); 
     if (kkt_error < solver_options_.kkt_tol) {
-      if (solver_options_.print_level >= 1) {
-        std::cout << "Convergence achieved!" << std::endl;
-      }
+      solver_statistics_.convergence = true;
+      solver_statistics_.iter = iter+1;
       break;
     }
   }
+  if (!solver_statistics_.convergence) {
+    solver_statistics_.iter = solver_options_.max_iter;
+  }
+}
+
+
+const SolverStatistics& UnconstrOCPSolver::getSolverStatistics() const {
+  return solver_statistics_;
 }
 
 

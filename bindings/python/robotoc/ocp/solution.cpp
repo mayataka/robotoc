@@ -13,7 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(solution, m) {
   py::class_<Solution>(m, "Solution")
-    .def(py::init<const Robot&, const int, const int>())
+    .def(py::init<const Robot&, const int, const int>(),
+         py::arg("robot"), py::arg("N"), py::arg("max_num_each_discrete_events"))
     .def(py::init<>())
     .def("__getitem__", [](const Solution& self, const int i) {
         return self.data[i];
