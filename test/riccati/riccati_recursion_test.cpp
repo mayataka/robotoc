@@ -221,13 +221,14 @@ TEST_P(RiccatiRecursionTest, riccatiRecursion) {
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
-  Eigen::MatrixXd Kq(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())), 
-                  Kv(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv()));
   for (int i=0; i<N; ++i) {
-    riccati_recursion.getStateFeedbackGain(i, Kq, Kv);
-    EXPECT_TRUE(lqr_policy[i].Kq().isApprox(Kq));
-    EXPECT_TRUE(lqr_policy[i].Kv().isApprox(Kv));
+    const auto& lqr_policy_ref = riccati_recursion.getLQRPolicy();
+    EXPECT_TRUE(lqr_policy[i].K.isApprox(lqr_policy_ref[i].K));
   }
+
+  EXPECT_NO_THROW(
+    std::cout << factorization << std::endl;
+  );
 }
 
 
