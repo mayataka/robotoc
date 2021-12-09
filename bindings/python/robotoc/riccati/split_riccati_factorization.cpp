@@ -26,7 +26,12 @@ PYBIND11_MODULE(split_riccati_factorization, m) {
     .def_readwrite("chi", &SplitRiccatiFactorization::chi)
     .def_readwrite("rho", &SplitRiccatiFactorization::rho)
     .def_readwrite("eta", &SplitRiccatiFactorization::eta)
-    .def_readwrite("iota", &SplitRiccatiFactorization::iota);
+    .def_readwrite("iota", &SplitRiccatiFactorization::iota)
+    .def("__str__", [](const SplitRiccatiFactorization& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
+      });
 }
 
 } // namespace python

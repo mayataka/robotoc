@@ -3,7 +3,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 
-#include "robotoc/riccati/riccati_recursion.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
 
 
 namespace robotoc {

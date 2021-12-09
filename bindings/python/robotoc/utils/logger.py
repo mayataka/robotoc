@@ -14,11 +14,11 @@ class Logger:
                 f.write('')
                 f.close()
 
-    def take_log(self, solver, precision='%.18e', delimiter=', '):
+    def take_log(self, data, precision='%.18e', delimiter=', '):
         for var, log in zip(self.vars, self.logs):
             if var == 'KKT':
                 with open(log, 'a') as logf:
-                    np.savetxt(logf, np.array([solver.KKT_error()]), delimiter=delimiter)
+                    np.savetxt(logf, np.array(data), delimiter=delimiter)
             elif var == 'ts' and isinstance(solver, robotoc.OCPSolver):
                 ts = solver.get_solution('ts')
                 with open(log, 'a') as logf:

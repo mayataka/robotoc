@@ -17,6 +17,7 @@ class PlotConvergence:
                           (0, (3, 1, 1, 1, 1, 1)),
                           (0, (3, 1, 1, 1, 1))]
 
+
     def plot(self, kkt_data, ts_data=None, fig_name=None, save_dir='./'):
         import matplotlib.pyplot as plt
         import seaborn 
@@ -45,18 +46,17 @@ class PlotConvergence:
 
         fig = plt.figure()
         if ts_data is not None:
-            ax_sto = fig.add_subplot(1, 2, 1)
+            ax_ts = fig.add_subplot(1, 2, 1)
             ax_kkt = fig.add_subplot(1, 2, 2)
-            ts_data = ts_data.T
-            for i, ts in enumerate(ts_data):
+            for i, ts in enumerate(np.array(ts_data).T):
                 ts_str = r"$t_{}$".format(i+1)
                 linestyle = self.linestyle[i%len(self.linestyle)]
-                ax_sto.plot(ts, label=ts_str+r"${\rm [s]}$", linestyle=linestyle)
+                ax_ts.plot(ts, label=ts_str+r"${\rm [s]}$", linestyle=linestyle)
             if self.ylim is not None:
-                ax_sto.set_ylim(self.ylim)
-            ax_sto.set_xlabel("No. of Iterations")
-            ax_sto.set_ylabel(r"$t_k {\rm [s]}$")
-            ax_sto.legend(
+                ax_ts.set_ylim(self.ylim)
+            ax_ts.set_xlabel("No. of Iterations")
+            ax_ts.set_ylabel(r"$t_k {\rm [s]}$")
+            ax_ts.legend(
                 edgecolor='black', loc='upper left', 
                 bbox_to_anchor=self.legend_bbox_to_anchor, 
                 ncol=self.legend_ncols
@@ -68,7 +68,7 @@ class PlotConvergence:
         ax_kkt.set_xlabel("No. of Iterations")
         ax_kkt.set_ylabel(r"$\log_{10} \|$ (KKT residual) $\|_2$")
 
-        plt.show()
+        os.makedirs(os.path.abspath(save_dir), exist_ok=True)
         if fig_name is not None:
             plt.subplots_adjust(wspace=self.wspace, hspace=0.)
             plt.savefig(
@@ -76,6 +76,8 @@ class PlotConvergence:
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+        else:
+            plt.show()
 
 
 class PlotContactForce:
@@ -221,6 +223,7 @@ class PlotContactForce:
         ax.set_title(title)
         ax.set_xlim([t[0], t[-1]])
 
+
     def plot(self, f_data, t, fig_name=None, save_dir='./'):
         import matplotlib.pyplot as plt
         import seaborn 
@@ -284,10 +287,12 @@ class PlotContactForce:
             ncol=4
         )
 
-        plt.show()
+        os.makedirs(os.path.abspath(save_dir), exist_ok=True)
         if fig_name is not None:
             plt.savefig(
                 os.path.join(save_dir, fig_name+'.pdf'),
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+        else:
+            plt.show()

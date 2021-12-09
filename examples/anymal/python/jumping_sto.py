@@ -145,29 +145,22 @@ ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
-# logger_kkt_ts = robotoc.utils.Logger(vars=['ts', 'KKT'], log_name='jumping_sto')
-# robotoc.utils.benchmark.convergence_sto(ocp_solver, t, q, v, num_iteration=150, 
-#                                         dt_tol_mesh=0.02, kkt_tol_mesh=0.1, 
-#                                         logger=logger_kkt_ts)
-# logger_f = robotoc.utils.Logger(vars=['f'], log_name='jumping_sto')
-# logger_f.take_log(ocp_solver)
+kkt_data = ocp_solver.get_solver_statistics().kkt_error + [ocp_solver.KKT_error()] # append KKT after convergence
+ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
+plot_ts = robotoc.utils.PlotConvergence()
+plot_ts.ylim = [0., 1.5]
+plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto', 
+             save_dir='jumping_sto_log')
 
-# kkt_data = logger_kkt_ts.get_data('KKT')
-# ts_data = logger_kkt_ts.get_data('ts')
-# plot = robotoc.utils.PlotConvergence()
-# plot.ylim = [0., 1.5]
-# plot.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto', 
-#           save_dir=logger_kkt_ts.get_log_dir())
+plot_f = robotoc.utils.PlotContactForce(mu=mu)
+plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+            t=ocp_solver.get_OCP_discretization().time_points(), 
+            fig_name='jumping_sto_f', save_dir='jumping_sto_log')
 
-# plot = robotoc.utils.PlotContactForce(mu=mu)
-# plot.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
-#           t=ocp_solver.get_OCP_discretization().time_points(), 
-#           fig_name='jumping_sto_f', save_dir=logger_f.get_log_dir())
-
-# viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-#                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
-#                                         viewer_type='gepetto')
-# viewer.set_contact_info(contact_frames, mu)
-# ocp_discretization = ocp_solver.get_OCP_discretization()
-# viewer.display(ocp_discretization.time_steps(), ocp_solver.get_solution('q'), 
-#                ocp_solver.get_solution('f', 'WORLD'))
+viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
+                                        viewer_type='gepetto')
+viewer.set_contact_info(contact_frames, mu)
+ocp_discretization = ocp_solver.get_OCP_discretization()
+viewer.display(ocp_discretization.time_steps(), ocp_solver.get_solution('q'), 
+               ocp_solver.get_solution('f', 'WORLD'))

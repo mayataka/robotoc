@@ -119,18 +119,18 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   solver_statistics_.clear(); 
   int inner_iter = 0;
   for (int iter=0; iter<solver_options_.max_iter; ++iter, ++inner_iter) {
-    if (inner_iter < solver_options_.initial_sto_reg_iter) {
-      sto_.setRegularization(solver_options_.initial_sto_reg);
-    }
-    else {
-      sto_.setRegularization(0);
-    }
+    if (ocp_.isSTOEnabled()) {
+      if (inner_iter < solver_options_.initial_sto_reg_iter) {
+        sto_.setRegularization(solver_options_.initial_sto_reg);
+      }
+      else {
+        sto_.setRegularization(0);
+      }
+      solver_statistics_.ts.emplace_back(contact_sequence_->eventTimes());
+    } 
     updateSolution(t, q, v);
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
-    if (ocp_.isSTOEnabled()) {
-      solver_statistics_.ts.emplace_back(contact_sequence_->eventTimes());
-    } 
     if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
       if (ocp_.discrete().dt_max() > solver_options_.max_dt_mesh) {
         meshRefinement(t);
