@@ -59,7 +59,7 @@ public:
 
   ~TimeVaryingConfigurationRef() {}
 
-  void update_q_ref(const Robot& robot, const double t, 
+  void update_q_ref(const robotoc::Robot& robot, const double t, 
                     Eigen::VectorXd& q_ref) const override {
     if (t < t0_) {
       q_ref = q0_;
