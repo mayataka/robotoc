@@ -83,12 +83,12 @@ config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
 robot.forward_kinematics(q_standing)
-q0_3d_LF = robot.frame_position(LF_foot_id)
-q0_3d_LH = robot.frame_position(LH_foot_id)
-q0_3d_RF = robot.frame_position(RF_foot_id)
-q0_3d_RH = robot.frame_position(RH_foot_id)
+x3d0_LF = robot.frame_position(LF_foot_id)
+x3d0_LH = robot.frame_position(LH_foot_id)
+x3d0_RF = robot.frame_position(RF_foot_id)
+x3d0_RH = robot.frame_position(RH_foot_id)
 
-com_ref0_flying_up = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
+com_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
 com_ref0_flying_up[2] = robot.com()[2]
 v_com_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
 com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, v_com_ref_flying_up, 
@@ -98,7 +98,7 @@ com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
 com_cost_flying_up.set_q_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_flying_up)
 
-com_ref0_landed = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4
+com_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
 com_ref0_landed[0] += jump_length
 com_ref0_landed[2] = robot.com()[2]
 v_com_ref_landed = np.zeros(3)
@@ -142,7 +142,7 @@ Then we can set an impulse event and a lift event to the contact sequence.
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
-contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
+contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
 contact_status_standing.set_contact_points(contact_points)

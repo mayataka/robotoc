@@ -129,17 +129,10 @@ public:
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
   ///
-  /// @brief Gets the state-feedback gain of the optimal joint acceleration
-  /// w.r.t. the joint configuration and velocity.
-  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
-  /// than N.
-  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
-  /// Size must be Robot::dimu() x Robot::dimv().
-  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
-  /// Size must be Robot::dimu() x Robot::dimv().
+  /// @brief Gets of the local LQR policies over the horizon. 
+  /// @return const reference to the local LQR policies.
   ///
-  void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  const std::vector<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Sets the solution over the horizon. 

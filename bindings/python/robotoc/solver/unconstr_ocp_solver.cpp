@@ -23,7 +23,7 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
     .def("update_solution", &UnconstrOCPSolver::updateSolution,
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("solve", &UnconstrOCPSolver::solve,
-          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=false)
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=true)
     .def("get_solver_statistics", &UnconstrOCPSolver::getSolverStatistics)
     .def("get_solution", 
           static_cast<const SplitSolution& (UnconstrOCPSolver::*)(const int) const>(&UnconstrOCPSolver::getSolution))
@@ -31,6 +31,7 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
           static_cast<std::vector<Eigen::VectorXd> (UnconstrOCPSolver::*)(const std::string&) const>(&UnconstrOCPSolver::getSolution))
     .def("set_solution", &UnconstrOCPSolver::setSolution,
           py::arg("name"), py::arg("value"))
+    .def("get_LQR_policy", &UnconstrOCPSolver::getLQRPolicy)
     .def("KKT_error", 
           static_cast<double (UnconstrOCPSolver::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&UnconstrOCPSolver::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

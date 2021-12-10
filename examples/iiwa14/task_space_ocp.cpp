@@ -37,11 +37,11 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void update_SE3_ref(const double t, robotoc::SE3& SE3_ref) const override {
+  void update_x6d_ref(const double t, robotoc::SE3& x6d_ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*t);
     pos.coeffRef(2) += radius_ * cos(M_PI*t);
-    SE3_ref = robotoc::SE3(rotm_, pos);
+    x6d_ref = robotoc::SE3(rotm_, pos);
   }
 
   bool isActive(const double t) const override {
@@ -74,10 +74,10 @@ int main(int argc, char *argv[]) {
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
   const int ee_frame_id = 22; 
-  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
-  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, ref);
-  task_cost->set_q_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  task_cost->set_qf_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
+  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, x6d_ref);
+  task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_x6df_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);
 
   // Create joint constraints.

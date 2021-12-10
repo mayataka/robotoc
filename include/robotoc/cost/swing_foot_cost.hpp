@@ -59,10 +59,10 @@ public:
   ///
   /// @brief Computes the reference position of the swing foot. 
   /// @param[in] contact_status Contact status.
-  /// @param[in] q_3d_ref Reference position. Size is 3.
+  /// @param[in] x3d_ref Reference position. Size is 3.
   ///
-  virtual void update_q_3d_ref(const ContactStatus& contact_status, 
-                               Eigen::VectorXd& q_3d_ref) const = 0;
+  virtual void update_x3d_ref(const ContactStatus& contact_status, 
+                               Eigen::VectorXd& x3d_ref) const = 0;
 
 };
 
@@ -77,10 +77,10 @@ public:
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_index Contact index of the foot of interest.
-  /// @param[in] ref Reference position.
+  /// @param[in] x3d_ref Reference position.
   ///
   SwingFootCost(const Robot& robot, const int contact_index,
-                const std::shared_ptr<SwingFootRefBase>& ref);
+                const std::shared_ptr<SwingFootRefBase>& x3d_ref);
 
   ///
   /// @brief Default constructor. 
@@ -114,15 +114,15 @@ public:
 
   ///
   /// @brief Sets the reference position. 
-  /// @param[in] ref Reference position.
+  /// @param[in] x3d_ref Reference position.
   ///
-  void set_ref(const std::shared_ptr<SwingFootRefBase>& ref);
+  void set_x3d_ref(const std::shared_ptr<SwingFootRefBase>& x3d_ref);
 
   ///
   /// @brief Sets the weight vector. 
-  /// @param[in] q_3d_weight Weight vector on the position error. 
+  /// @param[in] x3d_weight Weight vector on the position error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& q_3d_weight);
+  void set_x3d_weight(const Eigen::Vector3d& x3d_weight);
 
   bool useKinematics() const override;
 
@@ -169,8 +169,8 @@ public:
 
 private:
   int contact_index_, contact_frame_id_;
-  std::shared_ptr<SwingFootRefBase> ref_;
-  Eigen::Vector3d q_3d_weight_;
+  std::shared_ptr<SwingFootRefBase> x3d_ref_;
+  Eigen::Vector3d x3d_weight_;
 
 };
 

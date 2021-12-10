@@ -82,11 +82,11 @@ max_num_impulses = 1
 contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
 
 robot.forward_kinematics(q_standing)
-q0_3d_LF = robot.frame_position(LF_foot_id)
-q0_3d_LH = robot.frame_position(LH_foot_id)
-q0_3d_RF = robot.frame_position(RF_foot_id)
-q0_3d_RH = robot.frame_position(RH_foot_id)
-contact_points = [q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH]
+x3d0_LF = robot.frame_position(LF_foot_id)
+x3d0_LH = robot.frame_position(LH_foot_id)
+x3d0_RF = robot.frame_position(RF_foot_id)
+x3d0_RH = robot.frame_position(RH_foot_id)
+contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])

@@ -23,8 +23,10 @@ PYBIND11_MODULE(sto_constraints, m) {
           py::arg("min_dt"))
     .def("set_minimum_dwell_times", static_cast<void (STOConstraints::*)(const std::vector<double>&)>(&STOConstraints::setMinimumDwellTimes),
           py::arg("min_dt"))
-    .def("set_barrier", &STOConstraints::setBarrier)
-    .def("set_fraction_to_boundary_rule", &STOConstraints::setFractionToBoundaryRule)
+    .def("set_barrier", &STOConstraints::setBarrier,
+          py::arg("barrier"))
+    .def("set_fraction_to_boundary_rule", &STOConstraints::setFractionToBoundaryRule,
+          py::arg("fraction_to_boundary_rule"))
     .def("barrier", &STOConstraints::barrier)
     .def("fraction_to_boundary_rule", &STOConstraints::fractionToBoundaryRule);
 }

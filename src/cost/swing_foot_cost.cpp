@@ -4,12 +4,12 @@
 namespace robotoc {
 
 SwingFootCost::SwingFootCost(const Robot& robot, const int contact_index, 
-                             const std::shared_ptr<SwingFootRefBase>& ref) 
+                             const std::shared_ptr<SwingFootRefBase>& x3d_ref) 
   : CostFunctionComponentBase(),
     contact_index_(contact_index), 
     contact_frame_id_(robot.contactFrames()[contact_index]),
-    ref_(ref),
-    q_3d_weight_(Eigen::Vector3d::Zero()) {
+    x3d_ref_(x3d_ref),
+    x3d_weight_(Eigen::Vector3d::Zero()) {
 }
 
 
@@ -17,8 +17,8 @@ SwingFootCost::SwingFootCost()
   : CostFunctionComponentBase(),
     contact_index_(0), 
     contact_frame_id_(0),
-    ref_(),
-    q_3d_weight_() {
+    x3d_ref_(),
+    x3d_weight_() {
 }
 
 
@@ -26,13 +26,14 @@ SwingFootCost::~SwingFootCost() {
 }
 
 
-void SwingFootCost::set_ref(const std::shared_ptr<SwingFootRefBase>& ref) {
-  ref_ = ref;
+void SwingFootCost::set_x3d_ref(
+    const std::shared_ptr<SwingFootRefBase>& x3d_ref) {
+  x3d_ref_ = x3d_ref;
 }
 
 
-void SwingFootCost::set_q_weight(const Eigen::Vector3d& q_3d_weight) {
-  q_3d_weight_ = q_3d_weight;
+void SwingFootCost::set_x3d_weight(const Eigen::Vector3d& x3d_weight) {
+  x3d_weight_ = x3d_weight;
 }
 
 
@@ -48,9 +49,9 @@ double SwingFootCost::evalStageCost(Robot& robot,
                                     const SplitSolution& s) const {
   if (!contact_status.isContactActive(contact_index_)) {
     double l = 0;
-    ref_->update_q_3d_ref(contact_status, data.q_3d_ref);
-    data.diff_3d = robot.framePosition(contact_frame_id_) - data.q_3d_ref;
-    l += (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    x3d_ref_->update_x3d_ref(contact_status, data.x3d_ref);
+    data.diff_3d = robot.framePosition(contact_frame_id_) - data.x3d_ref;
+    l += (x3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * dt * l;
   }
   else {
@@ -69,7 +70,7 @@ void SwingFootCost::evalStageCostDerivatives(
     data.J_3d.noalias() 
         = robot.frameRotation(contact_frame_id_) * data.J_6d.template topRows<3>();
     kkt_residual.lq().noalias() 
-        += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.diff_3d;
+        += dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.diff_3d;
   }
 }
 
@@ -80,7 +81,7 @@ void SwingFootCost::evalStageCostHessian(
     SplitKKTMatrix& kkt_matrix) const {
   if (!contact_status.isContactActive(contact_index_)) {
     kkt_matrix.Qqq().noalias()
-        += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
+        += dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.J_3d;
   }
 }
 

@@ -66,35 +66,35 @@ public:
 
   ///
   /// @brief Sets the reference pose. 
-  /// @param[in] position_ref Reference position.
-  /// @param[in] rotation_mat_ref Reference rotation matrix.
+  /// @param[in] trans_ref Reference translation.
+  /// @param[in] rot_ref Reference rotation matrix.
   ///
-  void set_q_6d_ref(const Eigen::Vector3d& position_ref, 
-                    const Eigen::Matrix3d& rotation_mat_ref);
+  void set_x6d_ref(const Eigen::Vector3d& trans_ref, 
+                   const Eigen::Matrix3d& rot_ref);
 
   ///
   /// @brief Sets the weight vectors. 
-  /// @param[in] position_weight Weight vector on the position error. 
-  /// @param[in] rotation_weight Weight vector on the rotation error. 
+  /// @param[in] trans_weight Weight vector on the position error. 
+  /// @param[in] rot_weight Weight vector on the rotation error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& position_weight, 
-                    const Eigen::Vector3d& rotation_weight);
+  void set_x6d_weight(const Eigen::Vector3d& trans_weight, 
+                      const Eigen::Vector3d& rot_weight);
 
   ///
   /// @brief Sets the terminal weight vectors. 
-  /// @param[in] position_weight Temrinal weight vector on the position error. 
-  /// @param[in] rotation_weight Temrinal weight vector on the rotation error. 
+  /// @param[in] trans_weight Temrinal weight vector on the position error. 
+  /// @param[in] rot_weight Temrinal weight vector on the rotation error. 
   ///
-  void set_qf_weight(const Eigen::Vector3d& position_weight, 
-                     const Eigen::Vector3d& rotation_weight);
+  void set_x6df_weight(const Eigen::Vector3d& trans_weight, 
+                       const Eigen::Vector3d& rot_weight);
 
   ///
   /// @brief Sets the weight vectors at impulse. 
-  /// @param[in] position_weight Weight vector on the position error at impulse. 
-  /// @param[in] rotation_weight Weight vector on the rotation error at impulse. 
+  /// @param[in] trans_weight Weight vector on the position error at impulse. 
+  /// @param[in] rot_weight Weight vector on the rotation error at impulse. 
   ///
-  void set_qi_weight(const Eigen::Vector3d& position_weight, 
-                     const Eigen::Vector3d& rotation_weight);
+  void set_x6di_weight(const Eigen::Vector3d& trans_weight, 
+                       const Eigen::Vector3d& rot_weight);
 
   bool useKinematics() const override;
 
@@ -141,8 +141,8 @@ public:
 
 private:
   int frame_id_;
-  SE3 SE3_ref_, SE3_ref_inv_;
-  Eigen::VectorXd q_6d_weight_, qf_6d_weight_, qi_6d_weight_;
+  SE3 x6d_ref_, x6d_ref_inv_;
+  Eigen::VectorXd x6d_weight_, x6df_weight_, x6di_weight_;
 
 };
 

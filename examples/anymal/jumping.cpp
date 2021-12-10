@@ -90,31 +90,31 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
 
   robot.updateFrameKinematics(q_standing);
-  const Eigen::Vector3d q0_3d_LF = robot.framePosition(LF_foot_id);
-  const Eigen::Vector3d q0_3d_LH = robot.framePosition(LH_foot_id);
-  const Eigen::Vector3d q0_3d_RF = robot.framePosition(RF_foot_id);
-  const Eigen::Vector3d q0_3d_RH = robot.framePosition(RH_foot_id);
+  const Eigen::Vector3d x3d0_LF = robot.framePosition(LF_foot_id);
+  const Eigen::Vector3d x3d0_LH = robot.framePosition(LH_foot_id);
+  const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
+  const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
 
-  Eigen::Vector3d CoM_ref0_flying_up = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4;
-  CoM_ref0_flying_up(2) = robot.CoM()(2);
-  Eigen::Vector3d v_CoM_ref_flying_up = Eigen::Vector3d::Zero();
-  v_CoM_ref_flying_up << (0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time);
-  auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_flying_up, v_CoM_ref_flying_up, 
+  Eigen::Vector3d com_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
+  com_ref0_flying_up(2) = robot.CoM()(2);
+  Eigen::Vector3d vcom_ref_flying_up = Eigen::Vector3d::Zero();
+  vcom_ref_flying_up << (0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time);
+  auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_flying_up, vcom_ref_flying_up, 
                                                                      t0+ground_time, flying_up_time, 
                                                                      flying_down_time+2*ground_time, false);
   auto com_cost_flying_up = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_flying_up);
-  com_cost_flying_up->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
+  com_cost_flying_up->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_flying_up);
 
-  Eigen::Vector3d CoM_ref0_landed = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4;
-  CoM_ref0_landed(0) += jump_length;
-  CoM_ref0_landed(2) = robot.CoM()(2);
-  const Eigen::Vector3d v_CoM_ref_landed = Eigen::Vector3d::Zero();
-  auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_landed, v_CoM_ref_landed, 
+  Eigen::Vector3d com_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
+  com_ref0_landed(0) += jump_length;
+  com_ref0_landed(2) = robot.CoM()(2);
+  const Eigen::Vector3d vcom_ref_landed = Eigen::Vector3d::Zero();
+  auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_landed, vcom_ref_landed, 
                                                                   t0+ground_time+flying_time, ground_time, 
                                                                   ground_time+flying_time, false);
   auto com_cost_landed = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_landed);
-  com_cost_landed->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
+  com_cost_landed->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_landed);
 
   // Create the constraints
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
   const int max_num_impulses = 1;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
-  std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
+  std::vector<Eigen::Vector3d> contact_points = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   contact_status_standing.setContactPoints(contact_points);

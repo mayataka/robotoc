@@ -63,27 +63,27 @@ public:
 
   ///
   /// @brief Sets the reference position. 
-  /// @param[in] q_3d_ref Reference position.
+  /// @param[in] x3d_ref Reference position.
   ///
-  void set_q_3d_ref(const Eigen::Vector3d& q_3d_ref);
+  void set_x3d_ref(const Eigen::Vector3d& x3d_ref);
 
   ///
   /// @brief Sets the weight vector. 
-  /// @param[in] q_3d_weight Weight vector on the position error. 
+  /// @param[in] x3d_weight Weight vector on the position error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& q_3d_weight);
+  void set_x3d_weight(const Eigen::Vector3d& x3d_weight);
 
   ///
   /// @brief Sets the terminal weight vector. 
-  /// @param[in] qf_3d_weight Terminal weight vector on the position error. 
+  /// @param[in] x3df_weight Terminal weight vector on the position error. 
   ///
-  void set_qf_weight(const Eigen::Vector3d& qf_3d_weight);
+  void set_x3df_weight(const Eigen::Vector3d& x3df_weight);
 
   ///
   /// @brief Sets the weight vector at impulse. 
-  /// @param[in] qi_3d_weight Weight vector on the position error at impulse. 
+  /// @param[in] x3di_weight Weight vector on the position error at impulse. 
   ///
-  void set_qi_weight(const Eigen::Vector3d& qi_3d_weight);
+  void set_x3di_weight(const Eigen::Vector3d& x3di_weight);
 
   bool useKinematics() const override;
 
@@ -130,7 +130,7 @@ public:
 
 private:
   int frame_id_;
-  Eigen::Vector3d q_3d_ref_, q_3d_weight_, qf_3d_weight_, qi_3d_weight_;
+  Eigen::Vector3d x3d_ref_, x3d_weight_, x3df_weight_, x3di_weight_;
 
 };
 

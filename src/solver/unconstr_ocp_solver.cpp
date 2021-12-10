@@ -191,16 +191,8 @@ std::vector<Eigen::VectorXd> UnconstrOCPSolver::getSolution(
 }
 
 
-void UnconstrOCPSolver::getStateFeedbackGain(const int time_stage, 
-                                             Eigen::MatrixXd& Kq, 
-                                             Eigen::MatrixXd& Kv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  assert(Kq.rows() == robots_[0].dimv());
-  assert(Kq.cols() == robots_[0].dimv());
-  assert(Kv.rows() == robots_[0].dimv());
-  assert(Kv.cols() == robots_[0].dimv());
-  riccati_recursion_.getStateFeedbackGain(time_stage, Kq, Kv);
+const std::vector<LQRPolicy>& UnconstrOCPSolver::getLQRPolicy() const {
+  return riccati_recursion_.getLQRPolicy();
 }
 
 

@@ -60,11 +60,10 @@ public:
 
   ///
   /// @brief Computes the time-varying reference configuration. 
-  /// @param[in] robot Robot model.
   /// @param[in] t Time.
   /// @param[in] q_ref Reference position. Size is Robot::dimv().
   ///
-  virtual void update_q_ref(const Robot& robot, const double t, 
+  virtual void update_q_ref(const double t, 
                             Eigen::VectorXd& q_ref) const = 0;
 
   ///
@@ -128,9 +127,9 @@ public:
 
   ///
   /// @brief Sets the time-varying reference configuration. 
-  /// @param[in] ref Shared ptr time-varying reference position.
+  /// @param[in] q_ref Shared ptr to the time-varying reference position.
   ///
-  void set_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref);
+  void set_q_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& q_ref);
 
   ///
   /// @brief Sets the weight vector on the configuration q. 
@@ -196,7 +195,7 @@ public:
 
 private:
   int dimq_, dimv_;
-  std::shared_ptr<TimeVaryingConfigurationRefBase> ref_;
+  std::shared_ptr<TimeVaryingConfigurationRefBase> q_ref_;
   Eigen::VectorXd q_weight_, qf_weight_, qi_weight_;
 
 };

@@ -34,8 +34,8 @@ public:
   ///
   ~TrottingSwingFootRef();
 
-  void update_q_3d_ref(const ContactStatus& contact_status, 
-                       Eigen::VectorXd& q_3d_ref) const override;
+  void update_x3d_ref(const ContactStatus& contact_status, 
+                      Eigen::VectorXd& x3d_ref) const override;
 
 private:
   int contact_index_, x_ref_foot_contact_index_, y_ref_foot_contact_index_;

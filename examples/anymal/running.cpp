@@ -59,8 +59,7 @@ public:
 
   ~TimeVaryingConfigurationRef() {}
 
-  void update_q_ref(const robotoc::Robot& robot, const double t, 
-                    Eigen::VectorXd& q_ref) const override {
+  void update_q_ref(const double t, Eigen::VectorXd& q_ref) const override {
     if (t < t0_) {
       q_ref = q0_;
     }
@@ -184,7 +183,6 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
-  constraints->setBarrier(1.0e-03);
 
   // Create the contact sequence
   const int max_num_impulses = (steps+3)*2;

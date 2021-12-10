@@ -3,7 +3,7 @@
 
 namespace robotoc {
 
-PeriodicFootTrackRef2::PeriodicFootTrackRef2(const Eigen::Vector3d p0, 
+PeriodicFootTrackRef2::PeriodicFootTrackRef2(const Eigen::Vector3d x3d0, 
                                              const double step_length, 
                                              const double step_height, 
                                              const double t0, 
@@ -11,7 +11,7 @@ PeriodicFootTrackRef2::PeriodicFootTrackRef2(const Eigen::Vector3d p0,
                                              const double period_stance, 
                                              const bool is_first_step_half)
   : TimeVaryingTaskSpace3DRefBase(),
-    p0_(p0),
+    x3d0_(x3d0),
     step_length_(step_length),
     step_height_(step_height),
     t0_(t0),
@@ -26,41 +26,41 @@ PeriodicFootTrackRef2::~PeriodicFootTrackRef2() {
 }
 
 
-void PeriodicFootTrackRef2::update_q_3d_ref(const double t, 
-                                            Eigen::VectorXd& q_3d_ref) const {
-  q_3d_ref = p0_;
+void PeriodicFootTrackRef2::update_x3d_ref(const double t, 
+                                           Eigen::VectorXd& x3d_ref) const {
+  x3d_ref = x3d0_;
   if (is_first_step_half_) {
     if (t < t0_) {
       // do nothing
     }
     else if (t < t0_+period_swing_) {
       const double rate = (t-t0_) / period_swing_;
-      q_3d_ref.coeffRef(0) += 0.5 * rate * step_length_;
+      x3d_ref.coeffRef(0) += 0.5 * rate * step_length_;
       if (rate < 0.5) {
-        q_3d_ref.coeffRef(2) += 2 * rate * step_height_;
+        x3d_ref.coeffRef(2) += 2 * rate * step_height_;
       }
       else {
-        q_3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
+        x3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
       }
     }
     else if (t < t0_+period_) {
-      q_3d_ref.coeffRef(0) += 0.5 * step_length_;
+      x3d_ref.coeffRef(0) += 0.5 * step_length_;
     }
     else {
       const int steps = std::floor((t-t0_)/period_);
       const double tau = t - t0_ - steps * period_;
       if (tau < period_swing_) {
         const double rate = tau / period_swing_;
-        q_3d_ref.coeffRef(0) += (0.5+(steps-1)+rate) * step_length_;
+        x3d_ref.coeffRef(0) += (0.5+(steps-1)+rate) * step_length_;
         if (rate < 0.5) {
-          q_3d_ref.coeffRef(2) += 2 * rate * step_height_;
+          x3d_ref.coeffRef(2) += 2 * rate * step_height_;
         }
         else {
-          q_3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
+          x3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
         }
       }
       else {
-        q_3d_ref.coeffRef(0) += (0.5+steps) * step_length_;
+        x3d_ref.coeffRef(0) += (0.5+steps) * step_length_;
       }
     }
   }
@@ -73,16 +73,16 @@ void PeriodicFootTrackRef2::update_q_3d_ref(const double t,
       const double tau = t - t0_ - steps * period_;
       if (tau < period_swing_) {
         const double rate = tau / period_swing_;
-        q_3d_ref.coeffRef(0) += (steps+rate) * step_length_;
+        x3d_ref.coeffRef(0) += (steps+rate) * step_length_;
         if (rate < 0.5) {
-          q_3d_ref.coeffRef(2) += 2 * rate * step_height_;
+          x3d_ref.coeffRef(2) += 2 * rate * step_height_;
         }
         else {
-          q_3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
+          x3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
         }
       }
       else {
-        q_3d_ref.coeffRef(0) += (steps+1) * step_length_;
+        x3d_ref.coeffRef(0) += (steps+1) * step_length_;
       }
     }
   }

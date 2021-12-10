@@ -85,16 +85,10 @@ public:
                                Direction& d) const;
 
   ///
-  /// @brief Gets of the state feedback gain of the LQR subproblem of the 
-  /// specified time stage. 
-  /// @param[in] time_stage Time stage of interested. 
-  /// @param[in, out] da_dq The state feedback gain of the optimal joint 
-  /// acceleration w.r.t the joint configuration. 
-  /// @param[in, out] da_dv The state feedback gain of the optimal joint 
-  /// acceleration w.r.t the joint velocity. 
+  /// @brief Gets of the LQR policies over the horizon. 
+  /// @return const reference to the LQR policies.
   ///
-  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& da_dq, 
-                            Eigen::MatrixXd& da_dv) const;
+  const std::vector<LQRPolicy>& getLQRPolicy() const;
 
 private:
   int N_;
