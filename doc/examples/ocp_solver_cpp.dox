@@ -114,32 +114,34 @@ Next, we construct the cost function (TODO: write details about the cost functio
   const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
   const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
 
-  Eigen::Vector3d CoM_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
-  CoM_ref0_flying_up(2) = robot.CoM()(2);
-  Eigen::Vector3d v_CoM_ref_flying_up = Eigen::Vector3d::Zero();
-  v_CoM_ref_flying_up << (0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time);
-  auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_flying_up, v_CoM_ref_flying_up, 
+  Eigen::Vector3d com_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
+  com_ref0_flying_up(2) = robot.CoM()(2);
+  Eigen::Vector3d vcom_ref_flying_up = Eigen::Vector3d::Zero();
+  vcom_ref_flying_up << (0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time);
+  auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_flying_up, vcom_ref_flying_up, 
                                                                      t0+ground_time, flying_up_time, 
                                                                      flying_down_time+2*ground_time, false);
   auto com_cost_flying_up = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_flying_up);
-  com_cost_flying_up->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
+  com_cost_flying_up->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_flying_up);
 
-  Eigen::Vector3d CoM_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
-  CoM_ref0_landed(0) += jump_length;
-  CoM_ref0_landed(2) = robot.CoM()(2);
-  const Eigen::Vector3d v_CoM_ref_landed = Eigen::Vector3d::Zero();
-  auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(CoM_ref0_landed, v_CoM_ref_landed, 
+  Eigen::Vector3d com_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
+  com_ref0_landed(0) += jump_length;
+  com_ref0_landed(2) = robot.CoM()(2);
+  const Eigen::Vector3d vcom_ref_landed = Eigen::Vector3d::Zero();
+  auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_landed, vcom_ref_landed, 
                                                                   t0+ground_time+flying_time, ground_time, 
                                                                   ground_time+flying_time, false);
   auto com_cost_landed = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_landed);
-  com_cost_landed->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
+  com_cost_landed->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_landed);
 ```
 
 Next, we construct the constraints.
 ```
-  auto constraints           = std::make_shared<robotoc::Constraints>();
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints          = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
   auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower  = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
@@ -155,7 +157,6 @@ Next, we construct the constraints.
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-03);
 ```
 
 Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 

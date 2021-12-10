@@ -49,11 +49,12 @@ void SolverStatistics::disp(std::ostream& os) const {
     os << " |     " << primal_step_size[i];
     os << " |     " << dual_step_size[i] << " |";
     if (ts.size() > 0) {
-    os << "  [";
+      os << "  [";
+      os << std::fixed << std::setprecision(4);
       for (int j=0; j<ts[i].size()-1; ++j) {
-        os << ts[i][j] << ", ";
+        os << std::setw(6) << ts[i][j] << ", ";
       }
-      os << ts[i][ts[i].size()-1] << "]";
+      os << std::setw(6) << ts[i][ts[i].size()-1] << "]";
     }
     os << std::endl;
   }

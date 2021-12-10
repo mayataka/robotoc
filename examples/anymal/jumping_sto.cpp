@@ -68,7 +68,6 @@ int main(int argc, char *argv[]) {
               0.001, 0.001, 0.001,
               0.001, 0.001, 0.001;
   Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
-  Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1.0e-06);
   Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
   Eigen::VectorXd qi_weight(Eigen::VectorXd::Zero(robot.dimv()));
   qi_weight << 0, 0, 0, 100.0, 100.0, 100.0,  
@@ -140,12 +139,12 @@ int main(int argc, char *argv[]) {
   // Create the STO cost function
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
-  const int max_num_switches = 2 * max_num_impulses;
+  const int max_num_switches = 2*max_num_impulses;
+  const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
   auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
+                                                                   min_dwell_times,
                                                                    barrier, 
                                                                    fraction_to_boundary_rule);
-  sto_constraints->setMinimumDwellTimes({0.15, 0.15, 0.65});
-  sto_constraints->setBarrier(1.0e-03);
 
   // you can check the contact sequence via
   // std::cout << contact_sequence << std::endl;

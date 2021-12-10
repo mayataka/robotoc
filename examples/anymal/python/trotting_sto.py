@@ -62,11 +62,11 @@ LF_cost = robotoc.SwingFootCost(robot, 0, LF_foot_ref)
 LH_cost = robotoc.SwingFootCost(robot, 1, LH_foot_ref)
 RF_cost = robotoc.SwingFootCost(robot, 2, RF_foot_ref)
 RH_cost = robotoc.SwingFootCost(robot, 3, RH_foot_ref)
-point_ref_weight = np.array([0., 1.0e06, 1.0e04])
-LF_cost.set_x3d_weight(point_ref_weight)
-LH_cost.set_x3d_weight(point_ref_weight)
-RF_cost.set_x3d_weight(point_ref_weight)
-RH_cost.set_x3d_weight(point_ref_weight)
+swing_foot_ref_weight = np.array([0., 1.0e06, 1.0e04])
+LF_cost.set_x3d_weight(swing_foot_ref_weight)
+LH_cost.set_x3d_weight(swing_foot_ref_weight)
+RF_cost.set_x3d_weight(swing_foot_ref_weight)
+RH_cost.set_x3d_weight(swing_foot_ref_weight)
 cost.push_back(LF_cost)
 cost.push_back(LH_cost)
 cost.push_back(RF_cost)
@@ -153,11 +153,11 @@ for i in range(cycle-1):
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
+min_dt = [0.02] + cycle * [0.2, 0.02, 0.2, 0.02]
 sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
+                                         min_dt=min_dt,
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
-sto_constraints.set_minimum_dwell_times([0.02, 0.2, 0.02, 0.2, 0.02])
-sto_constraints.set_barrier(1.0e-03)
 
 T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
@@ -169,6 +169,7 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
+# solver_options.initial_sto_reg_iter = 10 # necessary for the cases with cycle = 2 or 3
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                solver_options=solver_options, nthreads=4)
 

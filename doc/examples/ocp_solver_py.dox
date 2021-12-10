@@ -101,8 +101,8 @@ cost.push_back(com_cost_flying_up)
 com_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
 com_ref0_landed[0] += jump_length
 com_ref0_landed[2] = robot.com()[2]
-v_com_ref_landed = np.zeros(3)
-com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, v_com_ref_landed, 
+vcom_ref_landed = np.zeros(3)
+com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, vcom_ref_landed, 
                                         t0+ground_time+flying_time, ground_time, 
                                         ground_time+flying_time, False)
 com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
@@ -112,7 +112,7 @@ cost.push_back(com_cost_landed)
 
 Next, we construct the constraints.
 ```
-constraints           = robotoc.Constraints()
+constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
 joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
@@ -128,7 +128,6 @@ constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
-constraints.set_barrier(1.0e-03)
 ```
 
 Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 
@@ -198,7 +197,8 @@ ocp_solver.set_solution("f", f_init) # set the initial guess of the solution.
 ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
-print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) # print solver statistics
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) 
+print(ocp_solver.get_solver_statistics()) # print solver statistics
 ```
 
 We can visualize the solution trajectory as

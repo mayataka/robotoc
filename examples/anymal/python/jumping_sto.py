@@ -37,7 +37,6 @@ q_weight = np.array([1.0, 0., 0., 1.0, 1.0, 1.0,
                      0.001, 0.001, 0.001,
                      0.001, 0.001, 0.001])
 v_weight = np.full(robot.dimv(), 1.0)
-u_weight = np.full(robot.dimu(), 1.0e-06)
 a_weight = np.full(robot.dimv(), 1.0e-06)
 qi_weight = np.array([0., 0., 0., 100., 100., 100., 
                       0.1, 0.1, 0.1, 
@@ -110,10 +109,9 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
+                                         min_dt=[0.15, 0.15, 0.65],
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
-sto_constraints.set_minimum_dwell_times([0.15, 0.15, 0.65])
-sto_constraints.set_barrier(1.0e-03)
 
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 

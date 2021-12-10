@@ -87,7 +87,6 @@ Next, we construct the cost function. The below is the simple quadratic cost for
               0.001, 0.001, 0.001,
               0.001, 0.001, 0.001;
   Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
-  Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1.0e-06);
   Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
   Eigen::VectorXd qi_weight(Eigen::VectorXd::Zero(robot.dimv()));
   qi_weight << 0, 0, 0, 100.0, 100.0, 100.0,  
@@ -112,7 +111,9 @@ Next, we construct the cost function. The below is the simple quadratic cost for
 
 Next, we construct the constraints.
 ```
-  auto constraints           = std::make_shared<robotoc::Constraints>();
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints          = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
   auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower  = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
@@ -128,7 +129,6 @@ Next, we construct the constraints.
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-03);
 ```
 
 Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 
@@ -186,9 +186,12 @@ We further construct cost function for the switching time optimization (STO) pro
 ```
 and the minimum dwell-time constraints for the STO problem
 ```
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(2*max_num_impulses);
-  sto_constraints->setMinimumDwellTimes({0.15, 0.15, 0.65});
-  sto_constraints->setBarrier(1.0e-03);
+  const int max_num_switches = 2*max_num_impulses;
+  const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
+                                                                   min_dwell_times,
+                                                                   barrier, 
+                                                                   fraction_to_boundary_rule);
 ```
 
 Finally, we can construct the optimal control solver!
