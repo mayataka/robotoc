@@ -139,14 +139,16 @@ public:
   void set_x3d_weight(const Eigen::Vector3d& x3d_weight);
 
   ///
-  /// @brief Sets the terminal weight vector. 
-  /// @param[in] x3df_weight Terminal weight vector on the position error. 
+  /// @brief Sets the weight vector at the terminal stage. 
+  /// @param[in] x3df_weight Weight vector on the position error at the terminal
+  /// stage. 
   ///
   void set_x3df_weight(const Eigen::Vector3d& x3df_weight);
 
   ///
-  /// @brief Sets the weight vector at impulse. 
-  /// @param[in] x3di_weight Weight vector on the position error at impulse. 
+  /// @brief Sets the weight vector at the impulse stages. 
+  /// @param[in] x3di_weight Weight vector on the position error at the impulse
+  /// stages. 
   ///
   void set_x3di_weight(const Eigen::Vector3d& x3di_weight);
 

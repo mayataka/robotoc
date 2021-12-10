@@ -20,11 +20,11 @@ namespace robotoc {
 
 class TimeVaryingTaskSpace6DRef final : public TimeVaryingTaskSpace6DRefBase {
 public:
-  TimeVaryingTaskSpace6DRef(const Eigen::Vector3d& q0_ref, 
-                            const Eigen::Vector3d& v_ref, 
+  TimeVaryingTaskSpace6DRef(const Eigen::Vector3d& x6d0_ref, 
+                            const Eigen::Vector3d& vx6d_ref, 
                             const double t0, const double tf)
-    : q0_ref_(q0_ref),
-      v_ref_(v_ref),
+    : x6d0_ref_(x6d0_ref),
+      vx6d_ref_(vx6d_ref),
       t0_(t0),
       tf_(tf),
       rotm_(Eigen::Matrix3d::Identity()) {
@@ -45,8 +45,8 @@ public:
   TimeVaryingTaskSpace6DRef& operator=(
       TimeVaryingTaskSpace6DRef&&) noexcept = default;
 
-  void update_SE3_ref(const double t, SE3& SE3_ref) const override {
-    SE3_ref = SE3(rotm_, (q0_ref_+(t-t0_)*v_ref_));
+  void update_x6d_ref(const double t, SE3& x6d_ref) const override {
+    x6d_ref = SE3(rotm_, (x6d0_ref_+(t-t0_)*vx6d_ref_));
   }
 
   bool isActive(const double t) const override {
@@ -57,7 +57,7 @@ public:
   }
 
 private:
-  Eigen::Vector3d q0_ref_, v_ref_;
+  Eigen::Vector3d x6d0_ref_, vx6d_ref_;
   Eigen::Matrix3d rotm_;
   double t0_, tf_;
 };
@@ -91,19 +91,19 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
-  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
-  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(q0_ref, v_ref, t0, tf);
+  const Eigen::VectorXd x6d_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd x6df_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd x6di_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::Vector3d x6d0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vx6d_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(x6d0_ref, vx6d_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
-  cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
-  cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
+  cost->set_x6d_weight(x6d_weight.tail(3), x6d_weight.head(3));
+  cost->set_x6df_weight(x6df_weight.tail(3), x6df_weight.head(3));
+  cost->set_x6di_weight(x6di_weight.tail(3), x6di_weight.head(3));
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -119,22 +119,22 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   cost->evalStageCostHessian(robot, contact_status, data, tf+dt, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
-  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
-  const SE3 ref_placement = SE3(Eigen::Matrix3d::Identity(), q_ref);
+  const Eigen::Vector3d q_ref = x6d0_ref + (t-t0) * vx6d_ref;
+  const SE3 x6d_ref = SE3(Eigen::Matrix3d::Identity(), q_ref);
   const SE3 placement = robot.framePlacement(frame_id);
-  const SE3 diff_SE3 = ref_placement.inverse() * placement;
-  const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
-  const double l_ref = dt * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
+  const SE3 diff_x6d = x6d_ref.inverse() * placement;
+  const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
+  const double l_ref = dt * 0.5 * diff_6d.transpose() * x6d_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
-  computeJLog6Map(diff_SE3, J_66);
+  computeJLog6Map(diff_x6d, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
-  kkt_res_ref.lq() += dt * J66_J_6d.transpose() * q_weight.asDiagonal() * diff_6d;
-  kkt_mat_ref.Qqq() += dt * J66_J_6d.transpose() * q_weight.asDiagonal() * J66_J_6d;
+  kkt_res_ref.lq() += dt * J66_J_6d.transpose() * x6d_weight.asDiagonal() * diff_6d;
+  kkt_mat_ref.Qqq() += dt * J66_J_6d.transpose() * x6d_weight.asDiagonal() * J66_J_6d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -149,19 +149,19 @@ void TimeVaryingTaskSpace6DCostTest::testTerminalCost(Robot& robot, const int fr
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
-  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
-  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(q0_ref, v_ref, t0, tf);
+  const Eigen::VectorXd x6d_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd x6df_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd x6di_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::Vector3d x6d0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vx6d_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(x6d0_ref, vx6d_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
-  cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
-  cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
+  cost->set_x6d_weight(x6d_weight.tail(3), x6d_weight.head(3));
+  cost->set_x6df_weight(x6df_weight.tail(3), x6df_weight.head(3));
+  cost->set_x6di_weight(x6di_weight.tail(3), x6di_weight.head(3));
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -176,22 +176,22 @@ void TimeVaryingTaskSpace6DCostTest::testTerminalCost(Robot& robot, const int fr
   cost->evalTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
-  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
-  const SE3 ref_placement = SE3(Eigen::Matrix3d::Identity(), q_ref);
+  const Eigen::Vector3d q_ref = x6d0_ref + (t-t0) * vx6d_ref;
+  const SE3 x6d_ref = SE3(Eigen::Matrix3d::Identity(), q_ref);
   const SE3 placement = robot.framePlacement(frame_id);
-  const SE3 diff_SE3 = ref_placement.inverse() * placement;
-  const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
-  const double l_ref = 0.5 * diff_6d.transpose() * qf_weight.asDiagonal() * diff_6d;
+  const SE3 diff_x6d = x6d_ref.inverse() * placement;
+  const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
+  const double l_ref = 0.5 * diff_6d.transpose() * x6df_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
   cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
   cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
-  computeJLog6Map(diff_SE3, J_66);
+  computeJLog6Map(diff_x6d, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
-  kkt_res_ref.lq() += J66_J_6d.transpose() * qf_weight.asDiagonal() * diff_6d;
-  kkt_mat_ref.Qqq() += J66_J_6d.transpose() * qf_weight.asDiagonal() * J66_J_6d;
+  kkt_res_ref.lq() += J66_J_6d.transpose() * x6df_weight.asDiagonal() * diff_6d;
+  kkt_mat_ref.Qqq() += J66_J_6d.transpose() * x6df_weight.asDiagonal() * J66_J_6d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -206,19 +206,19 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
-  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
-  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
-  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(q0_ref, v_ref, t0, tf);
+  const Eigen::VectorXd x6d_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd x6df_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd x6di_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::Vector3d x6d0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vx6d_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(x6d0_ref, vx6d_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
-  cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
-  cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
+  cost->set_x6d_weight(x6d_weight.tail(3), x6d_weight.head(3));
+  cost->set_x6df_weight(x6df_weight.tail(3), x6df_weight.head(3));
+  cost->set_x6di_weight(x6di_weight.tail(3), x6di_weight.head(3));
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
@@ -234,22 +234,22 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   cost->evalImpulseCostHessian(robot, impulse_status, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
-  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
-  const SE3 ref_placement = SE3(Eigen::Matrix3d::Identity(), q_ref);
+  const Eigen::Vector3d q_ref = x6d0_ref + (t-t0) * vx6d_ref;
+  const SE3 x6d_ref = SE3(Eigen::Matrix3d::Identity(), q_ref);
   const SE3 placement = robot.framePlacement(frame_id);
-  const SE3 diff_SE3 = ref_placement.inverse() * placement;
-  const Eigen::VectorXd diff_6d = Log6Map(diff_SE3);
-  const double l_ref = 0.5 * diff_6d.transpose() * qi_weight.asDiagonal() * diff_6d;
+  const SE3 diff_x6d = x6d_ref.inverse() * placement;
+  const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
+  const double l_ref = 0.5 * diff_6d.transpose() * x6di_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
   cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
-  computeJLog6Map(diff_SE3, J_66);
+  computeJLog6Map(diff_x6d, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
-  kkt_res_ref.lq() += J66_J_6d.transpose() * qi_weight.asDiagonal() * diff_6d;
-  kkt_mat_ref.Qqq() += J66_J_6d.transpose() * qi_weight.asDiagonal() * J66_J_6d;
+  kkt_res_ref.lq() += J66_J_6d.transpose() * x6di_weight.asDiagonal() * diff_6d;
+  kkt_mat_ref.Qqq() += J66_J_6d.transpose() * x6di_weight.asDiagonal() * J66_J_6d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

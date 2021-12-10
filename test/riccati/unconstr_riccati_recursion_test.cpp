@@ -98,9 +98,8 @@ TEST_F(UnconstrRiccatiRecursionTest, test) {
   Eigen::MatrixXd Kq(Eigen::MatrixXd::Zero(dimv, dimv)), 
                   Kv(Eigen::MatrixXd::Zero(dimv, dimv));
   for (int i=0; i<N; ++i) {
-    riccati_recursion.getStateFeedbackGain(i, Kq, Kv);
-    EXPECT_TRUE(Kq.isApprox(lqr_policy[i].Kq()));
-    EXPECT_TRUE(Kv.isApprox(lqr_policy[i].Kv()));
+    const auto& lqr_policy_ref = riccati_recursion.getLQRPolicy();
+    EXPECT_TRUE(lqr_policy[i].K.isApprox(lqr_policy_ref[i].K));
   }
 }
 

@@ -44,7 +44,7 @@ TEST_F(SwingFootCostTest, testStageCost) {
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3d_weight = Eigen::Vector3d::Random().array().abs();
   const int contact_index = 0;
   const int x_ref_foot_contact_index = 1;
   const int y_ref_foot_contact_index = 2;
@@ -57,39 +57,39 @@ TEST_F(SwingFootCostTest, testStageCost) {
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight);
-  cost->set_ref(ref);
+  cost->set_x3d_weight(x3d_weight);
+  cost->set_x3d_ref(ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
-  Eigen::Vector3d q_ref;
+  Eigen::Vector3d x3d_ref;
   const double xdiff = contact_status.contactPoint(contact_index)[0] 
                         - contact_status.contactPoint(x_ref_foot_contact_index)[0];
   constexpr double eps = std::numeric_limits<double>::epsilon();
   if (std::abs(xdiff) < eps) {
-    q_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
-    q_ref[0] += 0.25 * step_length;
+    x3d_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
+    x3d_ref[0] += 0.25 * step_length;
   }
   else {
-    q_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
+    x3d_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
   }
-  q_ref[1] = contact_status.contactPoint(y_ref_foot_contact_index)[1];
-  q_ref[2] = step_height;
+  x3d_ref[1] = contact_status.contactPoint(y_ref_foot_contact_index)[1];
+  x3d_ref[2] = step_height;
   const int frame_id = robot.contactFrames()[contact_index];
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
-  const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = dt * 0.5 * q_diff.transpose() * q_weight.asDiagonal() * q_diff;
+  const Eigen::Vector3d q_diff = q_task - x3d_ref;
+  const double l_ref = dt * 0.5 * q_diff.transpose() * x3d_weight.asDiagonal() * q_diff;
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += dt * J_diff.transpose() * q_weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * q_weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += dt * J_diff.transpose() * x3d_weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * x3d_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   contact_status.activateContacts();
@@ -110,7 +110,7 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3d_weight = Eigen::Vector3d::Random().array().abs();
   const int contact_index = 0;
   const int x_ref_foot_contact_index = 1;
   const int y_ref_foot_contact_index = 2;
@@ -123,7 +123,7 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight);
+  cost->set_x3d_weight(x3d_weight);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const double l_ref = 0;
@@ -144,7 +144,7 @@ TEST_F(SwingFootCostTest, testImpulseCost) {
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3d_weight = Eigen::Vector3d::Random().array().abs();
   const int contact_index = 0;
   const int x_ref_foot_contact_index = 1;
   const int y_ref_foot_contact_index = 2;
@@ -157,7 +157,7 @@ TEST_F(SwingFootCostTest, testImpulseCost) {
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight);
+  cost->set_x3d_weight(x3d_weight);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const double l_ref = 0.0;

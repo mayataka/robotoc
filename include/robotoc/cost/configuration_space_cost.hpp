@@ -124,24 +124,24 @@ public:
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse stage. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at impulse stages. 
+  /// @param[in] qi_weight Weight vector on the configuration q at impulse  
+  /// stages. Size must be Robot::dimv().
   ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 
   ///
-  /// @brief Sets the weight vector on the velocity v at the impulse stage. 
-  /// @param[in] vi_weight Weight vector on the velocity v at the impulse stage. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the velocity v at the impulse stages. 
+  /// @param[in] vi_weight Weight vector on the velocity v at the impulse  
+  /// stages. Size must be Robot::dimv().
   ///
   void set_vi_weight(const Eigen::VectorXd& vi_weight);
 
   ///
   /// @brief Sets the weight vector on the impulse change in the velocity dv at 
-  /// the impulse stage. 
+  /// the impulse stages. 
   /// @param[in] dvi_weight Weight vector on the impulse change in the velocity
-  /// the impulse stage. Size must be Robot::dimv().
+  /// the impulse stages. Size must be Robot::dimv().
   ///
   void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
 

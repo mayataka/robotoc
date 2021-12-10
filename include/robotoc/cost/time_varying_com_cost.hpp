@@ -143,9 +143,9 @@ public:
   void set_comf_weight(const Eigen::Vector3d& comf_weight);
 
   ///
-  /// @brief Sets the weight vector at the impulse stage. 
+  /// @brief Sets the weight vector at the impulse stages. 
   /// @param[in] comi_weight Weight vector on the CoM position error at the
-  /// impulse stage. 
+  /// impulse stages. 
   ///
   void set_comi_weight(const Eigen::Vector3d& comi_weight);
 

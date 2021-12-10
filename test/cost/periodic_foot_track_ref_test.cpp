@@ -39,7 +39,7 @@ TEST_F(PeriodicFootTrackRefTest, first_mode_half_true) {
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
   EXPECT_FALSE(preiodic_foot_ref->isActive(t1));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_q_3d_ref(t2, p);
+  preiodic_foot_ref->update_x3d_ref(t2, p);
   if (t2 < t0+period_swing) {
     p_ref = p0;
     p_ref(0) += 0.5 * ((t2-t0)/period_swing) * step_length;
@@ -90,7 +90,7 @@ TEST_F(PeriodicFootTrackRefTest, first_mode_half_false) {
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
   EXPECT_FALSE(preiodic_foot_ref->isActive(t1));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_q_3d_ref(t2, p);
+  preiodic_foot_ref->update_x3d_ref(t2, p);
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;
   if (tau < period_swing) {

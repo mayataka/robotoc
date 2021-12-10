@@ -60,10 +60,11 @@ public:
 
   ///
   /// @brief Computes the time-varying reference configuration. 
+  /// @param[in] robot Robot model.
   /// @param[in] t Time.
   /// @param[in] q_ref Reference position. Size is Robot::dimv().
   ///
-  virtual void update_q_ref(const double t, 
+  virtual void update_q_ref(const Robot& robot, const double t, 
                             Eigen::VectorXd& q_ref) const = 0;
 
   ///
@@ -139,16 +140,16 @@ public:
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the configuration q. 
-  /// @param[in] qf_weight Terminal weight vector on the configuration q. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the terminal stage. 
+  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the impulse stages. 
+  /// @param[in] qi_weight Weight vector on the configuration q at the impulse 
+  /// stages. Size must be Robot::dimv().
   ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 

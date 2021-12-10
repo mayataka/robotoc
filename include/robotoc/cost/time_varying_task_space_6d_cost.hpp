@@ -151,11 +151,11 @@ public:
                        const Eigen::Vector3d& rot_weight);
 
   ///
-  /// @brief Sets the weight vectors at the impulse stage. 
+  /// @brief Sets the weight vectors at the impulse stages. 
   /// @param[in] trans_weight Weight vector on the position error at the 
-  /// impulse stage. 
+  /// impulse stages. 
   /// @param[in] rot_weight Weight vector on the rotation error at the 
-  /// impulse stage. 
+  /// impulse stages. 
   ///
   void set_x6di_weight(const Eigen::Vector3d& trans_weight, 
                        const Eigen::Vector3d& rot_weight);

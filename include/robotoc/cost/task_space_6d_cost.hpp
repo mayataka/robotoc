@@ -81,17 +81,21 @@ public:
                       const Eigen::Vector3d& rot_weight);
 
   ///
-  /// @brief Sets the terminal weight vectors. 
-  /// @param[in] trans_weight Temrinal weight vector on the position error. 
-  /// @param[in] rot_weight Temrinal weight vector on the rotation error. 
+  /// @brief Sets the weight vectors at the terminal stage. 
+  /// @param[in] trans_weight Weight vector on the position error at the 
+  /// terminal stage. 
+  /// @param[in] rot_weight Weight vector on the rotation error at the 
+  /// terminal stage.
   ///
   void set_x6df_weight(const Eigen::Vector3d& trans_weight, 
                        const Eigen::Vector3d& rot_weight);
 
   ///
-  /// @brief Sets the weight vectors at impulse. 
-  /// @param[in] trans_weight Weight vector on the position error at impulse. 
-  /// @param[in] rot_weight Weight vector on the rotation error at impulse. 
+  /// @brief Sets the weight vectors at the impulse stages. 
+  /// @param[in] trans_weight Weight vector on the position error at the 
+  /// impulse stages. 
+  /// @param[in] rot_weight Weight vector on the rotation error at the 
+  /// impulse stages.
   ///
   void set_x6di_weight(const Eigen::Vector3d& trans_weight, 
                        const Eigen::Vector3d& rot_weight);
