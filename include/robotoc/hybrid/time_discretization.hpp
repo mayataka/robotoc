@@ -15,7 +15,7 @@ namespace robotoc {
 
 ///
 /// @class TimeDiscretization
-/// @brief Discretization of the hybrid optimal control problem.
+/// @brief Time discretization of the hybrid optimal control problem.
 ///
 class TimeDiscretization {
 public:

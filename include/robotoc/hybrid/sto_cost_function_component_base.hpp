@@ -50,14 +50,16 @@ public:
 
   ///
   /// @brief Computes the cost on the switching times. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @return Cost on the switching times.
   ///
   virtual double evalCost(const TimeDiscretization& discretization) const = 0;
 
   ///
   /// @brief Computes the derivative of the cost on the switching times. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] lts Derivative of the cost w.r.t. the switching times.
   ///
   virtual void evalCostDerivatives(const TimeDiscretization& discretization,
@@ -66,7 +68,8 @@ public:
   ///
   /// @brief Computes the twice-time derivative (Hessian) of the cost on the 
   /// switching times. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] Qts Hessian of the cost w.r.t. the switching times.
   ///
   virtual void evalCostHessian(const TimeDiscretization& discretization,

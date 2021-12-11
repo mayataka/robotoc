@@ -86,21 +86,24 @@ public:
 
   ///
   /// @brief Sets the slack variables. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   ///
   void setSlack(const TimeDiscretization& discretization);
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   ///
   void evalConstraint(const TimeDiscretization& discretization);
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] kkt_residual KKT residual.
   ///
   void linearizeConstraints(const TimeDiscretization& discretization,
@@ -109,7 +112,8 @@ public:
   ///
   /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
   /// and condense the slack and dual variables.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   ///
@@ -120,7 +124,8 @@ public:
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[in] d Newton direction.
   ///
   void expandSlackAndDual(const TimeDiscretization& discretization, 

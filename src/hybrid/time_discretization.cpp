@@ -22,7 +22,9 @@ void TimeDiscretization::disp(std::ostream& os) const {
      << isFormulationTractable() << std::endl;;
   os << "  isSwitchingTimeConsistent: " << std::boolalpha
      << isSwitchingTimeConsistent() << std::endl;
+  os << " -----------------------------------------------------------" << std::endl;
   os << "  grid point |      t |     dt | phase |  sto  | sto_next |" << std::endl;
+  os << " -----------------------------------------------------------" << std::endl;
   for (int i=0; i<N(); ++i) {
     os << "  stage: " << std::setw(3) << i << " | "
        << std::fixed << std::setprecision(4) << t(i) << " | " << dt(i)

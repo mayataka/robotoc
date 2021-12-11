@@ -69,7 +69,8 @@ public:
 
   ///
   /// @brief Computes the cost on the switching times. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @return Cost on the switching times.
   ///
   double evalCost(const TimeDiscretization& discretization);
@@ -77,7 +78,8 @@ public:
   ///
   /// @brief Computes the cost on the switching times and its first-order 
   /// partial derivatives. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[in, out] kkt_residual KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Cost on the switching times.
@@ -88,7 +90,8 @@ public:
   ///
   /// @brief Computes the cost, its first-order partial derivatives, and 
   /// its Hessian, i.e., its second-order partial derivatives. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   /// @return Cost on the switching times.
