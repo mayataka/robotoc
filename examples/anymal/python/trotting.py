@@ -206,6 +206,5 @@ viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf,
                                         viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
 discretization = ocp_solver.get_time_discretization()
-print(discretization)
 viewer.display(discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

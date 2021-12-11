@@ -1,5 +1,7 @@
 #include "robotoc/hybrid/time_discretization.hpp"
 
+#include <iomanip>
+
 
 namespace robotoc {
 
@@ -20,36 +22,43 @@ void TimeDiscretization::disp(std::ostream& os) const {
      << isFormulationTractable() << std::endl;;
   os << "  isSwitchingTimeConsistent: " << std::boolalpha
      << isSwitchingTimeConsistent() << std::endl;
+  os << "  grid point |      t |     dt | phase |  sto  | sto_next |" << std::endl;
   for (int i=0; i<N(); ++i) {
-    os << "  i = " << i << ": t = " << t(i) << ": dt = " << dt(i) 
-       << ": phase = " << contactPhase(i) 
-       << ": sto = " << std::boolalpha << isSTOEnabledPhase(contactPhase(i)) 
-       << ": sto_next = " << std::boolalpha << isSTOEnabledNextPhase(contactPhase(i)) << std::endl;
+    os << "  stage: " << std::setw(3) << i << " | "
+       << std::fixed << std::setprecision(4) << t(i) << " | " << dt(i)
+       << " |   " << std::setw(3) << contactPhase(i)
+       << " | " << std::setw(5) << std::boolalpha << isSTOEnabledPhase(contactPhase(i)) 
+       << " |   " << std::setw(5) << std::boolalpha << isSTOEnabledNextPhase(contactPhase(i)) 
+       << "  |" << std::endl;
     if (isTimeStageBeforeImpulse(i)) {
       const int impulse_index = impulseIndexAfterTimeStage(i);
-      os << "  aux = " << impulse_index
-         << ": t =  " << t_impulse(impulse_index) 
-         << ": dt_aux = " << dt_aux(impulse_index)
-         << ": phase = " << contactPhaseAfterImpulse(impulse_index)
-         << ": sto = " << std::boolalpha 
+      os << "    aux: " << std::setw(3) << impulse_index
+         << " | " << t_impulse(impulse_index) 
+         << " | " << dt_aux(impulse_index)
+         << " |   " << std::setw(3) << contactPhaseAfterImpulse(impulse_index)
+         << " | " << std::setw(5) << std::boolalpha 
          << isSTOEnabledPhase(contactPhaseAfterImpulse(impulse_index)) 
-         << ": sto_next = " << std::boolalpha 
+         << " |   " << std::setw(5) << std::boolalpha 
          << isSTOEnabledNextPhase(contactPhaseAfterImpulse(impulse_index)) 
-         << std::endl;
+         << "  |" << std::endl;
     }
     else if (isTimeStageBeforeLift(i)) {
       const int lift_index = liftIndexAfterTimeStage(i);
-      os << "  lift = " << lift_index 
-         << ": t =  " << t_lift(lift_index) 
-         << ": dt_lift = " << dt_lift(lift_index) 
-         << ": phase = " << contactPhaseAfterLift(lift_index)
-         << ": sto = " << std::boolalpha
+      os << "   lift: " << std::setw(3) << lift_index 
+         << " | " << t_lift(lift_index) 
+         << " | " << dt_lift(lift_index) 
+         << " |   " << std::setw(3) << contactPhaseAfterLift(lift_index)
+         << " | " << std::setw(5) << std::boolalpha
          << isSTOEnabledPhase(contactPhaseAfterLift(lift_index)) 
-         << ": sto_next = " << std::boolalpha
-         << isSTOEnabledNextPhase(contactPhaseAfterLift(lift_index)) << std::endl;
+         << " |   " << std::setw(5) << std::boolalpha
+         << isSTOEnabledNextPhase(contactPhaseAfterLift(lift_index))
+         << "  |" << std::endl;
     }
   }
-  os << "  i = " << N() << ": t = " << t(N()) << std::flush; 
+  os << "  stage: " << std::setw(3) << N() << " | " << t(N()) 
+     << " |        |       |       |          |" << std::flush; 
+
+  
 }
 
 
