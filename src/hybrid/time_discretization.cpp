@@ -58,9 +58,8 @@ void TimeDiscretization::disp(std::ostream& os) const {
     }
   }
   os << "  stage: " << std::setw(3) << N() << " | " << t(N()) 
-     << " |        |       |       |          |" << std::flush; 
-
-  
+     << " |        |       |       |          |" << std::endl; 
+  os << " -----------------------------------------------------------" << std::flush;
 }
 
 
