@@ -10,11 +10,10 @@
 namespace robotoc {
 
 MPCQuadrupedalTrotting::MPCQuadrupedalTrotting(const OCP& ocp, 
-                                               const int max_num_steps, 
                                                const int nthreads)
   : robot_(ocp.robot()),
-    contact_sequence_(std::make_shared<robotoc::ContactSequence>(ocp.robot(), 
-                                                                 max_num_steps)),
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(
+        ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
     cs_standing_(ocp.robot().createContactStatus()),
     cs_lfrh_(ocp.robot().createContactStatus()),
@@ -126,11 +125,11 @@ void MPCQuadrupedalTrotting::updateSolution(const double t,
                                             const Eigen::VectorXd& q, 
                                             const Eigen::VectorXd& v) {
   const bool add_step = addStep(t);
-  const auto ts = ocp_solver_.getSolution("ts");
+  const auto ts = contact_sequence_->eventTimes();
   bool remove_step = false;
   if (!ts.empty()) {
-    if (ts.front().coeff(0) < t+min_dt) {
-      ts_last_ = ts.front().coeff(0);
+    if (ts.front() < t+min_dt) {
+      ts_last_ = ts.front();
       ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
@@ -172,9 +171,9 @@ bool MPCQuadrupedalTrotting::addStep(const double t) {
   }
   else {
     double tt = ts_last_ + swing_time_;
-    const auto ts = ocp_solver_.getSolution("ts");
+    const auto ts = contact_sequence_->eventTimes();
     if (!ts.empty()) {
-      tt = ts.back().coeff(0) + swing_time_;
+      tt = ts.back() + swing_time_;
     }
     if (tt < t+T_-dtm_) {
       if (predict_step_%2 != 0) {

@@ -13,8 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_quadrupedal_trotting, m) {
   py::class_<MPCQuadrupedalTrotting>(m, "MPCQuadrupedalTrotting")
-    .def(py::init<const OCP&, const int, const int>(),
-         py::arg("ocp"), py::arg("max_num_steps"), py::arg("nthreads"))
+    .def(py::init<const OCP&, const int>(),
+         py::arg("ocp"), py::arg("nthreads"))
     .def("set_gait_pattern", &MPCQuadrupedalTrotting::setGaitPattern,
          py::arg("step_length"), py::arg("step_height"), py::arg("swing_time"), 
          py::arg("t0"))

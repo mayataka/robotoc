@@ -27,13 +27,10 @@ public:
   ///
   /// @brief Construct MPC solver.
   /// @param[in] ocp Optimal contro problem. 
-  /// @param[in] max_num_steps Maximum number of the steps on the horizon. 
-  /// Must be positive. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalWalking(const OCP& ocp, const int max_num_steps, 
-                        const int nthreads);
+  MPCQuadrupedalWalking(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 

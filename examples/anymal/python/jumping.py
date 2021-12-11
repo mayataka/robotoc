@@ -65,8 +65,8 @@ x3d0_RH = robot.frame_position(RH_foot_id)
 
 com_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
 com_ref0_flying_up[2] = robot.com()[2]
-v_com_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
-com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, v_com_ref_flying_up, 
+vcom_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
+com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, vcom_ref_flying_up, 
                                            t0+ground_time, flying_up_time, 
                                            flying_down_time+2*ground_time, False)
 com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
