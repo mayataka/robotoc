@@ -106,8 +106,7 @@ inline STOConstraints::~STOConstraints() {
 }
 
 
-inline void STOConstraints::setSlack(
-    const HybridOCPDiscretization& discretization) {
+inline void STOConstraints::setSlack(const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
@@ -166,7 +165,7 @@ inline void STOConstraints::setSlack(
 
 
 inline void STOConstraints::evalConstraint(
-    const HybridOCPDiscretization& discretization) {
+    const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
@@ -239,7 +238,7 @@ inline void STOConstraints::evalConstraint(
 
 
 inline void STOConstraints::linearizeConstraints(
-    const HybridOCPDiscretization& discretization, 
+    const TimeDiscretization& discretization, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
@@ -326,7 +325,7 @@ inline void STOConstraints::linearizeConstraints(
 
 
 inline void STOConstraints::condenseSlackAndDual(
-    const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
+    const TimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
@@ -396,7 +395,7 @@ inline void STOConstraints::condenseSlackAndDual(
 
 
 inline void STOConstraints::expandSlackAndDual(
-    const HybridOCPDiscretization& discretization, const Direction& d) {
+    const TimeDiscretization& discretization, const Direction& d) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());

@@ -236,7 +236,7 @@ public:
   /// @brief OCP discretization. 
   /// @return Returns const reference to the internal OCP discretization. 
   ///
-  const HybridOCPDiscretization& getOCPDiscretization() const;
+  const TimeDiscretization& getTimeDiscretization() const;
 
   ///
   /// @brief Displays the optimal control problem solver onto a ostream.

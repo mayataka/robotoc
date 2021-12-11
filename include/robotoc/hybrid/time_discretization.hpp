@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_HYBRID_OCP_DISCRETIZATION_HPP_ 
-#define ROBOTOC_HYBRID_OCP_DISCRETIZATION_HPP_
+#ifndef ROBOTOC_TIME_DISCRETIZATION_HPP_ 
+#define ROBOTOC_TIME_DISCRETIZATION_HPP_
 
 #include <vector>
 #include <memory>
@@ -14,10 +14,10 @@
 namespace robotoc {
 
 ///
-/// @class HybridOCPDiscretization
+/// @class TimeDiscretization
 /// @brief Discretization of the hybrid optimal control problem.
 ///
-class HybridOCPDiscretization {
+class TimeDiscretization {
 public:
   ///
   /// @brief Constructor. 
@@ -27,38 +27,38 @@ public:
   /// @param[in] max_num_each_discrete_events Maximum possible number of the 
   /// each discrete events on the horizon. Must be non-negative.
   ///
-  HybridOCPDiscretization(const double T, const int N, 
-                          const int max_num_each_discrete_events);
+  TimeDiscretization(const double T, const int N, 
+                     const int max_num_each_discrete_events);
 
   ///
   /// @brief Default constructor. 
   ///
-  HybridOCPDiscretization();
+  TimeDiscretization();
 
   ///
   /// @brief Destructor. 
   ///
-  ~HybridOCPDiscretization();
+  ~TimeDiscretization();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  HybridOCPDiscretization(const HybridOCPDiscretization&) = default;
+  TimeDiscretization(const TimeDiscretization&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  HybridOCPDiscretization& operator=(const HybridOCPDiscretization&) = default;
+  TimeDiscretization& operator=(const TimeDiscretization&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  HybridOCPDiscretization(HybridOCPDiscretization&&) noexcept = default;
+  TimeDiscretization(TimeDiscretization&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  HybridOCPDiscretization& operator=(HybridOCPDiscretization&&) noexcept = default;
+  TimeDiscretization& operator=(TimeDiscretization&&) noexcept = default;
 
   ///
   /// @brief Sets the discretization method of the optimal contro problem. 
@@ -394,7 +394,7 @@ public:
   void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const HybridOCPDiscretization& discretization);
+                                  const TimeDiscretization& discretization);
 
   ///
   /// @brief Minimum time step size of the discretization. 
@@ -432,6 +432,6 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hxx"
+#include "robotoc/hybrid/time_discretization.hxx"
 
-#endif // ROBOTOC_HYBRID_OCP_DISCRETIZATION_HPP_ 
+#endif // ROBOTOC_TIME_DISCRETIZATION_HPP_ 

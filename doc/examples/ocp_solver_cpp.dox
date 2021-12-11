@@ -235,9 +235,9 @@ Let's run the solver!
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-robotoc::HybridOCPDiscretization ocp_discretization(T, N, max_num_impulses*2);
-ocp_discretization.discretize(contact_sequence, t);
-std::cout << ocp_discretization << std::endl;
+robotoc::TimeDiscretization discretization(T, N, max_num_impulses*2);
+discretization.discretize(contact_sequence, t);
+std::cout << discretization << std::endl;
 ```
 
 */

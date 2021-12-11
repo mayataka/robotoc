@@ -14,7 +14,7 @@
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -126,7 +126,7 @@ public:
   /// of the optimal control problem. 
   /// @return The discretization of the optimal control problem. 
   ///
-  const HybridOCPDiscretization& discrete() const;
+  const TimeDiscretization& discrete() const;
 
   ///
   /// @return const reference to the Robot model. 
@@ -235,7 +235,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
-  HybridOCPDiscretization discretization_;
+  TimeDiscretization discretization_;
   double T_;
   int N_, max_num_each_discrete_events_;
   bool is_sto_enabled_;

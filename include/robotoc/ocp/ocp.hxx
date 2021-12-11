@@ -113,8 +113,7 @@ inline void OCP::resize(const int max_num_each_discrete_events) {
   assert(lift.size() == discretization_.maxNumEachDiscreteEvents());
   if (max_num_each_discrete_events > max_num_each_discrete_events_) {
     const auto discretization_method = discretization_.discretizationMethod();
-    discretization_ 
-        = HybridOCPDiscretization(T_, N_, max_num_each_discrete_events);
+    discretization_ = TimeDiscretization(T_, N_, max_num_each_discrete_events);
     discretization_.setDiscretizationMethod(discretization_method);
     while (max_num_each_discrete_events > impulse.size()) {
       impulse.emplace_back(robot_, cost_, constraints_);
@@ -150,7 +149,7 @@ inline void OCP::meshRefinement(
 }
 
 
-inline const HybridOCPDiscretization& OCP::discrete() const {
+inline const TimeDiscretization& OCP::discrete() const {
   return discretization_;
 }
 

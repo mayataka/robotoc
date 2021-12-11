@@ -201,7 +201,7 @@ plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto',
 
 plot_f = robotoc.utils.PlotContactForce(mu=mu)
 plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
-            t=ocp_solver.get_OCP_discretization().time_points(), 
+            t=ocp_solver.get_time_discretization().time_points(), 
             fig_name='trotting_sto_f', save_dir='trotting_sto_log')
 
 
@@ -210,6 +210,7 @@ viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf,
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')
 viewer.set_contact_info(contact_frames, mu)
-ocp_discretization = ocp_solver.get_OCP_discretization()
-viewer.display(ocp_discretization.time_steps(), ocp_solver.get_solution('q'), 
+discretization = ocp_solver.get_time_discretization()
+print(discretization)
+viewer.display(discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

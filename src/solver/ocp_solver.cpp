@@ -470,7 +470,7 @@ bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
 }
 
 
-const HybridOCPDiscretization& OCPSolver::getOCPDiscretization() const {
+const TimeDiscretization& OCPSolver::getTimeDiscretization() const {
   return ocp_.discrete();
 }
 

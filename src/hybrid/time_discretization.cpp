@@ -1,10 +1,10 @@
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
 
-void HybridOCPDiscretization::disp(std::ostream& os) const {
-  os << "The discretized optimal control problem (OCP):" << std::endl;
+void TimeDiscretization::disp(std::ostream& os) const {
+  os << "Time discretization of optimal control problem (OCP):" << std::endl;
   os << "  T: " << T_ << std::endl;
   os << "  N_ideal: " << N_ideal() << std::endl;
   os << "  N: " << N() << std::endl;
@@ -54,7 +54,7 @@ void HybridOCPDiscretization::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const HybridOCPDiscretization& discretization) {
+                         const TimeDiscretization& discretization) {
   discretization.disp(os);
   return os;
 }

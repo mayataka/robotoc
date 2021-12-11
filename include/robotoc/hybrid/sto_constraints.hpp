@@ -7,7 +7,7 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/ocp/direction.hpp"
@@ -88,14 +88,14 @@ public:
   /// @brief Sets the slack variables. 
   /// @param[in] discretization Discretization of the optimal control problem.
   ///
-  void setSlack(const HybridOCPDiscretization& discretization);
+  void setSlack(const TimeDiscretization& discretization);
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] discretization Discretization of the optimal control problem.
   ///
-  void evalConstraint(const HybridOCPDiscretization& discretization);
+  void evalConstraint(const TimeDiscretization& discretization);
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
@@ -103,7 +103,7 @@ public:
   /// @param[in] discretization Discretization of the optimal control problem.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(const HybridOCPDiscretization& discretization,
+  void linearizeConstraints(const TimeDiscretization& discretization,
                             KKTResidual& kkt_residual); 
 
   ///
@@ -113,7 +113,7 @@ public:
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void condenseSlackAndDual(const HybridOCPDiscretization& discretization,
+  void condenseSlackAndDual(const TimeDiscretization& discretization,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual);
 
@@ -123,7 +123,7 @@ public:
   /// @param[in] discretization Discretization of the optimal control problem.
   /// @param[in] d Newton direction.
   ///
-  void expandSlackAndDual(const HybridOCPDiscretization& discretization, 
+  void expandSlackAndDual(const TimeDiscretization& discretization, 
                           const Direction& d); 
 
   ///

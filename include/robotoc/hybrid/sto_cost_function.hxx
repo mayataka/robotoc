@@ -28,7 +28,7 @@ inline void STOCostFunction::clear() {
 
 
 inline double STOCostFunction::evalCost(
-    const HybridOCPDiscretization& discretization) {
+    const TimeDiscretization& discretization) {
   if (!costs_.empty()) {
     double cost = 0;
     for (auto& e : costs_) {
@@ -43,7 +43,7 @@ inline double STOCostFunction::evalCost(
 
 
 inline double STOCostFunction::linearizeCost(
-    const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
+    const TimeDiscretization& discretization, KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
     lts_.resize(num_events);
@@ -63,7 +63,7 @@ inline double STOCostFunction::linearizeCost(
 
 
 inline double STOCostFunction::quadratizeCost(
-    const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
+    const TimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -90,8 +90,8 @@ inline double STOCostFunction::quadratizeCost(
 }
 
 
-inline void STOCostFunction::setToKKT(
-    const HybridOCPDiscretization& discretization, KKTResidual& kkt_residual) {
+inline void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
+                                      KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
@@ -119,9 +119,9 @@ inline void STOCostFunction::setToKKT(
 }
 
 
-inline void STOCostFunction::setToKKT(
-    const HybridOCPDiscretization& discretization, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+inline void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
+                                      KKTMatrix& kkt_matrix, 
+                                      KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;

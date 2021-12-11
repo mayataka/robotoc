@@ -9,7 +9,7 @@
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
 

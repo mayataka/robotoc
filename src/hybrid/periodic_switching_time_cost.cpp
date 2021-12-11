@@ -69,7 +69,7 @@ void PeriodicSwitchingTimeCost::set_weight(const double weight) {
 
 
 double PeriodicSwitchingTimeCost::evalCost(
-    const HybridOCPDiscretization& discretization) const {
+    const TimeDiscretization& discretization) const {
   double cost = 0;
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
@@ -104,7 +104,7 @@ double PeriodicSwitchingTimeCost::evalCost(
 
 
 void PeriodicSwitchingTimeCost::evalCostDerivatives(
-    const HybridOCPDiscretization& discretization, Eigen::VectorXd& lts) const {
+    const TimeDiscretization& discretization, Eigen::VectorXd& lts) const {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
@@ -137,7 +137,7 @@ void PeriodicSwitchingTimeCost::evalCostDerivatives(
 
 
 void PeriodicSwitchingTimeCost::evalCostHessian(
-    const HybridOCPDiscretization& discretization, Eigen::MatrixXd& Qts) const {
+    const TimeDiscretization& discretization, Eigen::MatrixXd& Qts) const {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   for (int i=0; num_events; ++i) {
     Qts.coeffRef(i, i) += weight_;

@@ -214,9 +214,9 @@ viewer.display(dt, ocp_solver.get_solution('q'),
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-ocp_discretization = robotoc.HybridOCPDiscretization(T, N, max_num_impulses*2)
-ocp_discretization.discretize(contact_sequence, t)
-print(ocp_discretization)
+discretization = robotoc.TimeDiscretization(T, N, max_num_impulses*2)
+discretization.discretize(contact_sequence, t)
+print(discretization)
 ```
 
 */
