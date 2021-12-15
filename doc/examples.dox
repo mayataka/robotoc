@@ -8,6 +8,10 @@
 
 \subpage subpage_ocp_solver_example_py
 
+\subpage subpage_ocp_solver_sto_example_cpp
+
+\subpage subpage_ocp_solver_sto_example_py
+
 \subpage subpage_unconstr_ocp_solver_example_cpp 
 
 \subpage subpage_unconstr_ocp_solver_example_py

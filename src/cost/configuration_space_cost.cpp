@@ -239,6 +239,7 @@ bool ConfigurationSpaceCost::useKinematics() const {
 
 
 double ConfigurationSpaceCost::evalStageCost(Robot& robot, 
+                                             const ContactStatus& contact_status, 
                                              CostFunctionData& data, 
                                              const double t, const double dt, 
                                              const SplitSolution& s) const {
@@ -253,8 +254,9 @@ double ConfigurationSpaceCost::evalStageCost(Robot& robot,
 
 
 void ConfigurationSpaceCost::evalStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -272,8 +274,9 @@ void ConfigurationSpaceCost::evalStageCostDerivatives(
 
 
 void ConfigurationSpaceCost::evalStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
         += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
@@ -330,8 +333,8 @@ void ConfigurationSpaceCost::evalTerminalCostHessian(
 
 
 double ConfigurationSpaceCost::evalImpulseCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s) const {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s) const {
   double l = 0;
   robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
   l += (qi_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
@@ -342,9 +345,9 @@ double ConfigurationSpaceCost::evalImpulseCost(
 
 
 void ConfigurationSpaceCost::evalImpulseCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& 
-    s, ImpulseSplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -360,8 +363,9 @@ void ConfigurationSpaceCost::evalImpulseCostDerivatives(
 
 
 void ConfigurationSpaceCost::evalImpulseCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
         += data.J_qdiff.transpose() * qi_weight_.asDiagonal() * data.J_qdiff;

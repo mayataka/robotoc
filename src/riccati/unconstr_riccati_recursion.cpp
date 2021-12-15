@@ -7,28 +7,16 @@
 
 namespace robotoc {
 
-UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const Robot& robot, 
-                                                   const double T, const int N)
-  : N_(N),
-    T_(T),
-    dt_(T/N),
-    factorizer_(robot),
-    lqr_policy_(N, LQRPolicy(robot)) {
-  try {
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
+UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const UnconstrOCP& ocp)
+  : N_(ocp.N()),
+    dt_(ocp.T()/ocp.N()),
+    factorizer_(ocp.robot()),
+    lqr_policy_(ocp.N(), LQRPolicy(ocp.robot())) {
 }
 
 
 UnconstrRiccatiRecursion::UnconstrRiccatiRecursion()
   : N_(0),
-    T_(0),
     dt_(0),
     factorizer_(),
     lqr_policy_() {
@@ -61,13 +49,8 @@ void UnconstrRiccatiRecursion::forwardRiccatiRecursion(
 }
 
 
-void UnconstrRiccatiRecursion::getStateFeedbackGain(
-    const int time_stage, Eigen::MatrixXd& da_dq, 
-    Eigen::MatrixXd& da_dv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  da_dq = lqr_policy_[time_stage].Kq();
-  da_dv = lqr_policy_[time_stage].Kv();
+const std::vector<LQRPolicy>& UnconstrRiccatiRecursion::getLQRPolicy() const {
+  return lqr_policy_;
 }
 
 } // namespace robotoc

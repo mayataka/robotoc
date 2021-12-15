@@ -18,10 +18,13 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Fqq_prev(),
     fx(Eigen::VectorXd::Zero(2*robot.dimv())),
     Qtt(0),
+    Qtt_prev(0),
     hx(Eigen::VectorXd::Zero(2*robot.dimv())),
+    ha(Eigen::VectorXd::Zero(robot.dimv())),
     hu(Eigen::VectorXd::Zero(robot.dimu())),
     Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     Qqf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
+    hf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -44,10 +47,13 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     Fqq_prev(),
     fx(),
     Qtt(0),
+    Qtt_prev(0),
     hx(),
+    ha(),
     hu(),
     Qff_full_(),
     Qqf_full_(),
+    hf_full_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
@@ -230,6 +236,17 @@ SplitKKTMatrix::hv() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::hf() {
+  return hf_full_.head(dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTMatrix::hf() const {
+  return hf_full_.head(dimf_);
+}
+
+
 inline void SplitKKTMatrix::setZero() {
   Fxx.setZero();
   Fvu.setZero();
@@ -242,8 +259,11 @@ inline void SplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   fx.setZero();
   Qtt = 0;
+  Qtt_prev = 0;
   hx.setZero();
   hu.setZero();
+  ha.setZero();
+  hf().setZero();
 }
 
 
@@ -271,6 +291,7 @@ inline bool SplitKKTMatrix::isDimensionConsistent() const {
   }
   if (fx.size() != 2*dimv_) return false;
   if (hx.size() != 2*dimv_) return false;
+  if (ha.size() != dimv_) return false;
   if (hu.size() != dimu_) return false;
   return true;
 }
@@ -287,12 +308,14 @@ inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
   if (!Qqf().isApprox(other.Qqf())) return false;
   if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
   if (!fx.isApprox(other.fx)) return false;
-  Eigen::VectorXd vec(1), other_vec(1);
-  vec << Qtt;
-  other_vec << other.Qtt;
+  Eigen::VectorXd vec(2), other_vec(2);
+  vec << Qtt, Qtt_prev;
+  other_vec << other.Qtt, other.Qtt_prev;
   if (!vec.isApprox(other_vec)) return false;
   if (!hx.isApprox(other.hx)) return false;
   if (!hu.isApprox(other.hu)) return false;
+  if (!ha.isApprox(other.ha)) return false;
+  if (!hf().isApprox(other.hf())) return false;
   return true;
 }
 
@@ -308,11 +331,13 @@ inline bool SplitKKTMatrix::hasNaN() const {
   if (Qqf().hasNaN()) return true;
   if (Fqq_prev.hasNaN()) return true;
   if (fx.hasNaN()) return true;
-  Eigen::VectorXd vec(1);
-  vec << Qtt;
+  Eigen::VectorXd vec(2);
+  vec << Qtt, Qtt_prev;
   if (vec.hasNaN()) return true;
   if (hx.hasNaN()) return true;
   if (hu.hasNaN()) return true;
+  if (ha.hasNaN()) return true;
+  if (hf().hasNaN()) return true;
   return false;
 }
 
@@ -333,8 +358,11 @@ inline void SplitKKTMatrix::setRandom() {
   Fqq_prev.setRandom();
   fx.setRandom();
   Qtt = Eigen::VectorXd::Random(1)[0];
+  Qtt_prev = Eigen::VectorXd::Random(1)[0];
   hx.setRandom();
   hu.setRandom();
+  ha.setRandom();
+  hf().setRandom();
 }
 
 

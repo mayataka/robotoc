@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/hybrid/dwell_time_lower_bound.hpp"
 
 
@@ -14,7 +14,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     min_dt = Eigen::VectorXd::Random(1).array().abs()[0];
-    barrier = 1e-04;
+    barrier = 1e-03;
     fraction_to_boundary_rule = 0.995;
     bound = DwellTimeLowerBound(barrier, fraction_to_boundary_rule);
     ts1 = Eigen::VectorXd::Random(1).array().abs()[0];
@@ -31,7 +31,25 @@ protected:
 };
 
 
+TEST_F(DwellTimeLowerBoundTest, testParam) {
+  EXPECT_DOUBLE_EQ(bound.barrier(), 1.0e-03);
+  EXPECT_DOUBLE_EQ(bound.fractionToBoundaryRule(), 0.995);
+  // overwrite parameters
+  const double barrier = 0.8;
+  const double fraction_to_boundary_rule = 0.5;
+  bound.setBarrier(barrier);
+  bound.setFractionToBoundaryRule(fraction_to_boundary_rule);
+  EXPECT_DOUBLE_EQ(bound.barrier(), barrier);
+  EXPECT_DOUBLE_EQ(bound.fractionToBoundaryRule(), fraction_to_boundary_rule);
+}
+
+
 TEST_F(DwellTimeLowerBoundTest, lub) {
+  // overwrite parameters
+  const double barrier = 1e-03;
+  const double fraction_to_boundary_rule = 0.95;
+  bound.setBarrier(barrier);
+  bound.setFractionToBoundaryRule(fraction_to_boundary_rule);
   bound.setSlack(min_dt, ts1, ts2);
   double slack_ref = ts2 - ts1 - min_dt;
   if (slack_ref <= 0) {
@@ -43,6 +61,9 @@ TEST_F(DwellTimeLowerBoundTest, lub) {
   double residual_ref = ts1 + min_dt - ts2 + slack_ref;
   double cmpl_ref = slack_ref * dual_ref - barrier;
   const double log_barrier = - barrier * std::log(slack_ref);
+  const double kkt_error = bound.KKTError();
+  const double kkt_error_ref = residual_ref*residual_ref + cmpl_ref*cmpl_ref;
+  EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   SplitKKTResidual kkt_res1, kkt_res2;
   bound.evalDerivatives_lub(kkt_res1, kkt_res2);
   double h1_ref = dual_ref;
@@ -75,6 +96,9 @@ TEST_F(DwellTimeLowerBoundTest, lb) {
   double residual_ref = ts1 + min_dt - ts2 + slack_ref;
   double cmpl_ref = slack_ref * dual_ref - barrier;
   const double log_barrier = - barrier * std::log(slack_ref);
+  const double kkt_error = bound.KKTError();
+  const double kkt_error_ref = residual_ref*residual_ref + cmpl_ref*cmpl_ref;
+  EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   SplitKKTResidual kkt_res2;
   bound.evalDerivatives_lb(kkt_res2);
   double h2_ref = - dual_ref;
@@ -101,6 +125,9 @@ TEST_F(DwellTimeLowerBoundTest, ub) {
   double residual_ref = ts1 + min_dt - ts2 + slack_ref;
   double cmpl_ref = slack_ref * dual_ref - barrier;
   const double log_barrier = - barrier * std::log(slack_ref);
+  const double kkt_error = bound.KKTError();
+  const double kkt_error_ref = residual_ref*residual_ref + cmpl_ref*cmpl_ref;
+  EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   SplitKKTResidual kkt_res1;
   bound.evalDerivatives_ub(kkt_res1);
   double h1_ref = dual_ref;

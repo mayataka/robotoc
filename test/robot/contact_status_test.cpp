@@ -30,6 +30,12 @@ TEST_F(ContactStatusTest, constructor) {
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     EXPECT_FALSE(contact_status.isContactActive(i));
   }
+  EXPECT_EQ(contact_status.contactPoints().size(), max_point_contacts);
+  EXPECT_EQ(contact_status.contactSurfacesRotations().size(), max_point_contacts);
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    EXPECT_TRUE(contact_status.contactPoint(i).isZero());
+    EXPECT_TRUE(contact_status.contactSurfaceRotation(i).isIdentity());
+  }
 }
 
 

@@ -3,10 +3,9 @@
 
 namespace robotoc {
 
-JointAccelerationLowerLimit::JointAccelerationLowerLimit(
-    const Robot& robot, const Eigen::VectorXd& amin, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointAccelerationLowerLimit::JointAccelerationLowerLimit(const Robot& robot, 
+                                                         const Eigen::VectorXd& amin)
+  : ConstraintComponentBase(),
     dimc_(amin.size()),
     amin_(amin) {
 }
@@ -34,6 +33,7 @@ KinematicsLevel JointAccelerationLowerLimit::kinematicsLevel() const {
 
 
 bool JointAccelerationLowerLimit::isFeasible(Robot& robot, 
+                                             const ContactStatus& contact_status,
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -46,6 +46,7 @@ bool JointAccelerationLowerLimit::isFeasible(Robot& robot,
 
 
 void JointAccelerationLowerLimit::setSlack(Robot& robot, 
+                                           const ContactStatus& contact_status,
                                            ConstraintComponentData& data, 
                                            const SplitSolution& s) const {
   data.slack = s.a.tail(dimc_) - amin_;
@@ -53,6 +54,7 @@ void JointAccelerationLowerLimit::setSlack(Robot& robot,
 
 
 void JointAccelerationLowerLimit::evalConstraint(Robot& robot, 
+                                                 const ContactStatus& contact_status,
                                                  ConstraintComponentData& data, 
                                                  const SplitSolution& s) const {
   data.residual = amin_ - s.a.tail(dimc_) + data.slack;
@@ -62,24 +64,25 @@ void JointAccelerationLowerLimit::evalConstraint(Robot& robot,
 
 
 void JointAccelerationLowerLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  kkt_residual.la.tail(dimc_).noalias() -= dt * data.dual;
+    Robot& robot, const ContactStatus& contact_status,
+    ConstraintComponentData& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
+  kkt_residual.la.tail(dimc_).noalias() -= data.dual;
 }
 
 
 void JointAccelerationLowerLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const double dt, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qaa.diagonal().tail(dimc_).array()
-      += dt * data.dual.array() / data.slack.array();
+      += data.dual.array() / data.slack.array();
   computeCondensingCoeffcient(data);
-  kkt_residual.la.tail(dimc_).noalias() -= dt * data.cond;
+  kkt_residual.la.tail(dimc_).noalias() -= data.cond;
 }
 
 
 void JointAccelerationLowerLimit::expandSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   data.dslack = d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);

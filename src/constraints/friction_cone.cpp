@@ -6,10 +6,8 @@
 
 namespace robotoc {
 
-FrictionCone::FrictionCone(const Robot& robot, const double mu, 
-                           const double barrier,
-                           const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+FrictionCone::FrictionCone(const Robot& robot, const double mu)
+  : ConstraintComponentBase(),
     dimv_(robot.dimv()),
     dimc_(5*robot.maxPointContacts()),
     max_point_contacts_(robot.maxPointContacts()),
@@ -106,14 +104,15 @@ void FrictionCone::allocateExtraData(ConstraintComponentData& data) const {
 }
 
 
-bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data, 
+bool FrictionCone::isFeasible(Robot& robot, const ContactStatus& contact_status,
+                              ConstraintComponentData& data, 
                               const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isContactActive(i)) {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
-      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
@@ -124,13 +123,14 @@ bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void FrictionCone::setSlack(Robot& robot, ConstraintComponentData& data, 
+void FrictionCone::setSlack(Robot& robot, const ContactStatus& contact_status, 
+                            ConstraintComponentData& data, 
                             const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
-    fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+    robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
     frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
     data.slack.template segment<5>(idx)
         = - data.residual.template segment<5>(idx);
@@ -138,17 +138,19 @@ void FrictionCone::setSlack(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void FrictionCone::evalConstraint(Robot& robot, ConstraintComponentData& data, 
+void FrictionCone::evalConstraint(Robot& robot, 
+                                  const ContactStatus& contact_status, 
+                                  ConstraintComponentData& data, 
                                   const SplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isContactActive(i)) {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
-      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
@@ -159,60 +161,55 @@ void FrictionCone::evalConstraint(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void FrictionCone::evalDerivatives(Robot& robot, ConstraintComponentData& data, 
-                                   const double dt, const SplitSolution& s, 
+void FrictionCone::evalDerivatives(Robot& robot, 
+                                   const ContactStatus& contact_status, 
+                                   ConstraintComponentData& data, 
+                                   const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const {
-  assert(dt > 0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isContactActive(i)) {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       const Eigen::VectorXd& fWi = fW(data, i);
       // Jacobian of the contact force expressed in the world frame fWi 
       // with respect to the configuration q.
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
-      dfWi_dq.setZero();
-      robot.getFrameJacobian(contact_frame_[i], dfWi_dq);
-      for (int j=0; j<dimv_; ++j) {
-        dfWi_dq.template topRows<3>().col(j)
-            = dfWi_dq.template bottomRows<3>().col(j).cross(fWi.template head<3>());
-      }
+      robot.getJacobianTransformFromLocalToWorld(contact_frame_[i], fWi, dfWi_dq);
       // Jacobian of the frition cone constraint with respect to the 
       // configuration, i.e., s.q.
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       dgi_dq.noalias() = cone_ * dfWi_dq.template topRows<3>();
       kkt_residual.lq().noalias()
-          += dt * dgi_dq.transpose() * data.dual.template segment<5>(idx);
+          += dgi_dq.transpose() * data.dual.template segment<5>(idx);
       // Jacobian of the frition cone constraint with respect to the contact
       // force expressed in the local frame, i.e., s.f[i].
       Eigen::MatrixXd& dgi_df = dg_df(data, i);
       dgi_df.noalias() = cone_ * robot.frameRotation(contact_frame_[i]);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dt * dgi_df.transpose() * data.dual.template segment<5>(idx);
+          += dgi_df.transpose() * data.dual.template segment<5>(idx);
       dimf_stack += 3;
     }
   }
 }
 
 
-void FrictionCone::condenseSlackAndDual(ConstraintComponentData& data, 
-                                        const double dt, const SplitSolution& s, 
+void FrictionCone::condenseSlackAndDual(const ContactStatus& contact_status, 
+                                        ConstraintComponentData& data, 
                                         SplitKKTMatrix& kkt_matrix, 
                                         SplitKKTResidual& kkt_residual) const {
-  assert(dt > 0);
   data.cond.setZero();
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
+    if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       computeCondensingCoeffcient<5>(data, idx);
       const Vector5d& condi = data.cond.template segment<5>(idx);
       const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       const Eigen::MatrixXd& dgi_df = dg_df(data, i);
-      kkt_residual.lq().noalias() += dt * dgi_dq.transpose() * condi;
+      kkt_residual.lq().noalias() += dgi_dq.transpose() * condi;
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dt * dgi_df.transpose() * condi;
+          += dgi_df.transpose() * condi;
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
       Eigen::MatrixXd& r_dgi_df = r_dg_df(data, i);
       Eigen::VectorXd& ri = r(data, i);
@@ -221,19 +218,19 @@ void FrictionCone::condenseSlackAndDual(ConstraintComponentData& data,
       dfWi_dq.template topRows<5>().noalias() = ri.asDiagonal() * dgi_dq;
       r_dgi_df.noalias() = ri.asDiagonal() * dgi_df;
       kkt_matrix.Qqq().noalias()
-          += dt * dgi_dq.transpose() * dfWi_dq.template topRows<5>();
+          += dgi_dq.transpose() * dfWi_dq.template topRows<5>();
       kkt_matrix.Qqf().template middleCols<3>(dimf_stack).noalias()
-          += dt * dgi_dq.transpose() * r_dgi_df; 
+          += dgi_dq.transpose() * r_dgi_df; 
       kkt_matrix.Qff().template block<3, 3>(dimf_stack, dimf_stack).noalias()
-          += dt * dgi_df.transpose() * r_dgi_df;
+          += dgi_df.transpose() * r_dgi_df;
       dimf_stack += 3;
     }
   }
 }
 
 
-void FrictionCone::expandSlackAndDual(ConstraintComponentData& data, 
-                                      const SplitSolution& s, 
+void FrictionCone::expandSlackAndDual(const ContactStatus& contact_status,
+                                      ConstraintComponentData& data, 
                                       const SplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
@@ -242,7 +239,7 @@ void FrictionCone::expandSlackAndDual(ConstraintComponentData& data,
   data.ddual.fill(1.0);
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
+    if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       Eigen::MatrixXd& dgi_df = dg_df(data, i);

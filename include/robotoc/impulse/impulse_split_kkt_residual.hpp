@@ -135,6 +135,16 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
+  /// @brief The squared norm of the primal residual (constraint violation).
+  ///
+  double primal_inf;
+
+  ///
+  /// @brief The squared norm of the dual residual.
+  ///
+  double dual_inf;
+
+  ///
   /// @brief The squared norm of the KKT residual.
   ///
   double kkt_error;

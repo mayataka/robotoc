@@ -17,7 +17,7 @@ class PeriodicFootTrackRef2 : public TimeVaryingTaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] p0 Initial foot position reference.
+  /// @param[in] x3d0 Initial foot position reference.
   /// @param[in] step_length The step length of the gait.
   /// @param[in] step_height The step height of the gait.
   /// @param[in] t0 Start time of the reference tracking.
@@ -26,7 +26,7 @@ public:
   /// @param[in] is_first_step_half If true, the length ofh te first reference 
   /// foot step is half. 
   ///
-  PeriodicFootTrackRef2(const Eigen::Vector3d p0, const double step_length, 
+  PeriodicFootTrackRef2(const Eigen::Vector3d x3d0, const double step_length, 
                         const double step_height, const double t0, 
                         const double period_swing, const double period_stance, 
                         const bool is_first_step_half);
@@ -36,12 +36,12 @@ public:
   ///
   ~PeriodicFootTrackRef2();
 
-  void update_q_3d_ref(const double t, Eigen::VectorXd& q_3d_ref) const override;
+  void update_x3d_ref(const double t, Eigen::VectorXd& x3d_ref) const override;
 
   bool isActive(const double t) const override;
 
 private:
-  Eigen::Vector3d p0_;
+  Eigen::Vector3d x3d0_;
   double step_length_, step_height_, t0_, period_swing_, period_stance_,
          period_;
   bool is_first_step_half_;

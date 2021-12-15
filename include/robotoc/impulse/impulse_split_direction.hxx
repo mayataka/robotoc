@@ -13,6 +13,7 @@ inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot)
   : dx(Eigen::VectorXd::Zero(2*robot.dimv())),
     dlmdgmm(Eigen::VectorXd::Zero(2*robot.dimv())),
     dts(0.0),
+    dts_next(0.0),
     ddvf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -24,6 +25,7 @@ inline ImpulseSplitDirection::ImpulseSplitDirection()
   : dx(),
     dlmdgmm(),
     dts(0.0),
+    dts_next(0.0),
     ddvf_full_(),
     dbetamu_full_(),
     dimv_(0), 
@@ -37,14 +39,7 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 
 inline void ImpulseSplitDirection::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
-}
-
-
-inline void ImpulseSplitDirection::setImpulseStatusByDimension(const int dimi) {
-  assert(dimi >= 0);
-  assert(dimi % 3 == 0);
-  dimi_ = dimi;
+  dimi_ = impulse_status.dimi();
 }
 
 
@@ -172,6 +167,8 @@ inline void ImpulseSplitDirection::setZero() {
   ddvf().setZero();
   dlmdgmm.setZero();
   dbetamu().setZero();
+  dts = 0.0;
+  dts_next = 0.0;
 }
 
 
@@ -196,6 +193,12 @@ inline bool ImpulseSplitDirection::isApprox(
   if (!ddvf().isApprox(other.ddvf())) return false;
   if (!dlmdgmm.isApprox(other.dlmdgmm)) return false;
   if (!dbetamu().isApprox(other.dbetamu())) return false;
+  Eigen::VectorXd vec(2), other_vec(2);
+  vec << dts, dts_next;
+  other_vec << other.dts, other.dts_next;
+  if (!vec.isApprox(other_vec)) {
+    return false;
+  } 
   return true;
 }
 
@@ -206,6 +209,8 @@ inline void ImpulseSplitDirection::setRandom() {
   ddvf().setRandom();
   dlmdgmm.setRandom();
   dbetamu().setRandom();
+  dts = Eigen::VectorXd::Random(1)[0];
+  dts_next = Eigen::VectorXd::Random(1)[0];
 }
 
 

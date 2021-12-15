@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -17,6 +18,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
@@ -105,8 +107,9 @@ int main () {
   const double T = 0.5;
   const int N = 20;
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
-                                T, N, nthreads);
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;
@@ -120,9 +123,11 @@ int main () {
   ocp_solver.setSolution("f", f_init);
 
   ocp_solver.initConstraints(t);
+  ocp_solver.solve(t, q, v);
+  std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
-  // robotoc::benchmark::convergence(ocp_solver, t, q, v, 10, false);
-  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, 10000, false);
+  const int num_iteration = 10000;
+  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
 
   // std::cout << robot << std::endl;
 

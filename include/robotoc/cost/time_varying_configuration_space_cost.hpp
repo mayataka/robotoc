@@ -4,11 +4,16 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/cost/cost_function_component_base.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace robotoc {
@@ -123,9 +128,9 @@ public:
 
   ///
   /// @brief Sets the time-varying reference configuration. 
-  /// @param[in] ref Shared ptr time-varying reference position.
+  /// @param[in] q_ref Shared ptr to the time-varying reference position.
   ///
-  void set_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref);
+  void set_q_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& q_ref);
 
   ///
   /// @brief Sets the weight vector on the configuration q. 
@@ -135,32 +140,33 @@ public:
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the configuration q. 
-  /// @param[in] qf_weight Terminal weight vector on the configuration q. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the terminal stage. 
+  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the impulse stages. 
+  /// @param[in] qi_weight Weight vector on the configuration q at the impulse 
+  /// stages. Size must be Robot::dimv().
   ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 
   bool useKinematics() const override;
 
-  double evalStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                       const double dt, const SplitSolution& s) const override;
+  double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
+                       CostFunctionData& data, const double t, const double dt, 
+                       const SplitSolution& s) const override;
 
-  void evalStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                const double t, const double dt, 
-                                const SplitSolution& s, 
+  void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                                CostFunctionData& data, const double t, 
+                                const double dt, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override;
 
-  void evalStageCostHessian(Robot& robot, CostFunctionData& data, 
-                            const double t, const double dt, 
-                            const SplitSolution& s, 
+  void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
+                            CostFunctionData& data, const double t, 
+                            const double dt, const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override;
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 
@@ -174,21 +180,23 @@ public:
                                const double t, const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, CostFunctionData& data, 
-                         const double t, 
+  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                         CostFunctionData& data, const double t, 
                          const ImpulseSplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                  const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                                  CostFunctionData& data, const double t, 
+                                  const ImpulseSplitSolution& s, 
                                   ImpulseSplitKKTResidual& kkt_residual) const;
 
-  void evalImpulseCostHessian(Robot& robot, CostFunctionData& data, 
-                              const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+                              CostFunctionData& data, const double t, 
+                              const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
 private:
   int dimq_, dimv_;
-  std::shared_ptr<TimeVaryingConfigurationRefBase> ref_;
+  std::shared_ptr<TimeVaryingConfigurationRefBase> q_ref_;
   Eigen::VectorXd q_weight_, qf_weight_, qi_weight_;
 
 };

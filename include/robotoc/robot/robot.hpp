@@ -302,19 +302,45 @@ public:
   void getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const;
 
   ///
+  /// @brief Transforms 3D quantity from local frame to the world frame. 
+  /// @param[in] frame_id Index of the frame whose local coordinate is of 
+  /// interest.
+  /// @param[in] vec_local 3-dimensional vector-valued quantity expressed at the 
+  /// local frame.
+  /// @param[out] vec_world 3-dimensional vector-valued quantity expressed at 
+  /// the world frame.
+  ///
+  template <typename Vector3dType>
+  void transformFromLocalToWorld(
+      const int frame_id, const Eigen::Vector3d& vec_local, 
+      const Eigen::MatrixBase<Vector3dType>& vec_world) const;
+
+  ///
+  /// @brief Jacobian of the transformation mapping of a 3D quantity from local 
+  /// frame to the world frame. 
+  /// @param[in] frame_id Index of the frame whose local coordinate is of 
+  /// interest.
+  /// @param[in] vec_world 3-dimensional vector-valued quantity expressed at 
+  /// the world frame.
+  /// @param[out] J The Jacobian. Size must be 6 x Robot::dimv(). The result is
+  /// stored at the top 3 rows. 
+  ///
+  template <typename Vector3dType, typename MatrixType>
+  void getJacobianTransformFromLocalToWorld(
+      const int frame_id, const Eigen::MatrixBase<Vector3dType>& vec_world,
+      const Eigen::MatrixBase<MatrixType>& J);
+
+  ///
   /// @brief Computes the residual of the contact constriants represented by 
   /// Baumgarte's stabilization method. Before calling this function, 
   /// updateKinematics() must be called.
   /// @param[in] contact_status Contact status.
-  /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::maxPointContacts(). 
   /// @param[out] baumgarte_residual Residuals in the contact constraints. Size
   /// must be ContactStatus::dimf().
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
       const ContactStatus& contact_status, 
-      const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
@@ -367,15 +393,12 @@ public:
   /// @brief Computes the residual of the contact position constraint at the 
   /// impulse. Before calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::maxPointContacts(). 
   /// @param[out] contact_residual Residuals in the contact position constraint.
   /// Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
   void computeContactPositionResidual(
       const ImpulseStatus& impulse_status, 
-      const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///

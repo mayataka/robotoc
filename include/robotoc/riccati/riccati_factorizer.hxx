@@ -7,10 +7,12 @@
 
 namespace robotoc {
 
-inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot) 
+inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot, 
+                                            const double max_dts0) 
   : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
+    max_dts0_(max_dts0),
     llt_(robot.dimu()),
     llt_s_(),
     backward_recursion_(robot) {
@@ -21,6 +23,7 @@ inline RiccatiFactorizer::RiccatiFactorizer()
   : has_floating_base_(false),
     dimv_(0),
     dimu_(0),
+    max_dts0_(0),
     llt_(),
     llt_s_(),
     backward_recursion_() {
@@ -28,6 +31,12 @@ inline RiccatiFactorizer::RiccatiFactorizer()
 
 
 inline RiccatiFactorizer::~RiccatiFactorizer() {
+}
+
+
+inline void RiccatiFactorizer::setRegularization(const double max_dts0) {
+  assert(max_dts0 > 0);
+  max_dts0_ = max_dts0;
 }
 
 
@@ -46,6 +55,71 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, lqr_policy,
                                                     riccati);
+}
+
+
+inline void RiccatiFactorizer::backwardRiccatiRecursion(
+    const SplitRiccatiFactorization& riccati_next,  SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual, SplitRiccatiFactorization& riccati, 
+    LQRPolicy& lqr_policy, const bool sto, const bool has_next_sto_phase) {
+  backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual,
+                           riccati, lqr_policy);
+  if (sto) {
+    backward_recursion_.factorizeHamiltonian(riccati_next, kkt_matrix, riccati,
+                                             has_next_sto_phase);
+    lqr_policy.T.noalias() = - llt_.solve(riccati.psi_u);
+    if (has_next_sto_phase) {
+      lqr_policy.W.noalias() = - llt_.solve(riccati.phi_u);
+    }
+    else {
+      lqr_policy.W.setZero();
+    }
+    backward_recursion_.factorizeSTOFactorization(riccati_next, kkt_matrix, 
+                                                  kkt_residual, lqr_policy, 
+                                                  riccati, has_next_sto_phase);
+  }
+  else {
+    riccati.Psi.setZero();
+    riccati.xi = 0.;
+    riccati.chi = 0.;
+    riccati.eta = 0.;
+  }
+}
+
+
+inline void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
+    const SplitRiccatiFactorization& riccati, 
+    SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy, 
+    const bool has_next_sto_phase) const {
+  riccati_m.P = riccati.P;
+  riccati_m.s = riccati.s;
+  riccati_m.Psi.setZero();
+  riccati_m.Phi = riccati.Psi;
+  riccati_m.xi = 0.0;
+  riccati_m.chi = 0.0;
+  riccati_m.rho = riccati.xi;
+  riccati_m.eta = 0.0;
+  riccati_m.iota = riccati.eta;
+  if (has_next_sto_phase) {
+    double sgm = riccati.xi - 2.0 * riccati.chi + riccati.rho;
+    if ((sgm*max_dts0_) < std::abs(riccati.eta-riccati.iota) || sgm < keps_) {
+      // std::cout << "sgm reg ! sgm = " << sgm << std::endl;
+      // std::cout << "sgm * max_dts0_ = " << sgm*max_dts0_ << std::endl;
+      // std::cout << "std::abs(riccati.eta-riccati.iota) = " << std::abs(riccati.eta-riccati.iota) << std::endl;
+      sgm = std::abs(sgm) + std::abs(riccati.eta-riccati.iota) / max_dts0_;
+    }
+    sto_policy.dtsdx  = - (1.0/sgm) * (riccati.Psi-riccati.Phi);
+    sto_policy.dtsdts =   (1.0/sgm) * (riccati.xi-riccati.chi);
+    sto_policy.dts0   = - (1.0/sgm) * (riccati.eta-riccati.iota);
+    riccati_m.s.noalias()   
+        += (1.0/sgm) * (riccati.Psi-riccati.Phi) * (riccati.eta-riccati.iota);
+    riccati_m.Phi.noalias() 
+        -= (1.0/sgm) * (riccati.Psi-riccati.Phi) * (riccati.xi-riccati.chi);
+    riccati_m.rho
+        = riccati.xi - (1.0/sgm) * (riccati.xi-riccati.chi) * (riccati.xi-riccati.chi);
+    riccati_m.iota
+        = riccati.eta - (1.0/sgm) * (riccati.xi-riccati.chi)  * (riccati.eta-riccati.iota);
+  }
 }
 
 
@@ -93,6 +167,51 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
+    const SwitchingConstraintJacobian& sc_jacobian,
+    const SwitchingConstraintResidual& sc_residual, 
+    SplitRiccatiFactorization& riccati,
+    SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy,
+    const bool sto, const bool has_next_sto_phase) {
+  backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, sc_jacobian, 
+                           sc_residual, riccati, c_riccati, lqr_policy);
+  if (sto) {
+    backward_recursion_.factorizeHamiltonian(riccati_next, kkt_matrix, riccati,
+                                             has_next_sto_phase);
+    lqr_policy.T.noalias()  = - c_riccati.Ginv * riccati.psi_u;
+    lqr_policy.T.noalias() -= c_riccati.SinvDGinv().transpose() * sc_jacobian.Phit();
+    if (has_next_sto_phase) {
+      lqr_policy.W.noalias()  = - c_riccati.Ginv * riccati.phi_u;
+    }
+    else {
+      lqr_policy.W.setZero();
+    }
+    c_riccati.mt().noalias()  = llt_s_.solve(sc_jacobian.Phit());
+    c_riccati.mt().noalias() -= c_riccati.SinvDGinv() * riccati.psi_u;
+    if (has_next_sto_phase) {
+      c_riccati.mt_next().noalias() = - c_riccati.SinvDGinv() * riccati.phi_u;
+    }
+    else {
+      c_riccati.mt_next().setZero();
+    }
+    backward_recursion_.factorizeSTOFactorization(riccati_next, kkt_matrix, 
+                                                  kkt_residual, lqr_policy, 
+                                                  riccati, has_next_sto_phase);
+    riccati.Psi.noalias() += c_riccati.M().transpose() * sc_jacobian.Phit();
+    riccati.xi += c_riccati.mt().dot(sc_jacobian.Phit());
+    if (has_next_sto_phase) {
+      riccati.chi += c_riccati.mt_next().dot(sc_jacobian.Phit());
+    }
+    else {
+      riccati.chi = 0.0;
+    }
+    riccati.eta += c_riccati.m().dot(sc_jacobian.Phit());
+  }
+}
+
+
+inline void RiccatiFactorizer::backwardRiccatiRecursion(
+    const SplitRiccatiFactorization& riccati_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix);
@@ -101,22 +220,49 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
+inline void RiccatiFactorizer::backwardRiccatiRecursion(
+    const SplitRiccatiFactorization& riccati_next, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
+    SplitRiccatiFactorization& riccati, const bool sto) {
+  backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
+  if (sto) {
+    backward_recursion_.factorizeSTOFactorization(riccati_next, kkt_matrix, 
+                                                  kkt_residual, riccati);
+  }
+}
+
+
+inline void RiccatiFactorizer::computeSwitchingTimeDirection(
+    const STOPolicy& sto_policy, SplitDirection& d, 
+    const bool has_prev_sto_phase) {
+  d.dts_next = sto_policy.dtsdx.dot(d.dx) + sto_policy.dts0;
+  if (has_prev_sto_phase) {
+    d.dts_next += sto_policy.dtsdts * d.dts;
+  }
+}
+
+
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirectionType& d_next, 
-    const bool sto) const {
+    const bool sto, const bool has_next_sto_phase) const {
   d.du.noalias()  = lqr_policy.K * d.dx;
   d.du.noalias() += lqr_policy.k;
   if (sto) {
-    d.du.noalias() += lqr_policy.T * d.dts;
+    d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
+    if (has_next_sto_phase) {
+      d.du.noalias() -= lqr_policy.W * d.dts_next;
+    }
   }
   d_next.dx = kkt_residual.Fx;
   d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
   d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
   if (sto) {
-    d_next.dx.noalias() += kkt_matrix.fx * d.dts;
+    d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
   }
+  d_next.dts = d.dts;
+  d_next.dts_next = d.dts_next;
 }
 
 
@@ -126,30 +272,46 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx = kkt_residual.Fx;
   d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;
+  d_next.dts = d.dts;
+  d_next.dts_next = d.dts_next;
 }
 
 
-template <typename SplitDirectionType>
 inline void RiccatiFactorizer::computeCostateDirection(
-    const SplitRiccatiFactorization& riccati, SplitDirectionType& d,
+    const SplitRiccatiFactorization& riccati, SplitDirection& d,
+    const bool sto, const bool has_next_sto_phase) {
+  d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
+  if (sto) {
+    d.dlmdgmm.noalias() += riccati.Psi * (d.dts_next-d.dts);
+    if (has_next_sto_phase) {
+      d.dlmdgmm.noalias() -= riccati.Phi * d.dts_next;
+    }
+  }
+}
+
+
+inline void RiccatiFactorizer::computeCostateDirection(
+    const SplitRiccatiFactorization& riccati, ImpulseSplitDirection& d,
     const bool sto) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
   if (sto) {
-    d.dlmdgmm.noalias() += riccati.Gmm * d.dts;
+    d.dlmdgmm.noalias() -= riccati.Phi * d.dts_next;
   }
 }
 
 
 inline void RiccatiFactorizer::computeLagrangeMultiplierDirection(
     const SplitConstrainedRiccatiFactorization& c_riccati, 
-    SplitDirection& d, const bool sto) {
+    SplitDirection& d, const bool sto, const bool has_next_sto_phase) {
   d.dxi().noalias()  = c_riccati.M() * d.dx;
   d.dxi().noalias() += c_riccati.m();
   if (sto) {
-    d.dxi().noalias() += c_riccati.mt() * d.dts;
+    d.dxi().noalias() += c_riccati.mt() * (d.dts_next-d.dts);
+    if (has_next_sto_phase) {
+      d.dxi().noalias() -= c_riccati.mt_next() * d.dts_next;
+    }
   }
 }
-
 
 } // namespace robotoc
 

@@ -8,10 +8,10 @@ namespace robotoc {
 
 TimeVaryingConfigurationSpaceCost::TimeVaryingConfigurationSpaceCost(
     const Robot& robot,
-    const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref) 
+    const std::shared_ptr<TimeVaryingConfigurationRefBase>& q_ref) 
   : dimq_(robot.dimq()),
     dimv_(robot.dimv()),
-    ref_(ref),
+    q_ref_(q_ref),
     q_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     qf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     qi_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
@@ -21,7 +21,7 @@ TimeVaryingConfigurationSpaceCost::TimeVaryingConfigurationSpaceCost(
 TimeVaryingConfigurationSpaceCost::TimeVaryingConfigurationSpaceCost()
   : dimq_(0),
     dimv_(0),
-    ref_(),
+    q_ref_(),
     q_weight_(),
     qf_weight_(),
     qi_weight_() {
@@ -32,9 +32,9 @@ TimeVaryingConfigurationSpaceCost::~TimeVaryingConfigurationSpaceCost() {
 }
 
 
-void TimeVaryingConfigurationSpaceCost::set_ref(
-    const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref) {
-  ref_ = ref;
+void TimeVaryingConfigurationSpaceCost::set_q_ref(
+    const std::shared_ptr<TimeVaryingConfigurationRefBase>& q_ref) {
+  q_ref_ = q_ref;
 }
 
 
@@ -92,10 +92,10 @@ bool TimeVaryingConfigurationSpaceCost::useKinematics() const {
 
 
 double TimeVaryingConfigurationSpaceCost::evalStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s) const {
-  if (ref_->isActive(t)) {
-    ref_->update_q_ref(robot, t, data.q_ref);
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s) const {
+  if (q_ref_->isActive(t)) {
+    q_ref_->update_q_ref(robot, t, data.q_ref);
     double l = 0;
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (q_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
@@ -108,10 +108,11 @@ double TimeVaryingConfigurationSpaceCost::evalStageCost(
 
 
 void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (ref_->isActive(t)) {
-    ref_->update_q_ref(robot, t, data.q_ref);
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
+  if (q_ref_->isActive(t)) {
+    q_ref_->update_q_ref(robot, t, data.q_ref);
     if (robot.hasFloatingBase()) {
       robot.dSubtractConfiguration_dqf(s.q, data.q_ref, data.J_qdiff);
       kkt_residual.lq().noalias()
@@ -125,9 +126,10 @@ void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
 
 
 void TimeVaryingConfigurationSpaceCost::evalStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (ref_->isActive(t)) {
+    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
+    const double t, const double dt, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) const {
+  if (q_ref_->isActive(t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
@@ -142,8 +144,8 @@ void TimeVaryingConfigurationSpaceCost::evalStageCostHessian(
 double TimeVaryingConfigurationSpaceCost::evalTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
-  if (ref_->isActive(t)) {
-    ref_->update_q_ref(robot, t, data.q_ref);
+  if (q_ref_->isActive(t)) {
+    q_ref_->update_q_ref(robot, t, data.q_ref);
     double l = 0;
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (qf_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
@@ -158,7 +160,7 @@ double TimeVaryingConfigurationSpaceCost::evalTerminalCost(
 void TimeVaryingConfigurationSpaceCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (ref_->isActive(t)) {
+  if (q_ref_->isActive(t)) {
     if (robot.hasFloatingBase()) {
       robot.dSubtractConfiguration_dqf(s.q, data.q_ref, data.J_qdiff);
       kkt_residual.lq().noalias()
@@ -174,7 +176,7 @@ void TimeVaryingConfigurationSpaceCost::evalTerminalCostDerivatives(
 void TimeVaryingConfigurationSpaceCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (ref_->isActive(t)) {
+  if (q_ref_->isActive(t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;
@@ -187,10 +189,10 @@ void TimeVaryingConfigurationSpaceCost::evalTerminalCostHessian(
 
 
 double TimeVaryingConfigurationSpaceCost::evalImpulseCost(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s) const {
-  if (ref_->isActive(t)) {
-    ref_->update_q_ref(robot, t, data.q_ref);
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s) const {
+  if (q_ref_->isActive(t)) {
+    q_ref_->update_q_ref(robot, t, data.q_ref);
     double l = 0;
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (qi_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
@@ -203,10 +205,10 @@ double TimeVaryingConfigurationSpaceCost::evalImpulseCost(
 
 
 void TimeVaryingConfigurationSpaceCost::evalImpulseCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, 
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (ref_->isActive(t)) {
+  if (q_ref_->isActive(t)) {
     if (robot.hasFloatingBase()) {
       robot.dSubtractConfiguration_dqf(s.q, data.q_ref, data.J_qdiff);
       kkt_residual.lq().noalias()
@@ -220,9 +222,10 @@ void TimeVaryingConfigurationSpaceCost::evalImpulseCostDerivatives(
 
 
 void TimeVaryingConfigurationSpaceCost::evalImpulseCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (ref_->isActive(t)) {
+    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+    const double t, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix) const {
+  if (q_ref_->isActive(t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += data.J_qdiff.transpose() * qi_weight_.asDiagonal() * data.J_qdiff;

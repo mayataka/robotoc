@@ -9,28 +9,27 @@
 
 namespace robotoc {
 
-MPCQuadrupedalWalking::MPCQuadrupedalWalking(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints, const double T, 
-    const int N, const int max_num_steps, const int nthreads)
-  : robot_(robot),
-    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_num_steps)),
-    ocp_solver_(robot, contact_sequence_, cost, constraints, T, N, nthreads), 
-    cs_standing_(robot.createContactStatus()),
-    cs_lf_(robot.createContactStatus()),
-    cs_lh_(robot.createContactStatus()),
-    cs_rf_(robot.createContactStatus()),
-    cs_rh_(robot.createContactStatus()),
+MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp, 
+                                             const int nthreads)
+  : robot_(ocp.robot()),
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(
+        ocp.robot(), ocp.maxNumEachDiscreteEvents())),
+    ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
+    cs_standing_(ocp.robot().createContactStatus()),
+    cs_lf_(ocp.robot().createContactStatus()),
+    cs_lh_(ocp.robot().createContactStatus()),
+    cs_rf_(ocp.robot().createContactStatus()),
+    cs_rh_(ocp.robot().createContactStatus()),
     contact_points_(),
     step_length_(0),
     step_height_(0),
     swing_time_(0),
     t0_(0),
-    T_(T),
-    dt_(T/N),
-    dtm_(1.5*(T/N)),
+    T_(ocp.T()),
+    dt_(ocp.T()/ocp.N()),
+    dtm_(1.5*(ocp.T()/ocp.N())),
     ts_last_(0),
-    N_(N),
+    N_(ocp.N()),
     current_step_(0),
     predict_step_(0) {
   cs_standing_.activateContacts({0, 1, 2, 3});
@@ -80,7 +79,7 @@ void MPCQuadrupedalWalking::setGaitPattern(const double step_length,
 
 void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, 
-                                 const int num_iteration) {
+                                 const SolverOptions& solver_options) {
   try {
     if (t >= t0_) {
       throw std::out_of_range(
@@ -120,24 +119,27 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot_.totalWeight();
   ocp_solver_.setSolution("f", f_init);
-  ocp_solver_.initConstraints(t);
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver_.updateSolution(t, q, v);
-  }
+  ocp_solver_.setSolverOptions(solver_options);
+  ocp_solver_.solve(t, q, v, true);
   ts_last_ = t0_;
+}
+
+
+void MPCQuadrupedalWalking::setSolverOptions(
+    const SolverOptions& solver_options) {
+  ocp_solver_.setSolverOptions(solver_options);
 }
 
 
 void MPCQuadrupedalWalking::updateSolution(const double t, 
                                            const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v, 
-                                           const int num_iteration) {
+                                           const Eigen::VectorXd& v) {
   const bool add_step = addStep(t);
-  const auto ts = ocp_solver_.getSolution("ts");
+  const auto ts = contact_sequence_->eventTimes();
   bool remove_step = false;
   if (!ts.empty()) {
-    if (ts.front().coeff(0) < t+min_dt) {
-      ts_last_ = ts.front().coeff(0);
+    if (ts.front() < t+min_dt) {
+      ts_last_ = ts.front();
       ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
@@ -149,10 +151,7 @@ void MPCQuadrupedalWalking::updateSolution(const double t,
   if (add_step || remove_step) {
     ocp_solver_.initConstraints(t);
   }
-
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver_.updateSolution(t, q, v);
-  }
+  ocp_solver_.solve(t, q, v, false);
 }
 
 
@@ -163,12 +162,11 @@ const Eigen::VectorXd& MPCQuadrupedalWalking::getInitialControlInput() const {
 
 double MPCQuadrupedalWalking::KKTError(const double t, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v) {
-  ocp_solver_.computeKKTResidual(t, q, v);
-  return ocp_solver_.KKTError();
+  return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCQuadrupedalWalking::KKTError() {
+double MPCQuadrupedalWalking::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
@@ -183,9 +181,9 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
   }
   else {
     double tt = ts_last_ + swing_time_;
-    const auto ts = ocp_solver_.getSolution("ts");
+    const auto ts = contact_sequence_->eventTimes();
     if (!ts.empty()) {
-      tt = ts.back().coeff(0) + swing_time_;
+      tt = ts.back() + swing_time_;
     }
     if (tt < t+T_-dtm_) {
       if (predict_step_%4 == 1) {
@@ -284,11 +282,6 @@ void MPCQuadrupedalWalking::resetContactPoints(const Eigen::VectorXd& q) {
     }
     contact_sequence_->setContactPoints(step-current_step_, contact_points_);
   }
-}
-
-
-void MPCQuadrupedalWalking::showInfo() const {
-  std::cout << ocp_solver_ << std::endl;
 }
 
 } // namespace robotoc 

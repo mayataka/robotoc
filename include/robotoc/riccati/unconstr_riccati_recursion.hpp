@@ -9,6 +9,7 @@
 #include "robotoc/ocp/direction.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
+#include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/riccati/unconstr_riccati_factorizer.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
@@ -32,11 +33,9 @@ class UnconstrRiccatiRecursion {
 public:
   ///
   /// @brief Construct a Riccati recursion solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. 
+  /// @param[in] ocp Optimial control problem. 
   ///
-  UnconstrRiccatiRecursion(const Robot& robot, const double T, const int N);
+  UnconstrRiccatiRecursion(const UnconstrOCP& ocp);
 
   ///
   /// @brief Default constructor. 
@@ -86,20 +85,14 @@ public:
                                Direction& d) const;
 
   ///
-  /// @brief Gets of the state feedback gain of the LQR subproblem of the 
-  /// specified time stage. 
-  /// @param[in] time_stage Time stage of interested. 
-  /// @param[in, out] da_dq The state feedback gain of the optimal joint 
-  /// acceleration w.r.t the joint configuration. 
-  /// @param[in, out] da_dv The state feedback gain of the optimal joint 
-  /// acceleration w.r.t the joint velocity. 
+  /// @brief Gets of the LQR policies over the horizon. 
+  /// @return const reference to the LQR policies.
   ///
-  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& da_dq, 
-                            Eigen::MatrixXd& da_dv) const;
+  const std::vector<LQRPolicy>& getLQRPolicy() const;
 
 private:
   int N_;
-  double T_, dt_;
+  double dt_;
   UnconstrRiccatiFactorizer factorizer_;
   std::vector<LQRPolicy> lqr_policy_;
 

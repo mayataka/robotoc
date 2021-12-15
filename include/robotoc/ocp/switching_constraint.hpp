@@ -95,7 +95,7 @@ public:
       SwitchingConstraintResidual& sc_residual);
 
 private:
-  Eigen::VectorXd q_, dq_;
+  Eigen::VectorXd q_, dq_, PqT_xi_;
   bool has_floating_base_;
 
 };

@@ -17,6 +17,8 @@
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
+#include "robotoc/solver/solver_options.hpp"
+#include "robotoc/solver/solver_statistics.hpp"
 
 
 namespace robotoc {
@@ -31,17 +33,15 @@ class UnconstrOCPSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] ocp Optimal control problem. 
+  /// @param[in] solver_options Solver options. Default is SolverOptions::defaultOptions().
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnconstrOCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-                    const std::shared_ptr<Constraints>& constraints, 
-                    const double T, const int N, const int nthreads=1);
+  UnconstrOCPSolver(
+      const UnconstrOCP& ocp, 
+      const SolverOptions& solver_options=SolverOptions::defaultOptions(), 
+      const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -74,21 +74,43 @@ public:
   UnconstrOCPSolver& operator=(UnconstrOCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Sets the solver option. 
+  /// @param[in] solver_options Solver options.  
+  ///
+  void setSolverOptions(const SolverOptions& solver_options);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   ///
   void initConstraints();
 
   ///
-  /// @brief Updates the solution by computing the primal-dual Newon direction.
+  /// @brief Performs single Newton-type iteration, computes the primal-dual 
+  /// Newon direction, and updates the solution.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] line_search If true, filter line search is enabled. If false
-  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const bool line_search=false);
+                      const Eigen::VectorXd& v);
+
+  ///
+  /// @brief Solves the optimal control problem. Internally calls 
+  /// updateSolution().
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @param[in] init_solver If true, initializes the solver, that is, calls
+  /// initConstraints() and clears the line search filter. Default is true.
+  ///
+  void solve(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
+             const bool init_solver=true);
+  ///
+  /// @brief Gets the solver statistics.
+  /// @return Solver statistics.
+  ///
+  const SolverStatistics& getSolverStatistics() const;
 
   ///
   /// @brief Get the split solution of a time stage. For example, the control 
@@ -107,17 +129,10 @@ public:
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
   ///
-  /// @brief Gets the state-feedback gain of the optimal joint acceleration
-  /// w.r.t. the joint configuration and velocity.
-  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
-  /// than N.
-  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
-  /// Size must be Robot::dimu() x Robot::dimv().
-  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
-  /// Size must be Robot::dimu() x Robot::dimv().
+  /// @brief Gets of the local LQR policies over the horizon. 
+  /// @return const reference to the local LQR policies.
   ///
-  void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  const std::vector<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Sets the solution over the horizon. 
@@ -127,26 +142,22 @@ public:
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
-  /// @brief Clear the line search filter. 
-  ///
-  void clearLineSearchFilter();
-
-  ///
-  /// @brief Computes the KKT residual of the optimal control problem. 
+  /// @brief Computes the KKT residual of the optimal control problem and 
+  /// returns the KKT error, that is, the l2-norm of the KKT residual. 
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @return The KKT error, that is, the l2-norm of the KKT residual.
   ///
-  void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v);
+  double KKTError(const double t, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
 
   ///
-  /// @brief Returns the l2-norm of the KKT residuals.
-  /// UnconstrOCPsolver::updateSolution() or  
-  /// UnconstrOCPsolver::computeKKTResidual()must be computed.  
+  /// @brief Returns the l2-norm of the KKT residuals using the results of 
+  /// UnconstrOCPsolver::updateSolution() or UnconstrOCPsolver::solve().
   /// @return The l2-norm of the KKT residual.
   ///
-  double KKTError();
+  double KKTError() const;
 
   ///
   /// @brief Returns the value of the cost function.
@@ -175,6 +186,8 @@ private:
   int N_, nthreads_;
   double T_, dt_;
   Eigen::VectorXd primal_step_size_, dual_step_size_ ;
+  SolverOptions solver_options_;
+  SolverStatistics solver_statistics_;
 
 };
 

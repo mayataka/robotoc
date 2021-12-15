@@ -1,6 +1,6 @@
 #include "direction_factory.hpp"
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -24,7 +24,7 @@ Direction CreateDirection(const Robot& robot,
     return CreateDirection(robot, N, max_num_impulse);
   }
   else {
-    HybridOCPDiscretization discretization(T, N, max_num_impulse);
+    TimeDiscretization discretization(T, N, max_num_impulse);
     discretization.discretize(contact_sequence, t);
     Direction d(robot, N, max_num_impulse);
     for (int i=0; i<=N; ++i) {

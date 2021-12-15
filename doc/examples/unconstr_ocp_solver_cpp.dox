@@ -12,6 +12,8 @@ Required header files are as follows.
 
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
+#include "robotoc/unconstr/unconstr_ocp.hpp"
+#include "robotoc/unconstr/unconstr_parnmpc.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -41,11 +43,11 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void update_SE3_ref(const double t, robotoc::SE3& SE3_ref) const override {
+  void update_x6d_ref(const double t, robotoc::SE3& x6d_ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*t);
     pos.coeffRef(2) += radius_ * cos(M_PI*t);
-    SE3_ref = robotoc::SE3(rotm_, pos);
+    x6d_ref = robotoc::SE3(rotm_, pos);
   }
 
   bool isActive(const double t) const override {
@@ -80,16 +82,18 @@ Next, we construct the cost function.
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
   const int ee_frame_id = 22; 
-  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
-  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, ref);
-  task_cost->set_q_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  task_cost->set_qf_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
+  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, x6d_ref);
+  task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_x6df_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);
 ```
 
 We also construct the constraints.
 ```
-  auto constraints          = std::make_shared<robotoc::Constraints>();
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
@@ -109,18 +113,22 @@ Finally, we can construct the optimal control solver!
 ```
   const double T = 6;
   const int N = 120;
+  robotoc::UnconstrOCP ocp(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::UnconstrOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
+  robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options, nthreads);
 ```
 or ParNMPC solver!
 ```
   const double T = 6;
   const int N = 120;
+  robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::UnconstrParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, solver_options, nthreads);
 ```
 
-So, let's run the solver!
+Let's run the solver!
 ```
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
@@ -129,21 +137,11 @@ So, let's run the solver!
 
   ocp_solver.setSolution("q", q); // initial state.
   ocp_solver.setSolution("v", v); // initial state.
-
   ocp_solver.initConstraints(); // initialize the slack and dual variables of the primal-dual interior point method.
-
-  const bool line_search = false;
-  const int num_iteration = 50;
-  ocp_solver.computeKKTResidual(t, q, v);
-  std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
-  for (int i=0; i<num_iteration; ++i) {
-    ocp_solver.updateSolution(t, q, v, line_search);
-    ocp_solver.computeKKTResidual(t, q, v);
-    std::cout << "KKT error after iteration " << i+1 << " = " 
-              << ocp_solver.KKTError() << std::endl;
-  }
-  std::cout << "-----------------------------------" << std::endl;
-  std::cout << std::endl;
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  std::cout << ocp_solver.getSolverStatistics() << std::endl; // print solver statistics
 
   return 0;
 }

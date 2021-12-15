@@ -14,8 +14,8 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    CoM_ref0 = Eigen::Vector3d::Random();
-    v_CoM_ref = Eigen::Vector3d::Random();
+    com_ref0 = Eigen::Vector3d::Random();
+    vcom_ref = Eigen::Vector3d::Random();
 
     t0 = std::abs(Eigen::VectorXd::Random(1)[0]);
     period_active = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -26,13 +26,13 @@ protected:
   virtual void TearDown() {
   }
 
-  Eigen::Vector3d CoM_ref0, v_CoM_ref;
+  Eigen::Vector3d com_ref0, vcom_ref;
   double t0, period_active, period_inactive, period;
 };
 
 
 TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
-  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef>(CoM_ref0, v_CoM_ref,
+  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef>(com_ref0, vcom_ref,
                                                            t0, period_active,
                                                            period_inactive,
                                                            true);
@@ -40,9 +40,9 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
   EXPECT_FALSE(preiodic_com_ref->isActive(t1));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_CoM_ref(t2, com);
+  preiodic_com_ref->update_com_ref(t2, com);
   if (t2 < t0+period_active) {
-    com_ref = CoM_ref0 + 0.5 * (t2-t0) * v_CoM_ref;
+    com_ref = com_ref0 + 0.5 * (t2-t0) * vcom_ref;
     EXPECT_TRUE(com_ref.isApprox(com));
     EXPECT_TRUE(preiodic_com_ref->isActive(t2));
   }
@@ -53,7 +53,7 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
     const int steps = std::floor((t2-t0)/period);
     const double tau = t2 - t0 - steps*period;
     if (tau < period_active) {
-      com_ref = CoM_ref0 + period_active*(steps-0.5)*v_CoM_ref + tau*v_CoM_ref;
+      com_ref = com_ref0 + period_active*(steps-0.5)*vcom_ref + tau*vcom_ref;
       EXPECT_TRUE(com_ref.isApprox(com));
       EXPECT_TRUE(preiodic_com_ref->isActive(t2));
     }
@@ -65,7 +65,7 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
 
 
 TEST_F(PeriodicCoMRefTest, first_mode_half_false) {
-  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef>(CoM_ref0, v_CoM_ref,
+  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef>(com_ref0, vcom_ref,
                                                            t0, period_active,
                                                            period_inactive,
                                                            false);
@@ -73,11 +73,11 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_false) {
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
   EXPECT_FALSE(preiodic_com_ref->isActive(t1));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_CoM_ref(t2, com);
+  preiodic_com_ref->update_com_ref(t2, com);
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;
   if (tau < period_active) {
-    com_ref = CoM_ref0 + period_active*steps*v_CoM_ref + tau*v_CoM_ref;
+    com_ref = com_ref0 + period_active*steps*vcom_ref + tau*vcom_ref;
     EXPECT_TRUE(preiodic_com_ref->isActive(t2));
     EXPECT_TRUE(com_ref.isApprox(com));
   }

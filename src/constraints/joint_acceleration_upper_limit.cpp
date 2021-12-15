@@ -3,10 +3,9 @@
 
 namespace robotoc {
 
-JointAccelerationUpperLimit::JointAccelerationUpperLimit(
-    const Robot& robot, const Eigen::VectorXd& amax, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointAccelerationUpperLimit::JointAccelerationUpperLimit(const Robot& robot, 
+                                                         const Eigen::VectorXd& amax)
+  : ConstraintComponentBase(),
     dimc_(amax.size()),
     amax_(amax) {
 }
@@ -34,6 +33,7 @@ KinematicsLevel JointAccelerationUpperLimit::kinematicsLevel() const {
 
 
 bool JointAccelerationUpperLimit::isFeasible(Robot& robot, 
+                                             const ContactStatus& contact_status,
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -46,6 +46,7 @@ bool JointAccelerationUpperLimit::isFeasible(Robot& robot,
 
 
 void JointAccelerationUpperLimit::setSlack(Robot& robot, 
+                                           const ContactStatus& contact_status,
                                            ConstraintComponentData& data, 
                                            const SplitSolution& s) const {
   data.slack = amax_ - s.a.tail(dimc_);
@@ -53,6 +54,7 @@ void JointAccelerationUpperLimit::setSlack(Robot& robot,
 
 
 void JointAccelerationUpperLimit::evalConstraint(Robot& robot, 
+                                                 const ContactStatus& contact_status,
                                                  ConstraintComponentData& data, 
                                                  const SplitSolution& s) const {
   data.residual = s.a.tail(dimc_) - amax_ + data.slack;
@@ -62,24 +64,25 @@ void JointAccelerationUpperLimit::evalConstraint(Robot& robot,
 
 
 void JointAccelerationUpperLimit::evalDerivatives(
-    Robot& robot, ConstraintComponentData& data, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  kkt_residual.la.tail(dimc_).noalias() += dt * data.dual;
+    Robot& robot, const ContactStatus& contact_status, 
+    ConstraintComponentData& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
+  kkt_residual.la.tail(dimc_).noalias() += data.dual;
 }
 
 
 void JointAccelerationUpperLimit::condenseSlackAndDual(
-    ConstraintComponentData& data, const double dt, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qaa.diagonal().tail(dimc_).array()
-      += dt * data.dual.array() / data.slack.array();
+      += data.dual.array() / data.slack.array();
   computeCondensingCoeffcient(data);
-  kkt_residual.la.tail(dimc_).noalias() += dt * data.cond;
+  kkt_residual.la.tail(dimc_).noalias() += data.cond;
 }
 
 
 void JointAccelerationUpperLimit::expandSlackAndDual(
-    ConstraintComponentData& data, const SplitSolution& s, 
+    const ContactStatus& contact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   data.dslack = - d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);

@@ -5,18 +5,12 @@
 #include <iostream>
 #include <cassert>
 
+
 namespace robotoc{
 
-DirectMultipleShooting::DirectMultipleShooting(const int N, 
-                                               const int max_num_impulse, 
-                                               const int nthreads) 
-  : max_num_impulse_(max_num_impulse),
-    nthreads_(nthreads) {
+DirectMultipleShooting::DirectMultipleShooting(const int nthreads) 
+  : nthreads_(nthreads) {
   try {
-    if (max_num_impulse < 0) {
-      throw std::out_of_range(
-          "invalid value: max_num_impulse must be non-negative!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }
@@ -29,12 +23,62 @@ DirectMultipleShooting::DirectMultipleShooting(const int N,
 
 
 DirectMultipleShooting::DirectMultipleShooting()
-  : max_num_impulse_(0),
-    nthreads_(0) {
+  : nthreads_(0) {
 }
 
 
 DirectMultipleShooting::~DirectMultipleShooting() {
+}
+
+
+bool DirectMultipleShooting::isFeasible(
+    OCP& ocp, aligned_vector<Robot>& robots, 
+    const std::shared_ptr<ContactSequence>& contact_sequence, 
+    const Solution& s) const {
+  const int N = ocp.discrete().N();
+  const int N_impulse = ocp.discrete().N_impulse();
+  const int N_lift = ocp.discrete().N_lift();
+  const int N_all = N + 1 + 2*N_impulse + N_lift;
+  std::vector<bool> is_feasible(N_all, true);
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<N_all; ++i) {
+    if (i < N) {
+      const int contact_phase = ocp.discrete().contactPhase(i);
+      is_feasible[i] = ocp[i].isFeasible(
+          robots[omp_get_thread_num()], 
+          contact_sequence->contactStatus(contact_phase), s[i]);
+    }
+    else if (i == N) {
+      is_feasible[i] = ocp.terminal.isFeasible(robots[omp_get_thread_num()], s[N]);
+    }
+    else if (i < N+1+N_impulse) {
+      const int impulse_index  = i - (N+1);
+      is_feasible[i] = ocp.impulse[impulse_index].isFeasible(
+          robots[omp_get_thread_num()], 
+          contact_sequence->impulseStatus(impulse_index), 
+          s.impulse[impulse_index]);
+    }
+    else if (i < N+1+2*N_impulse) {
+      const int impulse_index  = i - (N+1+N_impulse);
+      const int contact_phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
+      is_feasible[i] = ocp.aux[impulse_index].isFeasible(
+          robots[omp_get_thread_num()], 
+          contact_sequence->contactStatus(contact_phase), s.aux[impulse_index]);
+    }
+    else {
+      const int lift_index = i - (N+1+2*N_impulse);
+      const int contact_phase = ocp.discrete().contactPhaseAfterLift(lift_index);
+      is_feasible[i] = ocp.lift[lift_index].isFeasible(
+          robots[omp_get_thread_num()], 
+          contact_sequence->contactStatus(lift_index), s.lift[lift_index]);
+    }
+  }
+  for (int i=0; i<N_all; ++i) {
+    if (!is_feasible[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 
@@ -49,25 +93,36 @@ void DirectMultipleShooting::initConstraints(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
-      ocp[i].initConstraints(robots[omp_get_thread_num()], i, s[i]);
+      ocp[i].initConstraints(
+          robots[omp_get_thread_num()], 
+          contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
+          i, s[i]);
     }
     else if (i == N) {
       ocp.terminal.initConstraints(robots[omp_get_thread_num()], N, s[N]);
     }
     else if (i < N+1+N_impulse) {
       const int impulse_index  = i - (N+1);
-      ocp.impulse[impulse_index].initConstraints(robots[omp_get_thread_num()], 
-                                                 s.impulse[impulse_index]);
+      ocp.impulse[impulse_index].initConstraints(
+          robots[omp_get_thread_num()], 
+          contact_sequence->impulseStatus(impulse_index), 
+          s.impulse[impulse_index]);
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
-      ocp.aux[impulse_index].initConstraints(robots[omp_get_thread_num()], 0, 
-                                             s.aux[impulse_index]);
+      ocp.aux[impulse_index].initConstraints(
+          robots[omp_get_thread_num()], 
+          contact_sequence->contactStatus(
+              ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
+          0, s.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
-      ocp.lift[lift_index].initConstraints(robots[omp_get_thread_num()], 0, 
-                                           s.lift[lift_index]);
+      ocp.lift[lift_index].initConstraints(
+          robots[omp_get_thread_num()], 
+          contact_sequence->contactStatus(
+              ocp.discrete().contactPhaseAfterLift(lift_index)), 
+          0, s.lift[lift_index]);
     }
   }
 }
@@ -106,11 +161,11 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
   for (int i=0; i<ocp.discrete().N_lift(); ++i) {
     kkt_error += kkt_residual.lift[i].kkt_error;
   }
-  return std::sqrt(kkt_error);
+  return kkt_error;
 }
 
 
-double DirectMultipleShooting::totalCost(const OCP& ocp) const {
+double DirectMultipleShooting::totalCost(const OCP& ocp) {
   double total_cost = 0;
   for (int i=0; i<ocp.discrete().N(); ++i) {
     total_cost += ocp[i].stageCost();
@@ -138,7 +193,7 @@ void DirectMultipleShooting::computeInitialStateDirection(
 void DirectMultipleShooting::integrateSolution(
     OCP& ocp, const aligned_vector<Robot>& robots, 
     const double primal_step_size, const double dual_step_size, 
-    Direction& d, Solution& s) const {
+    const KKTMatrix& kkt_matrix, Direction& d, Solution& s) const {
   assert(robots.size() == nthreads_);
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
@@ -149,17 +204,23 @@ void DirectMultipleShooting::integrateSolution(
     if (i < N) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-        const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-        ocp[i].expandDual(ocp.discrete().dt(i), d.impulse[impulse_index], d[i], sto);
+        ocp[i].expandDual(ocp.discrete().dt(i), d.impulse[impulse_index], d[i], 
+                          dts_stage(ocp, d, i));
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-        const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-        ocp[i].expandDual(ocp.discrete().dt(i), d.lift[lift_index], d[i], sto);
+        ocp[i].expandDual(ocp.discrete().dt(i), d.lift[lift_index], d[i], 
+                          dts_stage(ocp, d, i));
+      }
+      else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
+        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], 
+                          kkt_matrix.switching[impulse_index], d[i], 
+                          dts_stage(ocp, d, i));
       }
       else {
-        constexpr bool sto = false;
-        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i], sto);
+        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i], 
+                          dts_stage(ocp, d, i));
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                           d[i], s[i]);
@@ -183,11 +244,10 @@ void DirectMultipleShooting::integrateSolution(
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
       ocp.aux[impulse_index].expandDual(
           ocp.discrete().dt_aux(impulse_index), 
           d[ocp.discrete().timeStageAfterImpulse(impulse_index)], 
-          d.aux[impulse_index], sto);
+          d.aux[impulse_index], dts_aux(ocp, d, impulse_index));
       ocp.aux[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                           primal_step_size, 
                                           d.aux[impulse_index], 
@@ -196,11 +256,10 @@ void DirectMultipleShooting::integrateSolution(
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
-      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
       ocp.lift[lift_index].expandDual(
           ocp.discrete().dt_lift(lift_index), 
           d[ocp.discrete().timeStageAfterLift(lift_index)], 
-          d.lift[lift_index], sto);
+          d.lift[lift_index], dts_lift(ocp, d, lift_index));
       ocp.lift[lift_index].updatePrimal(robots[omp_get_thread_num()], 
                                         primal_step_size, d.lift[lift_index], 
                                         s.lift[lift_index]);

@@ -4,6 +4,8 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/cost/cost_function_component_base.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/ocp/split_solution.hpp"
@@ -108,54 +110,55 @@ public:
   void set_u_weight(const Eigen::VectorXd& u_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the configuration q. 
-  /// @param[in] qf_weight Terminal weight vector on the configuration q. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the terminal stage. 
+  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the velocity v. 
-  /// @param[in] vf_weight Terminal weight vector on the velocity v. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the velocity v at the terminal stage. 
+  /// @param[in] vf_weight Weight vector on the velocity v at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at impulse stages. 
+  /// @param[in] qi_weight Weight vector on the configuration q at impulse  
+  /// stages. Size must be Robot::dimv().
   ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 
   ///
-  /// @brief Sets the weight vector on the velocity v at impulse. 
-  /// @param[in] vi_weight Weight vector on the velocity v at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the velocity v at the impulse stages. 
+  /// @param[in] vi_weight Weight vector on the velocity v at the impulse  
+  /// stages. Size must be Robot::dimv().
   ///
   void set_vi_weight(const Eigen::VectorXd& vi_weight);
 
   ///
-  /// @brief Sets the weight vector on the impulse change in the velocity dv. 
-  /// @param[in] dvi_weight Weight vector on the impulse change in the velocity. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the impulse change in the velocity dv at 
+  /// the impulse stages. 
+  /// @param[in] dvi_weight Weight vector on the impulse change in the velocity
+  /// the impulse stages. Size must be Robot::dimv().
   ///
   void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
 
   bool useKinematics() const override;
 
-  double evalStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                       const double dt, 
+  double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
+                       CostFunctionData& data, const double t, const double dt, 
                        const SplitSolution& s) const override;
 
-  void evalStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                const double t, const double dt, 
-                                const SplitSolution& s, 
+  void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                                CostFunctionData& data, const double t, 
+                                const double dt, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override;
 
-  void evalStageCostHessian(Robot& robot, CostFunctionData& data, 
-                            const double t, const double dt, 
-                            const SplitSolution& s, 
+  void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
+                            CostFunctionData& data, const double t, 
+                            const double dt, const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override;
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 
@@ -169,16 +172,18 @@ public:
                                const double t, const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, CostFunctionData& data, 
-                         const double t, 
+  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                         CostFunctionData& data, const double t, 
                          const ImpulseSplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                  const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                                  CostFunctionData& data, const double t, 
+                                  const ImpulseSplitSolution& s, 
                                   ImpulseSplitKKTResidual& kkt_residual) const;
 
-  void evalImpulseCostHessian(Robot& robot, CostFunctionData& data, 
-                              const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+                              CostFunctionData& data, const double t, 
+                              const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
 private:

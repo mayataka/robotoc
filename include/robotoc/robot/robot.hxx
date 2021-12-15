@@ -226,18 +226,42 @@ inline void Robot::getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const 
 }
 
 
+template <typename Vector3dType>
+inline void Robot::transformFromLocalToWorld(
+    const int frame_id, const Eigen::Vector3d& vec_local, 
+    const Eigen::MatrixBase<Vector3dType>& vec_world) const {
+  assert(vec_world.size() == 3);
+  const_cast<Eigen::MatrixBase<Vector3dType>&>(vec_world).noalias()
+      = frameRotation(frame_id) * vec_local;
+}
+
+
+template <typename Vector3dType, typename MatrixType>
+inline void Robot::getJacobianTransformFromLocalToWorld(
+    const int frame_id, const Eigen::MatrixBase<Vector3dType>& vec_world,
+    const Eigen::MatrixBase<MatrixType>& J) {
+  assert(vec_world.size() == 3);
+  assert(J.rows() == 6);
+  assert(J.cols() == dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType>&>(J).setZero();
+  getFrameJacobian(frame_id, const_cast<Eigen::MatrixBase<MatrixType>&>(J));
+  for (int i=0; i<dimv_; ++i) {
+    const_cast<Eigen::MatrixBase<MatrixType>&>(J).template topRows<3>().col(i).noalias()
+        = J.template bottomRows<3>().col(i).cross(vec_world.template head<3>());
+  }
+}
+
+
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, 
-    const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
-  assert(contact_points.size() == maxPointContacts());
   assert(baumgarte_residual.size() == contact_status.dimf());
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, contact_points[i],
+          model_, data_, contact_status.contactPoint(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -279,7 +303,7 @@ template <typename VectorType>
 inline void Robot::computeImpulseVelocityResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
-  assert(velocity_residual.size() == impulse_status.dimf());
+  assert(velocity_residual.size() == impulse_status.dimi());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -298,9 +322,9 @@ inline void Robot::computeImpulseVelocityDerivatives(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
-  assert(velocity_partial_dq.rows() == impulse_status.dimf());
+  assert(velocity_partial_dq.rows() == impulse_status.dimi());
   assert(velocity_partial_dq.cols() == dimv_);
-  assert(velocity_partial_dv.rows() == impulse_status.dimf());
+  assert(velocity_partial_dv.rows() == impulse_status.dimi());
   assert(velocity_partial_dv.cols() == dimv_);
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -320,15 +344,13 @@ inline void Robot::computeImpulseVelocityDerivatives(
 template <typename VectorType>
 inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
-    const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  assert(contact_points.size() == point_contacts_.size());
-  assert(contact_residual.size() == impulse_status.dimf());
+  assert(contact_residual.size() == impulse_status.dimi());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactPositionResidual(
-          model_, data_, contact_points[i],
+          model_, data_, impulse_status.contactPoint(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
               .template segment<3>(3*num_active_impulse));
       ++num_active_impulse;
@@ -341,7 +363,7 @@ template <typename MatrixType>
 inline void Robot::computeContactPositionDerivative(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.rows() == impulse_status.dimf());
+  assert(contact_partial_dq.rows() == impulse_status.dimi());
   assert(contact_partial_dq.cols() == dimv_);
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {

@@ -50,7 +50,7 @@ inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   assert(impulse_status.maxPointContacts() == is_impulse_active_.size());
   is_impulse_active_ = impulse_status.isImpulseActive();
-  dimi_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimi();
 }
 
 
@@ -196,6 +196,13 @@ inline void ImpulseSplitSolution::copyDual(const ImpulseSplitSolution& other) {
   set_mu_stack();
 }
 
+inline double ImpulseSplitSolution::lagrangeMultiplierLinfNorm() const {
+  const double lmd_linf = lmd.template lpNorm<Eigen::Infinity>();
+  const double gmm_linf = gmm.template lpNorm<Eigen::Infinity>();
+  const double beta_linf = beta.template lpNorm<Eigen::Infinity>();
+  const double mu_linf = ((dimi_ > 0) ? mu_stack().template lpNorm<Eigen::Infinity>() : 0);
+  return std::max({lmd_linf, gmm_linf, beta_linf, mu_linf});
+}
 
 inline bool ImpulseSplitSolution::isApprox(
     const ImpulseSplitSolution& other) const {

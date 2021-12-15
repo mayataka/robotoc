@@ -61,12 +61,6 @@ public:
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Sets the impulse status, i.e., set the dimension of the impulse.
-  /// @param[in] dimi Dimension of the impulse.
-  ///
-  void setImpulseStatusByDimension(const int dimi);
-
-  ///
   /// @brief Stack of the Newton directions of ImpulseSplitSolution::q and 
   /// ImpulseSplitSolution::v. Size is 2 * Robot::dimv().
   ///
@@ -200,6 +194,11 @@ public:
   /// @brief Newton direction of the switching time.
   ///
   double dts;
+
+  ///
+  /// @brief Newton direction of the next switching time.
+  ///
+  double dts_next;
 
   ///
   /// @brief Set the all directions zero.

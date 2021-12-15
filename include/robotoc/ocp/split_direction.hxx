@@ -13,6 +13,7 @@ inline SplitDirection::SplitDirection(const Robot& robot)
     dlmdgmm(Eigen::VectorXd::Zero(2*robot.dimv())),
     dnu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     dts(0.0),
+    dts_next(0.0),
     daf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dxi_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -30,6 +31,7 @@ inline SplitDirection::SplitDirection()
     dlmdgmm(),
     dnu_passive(),
     dts(0.0),
+    dts_next(0.0),
     daf_full_(),
     dbetamu_full_(),
     dxi_full_(),
@@ -51,23 +53,9 @@ inline void SplitDirection::setContactStatus(
 }
 
 
-inline void SplitDirection::setContactStatusByDimension(const int dimf) {
-  assert(dimf >= 0);
-  assert(dimf % 3 == 0);
-  dimf_ = dimf;
-}
-
-
 inline void SplitDirection::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
-}
-
-
-inline void SplitDirection::setImpulseStatusByDimension(const int dimi) {
-  assert(dimi >= 0);
-  assert(dimi % 3 == 0);
-  dimi_ = dimi;
+  dimi_ = impulse_status.dimi();
 }
 
 
@@ -209,6 +197,7 @@ inline void SplitDirection::setZero() {
   dnu_passive.setZero();
   dxi().setZero();
   dts = 0.0;
+  dts_next = 0.0;
 }
 
 
@@ -257,9 +246,9 @@ inline bool SplitDirection::isApprox(const SplitDirection& other) const {
   if (!dnu_passive.isApprox(other.dnu_passive)) {
     return false;
   }
-  Eigen::VectorXd vec(1), other_vec(1);
-  vec << dts;
-  other_vec << other.dts;
+  Eigen::VectorXd vec(2), other_vec(2);
+  vec << dts, dts_next;
+  other_vec << other.dts, other.dts_next;
   if (!vec.isApprox(other_vec)) {
     return false;
   } 
@@ -277,6 +266,7 @@ inline void SplitDirection::setRandom() {
   dnu_passive.setRandom();
   dxi().setRandom();
   dts = Eigen::VectorXd::Random(1)[0];
+  dts_next = Eigen::VectorXd::Random(1)[0];
 }
 
 

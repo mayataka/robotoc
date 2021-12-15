@@ -29,7 +29,7 @@ protected:
 void ImpulseSplitDirectionTest::test(const Robot& robot, const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   ImpulseSplitDirection d(robot);
   EXPECT_EQ(d.dx.size(), dimx);
   EXPECT_EQ(d.dq().size(), dimv);
@@ -87,7 +87,7 @@ void ImpulseSplitDirectionTest::test_isApprox(const Robot& robot,
                                              const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   auto d = ImpulseSplitDirection::Random(robot, impulse_status);
   auto d_ref = d;
   EXPECT_TRUE(d.isApprox(d_ref));

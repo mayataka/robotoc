@@ -16,29 +16,30 @@ public:
                            useKinematics, );
   }
 
-  double evalStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                       const double dt, const SplitSolution& s) const override {
+  double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
+                       CostFunctionData& data, const double t, const double dt, 
+                       const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalStageCost, 
-                           robot, data, t, dt, s);
+                           robot, contact_status, data, t, dt, s);
   }
 
-  void evalStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                const double t, const double dt, 
-                                const SplitSolution& s, 
+  void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                                CostFunctionData& data, const double t, 
+                                const double dt, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalStageCostDerivatives, 
-                           robot, data, t, dt, s, kkt_residual);
+                           robot, contact_status, data, t, dt, s, kkt_residual);
   }
 
-  void evalStageCostHessian(Robot& robot, CostFunctionData& data, 
-                            const double t, const double dt, 
-                            const SplitSolution& s, 
+  void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
+                            CostFunctionData& data, const double t, 
+                            const double dt, const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalStageCostHessian, 
-                           robot, data, t, dt, s, kkt_matrix);
+                           robot, contact_status, data, t, dt, s, kkt_matrix);
   }
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 
@@ -65,27 +66,30 @@ public:
                            robot, data, t, s, kkt_matrix);
   }
 
-  double evalImpulseCost(Robot& robot, CostFunctionData& data, const double t, 
+  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+                         CostFunctionData& data, const double t, 
                          const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalImpulseCost, 
-                           robot, data, t, s);
+                           robot, impulse_status, data, t, s);
   }
 
-  void evalImpulseCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                  const double t, const ImpulseSplitSolution& s, 
+  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                                  CostFunctionData& data, const double t, 
+                                  const ImpulseSplitSolution& s, 
                                   ImpulseSplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalImpulseCostDerivatives, 
-                           robot, data, t, s, kkt_residual);
+                           robot, impulse_status, data, t, s, kkt_residual);
   }
 
-  void evalImpulseCostHessian(Robot& robot, CostFunctionData& data, const double t, 
+  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+                              CostFunctionData& data, const double t, 
                               const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalImpulseCostHessian, 
-                           robot, data, t, s, kkt_matrix);
+                           robot, impulse_status, data, t, s, kkt_matrix);
   }
 };
 

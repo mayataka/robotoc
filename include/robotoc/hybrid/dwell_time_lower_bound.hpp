@@ -182,6 +182,44 @@ public:
   ///
   void updateDual(const double step_size);
 
+  ///
+  /// @brief Returns the sum of the squared norm of the KKT error 
+  /// (primal residual and complementary slackness) of all the constraints. 
+  /// @return KKT error. 
+  ///
+  double KKTError() const;
+
+  ///
+  /// @brief Sets the barrier parameter for all the constraint components.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  ///
+  void setBarrier(const double barrier);
+
+  ///
+  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
+  /// constraint components.
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995.
+  ///
+  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
+
+  ///
+  /// @brief Gets the barrier parameter.
+  /// @return Barrier parameter. 
+  ///
+  double barrier() const;
+
+  ///
+  /// @brief Gets the parameter of the fraction-to-boundary-rule. 
+  /// @return The parameter of the fraction-to-boundary-rule. 
+  ///
+  double fractionToBoundaryRule() const;
+
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const DwellTimeLowerBound& dtlb);
+
 private:
   double barrier_, fraction_to_boundary_rule_, 
          slack_, dual_, residual_, cmpl_, dslack_, ddual_, log_barrier_;

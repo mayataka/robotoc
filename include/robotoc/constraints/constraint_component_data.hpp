@@ -140,6 +140,16 @@ public:
   double constraintViolation() const;
 
   ///
+  /// @brief Returns the lp norm of the complementarity residual.
+  /// Default norm is l1-norm. You can specify l-infty norm by passing 
+  /// Eigen::Infinity as the template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the complementarity residual.
+  ///
+  template <int p=1>
+  double complementarityResidual() const;
+
+  ///
   /// @brief Dimension of the constraint. 
   /// @return Dimension of the constraint. 
   ///

@@ -274,6 +274,11 @@ public:
   double Qtt;
 
   ///
+  /// @brief Hessian of the Lagrangian w.r.t. the previoius switching time. 
+  ///
+  double Qtt_prev;
+
+  ///
   /// @brief Derivative of the Hamiltonian w.r.t. the state. 
   ///
   Eigen::VectorXd hx;
@@ -304,6 +309,24 @@ public:
   /// @brief Derivative of the Hamiltonian w.r.t. the control input. 
   ///
   Eigen::VectorXd hu;
+
+  /// 
+  /// @brief Derivative of the Hamiltonian w.r.t. the acceleration.
+  /// 
+  Eigen::VectorXd ha;
+
+  ///
+  /// @brief Derivative of the Hamiltonian w.r.t. the stack of the contact 
+  /// forces f. 
+  /// @return Reference to the derivative w.r.t.f. Size is 
+  /// SplitKKTMatrix::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> hf();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::hf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> hf() const;
 
   ///
   /// @brief Set the all components zero.
@@ -373,6 +396,7 @@ public:
 
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;
+  Eigen::VectorXd hf_full_;
   bool has_floating_base_;
   int dimv_, dimx_, dimu_, dimf_;
 

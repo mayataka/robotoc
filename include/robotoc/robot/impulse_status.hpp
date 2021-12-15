@@ -21,8 +21,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
+  /// @param[in] impulse_id Identifier number of the impulse. Can be used only 
+  /// in user-defined cost and constraints. Default is 0.
   ///
-  ImpulseStatus(const int max_point_contacts);
+  ImpulseStatus(const int max_point_contacts, const int impulse_id=0);
 
   ///
   /// @brief Default constructor. 
@@ -87,7 +89,7 @@ public:
   /// @brief Returns the dimension of the active impulse forces.
   /// @return Dimension of the active impulse forces.  
   ///
-  int dimf() const;
+  int dimi() const;
 
   ///
   /// @brief Returns the maximum number of the contacts.
@@ -169,9 +171,50 @@ public:
 
   ///
   /// @brief Gets contact points.
-  /// @return const reference to the vector of contact points. 
+  /// @return const reference to the contact points. 
   ///
   const std::vector<Eigen::Vector3d>& contactPoints() const;
+
+  ///
+  /// @brief Sets the rotation matrix of a contact surface.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_surface_rotation Rotation matrix of the contact surface.
+  ///
+  void setContactSurfaceRotation(const int contact_index, 
+                                 const Eigen::Matrix3d& contact_surface_rotation);
+
+  ///
+  /// @brief Sets the rotation matrices of contact surfaces.
+  /// @param[in] contact_surfaces_rotations Rotation matrices of the contact 
+  //// surfaces. Size must be ImpulseStatus::maxPointContacts().
+  ///
+  void setContactSurfacesRotations(
+      const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations);
+
+  ///
+  /// @brief Gets rotation matrix of a contact surface.
+  /// @param[in] contact_index Index of the contact.
+  /// @return const reference to the rotation matrix of the contact surface. 
+  ///
+  const Eigen::Matrix3d& contactSurfaceRotation(const int contact_index) const;
+
+  ///
+  /// @brief Gets rotation matrices of the contact surfaces.
+  /// @return const reference to the rotation matrices of the contact surfaces. 
+  ///
+  const std::vector<Eigen::Matrix3d>& contactSurfacesRotations() const;
+
+  ///
+  /// @brief Sets impulse id.
+  /// @param[in] impulse_id Impulse id. 
+  ///
+  void setImpulseId(const int impulse_id);
+
+  ///
+  /// @brief Gets impulse id.
+  /// @return Impulse id. 
+  ///
+  int impulseId() const;
 
   ///
   /// @brief Fills impulse status randomly.

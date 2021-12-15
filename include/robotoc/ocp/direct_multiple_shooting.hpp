@@ -14,7 +14,7 @@
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -28,14 +28,10 @@ class DirectMultipleShooting {
 public:
   ///
   /// @brief Construct the direct multiple shooting method.
-  /// @param[in] N Number of discretization grids of the horizon. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  DirectMultipleShooting(const int N, const int max_num_impulse, 
-                         const int nthreads);
+  DirectMultipleShooting(const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -66,6 +62,17 @@ public:
   /// @brief Default move assign operator. 
   ///
   DirectMultipleShooting& operator=(DirectMultipleShooting&&) noexcept = default;
+
+  ///
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in, out] ocp Optimal control problem.
+  /// @param[in] robots aligned_vector of Robot.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in] s Solution. 
+  ///
+  bool isFeasible(OCP& ocp, aligned_vector<Robot>& robots,
+                  const std::shared_ptr<ContactSequence>& contact_sequence, 
+                  const Solution& s) const;
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
@@ -119,13 +126,13 @@ public:
   /// @param[in] ocp Optimal control problem.
   /// @param[in] kkt_residual KKT residual. 
   ///
-  double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
+  static double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the total value of the cost function.
   /// @param[in] ocp Optimal control problem.
   ///
-  double totalCost(const OCP& ocp) const;
+  static double totalCost(const OCP& ocp);
 
   ///
   /// @brief Computes the initial state direction.
@@ -148,16 +155,24 @@ public:
   /// @param[in] robots aligned_vector of Robot.
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
+  /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in, out] d Direction. 
   /// @param[in, out] s Solution. 
   ///
   void integrateSolution(OCP& ocp, const aligned_vector<Robot>& robots,
                          const double primal_step_size,
                          const double dual_step_size,
+                         const KKTMatrix& kkt_matrix,
                          Direction& d, Solution& s) const;
 
   static const Eigen::VectorXd& q_prev(const OCP& ocp, const Eigen::VectorXd& q, 
                                        const Solution& s, const int time_stage);
+
+  static double dts_stage(const OCP& ocp, const Direction& d, const int time_stage);
+
+  static double dts_aux(const OCP& ocp, const Direction& d, const int impulse_index);
+
+  static double dts_lift(const OCP& ocp, const Direction& d, const int lift_index);
 
 private:
   template <typename Algorithm>
@@ -167,7 +182,7 @@ private:
                    const Solution& s, KKTMatrix& kkt_matrix, 
                    KKTResidual& kkt_residual) const;
 
-  int max_num_impulse_, nthreads_;
+  int nthreads_;
 };
 
 } // namespace robotoc 

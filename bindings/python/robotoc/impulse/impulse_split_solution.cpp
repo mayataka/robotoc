@@ -18,6 +18,14 @@ PYBIND11_MODULE(impulse_split_solution, m) {
     .def_readwrite("v", &ImpulseSplitSolution::v)
     .def_readwrite("dv", &ImpulseSplitSolution::dv)
     .def_readwrite("f", &ImpulseSplitSolution::f)
+    .def_readwrite("lmd", &ImpulseSplitSolution::lmd)
+    .def_readwrite("gmm", &ImpulseSplitSolution::gmm)
+    .def_readwrite("beta", &ImpulseSplitSolution::beta)
+    .def_readwrite("mu", &ImpulseSplitSolution::mu)
+    .def("f_stack", 
+         static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (ImpulseSplitSolution::*)() const>(&ImpulseSplitSolution::f_stack))
+    .def("mu_stack", 
+         static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (ImpulseSplitSolution::*)() const>(&ImpulseSplitSolution::mu_stack))
     .def("__str__", [](const ImpulseSplitSolution& self) {
         std::stringstream ss;
         ss << self;

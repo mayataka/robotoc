@@ -73,7 +73,7 @@ public:
   /// Be allocated only when CostFunction has TimeVaryingTaskSpace3DCost. Then 
   /// the size is 3.
   ///
-  Eigen::VectorXd q_3d_ref;
+  Eigen::VectorXd x3d_ref;
 
   ///
   /// @brief Vector used for computing the difference of the position of the 
@@ -95,20 +95,20 @@ public:
   /// @brief Vector used for computing the reference SE3 of the end-effector in 
   /// TimeVaryingTaskSpace6DCost. 
   ///
-  SE3 SE3_ref;
+  SE3 x6d_ref;
 
   ///
   /// @brief Vector used for computing the inverse of the reference SE3 of the 
   /// end-effector in TimeVaryingTaskSpace6DCost. 
   ///
-  SE3 SE3_ref_inv;
+  SE3 x6d_ref_inv;
 
   ///
   /// @brief Vector used for computing the difference of the SE3 of the 
   /// end-effector in TaskSpace6DCost. 
   /// Be allocated only when CostFunction has TaskSpace6DCost. 
   ///
-  SE3 diff_SE3;
+  SE3 diff_x6d;
 
   ///
   /// @brief Jacobian of the difference of the configurations used in 

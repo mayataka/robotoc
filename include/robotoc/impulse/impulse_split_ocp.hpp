@@ -71,16 +71,20 @@ public:
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
   /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in] s Split solution of this impulse stage.
   ///
-  bool isFeasible(Robot& robot, const ImpulseSplitSolution& s);
+  bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+                  const ImpulseSplitSolution& s);
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
   /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in] s Split solution of this impulse stage.
   ///
-  void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
+  void initConstraints(Robot& robot, const ImpulseStatus& impulse_status, 
+                       const ImpulseSplitSolution& s);
 
   ///
   /// @brief Initializes the constraints, i.e., copies the slack and dual 
@@ -152,10 +156,11 @@ public:
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
   /// direction of the condensed primal variables of this impulse stage.
-  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void expandPrimal(const ImpulseSplitSolution& s, ImpulseSplitDirection& d);
+  void expandPrimal(const ImpulseStatus& impulse_status, 
+                    ImpulseSplitDirection& d);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 

@@ -6,6 +6,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -230,6 +231,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   UnconstrDynamics unconstr_dynamics_;
+  ContactStatus contact_status_;
   bool use_kinematics_;
   double stage_cost_;
 

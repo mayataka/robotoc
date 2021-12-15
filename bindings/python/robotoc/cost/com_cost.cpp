@@ -13,11 +13,16 @@ namespace py = pybind11;
 PYBIND11_MODULE(com_cost, m) {
   py::class_<CoMCost, CostFunctionComponentBase,
              std::shared_ptr<CoMCost>>(m, "CoMCost")
-    .def(py::init<const Robot&>())
-    .def("set_com_ref", &CoMCost::set_CoM_ref)
-    .def("set_q_weight", &CoMCost::set_q_weight)
-    .def("set_qf_weight", &CoMCost::set_qf_weight)
-    .def("set_qi_weight", &CoMCost::set_qi_weight);
+    .def(py::init<const Robot&>(),
+          py::arg("robot"))
+    .def("set_com_ref", &CoMCost::set_com_ref,
+          py::arg("com_ref"))
+    .def("set_com_weight", &CoMCost::set_com_weight,
+          py::arg("com_weight"))
+    .def("set_comf_weight", &CoMCost::set_comf_weight,
+          py::arg("comf_weight"))
+    .def("set_comi_weight", &CoMCost::set_comi_weight,
+          py::arg("comi_weight"));
 }
 
 } // namespace python

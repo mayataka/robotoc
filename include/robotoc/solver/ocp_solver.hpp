@@ -19,7 +19,14 @@
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/riccati/riccati_recursion.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/line_search/line_search.hpp"
+#include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/hybrid/switching_time_optimization.hpp"
+#include "robotoc/hybrid/sto_cost_function.hpp"
+#include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/solver/solver_options.hpp"
+#include "robotoc/solver/solver_statistics.hpp"
 
 
 namespace robotoc {
@@ -32,21 +39,18 @@ class OCPSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_sequence Shared ptr to the contact sequence.
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] ocp Optimal control problem. 
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in] solver_options Solver options. Default is SolverOptions::defaultOptions().
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
+  /// @note If you consider the switching time optimization (STO) problem,
+  /// please use the other constructor.
   ///
-  OCPSolver(const Robot& robot, 
-            const std::shared_ptr<ContactSequence>& contact_sequence,
-            const std::shared_ptr<CostFunction>& cost,
-            const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int nthreads=1);
-
+  OCPSolver(const OCP& ocp, 
+            const std::shared_ptr<ContactSequence>& contact_sequence, 
+            const SolverOptions& solver_options=SolverOptions::defaultOptions(), 
+            const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -79,6 +83,20 @@ public:
   OCPSolver& operator=(OCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Sets the solver option. 
+  /// @param[in] solver_options Solver options.  
+  ///
+  void setSolverOptions(const SolverOptions& solver_options);
+
+  ///
+  /// @brief Applies mesh refinement if the discretization method is   
+  /// DiscretizationMethod::PhaseBased. Also initializes the constraints 
+  /// if the mesh refiement is carried out.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void meshRefinement(const double t);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   /// @param[in] t Initial time of the horizon. 
@@ -86,15 +104,38 @@ public:
   void initConstraints(const double t);
 
   ///
-  /// @brief Updates the solution by computing the primal-dual Newon direction.
+  /// @brief Performs single Newton-type iteration and updates the solution.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] line_search If true, filter line search is enabled. If false
-  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const bool line_search=false);
+                      const Eigen::VectorXd& v);
+
+  ///
+  /// @brief Solves the optimal control problem. Internally calls 
+  /// updateSolutio() and meshRefinement().
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @param[in] init_solver If true, initializes the solver, that is, calls
+  /// meshRefinement(), initConstraints(), and clears the line search filter.
+  /// Default is true.
+  ///
+  void solve(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
+             const bool init_solver=true);
+
+  ///
+  /// @brief Gets the solver statistics.
+  /// @return Solver statistics.
+  ///
+  const SolverStatistics& getSolverStatistics() const;
+
+  ///
+  /// @brief Get the solution over the horizon. 
+  /// @return const reference to the solution.
+  ///
+  const Solution& getSolution() const;
 
   ///
   /// @brief Get the split solution of a time stage. For example, the control 
@@ -118,19 +159,26 @@ public:
                                            const std::string& option="") const;
 
   ///
-  /// @brief Gets the state-feedback gain.
-  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
-  /// than N.
-  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
-  /// Size must be Robot::dimu() x Robot::dimv().
-  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
-  /// Size must be Robot::dimu() x Robot::dimv().
+  /// @brief Gets of the local LQR policies over the horizon. 
+  /// @return const reference to the local LQR policies.
   ///
-  void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
 
   ///
-  /// @brief Sets the solution over the horizon. 
+  /// @brief Gets the Riccati factorizations. This can be interpreted as 
+  /// locally approximated cost-to-go functions. 
+  /// @return const reference to the Riccati factorizations.
+  ///
+  const RiccatiFactorization& getRiccatiFactorization() const;
+
+  ///
+  /// @brief Sets the solution guess over the horizon. 
+  /// @param[in] s Solution. 
+  ///
+  void setSolution(const Solution& s);
+
+  ///
+  /// @brief Sets the solution guess over the horizon. 
   /// @param[in] name Name of the variable. 
   /// @param[in] value Value of the specified variable. 
   ///
@@ -153,26 +201,22 @@ public:
   void extrapolateSolutionInitialPhase(const double t);
 
   ///
-  /// @brief Clear the line search filter. 
-  ///
-  void clearLineSearchFilter();
-
-  ///
-  /// @brief Computes the KKT residual of the optimal control problem. 
+  /// @brief Computes the KKT residual of the optimal control problem and 
+  /// returns the KKT error, that is, the l2-norm of the KKT residual. 
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @return The KKT error, that is, the l2-norm of the KKT residual.
   ///
-  void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v);
+  double KKTError(const double t, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
 
   ///
-  /// @brief Returns the l2-norm of the KKT residuals.
-  /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
-  /// called.  
+  /// @brief Returns the l2-norm of the KKT residuals using the results of 
+  /// OCPsolver::updateSolution() or OCPsolver::solve().
   /// @return The l2-norm of the KKT residual.
   ///
-  double KKTError();
+  double KKTError() const;
 
   ///
   /// @brief Returns the value of the cost function.
@@ -186,22 +230,13 @@ public:
   /// @return true if the current solution is feasible subject to the 
   /// inequality constraints. Return false if it is not feasible.
   ///
-  bool isCurrentSolutionFeasible();
+  bool isCurrentSolutionFeasible(const bool verbose=false);
 
   ///
-  /// @brief Checks wheather the formulation of the discretized optimal control 
-  /// problem is tractable or not.
-  /// @param[in] t Initial time of the horizon. 
-  /// @return true if the optimal control problem is tractable. false if not.
+  /// @brief OCP discretization. 
+  /// @return Returns const reference to the internal OCP discretization. 
   ///
-  bool isFormulationTractable(const double t);
-
-  ///
-  /// @brief Checks wheather the switching times are consistent. 
-  /// @param[in] t Initial time of the horizon. 
-  /// @return true if the switching times are consistent. false if not.
-  ///
-  bool isSwitchingTimeConsistent(const double t);
+  const TimeDiscretization& getTimeDiscretization() const;
 
   ///
   /// @brief Displays the optimal control problem solver onto a ostream.
@@ -214,9 +249,8 @@ public:
 private:
   aligned_vector<Robot> robots_;
   std::shared_ptr<ContactSequence> contact_sequence_;
-  std::shared_ptr<CostFunction> cost_;
-  std::shared_ptr<Constraints> constraints_;
   DirectMultipleShooting dms_;
+  SwitchingTimeOptimization sto_;
   RiccatiRecursion riccati_recursion_;
   LineSearch line_search_;
   OCP ocp_;
@@ -225,6 +259,8 @@ private:
   Solution s_;
   Direction d_;
   RiccatiFactorization riccati_factorization_;
+  SolverOptions solver_options_;
+  SolverStatistics solver_statistics_;
 
   void discretizeSolution();
 

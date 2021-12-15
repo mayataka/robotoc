@@ -21,50 +21,54 @@ public:
                            allocateExtraData, data);
   }
 
-  bool isFeasible(Robot& robot, ConstraintComponentData& data, 
+  bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+                  ConstraintComponentData& data, 
                   const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(bool, ImpulseConstraintComponentBase, 
                            isFeasible, 
-                           robot, data, s);
+                           robot, impulse_status, data, s);
   }
 
-  void setSlack(Robot& robot, ConstraintComponentData& data, 
+  void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
+                ConstraintComponentData& data, 
                 const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            setSlack, 
-                           robot, data, s);
+                           robot, impulse_status, data, s);
   }
 
-  void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+  void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+                      ConstraintComponentData& data, 
                       const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            evalConstraint, 
-                           robot, data, s);
+                           robot, impulse_status, data, s);
   }
 
-  void evalDerivatives(Robot& robot, ConstraintComponentData& data,
+  void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                       ConstraintComponentData& data,
                        const ImpulseSplitSolution& s,
                        ImpulseSplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            evalDerivatives, 
-                           robot, data, s, kkt_residual);
+                           robot, impulse_status, data, s, kkt_residual);
   }
 
-  void condenseSlackAndDual(ConstraintComponentData& data,
-                            const ImpulseSplitSolution& s, 
+  void condenseSlackAndDual(const ImpulseStatus& impulse_status, 
+                            ConstraintComponentData& data,
                             ImpulseSplitKKTMatrix& kkt_matrix,
                             ImpulseSplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            condenseSlackAndDual, 
-                           data, s, kkt_matrix, kkt_residual);
+                           impulse_status, data, kkt_matrix, kkt_residual);
   }
 
-  void expandSlackAndDual(ConstraintComponentData& data, 
-                          const ImpulseSplitSolution& s, 
+  void expandSlackAndDual(const ImpulseStatus& impulse_status, 
+                          ConstraintComponentData& data, 
                           const ImpulseSplitDirection& d) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            expandSlackAndDual, 
-                           data, s, d);
+                           impulse_status, data, d);
   }
 
   int dimc() const override {
@@ -80,7 +84,8 @@ PYBIND11_MODULE(impulse_constraint_component_base, m) {
   py::class_<ImpulseConstraintComponentBase, 
              PyImpulseConstraintComponentBase, 
              std::shared_ptr<ImpulseConstraintComponentBase>>(m, "ImpulseConstraintComponentBase")
-    .def(py::init<const double, const double>());
+    .def(py::init<const double, const double>(),
+          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995);
 }
 
 } // namespace python

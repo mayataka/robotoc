@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
@@ -23,17 +24,13 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
-  /// Should be between 0.9 and 0.995. 
+  /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  ImpulseConstraintComponentBase(const double barrier, 
-                                 const double fraction_to_boundary_rule);
-
-  ///
-  /// @brief Default constructor. 
-  ///
-  ImpulseConstraintComponentBase();
+  ImpulseConstraintComponentBase(const double barrier=1.0e-03, 
+                                 const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Destructor. 
@@ -79,30 +76,36 @@ public:
   ///
   /// @brief Checks whether the current solution s is feasible or not. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraint data.
   /// @param[in] s Impulse split solution.
   /// @return true if s is feasible. false if not.
   ///
-  virtual bool isFeasible(Robot& robot, ConstraintComponentData& data, 
+  virtual bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+                          ConstraintComponentData& data, 
                           const ImpulseSplitSolution& s) const = 0;
 
   ///
   /// @brief Sets the slack variables of each constraint components. 
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[out] data Constraint data. 
   /// @param[in] s Impulse split solution.
   ///
-  virtual void setSlack(Robot& robot, ConstraintComponentData& data, 
+  virtual void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
+                        ConstraintComponentData& data, 
                         const ImpulseSplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
   ///
-  virtual void evalConstraint(Robot& robot, ConstraintComponentData& data, 
+  virtual void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+                              ConstraintComponentData& data, 
                               const ImpulseSplitSolution& s) const = 0;
 
   ///
@@ -111,11 +114,13 @@ public:
   /// Jacobian and the dual variable to the KKT residual. This function is 
   /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraint data.
   /// @param[in] s Impulse split solution.
   /// @param[out] kkt_residual Impulse split KKT residual.
   ///
-  virtual void evalDerivatives(Robot& robot, ConstraintComponentData& data, 
+  virtual void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+                               ConstraintComponentData& data, 
                                const ImpulseSplitSolution& s,
                                ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
@@ -123,27 +128,27 @@ public:
   /// @brief Condenses the slack and dual variables, i.e., factorizes the  
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] data Constraints data.
-  /// @param[in] s Impulse split solution.
   /// @param[out] kkt_matrix Impulse split KKT matrix. The condensed Hessians   
   /// are added to this data.
   /// @param[out] kkt_residual Impulse split KKT residual. The condensed KKT
   /// residual are added to this data.
   ///
   virtual void condenseSlackAndDual(
-      ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+      const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
       ImpulseSplitKKTMatrix& kkt_matrix, 
       ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in, out] data Constraints data.
-  /// @param[in] s Impulse split solution.
   /// @param[in] d Impulse split direction.
   ///
-  virtual void expandSlackAndDual(ConstraintComponentData& data, 
-                                  const ImpulseSplitSolution& s, 
+  virtual void expandSlackAndDual(const ImpulseStatus& impulse_status, 
+                                  ConstraintComponentData& data, 
                                   const ImpulseSplitDirection& d) const = 0;
 
   ///
@@ -191,7 +196,7 @@ public:
   ///
   /// @brief Returns the barrier parameter.
   ///
-  virtual double barrierParameter() const final;
+  virtual double barrier() const final;
 
   ///
   /// @brief Returns the parameter of the fraction-to-boundary-rule.

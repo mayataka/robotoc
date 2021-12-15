@@ -56,3 +56,5 @@ add_example(pacing)
 add_example(bounding)
 add_example(jumping)
 add_example(running)
+
+add_example(jumping_sto)

@@ -19,7 +19,7 @@
 
 namespace robotoc {
 
-class TerminalOCPTest : public ::testing::Test {
+class TerminalOCPTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -27,14 +27,11 @@ protected:
 
   virtual void TearDown() {
   }
-
-  static void test_computeKKTResidual(Robot& robot);
-  static void test_computeKKTSystem(Robot& robot);
-  static void test_evalOCP(Robot& robot);
 };
 
 
-void TerminalOCPTest::test_computeKKTResidual(Robot& robot) {
+TEST_P(TerminalOCPTest, computeKKTResidual) {
+  auto robot = GetParam();
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -53,6 +50,7 @@ void TerminalOCPTest::test_computeKKTResidual(Robot& robot) {
   const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
   TerminalStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
   double KKT_ref = 0;
   KKT_ref += kkt_residual_ref.lx.squaredNorm();
   EXPECT_DOUBLE_EQ(KKT, KKT_ref);
@@ -60,7 +58,8 @@ void TerminalOCPTest::test_computeKKTResidual(Robot& robot) {
 }
 
 
-void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
+TEST_P(TerminalOCPTest, computeKKTSystem) {
+  auto robot = GetParam();
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   const auto s_prev = SplitSolution::Random(robot);
@@ -78,7 +77,8 @@ void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
   const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   TerminalStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
-  kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
+  // kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
+  kkt_residual.kkt_error = 0;
   state_equation.correctLinearizedStateEquation(kkt_matrix_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -90,7 +90,8 @@ void TerminalOCPTest::test_computeKKTSystem(Robot& robot) {
 }
 
 
-void TerminalOCPTest::test_evalOCP(Robot& robot) {
+TEST_P(TerminalOCPTest, evalOCP) {
+  auto robot = GetParam();
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
@@ -106,22 +107,11 @@ void TerminalOCPTest::test_evalOCP(Robot& robot) {
 }
 
 
-TEST_F(TerminalOCPTest, fixedBase) {
-  const double dt = 0.01;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
-  test_computeKKTResidual(robot);
-  test_computeKKTSystem(robot);
-  test_evalOCP(robot);
-}
-
-
-TEST_F(TerminalOCPTest, floatingBase) {
-  const double dt = 0.01;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  test_computeKKTResidual(robot);
-  test_computeKKTSystem(robot);
-  test_evalOCP(robot);
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, TerminalOCPTest, 
+  ::testing::Values(testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+);
 
 } // namespace robotoc
 

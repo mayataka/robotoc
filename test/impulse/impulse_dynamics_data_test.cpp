@@ -28,7 +28,7 @@ void ImpulseDynamicsDataTest::test(const Robot& robot,
                                    const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impulse_status.dimi();
   ImpulseDynamicsData data(robot);
   data.setImpulseStatus(impulse_status);
   EXPECT_EQ(data.dImDddv.rows(), dimv);

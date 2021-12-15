@@ -84,11 +84,11 @@ inline void StateEquation::linearizeStateEquation(
   kkt_matrix.Fqv().diagonal().fill(dt);
   kkt_residual.lv().noalias() += dt * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la.noalias() += dt * s_next.gmm;
-  // linearize Hamiltonian
+  // STO sensitivities
   kkt_residual.h += s_next.lmd.dot(s.v);
   kkt_residual.h += s_next.gmm.dot(s.a);
-  // linearize the Hamiltonian derivatives
   kkt_matrix.hv().noalias() += s_next.lmd;
+  kkt_matrix.ha.noalias()   += s_next.gmm;
   kkt_matrix.fq() = s.v;
   kkt_matrix.fv() = s.a;
 }

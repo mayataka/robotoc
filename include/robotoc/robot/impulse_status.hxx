@@ -9,8 +9,9 @@
 
 namespace robotoc {
 
-inline ImpulseStatus::ImpulseStatus(const int max_point_contacts)
-  : contact_status_(max_point_contacts) {
+inline ImpulseStatus::ImpulseStatus(const int max_point_contacts,
+                                    const int impulse_id)
+  : contact_status_(max_point_contacts, impulse_id) {
 }
 
 
@@ -29,7 +30,10 @@ inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
     if (other.isImpulseActive(i) != isImpulseActive(i)) {
       return false;
     }
-    if (!other.contactPoints()[i].isApprox(contactPoints()[i])) {
+    if (!other.contactPoint(i).isApprox(contactPoint(i))) {
+      return false;
+    }
+    if (!other.contactSurfaceRotation(i).isApprox(contactSurfaceRotation(i))) {
       return false;
     }
   }
@@ -57,7 +61,7 @@ inline bool ImpulseStatus::hasActiveImpulse() const {
 }
 
 
-inline int ImpulseStatus::dimf() const {
+inline int ImpulseStatus::dimi() const {
   return contact_status_.dimf();
 }
 
@@ -147,6 +151,40 @@ inline const Eigen::Vector3d& ImpulseStatus::contactPoint(
 inline const std::vector<Eigen::Vector3d>& 
 ImpulseStatus::contactPoints() const {
   return contact_status_.contactPoints();
+}
+
+
+inline void ImpulseStatus::setContactSurfaceRotation(
+    const int contact_index, const Eigen::Matrix3d& contact_surface_rotation) {
+  contact_status_.setContactSurfaceRotation(contact_index, contact_surface_rotation);
+}
+
+
+inline void ImpulseStatus::setContactSurfacesRotations(
+    const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations) {
+  contact_status_.setContactSurfacesRotations(contact_surfaces_rotations);
+}
+
+
+inline const Eigen::Matrix3d& ImpulseStatus::contactSurfaceRotation(
+    const int contact_index) const {
+  return contact_status_.contactSurfaceRotation(contact_index);
+}
+
+
+inline const std::vector<Eigen::Matrix3d>& 
+ImpulseStatus::contactSurfacesRotations() const {
+  return contact_status_.contactSurfacesRotations();
+}
+
+
+inline void ImpulseStatus::setImpulseId(const int impulse_id) {
+  contact_status_.setContactId(impulse_id);
+}
+
+
+inline int ImpulseStatus::impulseId() const {
+  return contact_status_.contactId();
 }
 
 

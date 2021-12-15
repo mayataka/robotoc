@@ -6,7 +6,7 @@
 
 \section solvers_list List of optimal control solvers 
 The following three solvers are available:
-- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base.
+- `robotoc::OCPSolver`: Optimal control solver for robot systems with rigid contacts and/or a floating base. This solver can optimize the trajectory and switching times simultaneously.
 - `robotoc::UnconstrOCPSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. More efficient than `robotoc::OCPSolver`.
 - `robotoc::UnconstrParNMPCSolver`: Optimal control solver for robot systems without rigid contacts or a floating base. Possibly very efficient when the number of available CPU cores is very large.
 
@@ -42,9 +42,9 @@ The unique features of `robotoc::OCPSolver` are:
     - `robotoc::ContactSequence` interface enables us to formulate the complicated optimal control problems involving changes of dynamics and state jumps due to rigid contacts.
 - <b>Lifted contact dynamics</b> [7]: 
     - Relaxes the high nonlinearity in optimization problems typically caused by inequality constraints treated by the interior point methods.
-- <b>Riccati recursion to compute Newton steps</b> [2, 4]: 
-    - Computes the Newton steps with linear time complexity with respect to the length of the horizon.
-- <b>Constraint transformation of pure-state constraints for efficient Riccati recursion</b> [8]: 
+- <b>Riccati recursion for switching time optimization (STO) problems</b> [8]: 
+    - Computes the Newton steps including the switching times with linear time complexity with respect to the length of the horizon. Moreover, the Riccati-recursion-based Hessian modification improves numerical stability.  
+- <b>Constraint transformation of pure-state constraints for efficient Riccati recursion</b> [9]: 
     - The pure-state equality constraints representing the switching constraints are treated very efficiently while preserving accuracy and guaranteeing optimality by the constraint transformation.
 
 \subsection ocp_solver_formulation Methematical formulation
@@ -58,7 +58,7 @@ TODO
 \subsection unconstr_ocp_solver_features Features
 `robotoc::UnconstrOCPSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::OCPSolver` for such systems.
 The unique features of `robotoc::UnconstrOCPSolver` are:
-- <b>Inverse dynamics based formulation</b> [9]: 
+- <b>Inverse dynamics based formulation</b> [10]: 
     - Inverse dynamics-based formulation enables very fast computation compared with the forward dynamics-based formulation. You can check this fact easily by comparing `robotoc::UnconstrOCPSolver` and `robotoc::OCPSolver`.
 - <b>Riccati recursion to compute Newton steps</b> [2, 4]: 
     - Computes the Newton steps with linear time complexity with respect to the length of the horizon.
@@ -74,7 +74,7 @@ TODO
 \subsection unconstr_parnmpc_solver_features Features
 `robotoc::UnconstrParNMPCSolver` is an optimal control solver for robot systems without rigid contacts or a floating base. This is recommended than `robotoc::UnconstrOCPSolver` if the available number of CPU cores are very large.
 The unique features of `robotoc::UnconstrParNMPCSolver` are:
-- <b>Inverse dynamics based formulation</b> [9]: 
+- <b>Inverse dynamics based formulation</b> [10]: 
     - Inverse dynamics-based formulation enables very fast computation compared with the forward dynamics-based formulation. 
 - <b>Highly parallelizable Newton-type method</b> [5]: 
     - This method can parallelize all steps of Newton-step computation while the Riccati recursion needs serial computation in solving the KKT system. Note that the convergence speed can decrease because this method introduces an approximation for parallelization.
@@ -95,7 +95,8 @@ TODO
 [5] H. Deng and T. Ohtsuka, "A parallel Newton-type method for nonlinear model predictive control," <i>Automatica</i>, Vol. 109, pp. 108560, 2019. <br>
 [6] J. Carpentier and N. Mansard, "Analytical derivatives of rigid body dynamics algorithms," Robotics: Science and Systems, 2018. <br>
 [7] S. Katayama and T. Ohtsuka, "Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts," https://arxiv.org/abs/2108.01781, 2021 <br>
-[8] S. Katayama and T. Ohtsuka, "Efficient Riccati recursion for optimal control problems with pure-state equality constraints," https://arxiv.org/abs/2102.09731, 2021 <br>
-[9] S. Katayama and T. Ohtsuka, "Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems," IEEE International Conference on Robotics and Automation (ICRA), 2021. <br>
+[8] S. Katayama and T. Ohtsuka, "Structure-exploiting {N}ewton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021. <br>
+[9] S. Katayama and T. Ohtsuka, "Efficient Riccati recursion for optimal control problems with pure-state equality constraints," https://arxiv.org/abs/2102.09731, 2021 <br>
+[10] S. Katayama and T. Ohtsuka, "Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems," IEEE International Conference on Robotics and Automation (ICRA), 2021. <br>
 
 */

@@ -10,6 +10,7 @@ namespace robotoc {
 inline SwitchingConstraint::SwitchingConstraint(const Robot& robot)
   : q_(Eigen::VectorXd::Zero(robot.dimq())),
     dq_(Eigen::VectorXd::Zero(robot.dimv())),
+    PqT_xi_(Eigen::VectorXd::Zero(robot.dimv())),
     has_floating_base_(robot.hasFloatingBase()) {
 }
 
@@ -17,6 +18,7 @@ inline SwitchingConstraint::SwitchingConstraint(const Robot& robot)
 inline SwitchingConstraint::SwitchingConstraint()
   : q_(),
     dq_(),
+    PqT_xi_(),
     has_floating_base_(false) {
 }
 
@@ -35,9 +37,7 @@ inline void SwitchingConstraint::evalSwitchingConstraint(
   dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, dq_, 1.0, q_);
   robot.updateKinematics(q_);
-  robot.computeContactPositionResidual(impulse_status, 
-                                       impulse_status.contactPoints(), 
-                                       sc_residual.P());
+  robot.computeContactPositionResidual(impulse_status, sc_residual.P());
 }
 
 
@@ -67,6 +67,15 @@ inline void SwitchingConstraint::linearizeSwitchingConstraint(
   }
   kkt_residual.lx.noalias() += sc_jacobian.Phix().transpose() * s.xi_stack();
   kkt_residual.la.noalias() += sc_jacobian.Phia().transpose() * s.xi_stack();
+  // STO sensitivities
+  // Note that in computing the STO sensitivities, we always assume that dt1 = dt2.
+  dq_ = 2.0 * (s.v + dt1 * s.a);
+  sc_jacobian.Phit().noalias() = sc_jacobian.Pq() * dq_;
+  kkt_residual.h += s.xi_stack().dot(sc_jacobian.Phit());
+  PqT_xi_.noalias() = sc_jacobian.Pq().transpose() * s.xi_stack();
+  kkt_matrix.Qtt += 2.0 * PqT_xi_.dot(s.a);
+  kkt_matrix.hv().noalias() += 2.0 * PqT_xi_;
+  kkt_matrix.ha.noalias() += (2.0*dt1) * PqT_xi_;
 }
 
 } // namespace robotoc

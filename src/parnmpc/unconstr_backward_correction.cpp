@@ -8,26 +8,19 @@
 
 namespace robotoc {
 
-UnconstrBackwardCorrection::UnconstrBackwardCorrection(const Robot& robot, 
-                                                       const double T, 
-                                                       const int N, 
-                                                       const int nthreads)
-  : N_(N),
+UnconstrBackwardCorrection::UnconstrBackwardCorrection(
+    const UnconstrParNMPC& parnmpc, const int nthreads)
+  : N_(parnmpc.N()),
     nthreads_(nthreads),
-    T_(T),
-    dt_(T/N),
-    corrector_(N, UnconstrSplitBackwardCorrection(robot)),
-    s_new_(robot, N),
-    aux_mat_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
-    primal_step_sizes_(Eigen::VectorXd::Zero(N)),
-    dual_step_sizes_(Eigen::VectorXd::Zero(N)) {
+    T_(parnmpc.T()),
+    dt_(parnmpc.T()/parnmpc.N()),
+    corrector_(parnmpc.N(), UnconstrSplitBackwardCorrection(parnmpc.robot())),
+    s_new_(parnmpc.robot(), parnmpc.N()),
+    aux_mat_(parnmpc.N(), Eigen::MatrixXd::Zero(2*parnmpc.robot().dimv(), 
+                                                2*parnmpc.robot().dimv())),
+    primal_step_sizes_(Eigen::VectorXd::Zero(parnmpc.N())),
+    dual_step_sizes_(Eigen::VectorXd::Zero(parnmpc.N())) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }
