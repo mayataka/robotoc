@@ -1,6 +1,6 @@
 /*!
 
-\page subpage_ocp_solver_sto_example_cpp Quadrupedal jumping example of robotoc::OCPSolver in C++
+\page subpage_ocp_solver_sto_example_cpp Switching time optimization (STO) example of robotoc::OCPSolver in C++
 
 This page explains the example code in examples/anymal/jumping.cpp.
 Required header files are as follows.

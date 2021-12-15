@@ -55,8 +55,8 @@ Please see @ref page_installation.
 @misc{katayama2021newtonocss,
   title={Structure-exploiting {N}ewton-type method for optimal control of switched systems}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
-  url={arXiv:--},
-  eprint={--},
+  url={arXiv:2112.07232},
+  eprint={2112.07232},
   archivePrefix={arXiv}
   year={2021}}
 ```
