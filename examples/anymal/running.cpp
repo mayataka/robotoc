@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -18,6 +19,7 @@
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
 #include "robotoc/constraints/impulse_friction_cone.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
@@ -162,7 +164,9 @@ int main(int argc, char *argv[]) {
   cost->push_back(time_varying_config_cost);
 
   // Create the constraints
-  auto constraints           = std::make_shared<robotoc::Constraints>();
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints           = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
   auto joint_position_lower  = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper  = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower  = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
@@ -180,7 +184,6 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
-  constraints->setBarrier(1.0e-02);
 
   // Create the contact sequence
   const int max_num_impulses = (steps+3)*2;
@@ -281,32 +284,39 @@ int main(int argc, char *argv[]) {
   // you can check the contact sequence via
   // std::cout << contact_sequence << std::endl;
 
+  // Create the OCP solver.
   const double T = 7; 
   const int N = 240;
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(robot, contact_sequence, cost, constraints, 
-                                T, N, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
+  // Initial time and initial state
   const double t = 0;
-  Eigen::VectorXd q(q_standing);
-  Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
+  const Eigen::VectorXd q(q_standing);
+  const Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
+  // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
   ocp_solver.setSolution("lmd", f_init);
-
   ocp_solver.initConstraints(t);
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
-  const bool line_search = false;
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, 80, line_search);
+  // const int num_iteration = 10000;
+  // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
-  const auto ocp_discretization = ocp_solver.getOCPDiscretization();
-  const auto time_steps = ocp_discretization.timeSteps();
+  const auto discretization = ocp_solver.getTimeDiscretization();
+  const auto time_steps = discretization.timeSteps();
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
   camera_pos << 0.119269, -7.96283, 1.95978;

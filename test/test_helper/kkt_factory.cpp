@@ -31,6 +31,7 @@ SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
   kkt_matrix.hu.setRandom();
   kkt_matrix.ha.setRandom();
   kkt_matrix.hf().setRandom();
+  kkt_matrix.fx.setRandom();
   return kkt_matrix;
 }
 

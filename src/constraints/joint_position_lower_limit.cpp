@@ -3,10 +3,8 @@
 
 namespace robotoc {
 
-JointPositionLowerLimit::JointPositionLowerLimit(
-    const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointPositionLowerLimit::JointPositionLowerLimit(const Robot& robot)
+  : ConstraintComponentBase(),
     dimc_(robot.lowerJointPositionLimit().size()),
     qmin_(robot.lowerJointPositionLimit()) {
 }

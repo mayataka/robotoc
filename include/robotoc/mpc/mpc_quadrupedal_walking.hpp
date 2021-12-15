@@ -8,9 +8,12 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
+#include "robotoc/solver/solver_options.hpp"
 
 
 namespace robotoc {
@@ -23,21 +26,11 @@ class MPCQuadrupedalWalking {
 public:
   ///
   /// @brief Construct MPC solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] max_num_steps Maximum number of the steps on the horizon. 
-  /// Must be positive. 
+  /// @param[in] ocp Optimal contro problem. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalWalking(const Robot& robot, 
-                        const std::shared_ptr<CostFunction>& cost, 
-                        const std::shared_ptr<Constraints>& constraints, 
-                        const double T, const int N, const int max_num_steps, 
-                        const int nthreads);
+  MPCQuadrupedalWalking(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -84,22 +77,25 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] num_iteration Number of the iterations. Must be non-negative.
-  /// If num_iteration is zero, only the slack and dual variables of the 
-  /// interior point method are initialized.
+  /// @param[in] solver_options Solver options for the initialization. 
   ///
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-            const int num_iteration);
+            const SolverOptions& solver_options);
+
+  ///
+  /// @brief Sets the solver options. 
+  /// @param[in] solver_options Solver options.  
+  ///
+  void setSolverOptions(const SolverOptions& solver_options);
 
   ///
   /// @brief Updates the solution by iterationg the Newton-type method.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Velocity. Size must be Robot::dimv().
-  /// @param[in] num_iteration Number of the Newton-type iterations.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const int num_iteration);
+                      const Eigen::VectorXd& v);
 
   ///
   /// @brief Get the initial control input.
@@ -121,13 +117,7 @@ public:
   /// MPCQuadrupedalWalking::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
-  double KKTError();
-
-  ///
-  /// @brief Shows the information of the discretized optimal control problem
-  /// onto console.
-  ///
-  void showInfo() const;
+  double KKTError() const;
 
   static constexpr double min_dt 
       = std::sqrt(std::numeric_limits<double>::epsilon());
@@ -140,6 +130,7 @@ private:
   std::vector<Eigen::Vector3d> contact_points_;
   double step_length_, step_height_, swing_time_, t0_, T_, dt_, dtm_, ts_last_;
   int N_, current_step_, predict_step_;
+  SolverOptions solver_options_;
 
   bool addStep(const double t);
 
@@ -148,6 +139,5 @@ private:
 };
 
 } // namespace robotoc 
-
 
 #endif // ROBOTOC_MPC_QUADRUPEDAL_WALKING_HPP_ 

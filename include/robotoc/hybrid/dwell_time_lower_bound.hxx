@@ -13,26 +13,26 @@
 namespace robotoc {
 
 inline DwellTimeLowerBound::DwellTimeLowerBound(
-    const double barrier, const double fraction_to_boundary_rule) 
-  : barrier_(barrier),
-    fraction_to_boundary_rule_(fraction_to_boundary_rule),
-    slack_(std::sqrt(barrier)), 
-    dual_(std::sqrt(barrier)), 
+    const double _barrier, const double _fraction_to_boundary_rule) 
+  : barrier_(_barrier),
+    fraction_to_boundary_rule_(_fraction_to_boundary_rule),
+    slack_(std::sqrt(_barrier)), 
+    dual_(std::sqrt(_barrier)), 
     residual_(0), 
     cmpl_(0), 
     dslack_(0), 
     ddual_(0), 
     log_barrier_(0) {
   try {
-    if (barrier <= 0) {
+    if (_barrier <= 0) {
       throw std::out_of_range(
           "Invalid argment: barrirer must be positive!");
     }
-    if (fraction_to_boundary_rule <= 0) {
+    if (_fraction_to_boundary_rule <= 0) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be positive!");
     }
-    if (fraction_to_boundary_rule >= 1) {
+    if (_fraction_to_boundary_rule >= 1) {
       throw std::out_of_range(
           "Invalid argment: fraction_to_boundary_rule must be less than 1!");
     }
@@ -174,21 +174,50 @@ inline void DwellTimeLowerBound::updateDual(const double step_size) {
 }
 
 
-inline void DwellTimeLowerBound::setBarrier(const double barrier) {
-  assert(barrier > 0.0);
-  barrier_ = barrier;
+inline double DwellTimeLowerBound::KKTError() const {
+  return (residual_*residual_) + (cmpl_*cmpl_);
+}
+
+
+inline void DwellTimeLowerBound::setBarrier(const double _barrier) {
+  assert(_barrier > 0.0);
+  barrier_ = _barrier;
 }
 
 
 inline void DwellTimeLowerBound::setFractionToBoundaryRule(
-    const double fraction_to_boundary_rule) {
-  assert(fraction_to_boundary_rule > 0.0);
-  fraction_to_boundary_rule_ = fraction_to_boundary_rule;
+    const double _fraction_to_boundary_rule) {
+  assert(_fraction_to_boundary_rule > 0.0);
+  assert(_fraction_to_boundary_rule < 1.0);
+  fraction_to_boundary_rule_ = _fraction_to_boundary_rule;
 }
 
 
-inline double DwellTimeLowerBound::KKTError() const {
-  return (residual_*residual_) + (cmpl_*cmpl_);
+inline double DwellTimeLowerBound::barrier() const {
+  return barrier_;
+}
+
+
+inline double DwellTimeLowerBound::fractionToBoundaryRule() const {
+  return fraction_to_boundary_rule_;
+}
+
+
+inline void DwellTimeLowerBound::disp(std::ostream& os) const {
+  os << "barrier = " << barrier_ << std::endl;
+  os << "fraction_to_boundary_rule = " << fraction_to_boundary_rule_ << std::endl;
+  os << "slack = " << slack_ << std::endl;
+  os << "dual = " << dual_ << std::endl;
+  os << "residual_ = " << residual_ << std::endl;
+  os << "cmpl_ = " << cmpl_ << std::flush;
+}
+
+
+inline std::ostream& operator<<(std::ostream& os, 
+                                const DwellTimeLowerBound& dtlb) {
+  os << "DwellTimeLowerBound :" << std::endl;
+  dtlb.disp(os);
+  return os;
 }
 
 } // namespace robotoc

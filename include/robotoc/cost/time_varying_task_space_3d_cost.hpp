@@ -62,10 +62,10 @@ public:
   ///
   /// @brief Computes the time-varying reference position. 
   /// @param[in] t Time.
-  /// @param[in] q_3d_ref Reference position. Size is 3.
+  /// @param[in] x3d_ref Reference position. Size is 3.
   ///
-  virtual void update_q_3d_ref(const double t, 
-                               Eigen::VectorXd& q_3d_ref) const = 0;
+  virtual void update_x3d_ref(const double t, 
+                              Eigen::VectorXd& x3d_ref) const = 0;
 
   ///
   /// @brief Checks wheather the cost is active or not at the specified time. 
@@ -87,11 +87,11 @@ public:
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
   /// @param[in] frame_id Frame of interest.
-  /// @param[in] ref Shared ptr to the reference position.
+  /// @param[in] x3d_ref Shared ptr to the reference position.
   ///
   TimeVaryingTaskSpace3DCost(
       const Robot& robot, const int frame_id, 
-      const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& ref);
+      const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& x3d_ref);
 
   ///
   /// @brief Default constructor. 
@@ -127,27 +127,30 @@ public:
 
   ///
   /// @brief Sets the time-varying reference position. 
-  /// @param[in] ref Shared ptr to the time-varying reference position.
+  /// @param[in] x3d_ref Shared ptr to the time-varying reference position.
   ///
-  void set_ref(const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& ref);
+  void set_x3d_ref(
+      const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& x3d_ref);
 
   ///
   /// @brief Sets the weight vector. 
-  /// @param[in] q_3d_weight Weight vector on the position error. 
+  /// @param[in] x3d_weight Weight vector on the position error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& q_3d_weight);
+  void set_x3d_weight(const Eigen::Vector3d& x3d_weight);
 
   ///
-  /// @brief Sets the terminal weight vector. 
-  /// @param[in] qf_3d_weight Terminal weight vector on the position error. 
+  /// @brief Sets the weight vector at the terminal stage. 
+  /// @param[in] x3df_weight Weight vector on the position error at the terminal
+  /// stage. 
   ///
-  void set_qf_weight(const Eigen::Vector3d& qf_3d_weight);
+  void set_x3df_weight(const Eigen::Vector3d& x3df_weight);
 
   ///
-  /// @brief Sets the weight vector at impulse. 
-  /// @param[in] qi_3d_weight Weight vector on the position error at impulse. 
+  /// @brief Sets the weight vector at the impulse stages. 
+  /// @param[in] x3di_weight Weight vector on the position error at the impulse
+  /// stages. 
   ///
-  void set_qi_weight(const Eigen::Vector3d& qi_3d_weight);
+  void set_x3di_weight(const Eigen::Vector3d& x3di_weight);
 
   bool useKinematics() const override;
 
@@ -194,8 +197,8 @@ public:
 
 private:
   int frame_id_;
-  std::shared_ptr<TimeVaryingTaskSpace3DRefBase> ref_;
-  Eigen::Vector3d q_3d_weight_, qf_3d_weight_, qi_3d_weight_;
+  std::shared_ptr<TimeVaryingTaskSpace3DRefBase> x3d_ref_;
+  Eigen::Vector3d x3d_weight_, x3df_weight_, x3di_weight_;
 
 };
 

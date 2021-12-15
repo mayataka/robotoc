@@ -2,7 +2,7 @@
 #define ROBOTOC_PERIODIC_SWITCHING_TIME_COST_HPP_
 
 #include "robotoc/hybrid/sto_cost_function_component_base.hpp"
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 #include "Eigen/Core"
 
@@ -35,12 +35,12 @@ public:
 
   void set_weight(const double weight);
 
-  double evalCost(const HybridOCPDiscretization& discretization) const override;
+  double evalCost(const TimeDiscretization& discretization) const override;
 
-  void evalCostDerivatives(const HybridOCPDiscretization& discretization, 
+  void evalCostDerivatives(const TimeDiscretization& discretization, 
                            Eigen::VectorXd& lts) const override;
 
-  void evalCostHessian(const HybridOCPDiscretization& discretization,
+  void evalCostHessian(const TimeDiscretization& discretization,
                        Eigen::MatrixXd& Qts) const override;
 
 private:

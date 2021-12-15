@@ -3,7 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/hybrid/sto_cost_function_component_base.hpp"
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -14,20 +14,20 @@ public:
   // Inherit the constructors
   using STOCostFunctionComponentBase::STOCostFunctionComponentBase;
 
-  double evalCost(const HybridOCPDiscretization& discretization) const override {
+  double evalCost(const TimeDiscretization& discretization) const override {
     PYBIND11_OVERRIDE_PURE(double, STOCostFunctionComponentBase, 
                            evalCost, 
                            discretization);
   }
 
-  void evalCostDerivatives(const HybridOCPDiscretization& discretization,
+  void evalCostDerivatives(const TimeDiscretization& discretization,
                            Eigen::VectorXd& lts) const override {
     PYBIND11_OVERRIDE_PURE(void, STOCostFunctionComponentBase, 
                            evalCostDerivatives, 
                            discretization, lts);
   }
 
-  void evalCostHessian(const HybridOCPDiscretization& discretization,
+  void evalCostHessian(const TimeDiscretization& discretization,
                        Eigen::MatrixXd& Qts) const override {
     PYBIND11_OVERRIDE_PURE(void, STOCostFunctionComponentBase, 
                            evalStageCostHessian, 

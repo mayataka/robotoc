@@ -17,5 +17,8 @@ pybind11_add_robotoc_module(periodic_foot_track_ref)
 pybind11_add_robotoc_module(periodic_foot_track_ref2)
 pybind11_add_robotoc_module(periodic_com_ref)
 pybind11_add_robotoc_module(periodic_com_ref2)
+pybind11_add_robotoc_module(swing_foot_cost)
+pybind11_add_robotoc_module(swing_foot_ref_base)
+pybind11_add_robotoc_module(trotting_swing_foot_ref)
 
 install_robotoc_pybind_module(cost)

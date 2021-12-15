@@ -203,6 +203,23 @@ public:
   ///
   void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
 
+  ///
+  /// @brief Gets the barrier parameter.
+  /// @return Barrier parameter. 
+  ///
+  double barrier() const;
+
+  ///
+  /// @brief Gets the parameter of the fraction-to-boundary-rule. 
+  /// @return The parameter of the fraction-to-boundary-rule. 
+  ///
+  double fractionToBoundaryRule() const;
+
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const DwellTimeLowerBound& dtlb);
+
 private:
   double barrier_, fraction_to_boundary_rule_, 
          slack_, dual_, residual_, cmpl_, dslack_, ddual_, log_barrier_;

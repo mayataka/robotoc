@@ -3,6 +3,7 @@
 
 #include "Eigen/Core"
 
+#include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3.hpp"
@@ -10,7 +11,12 @@
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/time_varying_task_space_6d_cost.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/utils/joint_constraints_factory.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
 #ifdef ENABLE_VIEWER
@@ -31,11 +37,11 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void update_SE3_ref(const double t, robotoc::SE3& SE3_ref) const override {
+  void update_x6d_ref(const double t, robotoc::SE3& x6d_ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*t);
     pos.coeffRef(2) += radius_ * cos(M_PI*t);
-    SE3_ref = robotoc::SE3(rotm_, pos);
+    x6d_ref = robotoc::SE3(rotm_, pos);
   }
 
   bool isActive(const double t) const override {
@@ -68,34 +74,51 @@ int main(int argc, char *argv[]) {
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
   const int ee_frame_id = 22; 
-  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
-  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, ref);
-  task_cost->set_q_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  task_cost->set_qf_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
+  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, x6d_ref);
+  task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_x6df_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);
 
   // Create joint constraints.
-  robotoc::JointConstraintsFactory constraints_factory(robot);
-  auto constraints = constraints_factory.create();
-  constraints->setBarrier(1.0e-04);
+  const double barrier = 1.0e-03;
+  const double fraction_to_boundary_rule = 0.995;
+  auto constraints = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
+  auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
+  constraints->push_back(joint_position_lower);
+  constraints->push_back(joint_position_upper);
+  constraints->push_back(joint_velocity_lower);
+  constraints->push_back(joint_velocity_upper);
+  constraints->push_back(joint_torques_lower);
+  constraints->push_back(joint_torques_upper);
 
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 6;
   const int N = 120;
+  robotoc::UnconstrOCP ocp(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
+  robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options, nthreads);
+
+  // Initial time and initial state
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   q << 0, M_PI_2, 0, M_PI_2, 0, M_PI_2, 0;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  robotoc::UnconstrOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   ocp_solver.initConstraints();
-  const int num_iteration = 50;
-  const bool line_search = false;
-  robotoc::benchmark::convergence(ocp_solver, t, q, v, num_iteration, line_search);
+  std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  ocp_solver.solve(t, q, v);
+  std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
+  std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf);

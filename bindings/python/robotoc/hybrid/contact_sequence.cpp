@@ -15,11 +15,12 @@ PYBIND11_MODULE(contact_sequence, m) {
   py::class_<ContactSequence, std::shared_ptr<ContactSequence>>(m, "ContactSequence")
     .def(py::init<const Robot&, const int>(),
          py::arg("robot"), py::arg("max_num_each_events")=0)
-    .def("init_contact_sequence", &ContactSequence::initContactSequence)
+    .def("init_contact_sequence", &ContactSequence::initContactSequence,
+           py::arg("contact_status"))
     .def("push_back", static_cast<void (ContactSequence::*)(const DiscreteEvent&, const double, const bool)>(&ContactSequence::push_back),
           py::arg("discrete_event"), py::arg("event_time"), py::arg("sto")=false)
     .def("push_back", static_cast<void (ContactSequence::*)(const ContactStatus&, const double, const bool)>(&ContactSequence::push_back),
-          py::arg("contact_status"), py::arg("event_time"), py::arg("sto")=false)
+          py::arg("contact_status"), py::arg("switching_time"), py::arg("sto")=false)
     .def("pop_back", &ContactSequence::pop_back)
     .def("pop_front", &ContactSequence::pop_front)
     .def("set_impulse_time", &ContactSequence::setImpulseTime, 
@@ -47,6 +48,7 @@ PYBIND11_MODULE(contact_sequence, m) {
           py::arg("lift_index"))
     .def("event_type", &ContactSequence::eventType,
           py::arg("event_index"))
+    .def("event_times", &ContactSequence::eventTimes)
     .def("max_num_each_events", &ContactSequence::maxNumEachEvents)
     .def("max_num_events", &ContactSequence::maxNumEvents)
     .def("__str__", [](const ContactSequence& self) {

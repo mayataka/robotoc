@@ -88,6 +88,7 @@ inline void StateEquation::linearizeStateEquation(
   kkt_residual.h += s_next.lmd.dot(s.v);
   kkt_residual.h += s_next.gmm.dot(s.a);
   kkt_matrix.hv().noalias() += s_next.lmd;
+  kkt_matrix.ha.noalias()   += s_next.gmm;
   kkt_matrix.fq() = s.v;
   kkt_matrix.fv() = s.a;
 }

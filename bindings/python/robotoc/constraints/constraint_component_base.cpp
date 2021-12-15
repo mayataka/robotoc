@@ -94,7 +94,8 @@ PYBIND11_MODULE(constraint_component_base, m) {
   py::class_<ConstraintComponentBase, 
              PyConstraintComponentBase,
              std::shared_ptr<ConstraintComponentBase>>(m, "ConstraintComponentBase")
-    .def(py::init<const double, const double>());
+    .def(py::init<const double, const double>(),
+          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995);
 }
 
 } // namespace python

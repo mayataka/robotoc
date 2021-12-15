@@ -3,9 +3,9 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/hybrid_container.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
@@ -19,14 +19,6 @@
 namespace robotoc {
 
 ///
-/// @typedef RiccatiFactorization
-/// @brief Riccati factorization matices of the LQR subproblem. 
-///
-using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, 
-                                              SplitRiccatiFactorization, 
-                                              SplitConstrainedRiccatiFactorization>;
-
-///
 /// @class RiccatiRecursion
 /// @brief Riccati recursion solver for hybrid optimal control problems.
 /// Solves the KKT system in linear time complexity w.r.t. the length of the 
@@ -34,18 +26,17 @@ using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization,
 ///
 class RiccatiRecursion {
 public:
-
   ///
   /// @brief Construct a Riccati recursion solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] N Number of discretization of the horizon. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
+  /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. Default is 0.1.
   ///
-  RiccatiRecursion(const Robot& robot, const int N, const int max_num_impulse, 
-                   const int nthreads);
+  RiccatiRecursion(const OCP& ocp, const int nthreads, 
+                   const double max_dts0=0.1);
 
   ///
   /// @brief Default constructor. 
@@ -76,6 +67,20 @@ public:
   /// @brief Default move assign operator. 
   ///
   RiccatiRecursion& operator=(RiccatiRecursion&&) noexcept = default;
+
+  ///
+  /// @brief Sets the regularization on the STO.
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. 
+  ///
+  void setRegularization(const double max_dts0);
+
+  ///
+  /// @brief Resizes the internal data. 
+  /// @param[in] ocp Optimal control problem.
+  ///
+  void resize(const OCP& ocp);
 
   ///
   /// @brief Performs the backward Riccati recursion. 
@@ -126,23 +131,21 @@ public:
   double maxDualStepSize() const;
 
   ///
-  /// @brief Gets of the state feedback gain of the LQR subproblem of the 
-  /// specified time stage. 
-  /// @param[in] time_stage Time stage of interested. 
-  /// @param[in, out] Kq The state feedback gain with respect to the configuration. 
-  /// @param[in, out] Kv The state feedback gain with respect to the velocity. 
+  /// @brief Gets of the LQR policies over the horizon. 
+  /// @return const reference to the LQR policies.
   ///
-  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
-                            Eigen::MatrixXd& Kv) const;
+  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
 
 private:
-  int nthreads_, N_, N_all_;
+  int nthreads_, N_all_;
   RiccatiFactorizer factorizer_;
   hybrid_container<LQRPolicy> lqr_policy_;
+  aligned_vector<STOPolicy> sto_policy_;
+  SplitRiccatiFactorization factorization_m_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
 
 } // namespace robotoc
 
-#endif // ROBOTOC_RICCATI_RECURSION_HPP_ 
+#endif // ROBOTkeps_OC_RICCATI_RECURSION_HPP_ 

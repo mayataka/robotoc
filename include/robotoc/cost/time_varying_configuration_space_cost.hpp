@@ -128,9 +128,9 @@ public:
 
   ///
   /// @brief Sets the time-varying reference configuration. 
-  /// @param[in] ref Shared ptr time-varying reference position.
+  /// @param[in] q_ref Shared ptr to the time-varying reference position.
   ///
-  void set_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref);
+  void set_q_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& q_ref);
 
   ///
   /// @brief Sets the weight vector on the configuration q. 
@@ -140,16 +140,16 @@ public:
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the configuration q. 
-  /// @param[in] qf_weight Terminal weight vector on the configuration q. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the terminal stage. 
+  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the impulse stages. 
+  /// @param[in] qi_weight Weight vector on the configuration q at the impulse 
+  /// stages. Size must be Robot::dimv().
   ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 
@@ -196,7 +196,7 @@ public:
 
 private:
   int dimq_, dimv_;
-  std::shared_ptr<TimeVaryingConfigurationRefBase> ref_;
+  std::shared_ptr<TimeVaryingConfigurationRefBase> q_ref_;
   Eigen::VectorXd q_weight_, qf_weight_, qi_weight_;
 
 };

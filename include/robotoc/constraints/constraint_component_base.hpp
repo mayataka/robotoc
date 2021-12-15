@@ -34,17 +34,13 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
-  /// Should be between 0.9 and 0.995.
+  /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  ConstraintComponentBase(const double barrier, 
-                          const double fraction_to_boundary_rule);
-
-  ///
-  /// @brief Default constructor. 
-  ///
-  ConstraintComponentBase();
+  ConstraintComponentBase(const double barrier=1.0e-03, 
+                          const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Destructor. 
@@ -215,7 +211,7 @@ public:
   ///
   /// @brief Returns the barrier parameter.
   ///
-  virtual double barrierParameter() const final;
+  virtual double barrier() const final;
 
   ///
   /// @brief Returns the parameter of the fraction-to-boundary-rule.

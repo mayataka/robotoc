@@ -34,8 +34,11 @@ public:
   ///
   /// @brief Constructs a factorizer.
   /// @param[in] robot Robot model. 
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. Default is 0.1.
   ///
-  RiccatiFactorizer(const Robot& robot);
+  RiccatiFactorizer(const Robot& robot, const double max_dts0=0.1);
 
   ///
   /// @brief Default constructor. 
@@ -68,6 +71,14 @@ public:
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
   ///
+  /// @brief Sets the regularization on the STO.
+  /// @param[in] max_dts0 Maximum magnitude of the nominal direction of 
+  /// the switching time. Used in a heuristic regularization on the dynamic 
+  /// programming recursion. Must be positive. 
+  ///
+  void setRegularization(const double max_dts0);
+
+  ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 
@@ -80,6 +91,37 @@ public:
                                 SplitKKTResidual& kkt_residual,  
                                 SplitRiccatiFactorization& riccati,
                                 LQRPolicy& lqr_policy);
+
+  ///
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] riccati_next Riccati factorization of the next stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this stage. 
+  /// @param[in, out] riccati Riccati factorization of this stage. 
+  /// @param[in, out] lqr_policy LQR policy of this stage. 
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
+  ///
+  void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
+                                SplitKKTMatrix& kkt_matrix, 
+                                SplitKKTResidual& kkt_residual,  
+                                SplitRiccatiFactorization& riccati,
+                                LQRPolicy& lqr_policy, const bool sto,
+                                const bool has_next_sto_phase);
+
+  ///
+  /// @brief Performs the backward Riccati recursion for the phase transition. 
+  /// @param[in] riccati Riccati factorization of this stage. 
+  /// @param[in, out] riccati_m Data for modified Riccati factorization. 
+  /// @param[in, out] sto_policy STO policy. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
+  ///
+  void backwardRiccatiRecursionPhaseTransition(
+      const SplitRiccatiFactorization& riccati, 
+      SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy, 
+      const bool has_next_sto_phase) const;
 
   ///
   /// @brief Performs the backward Riccati recursion with the switching 
@@ -103,6 +145,31 @@ public:
       SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy);
 
   ///
+  /// @brief Performs the backward Riccati recursion with the switching 
+  /// constraint. 
+  /// @param[in] riccati_next Riccati factorization of the next stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this stage. 
+  /// @param[in] sc_jacobian Jacobian of the switching constraint. 
+  /// @param[in] sc_residual Residual of the switching constraint. 
+  /// @param[in, out] riccati Riccati factorization of this stage. 
+  /// @param[in, out] c_riccati Riccati factorization for the switching 
+  /// constraint. 
+  /// @param[in, out] lqr_policy LQR policy of this stage. 
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
+  ///
+  void backwardRiccatiRecursion(
+      const SplitRiccatiFactorization& riccati_next, 
+      SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
+      const SwitchingConstraintJacobian& sc_jacobian, 
+      const SwitchingConstraintResidual& sc_residual, 
+      SplitRiccatiFactorization& riccati, 
+      SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy,
+      const bool sto, const bool has_next_sto_phase);
+
+  ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage. 
@@ -115,6 +182,31 @@ public:
                                 SplitRiccatiFactorization& riccati);
 
   ///
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] riccati_next Riccati factorization of the next stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage. 
+  /// @param[in, out] riccati Riccati factorization of this impulse stage. 
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  ///
+  void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
+                                ImpulseSplitKKTMatrix& kkt_matrix, 
+                                ImpulseSplitKKTResidual& kkt_residual, 
+                                SplitRiccatiFactorization& riccati,
+                                const bool sto);
+
+  /// 
+  /// @brief Computes the switching time direction. 
+  /// @param[in, out] sto_policy STO policy. 
+  /// @param[in] d Split direction. 
+  /// @param[in] has_prev_sto_phase Flag for wheather this phase has the 
+  /// previous phase involving the STO problem.
+  /// 
+  static void computeSwitchingTimeDirection(const STOPolicy& sto_policy,
+                                            SplitDirection& d,
+                                            const bool has_prev_sto_phase);
+
+  ///
   /// @brief Performs the forward Riccati recursion and computes the state 
   /// direction. 
   /// @param[in] kkt_matrix Split KKT matrix of this stage. 
@@ -122,15 +214,16 @@ public:
   /// @param[in] lqr_policy LQR policy of this stage. 
   /// @param[in] d Split direction of this stage. 
   /// @param[in, out] d_next Split direction of the next stage. 
-  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
-  /// considered. If false, it is not considered.
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
   ///
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
                                const LQRPolicy& lqr_policy, SplitDirection& d, 
-                               SplitDirectionType& d_next, 
-                               const bool sto=false) const;
+                               SplitDirectionType& d_next, const bool sto,
+                               const bool has_next_sto_phase) const;
 
   ///
   /// @brief Performs the forward Riccati recursion and computes the state 
@@ -149,32 +242,45 @@ public:
   /// @brief Computes the Newton direction of the costate. 
   /// @param[in] riccati Riccati factorization of this impulse stage. 
   /// @param[in, out] d Split direction. 
-  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
-  /// considered. If false, it is not considered. Defalut is false.
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
   ///
-  template <typename SplitDirectionType>
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
-                                      SplitDirectionType& d, 
-                                      const bool sto=false);
+                                      SplitDirection& d, const bool sto, 
+                                      const bool has_next_sto_phase);
+
+  ///
+  /// @brief Computes the Newton direction of the costate. 
+  /// @param[in] riccati Riccati factorization of this impulse stage. 
+  /// @param[in, out] d Impulse split direction. 
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  ///
+  static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
+                                      ImpulseSplitDirection& d, const bool sto);
 
   ///
   /// @brief Computes the Newton direction of the Lagrange multiplier with 
   /// respect to the switching constraint. 
   /// @param[in] c_riccati Riccati factorization for the switching constraint.
   /// @param[in, out] d Split direction of the this stage. 
-  /// @param[in] sto If true, the sensitivity w.r.t. the switching time is 
-  /// considered. If false, it is not considered. Defalut is false.
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
   ///
   static void computeLagrangeMultiplierDirection(
-      const SplitConstrainedRiccatiFactorization& c_riccati,
-      SplitDirection& d, const bool sto=false);
+      const SplitConstrainedRiccatiFactorization& c_riccati, SplitDirection& d,
+      const bool sto, const bool has_next_sto_phase);
 
 private:
   bool has_floating_base_;
   int dimv_, dimu_;
+  double max_dts0_;
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
   LQRPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
+  static constexpr double keps_ 
+      = std::sqrt(std::numeric_limits<double>::epsilon());
 
 };
 

@@ -34,8 +34,10 @@ PYBIND11_MODULE(time_varying_configuration_ref_base, m) {
              PyTimeVaryingConfigurationRefBase,
              std::shared_ptr<TimeVaryingConfigurationRefBase>>(m, "TimeVaryingConfigurationRefBase")
     .def(py::init<>())
-    .def("update_q_ref", &TimeVaryingConfigurationRefBase::update_q_ref)
-    .def("isActive", &TimeVaryingConfigurationRefBase::isActive);
+    .def("update_q_ref", &TimeVaryingConfigurationRefBase::update_q_ref,
+          py::arg("robot"), py::arg("t"), py::arg("q_ref"))
+    .def("isActive", &TimeVaryingConfigurationRefBase::isActive,
+          py::arg("t"));
 }
 
 } // namespace python

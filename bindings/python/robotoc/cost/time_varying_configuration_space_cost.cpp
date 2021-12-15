@@ -16,10 +16,14 @@ PYBIND11_MODULE(time_varying_configuration_space_cost, m) {
              std::shared_ptr<TimeVaryingConfigurationSpaceCost>>(m, "TimeVaryingConfigurationSpaceCost")
     .def(py::init<const Robot&, 
                   const std::shared_ptr<TimeVaryingConfigurationRefBase>&>())
-    .def("set_ref", &TimeVaryingConfigurationSpaceCost::set_ref)
-    .def("set_q_weight", &TimeVaryingConfigurationSpaceCost::set_q_weight)
-    .def("set_qf_weight", &TimeVaryingConfigurationSpaceCost::set_qf_weight)
-    .def("set_qi_weight", &TimeVaryingConfigurationSpaceCost::set_qi_weight);
+    .def("set_q_ref", &TimeVaryingConfigurationSpaceCost::set_q_ref,
+          py::arg("q_ref"))
+    .def("set_q_weight", &TimeVaryingConfigurationSpaceCost::set_q_weight,
+          py::arg("q_weight"))
+    .def("set_qf_weight", &TimeVaryingConfigurationSpaceCost::set_qf_weight,
+          py::arg("qf_weight"))
+    .def("set_qi_weight", &TimeVaryingConfigurationSpaceCost::set_qi_weight,
+          py::arg("qi_weight"));
 }
 
 } // namespace python

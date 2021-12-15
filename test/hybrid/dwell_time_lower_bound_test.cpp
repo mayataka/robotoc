@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/hybrid/dwell_time_lower_bound.hpp"
 
 
@@ -14,7 +14,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     min_dt = Eigen::VectorXd::Random(1).array().abs()[0];
-    barrier = 1e-04;
+    barrier = 1e-03;
     fraction_to_boundary_rule = 0.995;
     bound = DwellTimeLowerBound(barrier, fraction_to_boundary_rule);
     ts1 = Eigen::VectorXd::Random(1).array().abs()[0];
@@ -29,6 +29,19 @@ protected:
   DwellTimeLowerBound bound;
   double min_dt, barrier, fraction_to_boundary_rule, ts1, ts2;
 };
+
+
+TEST_F(DwellTimeLowerBoundTest, testParam) {
+  EXPECT_DOUBLE_EQ(bound.barrier(), 1.0e-03);
+  EXPECT_DOUBLE_EQ(bound.fractionToBoundaryRule(), 0.995);
+  // overwrite parameters
+  const double barrier = 0.8;
+  const double fraction_to_boundary_rule = 0.5;
+  bound.setBarrier(barrier);
+  bound.setFractionToBoundaryRule(fraction_to_boundary_rule);
+  EXPECT_DOUBLE_EQ(bound.barrier(), barrier);
+  EXPECT_DOUBLE_EQ(bound.fractionToBoundaryRule(), fraction_to_boundary_rule);
+}
 
 
 TEST_F(DwellTimeLowerBoundTest, lub) {

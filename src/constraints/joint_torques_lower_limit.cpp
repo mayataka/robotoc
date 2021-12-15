@@ -3,10 +3,8 @@
 
 namespace robotoc {
 
-JointTorquesLowerLimit::JointTorquesLowerLimit(
-    const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointTorquesLowerLimit::JointTorquesLowerLimit(const Robot& robot)
+  : ConstraintComponentBase(),
     dimc_(robot.jointEffortLimit().size()),
     umin_(-robot.jointEffortLimit()) {
 }

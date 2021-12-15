@@ -89,6 +89,10 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> mt() const;
 
+    Eigen::VectorBlock<Eigen::VectorXd> mt_next();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> mt_next() const;
+
   Eigen::MatrixXd Ginv;
 
   Eigen::MatrixXd DtM;
@@ -99,9 +103,17 @@ public:
 
   bool hasNaN() const;
 
+  ///
+  /// @brief Displays the split constrained Riccati factorization onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(
+      std::ostream& os, const SplitConstrainedRiccatiFactorization& c_riccati);
+
 private:
   Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_, M_full_;
-  Eigen::VectorXd m_full_, mt_full_;
+  Eigen::VectorXd m_full_, mt_full_, mt_next_full_;
   int dimv_, dimx_, dimu_, dimi_;
 
 };

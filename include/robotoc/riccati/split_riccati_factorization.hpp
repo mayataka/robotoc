@@ -18,34 +18,17 @@ public:
   /// @brief Constructs Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. 
   ///
-  SplitRiccatiFactorization(const Robot& robot)
-    : P(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
-      s(Eigen::VectorXd::Zero(2*robot.dimv())),
-      Gmm(Eigen::VectorXd::Zero(2*robot.dimv())),
-      xi(0.0),
-      eta(0.0),
-      dimv_(robot.dimv()),
-      dimx_(2*robot.dimv()) {
-  }
+  SplitRiccatiFactorization(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  SplitRiccatiFactorization()
-    : P(),
-      s(),
-      Gmm(),
-      xi(0.0),
-      eta(0.0),
-      dimv_(0.0),
-      dimx_(0.0) {
-  }
+  SplitRiccatiFactorization();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitRiccatiFactorization() {
-  }
+  ~SplitRiccatiFactorization();
 
   ///
   /// @brief Default copy constructor. 
@@ -133,7 +116,37 @@ public:
   /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
   /// 2 * Robot::dimv().
   ///
-  Eigen::VectorXd Gmm;
+  Eigen::VectorXd psi_x;
+
+  ///
+  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
+  /// Robot::dimu().
+  ///
+  Eigen::VectorXd psi_u;
+
+  ///
+  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
+  /// 2 * Robot::dimv().
+  ///
+  Eigen::VectorXd Psi;
+
+  ///
+  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
+  /// 2 * Robot::dimv().
+  ///
+  Eigen::VectorXd phi_x;
+
+  ///
+  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
+  /// Robot::dimu().
+  ///
+  Eigen::VectorXd phi_u;
+
+  ///
+  /// @brief Riccati factorization vector w.r.t. the switching time. Size is 
+  /// 2 * Robot::dimv().
+  ///
+  Eigen::VectorXd Phi;
 
   ///
   /// @brief Riccati factorization w.r.t. the switching time. 
@@ -143,37 +156,49 @@ public:
   ///
   /// @brief Riccati factorization w.r.t. the switching time. 
   ///
+  double chi;
+
+  ///
+  /// @brief Riccati factorization w.r.t. the switching time. 
+  ///
+  double rho;
+
+  ///
+  /// @brief Riccati factorization w.r.t. the switching time. 
+  ///
   double eta;
+
+  ///
+  /// @brief Riccati factorization w.r.t. the switching time. 
+  ///
+  double iota;
+
+  void setZero();
+
+  void setRandom();
 
   ///
   /// @brief Checks the equivalence of two SplitRiccatiFactorization.
   /// @param[in] other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const SplitRiccatiFactorization& other) const {
-    if (!P.isApprox(other.P)) return false;
-    if (!s.isApprox(other.s)) return false;
-    if (!Gmm.isApprox(other.Gmm)) return false;
-    Eigen::Vector2d vec, other_vec;
-    vec << xi, eta;
-    other_vec << other.xi, other.eta;
-    if (!vec.isApprox(other_vec)) return false;
-    return true;
-  }
+  bool isApprox(const SplitRiccatiFactorization& other) const;
 
   ///
   /// @brief Checks this object has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
-  bool hasNaN() const {
-    if (P.hasNaN()) return true;
-    if (s.hasNaN()) return true;
-    if (Gmm.hasNaN()) return true;
-    Eigen::Vector2d vec;
-    vec << xi, eta;
-    if (vec.hasNaN()) return true;
-    return false;
-  }
+  bool hasNaN() const;
+
+  static SplitRiccatiFactorization Random(const Robot& robot);
+
+  ///
+  /// @brief Displays the split Riccati factorization onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const SplitRiccatiFactorization& riccati);
 
 private:
   int dimv_, dimx_;
@@ -181,5 +206,7 @@ private:
 };
 
 } // namespace robotoc 
+
+#include "robotoc/riccati/split_riccati_factorization.hxx"
 
 #endif // ROBOTOC_SPLIT_RICCATI_FACTORIZATION_HPP_ 

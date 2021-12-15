@@ -1,17 +1,18 @@
 #include "riccati_factory.hpp"
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
 namespace testhelper {
 
 SplitRiccatiFactorization CreateSplitRiccatiFactorization(const Robot& robot) {
-  SplitRiccatiFactorization riccati_factorization(robot);
+  auto riccati_factorization = SplitRiccatiFactorization::Random(robot);
   const int dimx = 2*robot.dimv();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimx, dimx);
   riccati_factorization.P = seed * seed.transpose();
-  riccati_factorization.s.setRandom();
+  riccati_factorization.xi = 1000.0 * std::abs(riccati_factorization.xi); // scaling to avoid ill-conditioning
+  riccati_factorization.rho = std::abs(riccati_factorization.rho);
   return riccati_factorization;
 }
 

@@ -33,8 +33,8 @@ inline void createConstraintsData(
     std::vector<ConstraintComponentData>& data) {
   data.clear();
   for (const auto& constraint : constraints) {
-    auto component_data = ConstraintComponentData(
-        constraint->dimc(), constraint->barrierParameter());
+    auto component_data = ConstraintComponentData(constraint->dimc(), 
+                                                  constraint->barrier());
     constraint->allocateExtraData(component_data);
     data.push_back(component_data);
   }

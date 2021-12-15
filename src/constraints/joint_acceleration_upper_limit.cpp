@@ -3,10 +3,9 @@
 
 namespace robotoc {
 
-JointAccelerationUpperLimit::JointAccelerationUpperLimit(
-    const Robot& robot, const Eigen::VectorXd& amax, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointAccelerationUpperLimit::JointAccelerationUpperLimit(const Robot& robot, 
+                                                         const Eigen::VectorXd& amax)
+  : ConstraintComponentBase(),
     dimc_(amax.size()),
     amax_(amax) {
 }

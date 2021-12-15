@@ -3,10 +3,8 @@
 
 namespace robotoc {
 
-JointPositionUpperLimit::JointPositionUpperLimit(
-    const Robot& robot, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointPositionUpperLimit::JointPositionUpperLimit(const Robot& robot)
+  : ConstraintComponentBase(),
     dimc_(robot.lowerJointPositionLimit().size()),
     qmax_(robot.upperJointPositionLimit()) {
 }

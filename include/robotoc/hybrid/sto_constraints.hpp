@@ -7,7 +7,7 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/ocp/direction.hpp"
@@ -29,13 +29,13 @@ public:
   /// minimum dwell times are set to this value. Default is 
   /// STOConstraints::k_min_dt.
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
-  /// Default is 1.0e-04.
+  /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
   STOConstraints(const int max_num_switches, const double min_dt=k_min_dt,
-                 const double barrier=1.0e-04, 
+                 const double barrier=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
   ///
@@ -44,13 +44,13 @@ public:
   /// @param[in] min_dt Minimum dwell times. Each component must be 
   /// non-negative. 
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
-  /// Default is 1.0e-04.
+  /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
   STOConstraints(const int max_num_switches, const std::vector<double>& min_dt,
-                 const double barrier=1.0e-04, 
+                 const double barrier=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
   ///
@@ -86,44 +86,49 @@ public:
 
   ///
   /// @brief Sets the slack variables. 
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   ///
-  void setSlack(const HybridOCPDiscretization& discretization);
+  void setSlack(const TimeDiscretization& discretization);
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   ///
-  void evalConstraint(const HybridOCPDiscretization& discretization);
+  void evalConstraint(const TimeDiscretization& discretization);
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(const HybridOCPDiscretization& discretization,
+  void linearizeConstraints(const TimeDiscretization& discretization,
                             KKTResidual& kkt_residual); 
 
   ///
   /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
   /// and condense the slack and dual variables.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void condenseSlackAndDual(const HybridOCPDiscretization& discretization,
+  void condenseSlackAndDual(const TimeDiscretization& discretization,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
-  /// @param[in] discretization Discretization of the optimal control problem.
+  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// control problem.
   /// @param[in] d Newton direction.
   ///
-  void expandSlackAndDual(const HybridOCPDiscretization& discretization, 
+  void expandSlackAndDual(const TimeDiscretization& discretization, 
                           const Direction& d); 
 
   ///
@@ -161,20 +166,6 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Sets the barrier parameter for all the constraint components.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
-  ///
-  void setBarrier(const double barrier);
-
-  ///
-  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
-  /// constraint components.
-  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
-  /// than 1. Should be between 0.9 and 0.995.
-  ///
-  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
-
-  ///
   /// @brief Sets the minimum dwell time. 
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
   /// minimum dwell times are set to this value. Default is 
@@ -190,6 +181,32 @@ public:
   void setMinimumDwellTimes(const std::vector<double>& min_dt);
 
   ///
+  /// @brief Sets the barrier parameter for all the constraint components.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  ///
+  void setBarrier(const double barrier);
+
+  ///
+  /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
+  /// constraint components.
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995.
+  ///
+  void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
+
+  ///
+  /// @brief Gets the barrier parameter.
+  /// @return Barrier parameter. 
+  ///
+  double barrier() const;
+
+  ///
+  /// @brief Gets the parameter of the fraction-to-boundary-rule. 
+  /// @return The parameter of the fraction-to-boundary-rule. 
+  ///
+  double fractionToBoundaryRule() const;
+
+  ///
   /// @brief Minimum value of the minimum dwell times.  
   ///
   static constexpr double k_min_dt 
@@ -199,6 +216,7 @@ private:
   std::vector<DwellTimeLowerBound> dtlb_;
   std::vector<double> min_dt_;
   double k_min_dt_; // this is for Pybind11
+  double barrier_, fraction_to_boundary_rule_;
   int max_num_switches_, num_switches_;
   Eigen::VectorXd primal_step_size_, dual_step_size_;
 

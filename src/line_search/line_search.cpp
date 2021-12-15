@@ -7,31 +7,28 @@
 
 namespace robotoc {
 
-LineSearch::LineSearch(const Robot& robot, const int N, 
-                       const int max_num_impulse, const int nthreads, 
+LineSearch::LineSearch(const OCP& ocp, const int nthreads, 
                        const LineSearchSettings& line_search_settings) 
   : filter_(),
-    max_num_impulse_(max_num_impulse), 
-    nthreads_(nthreads),
     settings_(line_search_settings),
-    costs_(Eigen::VectorXd::Zero(N+1)), 
-    costs_impulse_(Eigen::VectorXd::Zero(max_num_impulse)), 
-    costs_aux_(Eigen::VectorXd::Zero(max_num_impulse)), 
-    costs_lift_(Eigen::VectorXd::Zero(max_num_impulse)), 
-    violations_(Eigen::VectorXd::Zero(N)), 
-    violations_impulse_(Eigen::VectorXd::Zero(max_num_impulse)), 
-    violations_aux_(Eigen::VectorXd::Zero(max_num_impulse)), 
-    violations_lift_(Eigen::VectorXd::Zero(max_num_impulse)),
-    s_trial_(robot, N, max_num_impulse), 
-    kkt_residual_(robot, N, max_num_impulse) {
+    nthreads_(nthreads),
+    costs_(Eigen::VectorXd::Zero(ocp.N()+1)), 
+    costs_impulse_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    costs_aux_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    costs_lift_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    violations_(Eigen::VectorXd::Zero(ocp.N())), 
+    violations_impulse_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    violations_aux_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    violations_lift_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())),
+    s_trial_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()), 
+    kkt_residual_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()) {
 }
 
 
 LineSearch::LineSearch() 
   : filter_(),
-    max_num_impulse_(0), 
-    nthreads_(0),
     settings_(),
+    nthreads_(0),
     costs_(), 
     costs_impulse_(), 
     costs_aux_(), 
@@ -57,11 +54,11 @@ double LineSearch::computeStepSize(
   assert(max_primal_step_size > 0);
   assert(max_primal_step_size <= 1);
   double primal_step_size = max_primal_step_size;
-  if (settings_.line_search_method == "filter") {
+  if (settings_.line_search_method == LineSearchMethod::Filter) {
     primal_step_size = lineSearchFilterMethod(ocp, robots, contact_sequence, 
                                                 q, v, s, d, primal_step_size);
   }
-	else if (settings_.line_search_method == "merit-backtracking") {
+	else if (settings_.line_search_method == LineSearchMethod::MeritBacktracking) {
     primal_step_size = meritBacktrackingLineSearch(ocp, robots, contact_sequence, 
                                                      q, v, s, d, primal_step_size);
   }

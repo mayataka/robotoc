@@ -17,6 +17,8 @@
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
+#include "robotoc/solver/solver_options.hpp"
+#include "robotoc/solver/solver_statistics.hpp"
 
 
 namespace robotoc {
@@ -31,18 +33,16 @@ class UnconstrParNMPCSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. 
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] parnmpc Optimal control problem. 
+  /// @param[in] solver_options Solver options. Default is 
+  /// SolverOptions::defaultOptions().
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnconstrParNMPCSolver(const Robot& robot, 
-                        const std::shared_ptr<CostFunction>& cost,
-                        const std::shared_ptr<Constraints>& constraints, 
-                        const double T, const int N, const int nthreads=1);
+  UnconstrParNMPCSolver(
+      const UnconstrParNMPC& parnmpc, 
+      const SolverOptions& solver_options=SolverOptions::defaultOptions(), 
+      const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -75,6 +75,12 @@ public:
   UnconstrParNMPCSolver& operator=(UnconstrParNMPCSolver&&) noexcept = default;
 
   ///
+  /// @brief Sets the solver option. 
+  /// @param[in] solver_options Solver options.  
+  ///
+  void setSolverOptions(const SolverOptions& solver_options);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   ///
@@ -87,15 +93,33 @@ public:
   void initBackwardCorrection(const double t);
 
   ///
-  /// @brief Updates the solution by computing the primal-dual Newon direction.
+  /// @brief Performs single Newton-type iteration, computes the primal-dual 
+  /// Newon direction, and updates the solution.
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] line_search If true, filter line search is enabled. If false
-  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const bool line_search=false);
+                      const Eigen::VectorXd& v);
+
+  ///
+  /// @brief Solves the optimal control problem. Internally calls 
+  /// updateSolution().
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @param[in] init_solver If true, initializes the solver, that is, calls
+  /// initConstraints(), initBackwardCorrection(), and clears the line search 
+  /// filter. Default is true.
+  ///
+  void solve(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
+             const bool init_solver=true);
+
+  ///
+  /// @brief Gets the solver statistics.
+  /// @return Solver statistics.
+  ///
+  const SolverStatistics& getSolverStatistics() const;
 
   ///
   /// @brief Get the split solution of a time stage. For example, the control 
@@ -121,26 +145,22 @@ public:
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
-  /// @brief Clear the line search filter. 
-  ///
-  void clearLineSearchFilter();
-
-  ///
-  /// @brief Computes the KKT residual of the optimal control problem. 
+  /// @brief Computes the KKT residual of the optimal control problem and 
+  /// returns the KKT error, that is, the l2-norm of the KKT residual. 
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @return The KKT error, that is, the l2-norm of the KKT residual.
   ///
-  void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v);
+  double KKTError(const double t, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
 
   ///
-  /// @brief Returns the l2-norm of the KKT residuals.
-  /// UnconstrParNMPCsolver::updateSolution() or 
-  /// UnconstrParNMPCsolver::computeKKTResidual() must be called.  
+  /// @brief Returns the l2-norm of the KKT residuals using the results of 
+  /// UnconstrParNMPCsolver::updateSolution() or UnconstrParNMPCsolver::solve().
   /// @return The l2-norm of the KKT residual.
   ///
-  double KKTError();
+  double KKTError() const;
 
   ///
   /// @brief Returns the value of the cost function.
@@ -167,6 +187,8 @@ private:
   Direction d_;
   int N_, nthreads_;
   double T_, dt_;
+  SolverOptions solver_options_;
+  SolverStatistics solver_statistics_;
 
 };
 

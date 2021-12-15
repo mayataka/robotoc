@@ -10,6 +10,16 @@
 namespace robotoc {
 
 ///
+/// @enum ContactType 
+/// @brief Types of contacts 
+///
+enum class ContactType {
+  PointContact,
+  SurfaceContact
+};
+
+
+///
 /// @class ContactStatus
 /// @brief Contact status of robot model.
 ///
@@ -18,8 +28,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
+  /// @param[in] contact_id Identifier number of the contact. Can be used only 
+  /// in user-defined cost and constraints. Default is 0.
   ///
-  ContactStatus(const int max_point_contacts);
+  ContactStatus(const int max_point_contacts, const int contact_id=0);
 
   ///
   /// @brief Default constructor. 
@@ -157,9 +169,50 @@ public:
 
   ///
   /// @brief Gets contact points.
-  /// @return const reference to the vector of contact points. 
+  /// @return const reference to the contact points. 
   ///
   const std::vector<Eigen::Vector3d>& contactPoints() const;
+
+  ///
+  /// @brief Sets the rotation matrix of a contact surface.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_surface_rotation Rotation matrix of the contact surface.
+  ///
+  void setContactSurfaceRotation(const int contact_index, 
+                                 const Eigen::Matrix3d& contact_surface_rotation);
+
+  ///
+  /// @brief Sets the rotation matrices of contact surfaces.
+  /// @param[in] contact_surfaces_rotations Rotation matrices of the contact 
+  //// surfaces. Size must be ContactStatus::maxPointContacts().
+  ///
+  void setContactSurfacesRotations(
+      const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations);
+
+  ///
+  /// @brief Gets rotation matrix of a contact surface.
+  /// @param[in] contact_index Index of the contact.
+  /// @return const reference to the rotation matrix of the contact surface. 
+  ///
+  const Eigen::Matrix3d& contactSurfaceRotation(const int contact_index) const;
+
+  ///
+  /// @brief Gets rotation matrices of the contact surfaces.
+  /// @return const reference to the rotation matrices of the contact surfaces. 
+  ///
+  const std::vector<Eigen::Matrix3d>& contactSurfacesRotations() const;
+
+  ///
+  /// @brief Sets contact id.
+  /// @param[in] contact_id Contact id. 
+  ///
+  void setContactId(const int contact_id);
+
+  ///
+  /// @brief Gets contact id.
+  /// @return Contact id. 
+  ///
+  int contactId() const;
 
   ///
   /// @brief Fills contact status randomly.
@@ -179,7 +232,8 @@ public:
 private:
   std::vector<bool> is_contact_active_;
   std::vector<Eigen::Vector3d> contact_points_;
-  int dimf_, max_point_contacts_;
+  std::vector<Eigen::Matrix3d> contact_surfaces_rotations_;
+  int dimf_, max_point_contacts_, contact_id_;
   bool has_active_contacts_;
 
   void set_has_active_contacts();

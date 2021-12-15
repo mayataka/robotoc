@@ -62,10 +62,10 @@ public:
   ///
   /// @brief Computes the time-varying reference position. 
   /// @param[in] t Time.
-  /// @param[in] CoM_ref Reference position of the center of mass. Size is 3.
+  /// @param[in] com_ref Reference position of the center of mass. Size is 3.
   ///
-  virtual void update_CoM_ref(const double t, 
-                              Eigen::VectorXd& CoM_ref) const = 0;
+  virtual void update_com_ref(const double t, 
+                              Eigen::VectorXd& com_ref) const = 0;
 
   ///
   /// @brief Checks wheather the cost is active or not at the specified time. 
@@ -86,10 +86,11 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] ref Shared ptr to the reference position.
+  /// @param[in] com_ref Shared ptr to the reference position of the center of 
+  /// mass.
   ///
   TimeVaryingCoMCost(const Robot& robot, 
-                     const std::shared_ptr<TimeVaryingCoMRefBase>& ref);
+                     const std::shared_ptr<TimeVaryingCoMRefBase>& com_ref);
 
   ///
   /// @brief Default constructor. 
@@ -123,27 +124,30 @@ public:
 
   ///
   /// @brief Sets the time-varying reference position. 
-  /// @param[in] ref Shared ptr to the time-varying reference position.
+  /// @param[in] com_ref Shared ptr to the time-varying reference position of 
+  /// the center of mass.
   ///
-  void set_ref(const std::shared_ptr<TimeVaryingCoMRefBase>& ref);
+  void set_com_ref(const std::shared_ptr<TimeVaryingCoMRefBase>& com_ref);
 
   ///
   /// @brief Sets the weight vector. 
-  /// @param[in] q_weight Weight vector on the CoM position error. 
+  /// @param[in] com_weight Weight vector on the CoM position error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& q_weight);
+  void set_com_weight(const Eigen::Vector3d& com_weight);
 
   ///
-  /// @brief Sets the terminal weight vector. 
-  /// @param[in] qf_weight Terminal weight vector on the CoM position error. 
+  /// @brief Sets the weight vector at the terminal stage. 
+  /// @param[in] comf_weight Weight vector on the CoM position error at the 
+  /// terminal stage. 
   ///
-  void set_qf_weight(const Eigen::Vector3d& qf_weight);
+  void set_comf_weight(const Eigen::Vector3d& comf_weight);
 
   ///
-  /// @brief Sets the weight vector at impulse. 
-  /// @param[in] qi_weight Weight vector on the CoM position error at impulse. 
+  /// @brief Sets the weight vector at the impulse stages. 
+  /// @param[in] comi_weight Weight vector on the CoM position error at the
+  /// impulse stages. 
   ///
-  void set_qi_weight(const Eigen::Vector3d& qi_weight);
+  void set_comi_weight(const Eigen::Vector3d& comi_weight);
 
   bool useKinematics() const override;
 
@@ -189,8 +193,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<TimeVaryingCoMRefBase> ref_;
-  Eigen::Vector3d q_weight_, qf_weight_, qi_weight_;
+  std::shared_ptr<TimeVaryingCoMRefBase> com_ref_;
+  Eigen::Vector3d com_weight_, comf_weight_, comi_weight_;
 
 };
 

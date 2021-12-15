@@ -1,0 +1,2 @@
+add_robotoc_test(solver_options_test)
+add_robotoc_test(solver_statistics_test)

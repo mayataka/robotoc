@@ -20,7 +20,7 @@ class ImpulseFrictionConeTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-04;
+    barrier = 1.0e-03;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.7;
     fraction_to_boundary_rule = 0.995;
@@ -60,7 +60,7 @@ void ImpulseFrictionConeTest::test_kinematics(Robot& robot,
 void ImpulseFrictionConeTest::test_isFeasible(Robot& robot, 
                                              const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
   EXPECT_EQ(constr.dimc(), 5*impulse_status.maxPointContacts());
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -85,7 +85,7 @@ void ImpulseFrictionConeTest::test_isFeasible(Robot& robot,
 
 void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter()), data_ref(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier()), data_ref(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
   constr.allocateExtraData(data_ref);
   const int dimc = constr.dimc();
@@ -108,7 +108,7 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
   data.slack.setRandom();
   data.dual.setRandom();
@@ -140,7 +140,7 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
 
 void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -182,7 +182,7 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
 void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
                                                        const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -238,7 +238,7 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
 
 void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone constr(robot, mu); 
-  ConstraintComponentData data(constr.dimc(), constr.barrierParameter());
+  ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);

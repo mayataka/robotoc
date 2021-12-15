@@ -95,20 +95,23 @@ void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(nthreads);
   dms.initConstraints(ocp, robots, contact_sequence, s);
-  LineSearch line_search(robot, N, max_num_impulse, nthreads, settings);
+  LineSearch line_search(ocp, nthreads, settings);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
-  if (settings.line_search_method == "filter") {
+  if (settings.line_search_method == LineSearchMethod::Filter) {
     EXPECT_FALSE(line_search.isFilterEmpty());
   }
   const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
   EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, very_small_max_primal_step_size),
                    min_step_size);
+  EXPECT_NO_THROW(
+    std::cout << settings << std::endl;
+  );
 }
 
 
@@ -130,7 +133,7 @@ TEST_P(LineSearchTest, floatingBase) {
 }
 
 LineSearchSettings filter_settings = LineSearchSettings::defaultSettings();
-LineSearchSettings backtrack_settings("merit-backtracking", 0.75, 0.05, 0.001, 0.05, 1.0e-08);
+LineSearchSettings backtrack_settings(LineSearchMethod::MeritBacktracking, 0.75, 0.05, 0.001, 0.05, 1.0e-08);
 
 INSTANTIATE_TEST_SUITE_P(ParamtererizedTest, LineSearchTest, 
                          ::testing::Values(filter_settings, backtrack_settings));

@@ -28,16 +28,12 @@ class LineSearch {
 public:
   ///
   /// @brief Construct a line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
+  /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   /// @param[in] line_search_settings Line search settings.
   ///
-  LineSearch(const Robot& robot, const int N, const int max_num_impulse=0, 
-             const int nthreads=1, 
+  LineSearch(const OCP& ocp, const int nthreads=1, 
              const LineSearchSettings& line_search_settings=LineSearchSettings::defaultSettings());
 
   ///
@@ -105,8 +101,8 @@ public:
 
 private:
   LineSearchFilter filter_;
-  int max_num_impulse_, nthreads_;
   LineSearchSettings settings_;
+  int nthreads_;
   Eigen::VectorXd costs_, costs_impulse_, costs_aux_, costs_lift_, violations_, 
                   violations_impulse_, violations_aux_, violations_lift_; 
   Solution s_trial_;

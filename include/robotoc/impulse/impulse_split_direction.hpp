@@ -196,6 +196,11 @@ public:
   double dts;
 
   ///
+  /// @brief Newton direction of the next switching time.
+  ///
+  double dts_next;
+
+  ///
   /// @brief Set the all directions zero.
   ///
   void setZero();

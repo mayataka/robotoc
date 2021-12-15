@@ -62,27 +62,29 @@ public:
 
   ///
   /// @brief Sets the reference position of the center of mass. 
-  /// @param[in] CoM_ref Reference position of the center of mass.
+  /// @param[in] com_ref Reference position of the center of mass.
   ///
-  void set_CoM_ref(const Eigen::Vector3d& CoM_ref);
+  void set_com_ref(const Eigen::Vector3d& com_ref);
 
   ///
   /// @brief Sets the weight vector. 
-  /// @param[in] q_weight Weight vector on the CoM position error. 
+  /// @param[in] com_weight Weight vector on the com position error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& q_weight);
+  void set_com_weight(const Eigen::Vector3d& com_weight);
 
   ///
-  /// @brief Sets the terminal weight vector. 
-  /// @param[in] qf_weight Terminal weight vector on the CoM position error. 
+  /// @brief Sets the weight vector at the terminal stage. 
+  /// @param[in] comf_weight Weight vector on the com position error at the 
+  /// terminal stage. 
   ///
-  void set_qf_weight(const Eigen::Vector3d& qf_weight);
+  void set_comf_weight(const Eigen::Vector3d& comf_weight);
 
   ///
-  /// @brief Sets the weight vector at impulse. 
-  /// @param[in] qi_weight Weight vector on the CoM position error at impulse. 
+  /// @brief Sets the weight vector at the impulse stage. 
+  /// @param[in] comi_weight Weight vector on the com position error at the 
+  /// impulse stage. 
   ///
-  void set_qi_weight(const Eigen::Vector3d& qi_weight);
+  void set_comi_weight(const Eigen::Vector3d& comi_weight);
 
   bool useKinematics() const override;
 
@@ -128,7 +130,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::Vector3d CoM_ref_, q_weight_, qf_weight_, qi_weight_;
+  Eigen::Vector3d com_ref_, com_weight_, comf_weight_, comi_weight_;
 
 };
 

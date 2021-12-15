@@ -268,11 +268,11 @@ public:
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
-  /// stage. Default is zero.
+  /// stage. 
   /// 
   template <typename SplitDirectionType>
   void expandDual(const double dt, const SplitDirectionType& d_next, 
-                  SplitDirection& d, const double dts=0);
+                  SplitDirection& d, const double dts);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
@@ -282,11 +282,11 @@ public:
   /// @param[in] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
-  /// stage. Default is zero.
+  /// stage. 
   /// 
   void expandDual(const double dt, const SplitDirection& d_next, 
                   const SwitchingConstraintJacobian& sc_jacobian,
-                  SplitDirection& d, const double dts=0);
+                  SplitDirection& d, const double dts);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

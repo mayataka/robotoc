@@ -47,6 +47,7 @@ TEST_F(StateEquationTest, fixedbase) {
   kkt_residual_ref.la   = dt * s_next.gmm;
   kkt_residual_ref.h  = s_next.lmd.dot(s.v) + s_next.gmm.dot(s.a);
   kkt_matrix_ref.hv() = s_next.lmd;
+  kkt_matrix_ref.ha   = s_next.gmm;
   kkt_matrix_ref.fq() = s.v;
   kkt_matrix_ref.fv() = s.a;
   kkt_matrix_ref.Fqq() = Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
@@ -90,6 +91,7 @@ TEST_F(StateEquationTest, floatingBase) {
   kkt_residual_ref.la   = dt * s_next.gmm;
   kkt_residual_ref.h  = s_next.lmd.dot(s.v) + s_next.gmm.dot(s.a);
   kkt_matrix_ref.hv() = s_next.lmd;
+  kkt_matrix_ref.ha   = s_next.gmm;
   kkt_matrix_ref.fq() = s.v;
   kkt_matrix_ref.fv() = s.a;
   kkt_matrix_ref.Fqq() = dsubtract_dq;

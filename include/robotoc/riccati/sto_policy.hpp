@@ -21,6 +21,7 @@ public:
   ///
   STOPolicy(const Robot& robot)
     : dtsdx(Eigen::VectorXd::Zero(2*robot.dimv())),
+      dtsdts(0),
       dts0(0) {
   }
 
@@ -29,6 +30,7 @@ public:
   ///
   STOPolicy() 
     : dtsdx(),
+      dtsdts(0),
       dts0(0) {
   }
 
@@ -65,9 +67,29 @@ public:
   Eigen::VectorXd dtsdx;
 
   ///
+  /// @brief Feedback gain of the STO policy, i.e. the sensitivity w.r.t. the 
+  /// previous switching time.
+  ///
+  double dtsdts;
+
+  ///
   /// @brief Feedforward term of the STO policy.
   ///
   double dts0;
+
+  ///
+  /// @brief Checks the equivalence of two STOPolicy.
+  /// @param[in] other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
+  bool isApprox(const STOPolicy& other) const {
+    if (!dtsdx.isApprox(other.dtsdx)) return false;
+    Eigen::Vector2d vec, vec_other;
+    vec << dtsdts, dts0;
+    vec_other << other.dtsdts, other.dts0;
+    if (!vec.isApprox(vec_other)) return false;
+    return true;
+  }
 
 private:
 

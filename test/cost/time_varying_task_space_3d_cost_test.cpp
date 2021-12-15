@@ -18,11 +18,11 @@ namespace robotoc {
   
 class TimeVaryingTaskSpace3DRef final : public TimeVaryingTaskSpace3DRefBase {
 public:
-  TimeVaryingTaskSpace3DRef(const Eigen::Vector3d& q0_ref, 
-                            const Eigen::Vector3d& v_ref, 
+  TimeVaryingTaskSpace3DRef(const Eigen::Vector3d& x3d0_ref, 
+                            const Eigen::Vector3d& vx3d0_ref, 
                             const double t0, const double tf)
-    : q0_ref_(q0_ref),
-      v_ref_(v_ref),
+    : x3d0_ref_(x3d0_ref),
+      vx3d0_ref_(vx3d0_ref),
       t0_(t0),
       tf_(tf) {
   }
@@ -42,8 +42,8 @@ public:
   TimeVaryingTaskSpace3DRef& operator=(
       TimeVaryingTaskSpace3DRef&&) noexcept = default;
 
-  void update_q_3d_ref(const double t, Eigen::VectorXd& q_ref) const override {
-    q_ref = q0_ref_ + (t-t0_) * v_ref_;
+  void update_x3d_ref(const double t, Eigen::VectorXd& x3d_ref) const override {
+    x3d_ref = x3d0_ref_ + (t-t0_) * vx3d0_ref_;
   }
 
   bool isActive(const double t) const override {
@@ -54,7 +54,7 @@ public:
   }
 
 private:
-  Eigen::Vector3d q0_ref_, v_ref_;
+  Eigen::Vector3d x3d0_ref_, vx3d0_ref_;
   double t0_, tf_;
 };
 
@@ -87,19 +87,19 @@ void TimeVaryingTaskSpace3DCostTest::testStageCost(Robot& robot, const int frame
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
-  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
-  auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(q0_ref, v_ref, t0, tf);
+  const Eigen::Vector3d x3d_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3df_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3di_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3d0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vx3d0_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(x3d0_ref, vx3d0_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight);
-  cost->set_qf_weight(qf_weight);
-  cost->set_qi_weight(qi_weight);
+  cost->set_x3d_weight(x3d_weight);
+  cost->set_x3df_weight(x3df_weight);
+  cost->set_x3di_weight(x3di_weight);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -115,18 +115,18 @@ void TimeVaryingTaskSpace3DCostTest::testStageCost(Robot& robot, const int frame
   cost->evalStageCostHessian(robot, contact_status, data, tf+dt, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
-  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
+  const Eigen::Vector3d q_ref = x3d0_ref + (t-t0) * vx3d0_ref;
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = dt * 0.5 * q_diff.transpose() * q_weight.asDiagonal() * q_diff;
+  const double l_ref = dt * 0.5 * q_diff.transpose() * x3d_weight.asDiagonal() * q_diff;
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += dt * J_diff.transpose() * q_weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * q_weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += dt * J_diff.transpose() * x3d_weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * x3d_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -140,19 +140,19 @@ void TimeVaryingTaskSpace3DCostTest::testTerminalCost(Robot& robot, const int fr
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
-  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
-  auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(q0_ref, v_ref, t0, tf);
+  const Eigen::Vector3d x3d_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3df_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3di_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3d0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vx3d0_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(x3d0_ref, vx3d0_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight);
-  cost->set_qf_weight(qf_weight);
-  cost->set_qi_weight(qi_weight);
+  cost->set_x3d_weight(x3d_weight);
+  cost->set_x3df_weight(x3df_weight);
+  cost->set_x3di_weight(x3di_weight);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -167,18 +167,18 @@ void TimeVaryingTaskSpace3DCostTest::testTerminalCost(Robot& robot, const int fr
   cost->evalTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
-  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
+  const Eigen::Vector3d q_ref = x3d0_ref + (t-t0) * vx3d0_ref;
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = 0.5 * q_diff.transpose() * qf_weight.asDiagonal() * q_diff;
+  const double l_ref = 0.5 * q_diff.transpose() * x3df_weight.asDiagonal() * q_diff;
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
   cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
   cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += J_diff.transpose() * qf_weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += J_diff.transpose() * qf_weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += J_diff.transpose() * x3df_weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_diff.transpose() * x3df_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -192,19 +192,19 @@ void TimeVaryingTaskSpace3DCostTest::testImpulseCost(Robot& robot, const int fra
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
-  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
-  auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(q0_ref, v_ref, t0, tf);
+  const Eigen::Vector3d x3d_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3df_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3di_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d x3d0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d vx3d0_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(x3d0_ref, vx3d0_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_weight(q_weight);
-  cost->set_qf_weight(qf_weight);
-  cost->set_qi_weight(qi_weight);
+  cost->set_x3d_weight(x3d_weight);
+  cost->set_x3df_weight(x3df_weight);
+  cost->set_x3di_weight(x3di_weight);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
@@ -220,18 +220,18 @@ void TimeVaryingTaskSpace3DCostTest::testImpulseCost(Robot& robot, const int fra
   cost->evalImpulseCostHessian(robot, impulse_status, data, tf+dt, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
-  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
+  const Eigen::Vector3d q_ref = x3d0_ref + (t-t0) * vx3d0_ref;
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = 0.5 * q_diff.transpose() * qi_weight.asDiagonal() * q_diff;
+  const double l_ref = 0.5 * q_diff.transpose() * x3di_weight.asDiagonal() * q_diff;
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
   cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += J_diff.transpose() * qi_weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += J_diff.transpose() * qi_weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += J_diff.transpose() * x3di_weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_diff.transpose() * x3di_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

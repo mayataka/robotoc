@@ -14,7 +14,7 @@
 #include "robotoc/ocp/kkt_matrix.hpp"
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/hybrid_ocp_discretization.hpp"
+#include "robotoc/hybrid/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -28,14 +28,10 @@ class DirectMultipleShooting {
 public:
   ///
   /// @brief Construct the direct multiple shooting method.
-  /// @param[in] N Number of discretization grids of the horizon. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  DirectMultipleShooting(const int N, const int max_num_impulse, 
-                         const int nthreads);
+  DirectMultipleShooting(const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -130,13 +126,13 @@ public:
   /// @param[in] ocp Optimal control problem.
   /// @param[in] kkt_residual KKT residual. 
   ///
-  double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
+  static double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the total value of the cost function.
   /// @param[in] ocp Optimal control problem.
   ///
-  double totalCost(const OCP& ocp) const;
+  static double totalCost(const OCP& ocp);
 
   ///
   /// @brief Computes the initial state direction.
@@ -172,6 +168,12 @@ public:
   static const Eigen::VectorXd& q_prev(const OCP& ocp, const Eigen::VectorXd& q, 
                                        const Solution& s, const int time_stage);
 
+  static double dts_stage(const OCP& ocp, const Direction& d, const int time_stage);
+
+  static double dts_aux(const OCP& ocp, const Direction& d, const int impulse_index);
+
+  static double dts_lift(const OCP& ocp, const Direction& d, const int lift_index);
+
 private:
   template <typename Algorithm>
   void runParallel(OCP& ocp, aligned_vector<Robot>& robots,
@@ -180,7 +182,7 @@ private:
                    const Solution& s, KKTMatrix& kkt_matrix, 
                    KKTResidual& kkt_residual) const;
 
-  int max_num_impulse_, nthreads_;
+  int nthreads_;
 };
 
 } // namespace robotoc 

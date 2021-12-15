@@ -3,10 +3,9 @@
 
 namespace robotoc {
 
-JointAccelerationLowerLimit::JointAccelerationLowerLimit(
-    const Robot& robot, const Eigen::VectorXd& amin, const double barrier, 
-    const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+JointAccelerationLowerLimit::JointAccelerationLowerLimit(const Robot& robot, 
+                                                         const Eigen::VectorXd& amin)
+  : ConstraintComponentBase(),
     dimc_(amin.size()),
     amin_(amin) {
 }

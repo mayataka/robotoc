@@ -37,11 +37,11 @@ TEST_F(PeriodicFootTrackRefTest2, first_mode_half_true) {
                                                                    period_stance, true);
   Eigen::VectorXd p(3), p_ref(3);
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_q_3d_ref(t1, p);
+  preiodic_foot_ref->update_x3d_ref(t1, p);
   EXPECT_TRUE(p.isApprox(p0));
   EXPECT_TRUE(preiodic_foot_ref->isActive(t1));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_q_3d_ref(t2, p);
+  preiodic_foot_ref->update_x3d_ref(t2, p);
   EXPECT_TRUE(preiodic_foot_ref->isActive(t2));
   if (t2 < t0+period_swing) {
     p_ref = p0;
@@ -90,11 +90,11 @@ TEST_F(PeriodicFootTrackRefTest2, first_mode_half_false) {
                                                                    period_stance, false);
   Eigen::VectorXd p(3), p_ref(3);
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_q_3d_ref(t1, p);
+  preiodic_foot_ref->update_x3d_ref(t1, p);
   EXPECT_TRUE(preiodic_foot_ref->isActive(t1));
   EXPECT_TRUE(p.isApprox(p0));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_q_3d_ref(t2, p);
+  preiodic_foot_ref->update_x3d_ref(t2, p);
   EXPECT_TRUE(preiodic_foot_ref->isActive(t2));
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;

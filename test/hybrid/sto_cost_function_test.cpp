@@ -30,7 +30,7 @@ protected:
     contact_sequence 
         = testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, 0, 3*dt);
 
-    discretization = HybridOCPDiscretization(T, N, 2*max_num_impulse);
+    discretization = TimeDiscretization(T, N, 2*max_num_impulse);
     discretization.discretize(contact_sequence, t);
   }
 
@@ -42,7 +42,7 @@ protected:
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
   std::shared_ptr<ContactSequence> contact_sequence;
-  HybridOCPDiscretization discretization;
+  TimeDiscretization discretization;
 };
 
 

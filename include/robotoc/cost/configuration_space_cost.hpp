@@ -110,37 +110,38 @@ public:
   void set_u_weight(const Eigen::VectorXd& u_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the configuration q. 
-  /// @param[in] qf_weight Terminal weight vector on the configuration q. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at the terminal stage. 
+  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   ///
-  /// @brief Sets the terminal weight vector on the velocity v. 
-  /// @param[in] vf_weight Terminal weight vector on the velocity v. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the velocity v at the terminal stage. 
+  /// @param[in] vf_weight Weight vector on the velocity v at the terminal 
+  /// stage. Size must be Robot::dimv().
   ///
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the configuration q at impulse stages. 
+  /// @param[in] qi_weight Weight vector on the configuration q at impulse  
+  /// stages. Size must be Robot::dimv().
   ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 
   ///
-  /// @brief Sets the weight vector on the velocity v at impulse. 
-  /// @param[in] vi_weight Weight vector on the velocity v at impulse. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the velocity v at the impulse stages. 
+  /// @param[in] vi_weight Weight vector on the velocity v at the impulse  
+  /// stages. Size must be Robot::dimv().
   ///
   void set_vi_weight(const Eigen::VectorXd& vi_weight);
 
   ///
-  /// @brief Sets the weight vector on the impulse change in the velocity dv. 
-  /// @param[in] dvi_weight Weight vector on the impulse change in the velocity. 
-  /// Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the impulse change in the velocity dv at 
+  /// the impulse stages. 
+  /// @param[in] dvi_weight Weight vector on the impulse change in the velocity
+  /// the impulse stages. Size must be Robot::dimv().
   ///
   void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
 

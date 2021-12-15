@@ -19,7 +19,7 @@
 
 namespace robotoc {
 
-class DirectMultipleShootingTest : public ::testing::Test {
+class DirectMultipleShootingTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -38,10 +38,6 @@ protected:
   Solution createSolution(const Robot& robot, 
                           const std::shared_ptr<ContactSequence>& contact_sequence) const;
   std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
-
-  void test_computeKKTResidual(const Robot& robot) const;
-  void test_computeKKTSystem(const Robot& robot) const;
-  void test_integrateSolution(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
   double T, t, dt;
@@ -64,10 +60,11 @@ std::shared_ptr<ContactSequence> DirectMultipleShootingTest::createContactSequen
 }
 
 
-void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) const {
+TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
+  auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
@@ -118,6 +115,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.impulse[impulse_index].initConstraints(
           robot_ref, contact_sequence->impulseStatus(impulse_index), s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTResidual(
@@ -130,6 +129,9 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.aux[impulse_index], 
+                                         kkt_residual_ref.aux[impulse_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       kkt_error_ref += kkt_residual_ref.impulse[impulse_index].kkt_error;
       kkt_error_ref += kkt_residual_ref.aux[impulse_index].kkt_error;
@@ -154,11 +156,16 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.lift[lift_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.lift[lift_index], 
+                                         kkt_residual_ref.lift[lift_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       kkt_error_ref += kkt_residual_ref.lift[lift_index].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
@@ -179,6 +186,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     } 
@@ -191,6 +200,8 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
           robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     }
@@ -207,15 +218,16 @@ void DirectMultipleShootingTest::test_computeKKTResidual(const Robot& robot) con
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix_ref));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual_ref));
-  EXPECT_DOUBLE_EQ(kkt_error, std::sqrt(kkt_error_ref));
+  EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   EXPECT_DOUBLE_EQ(total_cost, total_cost_ref);
 }
 
 
-void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const {
+TEST_P(DirectMultipleShootingTest, computeKKTSystem) {
+  auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
@@ -261,6 +273,8 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       ocp_ref[i].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.impulse[impulse_index].initConstraints(
           robot_ref, contact_sequence->impulseStatus(impulse_index), s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTSystem(
@@ -273,6 +287,9 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.aux[impulse_index], 
+                                         kkt_residual_ref.aux[impulse_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -290,11 +307,16 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
       ocp_ref[i].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
       ocp_ref.lift[lift_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.lift[lift_index], 
+                                         kkt_residual_ref.lift[lift_index], 
+                                         ocp.discrete().N_phase(contact_phase+1));
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -311,6 +333,8 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           contact_sequence->impulseStatus(impulse_index),
           dt_next, kkt_matrix_ref.switching[impulse_index],
           kkt_residual_ref.switching[impulse_index]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -321,6 +345,8 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
           robot_ref, contact_sequence->contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
+                                         ocp.discrete().N_phase(contact_phase));
     }
   }
   ocp_ref.terminal.computeKKTSystem(robot_ref, t+T, s[ocp_ref.discrete().N()-1].q, 
@@ -336,10 +362,11 @@ void DirectMultipleShootingTest::test_computeKKTSystem(const Robot& robot) const
 }
 
 
-void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) const {
+TEST_P(DirectMultipleShootingTest, integrateSolution) {
+  auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  DirectMultipleShooting dms(N, max_num_impulse, nthreads);
+  DirectMultipleShooting dms(nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
@@ -352,7 +379,7 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   dms.initConstraints(ocp, robots, contact_sequence, s);
   dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   Direction d(robot, N, max_num_impulse);
-  RiccatiRecursion riccati_solver(robots[0], N, max_num_impulse, nthreads);
+  RiccatiRecursion riccati_solver(ocp, nthreads);
   RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);
   riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, riccati_factorization);
   DirectMultipleShooting::computeInitialStateDirection(ocp, robots, q, v, s, d);
@@ -376,6 +403,7 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   auto robot_ref = robot;
   for (int i=0; i<ocp_ref.discrete().N(); ++i) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
+      const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
       const double dti = ocp_ref.discrete().dt(i);
       const double dt_aux = ocp_ref.discrete().dt_aux(impulse_index);
@@ -383,20 +411,22 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dt);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i]);
+      const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
+      const double dts_aux = (d_ref.aux[impulse_index].dts_next - d_ref.aux[impulse_index].dts) / ocp_ref.discrete().N_phase(contact_phase+1);
+      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index], dts_aux);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
+      const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
       const double dti = ocp_ref.discrete().dt(i);
       const double dt_lift = ocp_ref.discrete().dt_lift(lift_index);
@@ -404,30 +434,33 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dt);
-      const bool sto = ocp.discrete().isSTOEnabledLift(lift_index);
-      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i]);
+      const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
+      const double dts_lift = (d_ref.lift[lift_index].dts_next - d_ref.lift[lift_index].dts) / ocp_ref.discrete().N_phase(contact_phase+1);
+      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index], dts_lift);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, 
                                             d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
+      const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
       const double dti = ocp_ref.discrete().dt(i);
       ASSERT_TRUE(dti >= 0);
       ASSERT_TRUE(dti <= dt);
-      const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
+      const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
       ocp_ref[i].expandDual(dti, d_ref[i+1], kkt_matrix_ref.switching[impulse_index], 
-                            d_ref[i]);
+                            d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
     else {
+      const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const double dti = ocp_ref.discrete().dt(i);
-      const bool sto_false = false;
-      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i]);
+      const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
+      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
@@ -439,41 +472,22 @@ void DirectMultipleShootingTest::test_integrateSolution(const Robot& robot) cons
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
 
-
-  std::cout << d[0] << std::endl;
-  std::cout << d_ref[0] << std::endl;
-
-  // EXPECT_NO_THROW(
-  //   std::cout << s << std::endl;
-  //   std::cout << d << std::endl;
-  //   std::cout << kkt_matrix << std::endl;
-  //   std::cout << kkt_residual << std::endl;
-  // );
+  EXPECT_NO_THROW(
+    std::cout << s << std::endl;
+    std::cout << d << std::endl;
+    std::cout << kkt_matrix << std::endl;
+    std::cout << kkt_residual << std::endl;
+  );
 }
 
 
-TEST_F(DirectMultipleShootingTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot();
-  test_computeKKTResidual(robot);
-  test_computeKKTSystem(robot);
-  test_integrateSolution(robot);
-  robot = testhelper::CreateFixedBaseRobot(dt);
-  test_computeKKTResidual(robot);
-  test_computeKKTSystem(robot);
-  test_integrateSolution(robot);
-}
-
-
-TEST_F(DirectMultipleShootingTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot();
-  test_computeKKTResidual(robot);
-  test_computeKKTSystem(robot);
-  test_integrateSolution(robot);
-  robot = testhelper::CreateFloatingBaseRobot(dt);
-  test_computeKKTResidual(robot);
-  test_computeKKTSystem(robot);
-  test_integrateSolution(robot);
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, DirectMultipleShootingTest, 
+  ::testing::Values(testhelper::CreateFixedBaseRobot(),
+                    testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateFloatingBaseRobot(),
+                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+);
 
 } // namespace robotoc
 

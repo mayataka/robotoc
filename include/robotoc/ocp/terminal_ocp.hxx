@@ -74,6 +74,7 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
                                                 kkt_residual);
   state_equation_.linearizeStateEquation(robot, q_prev, s, 
                                          kkt_matrix, kkt_residual);
+  kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
 

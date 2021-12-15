@@ -191,7 +191,8 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   EXPECT_TRUE(d.isApprox(d_ref));
 
   const auto d_next = SplitDirection::Random(robot);
-  cd.expandDual(dt, d_next, d);
+  const double dts = Eigen::VectorXd::Random(1)[0];
+  cd.expandDual(dt, dts, d_next, d);
   if (robot.hasFloatingBase()) {
     Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);
     du_full.tail(dimu) = d_ref.du; 
@@ -202,7 +203,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   d_ref.dbetamu() = - data.MJtJinv() * (data.Qafqv() * d_ref.dx 
                                         + data.Qafu_full() * du_full 
                                         + OOIO_mat.transpose() * d_next.dlmdgmm
-                                        + data.laf());
+                                        + data.laf() + dts * data.haf());
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 

@@ -13,39 +13,51 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ocp_solver, m) {
   py::class_<OCPSolver>(m, "OCPSolver")
-    .def(py::init<const Robot&, const std::shared_ptr<ContactSequence>&, 
-                  const std::shared_ptr<CostFunction>&,
-                  const std::shared_ptr<Constraints>&, 
-                  const double, const int, const int>(),
-         py::arg("robot"), py::arg("contact_sequence"), py::arg("cost"), 
-         py::arg("constraints"), py::arg("T"), py::arg("N"), py::arg("nthreads")=1)
-    .def(py::init<const Robot&, const std::shared_ptr<ContactSequence>&, 
-                  const std::shared_ptr<CostFunction>&,
-                  const std::shared_ptr<Constraints>&, 
-                  const std::shared_ptr<STOCostFunction>&,
-                  const std::shared_ptr<STOConstraints>&, 
-                  const double, const int, const int>(),
-         py::arg("robot"), py::arg("contact_sequence"), py::arg("cost"), 
-         py::arg("constraints"), py::arg("sto_cost"), py::arg("sto_constraints"), 
-         py::arg("T"), py::arg("N"), py::arg("nthreads")=1)
-    .def("set_discretization_method", &OCPSolver::setDiscretizationMethod)
-    .def("mesh_refinement", &OCPSolver::meshRefinement)
-    .def("init_constraints", &OCPSolver::initConstraints)
+    .def(py::init<const OCP&, const std::shared_ptr<ContactSequence>&, 
+                  const SolverOptions&, const int>(),
+          py::arg("ocp"), py::arg("contact_sequence"), 
+          py::arg("solver_options")=SolverOptions::defaultOptions(), 
+          py::arg("nthreads")=1)
+    .def("set_solver_options", &OCPSolver::setSolverOptions,
+          py::arg("solver_options"))
+    .def("mesh_refinement", &OCPSolver::meshRefinement,
+          py::arg("t"))
+    .def("init_constraints", &OCPSolver::initConstraints,
+          py::arg("t"))
     .def("update_solution", &OCPSolver::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"), 
-          py::arg("line_search")=false)
-    .def("get_solution", static_cast<const SplitSolution& (OCPSolver::*)(const int stage) const>(&OCPSolver::getSolution))
-    .def("get_solution", static_cast<std::vector<Eigen::VectorXd> (OCPSolver::*)(const std::string&, const std::string&) const>(&OCPSolver::getSolution),
+          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("solve", &OCPSolver::solve,
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=true)
+    .def("get_solver_statistics", &OCPSolver::getSolverStatistics)
+    .def("get_solution", 
+          static_cast<const Solution& (OCPSolver::*)() const>(&OCPSolver::getSolution))
+    .def("get_solution", 
+          static_cast<const SplitSolution& (OCPSolver::*)(const int) const>(&OCPSolver::getSolution),
+          py::arg("stage"))
+    .def("get_solution", 
+          static_cast<std::vector<Eigen::VectorXd> (OCPSolver::*)(const std::string&, const std::string&) const>(&OCPSolver::getSolution),
           py::arg("name"), py::arg("option")="")
-    .def("set_solution", &OCPSolver::setSolution)
-    .def("compute_KKT_residual", &OCPSolver::computeKKTResidual)
-    .def("KKT_error", &OCPSolver::KKTError)
+    .def("get_LQR_policy", &OCPSolver::getLQRPolicy)
+    .def("get_riccati_factorization", &OCPSolver::getRiccatiFactorization)
+    .def("set_solution", 
+          static_cast<void (OCPSolver::*)(const Solution&)>(&OCPSolver::setSolution),
+          py::arg("s"))
+    .def("set_solution", 
+          static_cast<void (OCPSolver::*)(const std::string&, const Eigen::VectorXd&)>(&OCPSolver::setSolution),
+          py::arg("name"), py::arg("value"))
+    .def("extrapolate_solution_last_phase", &OCPSolver::extrapolateSolutionLastPhase,
+          py::arg("t"))
+    .def("extrapolate_solution_initial_phase", &OCPSolver::extrapolateSolutionInitialPhase,
+          py::arg("t"))
+    .def("KKT_error", 
+          static_cast<double (OCPSolver::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&OCPSolver::KKTError),
+          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("KKT_error", 
+          static_cast<double (OCPSolver::*)() const>(&OCPSolver::KKTError))
     .def("cost", &OCPSolver::cost)
     .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
           py::arg("verbose")=false)
-    .def("get_OCP_discretization", &OCPSolver::getOCPDiscretization)
-    .def("set_STO_regularization", &OCPSolver::setSTORegularization)
-    .def("set_line_search_settings", &OCPSolver::setLineSearchSettings)
+    .def("get_time_discretization", &OCPSolver::getTimeDiscretization)
     .def("__str__", [](const OCPSolver& self) {
         std::stringstream ss;
         ss << self;

@@ -7,24 +7,6 @@
 
 namespace robotoc {
 
-UnconstrLineSearch::UnconstrLineSearch(const Robot& robot, const double T, 
-                                       const int N, const int nthreads, 
-                                       const double step_size_reduction_rate,
-                                       const double min_step_size) 
-  : filter_(),
-    N_(N), 
-    nthreads_(nthreads),
-    T_(T),
-    dt_(T/N),
-    step_size_reduction_rate_(step_size_reduction_rate), 
-    min_step_size_(min_step_size),
-    costs_(Eigen::VectorXd::Zero(N+1)), 
-    violations_(Eigen::VectorXd::Zero(N)), 
-    s_trial_(robot, N), 
-    kkt_residual_(robot, N) {
-}
-
-
 UnconstrLineSearch::UnconstrLineSearch() 
   : filter_(),
     N_(0), 

@@ -361,6 +361,11 @@ inline DiscreteEventType ContactSequence::eventType(
 }
 
 
+inline const std::deque<double>& ContactSequence::eventTimes() const {
+  return event_time_;
+}
+
+
 inline int ContactSequence::maxNumEachEvents() const {
   return max_num_each_events_;
 }

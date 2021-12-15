@@ -6,10 +6,8 @@
 
 namespace robotoc {
 
-FrictionCone::FrictionCone(const Robot& robot, const double mu, 
-                           const double barrier,
-                           const double fraction_to_boundary_rule)
-  : ConstraintComponentBase(barrier, fraction_to_boundary_rule),
+FrictionCone::FrictionCone(const Robot& robot, const double mu)
+  : ConstraintComponentBase(),
     dimv_(robot.dimv()),
     dimc_(5*robot.maxPointContacts()),
     max_point_contacts_(robot.maxPointContacts()),

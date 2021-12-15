@@ -36,9 +36,14 @@ public:
       = std::shared_ptr<ImpulseConstraintComponentBase>;
 
   ///
-  /// @brief Default constructor. 
+  /// @brief Constructor. 
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-03
+  /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  Constraints();
+  Constraints(const double barrier=1.0e-03, 
+              const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Destructor. 
@@ -67,17 +72,19 @@ public:
 
   ///
   /// @brief Appends a constraint component to the cost function.
-  /// @param[in] constraint shared pointer to the constraint component appended 
-  /// to the constraints.
+  /// @param[in, out] constraint_component Shared pointer to the constraint 
+  /// component appended to the constraints. The internal barrier parameter and 
+  /// the parameter of the fraction-to-boundary rule will be overitten.
   ///
-  void push_back(const ConstraintComponentBasePtr& constraint);
+  void push_back(ConstraintComponentBasePtr constraint_component);
 
   ///
   /// @brief Appends a constraint component to the cost function.
-  /// @param[in] constraint shared pointer to the constraint component appended 
-  /// to the constraints.
+  /// @param[in, out] constraint_component Shared pointer to the constraint 
+  /// component appended to the constraints. The internal barrier parameter and 
+  /// the parameter of the fraction-to-boundary rule will be overitten.
   ///
-  void push_back(const ImpulseConstraintComponentBasePtr& constraint);
+  void push_back(ImpulseConstraintComponentBasePtr constraint_component);
 
   ///
   /// @brief Clears constraints by removing all components.
@@ -291,12 +298,24 @@ public:
   ///
   void setFractionToBoundaryRule(const double fraction_to_boundary_rule);
 
+  ///
+  /// @brief Gets the barrier parameter.
+  /// @return Barrier parameter. 
+  ///
+  double barrier() const;
+
+  ///
+  /// @brief Gets the parameter of the fraction-to-boundary-rule. 
+  /// @return The parameter of the fraction-to-boundary-rule. 
+  ///
+  double fractionToBoundaryRule() const;
+
 private:
   std::vector<ConstraintComponentBasePtr> position_level_constraints_, 
                                           velocity_level_constraints_, 
                                           acceleration_level_constraints_;
   std::vector<ImpulseConstraintComponentBasePtr> impulse_level_constraints_;
-
+  double barrier_, fraction_to_boundary_rule_;
 };
 
 } // namespace robotoc

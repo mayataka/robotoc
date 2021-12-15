@@ -8,32 +8,27 @@
 
 namespace robotoc {
 
-UnconstrOCPSolver::UnconstrOCPSolver(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints, 
-    const double T, const int N, const int nthreads)
-  : robots_(nthreads, robot),
-    ocp_(robot, cost, constraints, N),
-    riccati_recursion_(robot, T, N),
-    line_search_(robot, T, N, nthreads),
-    kkt_matrix_(robot, N),
-    kkt_residual_(robot, N),
-    s_(robot, N),
-    d_(robot, N),
-    riccati_factorization_(N+1, SplitRiccatiFactorization(robot)),
-    N_(N),
+UnconstrOCPSolver::UnconstrOCPSolver(const UnconstrOCP& ocp, 
+                                     const SolverOptions& solver_options, 
+                                     const int nthreads)
+  : robots_(nthreads, ocp.robot()),
+    ocp_(ocp),
+    riccati_recursion_(ocp),
+    line_search_(ocp, nthreads),
+    kkt_matrix_(ocp.robot(), ocp.N()),
+    kkt_residual_(ocp.robot(), ocp.N()),
+    s_(ocp.robot(), ocp.N()),
+    d_(ocp.robot(), ocp.N()),
+    riccati_factorization_(ocp.N()+1, SplitRiccatiFactorization(ocp.robot())),
+    N_(ocp.N()),
     nthreads_(nthreads),
-    T_(T),
-    dt_(T/N),
-    primal_step_size_(Eigen::VectorXd::Zero(N)), 
-    dual_step_size_(Eigen::VectorXd::Zero(N)) {
+    T_(ocp.T()),
+    dt_(ocp.T()/ocp.N()),
+    primal_step_size_(Eigen::VectorXd::Zero(ocp.N())), 
+    dual_step_size_(Eigen::VectorXd::Zero(ocp.N())),
+    solver_options_(solver_options),
+    solver_statistics_() {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
     }
@@ -54,6 +49,11 @@ UnconstrOCPSolver::~UnconstrOCPSolver() {
 }
 
 
+void UnconstrOCPSolver::setSolverOptions(const SolverOptions& solver_options) {
+  solver_options_ = solver_options;
+}
+
+
 void UnconstrOCPSolver::initConstraints() {
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
@@ -68,8 +68,7 @@ void UnconstrOCPSolver::initConstraints() {
 
 
 void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v, 
-                                       const bool line_search) {
+                                       const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(nthreads_)
@@ -106,11 +105,13 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   }
   double primal_step_size = primal_step_size_.minCoeff();
   const double dual_step_size   = dual_step_size_.minCoeff();
-  if (line_search) {
+  if (solver_options_.enable_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
                                                     d_, max_primal_step_size);
   }
+  solver_statistics_.primal_step_size.push_back(primal_step_size);
+  solver_statistics_.dual_step_size.push_back(dual_step_size);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
@@ -125,6 +126,35 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
     }
   }
 } 
+
+
+void UnconstrOCPSolver::solve(const double t, const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v,
+                              const bool init_solver) {
+  if (init_solver) {
+    initConstraints();
+    line_search_.clearFilter();
+  }
+  solver_statistics_.clear(); 
+  for (int iter=0; iter<solver_options_.max_iter; ++iter) {
+    updateSolution(t, q, v);
+    const double kkt_error = KKTError();
+    solver_statistics_.kkt_error.push_back(kkt_error); 
+    if (kkt_error < solver_options_.kkt_tol) {
+      solver_statistics_.convergence = true;
+      solver_statistics_.iter = iter+1;
+      break;
+    }
+  }
+  if (!solver_statistics_.convergence) {
+    solver_statistics_.iter = solver_options_.max_iter;
+  }
+}
+
+
+const SolverStatistics& UnconstrOCPSolver::getSolverStatistics() const {
+  return solver_statistics_;
+}
 
 
 const SplitSolution& UnconstrOCPSolver::getSolution(const int stage) const {
@@ -161,16 +191,8 @@ std::vector<Eigen::VectorXd> UnconstrOCPSolver::getSolution(
 }
 
 
-void UnconstrOCPSolver::getStateFeedbackGain(const int time_stage, 
-                                             Eigen::MatrixXd& Kq, 
-                                             Eigen::MatrixXd& Kv) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  assert(Kq.rows() == robots_[0].dimv());
-  assert(Kq.cols() == robots_[0].dimv());
-  assert(Kv.rows() == robots_[0].dimv());
-  assert(Kv.cols() == robots_[0].dimv());
-  riccati_recursion_.getStateFeedbackGain(time_stage, Kq, Kv);
+const std::vector<LQRPolicy>& UnconstrOCPSolver::getLQRPolicy() const {
+  return riccati_recursion_.getLQRPolicy();
 }
 
 
@@ -201,14 +223,8 @@ void UnconstrOCPSolver::setSolution(const std::string& name,
 }
 
 
-void UnconstrOCPSolver::clearLineSearchFilter() {
-  line_search_.clearFilter();
-}
-
-
-void UnconstrOCPSolver::computeKKTResidual(const double t, 
-                                           const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v) {
+double UnconstrOCPSolver::KKTError(const double t, const Eigen::VectorXd& q, 
+                                   const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(nthreads_)
@@ -227,10 +243,11 @@ void UnconstrOCPSolver::computeKKTResidual(const double t,
                                        kkt_matrix_[N_], kkt_residual_[N_]);
     }
   }
+  return KKTError();
 }
 
 
-double UnconstrOCPSolver::KKTError() {
+double UnconstrOCPSolver::KKTError() const {
   double kkt_error = 0;
   for (int i=0; i<=N_; ++i) {
     kkt_error += kkt_residual_[i].kkt_error;
