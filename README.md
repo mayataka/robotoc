@@ -164,8 +164,8 @@ You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anyma
 @misc{katayama2021sto,
   title={Structure-exploiting {N}ewton-type method for optimal control of switched systems}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
-  url={arXiv:--},
-  eprint={--},
+  url={arXiv:2112.07232},
+  eprint={2112.07232},
   archivePrefix={arXiv}
   year={2021}}
 ```
@@ -191,6 +191,7 @@ You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anyma
 ```
 
 ## Related publications
+- S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2102.09731, 2021
 - S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
 - S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021
 - S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021
