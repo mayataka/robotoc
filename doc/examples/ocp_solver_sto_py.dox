@@ -220,12 +220,15 @@ plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'),
             t=ocp_solver.get_time_discretization().time_points(), 
             fig_name='jumping_sto_f', save_dir='jumping_sto_log')
 ```
-and then we obtain 
-\image html jumping_sto/jumping_sto.pdf
-\image latex jumping_sto/jumping_sto.pdf
-\image html jumping_sto/jumping_sto_f.pdf
-\image latex jumping_sto/jumping_sto_f.pdf
-The grey hatches in the latter figure indicates the infeasible regions of fx and fy due to the friction cone constraints. 
+Then we obtain the convergence results ((left) switching times and (right) KKT error at each iteration)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.png" width="400">
+
+and the solution trajectory of the contact forces
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto_f.png" width="400">
+
+where the grey hatches indicates the infeasible regions of fx and fy due to the friction cone constraints. 
 We can see that the solution strictly satisfies the friction cone constraints.
 
 
