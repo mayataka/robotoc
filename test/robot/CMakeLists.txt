@@ -1,5 +1,6 @@
 add_robotoc_test(contact_status_test)
 add_robotoc_test(impulse_status_test)
 add_robotoc_test(point_contact_test)
+add_robotoc_test(surface_contact_test)
 add_robotoc_test(robot_test)
 add_robotoc_test(se3_jacobian_inverse_test)

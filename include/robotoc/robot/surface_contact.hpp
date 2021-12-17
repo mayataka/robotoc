@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_POINT_CONTACT_HPP_
-#define ROBOTOC_POINT_CONTACT_HPP_
+#ifndef ROBOTOC_SURFACE_CONTACT_HPP_
+#define ROBOTOC_SURFACE_CONTACT_HPP_
 
 #include "Eigen/Core"
 #include "pinocchio/multibody/model.hpp"
@@ -15,11 +15,13 @@
 namespace robotoc {
 
 ///
-/// @class PointContact
-/// @brief Kinematics and dynamic model of a point contact.
+/// @class SurfaceContact
+/// @brief Kinematics and dynamic model of a surface contact.
 ///
-class PointContact {
+class SurfaceContact {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+  using Matrix66d = Eigen::Matrix<double, 6, 6>;
   using Matrix6xd = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 
   ///
@@ -32,48 +34,48 @@ public:
   /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
   /// on the contact position. Must be non-negative.
   ///
-  PointContact(const pinocchio::Model& model, const int contact_frame_id,
-               const double baumgarte_weight_on_velocity,
-               const double baumgarte_weight_on_position); 
+  SurfaceContact(const pinocchio::Model& model, const int contact_frame_id,
+                 const double baumgarte_weight_on_velocity,
+                 const double baumgarte_weight_on_position); 
 
   ///
   /// @brief Default constructor. 
   ///
-  PointContact();
+  SurfaceContact();
 
   ///
   /// @brief Destructor. 
   ///
-  ~PointContact();
+  ~SurfaceContact();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  PointContact(const PointContact&) = default;
+  SurfaceContact(const SurfaceContact&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  PointContact& operator=(const PointContact&) = default;
+  SurfaceContact& operator=(const SurfaceContact&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  PointContact(PointContact&&) noexcept = default;
+  SurfaceContact(SurfaceContact&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  PointContact& operator=(PointContact&&) noexcept = default;
+  SurfaceContact& operator=(SurfaceContact&&) noexcept = default;
 
   ///
-  /// @brief Converts the 3D contact forces in the local coordinate to the 
+  /// @brief Converts the 6D contact wrench in the local coordinate to the 
   /// corresponding joint spatial forces.
-  /// @param[in] contact_force The 3D contact forces in the local frame.
+  /// @param[in] contact_wrench The 6D contact wrench in the local frame.
   /// @param[out] joint_forces: The corresponding joint spatial forces.
   ///
-  void computeJointForceFromContactForce(
-      const Eigen::Vector3d& contact_force, 
+  void computeJointForceFromContactWrench(
+      const Vector6d& contact_wrench, 
       pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const;
 
   ///
@@ -83,15 +85,15 @@ public:
   /// updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_point Contact point. Size must be 3.
+  /// @param[in] contact_placement Contact placement.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint. 
-  /// Size must be 3.
+  /// Size must be 6.
   /// 
-  template <typename VectorType1, typename VectorType2>
+  template <typename VectorType>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_point,
-      const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const;
+      const SE3& contact_placement,
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual);
 
   ///
   /// @brief Computes the partial derivatives of the contact constraints
@@ -101,11 +103,11 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[out] baumgarte_partial_dq The partial derivative with respect to 
-  /// the configuaration. Size must be 3 x Robot::dimv().
+  /// the configuaration. Size must be 6 x Robot::dimv().
   /// @param[out] baumgarte_partial_dv The partial derivative with respect to 
-  /// the velocity. Size must be 3 x Robot::dimv().
+  /// the velocity. Size must be 6 x Robot::dimv().
   /// @param[out] baumgarte_partial_da The partial derivative  with respect to 
-  /// the acceleration. Size must be 3 x Robot::dimv().
+  /// the acceleration. Size must be 6 x Robot::dimv().
   /// 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
@@ -134,9 +136,9 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[out] velocity_partial_dq The partial derivative with respect to the 
-  /// configuaration. Size must be 3 x Robot::dimv().
+  /// configuaration. Size must be 6 x Robot::dimv().
   /// @param[out] velocity_partial_dv The partial derivative with respect to the 
-  /// velocity. Size must be 3 x Robot::dimv().
+  /// velocity. Size must be 6 x Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2>
   void computeContactVelocityDerivatives(
@@ -150,15 +152,15 @@ public:
   /// be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_point Contact point. Size must be 3.
+  /// @param[in] contact_placement Contact placement.
   /// @param[out] contact_residual Residual of the contact constraint. Size must 
-  /// be 3.
+  /// be 6.
   /// 
-  template <typename VectorType1, typename VectorType2>
+  template <typename VectorType>
   void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_point,
-      const Eigen::MatrixBase<VectorType2>& contact_residual) const;
+      const SE3& contact_placement,
+      const Eigen::MatrixBase<VectorType>& contact_residual);
 
   ///
   /// @brief Computes the partial derivative of the contact position  
@@ -168,7 +170,7 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[out] contact_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
+  /// with respect to the configuaration. Size must be 6 x Robot::dimv().
   /// 
   template <typename MatrixType>
   void computeContactPositionDerivative(
@@ -186,13 +188,13 @@ public:
                            const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Returns the contact point at the current kinematics of the robot. 
-  /// Before calling this function, kinematics of the robot model (frame 
+  /// @brief Returns the contact placement at the current kinematics of the  
+  /// robot. Before calling this function, kinematics of the robot model (frame 
   /// position) must be updated.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @return Const reference to the contact point.
+  /// @return Const reference to the contact placmenet.
   ///
-  const Eigen::Vector3d& contactPoint(const pinocchio::Data& data) const;
+  const SE3& contactPlacement(const pinocchio::Data& data) const;
 
   ///
   /// @brief Returns contact frame id, i.e., the index of the contact frame.
@@ -213,22 +215,21 @@ public:
   void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const PointContact& point_contact);
+                                  const SurfaceContact& surface_contact);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int contact_frame_id_, parent_joint_id_, dimv_;
   double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
-  SE3 jXf_;
-  pinocchio::Motion v_frame_;
-  Eigen::Matrix3d v_linear_skew_, v_angular_skew_;
+  pinocchio::SE3 jXf_, X_diff_;
   Matrix6xd J_frame_, frame_v_partial_dq_, frame_a_partial_dq_, 
             frame_a_partial_dv_, frame_a_partial_da_;
+  Matrix66d Jlog6_;
 };
 
 } // namespace robotoc
 
-#include "robotoc/robot/point_contact.hxx"
+#include "robotoc/robot/surface_contact.hxx"
 
-#endif // ROBOTOC_POINT_CONTACT_HPP_
+#endif // ROBOTOC_SURFACE_CONTACT_HPP_ 
