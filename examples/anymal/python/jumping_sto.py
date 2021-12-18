@@ -158,7 +158,6 @@ plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'),
             t=ocp_solver.get_time_discretization().time_points(), 
             fig_name='jumping_sto_f', save_dir='jumping_sto_log')
 
-
 # Display results
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
