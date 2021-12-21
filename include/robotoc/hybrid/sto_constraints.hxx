@@ -532,6 +532,11 @@ inline void STOConstraints::setMinimumDwellTimes(
 }
 
 
+inline const std::vector<double>& STOConstraints::minimumDwellTimes() const {
+  return min_dt_;
+}
+
+
 inline void STOConstraints::setBarrier(const double _barrier) {
   assert(_barrier > 0.0);
   for (auto& e : dtlb_) {

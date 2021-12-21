@@ -41,6 +41,15 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       throw std::out_of_range(
           "invalid argument: max_num_each_discrete_events must be non-negative!");
     }
+    const auto& min_dt = sto_constraints->minimumDwellTimes();
+    double sum_min_dt = 0;
+    for (const auto e : min_dt) {
+      sum_min_dt += e;
+    }
+    if (T <= sum_min_dt) {
+      throw std::out_of_range(
+          "invalid argument: sum of the minimum dwell-times must be smaller than T!");
+    }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';

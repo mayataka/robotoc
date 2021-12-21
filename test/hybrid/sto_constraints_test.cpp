@@ -76,6 +76,11 @@ TEST_F(STOConstraintsTest, test) {
   EXPECT_TRUE(0 < dual_step_size && dual_step_size <= 1.0);
   constraints.updateSlack(primal_step_size);
   constraints.updateDual(dual_step_size);
+  const auto& min_dwell_times = constraints.minimumDwellTimes();
+  EXPECT_EQ(min_dwell_times.size(), 2*max_num_impulse+1);
+  for (const double e : min_dwell_times) {
+    EXPECT_DOUBLE_EQ(e, min_dt);
+  }
 }
 
 } // namespace robotoc
