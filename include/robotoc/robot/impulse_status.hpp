@@ -21,10 +21,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
-  /// @param[in] impulse_id Identifier number of the impulse. Can be used only 
+  /// @param[in] impulse_mode_id Identifier number of the impulse. Can be used only 
   /// in user-defined cost and constraints. Default is 0.
   ///
-  ImpulseStatus(const int max_point_contacts, const int impulse_id=0);
+  ImpulseStatus(const int max_point_contacts, const int impulse_mode_id=0);
 
   ///
   /// @brief Default constructor. 
@@ -206,13 +206,15 @@ public:
 
   ///
   /// @brief Sets impulse id.
-  /// @param[in] impulse_id Impulse id. 
+  /// @param[in] impulse_mode_id Impulse id. 
+  /// @note Default impulse mode id is 0.
   ///
-  void setImpulseId(const int impulse_id);
+  void setImpulseId(const int impulse_mode_id);
 
   ///
   /// @brief Gets impulse id.
   /// @return Impulse id. 
+  /// @note Default impulse mode id is 0.
   ///
   int impulseId() const;
 

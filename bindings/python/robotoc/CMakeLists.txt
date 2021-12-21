@@ -14,6 +14,7 @@ macro(pybind11_add_robotoc_module MODULE)
   )
 endmacro()
 
+
 macro(install_robotoc_pybind_module CURRENT_MODULE_DIR)
   file(GLOB PYTHON_BINDINGS_${CURRENT_MODULE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/*.cpython*)
   file(GLOB PYTHON_FILES_${CURRENT_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*.py)

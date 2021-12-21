@@ -3,6 +3,7 @@
 
 #include <Eigen/Core>
 #include "pinocchio/spatial/se3.hpp"
+#include "pinocchio/spatial/explog.hpp"
 
 
 namespace robotoc {
