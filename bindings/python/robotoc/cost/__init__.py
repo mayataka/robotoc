@@ -21,3 +21,6 @@ from .periodic_com_ref2 import *
 from .swing_foot_cost import *
 from .swing_foot_ref_base import *
 from .trotting_swing_foot_ref import *
+from .multi_mode_configuration_space_cost import *
+from .multi_mode_task_space_3d_cost import *
+from .multi_mode_task_space_6d_cost import *

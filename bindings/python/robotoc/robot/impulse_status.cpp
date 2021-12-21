@@ -49,9 +49,9 @@ PYBIND11_MODULE(impulse_status, m) {
     .def("contact_surface_rotation", &ImpulseStatus::contactSurfaceRotation,
           py::arg("contact_index"))
     .def("contact_surfaces_rotations", &ImpulseStatus::contactSurfacesRotations)
-    .def("set_impulse_mode_id", &ImpulseStatus::setImpulseId,
+    .def("set_impulse_mode_id", &ImpulseStatus::setImpulseModeId,
           py::arg("impulse_mode_id"))
-    .def("impulse_mode_id", &ImpulseStatus::impulseId)
+    .def("impulse_mode_id", &ImpulseStatus::impulseModeId)
     .def("__str__", [](const ImpulseStatus& self) {
         std::stringstream ss;
         ss << self;

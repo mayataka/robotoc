@@ -179,12 +179,12 @@ ImpulseStatus::contactSurfacesRotations() const {
 }
 
 
-inline void ImpulseStatus::setImpulseId(const int impulse_mode_id) {
+inline void ImpulseStatus::setImpulseModeId(const int impulse_mode_id) {
   contact_status_.setContactModeId(impulse_mode_id);
 }
 
 
-inline int ImpulseStatus::impulseId() const {
+inline int ImpulseStatus::impulseModeId() const {
   return contact_status_.contactModeId();
 }
 

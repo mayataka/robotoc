@@ -209,14 +209,14 @@ public:
   /// @param[in] impulse_mode_id Impulse id. 
   /// @note Default impulse mode id is 0.
   ///
-  void setImpulseId(const int impulse_mode_id);
+  void setImpulseModeId(const int impulse_mode_id);
 
   ///
   /// @brief Gets impulse id.
   /// @return Impulse id. 
   /// @note Default impulse mode id is 0.
   ///
-  int impulseId() const;
+  int impulseModeId() const;
 
   ///
   /// @brief Fills impulse status randomly.
