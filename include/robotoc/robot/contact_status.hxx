@@ -10,13 +10,13 @@
 namespace robotoc {
  
 inline ContactStatus::ContactStatus(const int max_point_contacts,
-                                    const int contact_id)
+                                    const int contact_mode_id)
   : is_contact_active_(max_point_contacts, false),
     contact_points_(max_point_contacts, Eigen::Vector3d::Zero()),
     contact_surfaces_rotations_(max_point_contacts, Eigen::Matrix3d::Identity()),
     dimf_(0),
     max_point_contacts_(max_point_contacts),
-    contact_id_(contact_id),
+    contact_mode_id_(contact_mode_id),
     has_active_contacts_(false) {
 }
 
@@ -27,7 +27,7 @@ inline ContactStatus::ContactStatus()
     contact_surfaces_rotations_(),
     dimf_(0),
     max_point_contacts_(0),
-    contact_id_(0),
+    contact_mode_id_(0),
     has_active_contacts_(false) {
 }
  
@@ -229,13 +229,13 @@ ContactStatus::contactSurfacesRotations() const {
 }
 
 
-inline void ContactStatus::setContactId(const int contact_id) {
-  contact_id_ = contact_id;
+inline void ContactStatus::setContactModeId(const int contact_mode_id) {
+  contact_mode_id_ = contact_mode_id;
 }
 
 
-inline int ContactStatus::contactId() const {
-  return contact_id_;
+inline int ContactStatus::contactModeId() const {
+  return contact_mode_id_;
 }
 
 

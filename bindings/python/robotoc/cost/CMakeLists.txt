@@ -20,5 +20,8 @@ pybind11_add_robotoc_module(periodic_com_ref2)
 pybind11_add_robotoc_module(swing_foot_cost)
 pybind11_add_robotoc_module(swing_foot_ref_base)
 pybind11_add_robotoc_module(trotting_swing_foot_ref)
+pybind11_add_robotoc_module(multi_mode_configuration_space_cost)
+pybind11_add_robotoc_module(multi_mode_task_space_3d_cost)
+pybind11_add_robotoc_module(multi_mode_task_space_6d_cost)
 
 install_robotoc_pybind_module(cost)

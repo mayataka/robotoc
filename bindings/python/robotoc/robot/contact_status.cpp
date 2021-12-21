@@ -21,7 +21,7 @@ PYBIND11_MODULE(contact_status, m) {
 
   py::class_<ContactStatus>(m, "ContactStatus")
     .def(py::init<const int, const int>(),
-          py::arg("max_point_contacts"), py::arg("contact_id")=0)
+          py::arg("max_point_contacts"), py::arg("contact_mode_id")=0)
     .def("max_point_contacts", &ContactStatus::maxPointContacts)
     .def("is_contact_active", 
           static_cast<bool (ContactStatus::*)(const int) const>(&ContactStatus::isContactActive),
@@ -54,9 +54,9 @@ PYBIND11_MODULE(contact_status, m) {
     .def("contact_surface_rotation", &ContactStatus::contactSurfaceRotation,
           py::arg("contact_index"))
     .def("contact_surfaces_rotations", &ContactStatus::contactSurfacesRotations)
-    .def("set_contact_id", &ContactStatus::setContactId,
-          py::arg("contact_id"))
-    .def("contact_id", &ContactStatus::contactId)
+    .def("set_contact_mode_id", &ContactStatus::setContactModeId,
+          py::arg("contact_mode_id"))
+    .def("contact_mode_id", &ContactStatus::contactModeId)
     .def("__str__", [](const ContactStatus& self) {
         std::stringstream ss;
         ss << self;

@@ -10,8 +10,8 @@
 namespace robotoc {
 
 inline ImpulseStatus::ImpulseStatus(const int max_point_contacts,
-                                    const int impulse_id)
-  : contact_status_(max_point_contacts, impulse_id) {
+                                    const int impulse_mode_id)
+  : contact_status_(max_point_contacts, impulse_mode_id) {
 }
 
 
@@ -156,7 +156,8 @@ ImpulseStatus::contactPoints() const {
 
 inline void ImpulseStatus::setContactSurfaceRotation(
     const int contact_index, const Eigen::Matrix3d& contact_surface_rotation) {
-  contact_status_.setContactSurfaceRotation(contact_index, contact_surface_rotation);
+  contact_status_.setContactSurfaceRotation(contact_index, 
+                                            contact_surface_rotation);
 }
 
 
@@ -178,13 +179,13 @@ ImpulseStatus::contactSurfacesRotations() const {
 }
 
 
-inline void ImpulseStatus::setImpulseId(const int impulse_id) {
-  contact_status_.setContactId(impulse_id);
+inline void ImpulseStatus::setImpulseModeId(const int impulse_mode_id) {
+  contact_status_.setContactModeId(impulse_mode_id);
 }
 
 
-inline int ImpulseStatus::impulseId() const {
-  return contact_status_.contactId();
+inline int ImpulseStatus::impulseModeId() const {
+  return contact_status_.contactModeId();
 }
 
 

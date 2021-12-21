@@ -16,7 +16,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(impulse_status, m) {
   py::class_<ImpulseStatus>(m, "ImpulseStatus")
     .def(py::init<const int, const int>(),
-          py::arg("max_point_contacts"), py::arg("impulse_id")=0)
+          py::arg("max_point_contacts"), py::arg("impulse_mode_id")=0)
     .def("max_point_contacts", &ImpulseStatus::maxPointContacts)
     .def("is_impulse_active", 
           static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),
@@ -49,9 +49,9 @@ PYBIND11_MODULE(impulse_status, m) {
     .def("contact_surface_rotation", &ImpulseStatus::contactSurfaceRotation,
           py::arg("contact_index"))
     .def("contact_surfaces_rotations", &ImpulseStatus::contactSurfacesRotations)
-    .def("set_impulse_id", &ImpulseStatus::setImpulseId,
-          py::arg("impulse_id"))
-    .def("impulse_id", &ImpulseStatus::impulseId)
+    .def("set_impulse_mode_id", &ImpulseStatus::setImpulseModeId,
+          py::arg("impulse_mode_id"))
+    .def("impulse_mode_id", &ImpulseStatus::impulseModeId)
     .def("__str__", [](const ImpulseStatus& self) {
         std::stringstream ss;
         ss << self;

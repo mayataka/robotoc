@@ -101,6 +101,7 @@ inline void DiscreteEvent::setDiscreteEvent(
       }
     }
   }
+  impulse_status_.setImpulseModeId(pre_contact_status.contactModeId());
   setContactPoints(post_contact_status.contactPoints());
   pre_contact_status_ = pre_contact_status;
   post_contact_status_ = post_contact_status;

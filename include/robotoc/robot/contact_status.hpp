@@ -28,10 +28,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
-  /// @param[in] contact_id Identifier number of the contact. Can be used only 
-  /// in user-defined cost and constraints. Default is 0.
+  /// @param[in] contact_mode_id Identifier number of the contact mode. Can be  
+  /// used only in user-defined cost and constraints. Default is 0.
   ///
-  ContactStatus(const int max_point_contacts, const int contact_id=0);
+  ContactStatus(const int max_point_contacts, const int contact_mode_id=0);
 
   ///
   /// @brief Default constructor. 
@@ -203,16 +203,18 @@ public:
   const std::vector<Eigen::Matrix3d>& contactSurfacesRotations() const;
 
   ///
-  /// @brief Sets contact id.
-  /// @param[in] contact_id Contact id. 
+  /// @brief Sets contact mode id.
+  /// @param[in] contact_mode_id Contact mode id. 
+  /// @note Default contact mode id is 0.
   ///
-  void setContactId(const int contact_id);
+  void setContactModeId(const int contact_mode_id);
 
   ///
-  /// @brief Gets contact id.
-  /// @return Contact id. 
+  /// @brief Gets contact mode id.
+  /// @return Contact mode id. 
+  /// @note Default contact mode id is 0.
   ///
-  int contactId() const;
+  int contactModeId() const;
 
   ///
   /// @brief Fills contact status randomly.
@@ -233,7 +235,7 @@ private:
   std::vector<bool> is_contact_active_;
   std::vector<Eigen::Vector3d> contact_points_;
   std::vector<Eigen::Matrix3d> contact_surfaces_rotations_;
-  int dimf_, max_point_contacts_, contact_id_;
+  int dimf_, max_point_contacts_, contact_mode_id_;
   bool has_active_contacts_;
 
   void set_has_active_contacts();
