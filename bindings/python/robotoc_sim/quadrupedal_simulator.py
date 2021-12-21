@@ -70,7 +70,7 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
         t = self.start_time
         q = q0
         v = v0
-        u = mpc.get_initial_control_input()
+        u = mpc.get_initial_control_input().copy()
         sim_time = self.end_time - self.start_time
         sim_steps = math.floor(sim_time/self.time_step)
 
@@ -90,13 +90,13 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
             if verbose:
                 print('t = {:.6g}:'.format(t))
             if feedback_delay:
-                u = mpc.get_initial_control_input()
+                u = mpc.get_initial_control_input().copy()
             mpc.update_solution(t, self.time_step, q, v)
             if verbose:
                 print('KKT error = {:.6g}'.format(mpc.KKT_error(t, q, v)))
                 print('')
             if not feedback_delay:
-                u = mpc.get_initial_control_input()
+                u = mpc.get_initial_control_input().copy()
             self.apply_control_input_to_pybullet(robot, u)
             pybullet.stepSimulation()
             time.sleep(self.time_step)
