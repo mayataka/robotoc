@@ -102,7 +102,7 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.8
+mu = 0.9
 friction_cone         = robotoc.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
@@ -137,5 +137,5 @@ sim_end_time = 10.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='anymal_walking.mp4')

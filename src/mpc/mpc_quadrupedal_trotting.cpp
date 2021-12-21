@@ -121,14 +121,15 @@ void MPCQuadrupedalTrotting::setSolverOptions(
 }
 
 
-void MPCQuadrupedalTrotting::updateSolution(const double t, 
+void MPCQuadrupedalTrotting::updateSolution(const double t, const double dt,
                                             const Eigen::VectorXd& q, 
                                             const Eigen::VectorXd& v) {
+  assert(dt > 0);
   const bool add_step = addStep(t);
   const auto ts = contact_sequence_->eventTimes();
   bool remove_step = false;
   if (!ts.empty()) {
-    if (ts.front() < t+min_dt) {
+    if (ts.front() < t+dt) {
       ts_last_ = ts.front();
       ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
@@ -137,7 +138,6 @@ void MPCQuadrupedalTrotting::updateSolution(const double t,
     }
   }
   resetContactPoints(q);
-
   if (add_step || remove_step) {
     ocp_solver_.initConstraints(t);
   }

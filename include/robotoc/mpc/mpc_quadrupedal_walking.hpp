@@ -91,10 +91,11 @@ public:
   ///
   /// @brief Updates the solution by iterationg the Newton-type method.
   /// @param[in] t Initial time of the horizon. 
+  /// @param[in] dt Sampling time of MPC. Must be positive.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Velocity. Size must be Robot::dimv().
   ///
-  void updateSolution(const double t, const Eigen::VectorXd& q, 
+  void updateSolution(const double t, const double dt, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);
 
   ///
