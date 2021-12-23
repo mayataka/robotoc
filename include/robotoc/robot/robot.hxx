@@ -654,11 +654,32 @@ inline int Robot::maxPointContacts() const {
 
 
 inline std::vector<int> Robot::contactFrames() const {
-  std::vector<int> contact_frames_indices;
+  std::vector<int> contact_frames;
   for (const auto& e : point_contacts_) {
-    contact_frames_indices.push_back(e.contact_frame_id());
+    contact_frames.push_back(e.contact_frame_id());
   }
-  return contact_frames_indices;
+  for (const auto& e : surface_contacts_) {
+    contact_frames.push_back(e.contact_frame_id());
+  }
+  return contact_frames;
+}
+
+
+inline std::vector<int> Robot::pointContactFrames() const {
+  std::vector<int> contact_frames;
+  for (const auto& e : point_contacts_) {
+    contact_frames.push_back(e.contact_frame_id());
+  }
+  return contact_frames;
+}
+
+
+inline std::vector<int> Robot::surfaceContactFrames() const {
+  std::vector<int> contact_frames;
+  for (const auto& e : surface_contacts_) {
+    contact_frames.push_back(e.contact_frame_id());
+  }
+  return contact_frames;
 }
 
 

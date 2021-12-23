@@ -13,9 +13,6 @@ namespace python {
 
 namespace py = pybind11;
 
-std::vector<int> empty_contact_frames = {};
-std::pair<double, double> zero_baumgarte_weights = {0., 0.};
-
 PYBIND11_MODULE(robot, m) {
   py::enum_<BaseJointType>(m, "BaseJointType", py::arithmetic())
     .value("FixedBase", BaseJointType::FixedBase)
@@ -23,15 +20,15 @@ PYBIND11_MODULE(robot, m) {
     .export_values();
 
   py::class_<Robot>(m, "Robot")
-    .def(py::init<const std::string&, const BaseJointType&, 
-                  const std::vector<int>&, 
-                  const std::pair<double, double>&>(),
+    .def(py::init<const std::string&, const BaseJointType&>(), 
           py::arg("path_to_urdf"),
-          py::arg("base_joint_type")=BaseJointType::FixedBase,
-          py::arg("contact_frames")=empty_contact_frames,
-          py::arg("baumgarte_weights")=zero_baumgarte_weights)
+          py::arg("base_joint_type")=BaseJointType::FixedBase)
     .def(py::init<const std::string&, const BaseJointType&, 
-                  const std::vector<int>&, const double>(),
+                  const ContactFrames&, const std::pair<double, double>&>(),
+          py::arg("path_to_urdf"), py::arg("base_joint_type"),
+          py::arg("contact_frames"), py::arg("baumgarte_weights"))
+    .def(py::init<const std::string&, const BaseJointType&, 
+                  const ContactFrames&, const double>(),
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
           py::arg("contact_frames"), py::arg("baumgarte_time_step"))
     .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q) {
@@ -64,6 +61,8 @@ PYBIND11_MODULE(robot, m) {
     .def("dim_passive", &Robot::dim_passive)
     .def("max_point_contacts", &Robot::maxPointContacts)
     .def("contact_frames", &Robot::contactFrames)
+    .def("point_contact_frames", &Robot::pointContactFrames)
+    .def("surface_contact_frames", &Robot::surfaceContactFrames)
     .def("set_joint_effort_limit", &Robot::setJointEffortLimit,
           py::arg("joint_effort_limit"))
     .def("set_joint_velocity_limit", &Robot::setJointVelocityLimit,

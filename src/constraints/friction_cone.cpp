@@ -11,7 +11,7 @@ FrictionCone::FrictionCone(const Robot& robot, const double mu)
     dimv_(robot.dimv()),
     dimc_(5*robot.maxPointContacts()),
     max_point_contacts_(robot.maxPointContacts()),
-    contact_frame_(robot.contactFrames()),
+    contact_frame_(robot.pointContactFrames()),
     mu_(mu),
     cone_(Eigen::MatrixXd::Zero(5, 3)) {
   try {

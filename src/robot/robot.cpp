@@ -6,14 +6,13 @@
 namespace robotoc {
 
 Robot::Robot(const std::string& path_to_urdf, 
-             const BaseJointType& base_joint_type,
-             const std::vector<int>& contact_frames,
-             const std::pair<double, double>& baumgarte_weights)
+             const BaseJointType& base_joint_type)
   : model_(),
     impulse_model_(),
     data_(),
     impulse_data_(),
     point_contacts_(),
+    surface_contacts_(),
     fjoint_(),
     dimq_(0),
     dimv_(0),
@@ -26,16 +25,6 @@ Robot::Robot(const std::string& path_to_urdf,
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
-  try {
-    if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
-      throw std::out_of_range(
-          "Invalid argument: baumgarte_weights must be non-negative!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
   switch (base_joint_type) {
     case BaseJointType::FloatingBase:
       pinocchio::urdf::buildModel(path_to_urdf, 
@@ -50,29 +39,6 @@ Robot::Robot(const std::string& path_to_urdf,
       break;
   }
   data_ = pinocchio::Data(model_);
-  if (!contact_frames.empty()) {
-    impulse_model_ = model_;
-    impulse_model_.gravity.linear().setZero();
-    impulse_data_ = pinocchio::Data(impulse_model_);
-    for (const auto contact_frame : contact_frames) {
-      point_contacts_.push_back(PointContact(model_, contact_frame, 
-                                             baumgarte_weights.first,
-                                             baumgarte_weights.second));
-      is_each_contact_active_.push_back(false);
-    }
-    max_dimf_ = 3 * point_contacts_.size();
-    fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                  model_.joints.size(), pinocchio::Force::Zero());
-    data_.JMinvJt.resize(max_dimf_, max_dimf_);
-    data_.JMinvJt.setZero();
-    data_.sDUiJt.resize(model_.nv, max_dimf_);
-    data_.sDUiJt.setZero();
-    dimpulse_dv_.resize(model_.nv, model_.nv);
-    dimpulse_dv_.setZero();
-  }
-  else {
-    max_dimf_ = 0;
-  }
   dimq_ = model_.nq;
   dimv_ = model_.nv;
   dimu_ = model_.nv - dim_passive_;
@@ -82,7 +48,47 @@ Robot::Robot(const std::string& path_to_urdf,
 
 Robot::Robot(const std::string& path_to_urdf, 
              const BaseJointType& base_joint_type,
-             const std::vector<int>& contact_frames, const double time_step)
+             const ContactFrames& contact_frames,
+             const std::pair<double, double>& baumgarte_weights)
+  : Robot(path_to_urdf, base_joint_type) {
+  try {
+    if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
+      throw std::out_of_range(
+          "Invalid argument: baumgarte_weights must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  impulse_model_ = model_;
+  impulse_model_.gravity.linear().setZero();
+  impulse_data_ = pinocchio::Data(impulse_model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                model_.joints.size(), pinocchio::Force::Zero());
+  for (const auto frame : contact_frames.point_contact_frames) {
+    point_contacts_.push_back(PointContact(model_, frame, 
+                                            baumgarte_weights.first,
+                                            baumgarte_weights.second));
+  }
+  for (const auto frame : contact_frames.surface_contact_frames) {
+    surface_contacts_.push_back(SurfaceContact(model_, frame, 
+                                                baumgarte_weights.first,
+                                                baumgarte_weights.second));
+  }
+  max_dimf_ = 3 * point_contacts_.size() + 6 * surface_contacts_.size();
+  data_.JMinvJt.resize(max_dimf_, max_dimf_);
+  data_.JMinvJt.setZero();
+  data_.sDUiJt.resize(model_.nv, max_dimf_);
+  data_.sDUiJt.setZero();
+  dimpulse_dv_.resize(model_.nv, model_.nv);
+  dimpulse_dv_.setZero();
+}
+
+
+Robot::Robot(const std::string& path_to_urdf, 
+             const BaseJointType& base_joint_type,
+             const ContactFrames& contact_frames, const double time_step)
   : Robot(path_to_urdf, base_joint_type, contact_frames, 
           std::make_pair(2.0/time_step, 1.0/(time_step*time_step))) {
 }
@@ -94,6 +100,7 @@ Robot::Robot()
     data_(),
     impulse_data_(),
     point_contacts_(),
+    surface_contacts_(),
     fjoint_(),
     dimq_(0),
     dimv_(0),
@@ -200,6 +207,13 @@ void Robot::disp(std::ostream& os) const {
   }
   else {
     os << "  base joint: fixed base" << std::endl;
+  }
+  os << "  contacts:";
+  for (const auto& e : point_contacts_) {
+    os << e << std::endl;
+  }
+  for (const auto& e : surface_contacts_) {
+    os << e << std::endl;
   }
   os << "  dimq = " << dimq_ << ", ";
   os << "  dimv = " << dimv_ << ", ";

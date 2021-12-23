@@ -7,7 +7,7 @@ SwingFootCost::SwingFootCost(const Robot& robot, const int contact_index,
                              const std::shared_ptr<SwingFootRefBase>& x3d_ref) 
   : CostFunctionComponentBase(),
     contact_index_(contact_index), 
-    contact_frame_id_(robot.contactFrames()[contact_index]),
+    contact_frame_id_(robot.pointContactFrames()[contact_index]),
     x3d_ref_(x3d_ref),
     x3d_weight_(Eigen::Vector3d::Zero()) {
 }

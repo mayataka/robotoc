@@ -92,10 +92,9 @@ void PointContact::disp(std::ostream& os) const {
   os << "point contact:" << std::endl;
   os << "  contact frame id: " << contact_frame_id_ << std::endl;
   os << "  parent joint id: " << parent_joint_id_ << std::endl;
-  os << "  Baumgarte's weight on velocity: " 
-     << baumgarte_weight_on_velocity_ << std::endl;
-  os << "  Baumgarte's weight on position: " 
-     << baumgarte_weight_on_position_ << std::flush;
+  os << "  Baumgarte's weights on (velocity, position): (" 
+     << baumgarte_weight_on_velocity_ << ", " 
+     << baumgarte_weight_on_position_ << ")" << std::flush;
 }
 
 

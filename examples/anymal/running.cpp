@@ -108,7 +108,8 @@ int main(int argc, char *argv[]) {
   const int LH_foot_id = 22;
   const int RF_foot_id = 32;
   const int RH_foot_id = 42;
-  std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
+  robotoc::ContactFrames contact_frames; 
+  contact_frames.point_contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 

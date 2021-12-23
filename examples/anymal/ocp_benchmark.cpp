@@ -25,11 +25,12 @@
 
 int main () {
   // Create a robot with contacts.
-  const int LF_foot = 12;
-  const int LH_foot = 22;
-  const int RF_foot = 32;
-  const int RH_foot = 42;
-  std::vector<int> contact_frames = {LF_foot, LH_foot, RF_foot, RH_foot}; // LF, LH, RF, RH
+  const int LF_foot_id = 12;
+  const int LH_foot_id = 22;
+  const int RF_foot_id = 32;
+  const int RH_foot_id = 42;
+  robotoc::ContactFrames contact_frames; 
+  contact_frames.point_contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
   const double baumgarte_time_step = 0.5 / 20;
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
@@ -59,7 +60,7 @@ int main () {
   cost->push_back(config_cost);
   auto local_contact_force_cost = std::make_shared<robotoc::LocalContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<contact_frames.size(); ++i) {
+  for (int i=0; i<contact_frames.point_contact_frames.size(); ++i) {
     Eigen::Vector3d fw; 
     fw << 0.001, 0.001, 0.001;
     f_weight.push_back(fw);
@@ -96,10 +97,10 @@ int main () {
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
-  const std::vector<Eigen::Vector3d> contact_points = {robot.framePosition(LF_foot), 
-                                                       robot.framePosition(LH_foot),
-                                                       robot.framePosition(RF_foot),
-                                                       robot.framePosition(RH_foot)};
+  const std::vector<Eigen::Vector3d> contact_points = {robot.framePosition(LF_foot_id), 
+                                                       robot.framePosition(LH_foot_id),
+                                                       robot.framePosition(RF_foot_id),
+                                                       robot.framePosition(RH_foot_id)};
   contact_status_standing.setContactPoints(contact_points);
   contact_sequence->initContactSequence(contact_status_standing);
 

@@ -209,7 +209,7 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
 void MPCQuadrupedalWalking::resetContactPoints(const Eigen::VectorXd& q) {
   robot_.updateFrameKinematics(q);
   contact_points_.clear();
-  for (const auto frame : robot_.contactFrames()) {
+  for (const auto frame : robot_.pointContactFrames()) {
     contact_points_.push_back(robot_.framePosition(frame));
   }
   // frames = [LF, LH, RF, RH] (0, 1, 2, 3)
