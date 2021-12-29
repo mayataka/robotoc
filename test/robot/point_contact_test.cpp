@@ -295,15 +295,15 @@ void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
   pinocchio::updateFramePlacement(model, data, contact_frame_id);
   const int parent_joint_id = contact.parent_joint_id();
-  Eigen::MatrixXd contact_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
-  contact.computeContactPositionDerivative(model, data, contact_partial_dq);
-  Eigen::MatrixXd contact_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
+  Eigen::MatrixXd position_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
+  contact.computeContactPositionDerivative(model, data, position_partial_dq);
+  Eigen::MatrixXd position_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
   pinocchio::getFrameJacobian(model, data, contact_frame_id, 
                               pinocchio::LOCAL, J_frame);
-  contact_partial_dq_ref 
+  position_partial_dq_ref 
       = data.oMf[contact_frame_id].rotation() * J_frame.template topRows<3>();
-  EXPECT_TRUE(contact_partial_dq_ref.isApprox(contact_partial_dq));
+  EXPECT_TRUE(position_partial_dq_ref.isApprox(position_partial_dq));
 }
 
 

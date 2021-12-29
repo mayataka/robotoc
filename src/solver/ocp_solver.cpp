@@ -222,7 +222,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
       for (int j=0; j<robot.maxNumContacts(); ++j) {
         if (s_[i].isContactActive(j)) {
           const int contact_frame = robot.contactFrames()[j];
-          robot.transformFromLocalToWorld(contact_frame, s_[i].f[j],
+          robot.transformFromLocalToWorld(contact_frame, s_[i].f[j].template head<3>(),
                                           f.template segment<3>(3*j));
         }
       }
@@ -234,7 +234,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           if (s_.aux[impulse_index].isContactActive(j)) {
             const int contact_frame = robot.contactFrames()[j];
-            robot.transformFromLocalToWorld(contact_frame, s_.aux[impulse_index].f[j],
+            robot.transformFromLocalToWorld(contact_frame, 
+                                            s_.aux[impulse_index].f[j].template head<3>(),
                                             f.template segment<3>(3*j));
           }
         }
@@ -247,7 +248,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           if (s_.lift[lift_index].isContactActive(j)) {
             const int contact_frame = robot.contactFrames()[j];
-            robot.transformFromLocalToWorld(contact_frame, s_.lift[lift_index].f[j],
+            robot.transformFromLocalToWorld(contact_frame, 
+                                            s_.lift[lift_index].f[j].template head<3>(), 
                                             f.template segment<3>(3*j));
           }
         }
@@ -261,7 +263,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       for (int j=0; j<robot.maxNumContacts(); ++j) {
         if (s_[i].isContactActive(j)) {
-          f.template segment<3>(3*j) = s_[i].f[j];
+          f.template segment<3>(3*j) = s_[i].f[j].template head<3>();
         }
       }
       sol.push_back(f);
@@ -270,7 +272,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           if (s_.aux[impulse_index].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_.aux[impulse_index].f[j];
+            f.template segment<3>(3*j) = s_.aux[impulse_index].f[j].template head<3>();
           }
         }
         sol.push_back(f);
@@ -280,7 +282,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           if (s_.lift[lift_index].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_.lift[lift_index].f[j];
+            f.template segment<3>(3*j) = s_.lift[lift_index].f[j].template head<3>();
           }
         }
         sol.push_back(f);

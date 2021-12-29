@@ -255,16 +255,35 @@ inline void Robot::getJacobianTransformFromLocalToWorld(
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, 
-    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+    const Eigen::MatrixBase<VectorType>& baumgarte_residual) {
   assert(baumgarte_residual.size() == contact_status.dimf());
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, contact_status.contactPosition(i),
-          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
-              .template segment<3>(3*num_active_contacts));
-      ++num_active_contacts;
+  int dimf_stack = 0;
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (contact_status.isContactActive(i)) {
+          point_contacts_[point_contact_index].computeBaumgarteResidual(
+              model_, data_, contact_status.contactPosition(i),
+              (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+                  .template segment<3>(dimf_stack));
+          dimf_stack += 3;
+        }
+        point_contact_index += 1;
+        break;
+      case ContactType::SurfaceContact:
+        if (contact_status.isContactActive(i)) {
+          surface_contacts_[surface_contact_index].computeBaumgarteResidual(
+              model_, data_, contact_status.contactPlacement(i),
+              (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+                  .template segment<6>(dimf_stack));
+          dimf_stack += 6;
+        }
+        surface_contact_index += 1;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -282,18 +301,41 @@ inline void Robot::computeBaumgarteDerivatives(
   assert(baumgarte_partial_dv.cols() == dimv_);
   assert(baumgarte_partial_da.rows() == contact_status.dimf());
   assert(baumgarte_partial_da.cols() == dimv_);
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, 
-          (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
-              .block(3*num_active_contacts, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
-              .block(3*num_active_contacts, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
-              .block(3*num_active_contacts, 0, 3, dimv_));
-      ++num_active_contacts;
+  int dimf_stack = 0;
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (contact_status.isContactActive(i)) {
+          point_contacts_[point_contact_index].computeBaumgarteDerivatives(
+              model_, data_, 
+              (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
+                  .block(dimf_stack, 0, 3, dimv_),
+              (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
+                  .block(dimf_stack, 0, 3, dimv_),
+              (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
+                  .block(dimf_stack, 0, 3, dimv_));
+          dimf_stack += 3;
+        }
+        point_contact_index += 1;
+        break;
+      case ContactType::SurfaceContact: 
+        if (contact_status.isContactActive(i)) {
+          surface_contacts_[surface_contact_index].computeBaumgarteDerivatives(
+              model_, data_, 
+              (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
+                  .block(dimf_stack, 0, 6, dimv_),
+              (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
+                  .block(dimf_stack, 0, 6, dimv_),
+              (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
+                  .block(dimf_stack, 0, 6, dimv_));
+          dimf_stack += 6;
+        }
+        surface_contact_index += 1;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -304,14 +346,33 @@ inline void Robot::computeImpulseVelocityResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
   assert(velocity_residual.size() == impulse_status.dimi());
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactVelocityResidual(
-          model_, data_,
-          (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
-              .template segment<3>(3*num_active_impulse));
-      ++num_active_impulse;
+  int dimf_stack = 0;
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (impulse_status.isImpulseActive(i)) {
+          point_contacts_[point_contact_index].computeContactVelocityResidual(
+              model_, data_, 
+              (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
+                  .template segment<3>(dimf_stack));
+          dimf_stack += 3;
+        }
+        point_contact_index += 1;
+        break;
+      case ContactType::SurfaceContact:
+        if (impulse_status.isImpulseActive(i)) {
+          surface_contacts_[surface_contact_index].computeContactVelocityResidual(
+              model_, data_, 
+              (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
+                  .template segment<6>(dimf_stack));
+          dimf_stack += 6;
+        }
+        surface_contact_index += 1;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -326,16 +387,37 @@ inline void Robot::computeImpulseVelocityDerivatives(
   assert(velocity_partial_dq.cols() == dimv_);
   assert(velocity_partial_dv.rows() == impulse_status.dimi());
   assert(velocity_partial_dv.cols() == dimv_);
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactVelocityDerivatives(
-          model_, data_, 
-          (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
-              .block(3*num_active_impulse, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
-              .block(3*num_active_impulse, 0, 3, dimv_));
-      ++num_active_impulse;
+  int dimf_stack = 0;
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (impulse_status.isImpulseActive(i)) {
+          point_contacts_[point_contact_index].computeContactVelocityDerivatives(
+              model_, data_, 
+              (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
+                  .block(dimf_stack, 0, 3, dimv_),
+              (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
+                  .block(dimf_stack, 0, 3, dimv_));
+          dimf_stack += 3;
+        }
+        point_contact_index += 1;
+        break;
+      case ContactType::SurfaceContact:
+        if (impulse_status.isImpulseActive(i)) {
+          surface_contacts_[surface_contact_index].computeContactVelocityDerivatives(
+              model_, data_, 
+              (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
+                  .block(dimf_stack, 0, 6, dimv_),
+              (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
+                  .block(dimf_stack, 0, 6, dimv_));
+          dimf_stack += 6;
+        }
+        surface_contact_index += 1;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -344,16 +426,35 @@ inline void Robot::computeImpulseVelocityDerivatives(
 template <typename VectorType>
 inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
-    const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  assert(contact_residual.size() == impulse_status.dimi());
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactPositionResidual(
-          model_, data_, impulse_status.contactPosition(i),
-          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
-              .template segment<3>(3*num_active_impulse));
-      ++num_active_impulse;
+    const Eigen::MatrixBase<VectorType>& position_residual) {
+  assert(position_residual.size() == impulse_status.dimi());
+  int dimf_stack = 0;
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (impulse_status.isImpulseActive(i)) {
+          point_contacts_[point_contact_index].computeContactPositionResidual(
+              model_, data_, impulse_status.contactPosition(i),
+              (const_cast<Eigen::MatrixBase<VectorType>&>(position_residual))
+                  .template segment<3>(dimf_stack));
+          dimf_stack += 3;
+        }
+        point_contact_index += 1;
+        break;
+      case ContactType::SurfaceContact:
+        if (impulse_status.isImpulseActive(i)) {
+          surface_contacts_[surface_contact_index].computeContactPositionResidual(
+              model_, data_, impulse_status.contactPlacement(i),
+              (const_cast<Eigen::MatrixBase<VectorType>&>(position_residual))
+                  .template segment<6>(dimf_stack));
+          dimf_stack += 6;
+        }
+        surface_contact_index += 1;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -362,47 +463,108 @@ inline void Robot::computeContactPositionResidual(
 template <typename MatrixType>
 inline void Robot::computeContactPositionDerivative(
     const ImpulseStatus& impulse_status, 
-    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.rows() == impulse_status.dimi());
-  assert(contact_partial_dq.cols() == dimv_);
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactPositionDerivative(
-          model_, data_, 
-          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
-              .block(3*num_active_impulse, 0, 3, dimv_));
-      ++num_active_impulse;
+    const Eigen::MatrixBase<MatrixType>& position_partial_dq) {
+  assert(position_partial_dq.rows() == impulse_status.dimi());
+  assert(position_partial_dq.cols() == dimv_);
+  int dimf_stack = 0;
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (impulse_status.isImpulseActive(i)) {
+          point_contacts_[point_contact_index].computeContactPositionDerivative(
+              model_, data_, 
+            (const_cast<Eigen::MatrixBase<MatrixType>&>(position_partial_dq))
+                .block(dimf_stack, 0, 3, dimv_));
+          dimf_stack += 3;
+        }
+        point_contact_index += 1;
+        break;
+    case ContactType::SurfaceContact:
+      if (impulse_status.isImpulseActive(i)) {
+        surface_contacts_[surface_contact_index].computeContactPositionDerivative(
+            model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(position_partial_dq))
+              .block(dimf_stack, 0, 6, dimv_));
+        dimf_stack += 6;
+      }
+      surface_contact_index += 1;
+      break;
+    default:
+      break;
     }
   }
 }
 
 
 inline void Robot::setContactForces(const ContactStatus& contact_status, 
-                                    const std::vector<Eigen::Vector3d>& f) {
+                                    const std::vector<Vector6d>& f) {
   assert(f.size() == maxNumContacts());
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
-    }
-    else {
-      point_contacts_[i].computeJointForceFromContactForce(
-          Eigen::Vector3d::Zero(), fjoint_);
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_types_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (contact_status.isContactActive(i)) {
+          point_contacts_[point_contact_index].computeJointForceFromContactForce(
+              f[i].template head<3>(), fjoint_);
+        }
+        else {
+          point_contacts_[point_contact_index].computeJointForceFromContactForce(
+              Eigen::Vector3d::Zero(), fjoint_);
+        }
+        ++point_contact_index;
+        break;
+      case ContactType::SurfaceContact:
+        if (contact_status.isContactActive(i)) {
+          surface_contacts_[surface_contact_index].computeJointForceFromContactWrench(
+              f[i], fjoint_);
+        }
+        else {
+          surface_contacts_[surface_contact_index].computeJointForceFromContactWrench(
+              Vector6d::Zero(), fjoint_);
+        }
+        ++surface_contact_index;
+        break;
+      default:
+        break;
     }
   }
 }
 
 
 inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
-                                    const std::vector<Eigen::Vector3d>& f) {
+                                    const std::vector<Vector6d>& f) {
   assert(f.size() == maxNumContacts());
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
-    }
-    else {
-      point_contacts_[i].computeJointForceFromContactForce(
-          Eigen::Vector3d::Zero(), fjoint_);
+  int point_contact_index = 0;
+  int surface_contact_index = 0;
+  for (int i=0; i<contact_types_.size(); ++i) {
+    switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        if (impulse_status.isImpulseActive(i)) {
+          point_contacts_[point_contact_index].computeJointForceFromContactForce(
+              f[i].template head<3>(), fjoint_);
+        }
+        else {
+          point_contacts_[point_contact_index].computeJointForceFromContactForce(
+              Eigen::Vector3d::Zero(), fjoint_);
+        }
+        ++point_contact_index;
+        break;
+      case ContactType::SurfaceContact:
+        if (impulse_status.isImpulseActive(i)) {
+          surface_contacts_[surface_contact_index].computeJointForceFromContactWrench(
+              f[i], fjoint_);
+        }
+        else {
+          surface_contacts_[surface_contact_index].computeJointForceFromContactWrench(
+              Vector6d::Zero(), fjoint_);
+        }
+        ++surface_contact_index;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -676,32 +838,25 @@ inline const std::vector<ContactType>& Robot::contactTypes() const {
 
 
 inline std::vector<int> Robot::contactFrames() const {
-  std::vector<int> contact_frames;
-  for (const auto& e : point_contacts_) {
-    contact_frames.push_back(e.contact_frame_id());
-  }
-  for (const auto& e : surface_contacts_) {
-    contact_frames.push_back(e.contact_frame_id());
-  }
-  return contact_frames;
+  return contact_frames_;
 }
 
 
 inline std::vector<int> Robot::pointContactFrames() const {
-  std::vector<int> contact_frames;
+  std::vector<int> point_contact_frames;
   for (const auto& e : point_contacts_) {
-    contact_frames.push_back(e.contact_frame_id());
+    point_contact_frames.push_back(e.contact_frame_id());
   }
-  return contact_frames;
+  return point_contact_frames;
 }
 
 
 inline std::vector<int> Robot::surfaceContactFrames() const {
-  std::vector<int> contact_frames;
+  std::vector<int> surface_contact_frames;
   for (const auto& e : surface_contacts_) {
-    contact_frames.push_back(e.contact_frame_id());
+    surface_contact_frames.push_back(e.contact_frame_id());
   }
-  return contact_frames;
+  return surface_contact_frames;
 }
 
 

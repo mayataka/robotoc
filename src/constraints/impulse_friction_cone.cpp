@@ -109,7 +109,8 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
-      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], 
+                                      s.f[i].template head<3>(), fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
@@ -128,7 +129,8 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
   for (int i=0; i<max_num_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
-    robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
+    robot.transformFromLocalToWorld(contact_frame_[i], 
+                                    s.f[i].template head<3>(), fWi);
     frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
     data.slack.template segment<5>(idx)
         = - data.residual.template segment<5>(idx);
@@ -148,7 +150,8 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
-      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], 
+                                      s.f[i].template head<3>(), fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);

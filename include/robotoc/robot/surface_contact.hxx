@@ -113,10 +113,10 @@ template <typename VectorType>
 inline void SurfaceContact::computeContactPositionResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const SE3& contact_placement,
-    const Eigen::MatrixBase<VectorType>& contact_residual) {
-  assert(contact_residual.size() == 6);
+    const Eigen::MatrixBase<VectorType>& position_residual) {
+  assert(position_residual.size() == 6);
   X_diff_ = contact_placement.inverse() * data.oMf[contact_frame_id_];
-  (const_cast<Eigen::MatrixBase<VectorType>&> (contact_residual))
+  (const_cast<Eigen::MatrixBase<VectorType>&> (position_residual))
       = Log6Map(X_diff_);
 }
 
@@ -124,13 +124,13 @@ inline void SurfaceContact::computeContactPositionResidual(
 template <typename MatrixType>
 inline void SurfaceContact::computeContactPositionDerivative(
     const pinocchio::Model& model, pinocchio::Data& data, 
-    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.cols() == dimv_);
-  assert(contact_partial_dq.rows() == 6);
+    const Eigen::MatrixBase<MatrixType>& position_partial_dq) {
+  assert(position_partial_dq.cols() == dimv_);
+  assert(position_partial_dq.rows() == 6);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
                               pinocchio::LOCAL, J_frame_);
   computeJLog6Map(X_diff_, Jlog6_);
-  (const_cast<Eigen::MatrixBase<MatrixType>&> (contact_partial_dq)).noalias()
+  (const_cast<Eigen::MatrixBase<MatrixType>&> (position_partial_dq)).noalias()
       = Jlog6_ * J_frame_;
 }
 

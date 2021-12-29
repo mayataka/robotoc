@@ -22,6 +22,8 @@ namespace robotoc {
 
 class RobotTest : public ::testing::Test {
 protected:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   virtual void SetUp() {
     srand((unsigned int) time(0));
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
@@ -574,9 +576,9 @@ void RobotTest::testRNEA(const std::string& path_to_urdf,
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
-  std::vector<Eigen::Vector3d> f;
+  std::vector<Vector6d> f;
   for (const auto frame : contact_frames) {
-    f.push_back(Eigen::Vector3d::Random());
+    f.push_back(Vector6d::Random());
   }
   auto contact_status = robot.createContactStatus();
   contact_status.setRandom();
@@ -588,7 +590,7 @@ void RobotTest::testRNEA(const std::string& path_to_urdf,
                  model.joints.size(), pinocchio::Force::Zero());
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (contact_status.isContactActive(i)) {
-      contacts_ref[i].computeJointForceFromContactForce(f[i], fjoint);
+      contacts_ref[i].computeJointForceFromContactForce(f[i].template head<3>(), fjoint);
     }
   }
   const Eigen::VectorXd tau_ref = pinocchio::rnea(model, data, q, v, a, fjoint);
@@ -624,11 +626,11 @@ void RobotTest::testRNEAImpulse(const std::string& path_to_urdf,
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd dv = Eigen::VectorXd::Random(model.nv);
-  std::vector<Eigen::Vector3d> f;
+  std::vector<Vector6d> f;
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   for (const auto frame : contact_frames) {
-    f.push_back(Eigen::Vector3d::Random());
+    f.push_back(Vector6d::Random());
   }
   robot.setImpulseForces(impulse_status, f);
   Eigen::VectorXd impulse_res = Eigen::VectorXd::Zero(model.nv);
@@ -638,7 +640,7 @@ void RobotTest::testRNEAImpulse(const std::string& path_to_urdf,
                  model.joints.size(), pinocchio::Force::Zero());
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      contacts_ref[i].computeJointForceFromContactForce(f[i], fjoint);
+      contacts_ref[i].computeJointForceFromContactForce(f[i].template head<3>(), fjoint);
     }
   }
   auto model_zero_grav = model;

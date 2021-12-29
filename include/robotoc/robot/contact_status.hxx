@@ -113,6 +113,7 @@ inline void ContactStatus::activateContact(const int contact_index) {
         break;
       case ContactType::SurfaceContact:
         dimf_ += 6;
+        break;
       default:
         break;
     }
@@ -132,6 +133,7 @@ inline void ContactStatus::deactivateContact(const int contact_index) {
         break;
       case ContactType::SurfaceContact:
         dimf_ -= 6;
+        break;
       default:
         break;
     }

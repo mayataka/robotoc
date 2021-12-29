@@ -20,6 +20,8 @@ namespace robotoc {
 ///
 class ImpulseSplitSolution {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct an impulse split solution.
   /// @param[in] robot Robot model. 
@@ -85,10 +87,11 @@ public:
   Eigen::VectorXd dv;
 
   ///
-  /// @brief Impulse forces. 
+  /// @brief Contact wrenches. Upper 3 elements are linear contact force
+  /// and the lower 3 elements are the angular momentum.
   /// Size is Robot::maxNumContacts().
   ///
-  std::vector<Eigen::Vector3d> f;
+  std::vector<Vector6d> f;
 
   ///
   /// @brief Stack of the active impulse forces. Size is ImpulseStatus::dimf().
@@ -130,10 +133,12 @@ public:
   Eigen::VectorXd beta;
 
   ///
-  /// @brief Lagrange multiplier w.r.t. the impulse velocity constraint. 
+  /// @brief Lagrange multiplier w.r.t. the acceleration-level contact  
+  /// constraint. Upper 3 elements are w.r.t. the linear contact acceleration
+  /// and the lower 3 elements are w.r.t. the angular contact acceleration.
   /// Size is Robot::maxNumContacts().
   ///
-  std::vector<Eigen::Vector3d> mu;
+  std::vector<Vector6d> mu;
 
   ///
   /// @brief Stack of the Lagrange multipliers w.r.t. the impulse velocity 
@@ -255,8 +260,9 @@ public:
 
 private:
   Eigen::VectorXd mu_stack_, f_stack_;
+  std::vector<ContactType> contact_types_;
   std::vector<bool> is_impulse_active_;
-  int dimi_;
+  int dimi_, max_num_contacts_;
 
 };
 

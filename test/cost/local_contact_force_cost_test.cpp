@@ -71,8 +71,9 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   double l_ref = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
-      l_ref += (f_weight[i].array() * (s.f[i].array()-f_ref[i].array()) 
-                                    * (s.f[i].array()-f_ref[i].array())).sum();
+      const auto& fl = s.f[i].template head<3>();
+      l_ref += (f_weight[i].array() * (fl.array()-f_ref[i].array()) 
+                                    * (fl.array()-f_ref[i].array())).sum();
     }
   }
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), 0.5*dt*l_ref);
@@ -87,8 +88,9 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
+      const auto& fl = s.f[i].template head<3>();
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
-          += dt * f_weight[i].array() * (s.f[i].array()-f_ref[i].array());
+          += dt * f_weight[i].array() * (fl.array()-f_ref[i].array());
       dimf_stack += 3;
     }
   }
@@ -189,8 +191,9 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   double l_ref = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      l_ref += (fi_weight[i].array() * (s.f[i].array()-fi_ref[i].array()) 
-                                     * (s.f[i].array()-fi_ref[i].array())).sum();
+      const auto& fl = s.f[i].template head<3>();
+      l_ref += (fi_weight[i].array() * (fl.array()-fi_ref[i].array()) 
+                                     * (fl.array()-fi_ref[i].array())).sum();
     }
   }
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), 0.5*l_ref);
@@ -205,8 +208,9 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
+      const auto& fl = s.f[i].template head<3>();
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
-          += fi_weight[i].array() * (s.f[i].array()-fi_ref[i].array());
+          += fi_weight[i].array() * (fl.array()-fi_ref[i].array());
       dimf_stack += 3;
     }
   }

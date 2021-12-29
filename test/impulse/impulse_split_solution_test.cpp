@@ -43,10 +43,6 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_EQ(s.mu_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.dimi(), impulse_status.dimi());
   for (int i=0; i<robot.maxNumContacts(); ++i) {
-    EXPECT_EQ(s.f[i].size(), 3);
-    EXPECT_EQ(s.mu[i].size(), 3);
-  }
-  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
   }
   EXPECT_TRUE(s.lmd.isZero());
@@ -77,16 +73,36 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   int dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
-      EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<3>(dimf_stack)));
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          EXPECT_TRUE(s.f[i].template head<3>().isApprox(s.f_stack().segment<3>(dimf_stack)));
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<6>(dimf_stack)));
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   dimf_stack = 0;
   s.set_mu_vector();
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
-      EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          EXPECT_TRUE(s.mu[i].template head<3>().isApprox(s.mu_stack().segment<3>(dimf_stack)));
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<6>(dimf_stack)));
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   s.f_stack().setZero();
@@ -96,15 +112,35 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
-      EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<3>(dimf_stack)));
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          EXPECT_TRUE(s.f[i].template head<3>().isApprox(s.f_stack().segment<3>(dimf_stack)));
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<6>(dimf_stack)));
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
-      EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          EXPECT_TRUE(s.mu[i].template head<3>().isApprox(s.mu_stack().segment<3>(dimf_stack)));
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<6>(dimf_stack)));
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -119,10 +155,6 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_EQ(s.f_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.mu_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.dimi(), impulse_status.dimi());
-  for (int i=0; i<robot.maxNumContacts(); ++i) {
-    EXPECT_EQ(s.f[i].size(), 3);
-    EXPECT_EQ(s.mu[i].size(), 3);
-  }
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
   }

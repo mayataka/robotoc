@@ -13,11 +13,11 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     v(Eigen::VectorXd::Zero(robot.dimv())),
     a(Eigen::VectorXd::Zero(robot.dimv())),
     u(Eigen::VectorXd::Zero(robot.dimu())),
-    f(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
+    f(robot.maxNumContacts(), Vector6d::Zero()),
     lmd(Eigen::VectorXd::Zero(robot.dimv())),
     gmm(Eigen::VectorXd::Zero(robot.dimv())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    mu(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
+    mu(robot.maxNumContacts(), Vector6d::Zero()),
     nu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -25,9 +25,11 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     has_floating_base_(robot.hasFloatingBase()),
     has_active_contacts_(false),
     has_active_impulse_(false),
+    contact_types_(robot.contactTypes()),
     is_contact_active_(robot.maxNumContacts(), false),
     dimf_(0),
-    dimi_(0) {
+    dimi_(0),
+    max_num_contacts_(robot.maxNumContacts()) {
   if (robot.hasFloatingBase()) {
     q.coeffRef(6) = 1.0;
   }
@@ -51,9 +53,11 @@ inline SplitSolution::SplitSolution()
     has_floating_base_(false),
     has_active_contacts_(false),
     has_active_impulse_(false),
+    contact_types_(),
     is_contact_active_(),
     dimf_(0),
-    dimi_(0) {
+    dimi_(0),
+    max_num_contacts_(0) {
 }
 
 
@@ -109,27 +113,43 @@ SplitSolution::f_stack() const {
 
 
 inline void SplitSolution::set_f_stack() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      f_stack_.template segment<3>(segment_start) = f[contact_index];
-      segment_start += 3;
+  int segment_begin = 0;
+  for (int i=0; i<max_num_contacts_; ++i) {
+    if (is_contact_active_[i]) {
+      switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        f_stack_.template segment<3>(segment_begin) = f[i].template head<3>();
+        segment_begin += 3;
+        break;
+      case ContactType::SurfaceContact:
+        f_stack_.template segment<6>(segment_begin) = f[i];
+        segment_begin += 6;
+        break;
+      default:
+        break;
+      }
     }
-    ++contact_index;
   }
 }
 
 
 inline void SplitSolution::set_f_vector() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      f[contact_index] = f_stack_.template segment<3>(segment_start);
-      segment_start += 3;
+  int segment_begin = 0;
+  for (int i=0; i<max_num_contacts_; ++i) {
+    if (is_contact_active_[i]) {
+      switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        f[i].template head<3>() = f_stack_.template segment<3>(segment_begin);
+        segment_begin += 3;
+        break;
+      case ContactType::SurfaceContact:
+        f[i] = f_stack_.template segment<6>(segment_begin);
+        segment_begin += 6;
+        break;
+      default:
+        break;
+      }
     }
-    ++contact_index;
   }
 }
 
@@ -146,27 +166,43 @@ SplitSolution::mu_stack() const {
 
 
 inline void SplitSolution::set_mu_stack() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      mu_stack_.template segment<3>(segment_start) = mu[contact_index];
-      segment_start += 3;
+  int segment_begin = 0;
+  for (int i=0; i<max_num_contacts_; ++i) {
+    if (is_contact_active_[i]) {
+      switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        mu_stack_.template segment<3>(segment_begin) = mu[i].template head<3>();
+        segment_begin += 3;
+        break;
+      case ContactType::SurfaceContact:
+        mu_stack_.template segment<6>(segment_begin) = mu[i];
+        segment_begin += 6;
+        break;
+      default:
+        break;
+      }
     }
-    ++contact_index;
   }
 }
 
 
 inline void SplitSolution::set_mu_vector() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      mu[contact_index] = mu_stack_.template segment<3>(segment_start);
-      segment_start += 3;
+  int segment_begin = 0;
+  for (int i=0; i<max_num_contacts_; ++i) {
+    if (is_contact_active_[i]) {
+      switch (contact_types_[i]) {
+      case ContactType::PointContact:
+        mu[i].template head<3>() = mu_stack_.template segment<3>(segment_begin);
+        segment_begin += 3;
+        break;
+      case ContactType::SurfaceContact:
+        mu[i] = mu_stack_.template segment<6>(segment_begin);
+        segment_begin += 6;
+        break;
+      default:
+        break;
+      }
     }
-    ++contact_index;
   }
 }
 

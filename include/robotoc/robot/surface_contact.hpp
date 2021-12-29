@@ -153,14 +153,14 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[in] contact_placement Contact placement.
-  /// @param[out] contact_residual Residual of the contact constraint. Size must 
+  /// @param[out] position_residual Residual of the contact constraint. Size must 
   /// be 6.
   /// 
   template <typename VectorType>
   void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
       const SE3& contact_placement,
-      const Eigen::MatrixBase<VectorType>& contact_residual);
+      const Eigen::MatrixBase<VectorType>& position_residual);
 
   ///
   /// @brief Computes the partial derivative of the contact position  
@@ -169,13 +169,13 @@ public:
   /// frame position must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] contact_partial_dq The result of the partial derivative  
+  /// @param[out] position_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Size must be 6 x Robot::dimv().
   /// 
   template <typename MatrixType>
   void computeContactPositionDerivative(
       const pinocchio::Model& model, pinocchio::Data& data,
-      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+      const Eigen::MatrixBase<MatrixType>& position_partial_dq);
 
   ///
   /// @brief Sets the weight parameters of the Baumgarte's stabilization method.

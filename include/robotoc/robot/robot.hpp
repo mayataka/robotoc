@@ -39,6 +39,8 @@ enum class BaseJointType {
 ///
 class Robot {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
   /// from URDF. Assumes that the robot never has any contacts.
@@ -359,7 +361,7 @@ public:
   template <typename VectorType>
   void computeBaumgarteResidual(
       const ContactStatus& contact_status, 
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual);
 
   ///
   /// @brief Computes the partial derivatives of the contact constriants 
@@ -411,44 +413,44 @@ public:
   /// @brief Computes the residual of the contact position constraint at the 
   /// impulse. Before calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] contact_residual Residuals in the contact position constraint.
+  /// @param[out] position_residual Residuals in the contact position constraint.
   /// Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
   void computeContactPositionResidual(
       const ImpulseStatus& impulse_status, 
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
+      const Eigen::MatrixBase<VectorType>& position_residual);
 
   ///
   /// @brief Computes the partial derivative of the contact position at the 
   /// impulse. Before calling this  function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] contact_partial_dq The result of the partial derivative  
+  /// @param[out] position_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
   void computeContactPositionDerivative(
       const ImpulseStatus& impulse_status, 
-      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+      const Eigen::MatrixBase<MatrixType>& position_partial_dq);
 
   ///
   /// @brief Set contact forces in this robot model for each active contacts.  
   /// @param[in] contact_status Contact status.
-  /// @param[in] f The stack of the contact forces represented in the local 
+  /// @param[in] f The stack of the contact wrenches represented in the local 
   /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
   void setContactForces(const ContactStatus& contact_status, 
-                        const std::vector<Eigen::Vector3d>& f);
+                        const std::vector<Vector6d>& f);
 
   ///
   /// @brief Set impulse forces in this robot model for each active impulses. 
   /// @param[in] impulse_status Impulse status.
-  /// @param[in] f The stack of the impulse forces represented in the local 
+  /// @param[in] f The stack of the impulse wrenches represented in the local 
   /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
   void setImpulseForces(const ImpulseStatus& impulse_status, 
-                        const std::vector<Eigen::Vector3d>& f);
+                        const std::vector<Vector6d>& f);
 
   ///
   /// @brief Computes inverse dynamics, i.e., generalized torques corresponding 
@@ -752,6 +754,7 @@ private:
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
+  std::vector<int> contact_frames_;
   std::vector<ContactType> contact_types_;
   aligned_vector<PointContact> point_contacts_;
   aligned_vector<SurfaceContact> surface_contacts_;

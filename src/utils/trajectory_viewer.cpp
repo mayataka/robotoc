@@ -32,14 +32,14 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
     path_to_pkg.pop_back();
   }
   switch (base_joint_type) {
-    case BaseJointType::FloatingBase:
-      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
-                                  pinocchio::JointModelFreeFlyer(), model_);
-      break;
-    default:
-      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
-                                  model_);
-      break;
+  case BaseJointType::FloatingBase:
+    pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                pinocchio::JointModelFreeFlyer(), model_);
+    break;
+  default:
+    pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                model_);
+    break;
   }
   pinocchio::urdf::buildGeom(model_, 
                              boost::filesystem::absolute(path_to_urdf).string(), 
@@ -58,14 +58,14 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
     force_scale_(0.75),
     friction_cone_scale_(0.15) {
   switch (base_joint_type) {
-    case BaseJointType::FloatingBase:
-      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
-                                  pinocchio::JointModelFreeFlyer(), model_);
-      break;
-    default:
-      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
-                                  model_);
-      break;
+  case BaseJointType::FloatingBase:
+    pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                pinocchio::JointModelFreeFlyer(), model_);
+    break;
+  default:
+    pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                model_);
+    break;
   }
   pinocchio::urdf::buildGeom(model_, 
                              boost::filesystem::absolute(path_to_urdf).string(), 

@@ -112,7 +112,8 @@ bool FrictionCone::isFeasible(Robot& robot, const ContactStatus& contact_status,
     if (contact_status.isContactActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
-      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], 
+                                      s.f[i].template head<3>(), fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
@@ -130,7 +131,8 @@ void FrictionCone::setSlack(Robot& robot, const ContactStatus& contact_status,
   for (int i=0; i<max_num_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
-    robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
+    robot.transformFromLocalToWorld(contact_frame_[i], 
+                                    s.f[i].template head<3>(), fWi);
     frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
     data.slack.template segment<5>(idx)
         = - data.residual.template segment<5>(idx);
@@ -150,7 +152,8 @@ void FrictionCone::evalConstraint(Robot& robot,
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
-      robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
+      robot.transformFromLocalToWorld(contact_frame_[i], 
+                                      s.f[i].template head<3>(), fWi);
       frictionConeResidual(mu_, fWi, data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);

@@ -70,7 +70,7 @@ void ImpulseFrictionConeTest::test_isFeasible(Robot& robot,
     for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
       if (impulse_status.isImpulseActive(i)) {
         Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-        robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+        robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
         Eigen::VectorXd res =  Eigen::VectorXd::Zero(5);
         ImpulseFrictionCone::frictionConeResidual(mu, f_world, res);
         if (res.maxCoeff() > 0) {
@@ -94,7 +94,7 @@ void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& i
   constr.setSlack(robot, impulse_status, data, s);
   for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-    robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+    robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
     ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
     data_ref.slack.segment(5*i, 5) = - data_ref.residual.segment(5*i, 5);
   }
@@ -124,7 +124,7 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
   for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
       data_ref.residual.template segment<5>(5*i) += data_ref.slack.segment(5*i, 5);
       for (int j=0; j<5; ++j) {
@@ -159,7 +159,7 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
   for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
       robot.getFrameJacobian(robot.contactFrames()[i], J);
       Eigen::MatrixXd dfW_dq = Eigen::MatrixXd::Zero(3, robot.dimv());
@@ -206,7 +206,7 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
       robot.getFrameJacobian(robot.contactFrames()[i], J);
       Eigen::MatrixXd dfW_dq = Eigen::MatrixXd::Zero(3, robot.dimv());
@@ -265,7 +265,7 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
       robot.getFrameJacobian(robot.contactFrames()[i], J);
       Eigen::MatrixXd dfW_dq = Eigen::MatrixXd::Zero(3, robot.dimv());

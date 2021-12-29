@@ -129,10 +129,10 @@ template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeContactPositionResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const Eigen::MatrixBase<VectorType1>& contact_position,
-    const Eigen::MatrixBase<VectorType2>& contact_residual) const {
+    const Eigen::MatrixBase<VectorType2>& position_residual) const {
   assert(contact_position.size() == 3);
-  assert(contact_residual.size() == 3);
-  (const_cast<Eigen::MatrixBase<VectorType2>&> (contact_residual))
+  assert(position_residual.size() == 3);
+  (const_cast<Eigen::MatrixBase<VectorType2>&> (position_residual))
       = (data.oMf[contact_frame_id_].translation()-contact_position);
 }
 
@@ -140,12 +140,12 @@ inline void PointContact::computeContactPositionResidual(
 template <typename MatrixType>
 inline void PointContact::computeContactPositionDerivative(
     const pinocchio::Model& model, pinocchio::Data& data, 
-    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.cols() == dimv_);
-  assert(contact_partial_dq.rows() == 3);
+    const Eigen::MatrixBase<MatrixType>& position_partial_dq) {
+  assert(position_partial_dq.cols() == dimv_);
+  assert(position_partial_dq.rows() == 3);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
                               pinocchio::LOCAL, J_frame_);
-  (const_cast<Eigen::MatrixBase<MatrixType>&> (contact_partial_dq)).noalias()
+  (const_cast<Eigen::MatrixBase<MatrixType>&> (position_partial_dq)).noalias()
       = data.oMf[contact_frame_id_].rotation() * J_frame_.template topRows<3>();
 }
 

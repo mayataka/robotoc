@@ -11,6 +11,7 @@ Robot::Robot(const std::string& path_to_urdf,
     impulse_model_(),
     data_(),
     impulse_data_(),
+    contact_frames_(),
     contact_types_(),
     point_contacts_(),
     surface_contacts_(),
@@ -68,18 +69,19 @@ Robot::Robot(const std::string& path_to_urdf,
   impulse_data_ = pinocchio::Data(impulse_model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                 model_.joints.size(), pinocchio::Force::Zero());
+  contact_frames_ = contact_frames;
   contact_types_ = contact_types; 
   for (int i=0; i<contact_frames.size(); ++i) {
     switch (contact_types[i]) {
       case ContactType::PointContact:
         point_contacts_.push_back(PointContact(model_, contact_frames[i], 
-                                               baumgarte_weights.first,
-                                               baumgarte_weights.second));
+                                                baumgarte_weights.first,
+                                                baumgarte_weights.second));
         break;
       case ContactType::SurfaceContact:
         surface_contacts_.push_back(SurfaceContact(model_, contact_frames[i], 
-                                                   baumgarte_weights.first,
-                                                   baumgarte_weights.second));
+                                                    baumgarte_weights.first,
+                                                    baumgarte_weights.second));
         break;
       default:
         break;
@@ -120,6 +122,8 @@ Robot::Robot()
     impulse_model_(),
     data_(),
     impulse_data_(),
+    contact_frames_(),
+    contact_types_(),
     point_contacts_(),
     surface_contacts_(),
     fjoint_(),

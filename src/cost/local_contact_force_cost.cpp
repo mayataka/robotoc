@@ -113,8 +113,9 @@ double LocalContactForceCost::evalStageCost(Robot& robot,
   double l = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
-      l += (f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array()) 
-                                 * (s.f[i].array()-f_ref_[i].array())).sum();
+      const auto& fl = s.f[i].template head<3>();
+      l += (f_weight_[i].array() * (fl.array()-f_ref_[i].array()) 
+                                 * (fl.array()-f_ref_[i].array())).sum();
     }
   }
   return 0.5 * dt * l;
@@ -128,8 +129,9 @@ void LocalContactForceCost::evalStageCostDerivatives(
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
+      const auto& fl = s.f[i].template head<3>();
       kkt_residual.lf().template segment<3>(dimf_stack).array()
-          += dt * f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array());
+          += dt * f_weight_[i].array() * (fl.array()-f_ref_[i].array());
       dimf_stack += 3;
     }
   }
@@ -179,8 +181,9 @@ double LocalContactForceCost::evalImpulseCost(
   double l = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      l += (fi_weight_[i].array() * (s.f[i].array()-fi_ref_[i].array()) 
-                                  * (s.f[i].array()-fi_ref_[i].array())).sum();
+      const auto& fl = s.f[i].template head<3>();
+      l += (fi_weight_[i].array() * (fl.array()-fi_ref_[i].array()) 
+                                  * (fl.array()-fi_ref_[i].array())).sum();
     }
   }
   return 0.5 * l;
@@ -194,8 +197,9 @@ void LocalContactForceCost::evalImpulseCostDerivatives(
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
+      const auto& fl = s.f[i].template head<3>();
       kkt_residual.lf().template segment<3>(dimf_stack).array()
-          += fi_weight_[i].array() * (s.f[i].array()-fi_ref_[i].array());
+          += fi_weight_[i].array() * (fl.array()-fi_ref_[i].array());
       dimf_stack += 3;
     }
   }
