@@ -27,7 +27,7 @@ inline SplitUnconstrOCP::SplitUnconstrOCP(
       throw std::logic_error(
           "robot has floating base: robot should have no constraints!");
     }
-    if (robot.maxPointContacts() > 0) {
+    if (robot.maxNumContacts() > 0) {
       throw std::logic_error(
           "robot can have contacts: robot should have no constraints!");
     }

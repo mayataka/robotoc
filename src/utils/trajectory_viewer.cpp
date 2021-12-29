@@ -204,7 +204,7 @@ void TrajectoryViewer::display(Robot& robot,
     gui->createGroup("hpp-gui/friction_cones");
     Eigen::Vector3d cone;
     cone << mu, mu, 1.0;
-    for (int j=0; j<robot.maxPointContacts(); ++j) {
+    for (int j=0; j<robot.maxNumContacts(); ++j) {
         gui->createGroup(("hpp-gui/friction_cones/friction_cone_"+std::to_string(j)).c_str());
         gui->addCurve(("hpp-gui/friction_cones/friction_cone_"+std::to_string(j)+"/vertex").c_str(), 
                       gepetto::viewer::corba::positionSeq({ {0., 0., 0., }, 
@@ -241,7 +241,7 @@ void TrajectoryViewer::display(Robot& robot,
   }
 
   gui->createGroup("hpp-gui/contact_forces");
-  for (int j=0; j<robot.maxPointContacts(); ++j) {
+  for (int j=0; j<robot.maxNumContacts(); ++j) {
     gui->addArrow(("hpp-gui/contact_forces/contact_force_"+std::to_string(j)).c_str(), force_radius_, force_length_, force_color_);
     gui->setFloatProperty(("hpp-gui/contact_forces/contact_force_"+std::to_string(j)).c_str(), "Alpha", 1.0);
     gui->setVisibility(("hpp-gui/contact_forces/contact_force_"+std::to_string(j)).c_str(), "ALWAYS_ON_TOP");
@@ -251,7 +251,7 @@ void TrajectoryViewer::display(Robot& robot,
   const int N = dt.size();
   for (int i=0; i<N; ++i) {
     robot.updateFrameKinematics(q_traj[i]);
-    for (int j=0; j<robot.maxPointContacts(); ++j) {
+    for (int j=0; j<robot.maxNumContacts(); ++j) {
       const Eigen::Vector3d& f = f_traj[i].template segment<3>(3*j);
       gepetto::corbaserver::Position f_scale;
       f_scale[0] = force_scale_ * std::sqrt(f.norm() / robot.totalWeight());

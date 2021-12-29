@@ -170,10 +170,10 @@ Then we can set an impulse event and a lift event to the contact sequence.
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
-  std::vector<Eigen::Vector3d> contact_points = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
-  contact_status_standing.setContactPoints(contact_points);
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 ```
 
@@ -186,11 +186,11 @@ Then the all the contacts are inactive.
 Then a lift event is appended into the back of the contact sequence.
 Finally, we set the contact status after touch-down as
 ```
-  contact_points[0].coeffRef(0) += jump_length;
-  contact_points[1].coeffRef(0) += jump_length;
-  contact_points[2].coeffRef(0) += jump_length;
-  contact_points[3].coeffRef(0) += jump_length;
-  contact_status_standing.setContactPoints(contact_points);
+  contact_positions[0].coeffRef(0) += jump_length;
+  contact_positions[1].coeffRef(0) += jump_length;
+  contact_positions[2].coeffRef(0) += jump_length;
+  contact_positions[3].coeffRef(0) += jump_length;
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);
 ```

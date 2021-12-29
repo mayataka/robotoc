@@ -119,7 +119,7 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
   EXPECT_EQ(robot_empty.dimu(), 0);
   EXPECT_EQ(robot_empty.max_dimf(), 0);
   EXPECT_EQ(robot_empty.dim_passive(), 0);
-  EXPECT_EQ(robot_empty.maxPointContacts(), 0);
+  EXPECT_EQ(robot_empty.maxNumContacts(), 0);
   EXPECT_FALSE(robot_empty.hasFloatingBase());
   Robot robot(path_to_urdf, base_joint_type);
   pinocchio::Model robot_ref;
@@ -140,7 +140,7 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
   else {
     EXPECT_EQ(robot.dim_passive(), 0);
   }
-  EXPECT_EQ(robot.maxPointContacts(), 0);
+  EXPECT_EQ(robot.maxNumContacts(), 0);
   Robot robot_contact(path_to_urdf, base_joint_type, contact_frames, baumgarte_weights);
   EXPECT_EQ(robot_contact.dimq(), robot_ref.nq);
   EXPECT_EQ(robot_contact.dimv(), robot_ref.nv);
@@ -153,7 +153,7 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
   else {
     EXPECT_EQ(robot_contact.dim_passive(), 0);
   }
-  EXPECT_EQ(robot_contact.maxPointContacts(), contact_frames.point_contact_frames.size());
+  EXPECT_EQ(robot_contact.maxNumContacts(), contact_frames.point_contact_frames.size());
   EXPECT_NO_THROW(
     std::cout << robot_contact << std::endl;
   );
@@ -351,7 +351,7 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf,
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       contacts_ref[i].computeBaumgarteResidual(
-          model, data, contact_status.contactPoints()[i], 
+          model, data, contact_status.contactPositions()[i], 
           residual_ref.segment<3>(3*num_active_contacts));
       ++num_active_contacts;
     }
@@ -489,7 +489,7 @@ void RobotTest::testContactPosition(const std::string& path_to_urdf,
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   for (int i=0; i<contact_frames.point_contact_frames.size(); ++i) {
-    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
+    impulse_status.setContactPlacement(i, Eigen::Vector3d::Random());
   }
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -503,7 +503,7 @@ void RobotTest::testContactPosition(const std::string& path_to_urdf,
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       contacts_ref[i].computeContactPositionResidual(
-        model, data, impulse_status.contactPoints()[i], 
+        model, data, impulse_status.contactPositions()[i], 
         residual_ref.segment<3>(3*num_active_impulse));
         ++num_active_impulse;
     }

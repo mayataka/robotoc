@@ -1,7 +1,6 @@
 pybind11_add_robotoc_module(contact_status)
 pybind11_add_robotoc_module(impulse_status)
 pybind11_add_robotoc_module(se3)
-pybind11_add_robotoc_module(contact_frames)
 pybind11_add_robotoc_module(robot)
 
 install_robotoc_pybind_module(robot)

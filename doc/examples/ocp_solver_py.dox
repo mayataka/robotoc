@@ -141,10 +141,10 @@ Then we can set an impulse event and a lift event to the contact sequence.
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
-contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
-contact_status_standing.set_contact_points(contact_points)
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 ```
 
@@ -157,11 +157,11 @@ contact_sequence.push_back(contact_status_flying, t0+ground_time)
 Then a lift event is appended into the back of the contact sequence.
 Finally, we set the contact status after touch-down as
 ```
-contact_points[0][0] += jump_length
-contact_points[1][0] += jump_length
-contact_points[2][0] += jump_length
-contact_points[3][0] += jump_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[0][0] += jump_length
+contact_positions[1][0] += jump_length
+contact_positions[2][0] += jump_length
+contact_positions[3][0] += jump_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 ```
 Then an impulse event is appended into the back of the contact sequence.

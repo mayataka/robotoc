@@ -83,14 +83,14 @@ public:
   /// updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_point Contact point. Size must be 3.
+  /// @param[in] contact_position Contact position. Size must be 3.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint. 
   /// Size must be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_point,
+      const Eigen::MatrixBase<VectorType1>& contact_position,
       const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const;
 
   ///
@@ -150,14 +150,14 @@ public:
   /// be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_point Contact point. Size must be 3.
+  /// @param[in] contact_position Contact position. Size must be 3.
   /// @param[out] contact_residual Residual of the contact constraint. Size must 
   /// be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
   void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_point,
+      const Eigen::MatrixBase<VectorType1>& contact_position,
       const Eigen::MatrixBase<VectorType2>& contact_residual) const;
 
   ///
@@ -186,13 +186,13 @@ public:
                            const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Returns the contact point at the current kinematics of the robot. 
+  /// @brief Returns the contact position at the current kinematics of the robot. 
   /// Before calling this function, kinematics of the robot model (frame 
   /// position) must be updated.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @return Const reference to the contact point.
+  /// @return Const reference to the contact position.
   ///
-  const Eigen::Vector3d& contactPoint(const pinocchio::Data& data) const;
+  const Eigen::Vector3d& contactPosition(const pinocchio::Data& data) const;
 
   ///
   /// @brief Returns contact frame id, i.e., the index of the contact frame.

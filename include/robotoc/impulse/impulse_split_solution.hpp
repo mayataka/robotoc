@@ -86,7 +86,7 @@ public:
 
   ///
   /// @brief Impulse forces. 
-  /// Size is Robot::maxPointContacts().
+  /// Size is Robot::maxNumContacts().
   ///
   std::vector<Eigen::Vector3d> f;
 
@@ -131,7 +131,7 @@ public:
 
   ///
   /// @brief Lagrange multiplier w.r.t. the impulse velocity constraint. 
-  /// Size is Robot::maxPointContacts().
+  /// Size is Robot::maxNumContacts().
   ///
   std::vector<Eigen::Vector3d> mu;
 

@@ -125,7 +125,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 
 private:
-  int dimv_, dimc_, max_point_contacts_;
+  int dimv_, dimc_, max_num_contacts_;
   std::vector<int> contact_frame_;
   double mu_;
   Eigen::MatrixXd cone_;
@@ -137,7 +137,7 @@ private:
 
   Eigen::VectorXd& r(ConstraintComponentData& data, 
                      const int contact_idx) const {
-    return data.r[max_point_contacts_+contact_idx];
+    return data.r[max_num_contacts_+contact_idx];
   }
 
   Eigen::MatrixXd& dg_dq(ConstraintComponentData& data, 
@@ -147,17 +147,17 @@ private:
 
   Eigen::MatrixXd& dg_df(ConstraintComponentData& data, 
                          const int contact_idx) const {
-    return data.J[max_point_contacts_+contact_idx];
+    return data.J[max_num_contacts_+contact_idx];
   }
 
   Eigen::MatrixXd& dfW_dq(ConstraintComponentData& data, 
                           const int contact_idx) const {
-    return data.J[2*max_point_contacts_+contact_idx];
+    return data.J[2*max_num_contacts_+contact_idx];
   }
 
   Eigen::MatrixXd& r_dg_df(ConstraintComponentData& data, 
                            const int contact_idx) const {
-    return data.J[3*max_point_contacts_+contact_idx];
+    return data.J[3*max_num_contacts_+contact_idx];
   }
 
 };

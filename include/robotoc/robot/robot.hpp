@@ -13,7 +13,6 @@
 #include "pinocchio/spatial/force.hpp"
 
 #include "robotoc/robot/se3.hpp"
-#include "robotoc/robot/contact_frames.hpp"
 #include "robotoc/robot/point_contact.hpp"
 #include "robotoc/robot/surface_contact.hpp"
 #include "robotoc/robot/contact_status.hpp"
@@ -36,7 +35,7 @@ enum class BaseJointType {
 ///
 /// @class Robot
 /// @brief Dynamics and kinematics model of robots. Wraps pinocchio::Model and 
-/// pinocchio::Data. Includes point contacts.
+/// pinocchio::Data. Includes contacts.
 ///
 class Robot {
 public:
@@ -60,13 +59,15 @@ public:
   /// BaseJointType::FixedBase.
   /// @param[in] contact_frames Collection of the frames that can have point and 
   /// surface contacts with the environments. 
+  /// @param[in] contact_types Types of the contacts. Size must be same as 
+  /// that of contact_frames.
   /// @param[in] baumgarte_weights The weight paramter of the Baumgarte's 
   /// stabilization method on the error on the contact velocity (first element) 
   /// and position (second element). Must be non-negative. 
   ///
-  Robot(const std::string& path_to_urdf, 
-        const BaseJointType& base_joint_type, 
-        const ContactFrames& contact_frames, 
+  Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
+        const std::vector<int>& contact_frames, 
+        const std::vector<ContactType>& contact_types,
         const std::pair<double, double>& baumgarte_weights);
 
   ///
@@ -79,12 +80,15 @@ public:
   /// @param[in] contact_frames Collection of the frames that can have point and 
   /// surface contacts with the environments. If this is empty, it is assumed 
   /// that this robot never has any contacts.
+  /// @param[in] contact_types Types of the contacts. Size must be same as 
+  /// that of contact_frames.
   /// @param[in] time_step Time steps of the Baumgarte's stabilization method.
   /// The weight parameter on the velocity is set by 2/time_step and that on the 
   /// position is by 1/(time_step*time_step). Must be positive.
   ///
   Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
-        const ContactFrames& contact_frames, const double time_step);
+        const std::vector<int>& contact_frames, 
+        const std::vector<ContactType>& contact_types, const double time_step);
 
   ///
   /// @brief Default constructor. 
@@ -432,7 +436,7 @@ public:
   /// @brief Set contact forces in this robot model for each active contacts.  
   /// @param[in] contact_status Contact status.
   /// @param[in] f The stack of the contact forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
+  /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
   void setContactForces(const ContactStatus& contact_status, 
                         const std::vector<Eigen::Vector3d>& f);
@@ -441,7 +445,7 @@ public:
   /// @brief Set impulse forces in this robot model for each active impulses. 
   /// @param[in] impulse_status Impulse status.
   /// @param[in] f The stack of the impulse forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
+  /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
   void setImpulseForces(const ImpulseStatus& impulse_status, 
                         const std::vector<Eigen::Vector3d>& f);
@@ -642,7 +646,20 @@ public:
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts.
   /// 
-  int maxPointContacts() const;
+  int maxNumContacts() const;
+
+  ///
+  /// @brief Returns the type of the contact.
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @return Contact type. 
+  ///
+  ContactType contactType(const int contact_index) const;
+
+  ///
+  /// @brief Returns the types of the contacts.
+  /// @return Contact types. 
+  ///
+  const std::vector<ContactType>& contactTypes() const;
 
   ///
   /// @brief Retruns the indices of the frames involving the point or surface 
@@ -652,8 +669,8 @@ public:
   std::vector<int> contactFrames() const;
 
   ///
-  /// @brief Retruns the indices of the frames involving the point contacts. 
-  /// @return Indices of the point contact frames.
+  /// @brief Retruns the indices of the frames involving the contacts. 
+  /// @return Indices of the contact frames.
   /// 
   std::vector<int> pointContactFrames() const;
 
@@ -722,9 +739,10 @@ public:
 private:
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
+  pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
+  std::vector<ContactType> contact_types_;
   aligned_vector<PointContact> point_contacts_;
   aligned_vector<SurfaceContact> surface_contacts_;
-  pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
   int dimq_, dimv_, dimu_, dim_passive_, max_dimf_;
   bool has_floating_base_;
   Eigen::MatrixXd dimpulse_dv_; 

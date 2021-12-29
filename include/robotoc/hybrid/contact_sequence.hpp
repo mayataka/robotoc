@@ -143,14 +143,29 @@ public:
   bool isEventTimeConsistent() const;
 
   ///
-  /// @brief Sets the contact points to contact statsus with specified contact  
-  /// phase. Also set the contact points of the discrete event just before the  
-  /// contact phase.
+  /// @brief Sets the contact placements (positions and rotations) to contact 
+  /// statsus with specified contact phase. The rotations are set to 
+  /// Eigen::Matrix3d::Identity(). Also sets the contact placement of 
+  /// the discrete event just before the contact phase.
   /// @param[in] contact_phase Contact phase.
-  /// @param[in] contact_points Contact points.
+  /// @param[in] contact_positions Contact positions.
   ///
-  void setContactPoints(const int contact_phase, 
-                        const std::vector<Eigen::Vector3d>& contact_points);
+  void setContactPlacements(
+      const int contact_phase, 
+      const std::vector<Eigen::Vector3d>& contact_positions);
+
+  ///
+  /// @brief Sets the contact placements (positions and rotations) to contact 
+  /// statsus with specified contact phase. Also set the contact placement of 
+  /// the discrete event just before the contact phase.
+  /// @param[in] contact_phase Contact phase.
+  /// @param[in] contact_positions Contact positions.
+  /// @param[in] contact_rotations Contact rotations.
+  ///
+  void setContactPlacements(
+      const int contact_phase, 
+      const std::vector<Eigen::Vector3d>& contact_positions,
+      const std::vector<Eigen::Matrix3d>& contact_rotations);
 
   ///
   /// @brief Returns number of impulse events. 

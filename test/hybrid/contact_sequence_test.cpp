@@ -35,7 +35,7 @@ protected:
   void test_push_back(const Robot& robot) const;
   void test_pop_back(const Robot& robot) const;
   void test_pop_front(const Robot& robot) const;
-  void test_setContactPoints(const Robot& robot) const;
+  void test_setContactPlacements(const Robot& robot) const;
 
   int max_num_each_events;
 };
@@ -43,7 +43,7 @@ protected:
 
 DiscreteEvent ContactSequenceTest::createDiscreteEvent(const Robot& robot, 
                                                        const ContactStatus& pre_contact_status) {
-  DiscreteEvent discrete_event(robot.maxPointContacts());
+  DiscreteEvent discrete_event(robot.maxNumContacts());
   ContactStatus post_contact_status = pre_contact_status;
   while (!discrete_event.existDiscreteEvent()) {
     post_contact_status.setRandom();
@@ -60,7 +60,7 @@ std::vector<DiscreteEvent> ContactSequenceTest::createDiscreteEvents(const Robot
   ContactStatus pre_contact_status = initial_contact_status;
   ContactStatus post_contact_status = robot.createContactStatus();
   for (int i=0; i<num_discrete_events; ++i) {
-    DiscreteEvent tmp(robot.maxPointContacts());
+    DiscreteEvent tmp(robot.maxNumContacts());
     tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     while (!tmp.existDiscreteEvent()) {
       post_contact_status.setRandom();
@@ -269,7 +269,7 @@ void ContactSequenceTest::test_pop_front(const Robot& robot) const {
 }
 
 
-void ContactSequenceTest::test_setContactPoints(const Robot& robot) const {
+void ContactSequenceTest::test_setContactPlacements(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_each_events);
   auto pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -288,25 +288,25 @@ void ContactSequenceTest::test_setContactPoints(const Robot& robot) const {
       impulse_indices.push_back(-1);
     }
   }
-  std::vector<std::vector<Eigen::Vector3d>> contact_points;
+  std::vector<std::vector<Eigen::Vector3d>> contact_positions;
   for (int i=0; i<6; ++i) {
     std::vector<Eigen::Vector3d> cp;
-    for (int j=0; j<robot.maxPointContacts(); ++j) {
+    for (int j=0; j<robot.maxNumContacts(); ++j) {
       cp.push_back(Eigen::Vector3d::Random());
     }
-    contact_points.push_back(cp);
+    contact_positions.push_back(cp);
   }
   for (int i=0; i<6; ++i) {
-    contact_sequence.setContactPoints(i, contact_points[i]);
-    const auto& cps = contact_sequence.contactStatus(i).contactPoints();
-    for (int j=0; j<robot.maxPointContacts(); ++j) {
-      EXPECT_TRUE(cps[j].isApprox(contact_points[i][j]));
+    contact_sequence.setContactPlacements(i, contact_positions[i]);
+    const auto& cps = contact_sequence.contactStatus(i).contactPositions();
+    for (int j=0; j<robot.maxNumContacts(); ++j) {
+      EXPECT_TRUE(cps[j].isApprox(contact_positions[i][j]));
     }
     if (i > 0) {
       if (contact_sequence.eventType(i-1) == DiscreteEventType::Impulse) {
-        const auto& ips = contact_sequence.impulseStatus(impulse_indices[i-1]).contactPoints();
-        for (int j=0; j<robot.maxPointContacts(); ++j) {
-          EXPECT_TRUE(ips[j].isApprox(contact_points[i][j]));
+        const auto& ips = contact_sequence.impulseStatus(impulse_indices[i-1]).contactPositions();
+        for (int j=0; j<robot.maxNumContacts(); ++j) {
+          EXPECT_TRUE(ips[j].isApprox(contact_positions[i][j]));
         }
       }
     }
@@ -322,7 +322,7 @@ TEST_F(ContactSequenceTest, fixedBase) {
   test_push_back(robot);
   test_pop_back(robot);
   test_pop_front(robot);
-  test_setContactPoints(robot);
+  test_setContactPlacements(robot);
 }
 
 
@@ -334,7 +334,7 @@ TEST_F(ContactSequenceTest, floatingBase) {
   test_push_back(robot);
   test_pop_back(robot);
   test_pop_front(robot);
-  test_setContactPoints(robot);
+  test_setContactPlacements(robot);
 }
 
 } // namespace robotoc

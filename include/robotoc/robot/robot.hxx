@@ -261,7 +261,7 @@ inline void Robot::computeBaumgarteResidual(
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, contact_status.contactPoint(i),
+          model_, data_, contact_status.contactPosition(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -350,7 +350,7 @@ inline void Robot::computeContactPositionResidual(
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactPositionResidual(
-          model_, data_, impulse_status.contactPoint(i),
+          model_, data_, impulse_status.contactPosition(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
               .template segment<3>(3*num_active_impulse));
       ++num_active_impulse;
@@ -380,7 +380,7 @@ inline void Robot::computeContactPositionDerivative(
 
 inline void Robot::setContactForces(const ContactStatus& contact_status, 
                                     const std::vector<Eigen::Vector3d>& f) {
-  assert(f.size() == maxPointContacts());
+  assert(f.size() == maxNumContacts());
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
@@ -395,7 +395,7 @@ inline void Robot::setContactForces(const ContactStatus& contact_status,
 
 inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
                                     const std::vector<Eigen::Vector3d>& f) {
-  assert(f.size() == maxPointContacts());
+  assert(f.size() == maxNumContacts());
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
@@ -648,8 +648,20 @@ inline bool Robot::hasFloatingBase() const {
 }
 
 
-inline int Robot::maxPointContacts() const {
+inline int Robot::maxNumContacts() const {
   return point_contacts_.size();
+}
+
+
+inline ContactType Robot::contactType(const int contact_index) const {
+  assert(contact_index >= 0);
+  assert(contact_index < max_num_contacts_);
+  return contact_types_[contact_index];
+}
+
+
+inline const std::vector<ContactType>& Robot::contactTypes() const {
+  return contact_types_;
 }
 
 
@@ -684,12 +696,12 @@ inline std::vector<int> Robot::surfaceContactFrames() const {
 
 
 inline ContactStatus Robot::createContactStatus() const {
-  return ContactStatus(maxPointContacts());
+  return ContactStatus(contact_types_);
 }
 
 
 inline ImpulseStatus Robot::createImpulseStatus() const {
-  return ImpulseStatus(maxPointContacts());
+  return ImpulseStatus(contact_types_);
 }
 
 } // namespace robotoc

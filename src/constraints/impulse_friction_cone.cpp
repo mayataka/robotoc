@@ -9,15 +9,15 @@ namespace robotoc {
 ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu)
   : ImpulseConstraintComponentBase(),
     dimv_(robot.dimv()),
-    dimc_(5*robot.maxPointContacts()),
-    max_point_contacts_(robot.maxPointContacts()),
+    dimc_(5*robot.maxNumContacts()),
+    max_num_contacts_(robot.maxNumContacts()),
     contact_frame_(robot.pointContactFrames()),
     mu_(mu),
     cone_(Eigen::MatrixXd::Zero(5, 3)) {
   try {
-    if (robot.maxPointContacts() == 0) {
+    if (robot.maxNumContacts() == 0) {
       throw std::out_of_range(
-          "Invalid argument: robot.maxPointContacts() must be positive!");
+          "Invalid argument: robot.maxNumContacts() must be positive!");
     }
     if (mu <= 0) {
       throw std::out_of_range(
@@ -39,7 +39,7 @@ ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu)
 ImpulseFrictionCone::ImpulseFrictionCone()
   : ImpulseConstraintComponentBase(),
     dimc_(0),
-    max_point_contacts_(0),
+    max_num_contacts_(0),
     dimv_(0),
     contact_frame_(),
     mu_(0),
@@ -78,23 +78,23 @@ KinematicsLevel ImpulseFrictionCone::kinematicsLevel() const {
 void ImpulseFrictionCone::allocateExtraData(
     ConstraintComponentData& data) const {
   data.r.clear();
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     data.r.push_back(Eigen::VectorXd::Zero(3)); // fWi
   }
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     data.r.push_back(Eigen::VectorXd::Zero(5)); // ri
   }
   data.J.clear();
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     data.J.push_back(Eigen::MatrixXd::Zero(5, dimv_)); // dgi_dq
   }
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     data.J.push_back(Eigen::MatrixXd::Zero(5, 3)); // dgi_df
   }
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     data.J.push_back(Eigen::MatrixXd::Zero(6, dimv_)); // dfWi_dq
   }
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     data.J.push_back(Eigen::MatrixXd::Zero(5, 3)); // r_dgi_df
   }
 }
@@ -105,7 +105,7 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
                                      ConstraintComponentData& data, 
                                      const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
@@ -125,7 +125,7 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
                                    ConstraintComponentData& data, 
                                    const ImpulseSplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     const int idx = 5*i;
     Eigen::VectorXd& fWi = fW(data, i);
     robot.transformFromLocalToWorld(contact_frame_[i], s.f[i], fWi);
@@ -143,7 +143,7 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
@@ -164,7 +164,7 @@ void ImpulseFrictionCone::evalDerivatives(
     ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
@@ -197,7 +197,7 @@ void ImpulseFrictionCone::condenseSlackAndDual(
     ImpulseSplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       computeCondensingCoeffcient<5>(data, idx);
@@ -235,7 +235,7 @@ void ImpulseFrictionCone::expandSlackAndDual(
   data.dslack.fill(1.0);
   data.ddual.fill(1.0);
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const int idx = 5*i;
       const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);

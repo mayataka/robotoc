@@ -37,12 +37,15 @@ int main(int argc, char *argv[]) {
   const int LH_foot_id = 22;
   const int RF_foot_id = 32;
   const int RH_foot_id = 42;
-  robotoc::ContactFrames contact_frames; 
-  contact_frames.point_contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
+  const std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
+  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact};
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.05;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, baumgarte_time_step);
+                       contact_frames, contact_types, baumgarte_time_step);
 
   const double dt = 0.02;
   const double jump_length = 0.8;
@@ -120,20 +123,20 @@ int main(int argc, char *argv[]) {
   const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
   const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
 
-  std::vector<Eigen::Vector3d> contact_points = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
-  contact_status_standing.setContactPoints(contact_points);
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time-0.3, true);
 
-  contact_points[0].coeffRef(0) += jump_length;
-  contact_points[1].coeffRef(0) += jump_length;
-  contact_points[2].coeffRef(0) += jump_length;
-  contact_points[3].coeffRef(0) += jump_length;
-  contact_status_standing.setContactPoints(contact_points);
+  contact_positions[0].coeffRef(0) += jump_length;
+  contact_positions[1].coeffRef(0) += jump_length;
+  contact_positions[2].coeffRef(0) += jump_length;
+  contact_positions[3].coeffRef(0) += jump_length;
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time-0.1, true);
 

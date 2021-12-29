@@ -11,14 +11,14 @@ inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot)
   : q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     dv(Eigen::VectorXd::Zero(robot.dimv())),
-    f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    f(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
     lmd(Eigen::VectorXd::Zero(robot.dimv())),
     gmm(Eigen::VectorXd::Zero(robot.dimv())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    mu(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    is_impulse_active_(robot.maxPointContacts(), false),
+    is_impulse_active_(robot.maxNumContacts(), false),
     dimi_(0) {
   if (robot.hasFloatingBase()) {
     q.coeffRef(6) = 1.0;
@@ -48,7 +48,7 @@ inline ImpulseSplitSolution::~ImpulseSplitSolution() {
 
 inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  assert(impulse_status.maxPointContacts() == is_impulse_active_.size());
+  assert(impulse_status.maxNumContacts() == is_impulse_active_.size());
   is_impulse_active_ = impulse_status.isImpulseActive();
   dimi_ = impulse_status.dimi();
 }

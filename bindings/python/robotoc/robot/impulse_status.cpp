@@ -15,9 +15,9 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(impulse_status, m) {
   py::class_<ImpulseStatus>(m, "ImpulseStatus")
-    .def(py::init<const int, const int>(),
-          py::arg("max_point_contacts"), py::arg("impulse_mode_id")=0)
-    .def("max_point_contacts", &ImpulseStatus::maxPointContacts)
+    .def(py::init<const std::vector<ContactType>&, const int>(),
+          py::arg("contact_types"), py::arg("contact_mode_id")=0)
+    .def("max_num_contacts", &ImpulseStatus::maxNumContacts)
     .def("is_impulse_active", 
           static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),
           py::arg("contact_index"))
@@ -27,28 +27,31 @@ PYBIND11_MODULE(impulse_status, m) {
           py::arg("contact_index"))
     .def("deactivate_impulse", &ImpulseStatus::deactivateImpulse,
           py::arg("contact_index"))
-    .def("activate_impulses", 
-          static_cast<void (ImpulseStatus::*)(const std::vector<int>& impulse_indices)>(&ImpulseStatus::activateImpulses))
-    .def("deactivate_impulses", 
-          static_cast<void (ImpulseStatus::*)(const std::vector<int>& impulse_indices)>(&ImpulseStatus::deactivateImpulses))
-    .def("activate_impulses", 
-          static_cast<void (ImpulseStatus::*)()>(&ImpulseStatus::activateImpulses))
-    .def("deactivate_impulses", 
-          static_cast<void (ImpulseStatus::*)()>(&ImpulseStatus::deactivateImpulses))
-    .def("set_contact_point", &ImpulseStatus::setContactPoint,
-          py::arg("contact_index"), py::arg("contact_point"))
-    .def("set_contact_points", &ImpulseStatus::setContactPoints,
-          py::arg("contact_points"))
-    .def("contact_point", &ImpulseStatus::contactPoint,
+    .def("activate_impulses", &ImpulseStatus::activateImpulses,
+          py::arg("contact_indices"))
+    .def("deactivate_impulses", &ImpulseStatus::deactivateImpulses,
+          py::arg("contact_indices"))
+    .def("set_contact_placement", 
+          static_cast<void (ImpulseStatus::*)(const int, const Eigen::Vector3d&)>(&ImpulseStatus::setContactPlacement),
+          py::arg("contact_index"), py::arg("contact_position"))
+    .def("set_contact_placement", 
+          static_cast<void (ImpulseStatus::*)(const int, const Eigen::Vector3d&, const Eigen::Matrix3d&)>(&ImpulseStatus::setContactPlacement),
+          py::arg("contact_index"), py::arg("contact_position"), py::arg("contact_rotation"))
+    .def("set_contact_placements", 
+          static_cast<void (ImpulseStatus::*)(const std::vector<Eigen::Vector3d>&)>(&ImpulseStatus::setContactPlacements),
+          py::arg("contact_positions"))
+    .def("set_contact_placements", 
+          static_cast<void (ImpulseStatus::*)(const std::vector<Eigen::Vector3d>&, const std::vector<Eigen::Matrix3d>&)>(&ImpulseStatus::setContactPlacements),
+          py::arg("contact_positions"), py::arg("contact_rotations"))
+    .def("contact_placement", &ImpulseStatus::contactPlacement,
           py::arg("contact_index"))
-    .def("contact_points", &ImpulseStatus::contactPoints)
-    .def("set_contact_surface_rotation", &ImpulseStatus::setContactSurfaceRotation,
-          py::arg("contact_index"), py::arg("contact_surface_rotation"))
-    .def("set_contact_surfaces_rotations", &ImpulseStatus::setContactSurfacesRotations,
-          py::arg("contact_surfaces_rotations"))
-    .def("contact_surface_rotation", &ImpulseStatus::contactSurfaceRotation,
+    .def("contact_placements", &ImpulseStatus::contactPlacements)
+    .def("contact_position", &ImpulseStatus::contactPosition,
           py::arg("contact_index"))
-    .def("contact_surfaces_rotations", &ImpulseStatus::contactSurfacesRotations)
+    .def("contact_positions", &ImpulseStatus::contactPositions)
+    .def("contact_rotation", &ImpulseStatus::contactRotation,
+          py::arg("contact_index"))
+    .def("contact_rotations", &ImpulseStatus::contactRotations)
     .def("set_impulse_mode_id", &ImpulseStatus::setImpulseModeId,
           py::arg("impulse_mode_id"))
     .def("impulse_mode_id", &ImpulseStatus::impulseModeId)

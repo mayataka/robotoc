@@ -8,18 +8,18 @@ namespace robotoc {
 
 LocalContactForceCost::LocalContactForceCost(const Robot& robot)
   : CostFunctionComponentBase(),
-    max_point_contacts_(robot.maxPointContacts()),
+    max_num_contacts_(robot.maxNumContacts()),
     max_dimf_(robot.max_dimf()),
-    f_ref_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    f_weight_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    fi_ref_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    fi_weight_(robot.maxPointContacts(), Eigen::Vector3d::Zero()) {
+    f_ref_(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
+    f_weight_(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
+    fi_ref_(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
+    fi_weight_(robot.maxNumContacts(), Eigen::Vector3d::Zero()) {
 }
 
 
 LocalContactForceCost::LocalContactForceCost()
   : CostFunctionComponentBase(),
-    max_point_contacts_(0),
+    max_num_contacts_(0),
     max_dimf_(0),
     f_ref_(),
     f_weight_(),
@@ -35,10 +35,10 @@ LocalContactForceCost::~LocalContactForceCost() {
 void LocalContactForceCost::set_f_ref(
     const std::vector<Eigen::Vector3d>& f_ref) {
   try {
-    if (f_ref.size() != max_point_contacts_) {
+    if (f_ref.size() != max_num_contacts_) {
       throw std::invalid_argument(
           "invalid size: f_ref.size() must be " 
-          + std::to_string(max_point_contacts_) + "!");
+          + std::to_string(max_num_contacts_) + "!");
     }
   }
   catch(const std::exception& e) {
@@ -52,10 +52,10 @@ void LocalContactForceCost::set_f_ref(
 void LocalContactForceCost::set_f_weight(
     const std::vector<Eigen::Vector3d>& f_weight) {
   try {
-    if (f_weight.size() != max_point_contacts_) {
+    if (f_weight.size() != max_num_contacts_) {
       throw std::invalid_argument(
           "invalid size: f_weight.size() must be " 
-          + std::to_string(max_point_contacts_) + "!");
+          + std::to_string(max_num_contacts_) + "!");
     }
   }
   catch(const std::exception& e) {
@@ -69,10 +69,10 @@ void LocalContactForceCost::set_f_weight(
 void LocalContactForceCost::set_fi_ref(
     const std::vector<Eigen::Vector3d>& fi_ref) {
   try {
-    if (fi_ref.size() != max_point_contacts_) {
+    if (fi_ref.size() != max_num_contacts_) {
       throw std::invalid_argument(
           "invalid size: f_ref.size() must be " 
-          + std::to_string(max_point_contacts_) + "!");
+          + std::to_string(max_num_contacts_) + "!");
     }
   }
   catch(const std::exception& e) {
@@ -86,10 +86,10 @@ void LocalContactForceCost::set_fi_ref(
 void LocalContactForceCost::set_fi_weight(
     const std::vector<Eigen::Vector3d>& fi_weight) {
   try {
-    if (fi_weight.size() != max_point_contacts_) {
+    if (fi_weight.size() != max_num_contacts_) {
       throw std::invalid_argument(
           "invalid size: f_weight.size() must be " 
-          + std::to_string(max_point_contacts_) + "!");
+          + std::to_string(max_num_contacts_) + "!");
     }
   }
   catch(const std::exception& e) {
@@ -111,7 +111,7 @@ double LocalContactForceCost::evalStageCost(Robot& robot,
                                             const double t, const double dt, 
                                             const SplitSolution& s) const {
   double l = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       l += (f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array()) 
                                  * (s.f[i].array()-f_ref_[i].array())).sum();
@@ -126,7 +126,7 @@ void LocalContactForceCost::evalStageCostDerivatives(
     const double t, const double dt, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += dt * f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array());
@@ -141,7 +141,7 @@ void LocalContactForceCost::evalStageCostHessian(
     const double t, const double dt, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
           += dt * f_weight_[i];
@@ -177,7 +177,7 @@ double LocalContactForceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const double t, const ImpulseSplitSolution& s) const {
   double l = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       l += (fi_weight_[i].array() * (s.f[i].array()-fi_ref_[i].array()) 
                                   * (s.f[i].array()-fi_ref_[i].array())).sum();
@@ -192,7 +192,7 @@ void LocalContactForceCost::evalImpulseCostDerivatives(
     const double t, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += fi_weight_[i].array() * (s.f[i].array()-fi_ref_[i].array());
@@ -207,7 +207,7 @@ void LocalContactForceCost::evalImpulseCostHessian(
     const double t, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
           += fi_weight_[i];

@@ -23,7 +23,7 @@ protected:
 
 
 void RiccatiFactorizationTest::test(const Robot& robot) {
-  ASSERT_TRUE(robot.maxPointContacts() == 0);
+  ASSERT_TRUE(robot.maxNumContacts() == 0);
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();

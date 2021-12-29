@@ -25,7 +25,7 @@ public:
   using Matrix6xd = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 
   ///
-  /// @brief Construct a point contact model.
+  /// @brief Construct a surface contact model.
   /// @param[in] model The pinocchio model. Before calling this constructor, 
   /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
   /// @param[in] contact_frame_id The index of the contact frame. 
@@ -210,7 +210,7 @@ public:
   int parent_joint_id() const;
 
   ///
-  /// @brief Displays the point contact onto a ostream.
+  /// @brief Displays the surface contact onto a ostream.
   ///
   void disp(std::ostream& os) const;
 

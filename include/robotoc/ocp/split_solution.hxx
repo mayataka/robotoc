@@ -13,11 +13,11 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     v(Eigen::VectorXd::Zero(robot.dimv())),
     a(Eigen::VectorXd::Zero(robot.dimv())),
     u(Eigen::VectorXd::Zero(robot.dimu())),
-    f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    f(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
     lmd(Eigen::VectorXd::Zero(robot.dimv())),
     gmm(Eigen::VectorXd::Zero(robot.dimv())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    mu(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
     nu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -25,7 +25,7 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     has_floating_base_(robot.hasFloatingBase()),
     has_active_contacts_(false),
     has_active_impulse_(false),
-    is_contact_active_(robot.maxPointContacts(), false),
+    is_contact_active_(robot.maxNumContacts(), false),
     dimf_(0),
     dimi_(0) {
   if (robot.hasFloatingBase()) {
@@ -63,7 +63,7 @@ inline SplitSolution::~SplitSolution() {
 
 inline void SplitSolution::setContactStatus(
     const ContactStatus& contact_status) {
-  assert(contact_status.maxPointContacts() == is_contact_active_.size());
+  assert(contact_status.maxNumContacts() == is_contact_active_.size());
   has_active_contacts_ = contact_status.hasActiveContacts();
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();

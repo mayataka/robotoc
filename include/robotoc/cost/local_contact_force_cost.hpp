@@ -65,28 +65,28 @@ public:
   ///
   /// @brief Sets the reference contact forces expressed in the local frames. 
   /// @param[in] f_ref Reference contact forces expressed in the local frames. 
-  /// Size must be Robot::maxPointContacts().
+  /// Size must be Robot::maxNumContacts().
   ///
   void set_f_ref(const std::vector<Eigen::Vector3d>& f_ref);
 
   ///
   /// @brief Sets the weight vectors on the contact forces. 
   /// @param[in] f_weight Weight vectors on the contact forces. 
-  /// Size must be Robot::maxPointContacts().
+  /// Size must be Robot::maxNumContacts().
   ///
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
   ///
   /// @brief Sets the reference impulse forces expressed in the local frames. 
   /// @param[in] fi_ref Reference impulse forces expressed in the local frames. 
-  /// Size must be Robot::maxPointContacts().
+  /// Size must be Robot::maxNumContacts().
   ///
   void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);
 
   ///
   /// @brief Sets the weight vectors on the impulse forces. 
   /// @param[in] fi_weight Weight vectors on the impulse forces. 
-  /// Size must be Robot::maxPointContacts().
+  /// Size must be Robot::maxNumContacts().
   ///
   void set_fi_weight(const std::vector<Eigen::Vector3d>& fi_weight);
 
@@ -134,7 +134,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int max_point_contacts_, max_dimf_;
+  int max_num_contacts_, max_dimf_;
   std::vector<Eigen::Vector3d> f_ref_, f_weight_, fi_ref_, fi_weight_;
 
 };

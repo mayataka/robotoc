@@ -107,7 +107,7 @@ public:
 
   ///
   /// @brief Contact forces. 
-  /// Size is Robot::maxPointContacts().
+  /// Size is Robot::maxNumContacts().
   ///
   std::vector<Eigen::Vector3d> f;
 
@@ -152,7 +152,7 @@ public:
 
   ///
   /// @brief Lagrange multiplier w.r.t. the acceleration-level contact  
-  /// constraint. Size is Robot::maxPointContacts().
+  /// constraint. Size is Robot::maxNumContacts().
   ///
   std::vector<Eigen::Vector3d> mu;
 

@@ -24,13 +24,17 @@ PYBIND11_MODULE(robot, m) {
           py::arg("path_to_urdf"),
           py::arg("base_joint_type")=BaseJointType::FixedBase)
     .def(py::init<const std::string&, const BaseJointType&, 
-                  const ContactFrames&, const std::pair<double, double>&>(),
+                  const std::vector<int>&, const std::vector<ContactType>&, 
+                  const std::pair<double, double>&>(),
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
-          py::arg("contact_frames"), py::arg("baumgarte_weights"))
+          py::arg("contact_frames"), py::arg("contact_types"), 
+          py::arg("baumgarte_weights"))
     .def(py::init<const std::string&, const BaseJointType&, 
-                  const ContactFrames&, const double>(),
+                  const std::vector<int>&, const std::vector<ContactType>&, 
+                  const double>(),
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
-          py::arg("contact_frames"), py::arg("baumgarte_time_step"))
+          py::arg("contact_frames"), py::arg("contact_types"), 
+          py::arg("baumgarte_time_step"))
     .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q) {
         self.updateFrameKinematics(q);
       },  py::arg("q"))
@@ -59,7 +63,10 @@ PYBIND11_MODULE(robot, m) {
     .def("dimu", &Robot::dimu)
     .def("max_dimf", &Robot::max_dimf)
     .def("dim_passive", &Robot::dim_passive)
-    .def("max_point_contacts", &Robot::maxPointContacts)
+    .def("max_num_contacts", &Robot::maxNumContacts)
+    .def("contact_type", &Robot::contactType,
+          py::arg("contact_index"))
+    .def("contact_types", &Robot::contactTypes)
     .def("contact_frames", &Robot::contactFrames)
     .def("point_contact_frames", &Robot::pointContactFrames)
     .def("surface_contact_frames", &Robot::surfaceContactFrames)

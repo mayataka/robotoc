@@ -256,9 +256,9 @@ inline bool ContactSequence::isEventTimeConsistent() const {
 }
 
 
-inline void ContactSequence::setContactPoints(
+inline void ContactSequence::setContactPlacements(
     const int contact_phase, 
-    const std::vector<Eigen::Vector3d>& contact_points) {
+    const std::vector<Eigen::Vector3d>& contact_positions) {
   try {
     if (contact_phase >= numContactPhases()) {
       throw std::runtime_error(
@@ -273,13 +273,48 @@ inline void ContactSequence::setContactPoints(
     std::cerr << *this << "\n";
     std::exit(EXIT_FAILURE);
   }
-  contact_statuses_[contact_phase].setContactPoints(contact_points);
+  contact_statuses_[contact_phase].setContactPlacements(contact_positions);
   if (contact_phase > 0) {
     if (is_impulse_event_[contact_phase-1]) {
       for (int impulse_index=0; ; ++impulse_index) {
         assert(impulse_index < numImpulseEvents());
         if (event_index_impulse_[impulse_index] == contact_phase-1) {
-          impulse_events_[impulse_index].setContactPoints(contact_points);
+          impulse_events_[impulse_index].setContactPlacements(contact_positions);
+          break;
+        }
+      }
+    }
+  }
+}
+
+
+inline void ContactSequence::setContactPlacements(
+    const int contact_phase, 
+    const std::vector<Eigen::Vector3d>& contact_positions,
+    const std::vector<Eigen::Matrix3d>& contact_rotations) {
+  try {
+    if (contact_phase >= numContactPhases()) {
+      throw std::runtime_error(
+          "The input contact_phase " + std::to_string(contact_phase) 
+          + " must be smaller than numContactPhases()" 
+          + std::to_string(numContactPhases()) + "!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::cerr << "c.f. the current contact sequence is " << "\n";
+    std::cerr << *this << "\n";
+    std::exit(EXIT_FAILURE);
+  }
+  contact_statuses_[contact_phase].setContactPlacements(contact_positions, 
+                                                        contact_rotations);
+  if (contact_phase > 0) {
+    if (is_impulse_event_[contact_phase-1]) {
+      for (int impulse_index=0; ; ++impulse_index) {
+        assert(impulse_index < numImpulseEvents());
+        if (event_index_impulse_[impulse_index] == contact_phase-1) {
+          impulse_events_[impulse_index].setContactPlacements(contact_positions,
+                                                              contact_rotations);
           break;
         }
       }

@@ -62,12 +62,12 @@ void ImpulseFrictionConeTest::test_isFeasible(Robot& robot,
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
-  EXPECT_EQ(constr.dimc(), 5*impulse_status.maxPointContacts());
+  EXPECT_EQ(constr.dimc(), 5*impulse_status.maxNumContacts());
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateFrameKinematics(s.q);
   if (impulse_status.hasActiveImpulse()) {
     bool feasible = true;
-    for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+    for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
       if (impulse_status.isImpulseActive(i)) {
         Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
         robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
@@ -92,7 +92,7 @@ void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& i
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateFrameKinematics(s.q);
   constr.setSlack(robot, impulse_status, data, s);
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
     robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
     ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
@@ -121,7 +121,7 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
       robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
@@ -156,7 +156,7 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
   auto kkt_res_ref = kkt_res;
   constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
       robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
@@ -203,7 +203,7 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   auto kkt_res_ref = kkt_res;
   constr.condenseSlackAndDual(impulse_status, data, kkt_mat, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
       robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
@@ -262,7 +262,7 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
       robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);

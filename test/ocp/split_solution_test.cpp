@@ -44,11 +44,11 @@ void SplitSolutionTest::test(const Robot& robot) {
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
   EXPECT_EQ(s.a.size(), robot.dimv());
-  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f.size(), robot.maxNumContacts());
   EXPECT_EQ(s.lmd.size(), robot.dimv());
   EXPECT_EQ(s.gmm.size(), robot.dimv());
   EXPECT_EQ(s.beta.size(), robot.dimv());
-  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxNumContacts());
   EXPECT_EQ(s.nu_passive.size(), robot.dim_passive());
   EXPECT_EQ(s.f_stack().size(), 0);
   EXPECT_EQ(s.mu_stack().size(), 0);
@@ -66,18 +66,18 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
   EXPECT_EQ(s.a.size(), robot.dimv());
-  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f.size(), robot.maxNumContacts());
   EXPECT_EQ(s.lmd.size(), robot.dimv());
   EXPECT_EQ(s.gmm.size(), robot.dimv());
   EXPECT_EQ(s.beta.size(), robot.dimv());
-  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxNumContacts());
   EXPECT_EQ(s.nu_passive.size(), robot.dim_passive());
   EXPECT_EQ(s.f_stack().size(), contact_status.dimf());
   EXPECT_EQ(s.mu_stack().size(), contact_status.dimf());
   EXPECT_EQ(s.xi_stack().size(), 0);
   EXPECT_EQ(s.dimf(), contact_status.dimf());
   EXPECT_EQ(s.dimi(), 0);
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));
   }
@@ -96,11 +96,11 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
   EXPECT_EQ(s.a.size(), robot.dimv());
-  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f.size(), robot.maxNumContacts());
   EXPECT_EQ(s.lmd.size(), robot.dimv());
   EXPECT_EQ(s.gmm.size(), robot.dimv());
   EXPECT_EQ(s.beta.size(), robot.dimv());
-  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxNumContacts());
   EXPECT_EQ(s.nu_passive.size(), robot.dim_passive());
   EXPECT_EQ(s.f_stack().size(), 0);
   EXPECT_EQ(s.mu_stack().size(), 0);
@@ -124,18 +124,18 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
   EXPECT_EQ(s.a.size(), robot.dimv());
-  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f.size(), robot.maxNumContacts());
   EXPECT_EQ(s.lmd.size(), robot.dimv());
   EXPECT_EQ(s.gmm.size(), robot.dimv());
   EXPECT_EQ(s.beta.size(), robot.dimv());
-  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxNumContacts());
   EXPECT_EQ(s.nu_passive.size(), robot.dim_passive());
   EXPECT_EQ(s.f_stack().size(), contact_status.dimf());
   EXPECT_EQ(s.mu_stack().size(), contact_status.dimf());
   EXPECT_EQ(s.xi_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.dimf(), contact_status.dimf());
   EXPECT_EQ(s.dimi(), impulse_status.dimi());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));
   }

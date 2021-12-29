@@ -39,7 +39,7 @@ protected:
 
 void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
     f_ref.push_back(Eigen::Vector3d::Random());
     fi_weight.push_back(Eigen::Vector3d::Random());
@@ -53,7 +53,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   cost->set_fi_weight(fi_weight);
   cost->set_fi_ref(fi_ref);
   ContactStatus contact_status = robot.createContactStatus();
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     contact_status.deactivateContact(i);
   }
   SplitKKTMatrix kkt_mat(robot);
@@ -69,7 +69,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   contact_status.setRandom();
   s.setRandom(robot, contact_status);
   double l_ref = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       l_ref += (f_weight[i].array() * (s.f[i].array()-f_ref[i].array()) 
                                     * (s.f[i].array()-f_ref[i].array())).sum();
@@ -85,7 +85,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
           += dt * f_weight[i].array() * (s.f[i].array()-f_ref[i].array());
@@ -93,7 +93,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += dt * f_weight[i];
       dimf_stack += 3;
@@ -109,7 +109,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
 
 void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
     f_ref.push_back(Eigen::Vector3d::Random());
     fi_weight.push_back(Eigen::Vector3d::Random());
@@ -123,7 +123,7 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   cost->set_fi_weight(fi_weight);
   cost->set_fi_ref(fi_ref);
   ContactStatus contact_status = robot.createContactStatus();
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     contact_status.deactivateContact(i);
   }
   SplitKKTMatrix kkt_mat(robot);
@@ -157,7 +157,7 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
 
 void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
     f_ref.push_back(Eigen::Vector3d::Random());
     fi_weight.push_back(Eigen::Vector3d::Random());
@@ -171,7 +171,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   cost->set_fi_weight(fi_weight);
   cost->set_fi_ref(fi_ref);
   ImpulseStatus impulse_status = robot.createImpulseStatus();
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     impulse_status.deactivateImpulse(i);
   }
   ImpulseSplitKKTMatrix kkt_mat(robot);
@@ -187,7 +187,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   impulse_status.setRandom();
   s.setRandom(robot, impulse_status);
   double l_ref = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       l_ref += (fi_weight[i].array() * (s.f[i].array()-fi_ref[i].array()) 
                                      * (s.f[i].array()-fi_ref[i].array())).sum();
@@ -203,7 +203,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
   cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
           += fi_weight[i].array() * (s.f[i].array()-fi_ref[i].array());
@@ -211,7 +211,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += fi_weight[i];
       dimf_stack += 3;

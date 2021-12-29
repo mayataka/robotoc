@@ -128,14 +128,14 @@ private:
   std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
-  std::vector<Eigen::Vector3d> contact_points_;
+  std::vector<Eigen::Vector3d> contact_positions_;
   double step_length_, step_height_, swing_time_, t0_, T_, dt_, dtm_, ts_last_;
   int N_, current_step_, predict_step_;
   SolverOptions solver_options_;
 
   bool addStep(const double t);
 
-  void resetContactPoints(const Eigen::VectorXd& q);
+  void resetContactPlacements(const Eigen::VectorXd& q);
 
 };
 

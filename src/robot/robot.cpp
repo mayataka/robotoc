@@ -11,6 +11,7 @@ Robot::Robot(const std::string& path_to_urdf,
     impulse_model_(),
     data_(),
     impulse_data_(),
+    contact_types_(),
     point_contacts_(),
     surface_contacts_(),
     fjoint_(),
@@ -48,7 +49,8 @@ Robot::Robot(const std::string& path_to_urdf,
 
 Robot::Robot(const std::string& path_to_urdf, 
              const BaseJointType& base_joint_type,
-             const ContactFrames& contact_frames,
+             const std::vector<int>& contact_frames,
+             const std::vector<ContactType>& contact_types,
              const std::pair<double, double>& baumgarte_weights)
   : Robot(path_to_urdf, base_joint_type) {
   try {
@@ -66,15 +68,32 @@ Robot::Robot(const std::string& path_to_urdf,
   impulse_data_ = pinocchio::Data(impulse_model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                 model_.joints.size(), pinocchio::Force::Zero());
-  for (const auto frame : contact_frames.point_contact_frames) {
-    point_contacts_.push_back(PointContact(model_, frame, 
-                                            baumgarte_weights.first,
-                                            baumgarte_weights.second));
+  contact_types_ = contact_types; 
+  for (int i=0; i<contact_frames.size(); ++i) {
+    switch (contact_types[i]) {
+      case ContactType::PointContact:
+        point_contacts_.push_back(PointContact(model_, contact_frames[i], 
+                                               baumgarte_weights.first,
+                                               baumgarte_weights.second));
+        break;
+      case ContactType::SurfaceContact:
+        surface_contacts_.push_back(SurfaceContact(model_, contact_frames[i], 
+                                                   baumgarte_weights.first,
+                                                   baumgarte_weights.second));
+        break;
+      default:
+        break;
+    }
   }
-  for (const auto frame : contact_frames.surface_contact_frames) {
-    surface_contacts_.push_back(SurfaceContact(model_, frame, 
-                                                baumgarte_weights.first,
-                                                baumgarte_weights.second));
+  try {
+    if (point_contacts_.size() > 0 && surface_contacts_.size() > 0) {
+      throw std::out_of_range(
+          "Invalid argument: in the current version of robotoc, the robot cannot has both a point contact and surface contact!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
   max_dimf_ = 3 * point_contacts_.size() + 6 * surface_contacts_.size();
   data_.JMinvJt.resize(max_dimf_, max_dimf_);
@@ -88,8 +107,10 @@ Robot::Robot(const std::string& path_to_urdf,
 
 Robot::Robot(const std::string& path_to_urdf, 
              const BaseJointType& base_joint_type,
-             const ContactFrames& contact_frames, const double time_step)
-  : Robot(path_to_urdf, base_joint_type, contact_frames, 
+             const std::vector<int>& contact_frames,
+             const std::vector<ContactType>& contact_types,
+             const double time_step)
+  : Robot(path_to_urdf, base_joint_type, contact_frames, contact_types,
           std::make_pair(2.0/time_step, 1.0/(time_step*time_step))) {
 }
 

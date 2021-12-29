@@ -212,7 +212,7 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
-    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
   }
   test_computeResidual(robot, contact_status);
   test_linearize(robot, contact_status);
@@ -228,7 +228,7 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
-    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
   }
   test_computeResidual(robot, contact_status);
   test_linearize(robot, contact_status);

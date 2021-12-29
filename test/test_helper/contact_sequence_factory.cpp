@@ -10,7 +10,7 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
                                       const int max_num_impulse,
                                       const double t0,
                                       const double event_period) {
-  if (robot.maxPointContacts() > 0) {
+  if (robot.maxNumContacts() > 0) {
     std::vector<DiscreteEvent> discrete_events;
     std::vector<double> event_times;
     ContactStatus pre_contact_status = robot.createContactStatus();
@@ -20,7 +20,7 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
     ContactStatus post_contact_status = pre_contact_status;
     std::random_device rnd;
     for (int i=0; i<max_num_impulse; ++i) {
-      DiscreteEvent tmp(robot.maxPointContacts());
+      DiscreteEvent tmp(robot.maxNumContacts());
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
       while (!tmp.existDiscreteEvent()) {
         post_contact_status.setRandom();

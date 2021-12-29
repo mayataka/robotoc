@@ -37,16 +37,16 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.dv.size(), robot.dimv());
   EXPECT_EQ(s.beta.size(), robot.dimv());
-  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
-  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f.size(), robot.maxNumContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxNumContacts());
   EXPECT_EQ(s.f_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.mu_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.dimi(), impulse_status.dimi());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.f[i].size(), 3);
     EXPECT_EQ(s.mu[i].size(), 3);
   }
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
   }
   EXPECT_TRUE(s.lmd.isZero());
@@ -65,7 +65,7 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_TRUE(s.beta.isZero());
   EXPECT_TRUE(s.f_stack().isZero());
   EXPECT_TRUE(s.mu_stack().isZero());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_TRUE(s.f[i].isZero());
     EXPECT_TRUE(s.mu[i].isZero());
   }
@@ -75,7 +75,7 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   s.mu_stack() = mu_stack;
   s.set_f_vector();
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
@@ -83,7 +83,7 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   }
   dimf_stack = 0;
   s.set_mu_vector();
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
@@ -94,14 +94,14 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   s.set_f_stack();
   s.set_mu_stack();
   dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
@@ -114,16 +114,16 @@ void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& imp
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.dv.size(), robot.dimv());
   EXPECT_EQ(s.beta.size(), robot.dimv());
-  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
-  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f.size(), robot.maxNumContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxNumContacts());
   EXPECT_EQ(s.f_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.mu_stack().size(), impulse_status.dimi());
   EXPECT_EQ(s.dimi(), impulse_status.dimi());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.f[i].size(), 3);
     EXPECT_EQ(s.mu[i].size(), 3);
   }
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
   }
   EXPECT_FALSE(s.lmd.isZero());

@@ -7,45 +7,49 @@
 #include <random>
 #include <chrono>
 
+
 namespace robotoc {
- 
-inline ContactStatus::ContactStatus(const int max_point_contacts,
-                                    const int contact_mode_id)
-  : is_contact_active_(max_point_contacts, false),
-    contact_points_(max_point_contacts, Eigen::Vector3d::Zero()),
-    contact_surfaces_rotations_(max_point_contacts, Eigen::Matrix3d::Identity()),
+
+inline ContactStatus::ContactStatus(
+    const std::vector<ContactType>& contact_types, const int contact_mode_id)
+  : contact_types_(contact_types),
+    is_contact_active_(contact_types.size(), false),
+    contact_placements_(contact_types.size(), SE3::Identity()),
+    contact_positions_(contact_types.size(), Eigen::Vector3d::Zero()),
+    contact_rotations_(contact_types.size(), Eigen::Matrix3d::Identity()),
     dimf_(0),
-    max_point_contacts_(max_point_contacts),
+    max_contacts_(contact_types.size()),
+    max_num_contacts_(contact_types.size()),
     contact_mode_id_(contact_mode_id),
     has_active_contacts_(false) {
 }
 
 
 inline ContactStatus::ContactStatus() 
-  : is_contact_active_(),
-    contact_points_(),
-    contact_surfaces_rotations_(),
+  : contact_types_(),
+    is_contact_active_(),
+    contact_placements_(),
+    contact_positions_(),
+    contact_rotations_(),
     dimf_(0),
-    max_point_contacts_(0),
+    max_contacts_(0),
+    max_num_contacts_(0),
     contact_mode_id_(0),
     has_active_contacts_(false) {
 }
- 
+
 
 inline ContactStatus::~ContactStatus() {
 }
 
 
 inline bool ContactStatus::operator==(const ContactStatus& other) const {
-  assert(other.maxPointContacts() == max_point_contacts_);
-  for (int i=0; i<max_point_contacts_; ++i) {
+  assert(other.maxNumContacts() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (other.isContactActive(i) != isContactActive(i)) {
       return false;
     }
-    if (!other.contactPoint(i).isApprox(contactPoint(i))) {
-      return false;
-    }
-    if (!other.contactSurfaceRotation(i).isApprox(contactSurfaceRotation(i))) {
+    if (!other.contactPlacement(i).isApprox(contactPlacement(i))) {
       return false;
     }
   }
@@ -55,6 +59,18 @@ inline bool ContactStatus::operator==(const ContactStatus& other) const {
 
 inline bool ContactStatus::operator!=(const ContactStatus& other) const {
   return !(*this == other);
+}
+
+
+inline ContactType ContactStatus::contactType(const int contact_index) const {
+  assert(contact_index >= 0);
+  assert(contact_index < max_num_contacts_);
+  return contact_types_[contact_index];
+}
+
+
+inline const std::vector<ContactType>& ContactStatus::contactTypes() const {
+  return contact_types_;
 }
 
 
@@ -81,31 +97,25 @@ inline int ContactStatus::dimf() const {
 }
 
 
-inline int ContactStatus::maxPointContacts() const {
-  return max_point_contacts_;
-}
-
-
-inline void ContactStatus::setActivity(
-    const std::vector<bool>& is_contact_active) {
-  assert(is_contact_active.size() == max_point_contacts_);
-  is_contact_active_ = is_contact_active;
-  dimf_ = 0;
-  for (const auto e : is_contact_active) {
-    if (e) {
-      dimf_ += 3;
-    }
-  }
-  set_has_active_contacts();
+inline int ContactStatus::maxNumContacts() const {
+  return max_num_contacts_;
 }
 
 
 inline void ContactStatus::activateContact(const int contact_index) {
   assert(contact_index >= 0);
-  assert(contact_index < max_point_contacts_);
+  assert(contact_index < max_num_contacts_);
   if (!is_contact_active_[contact_index]) {
     is_contact_active_[contact_index] = true;
-    dimf_ += 3;
+    switch (contact_types_[contact_index]) {
+      case ContactType::PointContact:
+        dimf_ += 3;
+        break;
+      case ContactType::SurfaceContact:
+        dimf_ += 6;
+      default:
+        break;
+    }
   }
   set_has_active_contacts();
 }
@@ -113,10 +123,18 @@ inline void ContactStatus::activateContact(const int contact_index) {
 
 inline void ContactStatus::deactivateContact(const int contact_index) {
   assert(contact_index >= 0);
-  assert(contact_index < max_point_contacts_);
+  assert(contact_index < max_num_contacts_);
   if (is_contact_active_[contact_index]) {
     is_contact_active_[contact_index] = false;
-    dimf_ -= 3;
+    switch (contact_types_[contact_index]) {
+      case ContactType::PointContact:
+        dimf_ -= 3;
+        break;
+      case ContactType::SurfaceContact:
+        dimf_ -= 6;
+      default:
+        break;
+    }
   }
   set_has_active_contacts();
 }
@@ -124,108 +142,92 @@ inline void ContactStatus::deactivateContact(const int contact_index) {
 
 inline void ContactStatus::activateContacts(
     const std::vector<int>& contact_indices) {
-  assert(contact_indices.size() <= max_point_contacts_);
-  for (const int index : contact_indices) {
-    assert(index >= 0);
-    assert(index < max_point_contacts_);
-    if (!is_contact_active_[index]) {
-      is_contact_active_[index] = true;
-      dimf_ += 3;
-    }
+  assert(contact_indices.size() <= max_num_contacts_);
+  for (const int e : contact_indices) {
+    activateContact(e);
   }
-  set_has_active_contacts();
 }
  
 
-inline void ContactStatus::activateContacts() {
-  for (int i=0; i<max_point_contacts_; ++i) {
-    is_contact_active_[i] = true;
-  }
-  dimf_ = 3*max_point_contacts_;
-  set_has_active_contacts();
-}
-
-
 inline void ContactStatus::deactivateContacts(
     const std::vector<int>& contact_indices) {
-  assert(contact_indices.size() <= max_point_contacts_);
-  for (const int index : contact_indices) {
-    assert(index >= 0);
-    assert(index < max_point_contacts_);
-    if (is_contact_active_[index]) {
-      is_contact_active_[index] = false;
-      dimf_ -= 3;
-    }
+  assert(contact_indices.size() <= max_num_contacts_);
+  for (const int e : contact_indices) {
+    deactivateContact(e);
   }
-  set_has_active_contacts();
 }
 
 
-inline void ContactStatus::deactivateContacts() {
-  for (int i=0; i<max_point_contacts_; ++i) {
-    is_contact_active_[i] = false;
-  }
-  dimf_ = 0;
-  set_has_active_contacts();
+inline void ContactStatus::setContactPlacement(
+    const int contact_index, const Eigen::Vector3d& contact_position) {
+  setContactPlacement(contact_index, contact_position, 
+                      Eigen::Matrix3d::Identity());
 }
 
 
-inline void ContactStatus::setContactPoint(
-    const int contact_index, const Eigen::Vector3d& contact_point) {
+inline void ContactStatus::setContactPlacement(
+    const int contact_index, const Eigen::Vector3d& contact_position,
+    const Eigen::Matrix3d& contact_rotation) {
   assert(contact_index >= 0);
-  assert(contact_index < max_point_contacts_);
-  contact_points_[contact_index] = contact_point;
+  assert(contact_index < max_num_contacts_);
+  contact_positions_[contact_index] = contact_position;
+  contact_rotations_[contact_index] = contact_rotation;
+  contact_placements_[contact_index] = SE3(contact_rotation, contact_position);
 }
 
 
-inline void ContactStatus::setContactPoints(
-    const std::vector<Eigen::Vector3d>& contact_points) {
-  assert(contact_points.size() == max_point_contacts_);
-  for (int i=0; i<max_point_contacts_; ++i) {
-    setContactPoint(i, contact_points[i]);
+inline void ContactStatus::setContactPlacements(
+    const std::vector<Eigen::Vector3d>& contact_positions) {
+  assert(contact_positions.size() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
+    setContactPlacement(i, contact_positions[i], Eigen::Matrix3d::Identity());
   }
 }
 
 
-inline const Eigen::Vector3d& ContactStatus::contactPoint(
+inline void ContactStatus::setContactPlacements(
+    const std::vector<Eigen::Vector3d>& contact_positions,
+    const std::vector<Eigen::Matrix3d>& contact_rotations) {
+  assert(contact_positions.size() == max_num_contacts_);
+  assert(contact_rotations.size() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
+    setContactPlacement(i, contact_positions[i], contact_rotations[i]);
+  }
+}
+
+
+inline const SE3& ContactStatus::contactPlacement(
     const int contact_index) const {
-  return contact_points_[contact_index];
+  return contact_placements_[contact_index];
+}
+
+
+inline const Eigen::Vector3d& ContactStatus::contactPosition(
+    const int contact_index) const {
+  return contact_positions_[contact_index];
+}
+
+
+inline const Eigen::Matrix3d& ContactStatus::contactRotation(
+    const int contact_index) const {
+  return contact_rotations_[contact_index];
+}
+
+
+inline const aligned_vector<SE3>& ContactStatus::contactPlacements() const {
+  return contact_placements_;
 }
 
 
 inline const std::vector<Eigen::Vector3d>& 
-ContactStatus::contactPoints() const {
-  return contact_points_;
-}
-
-
-inline void ContactStatus::setContactSurfaceRotation(
-    const int contact_index, const Eigen::Matrix3d& contact_surface_rotation) {
-  assert(contact_index >= 0);
-  assert(contact_index < max_point_contacts_);
-  assert((contact_surface_rotation.transpose()*contact_surface_rotation).isIdentity());
-  contact_surfaces_rotations_[contact_index] = contact_surface_rotation;
-}
-
-
-inline void ContactStatus::setContactSurfacesRotations(
-    const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations) {
-  assert(contact_surfaces_rotations.size() == max_point_contacts_);
-  for (int i=0; i<max_point_contacts_; ++i) {
-    setContactSurfaceRotation(i, contact_surfaces_rotations[i]);
-  }
-}
-
-
-inline const Eigen::Matrix3d& ContactStatus::contactSurfaceRotation(
-    const int contact_index) const {
-  return contact_surfaces_rotations_[contact_index];
+ContactStatus::contactPositions() const {
+  return contact_positions_;
 }
 
 
 inline const std::vector<Eigen::Matrix3d>& 
-ContactStatus::contactSurfacesRotations() const {
-  return contact_surfaces_rotations_;
+ContactStatus::contactRotations() const {
+  return contact_rotations_;
 }
 
 
@@ -242,7 +244,7 @@ inline int ContactStatus::contactModeId() const {
 inline void ContactStatus::setRandom() {
   std::minstd_rand0 rand(
       std::chrono::system_clock::now().time_since_epoch().count());
-  for (int i=0; i<max_point_contacts_; ++i) {
+  for (int i=0; i<max_num_contacts_; ++i) {
     if (rand()%2 == 0) {
       activateContact(i);
     }
@@ -254,12 +256,7 @@ inline void ContactStatus::setRandom() {
 
 
 inline void ContactStatus::set_has_active_contacts() {
-  if (dimf_ > 0) {
-    has_active_contacts_ = true;
-  }
-  else {
-    has_active_contacts_ = false;
-  }
+  has_active_contacts_ = (dimf_ > 0);
 }
 
 } // namespace robotoc
