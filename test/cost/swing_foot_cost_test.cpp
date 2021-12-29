@@ -92,7 +92,9 @@ TEST_F(SwingFootCostTest, testStageCost) {
   kkt_mat_ref.Qqq() += dt * J_diff.transpose() * x3d_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  contact_status.activateContacts();
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
+    contact_status.activateContact(i);
+  }
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), 0.);
   cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);

@@ -14,36 +14,40 @@ protected:
     srand((unsigned int) time(0));
     std::random_device rnd;
     max_num_contacts = 10;
+    contact_types = std::vector<ContactType>(max_num_contacts, ContactType::PointContact);
   }
 
   virtual void TearDown() {
   }
 
   int max_num_contacts;
+  std::vector<ContactType> contact_types;
 };
 
 
 TEST_F(ImpulseStatusTest, constructor) {
-  ImpulseStatus impulse_status(max_num_contacts);
-  ContactStatus contact_status(max_num_contacts);
+  ImpulseStatus impulse_status(contact_types);
+  ContactStatus contact_status(contact_types);
   EXPECT_EQ(contact_status.maxNumContacts(), impulse_status.maxNumContacts());
   EXPECT_FALSE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(impulse_status.dimi(), 0);
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
+  EXPECT_EQ(impulse_status.contactPlacements().size(), max_num_contacts);
   EXPECT_EQ(impulse_status.contactPositions().size(), max_num_contacts);
-  EXPECT_EQ(impulse_status.contactSurfacesRotations().size(), max_num_contacts);
+  EXPECT_EQ(impulse_status.contactRotations().size(), max_num_contacts);
   for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
+    EXPECT_TRUE(impulse_status.contactPlacement(i).isIdentity());
     EXPECT_TRUE(impulse_status.contactPosition(i).isZero());
-    EXPECT_TRUE(impulse_status.contactSurfaceRotation(i).isIdentity());
+    EXPECT_TRUE(impulse_status.contactRotation(i).isIdentity());
   }
 }
 
 
 TEST_F(ImpulseStatusTest, comparison) {
-  ImpulseStatus impulse_status1(max_num_contacts);
-  ImpulseStatus impulse_status2(max_num_contacts);
+  ImpulseStatus impulse_status1(contact_types);
+  ImpulseStatus impulse_status2(contact_types);
   impulse_status1.activateImpulses({5, 6, 7});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
   impulse_status2.activateImpulses({1, 2, 3});
@@ -56,8 +60,8 @@ TEST_F(ImpulseStatusTest, comparison) {
 
 
 TEST_F(ImpulseStatusTest, activate) {
-  ImpulseStatus impulse_status(max_num_contacts);
-  ContactStatus contact_status(max_num_contacts);
+  ImpulseStatus impulse_status(contact_types);
+  ContactStatus contact_status(contact_types);
   contact_status.activateContact(3);
   impulse_status.activateImpulse(3);
   EXPECT_TRUE(contact_status.hasActiveContacts());
@@ -102,20 +106,13 @@ TEST_F(ImpulseStatusTest, activate) {
 }
 
 
-TEST_F(ImpulseStatusTest, activateAll) {
-  ImpulseStatus impulse_status(max_num_contacts);
-  impulse_status.activateImpulses();
-  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
-    EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
-}
-
-
 TEST_F(ImpulseStatusTest, deactivate) {
-  ImpulseStatus impulse_status(max_num_contacts);
-  ContactStatus contact_status(max_num_contacts);
-  contact_status.setActivity(std::vector<bool>(max_num_contacts, true));
-  impulse_status.setActivity(std::vector<bool>(max_num_contacts, true));
+  ImpulseStatus impulse_status(contact_types);
+  ContactStatus contact_status(contact_types);
+  for (int i=0; i<contact_types.size(); ++i) {
+    contact_status.activateContact(i);
+    impulse_status.activateImpulse(i);
+  }
   EXPECT_EQ(contact_status.maxNumContacts(), max_num_contacts);
   EXPECT_EQ(impulse_status.maxNumContacts(), max_num_contacts);
   EXPECT_TRUE(contact_status.hasActiveContacts());
@@ -163,16 +160,6 @@ TEST_F(ImpulseStatusTest, deactivate) {
   for (int i=7; i<contact_status.maxNumContacts(); ++i) {
     EXPECT_TRUE(contact_status.isContactActive(i));
     EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
-}
-
-
-TEST_F(ImpulseStatusTest, deactivateAll) {
-  ImpulseStatus impulse_status(max_num_contacts);
-  impulse_status.setRandom();
-  impulse_status.deactivateImpulses();
-  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
-    EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
 }
 

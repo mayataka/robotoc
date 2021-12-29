@@ -20,7 +20,7 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
     ContactStatus post_contact_status = pre_contact_status;
     std::random_device rnd;
     for (int i=0; i<max_num_impulse; ++i) {
-      DiscreteEvent tmp(robot.maxNumContacts());
+      DiscreteEvent tmp(robot.contactTypes());
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
       while (!tmp.existDiscreteEvent()) {
         post_contact_status.setRandom();

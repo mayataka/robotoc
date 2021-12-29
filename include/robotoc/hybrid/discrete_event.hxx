@@ -81,8 +81,8 @@ inline const ContactStatus& DiscreteEvent::postContactStatus() const {
 inline void DiscreteEvent::setDiscreteEvent(
     const ContactStatus& pre_contact_status, 
     const ContactStatus& post_contact_status) {
-  assert(pre_contact_status.maxPointContacts() == max_point_contacts_);
-  assert(post_contact_status.maxPointContacts() == max_point_contacts_);
+  assert(pre_contact_status.maxNumContacts() == max_num_contacts_);
+  assert(post_contact_status.maxNumContacts() == max_num_contacts_);
   exist_impulse_ = false;
   exist_lift_ = false;
   for (int i=0; i<max_num_contacts_; ++i) {

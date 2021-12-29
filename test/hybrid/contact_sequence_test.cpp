@@ -43,7 +43,7 @@ protected:
 
 DiscreteEvent ContactSequenceTest::createDiscreteEvent(const Robot& robot, 
                                                        const ContactStatus& pre_contact_status) {
-  DiscreteEvent discrete_event(robot.maxNumContacts());
+  DiscreteEvent discrete_event(robot.contactTypes());
   ContactStatus post_contact_status = pre_contact_status;
   while (!discrete_event.existDiscreteEvent()) {
     post_contact_status.setRandom();
@@ -60,7 +60,7 @@ std::vector<DiscreteEvent> ContactSequenceTest::createDiscreteEvents(const Robot
   ContactStatus pre_contact_status = initial_contact_status;
   ContactStatus post_contact_status = robot.createContactStatus();
   for (int i=0; i<num_discrete_events; ++i) {
-    DiscreteEvent tmp(robot.maxNumContacts());
+    DiscreteEvent tmp(robot.contactTypes());
     tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     while (!tmp.existDiscreteEvent()) {
       post_contact_status.setRandom();

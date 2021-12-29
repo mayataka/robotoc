@@ -649,13 +649,23 @@ inline bool Robot::hasFloatingBase() const {
 
 
 inline int Robot::maxNumContacts() const {
+  return maxNumPointContacts() + maxNumSurfaceContacts();
+}
+
+
+inline int Robot::maxNumPointContacts() const {
   return point_contacts_.size();
+}
+
+
+inline int Robot::maxNumSurfaceContacts() const {
+  return surface_contacts_.size();
 }
 
 
 inline ContactType Robot::contactType(const int contact_index) const {
   assert(contact_index >= 0);
-  assert(contact_index < max_num_contacts_);
+  assert(contact_index < maxNumContacts());
   return contact_types_[contact_index];
 }
 

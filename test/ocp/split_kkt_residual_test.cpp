@@ -120,7 +120,6 @@ void SplitKKTResidualTest::test_isApprox(const Robot& robot, const ContactStatus
 TEST_F(SplitKKTResidualTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  contact_status.deactivateContact(0);
   test(robot, contact_status);
   test_isApprox(robot, contact_status);
   contact_status.activateContact(0);
@@ -132,7 +131,6 @@ TEST_F(SplitKKTResidualTest, fixedBase) {
 TEST_F(SplitKKTResidualTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  contact_status.deactivateContacts();
   test(robot, contact_status);
   test_isApprox(robot, contact_status);
   contact_status.setRandom();

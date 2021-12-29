@@ -649,6 +649,18 @@ public:
   int maxNumContacts() const;
 
   ///
+  /// @brief Returns the maximum number of the point contacts.
+  /// @return The maximum number of the point contacts.
+  /// 
+  int maxNumPointContacts() const;
+
+  ///
+  /// @brief Returns the maximum number of the surface contacts.
+  /// @return The maximum number of the surface contacts.
+  /// 
+  int maxNumSurfaceContacts() const;
+
+  ///
   /// @brief Returns the type of the contact.
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return Contact type. 

@@ -13,35 +13,39 @@ protected:
     srand((unsigned int) time(0));
     std::random_device rnd;
     max_num_contacts = 10;
+    contact_types = std::vector<ContactType>(max_num_contacts, ContactType::PointContact);
   }
 
   virtual void TearDown() {
   }
 
   int max_num_contacts;
+  std::vector<ContactType> contact_types;
 };
 
 
 TEST_F(ContactStatusTest, constructor) {
-  ContactStatus contact_status(max_num_contacts);
+  ContactStatus contact_status(contact_types);
   EXPECT_EQ(contact_status.maxNumContacts(), max_num_contacts);
   EXPECT_FALSE(contact_status.hasActiveContacts());
   EXPECT_EQ(contact_status.dimf(), 0);
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     EXPECT_FALSE(contact_status.isContactActive(i));
   }
+  EXPECT_EQ(contact_status.contactPlacements().size(), max_num_contacts);
   EXPECT_EQ(contact_status.contactPositions().size(), max_num_contacts);
-  EXPECT_EQ(contact_status.contactSurfacesRotations().size(), max_num_contacts);
+  EXPECT_EQ(contact_status.contactRotations().size(), max_num_contacts);
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
+    EXPECT_TRUE(contact_status.contactPlacement(i).isIdentity());
     EXPECT_TRUE(contact_status.contactPosition(i).isZero());
-    EXPECT_TRUE(contact_status.contactSurfaceRotation(i).isIdentity());
+    EXPECT_TRUE(contact_status.contactRotation(i).isIdentity());
   }
 }
 
 
 TEST_F(ContactStatusTest, comparison) {
-  ContactStatus contact_status1(max_num_contacts);
-  ContactStatus contact_status2(max_num_contacts);
+  ContactStatus contact_status1(contact_types);
+  ContactStatus contact_status2(contact_types);
   contact_status1.activateContacts({5, 6, 7});
   EXPECT_FALSE(contact_status1 == contact_status2);
   contact_status2.activateContacts({1, 2, 3});
@@ -54,7 +58,7 @@ TEST_F(ContactStatusTest, comparison) {
 
 
 TEST_F(ContactStatusTest, activate) {
-  ContactStatus contact_status(max_num_contacts);
+  ContactStatus contact_status(contact_types);
   contact_status.activateContact(3);
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_EQ(contact_status.dimf(), 3);
@@ -84,18 +88,11 @@ TEST_F(ContactStatusTest, activate) {
 }
 
 
-TEST_F(ContactStatusTest, activateAll) {
-  ContactStatus contact_status(max_num_contacts);
-  contact_status.activateContacts();
-  for (int i=0; i<contact_status.maxNumContacts(); ++i) {
-    EXPECT_TRUE(contact_status.isContactActive(i));
-  }
-}
-
-
 TEST_F(ContactStatusTest, deactivate) {
-  ContactStatus contact_status(max_num_contacts);
-  contact_status.setActivity(std::vector<bool>(max_num_contacts, true));
+  ContactStatus contact_status(contact_types);
+  for (int i=0; i<contact_types.size(); ++i) {
+    contact_status.activateContact(i);
+  }
   EXPECT_EQ(contact_status.maxNumContacts(), max_num_contacts);
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_EQ(contact_status.dimf(), 3*max_num_contacts);
@@ -124,16 +121,6 @@ TEST_F(ContactStatusTest, deactivate) {
   EXPECT_FALSE(contact_status.isContactActive(6));
   for (int i=7; i<contact_status.maxNumContacts(); ++i) {
     EXPECT_TRUE(contact_status.isContactActive(i));
-  }
-}
-
-
-TEST_F(ContactStatusTest, deactivateAll) {
-  ContactStatus contact_status(max_num_contacts);
-  contact_status.setRandom();
-  contact_status.deactivateContacts();
-  for (int i=0; i<contact_status.maxNumContacts(); ++i) {
-    EXPECT_FALSE(contact_status.isContactActive(i));
   }
 }
 
