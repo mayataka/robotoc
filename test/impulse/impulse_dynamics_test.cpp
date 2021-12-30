@@ -140,7 +140,7 @@ void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impul
 }
 
 
-TEST_F(ImpulseDynamicsTest, fixedBase) {
+TEST_F(ImpulseDynamicsTest, robotManipulator) {
   const double dt = 0.001;
   auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
@@ -154,9 +154,26 @@ TEST_F(ImpulseDynamicsTest, fixedBase) {
 }
 
 
-TEST_F(ImpulseDynamicsTest, floatingBase) {
+TEST_F(ImpulseDynamicsTest, quadrupedalRobot) {
   const double dt = 0.001;
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto impulse_status = robot.createImpulseStatus();
+  test_computeResidual(robot, impulse_status);
+  test_linearize(robot, impulse_status);
+  test_condense(robot, impulse_status);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  test_computeResidual(robot, impulse_status);
+  test_linearize(robot, impulse_status);
+  test_condense(robot, impulse_status);
+}
+
+
+TEST_F(ImpulseDynamicsTest, humanoidRobot) {
+  const double dt = 0.001;
+  auto robot = testhelper::CreateHumanoidRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_computeResidual(robot, impulse_status);
   test_linearize(robot, impulse_status);

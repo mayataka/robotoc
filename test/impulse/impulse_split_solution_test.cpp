@@ -290,6 +290,23 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   test_integrate(robot, impulse_status);
 }
 
+
+TEST_F(ImpulseSplitSolutionTest, humanoidRobot) {
+  const double dt = 0.001;
+  auto robot = testhelper::CreateHumanoidRobot(dt);
+  auto impulse_status = robot.createImpulseStatus();
+  test(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
+  test_integrate(robot, impulse_status);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  test(robot, impulse_status);
+  test_isApprox(robot, impulse_status);
+  test_integrate(robot, impulse_status);
+}
+
 } // namespace robotoc
 
 

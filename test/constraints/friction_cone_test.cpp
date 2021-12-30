@@ -172,7 +172,16 @@ void FrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& c
           += dg_dq.transpose() * data_ref.dual.segment(5*i, 5);
       kkt_res_ref.lf().segment(dimf_stack, 3)
           += dg_df.transpose() * data_ref.dual.segment(5*i, 5);
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -228,7 +237,16 @@ void FrictionConeTest::test_condenseSlackAndDual(Robot& robot,
           += dg_dq.transpose() * r.asDiagonal() * dg_df;
       kkt_mat_ref.Qff().block(dimf_stack, dimf_stack, 3, 3)
           += dg_df.transpose() * r.asDiagonal() * dg_df;
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -282,7 +300,16 @@ void FrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus
           = - (data_ref.dual(5*i+j)*data_ref.dslack(5*i+j)+data_ref.cmpl(5*i+j))
               / data_ref.slack(5*i+j);
       }
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -326,6 +353,27 @@ TEST_F(FrictionConeTest, fixedBase) {
 
 TEST_F(FrictionConeTest, floatingBase) {
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto contact_status = robot.createContactStatus();
+  test_kinematics(robot, contact_status);
+  test_isFeasible(robot, contact_status);
+  test_setSlack(robot, contact_status);
+  test_evalConstraint(robot, contact_status);
+  test_evalDerivatives(robot, contact_status);
+  test_condenseSlackAndDual(robot, contact_status);
+  test_expandSlackAndDual(robot, contact_status);
+  contact_status.setRandom();
+  test_kinematics(robot, contact_status);
+  test_isFeasible(robot, contact_status);
+  test_setSlack(robot, contact_status);
+  test_evalConstraint(robot, contact_status);
+  test_evalDerivatives(robot, contact_status);
+  test_condenseSlackAndDual(robot, contact_status);
+  test_expandSlackAndDual(robot, contact_status);
+}
+
+
+TEST_F(FrictionConeTest, humanoidRobot) {
+  auto robot = testhelper::CreateHumanoidRobot(dt);
   auto contact_status = robot.createContactStatus();
   test_kinematics(robot, contact_status);
   test_isFeasible(robot, contact_status);

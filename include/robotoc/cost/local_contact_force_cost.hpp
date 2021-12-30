@@ -135,6 +135,7 @@ public:
 
 private:
   int max_num_contacts_, max_dimf_;
+  std::vector<ContactType> contact_types_;
   std::vector<Eigen::Vector3d> f_ref_, f_weight_, fi_ref_, fi_weight_;
 
 };

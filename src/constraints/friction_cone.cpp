@@ -11,7 +11,8 @@ FrictionCone::FrictionCone(const Robot& robot, const double mu)
     dimv_(robot.dimv()),
     dimc_(5*robot.maxNumContacts()),
     max_num_contacts_(robot.maxNumContacts()),
-    contact_frame_(robot.pointContactFrames()),
+    contact_frame_(robot.contactFrames()),
+    contact_types_(robot.contactTypes()),
     mu_(mu),
     cone_(Eigen::MatrixXd::Zero(5, 3)) {
   try {
@@ -42,6 +43,7 @@ FrictionCone::FrictionCone()
     max_num_contacts_(0),
     dimv_(0),
     contact_frame_(),
+    contact_types_(),
     mu_(0),
     cone_() {
 }
@@ -191,7 +193,16 @@ void FrictionCone::evalDerivatives(Robot& robot,
       dgi_df.noalias() = cone_ * robot.frameRotation(contact_frame_[i]);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
           += dgi_df.transpose() * data.dual.template segment<5>(idx);
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -226,7 +237,16 @@ void FrictionCone::condenseSlackAndDual(const ContactStatus& contact_status,
           += dgi_dq.transpose() * r_dgi_df; 
       kkt_matrix.Qff().template block<3, 3>(dimf_stack, dimf_stack).noalias()
           += dgi_df.transpose() * r_dgi_df;
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -250,7 +270,16 @@ void FrictionCone::expandSlackAndDual(const ContactStatus& contact_status,
           = - dgi_dq * d.dq() - dgi_df * d.df().template segment<3>(dimf_stack) 
             - data.residual.template segment<5>(idx);
       computeDualDirection<5>(data, idx);
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }

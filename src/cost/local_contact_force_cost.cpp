@@ -10,6 +10,7 @@ LocalContactForceCost::LocalContactForceCost(const Robot& robot)
   : CostFunctionComponentBase(),
     max_num_contacts_(robot.maxNumContacts()),
     max_dimf_(robot.max_dimf()),
+    contact_types_(robot.contactTypes()),
     f_ref_(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
     f_weight_(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
     fi_ref_(robot.maxNumContacts(), Eigen::Vector3d::Zero()),
@@ -21,6 +22,7 @@ LocalContactForceCost::LocalContactForceCost()
   : CostFunctionComponentBase(),
     max_num_contacts_(0),
     max_dimf_(0),
+    contact_types_(),
     f_ref_(),
     f_weight_(),
     fi_ref_(),
@@ -132,7 +134,16 @@ void LocalContactForceCost::evalStageCostDerivatives(
       const auto& fl = s.f[i].template head<3>();
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += dt * f_weight_[i].array() * (fl.array()-f_ref_[i].array());
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -147,7 +158,16 @@ void LocalContactForceCost::evalStageCostHessian(
     if (contact_status.isContactActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
           += dt * f_weight_[i];
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -200,7 +220,16 @@ void LocalContactForceCost::evalImpulseCostDerivatives(
       const auto& fl = s.f[i].template head<3>();
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += fi_weight_[i].array() * (fl.array()-fi_ref_[i].array());
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -215,7 +244,16 @@ void LocalContactForceCost::evalImpulseCostHessian(
     if (impulse_status.isImpulseActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
           += fi_weight_[i];
-      dimf_stack += 3;
+      switch (contact_types_[i]) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
 }

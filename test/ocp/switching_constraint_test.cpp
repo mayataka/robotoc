@@ -140,6 +140,13 @@ TEST_F(SwitchingConstraintTest, floatingBase) {
   test_evalSwitchingConstraint(robot);
 }
 
+
+TEST_F(SwitchingConstraintTest, humanoidRobot) {
+  auto robot = testhelper::CreateHumanoidRobot(dt);
+  test_linearizeSwitchingConstraint(robot);
+  test_evalSwitchingConstraint(robot);
+}
+
 } // namespace robotoc
 
 

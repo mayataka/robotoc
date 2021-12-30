@@ -322,6 +322,30 @@ TEST_F(SplitSolutionTest, floatingBase) {
   test(robot, contact_status, impulse_status);
 }
 
+
+TEST_F(SplitSolutionTest, humanoidRobot) {
+  auto robot_without_contacts = testhelper::CreateHumanoidRobot();
+  test(robot_without_contacts);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto contact_status = robot.createContactStatus();
+  auto impulse_status = robot.createImpulseStatus();
+  test_isApprox(robot, contact_status, impulse_status);
+  test_integrate(robot, contact_status, impulse_status);
+  contact_status.setRandom();
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  test(robot, contact_status);
+  test_isApprox(robot, contact_status, impulse_status);
+  test_integrate(robot, contact_status, impulse_status);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  test(robot, impulse_status);
+  test(robot, contact_status, impulse_status);
+}
+
 } // namespace robotoc
 
 

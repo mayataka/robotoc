@@ -128,6 +128,7 @@ public:
 private:
   int dimv_, dimc_, max_num_contacts_;
   std::vector<int> contact_frame_;
+  std::vector<ContactType> contact_types_;
   double mu_;
   Eigen::MatrixXd cone_;
 

@@ -376,6 +376,25 @@ TEST_F(SplitOCPTest, floatingBase) {
   test_evalOCP(robot, contact_status, true);
 }
 
+
+TEST_F(SplitOCPTest, humanoidRobot) {
+  auto robot = testhelper::CreateHumanoidRobot(dt);
+  auto contact_status = robot.createContactStatus();
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evalOCP(robot, contact_status);
+  contact_status.setRandom();
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evalOCP(robot, contact_status);
+  test_computeKKTResidual(robot, contact_status, true);
+  test_computeKKTSystem(robot, contact_status, true);
+  test_evalOCP(robot, contact_status, true);
+}
+
 } // namespace robotoc
 
 

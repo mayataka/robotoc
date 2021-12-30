@@ -206,6 +206,23 @@ TEST_F(ImpulseSplitOCPTest, floatingBase) {
   test_evalOCP(robot, impulse_status);
 }
 
+
+TEST_F(ImpulseSplitOCPTest, humanoidRobot) {
+  const double dt = 0.001;
+  auto robot = testhelper::CreateHumanoidRobot(dt);
+  auto impulse_status = robot.createImpulseStatus();
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
+}
+
 } // namespace robotoc
 
 

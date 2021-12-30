@@ -172,7 +172,16 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
           += dg_dq.transpose() * data_ref.dual.segment(5*i, 5);
       kkt_res_ref.lf().segment(dimf_stack, 3) 
           += dg_df.transpose() * data_ref.dual.segment(5*i, 5);
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -228,7 +237,16 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
           += dg_dq.transpose() * r.asDiagonal() * dg_df;
       kkt_mat_ref.Qff().block(dimf_stack, dimf_stack, 3, 3)
           += dg_df.transpose() * r.asDiagonal() * dg_df;
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -282,7 +300,16 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
           = - (data_ref.dual(5*i+j)*data_ref.dslack(5*i+j)+data_ref.cmpl(5*i+j))
               / data_ref.slack(5*i+j);
       }
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -328,6 +355,28 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
 TEST_F(ImpulseFrictionConeTest, floatingBase) {
   const double dt = 0.01;
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto impulse_status = robot.createImpulseStatus();
+  test_kinematics(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
+  impulse_status.setRandom();
+  test_kinematics(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
+}
+
+
+TEST_F(ImpulseFrictionConeTest, humanoidRobot) {
+  const double dt = 0.01;
+  auto robot = testhelper::CreateHumanoidRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_kinematics(robot, impulse_status);
   test_isFeasible(robot, impulse_status);
