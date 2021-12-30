@@ -854,7 +854,7 @@
         <parent link="l_foot" />
         <child link="codyco_balancing_world" />
     </joint>
-    <joint name="neck_yaw" type="revolute">
+    <joint name="neck_yaw" type="fixed">
         <origin xyz="-5.77779e-34 0 0" rpy="-1.5708 -1.11022e-16 1.5708" />
         <axis xyz="0 -1 6.12323e-17" />
         <parent link="neck_2" />
@@ -1026,7 +1026,7 @@
         <dynamics damping="1" friction="0" />
         <limit effort="0.65" velocity="100" lower="-1.13446" upper="0.174533" />
     </joint>
-    <joint name="neck_pitch" type="revolute">
+    <joint name="neck_pitch" type="fixed">
         <origin xyz="0.00231 0.1933 -1.18362e-17" rpy="1.5708 1.11022e-16 1.5708" />
         <axis xyz="0 1 6.12323e-17" />
         <parent link="chest" />
@@ -1034,7 +1034,7 @@
         <dynamics damping="1" friction="0" />
         <limit effort="20" velocity="100" lower="-0.698132" upper="0.523599" />
     </joint>
-    <joint name="neck_roll" type="revolute">
+    <joint name="neck_roll" type="fixed">
         <origin xyz="0.0095 0 0" rpy="-1.5708 1.11022e-16 -1.5708" />
         <axis xyz="0 -1 6.12323e-17" />
         <parent link="neck_1" />

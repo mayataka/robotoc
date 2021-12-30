@@ -500,7 +500,7 @@ inline void Robot::computeContactPositionDerivative(
 
 inline void Robot::setContactForces(const ContactStatus& contact_status, 
                                     const std::vector<Vector6d>& f) {
-  assert(f.size() == maxNumContacts());
+  assert(f.size() == max_num_contacts_);
   int point_contact_index = 0;
   int surface_contact_index = 0;
   for (int i=0; i<contact_types_.size(); ++i) {
@@ -536,7 +536,7 @@ inline void Robot::setContactForces(const ContactStatus& contact_status,
 
 inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
                                     const std::vector<Vector6d>& f) {
-  assert(f.size() == maxNumContacts());
+  assert(f.size() == max_num_contacts_);
   int point_contact_index = 0;
   int surface_contact_index = 0;
   for (int i=0; i<contact_types_.size(); ++i) {
@@ -580,13 +580,13 @@ inline void Robot::RNEA(const Eigen::MatrixBase<ConfigVectorType>& q,
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
   assert(tau.size() == dimv_);
-  if (point_contacts_.empty()) {
+  if (max_num_contacts_) {
     const_cast<Eigen::MatrixBase<TangentVectorType3>&>(tau)
-        = pinocchio::rnea(model_, data_, q, v, a);
+        = pinocchio::rnea(model_, data_, q, v, a, fjoint_);
   }
   else {
     const_cast<Eigen::MatrixBase<TangentVectorType3>&>(tau)
-        = pinocchio::rnea(model_, data_, q, v, a, fjoint_);
+        = pinocchio::rnea(model_, data_, q, v, a);
   }
 }
 
@@ -610,19 +610,19 @@ inline void Robot::RNEADerivatives(
   assert(dRNEA_partial_dv.rows() == dimv_);
   assert(dRNEA_partial_da.cols() == dimv_);
   assert(dRNEA_partial_da.rows() == dimv_);
-  if (point_contacts_.empty()) {
-      pinocchio::computeRNEADerivatives(
-          model_, data_, q, v, a, 
-          const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
-          const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_dv),
-          const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da));
+  if (max_num_contacts_) {
+    pinocchio::computeRNEADerivatives(
+        model_, data_, q, v, a, fjoint_,
+        const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+        const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_dv),
+        const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da));
   }
   else {
-      pinocchio::computeRNEADerivatives(
-          model_, data_, q, v, a, fjoint_,
-          const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
-          const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_dv),
-          const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da));
+    pinocchio::computeRNEADerivatives(
+        model_, data_, q, v, a, 
+        const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+        const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_dv),
+        const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da));
   }
   (const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da)) 
       .template triangularView<Eigen::StrictlyLower>() 
@@ -706,6 +706,9 @@ inline void Robot::computeMJtJinv(
   }
   data_.JMinvJt.topLeftCorner(dimf, dimf).noalias() 
       = data_.sDUiJt.leftCols(dimf).transpose() * data_.sDUiJt.leftCols(dimf);
+  if (contact_inv_damping_ > 0.) {
+    data_.JMinvJt.diagonal().array() += contact_inv_damping_;
+  }
   data_.llt_JMinvJt.compute(data_.JMinvJt.topLeftCorner(dimf, dimf));
   assert(data_.llt_JMinvJt.info() == Eigen::Success);
   Eigen::Block<MatrixType3> topLeft 
@@ -811,7 +814,7 @@ inline bool Robot::hasFloatingBase() const {
 
 
 inline int Robot::maxNumContacts() const {
-  return maxNumPointContacts() + maxNumSurfaceContacts();
+  return max_num_contacts_;
 }
 
 
@@ -827,7 +830,7 @@ inline int Robot::maxNumSurfaceContacts() const {
 
 inline ContactType Robot::contactType(const int contact_index) const {
   assert(contact_index >= 0);
-  assert(contact_index < maxNumContacts());
+  assert(contact_index < max_num_contacts_);
   return contact_types_[contact_index];
 }
 

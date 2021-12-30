@@ -66,11 +66,15 @@ public:
   /// @param[in] baumgarte_weights The weight paramter of the Baumgarte's 
   /// stabilization method on the error on the contact velocity (first element) 
   /// and position (second element). Must be non-negative. 
+  /// @param[in] contact_inv_damping Damping paramter in matrix inversion of the 
+  /// contact-consistent forward dynamics. 1e-12 works well for two surface 
+  /// contacts. Must be non-negative. Default is 0.
   ///
   Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
         const std::vector<int>& contact_frames, 
         const std::vector<ContactType>& contact_types,
-        const std::pair<double, double>& baumgarte_weights);
+        const std::pair<double, double>& baumgarte_weights,
+        const double contact_inv_damping=0.);
 
   ///
   /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
@@ -87,10 +91,14 @@ public:
   /// @param[in] time_step Time steps of the Baumgarte's stabilization method.
   /// The weight parameter on the velocity is set by 2/time_step and that on the 
   /// position is by 1/(time_step*time_step). Must be positive.
+  /// @param[in] contact_inv_damping Damping paramter in matrix inversion of the 
+  /// contact-consistent forward dynamics. 1e-12 works well for two surface 
+  /// contacts. Must be non-negative. Default is 0.
   ///
   Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
         const std::vector<int>& contact_frames, 
-        const std::vector<ContactType>& contact_types, const double time_step);
+        const std::vector<ContactType>& contact_types, const double time_step,
+        const double contact_inv_damping=0.);
 
   ///
   /// @brief Default constructor. 
@@ -758,7 +766,8 @@ private:
   std::vector<ContactType> contact_types_;
   aligned_vector<PointContact> point_contacts_;
   aligned_vector<SurfaceContact> surface_contacts_;
-  int dimq_, dimv_, dimu_, dim_passive_, max_dimf_;
+  int dimq_, dimv_, dimu_, dim_passive_, max_dimf_, max_num_contacts_;
+  double contact_inv_damping_;
   bool has_floating_base_;
   Eigen::MatrixXd dimpulse_dv_; 
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,

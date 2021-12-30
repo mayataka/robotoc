@@ -25,16 +25,16 @@ PYBIND11_MODULE(robot, m) {
           py::arg("base_joint_type")=BaseJointType::FixedBase)
     .def(py::init<const std::string&, const BaseJointType&, 
                   const std::vector<int>&, const std::vector<ContactType>&, 
-                  const std::pair<double, double>&>(),
+                  const std::pair<double, double>&, const double>(),
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
           py::arg("contact_frames"), py::arg("contact_types"), 
-          py::arg("baumgarte_weights"))
+          py::arg("baumgarte_weights"), py::arg("contact_inv_damping")=0.)
     .def(py::init<const std::string&, const BaseJointType&, 
                   const std::vector<int>&, const std::vector<ContactType>&, 
-                  const double>(),
+                  const double, const double>(),
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
           py::arg("contact_frames"), py::arg("contact_types"), 
-          py::arg("baumgarte_time_step"))
+          py::arg("baumgarte_time_step"), py::arg("contact_inv_damping")=0.)
     .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q) {
         self.updateFrameKinematics(q);
       },  py::arg("q"))

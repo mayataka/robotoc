@@ -9,8 +9,9 @@ contact_frames = [L_foot_id, R_foot_id]
 contact_types = [robotoc.ContactType.SurfaceContact, robotoc.ContactType.SurfaceContact]
 path_to_urdf = '../icub_description/urdf/icub.urdf'
 baumgarte_time_step = 0.04
+contact_inv_damping = 1.0e-12
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step, contact_inv_damping)
 
 dt = 0.02
 jump_length = 0.5
@@ -26,21 +27,18 @@ q_standing = np.array([0, 0, 0.592, 0, 0, 1, 0,
                        0.20944, 0.08727, 0, -0.1745, -0.0279, -0.08726, # left leg
                        0, 0, 0, # torso
                        0, 0.35, 0.5, 0.5, 0, 0, 0, # left arm 
-                       0, 0, 0, #neck
                        0, 0.35, 0.5, 0.5, 0, 0, 0]) # right arm 
 q_weight = np.array([0, 0, 0, 250000, 250000, 250000, 
                      0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 
                      0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 
                      0.0001, 0.0001, 0.0001,
                      0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001,
-                     0.0001, 0.0001, 0.0001,
                      0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001])
 v_weight = np.array([100, 100, 100, 100, 100, 100, 
                      1, 1, 1, 1, 1, 1, 
                      1, 1, 1, 1, 1, 1, 
                      1, 1, 1,
                      1, 1, 1, 1, 1, 1, 1,
-                     1, 1, 1,
                      1, 1, 1, 1, 1, 1, 1])
 u_weight = np.full(robot.dimu(), 1.0e-01)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
