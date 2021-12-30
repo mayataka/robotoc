@@ -151,8 +151,9 @@ class TrajectoryViewer:
         gui.setCameraTransform(self.robot.viz.windowID, camera)
         # display
         if f_traj is not None:
+            contact_types = [robotoc.ContactType.PointContact for frame in self.contact_frames]
             robot = robotoc.Robot(self.path_to_urdf, self.base_joint_type, 
-                                self.contact_frames)
+                                  self.contact_frames, contact_types, [0, 0])
             for q, f, dts in zip(q_traj, f_traj, dt):
                 robot.forward_kinematics(q)
                 for i in range(len(self.contact_frames)):
