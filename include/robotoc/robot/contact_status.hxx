@@ -178,6 +178,14 @@ inline void ContactStatus::setContactPlacement(
 }
 
 
+inline void ContactStatus::setContactPlacement(const int contact_index, 
+                                               const SE3& contact_placement) {
+  contact_positions_[contact_index] = contact_placement.translation();
+  contact_rotations_[contact_index] = contact_placement.rotation();
+  contact_placements_[contact_index] = contact_placement;
+}
+
+
 inline void ContactStatus::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions) {
   assert(contact_positions.size() == max_num_contacts_);
@@ -194,6 +202,15 @@ inline void ContactStatus::setContactPlacements(
   assert(contact_rotations.size() == max_num_contacts_);
   for (int i=0; i<max_num_contacts_; ++i) {
     setContactPlacement(i, contact_positions[i], contact_rotations[i]);
+  }
+}
+
+
+inline void ContactStatus::setContactPlacements(
+    const aligned_vector<SE3>& contact_placements) {
+  assert(contact_placements.size() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
+    setContactPlacement(i, contact_placements[i]);
   }
 }
 

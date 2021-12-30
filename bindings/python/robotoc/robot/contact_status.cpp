@@ -42,12 +42,18 @@ PYBIND11_MODULE(contact_status, m) {
     .def("set_contact_placement", 
           static_cast<void (ContactStatus::*)(const int, const Eigen::Vector3d&, const Eigen::Matrix3d&)>(&ContactStatus::setContactPlacement),
           py::arg("contact_index"), py::arg("contact_position"), py::arg("contact_rotation"))
+    .def("set_contact_placement", 
+          static_cast<void (ContactStatus::*)(const int, const SE3&)>(&ContactStatus::setContactPlacement),
+          py::arg("contact_index"), py::arg("contact_placement"))
     .def("set_contact_placements", 
           static_cast<void (ContactStatus::*)(const std::vector<Eigen::Vector3d>&)>(&ContactStatus::setContactPlacements),
           py::arg("contact_positions"))
     .def("set_contact_placements", 
           static_cast<void (ContactStatus::*)(const std::vector<Eigen::Vector3d>&, const std::vector<Eigen::Matrix3d>&)>(&ContactStatus::setContactPlacements),
           py::arg("contact_positions"), py::arg("contact_rotations"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const aligned_vector<SE3>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_placements"))
     .def("contact_placement", &ContactStatus::contactPlacement,
           py::arg("contact_index"))
     .def("contact_placements", &ContactStatus::contactPlacements)

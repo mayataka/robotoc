@@ -144,6 +144,12 @@ inline void DiscreteEvent::setContactPlacements(
 }
 
 
+inline void DiscreteEvent::setContactPlacements(
+    const aligned_vector<SE3>& contact_placements) {
+  impulse_status_.setContactPlacements(contact_placements);
+}
+
+
 inline int DiscreteEvent::maxNumContacts() const {
   return max_num_contacts_;
 }

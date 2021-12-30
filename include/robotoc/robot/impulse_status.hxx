@@ -114,6 +114,12 @@ inline void ImpulseStatus::setContactPlacement(
 }
 
 
+inline void ImpulseStatus::setContactPlacement(const int contact_index, 
+                                               const SE3& contact_placement) {
+  contact_status_.setContactPlacement(contact_index, contact_placement);
+}
+
+
 inline void ImpulseStatus::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions) {
   contact_status_.setContactPlacements(contact_positions);
@@ -124,6 +130,12 @@ inline void ImpulseStatus::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions,
     const std::vector<Eigen::Matrix3d>& contact_rotations) {
   contact_status_.setContactPlacements(contact_positions, contact_rotations);
+}
+
+
+inline void ImpulseStatus::setContactPlacements(
+    const aligned_vector<SE3>& contact_placements) {
+  contact_status_.setContactPlacements(contact_placements);
 }
 
 

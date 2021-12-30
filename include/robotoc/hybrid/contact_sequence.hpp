@@ -6,6 +6,8 @@
 #include <memory>
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/se3.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/hybrid/discrete_event.hpp"
@@ -166,6 +168,16 @@ public:
       const int contact_phase, 
       const std::vector<Eigen::Vector3d>& contact_positions,
       const std::vector<Eigen::Matrix3d>& contact_rotations);
+
+  ///
+  /// @brief Sets the contact placements (positions and rotations) to contact 
+  /// statsus with specified contact phase. Also set the contact placement of 
+  /// the discrete event just before the contact phase.
+  /// @param[in] contact_phase Contact phase.
+  /// @param[in] contact_placements Contact placements.
+  ///
+  void setContactPlacements(const int contact_phase, 
+                            const aligned_vector<SE3>& contact_placements);
 
   ///
   /// @brief Returns number of impulse events. 

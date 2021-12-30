@@ -151,7 +151,7 @@ public:
   /// Eigen::Matrix3d::Identity(), which represents the vertical direction
   /// to the ground.
   /// @param[in] contact_positions Contact positions. Size must be 
-  /// ContactStatus::maxNumContacts().
+  /// DiscreteEvent::maxNumContacts().
   ///
   void setContactPlacements(
       const std::vector<Eigen::Vector3d>& contact_positions);
@@ -159,13 +159,20 @@ public:
   ///
   /// @brief Sets contact placements.
   /// @param[in] contact_positions Contact positions. Size must be 
-  /// ContactStatus::maxNumContacts().
+  /// DiscreteEvent::maxNumContacts().
   /// @param[in] contact_rotations Contact rotations. Size must be 
-  /// ContactStatus::maxNumContacts().
+  /// DiscreteEvent::maxNumContacts().
   ///
   void setContactPlacements(
       const std::vector<Eigen::Vector3d>& contact_positions,
       const std::vector<Eigen::Matrix3d>& contact_rotations);
+
+  ///
+  /// @brief Sets contact placements.
+  /// @param[in] contact_placements Contact placements. Size must be 
+  /// DiscreteEvent::maxNumContacts().
+  ///
+  void setContactPlacements(const aligned_vector<SE3>& contact_placements);
 
   ///
   /// @brief Returns the maximum number of the contacts.

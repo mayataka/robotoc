@@ -173,6 +173,18 @@ public:
                            const Eigen::Matrix3d& contact_rotation);
 
   ///
+  /// @brief Sets a contact placement, that is, the position and rotation of 
+  /// the contact. For the point contacts, the rotation is only used in the 
+  /// friction cone constraints.
+  /// For the surface contacts, the rotation represents the rotational contact
+  /// constraints on the contact frame of the robot.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_placement Contact placement.
+  ///
+  void setContactPlacement(const int contact_index, 
+                           const SE3& contact_placement);
+
+  ///
   /// @brief Sets contact placements. The rotation of each contact is set to
   /// Eigen::Matrix3d::Identity(), which represents the vertical direction
   /// to the ground.
@@ -192,6 +204,13 @@ public:
   void setContactPlacements(
       const std::vector<Eigen::Vector3d>& contact_positions,
       const std::vector<Eigen::Matrix3d>& contact_rotations);
+
+  ///
+  /// @brief Sets contact placements.
+  /// @param[in] contact_placements Contact placements. Size must be 
+  /// ContactStatus::maxNumContacts().
+  ///
+  void setContactPlacements(const aligned_vector<SE3>& contact_placements);
 
   ///
   /// @brief Gets the contact placement.
