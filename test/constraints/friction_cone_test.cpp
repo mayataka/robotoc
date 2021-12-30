@@ -304,7 +304,7 @@ TEST_F(FrictionConeTest, frictionConeResidual) {
 
 
 TEST_F(FrictionConeTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   test_kinematics(robot, contact_status);
   test_isFeasible(robot, contact_status);
@@ -325,7 +325,7 @@ TEST_F(FrictionConeTest, fixedBase) {
 
 
 TEST_F(FrictionConeTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   test_kinematics(robot, contact_status);
   test_isFeasible(robot, contact_status);

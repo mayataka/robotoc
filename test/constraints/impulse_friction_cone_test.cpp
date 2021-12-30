@@ -305,7 +305,7 @@ TEST_F(ImpulseFrictionConeTest, frictionConeResidual) {
 
 TEST_F(ImpulseFrictionConeTest, fixedBase) {
   const double dt = 0.01;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_kinematics(robot, impulse_status);
   test_isFeasible(robot, impulse_status);
@@ -327,7 +327,7 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
 
 TEST_F(ImpulseFrictionConeTest, floatingBase) {
   const double dt = 0.01;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_kinematics(robot, impulse_status);
   test_isFeasible(robot, impulse_status);

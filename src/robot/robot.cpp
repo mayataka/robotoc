@@ -87,16 +87,6 @@ Robot::Robot(const std::string& path_to_urdf,
         break;
     }
   }
-  try {
-    if (point_contacts_.size() > 0 && surface_contacts_.size() > 0) {
-      throw std::out_of_range(
-          "Invalid argument: in the current version of robotoc, the robot cannot has both a point contact and surface contact!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
   max_dimf_ = 3 * point_contacts_.size() + 6 * surface_contacts_.size();
   data_.JMinvJt.resize(max_dimf_, max_dimf_);
   data_.JMinvJt.setZero();

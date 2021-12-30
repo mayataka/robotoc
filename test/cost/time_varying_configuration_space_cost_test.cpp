@@ -269,7 +269,7 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
 
 
 TEST_F(TimeVaryingConfigurationSpaceCostTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);
@@ -277,7 +277,7 @@ TEST_F(TimeVaryingConfigurationSpaceCostTest, fixedBase) {
 
 
 TEST_F(TimeVaryingConfigurationSpaceCostTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);

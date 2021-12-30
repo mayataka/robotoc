@@ -316,7 +316,7 @@ void ContactSequenceTest::test_setContactPlacements(const Robot& robot) const {
 
 TEST_F(ContactSequenceTest, fixedBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   test_constructor(robot);
   test_setContactStatus(robot);
   test_push_back(robot);
@@ -328,7 +328,7 @@ TEST_F(ContactSequenceTest, fixedBase) {
 
 TEST_F(ContactSequenceTest, floatingBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   test_constructor(robot);
   test_setContactStatus(robot);
   test_push_back(robot);

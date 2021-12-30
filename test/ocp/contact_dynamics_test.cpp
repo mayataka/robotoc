@@ -209,7 +209,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
 
 
 TEST_F(ContactDynamicsTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
@@ -225,7 +225,7 @@ TEST_F(ContactDynamicsTest, fixedBase) {
 
 
 TEST_F(ContactDynamicsTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.setContactPlacement(i, Eigen::Vector3d::Random());

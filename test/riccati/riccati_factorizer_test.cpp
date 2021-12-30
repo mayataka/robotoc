@@ -400,8 +400,8 @@ TEST_P(RiccatiFactorizerTest, forwardRecursionImpulse) {
 
 INSTANTIATE_TEST_SUITE_P(
   TestWithMultipleRobots, RiccatiFactorizerTest, 
-  ::testing::Values(testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
-                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+  ::testing::Values(testhelper::CreateRobotManipulator(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateQuadrupedalRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
 );
 
 } // namespace robotoc

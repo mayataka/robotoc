@@ -184,7 +184,7 @@ void SplitKKTMatrixTest::test_isApprox(const Robot& robot, const ContactStatus& 
 
 
 TEST_F(SplitKKTMatrixTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   test(robot, contact_status);
   test_isApprox(robot, contact_status);
@@ -195,7 +195,7 @@ TEST_F(SplitKKTMatrixTest, fixedBase) {
 
 
 TEST_F(SplitKKTMatrixTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   test(robot, contact_status);
   test_isApprox(robot, contact_status);

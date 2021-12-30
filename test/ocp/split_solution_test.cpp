@@ -282,9 +282,9 @@ void SplitSolutionTest::test_integrate(const Robot& robot,
 
 
 TEST_F(SplitSolutionTest, fixedBase) {
-  auto robot_without_contacts = testhelper::CreateFixedBaseRobot();
+  auto robot_without_contacts = testhelper::CreateRobotManipulator();
   test(robot_without_contacts);
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   test_isApprox(robot, contact_status, impulse_status);
@@ -300,9 +300,9 @@ TEST_F(SplitSolutionTest, fixedBase) {
 
 
 TEST_F(SplitSolutionTest, floatingBase) {
-  auto robot_without_contacts = testhelper::CreateFloatingBaseRobot();
+  auto robot_without_contacts = testhelper::CreateQuadrupedalRobot();
   test(robot_without_contacts);
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   test_isApprox(robot, contact_status, impulse_status);

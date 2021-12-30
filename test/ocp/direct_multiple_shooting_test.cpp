@@ -483,10 +483,10 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
 
 INSTANTIATE_TEST_SUITE_P(
   TestWithMultipleRobots, DirectMultipleShootingTest, 
-  ::testing::Values(testhelper::CreateFixedBaseRobot(),
-                    testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
-                    testhelper::CreateFloatingBaseRobot(),
-                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+  ::testing::Values(testhelper::CreateRobotManipulator(),
+                    testhelper::CreateRobotManipulator(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateQuadrupedalRobot(),
+                    testhelper::CreateQuadrupedalRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
 );
 
 } // namespace robotoc

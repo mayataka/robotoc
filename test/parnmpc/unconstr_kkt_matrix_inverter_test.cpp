@@ -13,7 +13,7 @@ class UnconstrKKTMatrixInverterTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    robot = testhelper::CreateFixedBaseRobot();
+    robot = testhelper::CreateRobotManipulator();
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 

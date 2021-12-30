@@ -134,7 +134,7 @@ void ImpulseSplitKKTMatrixTest::test_isApprox(const Robot& robot, const ImpulseS
 
 TEST_F(ImpulseSplitKKTMatrixTest, fixedBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
   test_isApprox(robot, impulse_status);
@@ -146,7 +146,7 @@ TEST_F(ImpulseSplitKKTMatrixTest, fixedBase) {
 
 TEST_F(ImpulseSplitKKTMatrixTest, floatingBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
   test_isApprox(robot, impulse_status);

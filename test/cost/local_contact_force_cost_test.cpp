@@ -230,7 +230,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
 
 
 TEST_F(LocalContactForceCostTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);
@@ -238,7 +238,7 @@ TEST_F(LocalContactForceCostTest, fixedBase) {
 
 
 TEST_F(LocalContactForceCostTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);

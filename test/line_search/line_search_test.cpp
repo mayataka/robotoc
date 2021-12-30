@@ -116,19 +116,19 @@ void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings
 
 
 TEST_P(LineSearchTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot();
+  auto robot = testhelper::CreateRobotManipulator();
   auto settings = GetParam();
   test(robot, settings);
-  robot = testhelper::CreateFixedBaseRobot(dt);
+  robot = testhelper::CreateRobotManipulator(dt);
   test(robot, settings);
 }
 
 
 TEST_P(LineSearchTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot();
+  auto robot = testhelper::CreateQuadrupedalRobot();
   auto settings = GetParam();
   test(robot, settings);
-  robot = testhelper::CreateFloatingBaseRobot(dt);
+  robot = testhelper::CreateQuadrupedalRobot(dt);
   test(robot, settings);
 }
 

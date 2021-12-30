@@ -22,7 +22,7 @@ protected:
     T = 1.0;
     t = 0.1; 
 
-    auto robot = testhelper::CreateFloatingBaseRobot();
+    auto robot = testhelper::CreateQuadrupedalRobot();
     kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
     kkt_residual = KKTResidual(robot, N, max_num_impulse);
 

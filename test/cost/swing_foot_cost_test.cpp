@@ -38,7 +38,7 @@ protected:
 
 
 TEST_F(SwingFootCostTest, testStageCost) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
@@ -106,7 +106,7 @@ TEST_F(SwingFootCostTest, testStageCost) {
 
 
 TEST_F(SwingFootCostTest, testTerminalCost) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
@@ -140,7 +140,7 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
 
 
 TEST_F(SwingFootCostTest, testImpulseCost) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const int dimv = robot.dimv();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot);

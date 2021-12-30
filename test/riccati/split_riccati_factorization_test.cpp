@@ -51,13 +51,13 @@ void RiccatiFactorizationTest::test(const Robot& robot) {
 
 
 TEST_F(RiccatiFactorizationTest, fixed_base) {
-  auto robot = testhelper::CreateFixedBaseRobot();
+  auto robot = testhelper::CreateRobotManipulator();
   test(robot);
 }
 
 
 TEST_F(RiccatiFactorizationTest, floating_base) {
-  auto robot = testhelper::CreateFloatingBaseRobot();
+  auto robot = testhelper::CreateQuadrupedalRobot();
   test(robot);
 }
 

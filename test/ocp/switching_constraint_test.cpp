@@ -128,14 +128,14 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
 
 
 TEST_F(SwitchingConstraintTest, fixedbase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   test_linearizeSwitchingConstraint(robot);
   test_evalSwitchingConstraint(robot);
 }
 
 
 TEST_F(SwitchingConstraintTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   test_linearizeSwitchingConstraint(robot);
   test_evalSwitchingConstraint(robot);
 }

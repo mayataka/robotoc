@@ -262,7 +262,7 @@ void ImpulseSplitSolutionTest::test_integrate(const Robot& robot,
 
 TEST_F(ImpulseSplitSolutionTest, fixedBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
   test_isApprox(robot, impulse_status);
@@ -276,7 +276,7 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
 
 TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
   test_isApprox(robot, impulse_status);

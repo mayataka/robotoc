@@ -29,7 +29,7 @@ protected:
 
 
 TEST_F(StateEquationTest, fixedbase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
@@ -66,7 +66,7 @@ TEST_F(StateEquationTest, fixedbase) {
 
 
 TEST_F(StateEquationTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
