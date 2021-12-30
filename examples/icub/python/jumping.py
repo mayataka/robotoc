@@ -9,10 +9,13 @@ contact_frames = [L_foot_id, R_foot_id]
 contact_types = [robotoc.ContactType.SurfaceContact, robotoc.ContactType.SurfaceContact]
 path_to_urdf = '../icub_description/urdf/icub.urdf'
 baumgarte_time_step = 0.04
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+# robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
+#                       contact_frames, contact_types, baumgarte_time_step)
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase)
+
 print(robot)
 q = np.zeros(robot.dimq())
+q[2] = 0.6
 q[6] = 1.0
 
 # cost = robotoc.CostFunction()
@@ -28,5 +31,5 @@ q[6] = 1.0
 
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                        viewer_type='meshcat')
+                                        viewer_type='gepetto')
 viewer.display(0.01, [q for i in range(50)])
