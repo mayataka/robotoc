@@ -1,0 +1,60 @@
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><created>2013-11-15T10:34:59.514947</created><modified>2013-11-15T10:34:59.514955</modified><up_axis>Y_UP</up_axis></asset><library_effects><effect id="iCub_soft_grey-effect" name="iCub_soft_grey-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission><color>0.0 0.0 0.0 1.0</color></emission><ambient><color>0.0 0.0 0.0 1.0</color></ambient><diffuse><color>0.48 0.48 0.48 1.0</color></diffuse><specular><color>0.5 0.5 0.5 1.0</color></specular><shininess><float>50.0</float></shininess><transparency><float>1.0</float></transparency><index_of_refraction><float>1.0</float></index_of_refraction></phong>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>1</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>
+    </effect>
+    </library_effects>
+  <library_geometries><geometry id="Cylinder_002-mesh" name="Cylinder.002">
+      <mesh>
+        <source id="Cylinder_002-mesh-positions">
+          <float_array id="Cylinder_002-mesh-positions-array" count="48">0.01186317 0.02864021 0.0667401 -0.01186317 0.02864027 0.0667401 -0.02864027 0.01186317 0.0667401 -0.02864021 -0.01186317 0.0667401 0.01186317 -0.02864027 0.0667401 0.02864027 -0.01186317 0.0667401 0.02864027 0.01186317 0.0667401 -0.01186317 -0.02864027 0.0667401 0.02864027 0.01186311 0.0777399 0.02864021 -0.01186317 0.0777399 0.01186311 -0.02864027 0.0777399 -0.01186323 -0.02864021 0.0777399 -0.02864027 -0.01186311 0.0777399 -0.02864021 0.01186323 0.0777399 -0.01186305 0.02864027 0.0777399 0.01186323 0.02864021 0.0777399</float_array>
+          <technique_common>
+            <accessor count="16" source="#Cylinder_002-mesh-positions-array" stride="3"><param type="float" name="X"/><param type="float" name="Y"/><param type="float" name="Z"/></accessor></technique_common>
+        </source>
+        <source id="Cylinder_002-mesh-normals">
+          <float_array id="Cylinder_002-mesh-normals-array" count="84">-0.2970977 0.7172765 0.6302378 -0.2892239 0.6959746 -0.6572161 -0.7172765 0.2970977 -0.6302378 -0.6959746 0.2892239 0.6572161 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 -0.7172765 -0.2970977 0.6302378 -0.696646 -0.2875759 -0.6572161 -0.2798547 -0.6756493 -0.6819971 -0.2970977 -0.7172765 0.6302378 0.2970977 -0.7172765 0.6302378 0.2798547 -0.6756493 -0.6819971 0.6756493 -0.2798547 -0.6819971 0.7172765 -0.2970977 0.6302378 0.6756493 0.2798547 -0.6819971 0.7172765 0.2970977 0.6302378 0.2970977 0.7172765 0.6302378 0.2798547 0.6756493 -0.6819971</float_array>
+          <technique_common>
+            <accessor count="28" source="#Cylinder_002-mesh-normals-array" stride="3"><param type="float" name="X"/><param type="float" name="Y"/><param type="float" name="Z"/></accessor></technique_common>
+        </source>
+        <vertices id="Cylinder_002-mesh-vertices">
+          <input semantic="POSITION" source="#Cylinder_002-mesh-positions"/>
+        </vertices>
+        <polylist material="iCub_soft_grey-material" count="20">
+          <input semantic="VERTEX" source="#Cylinder_002-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Cylinder_002-mesh-normals" offset="1"/>
+          <vcount>4 3 3 3 3 3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 </vcount>
+          <p>14 0 1 1 2 2 13 3 14 4 13 4 15 4 13 5 8 5 15 5 13 6 12 6 8 6 12 7 9 7 8 7 12 8 11 8 9 8 11 9 10 9 9 9 1 10 0 10 2 10 2 11 0 11 6 11 3 12 2 12 6 12 5 13 3 13 6 13 5 14 7 14 3 14 5 15 4 15 7 15 12 16 3 17 7 18 11 19 10 20 4 21 5 22 9 23 13 3 2 2 3 17 12 16 9 23 5 22 6 24 8 25 15 26 0 27 1 1 14 0 11 19 7 18 4 21 10 20 0 27 15 26 8 25 6 24</p>
+        </polylist>
+      </mesh>
+      <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
+    </geometry>
+    </library_geometries>
+  <library_materials><material id="iCub_soft_grey-material" name="iCub_soft_grey">
+      <instance_effect url="#iCub_soft_grey-effect"/>
+    </material>
+    </library_materials>
+  <library_visual_scenes>
+    <visual_scene id="scene_l_shoulder_1"><node id="l_shoulder_1" name="l_shoulder_1" type="NODE">
+          <node id="l_shoulder_1_mesh" name="l_shoulder_1_mesh" type="NODE">
+            <instance_geometry url="#Cylinder_002-mesh">
+              <bind_material>
+                <technique_common>
+                  <instance_material symbol="iCub_soft_grey-material" target="#iCub_soft_grey-material"/>
+                </technique_common>
+              </bind_material>
+            </instance_geometry>
+          </node>
+        </node>
+      </visual_scene>
+  </library_visual_scenes>
+  <scene><instance_visual_scene url="#scene_l_shoulder_1"/></scene></COLLADA>
