@@ -7,36 +7,36 @@ void ImpulseStatus::disp(std::ostream& os) const {
   os << "impulse status:" << std::endl;
   os << "  impulse mode id: " << contact_status_.contactModeId() << std::endl;
   os << "  active impulses: [";
-  for (int i=0; i<maxPointContacts()-1; ++i) {
+  for (int i=0; i<maxNumContacts()-1; ++i) {
     if (isImpulseActive(i)) {
       os << i << ", ";
     }
   }
-  if (isImpulseActive(maxPointContacts()-1)) {
-    os << maxPointContacts()-1;
+  if (isImpulseActive(maxNumContacts()-1)) {
+    os << maxNumContacts()-1;
   }
   os << "]" << std::endl;
-  os << "  contact points: [";
-  for (int i=0; i<maxPointContacts()-1; ++i) {
-    os << "[" << contactPoint(i).transpose() << "], ";
+  os << "  contact positions: [";
+  for (int i=0; i<maxNumContacts()-1; ++i) {
+    os << "[" << contactPosition(i).transpose() << "], ";
   }
-  os << "[" << contactPoint(maxPointContacts()-1).transpose() << "]";
+  os << "[" << contactPosition(maxNumContacts()-1).transpose() << "]";
   os << "]" << std::endl;
-  os << "  contact surfaces rotations: [";
-  for (int i=0; i<maxPointContacts()-1; ++i) {
-    os << "[" << contactSurfaceRotation(i).row(0) << "]  ";
+  os << "  contact rotations: [";
+  for (int i=0; i<maxNumContacts()-1; ++i) {
+    os << "[" << contactRotation(i).row(0) << "]  ";
   }
-  os << "[" << contactSurfaceRotation(maxPointContacts()-1).row(0) << "]" << std::endl;
+  os << "[" << contactRotation(maxNumContacts()-1).row(0) << "]" << std::endl;
   os << "                               ";
-  for (int i=0; i<maxPointContacts()-1; ++i) {
-    os << "[" << contactSurfaceRotation(i).row(1) << "]  ";
+  for (int i=0; i<maxNumContacts()-1; ++i) {
+    os << "[" << contactRotation(i).row(1) << "]  ";
   }
-  os << "[" << contactSurfaceRotation(maxPointContacts()-1).row(1) << "]" << std::endl;
+  os << "[" << contactRotation(maxNumContacts()-1).row(1) << "]" << std::endl;
   os << "                               ";
-  for (int i=0; i<maxPointContacts()-1; ++i) {
-    os << "[" << contactSurfaceRotation(i).row(2) << "], ";
+  for (int i=0; i<maxNumContacts()-1; ++i) {
+    os << "[" << contactRotation(i).row(2) << "], ";
   }
-  os << "[" << contactSurfaceRotation(maxPointContacts()-1).row(2) << "]";
+  os << "[" << contactRotation(maxNumContacts()-1).row(2) << "]";
   os << "]" << std::flush;
 }
 

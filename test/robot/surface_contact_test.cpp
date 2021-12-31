@@ -284,16 +284,16 @@ void SurfaceContactTest::testContactDerivatives(pinocchio::Model& model, pinocch
   const SE3 contact_placement = SE3::Random();
   Vector6d residual;
   contact.computeContactPositionResidual(model, data, contact_placement, residual);
-  Eigen::MatrixXd contact_partial_dq = Eigen::MatrixXd::Zero(6, dimv);
-  contact.computeContactPositionDerivative(model, data, contact_partial_dq);
-  Eigen::MatrixXd contact_partial_dq_ref = Eigen::MatrixXd::Zero(6, dimv);
+  Eigen::MatrixXd position_partial_dq = Eigen::MatrixXd::Zero(6, dimv);
+  contact.computeContactPositionDerivative(model, data, position_partial_dq);
+  Eigen::MatrixXd position_partial_dq_ref = Eigen::MatrixXd::Zero(6, dimv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
   pinocchio::getFrameJacobian(model, data, contact_frame_id, 
                               pinocchio::LOCAL, J_frame);
   Eigen::MatrixXd Jlog6(Eigen::MatrixXd::Zero(6, 6));
   pinocchio::Jlog6(contact_placement.inverse()*data.oMf[contact_frame_id], Jlog6);
-  contact_partial_dq_ref = Jlog6 * J_frame;
-  EXPECT_TRUE(contact_partial_dq_ref.isApprox(contact_partial_dq));
+  position_partial_dq_ref = Jlog6 * J_frame;
+  EXPECT_TRUE(position_partial_dq_ref.isApprox(position_partial_dq));
 }
 
 

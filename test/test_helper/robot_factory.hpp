@@ -7,13 +7,17 @@
 namespace robotoc {
 namespace testhelper {
 
-Robot CreateFixedBaseRobot();
+Robot CreateRobotManipulator();
 
-Robot CreateFixedBaseRobot(const double time_step);
+Robot CreateRobotManipulator(const double time_step);
 
-Robot CreateFloatingBaseRobot();
+Robot CreateQuadrupedalRobot();
 
-Robot CreateFloatingBaseRobot(const double time_step);
+Robot CreateQuadrupedalRobot(const double time_step);
+
+Robot CreateHumanoidRobot();
+
+Robot CreateHumanoidRobot(const double time_step);
 
 } // namespace testhelper
 } // namespace robotoc

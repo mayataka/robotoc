@@ -20,7 +20,8 @@ SurfaceContact::SurfaceContact(const pinocchio::Model& model,
     frame_v_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
     frame_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
     frame_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
-    frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
+    frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)),
+    Jlog6_(Matrix66d::Zero()) {
   try {
     if (contact_frame_id_ < 0) {
       throw std::out_of_range(
@@ -54,7 +55,8 @@ SurfaceContact::SurfaceContact()
     frame_v_partial_dq_(),
     frame_a_partial_dq_(),
     frame_a_partial_dv_(),
-    frame_a_partial_da_() {
+    frame_a_partial_da_(),
+    Jlog6_() {
 }
 
 
@@ -88,10 +90,9 @@ void SurfaceContact::disp(std::ostream& os) const {
   os << "surface contact:" << std::endl;
   os << "  contact frame id: " << contact_frame_id_ << std::endl;
   os << "  parent joint id: " << parent_joint_id_ << std::endl;
-  os << "  Baumgarte's weight on velocity: " 
-     << baumgarte_weight_on_velocity_ << std::endl;
-  os << "  Baumgarte's weight on position: " 
-     << baumgarte_weight_on_position_ << std::flush;
+  os << "  Baumgarte's weights on (velocity, position): (" 
+     << baumgarte_weight_on_velocity_ << ", " 
+     << baumgarte_weight_on_position_ << ")" << std::flush;
 }
 
 

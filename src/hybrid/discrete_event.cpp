@@ -14,7 +14,7 @@ void DiscreteEvent::disp(std::ostream& os) const {
   else {
     os << "None" << std::endl;
   }
-  os << "max point contacts: " << max_point_contacts_ << std::endl;
+  os << "max num contacts: " << max_num_contacts_ << std::endl;
   os << "pre contact status:" << std::endl;
   os << pre_contact_status_ << std::endl;
   os << "post contact status:" << std::endl;

@@ -108,11 +108,15 @@ int main(int argc, char *argv[]) {
   const int LH_foot_id = 22;
   const int RF_foot_id = 32;
   const int RH_foot_id = 42;
-  std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
+  const std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
+  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact};
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, baumgarte_time_step);
+                       contact_frames, contact_types, baumgarte_time_step);
 
   const double stride = 0.45;
   const double additive_stride_hip = 0.2;
@@ -190,7 +194,7 @@ int main(int argc, char *argv[]) {
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
 
   robot.updateFrameKinematics(q_standing);
-  std::vector<Eigen::Vector3d> contact_points = {robot.framePosition(LF_foot_id), 
+  std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
                                                  robot.framePosition(LH_foot_id),
                                                  robot.framePosition(RF_foot_id),
                                                  robot.framePosition(RH_foot_id)};
@@ -202,7 +206,7 @@ int main(int argc, char *argv[]) {
   contact_status_hip_swing.activateContacts({0, 2});
   auto contact_status_front_hip_swing = robot.createContactStatus();
 
-  contact_status_standing.setContactPoints(contact_points);
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 
   const double t_initial_front_swing = 0.125;
@@ -214,52 +218,52 @@ int main(int argc, char *argv[]) {
   const double t_initial_hip_swing2 = 0.15;
   const double t_initial2 = t_initial_front_swing2 + t_initial_front_hip_swing2 + t_initial_hip_swing2;
 
-  contact_status_front_swing.setContactPoints(contact_points);
+  contact_status_front_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_front_swing, t_start);
-  contact_status_front_hip_swing.setContactPoints(contact_points);
+  contact_status_front_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_front_hip_swing, 
                               t_start+t_initial_front_swing);
 
-  contact_points[0].coeffRef(0) += 0.25 * stride;
-  contact_points[1].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
-  contact_points[2].coeffRef(0) += 0.25 * stride;
-  contact_points[3].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
+  contact_positions[0].coeffRef(0) += 0.25 * stride;
+  contact_positions[1].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
+  contact_positions[2].coeffRef(0) += 0.25 * stride;
+  contact_positions[3].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
 
-  contact_status_hip_swing.setContactPoints(contact_points);
+  contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, 
                               t_start+t_initial_front_swing+t_initial_front_hip_swing);
 
-  contact_status_front_swing.setContactPoints(contact_points);
+  contact_status_front_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_front_swing, t_start+t_initial);
-  contact_status_front_hip_swing.setContactPoints(contact_points);
+  contact_status_front_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_front_hip_swing, 
                               t_start+t_initial+t_initial_front_swing2);
 
-  contact_points[0].coeffRef(0) += 0.5 * stride;
-  contact_points[1].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
-  contact_points[2].coeffRef(0) += 0.5 * stride;
-  contact_points[3].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
+  contact_positions[0].coeffRef(0) += 0.5 * stride;
+  contact_positions[1].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
+  contact_positions[2].coeffRef(0) += 0.5 * stride;
+  contact_positions[3].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
 
-  contact_status_hip_swing.setContactPoints(contact_points);
+  contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, 
                               t_start+t_initial+t_initial_front_swing2+t_initial_front_hip_swing2);
   const double t_end_init = t_start+t_initial+t_initial2;
 
   for (int i=0; i<steps; ++i) {
-    contact_status_front_swing.setContactPoints(contact_points);
+    contact_status_front_swing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_front_swing, t_end_init+i*t_period);
     contact_sequence->push_back(contact_status_front_hip_swing, 
                                 t_end_init+i*t_period+t_front_swing);
-    contact_points[0].coeffRef(0) += stride;
-    contact_points[2].coeffRef(0) += stride;
-    contact_points[1].coeffRef(0) += stride;
-    contact_points[3].coeffRef(0) += stride;
-    contact_status_hip_swing.setContactPoints(contact_points);
+    contact_positions[0].coeffRef(0) += stride;
+    contact_positions[2].coeffRef(0) += stride;
+    contact_positions[1].coeffRef(0) += stride;
+    contact_positions[3].coeffRef(0) += stride;
+    contact_status_hip_swing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_hip_swing, 
                                 t_end_init+i*t_period+t_front_swing+t_front_hip_swing);
   }
 
-  contact_status_front_swing.setContactPoints(contact_points);
+  contact_status_front_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_front_swing, t_end_init+steps*t_period);
 
   // For the last step
@@ -271,14 +275,14 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_front_hip_swing, 
                               t_end_init+steps*t_period+t_end_front_swing);
 
-  contact_points[0].coeffRef(0) += 0.75 * stride;
-  contact_points[2].coeffRef(0) += 0.75 * stride;
-  contact_points[1].coeffRef(0) += 0.75 * stride - additive_stride_hip;
-  contact_points[3].coeffRef(0) += 0.75 * stride - additive_stride_hip;
-  contact_status_hip_swing.setContactPoints(contact_points);
+  contact_positions[0].coeffRef(0) += 0.75 * stride;
+  contact_positions[2].coeffRef(0) += 0.75 * stride;
+  contact_positions[1].coeffRef(0) += 0.75 * stride - additive_stride_hip;
+  contact_positions[3].coeffRef(0) += 0.75 * stride - additive_stride_hip;
+  contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, 
                               t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing);
-  contact_status_standing.setContactPoints(contact_points);
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, t_end_init+steps*t_period+t_end);
 
   // you can check the contact sequence via

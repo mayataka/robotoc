@@ -208,11 +208,11 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
 }
 
 
-TEST_F(ContactDynamicsTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+TEST_F(ContactDynamicsTest, robotManipulator) {
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
-    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
   }
   test_computeResidual(robot, contact_status);
   test_linearize(robot, contact_status);
@@ -224,11 +224,30 @@ TEST_F(ContactDynamicsTest, fixedBase) {
 }
 
 
-TEST_F(ContactDynamicsTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+TEST_F(ContactDynamicsTest, quadrupedalRobot) {
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
-    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
+  }
+  test_computeResidual(robot, contact_status);
+  test_linearize(robot, contact_status);
+  test_condense(robot, contact_status);
+  contact_status.setRandom();
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  test_computeResidual(robot, contact_status);
+  test_linearize(robot, contact_status);
+  test_condense(robot, contact_status);
+}
+
+
+TEST_F(ContactDynamicsTest, humanoidRobot) {
+  auto robot = testhelper::CreateHumanoidRobot(dt);
+  auto contact_status = robot.createContactStatus();
+  for (int i=0; i<robot.contactFrames().size(); ++i) {
+    contact_status.setContactPlacement(i, SE3::Random());
   }
   test_computeResidual(robot, contact_status);
   test_linearize(robot, contact_status);

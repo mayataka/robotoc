@@ -340,7 +340,7 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
 
 
 TEST_F(SplitOCPTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   test_computeKKTResidual(robot, contact_status);
   test_computeKKTSystem(robot, contact_status);
@@ -359,7 +359,26 @@ TEST_F(SplitOCPTest, fixedBase) {
 
 
 TEST_F(SplitOCPTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto contact_status = robot.createContactStatus();
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evalOCP(robot, contact_status);
+  contact_status.setRandom();
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  test_computeKKTResidual(robot, contact_status);
+  test_computeKKTSystem(robot, contact_status);
+  test_evalOCP(robot, contact_status);
+  test_computeKKTResidual(robot, contact_status, true);
+  test_computeKKTSystem(robot, contact_status, true);
+  test_evalOCP(robot, contact_status, true);
+}
+
+
+TEST_F(SplitOCPTest, humanoidRobot) {
+  auto robot = testhelper::CreateHumanoidRobot(dt);
   auto contact_status = robot.createContactStatus();
   test_computeKKTResidual(robot, contact_status);
   test_computeKKTSystem(robot, contact_status);

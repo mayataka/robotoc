@@ -178,7 +178,7 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
 
 TEST_F(ImpulseSplitOCPTest, fixedBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_computeKKTSystem(robot, impulse_status);
   test_computeKKTResidual(robot, impulse_status);
@@ -192,7 +192,24 @@ TEST_F(ImpulseSplitOCPTest, fixedBase) {
 
 TEST_F(ImpulseSplitOCPTest, floatingBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto impulse_status = robot.createImpulseStatus();
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  test_computeKKTSystem(robot, impulse_status);
+  test_computeKKTResidual(robot, impulse_status);
+  test_evalOCP(robot, impulse_status);
+}
+
+
+TEST_F(ImpulseSplitOCPTest, humanoidRobot) {
+  const double dt = 0.001;
+  auto robot = testhelper::CreateHumanoidRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_computeKKTSystem(robot, impulse_status);
   test_computeKKTResidual(robot, impulse_status);

@@ -22,7 +22,7 @@ class UnconstrBackwardRiccatiRecursionFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    robot = testhelper::CreateFixedBaseRobot();
+    robot = testhelper::CreateRobotManipulator();
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     dimv = robot.dimv();
     dimx = 2*robot.dimv();

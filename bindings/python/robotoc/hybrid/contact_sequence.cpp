@@ -32,8 +32,13 @@ PYBIND11_MODULE(contact_sequence, m) {
     .def("is_STO_enabled_lift", &ContactSequence::isSTOEnabledLift, 
           py::arg("lift_index"))
     .def("is_event_time_consistent", &ContactSequence::isEventTimeConsistent)
-    .def("set_contact_points", &ContactSequence::setContactPoints,
-          py::arg("contact_phase"), py::arg("contact_points"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactSequence::*)(const int, const std::vector<Eigen::Vector3d>&)>(&ContactSequence::setContactPlacements),
+          py::arg("contact_phase"), py::arg("contact_positions"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactSequence::*)(const int, const std::vector<Eigen::Vector3d>&, const std::vector<Eigen::Matrix3d>&)>(&ContactSequence::setContactPlacements),
+          py::arg("contact_phase"), py::arg("contact_positions"), 
+          py::arg("contact_rotations"))
     .def("num_impulse_events", &ContactSequence::numImpulseEvents)
     .def("num_lift_events", &ContactSequence::numLiftEvents)
     .def("num_discrete_events", &ContactSequence::numDiscreteEvents)

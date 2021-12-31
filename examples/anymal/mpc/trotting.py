@@ -8,10 +8,11 @@ LH_foot_id = 22
 RF_foot_id = 32
 RH_foot_id = 42
 contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
 step_length = 0.15

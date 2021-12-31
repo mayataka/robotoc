@@ -20,7 +20,7 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp,
     cs_lh_(ocp.robot().createContactStatus()),
     cs_rf_(ocp.robot().createContactStatus()),
     cs_rh_(ocp.robot().createContactStatus()),
-    contact_points_(),
+    contact_positions_(),
     step_length_(0),
     step_height_(0),
     swing_time_(0),
@@ -112,7 +112,7 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
     ++predict_step_;
     tt += swing_time_;
   }
-  resetContactPoints(q);
+  resetContactPlacements(q);
 
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -147,7 +147,7 @@ void MPCQuadrupedalWalking::updateSolution(const double t, const double dt,
       ++current_step_;
     }
   }
-  resetContactPoints(q);
+  resetContactPlacements(q);
   if (add_step || remove_step) {
     ocp_solver_.initConstraints(t);
   }
@@ -206,81 +206,81 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
 }
 
 
-void MPCQuadrupedalWalking::resetContactPoints(const Eigen::VectorXd& q) {
+void MPCQuadrupedalWalking::resetContactPlacements(const Eigen::VectorXd& q) {
   robot_.updateFrameKinematics(q);
-  contact_points_.clear();
-  for (const auto frame : robot_.contactFrames()) {
-    contact_points_.push_back(robot_.framePosition(frame));
+  contact_positions_.clear();
+  for (const auto frame : robot_.pointContactFrames()) {
+    contact_positions_.push_back(robot_.framePosition(frame));
   }
   // frames = [LF, LH, RF, RH] (0, 1, 2, 3)
   if (current_step_ == 0) {
     // do nothing (standing)
   }
   else if (current_step_ == 1) {
-    // retrive the initial contact point from the first step (stance legs: LF, LH, RF)
+    // retrive the initial contact position from the first step (stance legs: LF, LH, RF)
     // RH
-    contact_points_[3] << contact_points_[1].coeff(0), // x : same as LH
-                          contact_points_[2].coeff(1), // y : same as RF
-                          contact_points_[1].coeff(2); // z : same as LH
+    contact_positions_[3] << contact_positions_[1].coeff(0), // x : same as LH
+                             contact_positions_[2].coeff(1), // y : same as RF
+                             contact_positions_[1].coeff(2); // z : same as LH
   }
   else if (current_step_ == 2) {
-    // retrive the initial contact point from the first step (stance legs: LF, LH, RH)
+    // retrive the initial contact position from the first step (stance legs: LF, LH, RH)
     // RF
-    contact_points_[2] << contact_points_[0].coeff(0), // x : same as LF 
-                          contact_points_[3].coeff(1), // y : same as RH
-                          contact_points_[0].coeff(2); // z : same as LF
+    contact_positions_[2] << contact_positions_[0].coeff(0), // x : same as LF 
+                             contact_positions_[3].coeff(1), // y : same as RH
+                             contact_positions_[0].coeff(2); // z : same as LF
   }
   else if (current_step_%4 == 1) {
-    // retrive the previous contact points from the current step (stance legs: LF, LH, RF)
+    // retrive the previous contact positions from the current step (stance legs: LF, LH, RF)
     // RH
-    contact_points_[3] << contact_points_[1].coeff(0)-0.5*step_length_, // x : same as LH-0.5*step_length_ 
-                          contact_points_[2].coeff(1), // y : same as RF
-                          contact_points_[1].coeff(2); // z : same as LH
+    contact_positions_[3] << contact_positions_[1].coeff(0)-0.5*step_length_, // x : same as LH-0.5*step_length_ 
+                             contact_positions_[2].coeff(1), // y : same as RF
+                             contact_positions_[1].coeff(2); // z : same as LH
   }
   else if (current_step_%4 == 2) {
-    // retrive the previous contact points from the current step (stance legs: LF, LH, RF)
+    // retrive the previous contact positions from the current step (stance legs: LF, LH, RF)
     // RF
-    contact_points_[2] << contact_points_[0].coeff(0)-0.5*step_length_, // x : same as LF-0.5*step_length_ 
-                          contact_points_[3].coeff(1), // y : same as RH
-                          contact_points_[0].coeff(2); // z : same as LF
+    contact_positions_[2] << contact_positions_[0].coeff(0)-0.5*step_length_, // x : same as LF-0.5*step_length_ 
+                             contact_positions_[3].coeff(1), // y : same as RH
+                             contact_positions_[0].coeff(2); // z : same as LF
   }
   else if (current_step_%4 == 3) {
-    // retrive the previous contact points from the current step (stance legs: LF, RF, RH)
+    // retrive the previous contact positions from the current step (stance legs: LF, RF, RH)
     // LH
-    contact_points_[1] << contact_points_[3].coeff(0)-0.5*step_length_, // x : same as RH-0.5*step_length_
-                          contact_points_[0].coeff(1), // y : same as LF
-                          contact_points_[3].coeff(2); // z : same as RH
+    contact_positions_[1] << contact_positions_[3].coeff(0)-0.5*step_length_, // x : same as RH-0.5*step_length_
+                             contact_positions_[0].coeff(1), // y : same as LF
+                             contact_positions_[3].coeff(2); // z : same as RH
   }
   else {
-    // retrive the previous contact points from the current step (stance legs: LH, RF, RH)
+    // retrive the previous contact positions from the current step (stance legs: LH, RF, RH)
     // LF
-    contact_points_[0] << contact_points_[2].coeff(0)-0.5*step_length_, // x : same as RF-0.5*step_length_
-                          contact_points_[1].coeff(1), // y : same as LH
-                          contact_points_[2].coeff(2); // z : same as RF
+    contact_positions_[0] << contact_positions_[2].coeff(0)-0.5*step_length_, // x : same as RF-0.5*step_length_
+                             contact_positions_[1].coeff(1), // y : same as LH
+                             contact_positions_[2].coeff(2); // z : same as RF
   }
   for (int step=current_step_; step<=predict_step_; ++step) {
     if (step == 0) {
       // do nothing (standing)
     }
     else if (step == 1) {
-      contact_points_[3].coeffRef(0) += 0.5 * step_length_;
+      contact_positions_[3].coeffRef(0) += 0.5 * step_length_;
     }
     else if (step == 2) {
-      contact_points_[2].coeffRef(0) += 0.5 * step_length_;
+      contact_positions_[2].coeffRef(0) += 0.5 * step_length_;
     }
     else if (step%4 == 1) {
-      contact_points_[3].coeffRef(0) += step_length_;
+      contact_positions_[3].coeffRef(0) += step_length_;
     }
     else if (step%4 == 2) {
-      contact_points_[2].coeffRef(0) += step_length_;
+      contact_positions_[2].coeffRef(0) += step_length_;
     }
     else if (step%4 == 3) {
-      contact_points_[1].coeffRef(0) += step_length_;
+      contact_positions_[1].coeffRef(0) += step_length_;
     }
     else {
-      contact_points_[0].coeffRef(0) += step_length_;
+      contact_positions_[0].coeffRef(0) += step_length_;
     }
-    contact_sequence_->setContactPoints(step-current_step_, contact_points_);
+    contact_sequence_->setContactPlacements(step-current_step_, contact_positions_);
   }
 }
 

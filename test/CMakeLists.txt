@@ -49,6 +49,11 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/urdf/anymal/anymal.urdf
   COPYONLY
 )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/urdf/icub/icub.urdf
+  ${CMAKE_CURRENT_BINARY_DIR}/urdf/icub/icub.urdf
+  COPYONLY
+)
 
 # add tests
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)

@@ -14,6 +14,7 @@
 
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/robot/point_contact.hpp"
+#include "robotoc/robot/surface_contact.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
@@ -30,13 +31,27 @@ enum class BaseJointType {
   FloatingBase
 };
 
+
 ///
 /// @class Robot
 /// @brief Dynamics and kinematics model of robots. Wraps pinocchio::Model and 
-/// pinocchio::Data. Includes point contacts.
+/// pinocchio::Data. Includes contacts.
 ///
 class Robot {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
+  ///
+  /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
+  /// from URDF. Assumes that the robot never has any contacts.
+  /// @param[in] path_to_urdf Path to the URDF file.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
+  /// BaseJointType::FixedBase.
+  ///
+  Robot(const std::string& path_to_urdf, 
+        const BaseJointType& base_joint_type=BaseJointType::FixedBase);
+
   ///
   /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
   /// from URDF. 
@@ -44,17 +59,22 @@ public:
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
   /// BaseJointType::FixedBase.
-  /// @param[in] contact_frames Collection of the frames that can have contacts 
-  /// with the environments. If this is empty, it is assumed that this robot
-  /// never has any contacts. Deault is {} (empty).
+  /// @param[in] contact_frames Collection of the frames that can have point and 
+  /// surface contacts with the environments. 
+  /// @param[in] contact_types Types of the contacts. Size must be same as 
+  /// that of contact_frames.
   /// @param[in] baumgarte_weights The weight paramter of the Baumgarte's 
   /// stabilization method on the error on the contact velocity (first element) 
-  /// and position (second element). Must be non-negative. Defalut is {0, 0}.
+  /// and position (second element). Must be non-negative. 
+  /// @param[in] contact_inv_damping Damping paramter in matrix inversion of the 
+  /// contact-consistent forward dynamics. 1e-12 works well for two surface 
+  /// contacts. Must be non-negative. Default is 0.
   ///
-  Robot(const std::string& path_to_urdf, 
-        const BaseJointType& base_joint_type=BaseJointType::FixedBase, 
-        const std::vector<int>& contact_frames={}, 
-        const std::pair<double, double>& baumgarte_weights={0, 0});
+  Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
+        const std::vector<int>& contact_frames, 
+        const std::vector<ContactType>& contact_types,
+        const std::pair<double, double>& baumgarte_weights,
+        const double contact_inv_damping=0.);
 
   ///
   /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
@@ -63,14 +83,22 @@ public:
   /// @param[in] path_to_urdf Path to the URDF file.
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. 
-  /// @param[in] contact_frames Collection of the frames that can have contacts 
-  /// with the environments. 
+  /// @param[in] contact_frames Collection of the frames that can have point and 
+  /// surface contacts with the environments. If this is empty, it is assumed 
+  /// that this robot never has any contacts.
+  /// @param[in] contact_types Types of the contacts. Size must be same as 
+  /// that of contact_frames.
   /// @param[in] time_step Time steps of the Baumgarte's stabilization method.
   /// The weight parameter on the velocity is set by 2/time_step and that on the 
-  /// position is by 1/(time_step*time_step).
+  /// position is by 1/(time_step*time_step). Must be positive.
+  /// @param[in] contact_inv_damping Damping paramter in matrix inversion of the 
+  /// contact-consistent forward dynamics. 1e-12 works well for two surface 
+  /// contacts. Must be non-negative. Default is 0.
   ///
   Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
-        const std::vector<int>& contact_frames, const double time_step);
+        const std::vector<int>& contact_frames, 
+        const std::vector<ContactType>& contact_types, const double time_step,
+        const double contact_inv_damping=0.);
 
   ///
   /// @brief Default constructor. 
@@ -341,7 +369,7 @@ public:
   template <typename VectorType>
   void computeBaumgarteResidual(
       const ContactStatus& contact_status, 
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual);
 
   ///
   /// @brief Computes the partial derivatives of the contact constriants 
@@ -393,44 +421,44 @@ public:
   /// @brief Computes the residual of the contact position constraint at the 
   /// impulse. Before calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] contact_residual Residuals in the contact position constraint.
+  /// @param[out] position_residual Residuals in the contact position constraint.
   /// Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
   void computeContactPositionResidual(
       const ImpulseStatus& impulse_status, 
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
+      const Eigen::MatrixBase<VectorType>& position_residual);
 
   ///
   /// @brief Computes the partial derivative of the contact position at the 
   /// impulse. Before calling this  function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] contact_partial_dq The result of the partial derivative  
+  /// @param[out] position_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
   void computeContactPositionDerivative(
       const ImpulseStatus& impulse_status, 
-      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+      const Eigen::MatrixBase<MatrixType>& position_partial_dq);
 
   ///
   /// @brief Set contact forces in this robot model for each active contacts.  
   /// @param[in] contact_status Contact status.
-  /// @param[in] f The stack of the contact forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
+  /// @param[in] f The stack of the contact wrenches represented in the local 
+  /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
   void setContactForces(const ContactStatus& contact_status, 
-                        const std::vector<Eigen::Vector3d>& f);
+                        const std::vector<Vector6d>& f);
 
   ///
   /// @brief Set impulse forces in this robot model for each active impulses. 
   /// @param[in] impulse_status Impulse status.
-  /// @param[in] f The stack of the impulse forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
+  /// @param[in] f The stack of the impulse wrenches represented in the local 
+  /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
   void setImpulseForces(const ImpulseStatus& impulse_status, 
-                        const std::vector<Eigen::Vector3d>& f);
+                        const std::vector<Vector6d>& f);
 
   ///
   /// @brief Computes inverse dynamics, i.e., generalized torques corresponding 
@@ -628,13 +656,51 @@ public:
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts.
   /// 
-  int maxPointContacts() const;
+  int maxNumContacts() const;
 
   ///
-  /// @brief Retruns the indices of the contact frames. 
+  /// @brief Returns the maximum number of the point contacts.
+  /// @return The maximum number of the point contacts.
+  /// 
+  int maxNumPointContacts() const;
+
+  ///
+  /// @brief Returns the maximum number of the surface contacts.
+  /// @return The maximum number of the surface contacts.
+  /// 
+  int maxNumSurfaceContacts() const;
+
+  ///
+  /// @brief Returns the type of the contact.
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @return Contact type. 
+  ///
+  ContactType contactType(const int contact_index) const;
+
+  ///
+  /// @brief Returns the types of the contacts.
+  /// @return Contact types. 
+  ///
+  const std::vector<ContactType>& contactTypes() const;
+
+  ///
+  /// @brief Retruns the indices of the frames involving the point or surface 
+  /// contacts. 
   /// @return Indices of the contact frames.
   /// 
   std::vector<int> contactFrames() const;
+
+  ///
+  /// @brief Retruns the indices of the frames involving the contacts. 
+  /// @return Indices of the contact frames.
+  /// 
+  std::vector<int> pointContactFrames() const;
+
+  ///
+  /// @brief Retruns the indices of the frames involving the surface contacts. 
+  /// @return Indices of the surface contact frames.
+  /// 
+  std::vector<int> surfaceContactFrames() const;
 
   ///
   /// @brief Creates a ContactStatus for this robot model. 
@@ -695,11 +761,14 @@ public:
 private:
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
-  aligned_vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimu_, dim_passive_, max_dimf_;
+  std::vector<int> contact_frames_;
+  std::vector<ContactType> contact_types_;
+  aligned_vector<PointContact> point_contacts_;
+  aligned_vector<SurfaceContact> surface_contacts_;
+  int dimq_, dimv_, dimu_, dim_passive_, max_dimf_, max_num_contacts_;
+  double contact_inv_damping_;
   bool has_floating_base_;
-  std::vector<bool> is_each_contact_active_;
   Eigen::MatrixXd dimpulse_dv_; 
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;

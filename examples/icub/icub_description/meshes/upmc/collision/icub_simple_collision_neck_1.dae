@@ -1,0 +1,60 @@
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><created>2013-11-15T10:34:57.581020</created><modified>2013-11-15T10:34:57.581030</modified><up_axis>Y_UP</up_axis></asset><library_effects><effect id="iCub_soft_grey-effect" name="iCub_soft_grey-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission><color>0.0 0.0 0.0 1.0</color></emission><ambient><color>0.0 0.0 0.0 1.0</color></ambient><diffuse><color>0.48 0.48 0.48 1.0</color></diffuse><specular><color>0.5 0.5 0.5 1.0</color></specular><shininess><float>50.0</float></shininess><transparency><float>1.0</float></transparency><index_of_refraction><float>1.0</float></index_of_refraction></phong>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>1</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>
+    </effect>
+    </library_effects>
+  <library_geometries><geometry id="Cylinder_004-mesh" name="Cylinder.004">
+      <mesh>
+        <source id="Cylinder_004-mesh-positions">
+          <float_array id="Cylinder_004-mesh-positions-array" count="48">0 0.01499992 -0.03849995 -0.01060652 0.01060652 -0.03849995 0 -0.01499992 -0.03849995 0.01499992 0 -0.03849995 0.01060652 0.01060652 -0.03849995 0 0.01499992 0.03849995 -0.01060646 0.01060652 0.03849995 0.01499992 0 0.03849995 0.01060652 0.01060652 0.03849995 0.01060652 -0.01060652 -0.03849995 -0.01060652 -0.01060652 -0.03849995 -0.01499992 0 -0.03849995 0.01060652 -0.01060652 0.03849995 0 -0.01499992 0.03849995 -0.01060652 -0.01060646 0.03849995 -0.01499992 0 0.03849995</float_array>
+          <technique_common>
+            <accessor count="16" source="#Cylinder_004-mesh-positions-array" stride="3"><param type="float" name="X"/><param type="float" name="Y"/><param type="float" name="Z"/></accessor></technique_common>
+        </source>
+        <source id="Cylinder_004-mesh-normals">
+          <float_array id="Cylinder_004-mesh-normals-array" count="84">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0.548967 -0.548967 0.6302378 0.5468001 -0.5468001 -0.6339915 0.7733085 0 -0.6339915 0.7763603 0 0.6302378 0 -0.7748345 0.6321299 0 -0.7763603 -0.6302378 0 0.7763603 -0.6302378 0 0.7748345 0.6321299 0.548967 0.548967 0.6302378 0.5468001 0.5468001 -0.6339915 -0.5478988 -0.5478988 0.6321299 -0.548967 -0.548967 -0.6302378 -0.548967 0.548967 -0.6302378 -0.5478988 0.5478988 0.6321299 -0.7763603 0 0.6302378 -0.7733085 0 -0.6339915</float_array>
+          <technique_common>
+            <accessor count="28" source="#Cylinder_004-mesh-normals-array" stride="3"><param type="float" name="X"/><param type="float" name="Y"/><param type="float" name="Z"/></accessor></technique_common>
+        </source>
+        <vertices id="Cylinder_004-mesh-vertices">
+          <input semantic="POSITION" source="#Cylinder_004-mesh-positions"/>
+        </vertices>
+        <polylist material="iCub_soft_grey-material" count="20">
+          <input semantic="VERTEX" source="#Cylinder_004-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Cylinder_004-mesh-normals" offset="1"/>
+          <vcount>3 3 3 3 3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 </vcount>
+          <p>8 0 5 0 6 0 15 1 8 1 6 1 15 2 7 2 8 2 15 3 14 3 7 3 14 4 12 4 7 4 14 5 13 5 12 5 0 6 4 6 1 6 4 7 11 7 1 7 4 8 3 8 11 8 3 9 10 9 11 9 3 10 9 10 10 10 9 11 2 11 10 11 12 12 9 13 3 14 7 15 13 16 2 17 9 13 12 12 0 18 5 19 8 20 4 21 13 16 14 22 10 23 2 17 5 19 0 18 1 24 6 25 7 15 3 14 4 21 8 20 15 26 11 27 10 23 14 22 15 26 6 25 1 24 11 27</p>
+        </polylist>
+      </mesh>
+      <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
+    </geometry>
+    </library_geometries>
+  <library_materials><material id="iCub_soft_grey-material" name="iCub_soft_grey">
+      <instance_effect url="#iCub_soft_grey-effect"/>
+    </material>
+    </library_materials>
+  <library_visual_scenes>
+    <visual_scene id="scene_neck_1"><node id="neck_1" name="neck_1" type="NODE">
+          <node id="neck_1_mesh" name="neck_1_mesh" type="NODE">
+            <instance_geometry url="#Cylinder_004-mesh">
+              <bind_material>
+                <technique_common>
+                  <instance_material symbol="iCub_soft_grey-material" target="#iCub_soft_grey-material"/>
+                </technique_common>
+              </bind_material>
+            </instance_geometry>
+          </node>
+        </node>
+      </visual_scene>
+  </library_visual_scenes>
+  <scene><instance_visual_scene url="#scene_neck_1"/></scene></COLLADA>

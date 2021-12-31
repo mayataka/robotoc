@@ -20,9 +20,9 @@ PYBIND11_MODULE(contact_status, m) {
     .export_values();
 
   py::class_<ContactStatus>(m, "ContactStatus")
-    .def(py::init<const int, const int>(),
-          py::arg("max_point_contacts"), py::arg("contact_mode_id")=0)
-    .def("max_point_contacts", &ContactStatus::maxPointContacts)
+    .def(py::init<const std::vector<ContactType>&, const int>(),
+          py::arg("contact_types"), py::arg("contact_mode_id")=0)
+    .def("max_num_contacts", &ContactStatus::maxNumContacts)
     .def("is_contact_active", 
           static_cast<bool (ContactStatus::*)(const int) const>(&ContactStatus::isContactActive),
           py::arg("contact_index"))
@@ -32,28 +32,37 @@ PYBIND11_MODULE(contact_status, m) {
           py::arg("contact_index"))
     .def("deactivate_contact", &ContactStatus::deactivateContact,
           py::arg("contact_index"))
-    .def("activate_contacts", 
-          static_cast<void (ContactStatus::*)(const std::vector<int>& contact_indices)>(&ContactStatus::activateContacts))
-    .def("deactivate_contacts", 
-          static_cast<void (ContactStatus::*)(const std::vector<int>& contact_indices)>(&ContactStatus::deactivateContacts))
-    .def("activate_contacts", 
-          static_cast<void (ContactStatus::*)()>(&ContactStatus::activateContacts))
-    .def("deactivate_contacts", 
-          static_cast<void (ContactStatus::*)()>(&ContactStatus::deactivateContacts))
-    .def("set_contact_point", &ContactStatus::setContactPoint,
-          py::arg("contact_index"), py::arg("contact_point"))
-    .def("set_contact_points", &ContactStatus::setContactPoints,
-          py::arg("contact_points"))
-    .def("contact_point", &ContactStatus::contactPoint,
+    .def("activate_contacts", &ContactStatus::activateContacts,
+          py::arg("contact_indices"))
+    .def("deactivate_contacts", &ContactStatus::deactivateContacts,
+          py::arg("contact_indices"))
+    .def("set_contact_placement", 
+          static_cast<void (ContactStatus::*)(const int, const Eigen::Vector3d&)>(&ContactStatus::setContactPlacement),
+          py::arg("contact_index"), py::arg("contact_position"))
+    .def("set_contact_placement", 
+          static_cast<void (ContactStatus::*)(const int, const Eigen::Vector3d&, const Eigen::Matrix3d&)>(&ContactStatus::setContactPlacement),
+          py::arg("contact_index"), py::arg("contact_position"), py::arg("contact_rotation"))
+    .def("set_contact_placement", 
+          static_cast<void (ContactStatus::*)(const int, const SE3&)>(&ContactStatus::setContactPlacement),
+          py::arg("contact_index"), py::arg("contact_placement"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const std::vector<Eigen::Vector3d>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_positions"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const std::vector<Eigen::Vector3d>&, const std::vector<Eigen::Matrix3d>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_positions"), py::arg("contact_rotations"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const aligned_vector<SE3>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_placements"))
+    .def("contact_placement", &ContactStatus::contactPlacement,
           py::arg("contact_index"))
-    .def("contact_points", &ContactStatus::contactPoints)
-    .def("set_contact_surface_rotation", &ContactStatus::setContactSurfaceRotation,
-          py::arg("contact_index"), py::arg("contact_surface_rotation"))
-    .def("set_contact_surfaces_rotations", &ContactStatus::setContactSurfacesRotations,
-          py::arg("contact_surfaces_rotations"))
-    .def("contact_surface_rotation", &ContactStatus::contactSurfaceRotation,
+    .def("contact_placements", &ContactStatus::contactPlacements)
+    .def("contact_position", &ContactStatus::contactPosition,
           py::arg("contact_index"))
-    .def("contact_surfaces_rotations", &ContactStatus::contactSurfacesRotations)
+    .def("contact_positions", &ContactStatus::contactPositions)
+    .def("contact_rotation", &ContactStatus::contactRotation,
+          py::arg("contact_index"))
+    .def("contact_rotations", &ContactStatus::contactRotations)
     .def("set_contact_mode_id", &ContactStatus::setContactModeId,
           py::arg("contact_mode_id"))
     .def("contact_mode_id", &ContactStatus::contactModeId)

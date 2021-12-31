@@ -22,7 +22,7 @@ protected:
     t = 0.1; 
     min_dt  = std::abs(Eigen::VectorXd::Random(1)[0]);
 
-    auto robot = testhelper::CreateFloatingBaseRobot();
+    auto robot = testhelper::CreateQuadrupedalRobot();
     kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
     kkt_residual = KKTResidual(robot, N, max_num_impulse);
     d = Direction(robot, N, max_num_impulse);

@@ -24,7 +24,7 @@ class UnconstrRiccatiRecursionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    robot = testhelper::CreateFixedBaseRobot();
+    robot = testhelper::CreateRobotManipulator();
     dimv = robot.dimv();
     dimx = 2 * robot.dimv();
     N = 20;

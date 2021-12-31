@@ -7,11 +7,12 @@ LF_foot_id = 12
 LH_foot_id = 22
 RF_foot_id = 32
 RH_foot_id = 42
-contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id]
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.04
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
 step_length = 0.25
@@ -123,69 +124,69 @@ constraints.push_back(friction_cone)
 max_num_impulses = 4*cycle
 contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
 
-contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
-contact_status_standing.set_contact_points(contact_points)
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_rh_swing = robot.create_contact_status()
 contact_status_rh_swing.activate_contacts([0, 1, 2])
-contact_status_rh_swing.set_contact_points(contact_points)
+contact_status_rh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_rh_swing, t0)
 
-contact_points[3][0] += 0.5 * step_length
+contact_positions[3][0] += 0.5 * step_length
 contact_status_rf_swing = robot.create_contact_status()
 contact_status_rf_swing.activate_contacts([0, 1, 3])
-contact_status_rf_swing.set_contact_points(contact_points)
+contact_status_rf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_rf_swing, t0+swing_time)
 
-contact_points[2][0] += 0.5 * step_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[2][0] += 0.5 * step_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+2*swing_time)
 
 contact_status_lh_swing = robot.create_contact_status()
 contact_status_lh_swing.activate_contacts([0, 2, 3])
-contact_status_lh_swing.set_contact_points(contact_points)
+contact_status_lh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lh_swing, 
                            t0+double_support_time+2*swing_time)
 
-contact_points[1][0] += step_length
+contact_positions[1][0] += step_length
 contact_status_lf_swing = robot.create_contact_status()
 contact_status_lf_swing.activate_contacts([1, 2, 3])
-contact_status_lf_swing.set_contact_points(contact_points)
+contact_status_lf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lf_swing, 
                            t0+double_support_time+3*swing_time)
 
-contact_points[0][0] += step_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[0][0] += step_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, 
                            t0+double_support_time+4*swing_time)
 
 for i in range (cycle-1):
     t1 = t0 + (i+1)*(2*double_support_time+4*swing_time)
-    contact_status_rh_swing.set_contact_points(contact_points)
+    contact_status_rh_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_rh_swing, t1)
 
-    contact_points[3][0] += step_length
-    contact_status_rf_swing.set_contact_points(contact_points)
+    contact_positions[3][0] += step_length
+    contact_status_rf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_rf_swing, t1+swing_time)
 
-    contact_points[2][0] += step_length
-    contact_status_standing.set_contact_points(contact_points)
+    contact_positions[2][0] += step_length
+    contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, t1+2*swing_time)
 
-    contact_status_lh_swing.set_contact_points(contact_points)
+    contact_status_lh_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lh_swing, 
                                t1+double_support_time+2*swing_time)
 
-    contact_points[1][0] += step_length
-    contact_status_lf_swing.set_contact_points(contact_points)
+    contact_positions[1][0] += step_length
+    contact_status_lf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lf_swing, 
                                t1+double_support_time+3*swing_time)
 
-    contact_points[0][0] += step_length
-    contact_status_standing.set_contact_points(contact_points)
+    contact_positions[0][0] += step_length
+    contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, 
                                t1+double_support_time+4*swing_time)
 

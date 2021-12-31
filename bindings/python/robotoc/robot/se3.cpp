@@ -26,6 +26,12 @@ PYBIND11_MODULE(se3, m) {
     .def(py::init<const Eigen::Matrix4d&>(),
           py::arg("T"))
     .def(py::init<>())
+    .def_property("R", [](const SE3& self) { return self.rotation(); },
+                  [](SE3& self, const Eigen::Matrix3d& R) { self.rotation() = R; },
+                  py::return_value_policy::copy)
+    .def_property("trans", [](const SE3& self) { return self.translation(); },
+                  [](SE3& self, const Eigen::Vector3d& trans) { self.translation() = trans; },
+                  py::return_value_policy::copy)
     .def("__str__", [](const SE3& self) {
         std::stringstream ss;
         ss << self;

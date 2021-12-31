@@ -7,11 +7,12 @@ LF_foot_id = 12
 LH_foot_id = 22
 RF_foot_id = 32
 RH_foot_id = 42
-contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id]
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
 jump_length = 0.8
@@ -85,21 +86,21 @@ x3d0_LF = robot.frame_position(LF_foot_id)
 x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
-contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
-contact_status_standing.set_contact_points(contact_points)
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
 
-contact_points[0][0] += jump_length
-contact_points[1][0] += jump_length
-contact_points[2][0] += jump_length
-contact_points[3][0] += jump_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[0][0] += jump_length
+contact_positions[1][0] += jump_length
+contact_positions[2][0] += jump_length
+contact_positions[3][0] += jump_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 
 # you can check the contact sequence via 

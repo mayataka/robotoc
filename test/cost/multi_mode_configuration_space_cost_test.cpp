@@ -258,7 +258,7 @@ void MultiModeConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
 
 
 TEST_F(MultiModeConfigurationSpaceCostTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);
@@ -266,7 +266,7 @@ TEST_F(MultiModeConfigurationSpaceCostTest, fixedBase) {
 
 
 TEST_F(MultiModeConfigurationSpaceCostTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);

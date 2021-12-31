@@ -46,7 +46,7 @@ std::shared_ptr<ContactSequence> TimeDiscretizationTest::createContactSequence(c
   ContactStatus post_contact_status = pre_contact_status;
   const double event_period = 3 * dt;
   for (int i=0; i<max_num_events; ++i) {
-    DiscreteEvent tmp(robot.maxPointContacts());
+    DiscreteEvent tmp(robot.contactTypes());
     tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     while (!tmp.existDiscreteEvent()) {
       post_contact_status.setRandom();
@@ -69,7 +69,7 @@ std::shared_ptr<ContactSequence> TimeDiscretizationTest::createContactSequenceOn
   ContactStatus post_contact_status = pre_contact_status;
   const double event_period = 3 * dt;
   for (int i=0; i<max_num_events; ++i) {
-    DiscreteEvent tmp(robot.maxPointContacts());
+    DiscreteEvent tmp(robot.contactTypes());
     tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     while (!tmp.existDiscreteEvent()) {
       post_contact_status.setRandom();
@@ -680,8 +680,8 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
 
 INSTANTIATE_TEST_SUITE_P(
   TestWithMultipleRobots, TimeDiscretizationTest, 
-  ::testing::Values(testhelper::CreateFixedBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])),
-                    testhelper::CreateFloatingBaseRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
+  ::testing::Values(testhelper::CreateRobotManipulator(std::abs(Eigen::VectorXd::Random(1)[0])),
+                    testhelper::CreateQuadrupedalRobot(std::abs(Eigen::VectorXd::Random(1)[0])))
 );
 
 } // namespace robotoc
