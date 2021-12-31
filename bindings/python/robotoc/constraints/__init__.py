@@ -11,4 +11,5 @@ from .joint_torques_upper_limit import *
 from .friction_cone import *
 from .impulse_friction_cone import *
 from .wrench_friction_cone import *
+from .impulse_wrench_friction_cone import *
 from .constraints import *
