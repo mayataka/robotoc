@@ -204,15 +204,17 @@ void ImpulseWrenchFrictionCone::evalDerivatives(
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
       case ContactType::PointContact:
-        dimf_stack += 3;
+        if (impulse_status.isImpulseActive(i)) {
+          dimf_stack += 3;
+        }
         break;
       case ContactType::SurfaceContact:
         if (impulse_status.isImpulseActive(i)) {
           kkt_residual.lf().template segment<6>(dimf_stack).noalias()
               += cone_.transpose() * data.dual.template segment<17>(c_begin);
+          dimf_stack += 6;
         }
         c_begin += 17;
-        dimf_stack += 6;
         break;
       default:
         break;
@@ -231,20 +233,22 @@ void ImpulseWrenchFrictionCone::condenseSlackAndDual(
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
       case ContactType::PointContact:
-        dimf_stack += 3;
+        if (impulse_status.isImpulseActive(i)) {
+          dimf_stack += 3;
+        }
         break;
       case ContactType::SurfaceContact:
         if (impulse_status.isImpulseActive(i)) {
           data.r[0].array() = data.dual.template segment<17>(c_begin).array() 
                                 / data.slack.template segment<17>(c_begin).array();
           kkt_matrix.Qff().template block<6, 6>(dimf_stack, dimf_stack).noalias()
-              += cone_.transpose() * data.r[0] * cone_;
+              += cone_.transpose() * data.r[0].asDiagonal() * cone_;
           computeCondensingCoeffcient<17>(data, c_begin);
           kkt_residual.lf().template segment<6>(dimf_stack).noalias()
               += cone_.transpose() * data.cond.template segment<17>(c_begin);
+          dimf_stack += 6;
         }
         c_begin += 17;
-        dimf_stack += 6;
         break;
       default:
         break;
@@ -266,7 +270,9 @@ void ImpulseWrenchFrictionCone::expandSlackAndDual(
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
       case ContactType::PointContact:
-        dimf_stack += 3;
+        if (impulse_status.isImpulseActive(i)) {
+          dimf_stack += 3;
+        }
         break;
       case ContactType::SurfaceContact:
         if (impulse_status.isImpulseActive(i)) {
@@ -274,9 +280,9 @@ void ImpulseWrenchFrictionCone::expandSlackAndDual(
               = - cone_ * d.df().template segment<6>(dimf_stack) 
                 - data.residual.template segment<17>(c_begin);
           computeDualDirection<17>(data, c_begin);
+          dimf_stack += 6;
         }
         c_begin += 17;
-        dimf_stack += 6;
         break;
       default:
         break;
