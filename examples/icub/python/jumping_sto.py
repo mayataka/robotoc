@@ -15,7 +15,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.02
 jump_length = 0.5
 flying_time = 0.25
-ground_time = 0.8
+ground_time = 0.7
 t0 = 0.
 
 cost = robotoc.CostFunction()
@@ -30,7 +30,7 @@ q_ref[0] += jump_length
 q_weight = np.array([0, 1, 1, 100, 100, 100, 
                      0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
                      0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
-                     0.001, 0.001, 0.001,
+                     0.001, 1, 1,
                      0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
                      0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
 qf_weight = q_weight
@@ -70,8 +70,8 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_impulses = 3
-contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+max_num_each_discrete_events = 2
+contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
 x3d0_L = robot.frame_placement(L_foot_id)
@@ -91,20 +91,27 @@ contact_placements[1].trans = contact_placements[1].trans + np.array([jump_lengt
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
 
+contact_sequence.push_back(contact_status_flying, t0+2*ground_time+flying_time, sto=True)
+
+contact_placements[0].trans = contact_placements[0].trans + np.array([jump_length, 0, 0])
+contact_placements[1].trans = contact_placements[1].trans + np.array([jump_length, 0, 0])
+contact_status_standing.set_contact_placements(contact_placements)
+contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_time, sto=True)
+
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
-                                         min_dt=[0.6, 0.2, 0.6],
+sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
+                                         min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
-T = t0 + flying_time + 2*ground_time
+T = t0 + 2*flying_time + 3*ground_time
 N = math.floor(T/dt) 
 # Create the OCP with the STO problem
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_impulses)
+                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1

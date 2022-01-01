@@ -190,8 +190,8 @@ int main(int argc, char *argv[]) {
   constraints->push_back(impulse_friction_cone);
 
   // Create the contact sequence
-  const int max_num_impulses = (steps+3)*2;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
+  const int max_num_each_discrete_events = (steps+3)*2;
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
@@ -291,7 +291,7 @@ int main(int argc, char *argv[]) {
   // Create the OCP solver.
   const double T = 7; 
   const int N = 240;
-  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);

@@ -21,6 +21,7 @@ swing_time = 0.40
 double_support_time = 0.05
 t0 = 0.1
 cycle = 1
+cycle = 5
 
 
 # Create the cost function
@@ -92,8 +93,8 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_impulses = 2*cycle
-contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+max_num_each_discrete_events = 2*cycle
+contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
 x3d0_LF = robot.frame_position(LF_foot_id)
@@ -155,7 +156,7 @@ for i in range(cycle-1):
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 min_dt = [0.02] + cycle * [0.2, 0.02, 0.2, 0.02]
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
+sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
                                          min_dt=min_dt,
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
@@ -165,12 +166,12 @@ N = math.floor(T/dt)
 # Create the OCP with the STO problem
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_impulses)
+                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-# solver_options.initial_sto_reg_iter = 10 # necessary for the cases with cycle = 2 or 3
+solver_options.initial_sto_reg_iter = 10 # necessary for the cases with cycle >= 2
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                solver_options=solver_options, nthreads=4)
 

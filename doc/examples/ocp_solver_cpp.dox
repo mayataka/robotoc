@@ -3,6 +3,9 @@
 \page subpage_ocp_solver_example_cpp Quadrupedal jumping example of robotoc::OCPSolver in C++
 
 This page explains the example code in examples/anymal/jumping.cpp.
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping.gif" width="300">
+
 Required header files are as follows.
 ```
 #include <string>
@@ -163,10 +166,10 @@ Next, we construct the constraints.
   constraints->push_back(friction_cone);
 ```
 
-Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 
+Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible each discrete events (impulse and lift events) as 
 ```
-  const int max_num_impulses = 1;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
+  const int max_num_each_discrete_events = 1;
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
 `robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
@@ -209,7 +212,7 @@ Finally, we can construct the optimal control solver!
 ```
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = T / dt;
-  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
@@ -239,7 +242,7 @@ Let's run the solver!
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-robotoc::TimeDiscretization discretization(T, N, max_num_impulses*2);
+robotoc::TimeDiscretization discretization(T, N, max_num_each_discrete_events*2);
 discretization.discretize(contact_sequence, t);
 std::cout << discretization << std::endl;
 ```

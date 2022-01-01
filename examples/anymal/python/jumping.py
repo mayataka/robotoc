@@ -104,8 +104,8 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_impulses = 1
-contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+max_num_each_discrete_events = 1
+contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 contact_status_standing = robot.create_contact_status()
@@ -129,7 +129,7 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 T = t0 + flying_time + 2*ground_time
 N = math.floor(T/dt) 
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_impulses)
+                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
 solver_options = robotoc.SolverOptions()
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                solver_options=solver_options, nthreads=4)
