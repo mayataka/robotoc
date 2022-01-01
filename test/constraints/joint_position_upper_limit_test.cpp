@@ -151,7 +151,7 @@ void JointPositionUpperLimitTest::test_expandSlackAndDual(Robot& robot) const {
 
 
 TEST_F(JointPositionUpperLimitTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   test_kinematics(robot);
   test_isFeasible(robot);
   test_setSlack(robot);
@@ -163,7 +163,7 @@ TEST_F(JointPositionUpperLimitTest, fixedBase) {
 
 
 TEST_F(JointPositionUpperLimitTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   test_kinematics(robot);
   test_isFeasible(robot);
   test_setSlack(robot);

@@ -23,7 +23,7 @@ protected:
 
 
 void RiccatiFactorizationTest::test(const Robot& robot) {
-  ASSERT_TRUE(robot.maxPointContacts() == 0);
+  ASSERT_TRUE(robot.maxNumContacts() == 0);
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
@@ -51,13 +51,13 @@ void RiccatiFactorizationTest::test(const Robot& robot) {
 
 
 TEST_F(RiccatiFactorizationTest, fixed_base) {
-  auto robot = testhelper::CreateFixedBaseRobot();
+  auto robot = testhelper::CreateRobotManipulator();
   test(robot);
 }
 
 
 TEST_F(RiccatiFactorizationTest, floating_base) {
-  auto robot = testhelper::CreateFloatingBaseRobot();
+  auto robot = testhelper::CreateQuadrupedalRobot();
   test(robot);
 }
 

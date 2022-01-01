@@ -24,7 +24,7 @@ protected:
   virtual void TearDown() {
   }
 
-  int max_point_contacts;
+  int max_num_contacts;
 
   DwellTimeLowerBound bound;
   double min_dt, barrier, fraction_to_boundary_rule, ts1, ts2;

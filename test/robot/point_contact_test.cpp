@@ -119,8 +119,8 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  const Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
-  contact.computeBaumgarteResidual(model, data, contact_point, residual);
+  const Eigen::Vector3d contact_position = Eigen::Vector3d::Random();
+  contact.computeBaumgarteResidual(model, data, contact_position, residual);
   residual_ref 
       = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id, 
                                                  pinocchio::LOCAL).linear()
@@ -129,10 +129,10 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
                                             pinocchio::LOCAL).linear()
           + baumgarte_weight_on_position 
               * (data.oMf[contact_frame_id].translation()
-                 -contact_point);
+                 -contact_position);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeBaumgarteResidual(model, data, contact_point, residuals.segment<3>(5));
+  contact.computeBaumgarteResidual(model, data, contact_position, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
 }
@@ -272,12 +272,12 @@ void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::D
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  const Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
-  contact.computeContactPositionResidual(model, data, contact_point, residual);
-  residual_ref = (data.oMf[contact_frame_id].translation()-contact_point);
+  const Eigen::Vector3d contact_position = Eigen::Vector3d::Random();
+  contact.computeContactPositionResidual(model, data, contact_position, residual);
+  residual_ref = (data.oMf[contact_frame_id].translation()-contact_position);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeContactPositionResidual(model, data, contact_point, residuals.segment<3>(5));
+  contact.computeContactPositionResidual(model, data, contact_position, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());
@@ -295,15 +295,15 @@ void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
   pinocchio::updateFramePlacement(model, data, contact_frame_id);
   const int parent_joint_id = contact.parent_joint_id();
-  Eigen::MatrixXd contact_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
-  contact.computeContactPositionDerivative(model, data, contact_partial_dq);
-  Eigen::MatrixXd contact_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
+  Eigen::MatrixXd position_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
+  contact.computeContactPositionDerivative(model, data, position_partial_dq);
+  Eigen::MatrixXd position_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
   pinocchio::getFrameJacobian(model, data, contact_frame_id, 
                               pinocchio::LOCAL, J_frame);
-  contact_partial_dq_ref 
+  position_partial_dq_ref 
       = data.oMf[contact_frame_id].rotation() * J_frame.template topRows<3>();
-  EXPECT_TRUE(contact_partial_dq_ref.isApprox(contact_partial_dq));
+  EXPECT_TRUE(position_partial_dq_ref.isApprox(position_partial_dq));
 }
 
 

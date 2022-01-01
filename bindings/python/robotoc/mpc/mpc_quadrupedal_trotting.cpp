@@ -23,7 +23,7 @@ PYBIND11_MODULE(mpc_quadrupedal_trotting, m) {
     .def("set_solver_options", &MPCQuadrupedalTrotting::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCQuadrupedalTrotting::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"))
+          py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCQuadrupedalTrotting::getInitialControlInput)
     .def("KKT_error", 
           static_cast<double (MPCQuadrupedalTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalTrotting::KKTError),

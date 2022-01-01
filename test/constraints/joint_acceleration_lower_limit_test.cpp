@@ -146,7 +146,7 @@ void JointAccelerationLowerLimitTest::test_expandSlackAndDual(Robot& robot, cons
 
 
 TEST_F(JointAccelerationLowerLimitTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   const Eigen::VectorXd amin = Eigen::VectorXd::Constant(robot.dimv(), -10);
   test_kinematics(robot, amin);
   test_isFeasible(robot, amin);
@@ -159,7 +159,7 @@ TEST_F(JointAccelerationLowerLimitTest, fixedBase) {
 
 
 TEST_F(JointAccelerationLowerLimitTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const Eigen::VectorXd amin = Eigen::VectorXd::Constant(robot.dimu(), -10);
   test_kinematics(robot, amin);
   test_isFeasible(robot, amin);

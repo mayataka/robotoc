@@ -7,11 +7,12 @@ LF_foot_id = 12
 LH_foot_id = 22
 RF_foot_id = 32
 RH_foot_id = 42
-contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id]
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
 step_length = 0.15
@@ -20,6 +21,7 @@ swing_time = 0.40
 double_support_time = 0.05
 t0 = 0.1
 cycle = 1
+cycle = 5
 
 
 # Create the cost function
@@ -91,59 +93,59 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_impulses = 2*cycle
-contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+max_num_each_discrete_events = 2*cycle
+contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
 x3d0_LF = robot.frame_position(LF_foot_id)
 x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
-contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
-contact_status_standing.set_contact_points(contact_points)
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_lhrf_swing = robot.create_contact_status()
 contact_status_lhrf_swing.activate_contacts([0, 3])
-contact_status_lhrf_swing.set_contact_points(contact_points)
+contact_status_lhrf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status=contact_status_lhrf_swing, 
                            switching_time=t0, sto=True)
 
-contact_points[1][0] += 0.5 * step_length
-contact_points[2][0] += 0.5 * step_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[1][0] += 0.5 * step_length
+contact_positions[2][0] += 0.5 * step_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+0.21, sto=True)
 
 contact_status_lfrh_swing = robot.create_contact_status()
 contact_status_lfrh_swing.activate_contacts([1, 2])
-contact_status_lfrh_swing.set_contact_points(contact_points)
+contact_status_lfrh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lfrh_swing, t0+0.42, sto=True)
 
-contact_points[0][0] += step_length
-contact_points[3][0] += step_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[0][0] += step_length
+contact_positions[3][0] += step_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+0.63, sto=True)
 
 for i in range(cycle-1):
     t1 = t0 + (i+1)*0.84
-    contact_status_lhrf_swing.set_contact_points(contact_points)
+    contact_status_lhrf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lhrf_swing, t1, sto=True)
 
-    contact_points[1][0] += step_length
-    contact_points[2][0] += step_length
-    contact_status_standing.set_contact_points(contact_points)
+    contact_positions[1][0] += step_length
+    contact_positions[2][0] += step_length
+    contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, t1+0.21, sto=True)
 
-    contact_status_lfrh_swing.set_contact_points(contact_points)
+    contact_status_lfrh_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lfrh_swing, 
                                t1+0.42, sto=True)
 
-    contact_points[0][0] += step_length
-    contact_points[3][0] += step_length
-    contact_status_standing.set_contact_points(contact_points)
+    contact_positions[0][0] += step_length
+    contact_positions[3][0] += step_length
+    contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, 
                                t1+0.63, sto=True)
 
@@ -154,7 +156,7 @@ for i in range(cycle-1):
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 min_dt = [0.02] + cycle * [0.2, 0.02, 0.2, 0.02]
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
+sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
                                          min_dt=min_dt,
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
@@ -164,12 +166,12 @@ N = math.floor(T/dt)
 # Create the OCP with the STO problem
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_impulses)
+                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-# solver_options.initial_sto_reg_iter = 10 # necessary for the cases with cycle = 2 or 3
+solver_options.initial_sto_reg_iter = 10 # necessary for the cases with cycle >= 2
 ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
                                solver_options=solver_options, nthreads=4)
 

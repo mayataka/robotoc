@@ -3,6 +3,9 @@
 \page subpage_unconstr_ocp_solver_example_py Robot manipulator example of robotoc::UnconstrOCPSolver and robotoc::UnconstrParNMPCSolver in Python
 
 This page explains the example code in examples/iiwa14/python/config_space_ocp.py.
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/config_ocp.gif" width="140">
+
 Required imports are as follows.
 ```
 import robotoc

@@ -233,7 +233,7 @@ void TimeVaryingCoMCostTest::testImpulseCost(Robot& robot, const int frame_id) c
 
 
 TEST_F(TimeVaryingCoMCostTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   const int frame_id = robot.contactFrames()[0];
   testStageCost(robot, frame_id);
   testTerminalCost(robot, frame_id);
@@ -242,7 +242,7 @@ TEST_F(TimeVaryingCoMCostTest, fixedBase) {
 
 
 TEST_F(TimeVaryingCoMCostTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const std::vector<int> frames = robot.contactFrames();
   for (const auto frame_id : frames) {
     testStageCost(robot, frame_id);

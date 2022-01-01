@@ -7,6 +7,8 @@
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
+#include "robotoc/robot/se3.hpp"
+
 #include <iostream>
 
 
@@ -18,6 +20,8 @@ namespace robotoc {
 ///
 class PointContact {
 public:
+  using Matrix6xd = Eigen::Matrix<double, 6, Eigen::Dynamic>;
+
   ///
   /// @brief Construct a point contact model.
   /// @param[in] model The pinocchio model. Before calling this constructor, 
@@ -79,14 +83,14 @@ public:
   /// updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_point Contact point. Size must be 3.
+  /// @param[in] contact_position Contact position. Size must be 3.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint. 
   /// Size must be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_point,
+      const Eigen::MatrixBase<VectorType1>& contact_position,
       const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const;
 
   ///
@@ -146,15 +150,15 @@ public:
   /// be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_point Contact point. Size must be 3.
-  /// @param[out] contact_residual Residual of the contact constraint. Size must 
+  /// @param[in] contact_position Contact position. Size must be 3.
+  /// @param[out] position_residual Residual of the contact constraint. Size must 
   /// be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
   void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_point,
-      const Eigen::MatrixBase<VectorType2>& contact_residual) const;
+      const Eigen::MatrixBase<VectorType1>& contact_position,
+      const Eigen::MatrixBase<VectorType2>& position_residual) const;
 
   ///
   /// @brief Computes the partial derivative of the contact position  
@@ -163,13 +167,13 @@ public:
   /// frame position must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] contact_partial_dq The result of the partial derivative  
+  /// @param[out] position_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Size must be 3 x Robot::dimv().
   /// 
   template <typename MatrixType>
   void computeContactPositionDerivative(
       const pinocchio::Model& model, pinocchio::Data& data,
-      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+      const Eigen::MatrixBase<MatrixType>& position_partial_dq);
 
   ///
   /// @brief Sets the weight parameters of the Baumgarte's stabilization method.
@@ -182,13 +186,13 @@ public:
                            const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Returns the contact point at the current kinematics of the robot. 
+  /// @brief Returns the contact position at the current kinematics of the robot. 
   /// Before calling this function, kinematics of the robot model (frame 
   /// position) must be updated.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @return Const reference to the contact point.
+  /// @return Const reference to the contact position.
   ///
-  const Eigen::Vector3d& contactPoint(const pinocchio::Data& data) const;
+  const Eigen::Vector3d& contactPosition(const pinocchio::Data& data) const;
 
   ///
   /// @brief Returns contact frame id, i.e., the index of the contact frame.
@@ -216,13 +220,11 @@ public:
 private:
   int contact_frame_id_, parent_joint_id_, dimv_;
   double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
-  pinocchio::SE3 jXf_;
+  SE3 jXf_;
   pinocchio::Motion v_frame_;
   Eigen::Matrix3d v_linear_skew_, v_angular_skew_;
-  Eigen::Matrix<double, 6, Eigen::Dynamic> J_frame_, frame_v_partial_dq_, 
-                                           frame_a_partial_dq_, 
-                                           frame_a_partial_dv_, 
-                                           frame_a_partial_da_;
+  Matrix6xd J_frame_, frame_v_partial_dq_, frame_a_partial_dq_, 
+            frame_a_partial_dv_, frame_a_partial_da_;
 };
 
 } // namespace robotoc

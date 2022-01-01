@@ -200,7 +200,7 @@ void ConstraintsTest::timeStage2(Robot& robot,
 
 
 TEST_F(ConstraintsTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(0.001);
+  auto robot = testhelper::CreateRobotManipulator(0.001);
   auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
@@ -213,7 +213,7 @@ TEST_F(ConstraintsTest, fixedBase) {
 
 
 TEST_F(ConstraintsTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(0.001);
+  auto robot = testhelper::CreateQuadrupedalRobot(0.001);
   auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
@@ -226,7 +226,7 @@ TEST_F(ConstraintsTest, floatingBase) {
 
 
 TEST_F(ConstraintsTest, testParams) {
-  auto robot = testhelper::CreateFloatingBaseRobot(0.001);
+  auto robot = testhelper::CreateQuadrupedalRobot(0.001);
   auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot, 0.7);
   auto constraints = std::make_shared<Constraints>(0.1, 0.5);
   constraints->push_back(friction_cone);

@@ -7,11 +7,12 @@ LF_foot_id = 12
 LH_foot_id = 22
 RF_foot_id = 32
 RH_foot_id = 42
-contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id]
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
 jump_length = 0.8
@@ -77,29 +78,29 @@ constraints.push_back(friction_cone)
 
 
 # Create the contact sequence
-max_num_impulses = 1
-contact_sequence = robotoc.ContactSequence(robot, max_num_impulses)
+max_num_each_discrete_events = 1
+contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
 x3d0_LF = robot.frame_position(LF_foot_id)
 x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
-contact_points = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts([0, 1, 2, 3])
-contact_status_standing.set_contact_points(contact_points)
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
 
-contact_points[0][0] += jump_length
-contact_points[1][0] += jump_length
-contact_points[2][0] += jump_length
-contact_points[3][0] += jump_length
-contact_status_standing.set_contact_points(contact_points)
+contact_positions[0][0] += jump_length
+contact_positions[1][0] += jump_length
+contact_positions[2][0] += jump_length
+contact_positions[3][0] += jump_length
+contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 
 # you can check the contact sequence via 
@@ -108,7 +109,7 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_impulses, 
+sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
                                          min_dt=[0.15, 0.15, 0.65],
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
@@ -118,7 +119,7 @@ N = math.floor(T/dt)
 # Create the OCP with the STO problem
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_impulses)
+                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
@@ -157,7 +158,6 @@ plot_f = robotoc.utils.PlotContactForce(mu=mu)
 plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
             t=ocp_solver.get_time_discretization().time_points(), 
             fig_name='jumping_sto_f', save_dir='jumping_sto_log')
-
 
 # Display results
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 

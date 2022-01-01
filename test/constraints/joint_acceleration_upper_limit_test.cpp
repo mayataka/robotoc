@@ -146,7 +146,7 @@ void JointAccelerationUpperLimitTest::test_expandSlackAndDual(Robot& robot, cons
 
 
 TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimv(), 10);
   test_kinematics(robot, amax);
   test_isFeasible(robot, amax);
@@ -159,7 +159,7 @@ TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
 
 
 TEST_F(JointAccelerationUpperLimitTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimu(), 10);
   test_kinematics(robot, amax);
   test_isFeasible(robot, amax);

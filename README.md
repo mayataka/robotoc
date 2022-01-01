@@ -3,14 +3,12 @@
 [![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/running_yoko.gif" width="530">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/running_yoko.gif" width="530"> 
 
 ## Features for efficient optimal control of robotic systems
-- Direct multiple-shooting method based on the lifted contact dynamics / inverse dynamics.
-- Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT systems.
-- Efficient pure-state equality constraint handling in the Riccati recursion.
-- Riccati recursion algorithm for switching time optimization (STO) problems.
-- Primal-dual interior point method for inequality constraints.
+- Direct multiple-shooting method based on the **lifted contact dynamics** / **inverse dynamics**.
+- Riccati recursion algorithm for **switching time optimization (STO)** problems and efficient **pure-state equality constraint handling**.
+- **Primal-dual interior point method** for inequality constraints.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
 
 ## Requirements
@@ -119,43 +117,39 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 ## Documentation
 More detailed documentation is available at https://mayataka.github.io/robotoc/.
 
-## Optimal control examples
+## Examples
 Examples of these solvers are found in `examples` directory.
-The following animations are the solution trajectory of the `UnconstrOCPSolver` for a robot manipulator iiwa14.
+Further explanations are found at https://mayataka.github.io/robotoc/page_examples.html.
 
-- Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`, or `iiwa14/python/config_space_ocp.py`)
+### Optimal control example with fixed contact timings
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/config_ocp.gif" width="115"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/task_ocp.gif" width="115">
+- Configuration-space and task-space optimal control for a robot manipulator iiwa14 using `UnconstrOCPSolver` (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`, or `iiwa14/python/config_space_ocp.py`):
 
-
-The following animations are the solution trajectory of the `OCPSolver` for a quadruped ANYmal (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints).
-
-- Walking, trotting gaits (`anymal/walking.cpp`, `anymal/trotting.cpp`, or `anymal/python/walking.py`, `anymal/python/trotting.py`)
-
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="215"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="215">
-
-- Pacing, bounding, jumping gaits (`anymal/pacing.cpp`, `anymal/bounding.cpp`, `anymal/jumping.cpp`, or `anymal/python/pacing.py`, `anymal/python/bounding.py`, `anymal/python/jumping.py`)
-
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="215"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="215"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping.gif" width="215">
-
-- Running gait (`anymal/running.cpp`)
-
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/running.gif" width="500">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/config_ocp.gif" width="100"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/task_ocp.gif" width="100">
 
 
-## Whole-body MPC examples
-The following two example implementations of whole-body MPC are provided:
-- `MPCQuadrupedalWalking` : MPC with `OCPSolver` for the walking gait of quadrupedal robots.
-- `MPCQuadrupedalTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
+- Walking, trotting, pacing, and bounding gaits of quadruped ANYmal using `OCPSolver` (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints) with fixed contact timings (e.g., `anymal/walking.cpp` or `anymal/python/walking.py`):
 
-You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anymal/mpc/trotting.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`).
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="195"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="195"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="195"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="195">
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="300"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="300">
+### Switching time optimization (STO) examples
+-  `OCPSolver` for the switching time optimization (STO) problem, which optimizes the trajectory and the contact timings simultaneously (`anymal/python/jumping_sto.py` and `icub/python/jumping_sto.py`):
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="280"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="260">
+
+### Whole-body MPC examples
+- The following two example implementations of whole-body MPC are provided:
+  - `MPCQuadrupedalWalking` : MPC with `OCPSolver` for the walking gait of quadrupedal robots.
+  - `MPCQuadrupedalTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
+- You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anymal/mpc/trotting.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="280"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="280">
 
 
 ## Citing robotoc

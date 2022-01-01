@@ -19,6 +19,8 @@ namespace robotoc {
 ///
 class SplitSolution {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. 
@@ -106,10 +108,11 @@ public:
   Eigen::VectorXd u;
 
   ///
-  /// @brief Contact forces. 
-  /// Size is Robot::maxPointContacts().
+  /// @brief Contact wrenches. Upper 3 elements are linear contact force
+  /// and the lower 3 elements are the angular momentum.
+  /// Size is Robot::maxNumContacts().
   ///
-  std::vector<Eigen::Vector3d> f;
+  std::vector<Vector6d> f;
 
   ///
   /// @brief Stack of the active contact forces. Size is ContactStatus::dimf().
@@ -152,9 +155,11 @@ public:
 
   ///
   /// @brief Lagrange multiplier w.r.t. the acceleration-level contact  
-  /// constraint. Size is Robot::maxPointContacts().
+  /// constraint. Upper 3 elements are w.r.t. the linear contact acceleration
+  /// and the lower 3 elements are w.r.t. the angular contact acceleration.
+  /// Size is Robot::maxNumContacts().
   ///
-  std::vector<Eigen::Vector3d> mu;
+  std::vector<Vector6d> mu;
 
   ///
   /// @brief Lagrange multiplier w.r.t. the passive joint constraint. Size is 
@@ -350,8 +355,9 @@ public:
 private:
   Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;
   bool has_floating_base_, has_active_contacts_, has_active_impulse_;
+  std::vector<ContactType> contact_types_;
   std::vector<bool> is_contact_active_;
-  int dimf_, dimi_;
+  int dimf_, dimi_, max_num_contacts_;
 
 };
 

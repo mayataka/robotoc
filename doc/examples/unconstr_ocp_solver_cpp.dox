@@ -3,6 +3,9 @@
 \page subpage_unconstr_ocp_solver_example_cpp Robot manipulator example of robotoc::UnconstrOCPSolver and robotoc::UnconstrParNMPCSolver in C++
 
 This page explains the example code in examples/iiwa14/task_space_ocp.cpp.
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/task_ocp.gif" width="140">
+
 Required header files are as follows.
 ```
 #include <string>
@@ -146,4 +149,5 @@ Let's run the solver!
   return 0;
 }
 ```
+
 */

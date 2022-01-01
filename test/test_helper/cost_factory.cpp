@@ -58,10 +58,10 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   config_cost->set_dvi_weight(dvi_weight);
   cost->push_back(config_cost);
 
-  if (robot.maxPointContacts() > 0) {
+  if (robot.maxNumContacts() > 0) {
     auto local_contact_force_cost = std::make_shared<LocalContactForceCost>(robot);
     std::vector<Eigen::Vector3d> f_weight, fi_weight;
-    for (int i=0; i<robot.maxPointContacts(); ++i) {
+    for (int i=0; i<robot.maxNumContacts(); ++i) {
       f_weight.push_back(Eigen::Vector3d::Constant(0.001));
       fi_weight.push_back(Eigen::Vector3d::Constant(0.005));
     }

@@ -25,15 +25,19 @@
 
 int main () {
   // Create a robot with contacts.
-  const int LF_foot = 12;
-  const int LH_foot = 22;
-  const int RF_foot = 32;
-  const int RH_foot = 42;
-  std::vector<int> contact_frames = {LF_foot, LH_foot, RF_foot, RH_foot}; // LF, LH, RF, RH
-  const double baumgarte_time_step = 0.5 / 20;
+  const int LF_foot_id = 12;
+  const int LH_foot_id = 22;
+  const int RF_foot_id = 32;
+  const int RH_foot_id = 42;
+  const std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
+  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact};
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
+  const double baumgarte_time_step = 0.5 / 20;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, baumgarte_time_step);
+                       contact_frames, contact_types, baumgarte_time_step);
 
   // Create a cost function.
   auto cost = std::make_shared<robotoc::CostFunction>();
@@ -90,24 +94,24 @@ int main () {
   constraints->push_back(friction_cone);
 
   // Create the contact sequence
-  const int max_num_impulses = 4;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
+  const int max_num_each_discrete_events = 4;
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
-  const std::vector<Eigen::Vector3d> contact_points = {robot.framePosition(LF_foot), 
-                                                       robot.framePosition(LH_foot),
-                                                       robot.framePosition(RF_foot),
-                                                       robot.framePosition(RH_foot)};
-  contact_status_standing.setContactPoints(contact_points);
+  const std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
+                                                       robot.framePosition(LH_foot_id),
+                                                       robot.framePosition(RF_foot_id),
+                                                       robot.framePosition(RH_foot_id)};
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 
   // Create OCPSolver
   const double T = 0.5;
   const int N = 20;
   const int nthreads = 4;
-  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_impulses);
+  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 

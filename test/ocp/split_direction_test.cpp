@@ -189,7 +189,7 @@ void SplitDirectionTest::test_isApprox(const Robot& robot,
 
 
 TEST_F(SplitDirectionTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   test(robot, contact_status, impulse_status);
@@ -209,7 +209,7 @@ TEST_F(SplitDirectionTest, fixedBase) {
 
 
 TEST_F(SplitDirectionTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   test(robot, contact_status, impulse_status);

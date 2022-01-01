@@ -28,7 +28,7 @@ protected:
 
 TEST_F(ImpulseStateEquationTest, fixedBase) {
   const double dt = 0.001;
-  const auto robot = testhelper::CreateFixedBaseRobot(dt);
+  const auto robot = testhelper::CreateRobotManipulator(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const auto s = ImpulseSplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
@@ -62,7 +62,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
 
 TEST_F(ImpulseStateEquationTest, floatingBase) {
   const double dt = 0.001;
-  const auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  const auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);

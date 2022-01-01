@@ -8,10 +8,11 @@ LH_foot_id = 22
 RF_foot_id = 32
 RH_foot_id = 42
 contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, baumgarte_time_step)
+                      contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
 step_length = 0.25
@@ -102,7 +103,7 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.8
+mu = 0.9
 friction_cone         = robotoc.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
@@ -137,5 +138,5 @@ sim_end_time = 10.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='anymal_walking.mp4')

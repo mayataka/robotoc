@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_DISCRETE_EVENT_HPP_
 #define ROBOTOC_DISCRETE_EVENT_HPP_
 
+#include <vector>
+
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 
@@ -25,12 +27,14 @@ class DiscreteEvent {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] max_point_contacts Maximum number of the point contacts.
+  /// @param[in] contact_types Types of contacts. 
   ///
-  DiscreteEvent(const int max_point_contacts);
+  DiscreteEvent(const std::vector<ContactType>& contact_types);
 
   ///
   /// @brief Set the contact status from two sequential contact status.
+  /// The impulse mode id of this event is set to contactModeId() of 
+  /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
   ///
@@ -107,6 +111,8 @@ public:
 
   ///
   /// @brief Sets the contact status from two sequential contact status.
+  /// The impulse mode id of this event is set to contactModeId() of 
+  /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
   ///
@@ -114,25 +120,65 @@ public:
                         const ContactStatus& post_contact_status);
 
   ///
-  /// @brief Sets a contact point.
+  /// @brief Sets a contact placement, that is, the position and rotation of 
+  /// the contact. The contact rotation is set to Eigen::Matrix3d::Identity(), 
+  /// which represents the vertical direction to the ground. For the point 
+  /// contacts, the rotation is only used in the friction cone constraints.
+  /// For the surface contacts, the rotation represents the rotational contact
+  /// constraints on the contact frame of the robot.
   /// @param[in] contact_index Index of the contact.
-  /// @param[in] contact_point Contact point.
+  /// @param[in] contact_position Contact position.
   ///
-  void setContactPoint(const int contact_index, 
-                       const Eigen::Vector3d& contact_point);
+  void setContactPlacement(const int contact_index, 
+                           const Eigen::Vector3d& contact_position);
 
   ///
-  /// @brief Sets contact points.
-  /// @param[in] contact_points Contact points. Size must be 
-  /// ImpulseStatus::maxPointContacts().
+  /// @brief Sets a contact placement, that is, the position and rotation of 
+  /// the contact. For the point contacts, the rotation is only used in the 
+  /// friction cone constraints.
+  /// For the surface contacts, the rotation represents the rotational contact
+  /// constraints on the contact frame of the robot.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_position Contact position.
+  /// @param[in] contact_rotation Contact rotation.
   ///
-  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+  void setContactPlacement(const int contact_index, 
+                           const Eigen::Vector3d& contact_position, 
+                           const Eigen::Matrix3d& contact_rotation);
+
+  ///
+  /// @brief Sets contact placements. The rotation of each contact is set to
+  /// Eigen::Matrix3d::Identity(), which represents the vertical direction
+  /// to the ground.
+  /// @param[in] contact_positions Contact positions. Size must be 
+  /// DiscreteEvent::maxNumContacts().
+  ///
+  void setContactPlacements(
+      const std::vector<Eigen::Vector3d>& contact_positions);
+
+  ///
+  /// @brief Sets contact placements.
+  /// @param[in] contact_positions Contact positions. Size must be 
+  /// DiscreteEvent::maxNumContacts().
+  /// @param[in] contact_rotations Contact rotations. Size must be 
+  /// DiscreteEvent::maxNumContacts().
+  ///
+  void setContactPlacements(
+      const std::vector<Eigen::Vector3d>& contact_positions,
+      const std::vector<Eigen::Matrix3d>& contact_rotations);
+
+  ///
+  /// @brief Sets contact placements.
+  /// @param[in] contact_placements Contact placements. Size must be 
+  /// DiscreteEvent::maxNumContacts().
+  ///
+  void setContactPlacements(const aligned_vector<SE3>& contact_placements);
 
   ///
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
-  int maxPointContacts() const;
+  int maxNumContacts() const;
 
   ///
   /// @brief Returns the event type of this discrete event.
@@ -151,7 +197,7 @@ public:
 private:
   ContactStatus pre_contact_status_, post_contact_status_;
   ImpulseStatus impulse_status_;
-  int max_point_contacts_;
+  int max_num_contacts_;
   DiscreteEventType event_type_;
   bool exist_impulse_, exist_lift_;
 

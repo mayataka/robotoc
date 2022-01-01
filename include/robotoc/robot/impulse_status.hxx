@@ -9,9 +9,9 @@
 
 namespace robotoc {
 
-inline ImpulseStatus::ImpulseStatus(const int max_point_contacts,
-                                    const int impulse_id)
-  : contact_status_(max_point_contacts, impulse_id) {
+inline ImpulseStatus::ImpulseStatus(
+    const std::vector<ContactType>& contact_types, const int impulse_mode_id)
+  : contact_status_(contact_types, impulse_mode_id) {
 }
 
 
@@ -25,15 +25,12 @@ inline ImpulseStatus::~ImpulseStatus() {
 
 
 inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
-  assert(other.maxPointContacts() == maxPointContacts());
-  for (int i=0; i<maxPointContacts(); ++i) {
+  assert(other.maxNumContacts() == maxNumContacts());
+  for (int i=0; i<maxNumContacts(); ++i) {
     if (other.isImpulseActive(i) != isImpulseActive(i)) {
       return false;
     }
-    if (!other.contactPoint(i).isApprox(contactPoint(i))) {
-      return false;
-    }
-    if (!other.contactSurfaceRotation(i).isApprox(contactSurfaceRotation(i))) {
+    if (!other.contactPlacement(i).isApprox(contactPlacement(i))) {
       return false;
     }
   }
@@ -43,6 +40,16 @@ inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
 
 inline bool ImpulseStatus::operator!=(const ImpulseStatus& other) const {
   return !(*this == other);
+}
+
+
+inline ContactType ImpulseStatus::contactType(const int contact_index) const {
+  return contact_status_.contactType(contact_index);
+}
+
+
+inline const std::vector<ContactType>& ImpulseStatus::contactTypes() const {
+  return contact_status_.contactTypes();
 }
 
 
@@ -66,35 +73,8 @@ inline int ImpulseStatus::dimi() const {
 }
 
 
-inline int ImpulseStatus::maxPointContacts() const {
-  return contact_status_.maxPointContacts();
-}
-
-
-inline void ImpulseStatus::setActivity(
-    const ContactStatus& pre_contact_status, 
-    const ContactStatus& post_contact_status) {
-  assert(pre_contact_status.maxPointContacts() == maxPointContacts());
-  assert(post_contact_status.maxPointContacts() == maxPointContacts());
-  for (int i=0; i<contact_status_.maxPointContacts(); ++i) {
-    if (pre_contact_status.isContactActive(i)) {
-      deactivateImpulse(i);
-    }
-    else {
-      if (post_contact_status.isContactActive(i)) {
-        activateImpulse(i);
-      }
-      else {
-        deactivateImpulse(i);
-      }
-    }
-  }
-}
-
-
-inline void ImpulseStatus::setActivity(
-    const std::vector<bool>& is_impulse_active) {
-  contact_status_.setActivity(is_impulse_active);
+inline int ImpulseStatus::maxNumContacts() const {
+  return contact_status_.maxNumContacts();
 }
 
 
@@ -114,77 +94,93 @@ inline void ImpulseStatus::activateImpulses(
 } 
 
 
-inline void ImpulseStatus::activateImpulses() {
-  contact_status_.activateContacts();
-} 
-
-
 inline void ImpulseStatus::deactivateImpulses(
     const std::vector<int>& impulse_indices) {
   contact_status_.deactivateContacts(impulse_indices);
 }
 
 
-inline void ImpulseStatus::deactivateImpulses() {
-  contact_status_.deactivateContacts();
+inline void ImpulseStatus::setContactPlacement(
+    const int contact_index, const Eigen::Vector3d& contact_position) {
+  contact_status_.setContactPlacement(contact_index, contact_position);
 }
 
 
-inline void ImpulseStatus::setContactPoint(
-    const int contact_index, const Eigen::Vector3d& contact_point) {
-  contact_status_.setContactPoint(contact_index, contact_point);
+inline void ImpulseStatus::setContactPlacement(
+    const int contact_index, const Eigen::Vector3d& contact_position,
+    const Eigen::Matrix3d& contact_rotation) {
+  contact_status_.setContactPlacement(contact_index, contact_position, 
+                                      contact_rotation);
 }
 
 
-inline void ImpulseStatus::setContactPoints(
-    const std::vector<Eigen::Vector3d>& contact_points) {
-  contact_status_.setContactPoints(contact_points);
+inline void ImpulseStatus::setContactPlacement(const int contact_index, 
+                                               const SE3& contact_placement) {
+  contact_status_.setContactPlacement(contact_index, contact_placement);
 }
 
 
-inline const Eigen::Vector3d& ImpulseStatus::contactPoint(
-    const int impulse_index) const {
-  return contact_status_.contactPoint(impulse_index);
+inline void ImpulseStatus::setContactPlacements(
+    const std::vector<Eigen::Vector3d>& contact_positions) {
+  contact_status_.setContactPlacements(contact_positions);
+}
+
+
+inline void ImpulseStatus::setContactPlacements(
+    const std::vector<Eigen::Vector3d>& contact_positions,
+    const std::vector<Eigen::Matrix3d>& contact_rotations) {
+  contact_status_.setContactPlacements(contact_positions, contact_rotations);
+}
+
+
+inline void ImpulseStatus::setContactPlacements(
+    const aligned_vector<SE3>& contact_placements) {
+  contact_status_.setContactPlacements(contact_placements);
+}
+
+
+inline const SE3& ImpulseStatus::contactPlacement(
+    const int contact_index) const {
+  return contact_status_.contactPlacement(contact_index);
+}
+
+
+inline const Eigen::Vector3d& ImpulseStatus::contactPosition(
+    const int contact_index) const {
+  return contact_status_.contactPosition(contact_index);
+}
+
+
+inline const Eigen::Matrix3d& ImpulseStatus::contactRotation(
+    const int contact_index) const {
+  return contact_status_.contactRotation(contact_index);
+}
+
+
+inline const aligned_vector<SE3>& ImpulseStatus::contactPlacements() const {
+  return contact_status_.contactPlacements();
 }
 
 
 inline const std::vector<Eigen::Vector3d>& 
-ImpulseStatus::contactPoints() const {
-  return contact_status_.contactPoints();
+ImpulseStatus::contactPositions() const {
+  return contact_status_.contactPositions();
 }
 
-
-inline void ImpulseStatus::setContactSurfaceRotation(
-    const int contact_index, const Eigen::Matrix3d& contact_surface_rotation) {
-  contact_status_.setContactSurfaceRotation(contact_index, contact_surface_rotation);
-}
-
-
-inline void ImpulseStatus::setContactSurfacesRotations(
-    const std::vector<Eigen::Matrix3d>& contact_surfaces_rotations) {
-  contact_status_.setContactSurfacesRotations(contact_surfaces_rotations);
-}
-
-
-inline const Eigen::Matrix3d& ImpulseStatus::contactSurfaceRotation(
-    const int contact_index) const {
-  return contact_status_.contactSurfaceRotation(contact_index);
-}
-
-
+ 
 inline const std::vector<Eigen::Matrix3d>& 
-ImpulseStatus::contactSurfacesRotations() const {
-  return contact_status_.contactSurfacesRotations();
+ImpulseStatus::contactRotations() const {
+  return contact_status_.contactRotations();
 }
 
 
-inline void ImpulseStatus::setImpulseId(const int impulse_id) {
-  contact_status_.setContactId(impulse_id);
+inline void ImpulseStatus::setImpulseModeId(const int impulse_mode_id) {
+  contact_status_.setContactModeId(impulse_mode_id);
 }
 
 
-inline int ImpulseStatus::impulseId() const {
-  return contact_status_.contactId();
+inline int ImpulseStatus::impulseModeId() const {
+  return contact_status_.contactModeId();
 }
 
 

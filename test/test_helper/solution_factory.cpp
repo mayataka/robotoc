@@ -20,7 +20,7 @@ Solution CreateSolution(const Robot& robot,
                         const std::shared_ptr<ContactSequence>& contact_sequence, 
                         const double T, const int N, 
                         const int max_num_impulse, const double t) {
-  if (robot.maxPointContacts() == 0) {
+  if (robot.maxNumContacts() == 0) {
     return CreateSolution(robot, N, max_num_impulse);
   }
   else {

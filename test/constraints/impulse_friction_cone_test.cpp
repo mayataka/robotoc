@@ -62,15 +62,15 @@ void ImpulseFrictionConeTest::test_isFeasible(Robot& robot,
   ImpulseFrictionCone constr(robot, mu); 
   ConstraintComponentData data(constr.dimc(), constr.barrier());
   constr.allocateExtraData(data);
-  EXPECT_EQ(constr.dimc(), 5*impulse_status.maxPointContacts());
+  EXPECT_EQ(constr.dimc(), 5*impulse_status.maxNumContacts());
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateFrameKinematics(s.q);
   if (impulse_status.hasActiveImpulse()) {
     bool feasible = true;
-    for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+    for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
       if (impulse_status.isImpulseActive(i)) {
         Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-        robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+        robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
         Eigen::VectorXd res =  Eigen::VectorXd::Zero(5);
         ImpulseFrictionCone::frictionConeResidual(mu, f_world, res);
         if (res.maxCoeff() > 0) {
@@ -92,9 +92,9 @@ void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& i
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateFrameKinematics(s.q);
   constr.setSlack(robot, impulse_status, data, s);
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-    robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+    robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
     ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
     data_ref.slack.segment(5*i, 5) = - data_ref.residual.segment(5*i, 5);
   }
@@ -121,10 +121,10 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
       data_ref.residual.template segment<5>(5*i) += data_ref.slack.segment(5*i, 5);
       for (int j=0; j<5; ++j) {
@@ -156,10 +156,10 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
   auto kkt_res_ref = kkt_res;
   constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
       robot.getFrameJacobian(robot.contactFrames()[i], J);
       Eigen::MatrixXd dfW_dq = Eigen::MatrixXd::Zero(3, robot.dimv());
@@ -172,7 +172,16 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
           += dg_dq.transpose() * data_ref.dual.segment(5*i, 5);
       kkt_res_ref.lf().segment(dimf_stack, 3) 
           += dg_df.transpose() * data_ref.dual.segment(5*i, 5);
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -203,10 +212,10 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   auto kkt_res_ref = kkt_res;
   constr.condenseSlackAndDual(impulse_status, data, kkt_mat, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
       robot.getFrameJacobian(robot.contactFrames()[i], J);
       Eigen::MatrixXd dfW_dq = Eigen::MatrixXd::Zero(3, robot.dimv());
@@ -228,7 +237,16 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
           += dg_dq.transpose() * r.asDiagonal() * dg_df;
       kkt_mat_ref.Qff().block(dimf_stack, dimf_stack, 3, 3)
           += dg_df.transpose() * r.asDiagonal() * dg_df;
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -262,10 +280,10 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+  for (int i=0; i<impulse_status.maxNumContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i], f_world);
+      robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
       Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
       robot.getFrameJacobian(robot.contactFrames()[i], J);
       Eigen::MatrixXd dfW_dq = Eigen::MatrixXd::Zero(3, robot.dimv());
@@ -282,7 +300,16 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
           = - (data_ref.dual(5*i+j)*data_ref.dslack(5*i+j)+data_ref.cmpl(5*i+j))
               / data_ref.slack(5*i+j);
       }
-      dimf_stack += 3;
+      switch (robot.contactType(i)) {
+        case ContactType::PointContact:
+          dimf_stack += 3;
+          break;
+        case ContactType::SurfaceContact:
+          dimf_stack += 6;
+          break;
+        default:
+          break;
+      }
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -305,7 +332,7 @@ TEST_F(ImpulseFrictionConeTest, frictionConeResidual) {
 
 TEST_F(ImpulseFrictionConeTest, fixedBase) {
   const double dt = 0.01;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_kinematics(robot, impulse_status);
   test_isFeasible(robot, impulse_status);
@@ -327,7 +354,29 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
 
 TEST_F(ImpulseFrictionConeTest, floatingBase) {
   const double dt = 0.01;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
+  auto impulse_status = robot.createImpulseStatus();
+  test_kinematics(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
+  impulse_status.setRandom();
+  test_kinematics(robot, impulse_status);
+  test_isFeasible(robot, impulse_status);
+  test_setSlack(robot, impulse_status);
+  test_evalConstraint(robot, impulse_status);
+  test_evalDerivatives(robot, impulse_status);
+  test_condenseSlackAndDual(robot, impulse_status);
+  test_expandSlackAndDual(robot, impulse_status);
+}
+
+
+TEST_F(ImpulseFrictionConeTest, humanoidRobot) {
+  const double dt = 0.01;
+  auto robot = testhelper::CreateHumanoidRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test_kinematics(robot, impulse_status);
   test_isFeasible(robot, impulse_status);

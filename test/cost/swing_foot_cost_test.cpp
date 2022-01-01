@@ -38,7 +38,7 @@ protected:
 
 
 TEST_F(SwingFootCostTest, testStageCost) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
@@ -62,21 +62,21 @@ TEST_F(SwingFootCostTest, testStageCost) {
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   auto contact_status = robot.createContactStatus();
-  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
-    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+  for (int i=0; i<contact_status.maxNumContacts(); ++i) {
+    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
   }
   Eigen::Vector3d x3d_ref;
-  const double xdiff = contact_status.contactPoint(contact_index)[0] 
-                        - contact_status.contactPoint(x_ref_foot_contact_index)[0];
+  const double xdiff = contact_status.contactPosition(contact_index)[0] 
+                        - contact_status.contactPosition(x_ref_foot_contact_index)[0];
   constexpr double eps = std::numeric_limits<double>::epsilon();
   if (std::abs(xdiff) < eps) {
-    x3d_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
+    x3d_ref[0] = contact_status.contactPosition(x_ref_foot_contact_index)[0];
     x3d_ref[0] += 0.25 * step_length;
   }
   else {
-    x3d_ref[0] = contact_status.contactPoint(x_ref_foot_contact_index)[0];
+    x3d_ref[0] = contact_status.contactPosition(x_ref_foot_contact_index)[0];
   }
-  x3d_ref[1] = contact_status.contactPoint(y_ref_foot_contact_index)[1];
+  x3d_ref[1] = contact_status.contactPosition(y_ref_foot_contact_index)[1];
   x3d_ref[2] = step_height;
   const int frame_id = robot.contactFrames()[contact_index];
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
@@ -92,7 +92,9 @@ TEST_F(SwingFootCostTest, testStageCost) {
   kkt_mat_ref.Qqq() += dt * J_diff.transpose() * x3d_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  contact_status.activateContacts();
+  for (int i=0; i<robot.maxNumContacts(); ++i) {
+    contact_status.activateContact(i);
+  }
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), 0.);
   cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
@@ -104,7 +106,7 @@ TEST_F(SwingFootCostTest, testStageCost) {
 
 
 TEST_F(SwingFootCostTest, testTerminalCost) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
@@ -138,7 +140,7 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
 
 
 TEST_F(SwingFootCostTest, testImpulseCost) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const int dimv = robot.dimv();
   auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot);

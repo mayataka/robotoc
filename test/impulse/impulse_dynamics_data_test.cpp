@@ -91,7 +91,7 @@ void ImpulseDynamicsDataTest::test(const Robot& robot,
 
 TEST_F(ImpulseDynamicsDataTest, fixedBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
   impulse_status.activateImpulse(0);
@@ -101,7 +101,7 @@ TEST_F(ImpulseDynamicsDataTest, fixedBase) {
 
 TEST_F(ImpulseDynamicsDataTest, floatingBase) {
   const double dt = 0.001;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   test(robot, impulse_status);
   impulse_status.setRandom();

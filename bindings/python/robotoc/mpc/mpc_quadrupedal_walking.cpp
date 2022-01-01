@@ -23,7 +23,7 @@ PYBIND11_MODULE(mpc_quadrupedal_walking, m) {
     .def("set_solver_options", &MPCQuadrupedalWalking::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCQuadrupedalWalking::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"))
+          py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCQuadrupedalWalking::getInitialControlInput)
     .def("KKT_error", 
           static_cast<double (MPCQuadrupedalWalking::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCQuadrupedalWalking::KKTError),

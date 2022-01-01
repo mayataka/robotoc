@@ -170,7 +170,7 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
 
 
 TEST_F(TaskSpace6DCostTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   const int frame_id = robot.contactFrames()[0];
   testStageCost(robot, frame_id);
   testTerminalCost(robot, frame_id);
@@ -179,7 +179,7 @@ TEST_F(TaskSpace6DCostTest, fixedBase) {
 
 
 TEST_F(TaskSpace6DCostTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const std::vector<int> frames = robot.contactFrames();
   for (const auto frame_id : frames) {
     testStageCost(robot, frame_id);

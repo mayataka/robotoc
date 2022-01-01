@@ -166,7 +166,7 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Sets the minimum dwell time. 
+  /// @brief Sets the minimum dwell times. 
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
   /// minimum dwell times are set to this value. Default is 
   /// STOConstraints::k_min_dt.
@@ -174,11 +174,17 @@ public:
   void setMinimumDwellTimes(const double min_dt=k_min_dt);
 
   ///
-  /// @brief Sets the minimum dwell time. 
+  /// @brief Sets the minimum dwell times. 
   /// @param[in] min_dt Minimum dwell times. Each component must be 
   /// non-negative.
   ///
   void setMinimumDwellTimes(const std::vector<double>& min_dt);
+
+  ///
+  /// @brief Gets the minimum dwell times. 
+  /// @return const reference to the minimum dwell times. 
+  ///
+  const std::vector<double>& minimumDwellTimes() const;
 
   ///
   /// @brief Sets the barrier parameter for all the constraint components.

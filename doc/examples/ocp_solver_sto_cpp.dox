@@ -3,6 +3,9 @@
 \page subpage_ocp_solver_sto_example_cpp Switching time optimization (STO) example of robotoc::OCPSolver in C++
 
 This page explains the example code in examples/anymal/jumping.cpp.
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="350">
+
 Required header files are as follows.
 ```
 #include <string>
@@ -41,11 +44,15 @@ First, define the robot model with contact frames (in this case, the contact fra
   const int LH_foot_id = 22;
   const int RF_foot_id = 32;
   const int RH_foot_id = 42;
-  std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
+  const std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
+  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact,
+                                                           robotoc::ContactType::PointContact};
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.05;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, baumgarte_time_step);
+                       contact_frames, contact_types, baumgarte_time_step);
 ```
 @note 
 - If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
@@ -131,10 +138,10 @@ Next, we construct the constraints.
   constraints->push_back(friction_cone);
 ```
 
-Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible impulse events as 
+Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible each discrete events as 
 ```
-const int max_num_impulses = 1;
-auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_impulses);
+const int max_num_each_discrete_events = 1;
+auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
 `robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
@@ -148,10 +155,10 @@ In the beginning, the robot is standing, so all the contacts are active.
   const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
   const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
 
-  std::vector<Eigen::Vector3d> contact_points = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
-  contact_status_standing.setContactPoints(contact_points);
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 ```
 
@@ -165,11 +172,11 @@ Then a lift event is appended into the back of the contact sequence.
 By setting `sto` as `true`, the switching time of this event is regarded as an optimization variable.
 Finally, we set the contact status after touch-down as
 ```
-  contact_points[0].coeffRef(0) += jump_length;
-  contact_points[1].coeffRef(0) += jump_length;
-  contact_points[2].coeffRef(0) += jump_length;
-  contact_points[3].coeffRef(0) += jump_length;
-  contact_status_standing.setContactPoints(contact_points);
+  contact_positions[0].coeffRef(0) += jump_length;
+  contact_positions[1].coeffRef(0) += jump_length;
+  contact_positions[2].coeffRef(0) += jump_length;
+  contact_positions[3].coeffRef(0) += jump_length;
+  contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time-0.1, true);
 ```
@@ -186,7 +193,7 @@ We further construct cost function for the switching time optimization (STO) pro
 ```
 and the minimum dwell-time constraints for the STO problem
 ```
-  const int max_num_switches = 2*max_num_impulses;
+  const int max_num_switches = 2*max_num_each_discrete_events;
   const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
   auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
                                                                    min_dwell_times,
@@ -199,7 +206,7 @@ Finally, we can construct the optimal control solver!
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
   robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
-                   T, N, max_num_impulses);
+                   T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;
@@ -241,7 +248,7 @@ Let's run the solver!
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-robotoc::TimeDiscretization discretization(T, N, max_num_impulses*2);
+robotoc::TimeDiscretization discretization(T, N, max_num_each_discrete_events*2);
 discretization.discretize(contact_sequence, t);
 std::cout << discretization << std::endl;
 ```

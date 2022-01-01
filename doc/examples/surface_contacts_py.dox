@@ -1,0 +1,227 @@
+/*!
+
+\page subpage_surface_contacts_sto_example_py Humanoid jumping example with switching time optimization (STO) of robotoc::OCPSolver in Python
+
+This page explains the example code in examples/icub/python/jumping_sto.py.
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="340">
+
+Required imports are as follows.
+```
+import robotoc
+import numpy as np
+import math
+
+```
+
+First, define the robot model with surface contact frames (in this case, the contact frames are the frames of all feet).
+```
+L_foot_id = 26
+R_foot_id = 46
+contact_frames = [L_foot_id, R_foot_id]
+contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
+path_to_urdf = '../icub_description/urdf/icub.urdf'
+baumgarte_time_step = 0.05
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
+                      contact_frames, contact_types, baumgarte_time_step)
+```
+@note 
+- If you do not know the indices of the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
+```
+robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase)
+print(robot)
+```
+- `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
+The best choice of `baumgarte_time_step` may be the time step of the optimal control problem. 
+However, it is often too small to make the optimization problem high nonlinear. 
+A moderate value such as several times of the time step of optimal control problem may be sufficient 
+
+Then set the parameters for the optimal control problem of the jumping motion such as the jump length
+```
+dt = 0.02
+jump_length = 0.5
+flying_time = 0.25
+ground_time = 0.7
+t0 = 0.
+```
+
+Next, we construct the cost function (TODO: write details about the cost function components).
+```
+cost = robotoc.CostFunction()
+q_standing = np.array([0, 0, 0.592, 0, 0, 1, 0,
+                       0.20944, 0.08727, 0, -0.1745, -0.0279, -0.08726, # left leg
+                       0.20944, 0.08727, 0, -0.1745, -0.0279, -0.08726, # right leg
+                       0, 0, 0, # torso
+                       0, 0.35, 0.5, 0.5, 0, 0, 0, # left arm 
+                       0, 0.35, 0.5, 0.5, 0, 0, 0]) # right arm 
+q_ref = q_standing.copy()
+q_ref[0] += jump_length
+q_weight = np.array([0, 1, 1, 100, 100, 100, 
+                     0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
+                     0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
+                     0.001, 1, 1,
+                     0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 
+                     0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
+qf_weight = q_weight
+v_weight = np.full(robot.dimv(), 1.0e-03)
+a_weight = np.full(robot.dimv(), 1.0e-05)
+qi_weight = 1.0 * q_weight
+vi_weight = 1.0 * v_weight
+config_cost = robotoc.ConfigurationSpaceCost(robot)
+config_cost.set_q_ref(q_standing)
+config_cost.set_q_weight(q_weight)
+config_cost.set_qf_weight(q_weight)
+config_cost.set_qi_weight(qi_weight)
+config_cost.set_v_weight(v_weight)
+config_cost.set_vf_weight(v_weight)
+config_cost.set_vi_weight(vi_weight)
+config_cost.set_a_weight(a_weight)
+cost.push_back(config_cost)
+```
+
+Next, we construct the constraints.
+```
+constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
+joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
+joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
+joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
+joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
+joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
+joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
+mu = 0.6
+friction_cone  = robotoc.FrictionCone(robot, mu)
+constraints.push_back(joint_position_lower)
+constraints.push_back(joint_position_upper)
+constraints.push_back(joint_velocity_lower)
+constraints.push_back(joint_velocity_upper)
+constraints.push_back(joint_torques_lower)
+constraints.push_back(joint_torques_upper)
+constraints.push_back(friction_cone)
+```
+
+Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible each discrete events as 
+```
+max_num_each_discrete_events = 2
+contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
+```
+Then we can set an impulse event and a lift event to the contact sequence.
+`robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
+
+We set the initial contact status of the robot. 
+In the beginning, the robot is standing, so all the contacts are active.
+```
+robot.forward_kinematics(q_standing)
+x3d0_L = robot.frame_placement(L_foot_id)
+x3d0_R = robot.frame_placement(R_foot_id)
+contact_placements = [x3d0_L, x3d0_R]
+
+contact_status_standing = robot.create_contact_status()
+contact_status_standing.activate_contacts([0, 1])
+contact_status_standing.set_contact_placements(contact_placements)
+contact_sequence.init_contact_sequence(contact_status_standing)
+```
+
+Next, we set the contact status when the robot is flying. 
+Then the all the contacts are inactive.
+```
+contact_status_flying = robot.create_contact_status()
+contact_sequence.push_back(contact_status_flying, t0+ground_time, sto=True)
+```
+Then a lift event is appended into the back of the contact sequence.
+The next contact status after touch-down as
+```
+contact_placements[0].trans = contact_placements[0].trans + np.array([jump_length, 0, 0])
+contact_placements[1].trans = contact_placements[1].trans + np.array([jump_length, 0, 0])
+contact_status_standing.set_contact_placements(contact_placements)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
+```
+Then an impulse event is appended into the back of the contact sequence.
+We further add an impulse event and a lift event as 
+```
+contact_sequence.push_back(contact_status_flying, t0+2*ground_time+flying_time, sto=True)
+
+contact_placements[0].trans = contact_placements[0].trans + np.array([jump_length, 0, 0])
+contact_placements[1].trans = contact_placements[1].trans + np.array([jump_length, 0, 0])
+contact_status_standing.set_contact_placements(contact_placements)
+contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_time, sto=True)
+```
+
+We further construct cost function for the switching time optimization (STO) problem
+```
+sto_cost = robotoc.STOCostFunction()
+```
+and the minimum dwell-time constraints for the STO problem
+```
+sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
+                                         min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
+                                         barrier=1.0e-03, 
+                                         fraction_to_boundary_rule=0.995)
+```
+
+Finally, we can construct the optimal control solver!
+```
+T = t0 + 2*flying_time + 3*ground_time
+N = math.floor(T/dt) 
+ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence, 
+                  cost=cost, constraints=constraints, 
+                  sto_cost=sto_cost, sto_constraints=sto_constraints, T=T, N=N)
+solver_options = robotoc.SolverOptions()
+solver_options.kkt_tol_mesh = 0.1
+solver_options.max_dt_mesh = T/N 
+solver_options.max_iter = 300
+solver_options.initial_sto_reg_iter = 10 
+ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
+                               solver_options=solver_options, nthreads=4)
+```
+@note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
+Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
+
+@note In this example, we want to optimize the switching times as well as the whole-body trajectory of the robot.
+Then we need to carry on mesh refinement because the switching times change over the iterations. 
+We set `SolverOptions::max_dt_mesh` that the maximum value of the time-steps.
+We also set `SolverOptions::kkt_tol_mesh` and we apply the mesh refinement when the KKT error is less than `SolverOptions::kkt_tol_mesh` and the maximum time step is larger than `SolverOptions::max_dt_mesh`.
+
+
+Let's run the solver!
+```
+t = 0.
+q = q_standing # initial state.
+v = np.zeros(robot.dimv()) # initial state.
+
+ocp_solver.setSolution("q", q); # set the initial guess of the solution.
+ocp_solver.setSolution("v", v); # set the initial guess of the solution.
+
+ocp_solver.meshRefinement(t);
+
+print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+ocp_solver.solve(t, q, v)
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) 
+print(ocp_solver.get_solver_statistics()) # print solver statistics
+```
+
+We can visualize the solution trajectory as
+```
+viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
+                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
+                                        viewer_type='gepetto')
+viewer.set_contact_info(contact_frames, mu)
+viewer.display(ocp_solver.get_time_discretization().time_steps(), 
+               ocp_solver.get_solution('q'), 
+               ocp_solver.get_solution('f', 'WORLD'))
+```
+
+
+
+@note We can check the formulation of the discretized optimal control problem 
+before running it via
+```
+discretization = robotoc.TimeDiscretization(T, N, max_num_each_discrete_events*2)
+discretization.discretize(contact_sequence, t)
+print(discretization)
+```
+or 
+```
+print(ocp_solver.get_time_discretization())
+```
+
+*/

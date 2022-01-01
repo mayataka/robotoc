@@ -128,7 +128,7 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
 
 TEST_F(ContactDynamicsDataTest, fixedBase) {
   const double dt = 0.01;
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
   contact_status.activateContact(0);
@@ -138,7 +138,7 @@ TEST_F(ContactDynamicsDataTest, fixedBase) {
 
 TEST_F(ContactDynamicsDataTest, floatingBase) {
   const double dt = 0.01;
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
   contact_status.setRandom();

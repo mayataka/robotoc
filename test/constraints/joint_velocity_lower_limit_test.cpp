@@ -150,7 +150,7 @@ void JointVelocityLowerLimitTest::test_expandSlackAndDual(Robot& robot) const {
 
 
 TEST_F(JointVelocityLowerLimitTest, fixedBase) {
-  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  auto robot = testhelper::CreateRobotManipulator(dt);
   test_kinematics(robot);
   test_isFeasible(robot);
   test_setSlack(robot);
@@ -162,7 +162,7 @@ TEST_F(JointVelocityLowerLimitTest, fixedBase) {
 
 
 TEST_F(JointVelocityLowerLimitTest, floatingBase) {
-  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  auto robot = testhelper::CreateQuadrupedalRobot(dt);
   test_kinematics(robot);
   test_isFeasible(robot);
   test_setSlack(robot);
