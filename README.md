@@ -131,13 +131,13 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 
 - Walking, trotting, pacing, and bounding gaits of quadruped ANYmal using `OCPSolver` (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints) with fixed contact timings (e.g., `anymal/walking.cpp` or `anymal/python/walking.py`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="200"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="200"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="200"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="200">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="195"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="195"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="195"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="195">
 
 ### Switching time optimization (STO) examples
--  `OCPSolver` for the switching time optimization (STO) problem, which optimizes the trajectory and the contact timings simultaneously (`anymal/python/trotting_sto.py` and `icub/python/jumping_sto.py`):
+-  `OCPSolver` for the switching time optimization (STO) problem, which optimizes the trajectory and the contact timings simultaneously (`anymal/python/jumping_sto.py` and `icub/python/jumping_sto.py`):
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="280"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="260">
