@@ -22,7 +22,8 @@ public:
                        const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalStageCost, 
-                           robot, contact_status, data, time_stage_in_phase, t, dt, s);
+                           robot, contact_status, data, time_stage_in_phase, 
+                           t, dt, s);
   }
 
   void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 

@@ -4,6 +4,7 @@ pybind11_add_robotoc_module(periodic_switching_time_cost)
 pybind11_add_robotoc_module(sto_constraints)
 pybind11_add_robotoc_module(discrete_event)
 pybind11_add_robotoc_module(contact_sequence)
+pybind11_add_robotoc_module(grid_info)
 pybind11_add_robotoc_module(time_discretization)
 
 install_robotoc_pybind_module(hybrid)

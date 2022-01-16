@@ -68,14 +68,15 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index.
+  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
   virtual double evalStageCost(Robot& robot, const ContactStatus& contact_status,
-                               CostFunctionData& data, const int time_stage_in_phase, 
+                               CostFunctionData& data, 
+                               const int time_stage_in_phase, 
                                const double t, const double dt, 
                                const SplitSolution& s) const = 0;
 
@@ -85,7 +86,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index.
+  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -95,8 +96,9 @@ public:
   virtual void evalStageCostDerivatives(Robot& robot, 
                                         const ContactStatus& contact_status,
                                         CostFunctionData& data, 
-                                        const int time_stage_in_phase, const double t, 
-                                        const double dt, const SplitSolution& s, 
+                                        const int time_stage_in_phase, 
+                                        const double t, const double dt, 
+                                        const SplitSolution& s, 
                                         SplitKKTResidual& kkt_residual) const = 0;
 
   ///
@@ -106,7 +108,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index.
+  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -116,8 +118,9 @@ public:
   virtual void evalStageCostHessian(Robot& robot, 
                                     const ContactStatus& contact_status,
                                     CostFunctionData& data, 
-                                    const int time_stage_in_phase, const double t, 
-                                    const double dt, const SplitSolution& s, 
+                                    const int time_stage_in_phase, 
+                                    const double t, const double dt, 
+                                    const SplitSolution& s, 
                                     SplitKKTMatrix& kkt_matrix) const = 0;
 
   ///

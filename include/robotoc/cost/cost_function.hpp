@@ -94,7 +94,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index.
+  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -110,7 +110,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index.
+  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -130,7 +130,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index.
+  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.

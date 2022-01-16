@@ -9,6 +9,7 @@
 
 #include "robotoc/hybrid/discretization_method.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -287,6 +288,34 @@ public:
   double dt_ideal() const;
 
   ///
+  /// @brief Returns the grid info of the specified time stage. 
+  /// @param[in] time_stage Time stage of interest. 
+  /// @return Grid info of the time stage of interest.
+  ///
+  const GridInfo& gridInfo(const int time_stage) const;
+
+  ///
+  /// @brief Returns the grid info of the specified impulse stage. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Grid info of the impulse stage of the impulse event.
+  ///
+  const GridInfo& gridInfoImpulse(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the grid info of the specified aux stage of an impulse. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Grid info of the aux stage of the impulse event.
+  ///
+  const GridInfo& gridInfoAux(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the grid info of the specified lift stage of a lift. 
+  /// @param[in] lift_index Index of lift event of interest. 
+  /// @return Grid info of the aux stage of the impulse event.
+  ///
+  const GridInfo& gridInfoLift(const int lift_index) const;
+
+  ///
   /// @brief Returns the time stage index counded in the contact phase of the 
   /// specified time stage. 
   /// @param[in] time_stage Time stage of interest. 
@@ -335,13 +364,6 @@ public:
   /// @return true if the STO is enabled. false if not.
   ///
   bool isSTOEnabledNextPhase(const int phase) const;
-
-  ///
-  /// @brief Checks wheather the STO is enabled at the specified time stage. 
-  /// @param[in] stage Time stage of interest. 
-  /// @return true if the STO is enabled. false if not.
-  ///
-  bool isSTOEnabledStage(const int stage) const;
 
   ///
   /// @brief Checks wheather the STO is enabled for the specified impulse event. 
@@ -436,10 +458,10 @@ private:
   std::vector<int> N_phase_, contact_phase_from_time_stage_, 
                    impulse_index_after_time_stage_, 
                    lift_index_after_time_stage_, time_stage_before_impulse_, 
-                   time_stage_before_lift_, time_stage_in_phase_;
+                   time_stage_before_lift_;
   std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_,
                     sto_impulse_, sto_lift_, sto_event_;
-  std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
+  std::vector<GridInfo> grid_, grid_impulse_, grid_lift_;
   std::vector<DiscreteEventType> event_types_;
   DiscretizationMethod discretization_method_;
 
