@@ -94,20 +94,23 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
+  /// @param[in] time_stage_in_phase Time stage index.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
   double evalStageCost(Robot& robot, const ContactStatus& contact_status,
-                       CostFunctionData& data, const double t, 
-                       const double dt, const SplitSolution& s) const;
+                       CostFunctionData& data, const int time_stage_in_phase, 
+                       const double t, const double dt, 
+                       const SplitSolution& s) const;
 
   ///
   /// @brief Computes the stage cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
+  /// @param[in] time_stage_in_phase Time stage index.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -116,8 +119,9 @@ public:
   /// @return Stage cost.
   ///
   double linearizeStageCost(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const double t, 
-                            const double dt, const SplitSolution& s, 
+                            CostFunctionData& data, const int time_stage_in_phase, 
+                            const double t, const double dt, 
+                            const SplitSolution& s, 
                             SplitKKTResidual& kkt_residual) const;
 
   ///
@@ -126,6 +130,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
+  /// @param[in] time_stage_in_phase Time stage index.
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
@@ -136,8 +141,9 @@ public:
   /// @return Stage cost.
   ///
   double quadratizeStageCost(Robot& robot, const ContactStatus& contact_status, 
-                             CostFunctionData& data, const double t, 
-                             const double dt, const SplitSolution& s, 
+                             CostFunctionData& data, const int time_stage_in_phase, 
+                             const double t, const double dt, 
+                             const SplitSolution& s, 
                              SplitKKTResidual& kkt_residual,
                              SplitKKTMatrix& kkt_matrix) const;
 

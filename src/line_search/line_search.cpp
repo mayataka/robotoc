@@ -99,7 +99,7 @@ void LineSearch::computeCostAndViolation(
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
                        s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].q,
                        s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].v,
                        kkt_residual_[i]);
@@ -109,7 +109,7 @@ void LineSearch::computeCostAndViolation(
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
                        s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].q,
                        s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].v,
                        kkt_residual_[i]);
@@ -121,7 +121,7 @@ void LineSearch::computeCostAndViolation(
             = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
                        s[i+1].q, s[i+1].v, kkt_residual_[i], 
                        contact_sequence->impulseStatus(impulse_index), 
                        ocp.discrete().dt(i+1), kkt_residual_.switching[impulse_index]);
@@ -132,7 +132,7 @@ void LineSearch::computeCostAndViolation(
       else {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
                        s[i+1].q, s[i+1].v, kkt_residual_[i]);
         costs_.coeffRef(i) = ocp[i].stageCost();
         violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i]);
@@ -165,6 +165,7 @@ void LineSearch::computeCostAndViolation(
       ocp.aux[impulse_index].evalOCP(robots[omp_get_thread_num()], 
                                      contact_sequence->contactStatus(
                                         ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
+                                     time_stage_after_impulse-1,
                                      ocp.discrete().t_impulse(impulse_index), 
                                      ocp.discrete().dt_aux(impulse_index), 
                                      s.aux[impulse_index],
@@ -182,6 +183,7 @@ void LineSearch::computeCostAndViolation(
       ocp.lift[lift_index].evalOCP(robots[omp_get_thread_num()], 
                                    contact_sequence->contactStatus(
                                        ocp.discrete().contactPhaseAfterLift(lift_index)), 
+                                   time_stage_after_lift-1,
                                    ocp.discrete().t_lift(lift_index), 
                                    ocp.discrete().dt_lift(lift_index), 
                                    s.lift[lift_index],

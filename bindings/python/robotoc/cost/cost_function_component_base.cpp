@@ -17,29 +17,34 @@ public:
   }
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                       CostFunctionData& data, const double t, const double dt, 
+                       CostFunctionData& data, const int time_stage_in_phase, 
+                       const double t, const double dt, 
                        const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalStageCost, 
-                           robot, contact_status, data, t, dt, s);
+                           robot, contact_status, data, time_stage_in_phase, t, dt, s);
   }
 
   void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
-                                CostFunctionData& data, const double t, 
-                                const double dt, const SplitSolution& s, 
+                                CostFunctionData& data, const int time_stage_in_phase,
+                                const double t, const double dt, 
+                                const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalStageCostDerivatives, 
-                           robot, contact_status, data, t, dt, s, kkt_residual);
+                           robot, contact_status, data, time_stage_in_phase, 
+                           t, dt, s, kkt_residual);
   }
 
   void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const double t, 
-                            const double dt, const SplitSolution& s, 
+                            CostFunctionData& data, const int time_stage_in_phase, 
+                            const double t, const double dt, 
+                            const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalStageCostHessian, 
-                           robot, contact_status, data, t, dt, s, kkt_matrix);
+                           robot, contact_status, data, time_stage_in_phase, 
+                           t, dt, s, kkt_matrix);
   }
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 

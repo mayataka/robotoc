@@ -55,6 +55,7 @@ bool TaskSpace3DCost::useKinematics() const {
 double TaskSpace3DCost::evalStageCost(Robot& robot, 
                                       const ContactStatus& contact_status, 
                                       CostFunctionData& data, 
+                                      const int time_stage,
                                       const double t, const double dt, 
                                       const SplitSolution& s) const {
   double l = 0;
@@ -66,8 +67,8 @@ double TaskSpace3DCost::evalStageCost(Robot& robot,
 
 void TaskSpace3DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   data.J_6d.setZero();
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
@@ -80,6 +81,7 @@ void TaskSpace3DCost::evalStageCostDerivatives(
 void TaskSpace3DCost::evalStageCostHessian(Robot& robot, 
                                            const ContactStatus& contact_status, 
                                            CostFunctionData& data, 
+                                           const int time_stage,
                                            const double t, const double dt, 
                                            const SplitSolution& s, 
                                            SplitKKTMatrix& kkt_matrix) const {

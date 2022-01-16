@@ -56,6 +56,7 @@ bool TimeVaryingCoMCost::useKinematics() const {
 double TimeVaryingCoMCost::evalStageCost(Robot& robot, 
                                          const ContactStatus& contact_status, 
                                          CostFunctionData& data, 
+                                         const int time_stage,
                                          const double t, const double dt, 
                                          const SplitSolution& s) const {
   if (com_ref_->isActive(t)) {
@@ -73,8 +74,8 @@ double TimeVaryingCoMCost::evalStageCost(Robot& robot,
 
 void TimeVaryingCoMCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (com_ref_->isActive(t)) {
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
@@ -86,8 +87,8 @@ void TimeVaryingCoMCost::evalStageCostDerivatives(
 
 void TimeVaryingCoMCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (com_ref_->isActive(t)) {
     kkt_matrix.Qqq().noalias()
         += dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.J_3d;

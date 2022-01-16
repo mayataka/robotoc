@@ -13,29 +13,28 @@ namespace internal {
 struct ComputeKKTResidual {
   template <typename SplitSolutionType>
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
+                         const ContactStatus& contact_status, 
+                         const int time_stage_in_phase, const double t, 
                          const double dt, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, 
-                         const SplitSolutionType& s_next, 
+                         const SplitSolution& s, const SplitSolutionType& s_next, 
                          SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual) {
-    split_ocp.computeKKTResidual(robot, contact_status, t, dt, q_prev, s, 
-                                 s_next, kkt_matrix, kkt_residual);
+    split_ocp.computeKKTResidual(robot, contact_status, time_stage_in_phase, 
+                                 t, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
   }
 
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
+                         const ContactStatus& contact_status, 
+                         const int time_stage_in_phase, const double t, 
                          const double dt, const Eigen::VectorXd& q_prev, 
                          const SplitSolution& s, const SplitSolution& s_next, 
-                         SplitKKTMatrix& kkt_matrix, 
-                         SplitKKTResidual& kkt_residual,
-                         const ImpulseStatus& impulse_status, 
-                         const double dt_next, 
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual,
+                         const ImpulseStatus& impulse_status, const double dt_next, 
                          SwitchingConstraintJacobian& sc_jacobian,
                          SwitchingConstraintResidual& sc_residual) {
-    split_ocp.computeKKTResidual(robot, contact_status, t, dt, q_prev, s, 
-                                 s_next, kkt_matrix, kkt_residual, impulse_status, 
-                                 dt_next, sc_jacobian, sc_residual);
+    split_ocp.computeKKTResidual(robot, contact_status, time_stage_in_phase,  
+                                 t, dt, q_prev, s, s_next, kkt_matrix, kkt_residual, 
+                                 impulse_status, dt_next, sc_jacobian, sc_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
@@ -61,29 +60,28 @@ struct ComputeKKTResidual {
 struct ComputeKKTSystem {
   template <typename SplitSolutionType>
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
-                         const double dt, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, 
+                         const ContactStatus& contact_status, 
+                         const int time_stage_in_phase, const double t, const double dt, 
+                         const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                          const SplitSolutionType& s_next, 
                          SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual) {
-    split_ocp.computeKKTSystem(robot, contact_status, t, dt, q_prev, s, s_next,
-                               kkt_matrix, kkt_residual);
+    split_ocp.computeKKTSystem(robot, contact_status, time_stage_in_phase, t, dt, 
+                               q_prev, s, s_next, kkt_matrix, kkt_residual);
   }
 
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
-                         const double dt, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, const SplitSolution& s_next, 
-                         SplitKKTMatrix& kkt_matrix, 
+                         const ContactStatus& contact_status, 
+                         const int time_stage_in_phase, const double t, const double dt, 
+                         const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                         const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual,
-                         const ImpulseStatus& impulse_status, 
-                         const double dt_next, 
+                         const ImpulseStatus& impulse_status, const double dt_next, 
                          SwitchingConstraintJacobian& sc_jacobian,
                          SwitchingConstraintResidual& sc_residual) {
-    split_ocp.computeKKTSystem(robot, contact_status, t, dt, q_prev, s, s_next,
-                               kkt_matrix, kkt_residual, impulse_status, 
-                               dt_next, sc_jacobian, sc_residual);
+    split_ocp.computeKKTSystem(robot, contact_status, time_stage_in_phase, t, dt, 
+                               q_prev, s, s_next, kkt_matrix, kkt_residual, 
+                               impulse_status, dt_next, sc_jacobian, sc_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
@@ -132,7 +130,7 @@ inline void DirectMultipleShooting::runParallel(
         const int contact_phase = ocp.discrete().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().t(i), ocp.discrete().dt(i), 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), 
                        q_prev(ocp, q, s, i), s[i], 
                        s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], 
                        kkt_matrix[i], kkt_residual[i]);
@@ -144,7 +142,7 @@ inline void DirectMultipleShooting::runParallel(
         const int contact_phase = ocp.discrete().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().t(i), ocp.discrete().dt(i), 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), 
                        q_prev(ocp, q, s, i), s[i], 
                        s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
                        kkt_matrix[i], kkt_residual[i]);
@@ -157,7 +155,7 @@ inline void DirectMultipleShooting::runParallel(
         const int contact_phase = ocp.discrete().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().t(i), ocp.discrete().dt(i), 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), 
                        q_prev(ocp, q, s, i), s[i], s[i+1], 
                        kkt_matrix[i], kkt_residual[i], 
                        contact_sequence->impulseStatus(impulse_index), 
@@ -171,7 +169,7 @@ inline void DirectMultipleShooting::runParallel(
         const int contact_phase = ocp.discrete().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().t(i), ocp.discrete().dt(i), 
+                       i, ocp.discrete().t(i), ocp.discrete().dt(i), 
                        q_prev(ocp, q, s, i), s[i], s[i+1], 
                        kkt_matrix[i], kkt_residual[i]);
         SplitOCP::correctSTOSensitivities(kkt_matrix[i], kkt_residual[i], 
@@ -201,7 +199,7 @@ inline void DirectMultipleShooting::runParallel(
       const int contact_phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
       Algorithm::run(ocp.aux[impulse_index], robots[omp_get_thread_num()], 
                      contact_sequence->contactStatus(contact_phase),
-                     ocp.discrete().t_impulse(impulse_index), 
+                     0, ocp.discrete().t_impulse(impulse_index), 
                      ocp.discrete().dt_aux(impulse_index), s.impulse[impulse_index].q, 
                      s.aux[impulse_index], s[time_stage_after_impulse], 
                      kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
@@ -216,7 +214,7 @@ inline void DirectMultipleShooting::runParallel(
       const int contact_phase = ocp.discrete().contactPhaseAfterLift(lift_index);
       Algorithm::run(ocp.lift[lift_index], robots[omp_get_thread_num()], 
                      contact_sequence->contactStatus(contact_phase),
-                     ocp.discrete().t_lift(lift_index), 
+                     0, ocp.discrete().t_lift(lift_index), 
                      ocp.discrete().dt_lift(lift_index), s[time_stage_after_lift-1].q, 
                      s.lift[lift_index], s[time_stage_after_lift], 
                      kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);

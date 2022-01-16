@@ -88,7 +88,8 @@ bool MultiModeTaskSpace6DCost::useKinematics() const {
 
 double MultiModeTaskSpace6DCost::evalStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s) const {
   const int contact_mode_id = contact_status.contactModeId();
   const auto& x6d_ref_inv = x6d_ref_inv_.at(contact_mode_id);
   const auto& x6d_weight = x6d_weight_.at(contact_mode_id);
@@ -102,8 +103,8 @@ double MultiModeTaskSpace6DCost::evalStageCost(
 
 void MultiModeTaskSpace6DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   const int contact_mode_id = contact_status.contactModeId();
   const auto& x6d_weight = x6d_weight_.at(contact_mode_id);
   data.J_66.setZero();
@@ -118,8 +119,8 @@ void MultiModeTaskSpace6DCost::evalStageCostDerivatives(
 
 void MultiModeTaskSpace6DCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   const int contact_mode_id = contact_status.contactModeId();
   const auto& x6d_weight = x6d_weight_.at(contact_mode_id);
   kkt_matrix.Qqq().noalias()

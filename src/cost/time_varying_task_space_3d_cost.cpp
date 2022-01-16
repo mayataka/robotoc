@@ -60,7 +60,8 @@ bool TimeVaryingTaskSpace3DCost::useKinematics() const {
 
 double TimeVaryingTaskSpace3DCost::evalStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s) const {
   if (x3d_ref_->isActive(t)) {
     double l = 0;
     x3d_ref_->update_x3d_ref(t, data.x3d_ref);
@@ -76,8 +77,8 @@ double TimeVaryingTaskSpace3DCost::evalStageCost(
 
 void TimeVaryingTaskSpace3DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (x3d_ref_->isActive(t)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
@@ -91,8 +92,8 @@ void TimeVaryingTaskSpace3DCost::evalStageCostDerivatives(
 
 void TimeVaryingTaskSpace3DCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (x3d_ref_->isActive(t)) {
     kkt_matrix.Qqq().noalias()
         += dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.J_3d;

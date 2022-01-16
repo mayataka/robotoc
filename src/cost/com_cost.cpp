@@ -51,8 +51,9 @@ bool CoMCost::useKinematics() const {
 
 
 double CoMCost::evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                              CostFunctionData& data, const double t, 
-                              const double dt, const SplitSolution& s) const {
+                              CostFunctionData& data, const int time_stage, 
+                              const double t, const double dt, 
+                              const SplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.CoM() - com_ref_;
   l += (com_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -62,7 +63,8 @@ double CoMCost::evalStageCost(Robot& robot, const ContactStatus& contact_status,
 
 void CoMCost::evalStageCostDerivatives(Robot& robot, 
                                        const ContactStatus& contact_status, 
-                                       CostFunctionData& data, const double t, 
+                                       CostFunctionData& data, 
+                                       const int time_stage, const double t, 
                                        const double dt, const SplitSolution& s,
                                        SplitKKTResidual& kkt_residual) const {
   data.J_3d.setZero();
@@ -74,7 +76,8 @@ void CoMCost::evalStageCostDerivatives(Robot& robot,
 
 void CoMCost::evalStageCostHessian(Robot& robot, 
                                    const ContactStatus& contact_status, 
-                                   CostFunctionData& data, const double t, 
+                                   CostFunctionData& data, 
+                                   const int time_stage, const double t, 
                                    const double dt, const SplitSolution& s, 
                                    SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()

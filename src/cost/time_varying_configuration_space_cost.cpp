@@ -93,7 +93,8 @@ bool TimeVaryingConfigurationSpaceCost::useKinematics() const {
 
 double TimeVaryingConfigurationSpaceCost::evalStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s) const {
   if (q_ref_->isActive(t)) {
     q_ref_->update_q_ref(robot, t, data.q_ref);
     double l = 0;
@@ -109,8 +110,8 @@ double TimeVaryingConfigurationSpaceCost::evalStageCost(
 
 void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (q_ref_->isActive(t)) {
     q_ref_->update_q_ref(robot, t, data.q_ref);
     if (robot.hasFloatingBase()) {
@@ -127,8 +128,8 @@ void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
 
 void TimeVaryingConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (q_ref_->isActive(t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()

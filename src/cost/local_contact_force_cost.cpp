@@ -110,6 +110,7 @@ bool LocalContactForceCost::useKinematics() const {
 double LocalContactForceCost::evalStageCost(Robot& robot, 
                                             const ContactStatus& contact_status, 
                                             CostFunctionData& data, 
+                                            const int time_stage, 
                                             const double t, const double dt, 
                                             const SplitSolution& s) const {
   double l = 0;
@@ -126,8 +127,8 @@ double LocalContactForceCost::evalStageCost(Robot& robot,
 
 void LocalContactForceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
@@ -151,8 +152,8 @@ void LocalContactForceCost::evalStageCostDerivatives(
 
 void LocalContactForceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {

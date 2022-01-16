@@ -4,6 +4,8 @@
 #include "robotoc/hybrid/time_discretization.hpp"
 
 #include <cassert>
+#include <numeric>
+
 
 namespace robotoc {
 
@@ -23,6 +25,7 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
     lift_index_after_time_stage_(N+1, -1), 
     time_stage_before_impulse_(max_num_each_discrete_events+1, -1), 
     time_stage_before_lift_(max_num_each_discrete_events+1, -1),
+    time_stage_in_phase_(N+1, 0),
     is_time_stage_before_impulse_(N+1, false),
     is_time_stage_before_lift_(N+1, false),
     t_(N+1, 0),
@@ -36,6 +39,7 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
     sto_lift_(max_num_each_discrete_events),
     sto_event_(2*max_num_each_discrete_events+1),
     discretization_method_(DiscretizationMethod::GridBased) {
+  std::iota(time_stage_in_phase_.begin(), time_stage_in_phase_.end(), 0);
 }
 
 
@@ -54,6 +58,7 @@ inline TimeDiscretization::TimeDiscretization()
     lift_index_after_time_stage_(), 
     time_stage_before_impulse_(), 
     time_stage_before_lift_(),
+    time_stage_in_phase_(),
     is_time_stage_before_impulse_(),
     is_time_stage_before_lift_(),
     t_(),
@@ -304,6 +309,13 @@ inline double TimeDiscretization::dt_ideal() const {
 }
 
 
+inline int TimeDiscretization::timeStageInPhase(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  return time_stage_in_phase_[time_stage];
+}
+
+
 inline bool TimeDiscretization::isSTOEnabledEvent(
     const int event_index) const {
   assert(event_index >= 0);
@@ -498,6 +510,8 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
   int impulse_index = 0;
   int lift_index = 0;
   int num_events_on_grid = 0;
+  int time_stage_before_prev_event = 0;
+  int phase = 0;
   for (int i=0; i<N_ideal_; ++i) {
     const int stage = i - num_events_on_grid;
     if (i == time_stage_before_impulse_[impulse_index]) {
@@ -521,6 +535,11 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
         t_[stage] = t + i * dt_ideal_;
         ++impulse_index;
       }
+      N_phase_[phase] = time_stage_before_impulse_[impulse_index-1] 
+                          - time_stage_before_prev_event + 1;
+      time_stage_before_prev_event = time_stage_before_impulse_[impulse_index-1];
+      ++phase;
+      time_stage_in_phase_[stage] = stage - time_stage_before_prev_event;
     }
     else if (i == time_stage_before_lift_[lift_index]) {
       dt_[stage] = t_lift_[lift_index] - i * dt_ideal_ - t;
@@ -543,17 +562,22 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
         t_[stage] = t + i * dt_ideal_;
         ++lift_index;
       }
+      N_phase_[phase] = time_stage_before_lift_[lift_index-1] 
+                          - time_stage_before_prev_event + 1;
+      time_stage_before_prev_event = time_stage_before_lift_[lift_index-1];
+      ++phase;
+      time_stage_in_phase_[stage] = stage - time_stage_before_prev_event;
     }
     else {
       dt_[stage] = dt_ideal_;
       t_[stage] = t + i * dt_ideal_;
+      time_stage_in_phase_[stage] = stage - time_stage_before_prev_event;
     }
   }
   N_ = N_ideal_ - num_events_on_grid;
   t_[N_] = t + T_;
-  for (auto& e : N_phase_) {
-    e = 1;
-  }
+  N_phase_[phase] = N_ - time_stage_before_prev_event;
+  time_stage_in_phase_[N_] = N_ - time_stage_before_prev_event;
 }
 
 
@@ -584,6 +608,10 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
             stage<=time_stage_before_next_event; ++stage) {
         t_[stage] = t_[stage-1] + dt_phase;
       }
+      for (int stage=time_stage_before_prev_event+1; 
+            stage<=time_stage_before_next_event; ++stage) {
+        time_stage_in_phase_[stage] = stage - time_stage_before_prev_event;
+      }
       time_stage_before_prev_event = time_stage_before_next_event;
       t_prev_event = t_impulse(next_impulse_index);
       ++next_impulse_index;
@@ -605,6 +633,10 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
             stage<=time_stage_before_next_event; ++stage) {
         t_[stage] = t_[stage-1] + dt_phase;
       }
+      for (int stage=time_stage_before_prev_event+1; 
+            stage<=time_stage_before_next_event; ++stage) {
+        time_stage_in_phase_[stage] = stage - time_stage_before_prev_event;
+      }
       time_stage_before_prev_event = time_stage_before_next_event;
       t_prev_event = t_lift(next_lift_index);
       ++next_lift_index;
@@ -620,6 +652,9 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
   t_[time_stage_before_prev_event+1] = t_prev_event + dt_phase;
   for (int stage=time_stage_before_prev_event+2; stage<=N_; ++stage) {
     t_[stage] = t_[stage-1] + dt_phase;
+  }
+  for (int stage=time_stage_before_prev_event+1; stage<=N_; ++stage) {
+    time_stage_in_phase_[stage] = stage - time_stage_before_prev_event;
   }
   for (int impulse_index=0; impulse_index<N_impulse(); ++impulse_index) {
     dt_aux_[impulse_index] = dt_[time_stage_before_impulse_[impulse_index]+1];

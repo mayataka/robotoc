@@ -287,6 +287,34 @@ public:
   double dt_ideal() const;
 
   ///
+  /// @brief Returns the time stage index counded in the contact phase of the 
+  /// specified time stage. 
+  /// @param[in] time_stage Time stage of interest. 
+  /// @return Time stage index counded in the contact phase.
+  ///
+  int timeStageInPhase(const int time_stage) const;
+
+  ///
+  /// @brief Returns the time stage index counded in the contact phase of the 
+  /// specified lift index. 
+  /// @param[in] lift_index Index of lift event of interest. 
+  /// @return Time stage index counded in the contact phase.
+  ///
+  static constexpr int timeStageInPhaseLift(const int lift_index) {
+    return 0;
+  }
+
+  ///
+  /// @brief Returns the time stage index counded in the contact phase of the
+  /// specified impulse index. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Time stage index counded in the contact phase.
+  ///
+  static constexpr int timeStageInPhaseAux(const int impulse_index) {
+    return 0;
+  }
+
+  ///
   /// @brief Checks wheather the STO is enabled for the specified discrete event. 
   /// @param[in] event_index Index of the discrete event of interest. 
   /// @return true if the STO is enabled. false if not.
@@ -408,7 +436,7 @@ private:
   std::vector<int> N_phase_, contact_phase_from_time_stage_, 
                    impulse_index_after_time_stage_, 
                    lift_index_after_time_stage_, time_stage_before_impulse_, 
-                   time_stage_before_lift_;
+                   time_stage_before_lift_, time_stage_in_phase_;
   std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_,
                     sto_impulse_, sto_lift_, sto_event_;
   std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;

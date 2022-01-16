@@ -203,18 +203,18 @@ double UnconstrParNMPCSolver::KKTError(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
-      parnmpc_[0].computeKKTResidual(robots_[omp_get_thread_num()], t+dt_,
-                                     dt_, q, v, s_[0], s_[1], 
+      parnmpc_[0].computeKKTResidual(robots_[omp_get_thread_num()], 0, 
+                                     t+dt_, dt_, q, v, s_[0], s_[1], 
                                      kkt_matrix_[0], kkt_residual_[0]);
     }
     else if (i < N_-1) {
-      parnmpc_[i].computeKKTResidual(robots_[omp_get_thread_num()], t+(i+1)*dt_,   
-                                     dt_, s_[i-1].q, s_[i-1].v, s_[i], s_[i+1],
-                                     kkt_matrix_[i], kkt_residual_[i]);
+      parnmpc_[i].computeKKTResidual(robots_[omp_get_thread_num()], i,    
+                                     t+(i+1)*dt_, dt_, s_[i-1].q, s_[i-1].v, 
+                                     s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
     }
     else {
-      parnmpc_.terminal.computeKKTResidual(robots_[omp_get_thread_num()], t+T_, 
-                                           dt_, s_[i-1].q, s_[i-1].v, s_[i],
+      parnmpc_.terminal.computeKKTResidual(robots_[omp_get_thread_num()], i,  
+                                           t+T_, dt_, s_[i-1].q, s_[i-1].v, s_[i],
                                            kkt_matrix_[i], kkt_residual_[i]);
     }
   }

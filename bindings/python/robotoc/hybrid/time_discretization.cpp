@@ -77,6 +77,9 @@ PYBIND11_MODULE(time_discretization, m) {
           py::arg("lift_index"))
     .def("dt_max", &TimeDiscretization::dt_max)
     .def("dt_ideal", &TimeDiscretization::dt_ideal)
+    .def("time_stage_in_phase", &TimeDiscretization::timeStageInPhase)
+    .def("time_stage_in_phase_lift", &TimeDiscretization::timeStageInPhaseLift)
+    .def("time_stage_in_phase_aux", &TimeDiscretization::timeStageInPhaseAux)
     .def("is_STO_enabled_event", &TimeDiscretization::isSTOEnabledEvent,
           py::arg("event_index"))
     .def("is_STO_enabled_phase", &TimeDiscretization::isSTOEnabledPhase,

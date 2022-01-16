@@ -68,8 +68,9 @@ inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step,
 }
 
 
-inline void SplitUnconstrOCP::evalOCP(Robot& robot, const double t, 
-                                      const double dt, const SplitSolution& s, 
+inline void SplitUnconstrOCP::evalOCP(Robot& robot, const int time_stage, 
+                                      const double t, const double dt, 
+                                      const SplitSolution& s, 
                                       const Eigen::VectorXd& q_next, 
                                       const Eigen::VectorXd& v_next, 
                                       SplitKKTResidual& kkt_residual) {
@@ -80,7 +81,8 @@ inline void SplitUnconstrOCP::evalOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, t, dt, s);
+  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, 
+                                     time_stage, t, dt, s);
   constraints_->evalConstraint(robot, contact_status_, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
@@ -89,8 +91,8 @@ inline void SplitUnconstrOCP::evalOCP(Robot& robot, const double t,
 }
 
 
-inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t, 
-                                                 const double dt, 
+inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const int time_stage, 
+                                                 const double t, const double dt, 
                                                  const SplitSolution& s,
                                                  const SplitSolution& s_next,
                                                  SplitKKTMatrix& kkt_matrix, 
@@ -101,7 +103,7 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
   }
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
-                                          t, dt, s, kkt_residual);
+                                          time_stage, t, dt, s, kkt_residual);
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
@@ -111,8 +113,8 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
 }
 
 
-inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const double t, 
-                                               const double dt, 
+inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const int time_stage, 
+                                               const double t, const double dt, 
                                                const SplitSolution& s, 
                                                const SplitSolution& s_next, 
                                                SplitKKTMatrix& kkt_matrix,
@@ -124,7 +126,8 @@ inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const double t,
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 
-                                           t, dt, s, kkt_residual, kkt_matrix);
+                                           time_stage, t, dt, s, 
+                                           kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();

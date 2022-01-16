@@ -155,17 +155,20 @@ public:
   bool useKinematics() const override;
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                       CostFunctionData& data, const double t, const double dt, 
+                       CostFunctionData& data, const int time_stage_in_phase, 
+                       const double t, const double dt, 
                        const SplitSolution& s) const override;
 
   void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
-                                CostFunctionData& data, const double t, 
-                                const double dt, const SplitSolution& s, 
+                                CostFunctionData& data, const int time_stage_in_phase, 
+                                const double t, const double dt, 
+                                const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override;
 
   void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const double t, 
-                            const double dt, const SplitSolution& s, 
+                            CostFunctionData& data, const int time_stage_in_phase, 
+                            const double t, const double dt, 
+                            const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override;
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 

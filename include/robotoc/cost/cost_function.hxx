@@ -44,12 +44,14 @@ inline CostFunctionData CostFunction::createCostFunctionData(
 inline double CostFunction::evalStageCost(Robot& robot, 
                                           const ContactStatus& contact_status, 
                                           CostFunctionData& data, 
+                                          const int time_stage_in_phase,
                                           const double t, const double dt, 
                                           const SplitSolution& s) const {
   assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalStageCost(robot, contact_status, data, t, dt, s);
+    l += cost->evalStageCost(robot, contact_status, data, 
+                             time_stage_in_phase, t, dt, s);
   }
   return l;
 }
@@ -57,14 +59,15 @@ inline double CostFunction::evalStageCost(Robot& robot,
 
 inline double CostFunction::linearizeStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const int time_stage_in_phase, const double t, const double dt, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalStageCost(robot, contact_status, data, t, dt, s);
-    cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, 
-                                   kkt_residual);
+    l += cost->evalStageCost(robot, contact_status, data, 
+                             time_stage_in_phase, t, dt, s);
+    cost->evalStageCostDerivatives(robot, contact_status, data,  
+                                   time_stage_in_phase, t, dt, s, kkt_residual);
   }
   return l;
 }
@@ -72,16 +75,17 @@ inline double CostFunction::linearizeStageCost(
 
 inline double CostFunction::quadratizeStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const int time_stage_in_phase, const double t, const double dt, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual, SplitKKTMatrix& kkt_matrix) const {
   assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->evalStageCost(robot, contact_status, data, t, dt, s);
-    cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, 
-                                   kkt_residual);
-    cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, 
-                               kkt_matrix);
+    l += cost->evalStageCost(robot, contact_status, data, 
+                             time_stage_in_phase, t, dt, s);
+    cost->evalStageCostDerivatives(robot, contact_status, data,  
+                                   time_stage_in_phase, t, dt, s, kkt_residual);
+    cost->evalStageCostHessian(robot, contact_status, data,  
+                               time_stage_in_phase, t, dt, s, kkt_matrix);
   }
   return l;
 }

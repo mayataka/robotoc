@@ -87,6 +87,7 @@ public:
   /// @brief Computes the stage cost and constraint violation.
   /// Used in the line search.
   /// @param[in] robot Robot model. 
+  /// @param[in] time_stage Time stage. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] q_prev Configuration at the previous time stage.
@@ -94,13 +95,14 @@ public:
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void evalOCP(Robot& robot, const double t, const double dt, 
+  void evalOCP(Robot& robot, const int time_stage, const double t, const double dt, 
                const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
                const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
   /// @param[in] robot Robot model. 
+  /// @param[in] time_stage Time stage. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] q_prev Configuration at the previous time stage.
@@ -110,8 +112,8 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void computeKKTResidual(Robot& robot, const double t, const double dt, 
-                          const Eigen::VectorXd& q_prev, 
+  void computeKKTResidual(Robot& robot, const int time_stage, const double t, 
+                          const double dt, const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, const SplitSolution& s,
                           const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
@@ -120,6 +122,7 @@ public:
   /// @brief Computes the KKT system of this time stage, i.e., the condensed
   /// KKT matrix and KKT residual of this time stage for Newton's method.
   /// @param[in] robot Robot model. 
+  /// @param[in] time_stage Time stage. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] q_prev Configuration at the previous time stage.
@@ -129,8 +132,8 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void computeKKTSystem(Robot& robot, const double t, const double dt, 
-                        const Eigen::VectorXd& q_prev, 
+  void computeKKTSystem(Robot& robot, const int time_stage, const double t, 
+                        const double dt, const Eigen::VectorXd& q_prev, 
                         const Eigen::VectorXd& v_prev, const SplitSolution& s, 
                         const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
                         SplitKKTResidual& kkt_residual);

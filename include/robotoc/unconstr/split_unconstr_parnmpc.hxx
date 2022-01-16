@@ -71,8 +71,8 @@ inline void SplitUnconstrParNMPC::initConstraints(Robot& robot,
 }
 
 
-inline void SplitUnconstrParNMPC::evalOCP(Robot& robot, const double t, 
-                                          const double dt, 
+inline void SplitUnconstrParNMPC::evalOCP(Robot& robot, const int time_stage,
+                                          const double t, const double dt, 
                                           const Eigen::VectorXd& q_prev, 
                                           const Eigen::VectorXd& v_prev, 
                                           const SplitSolution& s, 
@@ -84,7 +84,8 @@ inline void SplitUnconstrParNMPC::evalOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, t, dt, s);
+  stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, 
+                                     time_stage, t, dt, s);
   constraints_->evalConstraint(robot, contact_status_, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
@@ -93,8 +94,8 @@ inline void SplitUnconstrParNMPC::evalOCP(Robot& robot, const double t,
 }
 
 
-inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const double t, 
-                                                     const double dt, 
+inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const int time_stage, 
+                                                     const double t, const double dt, 
                                                      const Eigen::VectorXd& q_prev, 
                                                      const Eigen::VectorXd& v_prev, 
                                                      const SplitSolution& s, 
@@ -109,7 +110,7 @@ inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const double 
   }
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
-                                          t, dt, s, kkt_residual);
+                                          time_stage, t, dt, s, kkt_residual);
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
@@ -120,8 +121,8 @@ inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const double 
 }
 
 
-inline void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot, const double t, 
-                                                   const double dt, 
+inline void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot, const int time_stage, 
+                                                   const double t, const double dt, 
                                                    const Eigen::VectorXd& q_prev, 
                                                    const Eigen::VectorXd& v_prev, 
                                                    const SplitSolution& s, 
@@ -137,7 +138,8 @@ inline void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot, const double t,
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 
-                                           t, dt, s, kkt_residual, kkt_matrix);
+                                           time_stage, t, dt, s, 
+                                           kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();

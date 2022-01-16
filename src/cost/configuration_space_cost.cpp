@@ -241,6 +241,7 @@ bool ConfigurationSpaceCost::useKinematics() const {
 double ConfigurationSpaceCost::evalStageCost(Robot& robot, 
                                              const ContactStatus& contact_status, 
                                              CostFunctionData& data, 
+                                             const int time_stage, 
                                              const double t, const double dt, 
                                              const SplitSolution& s) const {
   double l = 0;
@@ -255,8 +256,8 @@ double ConfigurationSpaceCost::evalStageCost(Robot& robot,
 
 void ConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -275,8 +276,8 @@ void ConfigurationSpaceCost::evalStageCostDerivatives(
 
 void ConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix) const {
+    const int time_stage, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
         += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
