@@ -18,6 +18,7 @@
 #include "robotoc/impulse/impulse_state_equation.hpp"
 #include "robotoc/impulse/impulse_dynamics.hpp"
 #include "robotoc/ocp/split_direction.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -105,14 +106,14 @@ public:
   /// Used in the line search.
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] grid_info Grid info of this impulse stage.
   /// @param[in] s Split solution of this impulse stage.
   /// @param[in] q_next Configuration at the next time stage.
   /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
-               const double t, const ImpulseSplitSolution& s, 
+               const GridInfo& grid_info, const ImpulseSplitSolution& s, 
                const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
                ImpulseSplitKKTResidual& kkt_residual);
 
@@ -120,7 +121,7 @@ public:
   /// @brief Computes the KKT residual of this impulse stage.
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] grid_info Grid info of this impulse stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this impulse stage.
   /// @param[in] s_next Split solution of the next time stage.
@@ -128,7 +129,8 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
-                          const double t, const Eigen::VectorXd& q_prev, 
+                          const GridInfo& grid_info, 
+                          const Eigen::VectorXd& q_prev, 
                           const ImpulseSplitSolution& s, 
                           const SplitSolution& s_next,
                           ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -139,7 +141,7 @@ public:
   /// KKT matrix and KKT residual of this impulse stage for Newton's method.
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] grid_info Grid info of this impulse stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this impulse stage.
   /// @param[in] s_next Split solution of the next time stage.
@@ -147,7 +149,8 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void computeKKTSystem(Robot& robot, const ImpulseStatus& impulse_status, 
-                        const double t, const Eigen::VectorXd& q_prev, 
+                        const GridInfo& grid_info, 
+                        const Eigen::VectorXd& q_prev, 
                         const ImpulseSplitSolution& s, 
                         const SplitSolution& s_next, 
                         ImpulseSplitKKTMatrix& kkt_matrix, 

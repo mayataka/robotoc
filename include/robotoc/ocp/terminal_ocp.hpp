@@ -15,6 +15,7 @@
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/ocp/terminal_state_equation.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -85,23 +86,23 @@ public:
   /// @brief Computes the terminal cost and constraint violation.
   /// Used in the line search.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void evalOCP(Robot& robot, const double t, const SplitSolution& s, 
+  void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
                SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of the terminal stage.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of the terminal stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of the terminal stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of the terminal stage.
   /// @param[in, out] kkt_residual Split KKT residual of the terminal stage.
   ///
-  void computeKKTResidual(Robot& robot, const double t, 
+  void computeKKTResidual(Robot& robot, const GridInfo& grid_info,
                           const Eigen::VectorXd& q_prev, const SplitSolution& s,
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
@@ -110,13 +111,13 @@ public:
   /// @brief Computes the KKT system of the terminal stage, i.e., the condensed
   /// KKT matrix and KKT residual of the terminal stage for Newton's method.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of the terminal stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of the terminal stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of the terminal stage.
   /// @param[in, out] kkt_residual Split KKT residual of the terminal stage.
   ///
-  void computeKKTSystem(Robot& robot, const double t, 
+  void computeKKTSystem(Robot& robot, const GridInfo& grid_info,
                         const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                         SplitKKTMatrix& kkt_matrix, 
                         SplitKKTResidual& kkt_residual);

@@ -54,8 +54,10 @@ void UnconstrBackwardCorrection::initAuxMat(aligned_vector<Robot>& robots,
                                             const double t, const Solution& s, 
                                             KKTMatrix& kkt_matrix,
                                             KKTResidual& kkt_residual) {
-  parnmpc.terminal.evalTerminalCostHessian(robots[0], t+T_, s[N_-1], 
-                                           kkt_matrix[0], kkt_residual[0]);
+  parnmpc.discretize(t);
+  parnmpc.terminal.evalTerminalCostHessian(robots[0], parnmpc.gridInfo(N_), 
+                                           s[N_-1], kkt_matrix[0], 
+                                           kkt_residual[0]);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     aux_mat_[i] = kkt_matrix[0].Qxx;
@@ -73,25 +75,27 @@ void UnconstrBackwardCorrection::coarseUpdate(aligned_vector<Robot>& robots,
                                               KKTMatrix& kkt_matrix, 
                                               KKTResidual& kkt_residual,
                                               const Solution& s) {
+  parnmpc.discretize(t);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
-      parnmpc[i].computeKKTSystem(robots[omp_get_thread_num()], i, t+dt_, dt_, 
-                                  q, v, s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
-      corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, kkt_matrix[i], 
-                                 kkt_residual[i], s[i], s_new_[i]);
-    }
-    else if (i < N_-1) {
-      parnmpc[i].computeKKTSystem(robots[omp_get_thread_num()], i, t+(i+1)*dt_, dt_, 
-                                  s[i-1].q, s[i-1].v, s[i], s[i+1], 
+      parnmpc[i].computeKKTSystem(robots[omp_get_thread_num()], 
+                                  parnmpc.gridInfo(i), q, v, s[i], s[i+1], 
                                   kkt_matrix[i], kkt_residual[i]);
       corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, kkt_matrix[i], 
                                  kkt_residual[i], s[i], s_new_[i]);
     }
+    else if (i < N_-1) {
+      parnmpc[i].computeKKTSystem(robots[omp_get_thread_num()], 
+                                  parnmpc.gridInfo(i), s[i-1].q, s[i-1].v, 
+                                  s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
+      corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, kkt_matrix[i], 
+                                 kkt_residual[i], s[i], s_new_[i]);
+    }
     else {
-      parnmpc.terminal.computeKKTSystem(robots[omp_get_thread_num()], i, t+T_, dt_, 
-                                        s[i-1].q, s[i-1].v, s[i], 
-                                        kkt_matrix[i], kkt_residual[i]);
+      parnmpc.terminal.computeKKTSystem(robots[omp_get_thread_num()], 
+                                        parnmpc.gridInfo(i), s[i-1].q, s[i-1].v, 
+                                        s[i], kkt_matrix[i], kkt_residual[i]);
       corrector_[i].coarseUpdate(dt_, kkt_matrix[i], kkt_residual[i], 
                                  s[i], s_new_[i]);
     }

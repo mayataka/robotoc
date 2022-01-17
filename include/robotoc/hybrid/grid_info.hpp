@@ -1,6 +1,11 @@
 #ifndef ROBOTOC_GRID_INFO_HPP_
 #define ROBOTOC_GRID_INFO_HPP_
 
+#include <random>
+#include <chrono>
+#include <iostream>
+
+
 namespace robotoc {
 
 /// 
@@ -44,6 +49,53 @@ struct GridInfo {
   /// @brief Grid index counded in the contact phase that contains this grid. 
   ///
   int grid_count_in_phase = 0;
+
+  ///
+  /// @brief Total number of grids in the contact phase that contains this grid. 
+  ///
+  int N_phase = 0;
+
+  ///
+  /// @brief Sets random. 
+  ///
+  void setRandom() {
+    std::random_device rand;
+    std::default_random_engine eng(rand());
+    std::uniform_real_distribution<double> d_distr(0, 10);
+    t = d_distr(eng);
+    dt = d_distr(eng);
+    std::uniform_int_distribution<int> i_distr(0, 100);
+    contact_phase = i_distr(eng);
+    time_stage = i_distr(eng);
+    grid_count_in_phase = i_distr(eng);
+    N_phase = i_distr(eng);
+  }
+
+  ///
+  /// @brief Returns random grid info. 
+  ///
+  static GridInfo Random() {
+    GridInfo grid_info;
+    grid_info.setRandom();
+    return grid_info;
+  }
+
+  ///
+  /// @brief Displays the grid info onto a ostream.
+  ///
+  void disp(std::ostream& os) const {
+    os << "Grid info: " << std::endl;
+    os << "t:  " << t << std::endl;
+    os << "dt: " << dt << std::endl;
+    os << "contact_phase: " << contact_phase << std::endl;
+    os << "time_stage: " << time_stage << std::endl;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const GridInfo& grid_info) {
+    grid_info.disp(os);
+    return os;
+  }
+
 };
 
 } // namespace robotoc

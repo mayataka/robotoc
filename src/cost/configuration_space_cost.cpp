@@ -241,8 +241,7 @@ bool ConfigurationSpaceCost::useKinematics() const {
 double ConfigurationSpaceCost::evalStageCost(Robot& robot, 
                                              const ContactStatus& contact_status, 
                                              CostFunctionData& data, 
-                                             const int time_stage, 
-                                             const double t, const double dt, 
+                                             const GridInfo& grid_info,
                                              const SplitSolution& s) const {
   double l = 0;
   robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
@@ -250,50 +249,50 @@ double ConfigurationSpaceCost::evalStageCost(Robot& robot,
   l += (v_weight_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
   l += (a_weight_.array()*s.a.array()*s.a.array()).sum();
   l += (u_weight_.array()*(s.u-u_ref_).array()*(s.u-u_ref_).array()).sum();
-  return 0.5 * dt * l;
+  return 0.5 * grid_info.dt * l;
 }
 
 
 void ConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const int time_stage, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
+        += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
   }
   else {
-    kkt_residual.lq().array() += dt * q_weight_.array() * data.qdiff.array();
+    kkt_residual.lq().array() += grid_info.dt * q_weight_.array() * data.qdiff.array();
   }
   kkt_residual.lv().array()
-      += dt * v_weight_.array() * (s.v.array()-v_ref_.array());
-  kkt_residual.la.array() += dt * a_weight_.array() * s.a.array();
+      += grid_info.dt * v_weight_.array() * (s.v.array()-v_ref_.array());
+  kkt_residual.la.array() += grid_info.dt * a_weight_.array() * s.a.array();
   kkt_residual.lu.array() 
-      += dt * u_weight_.array() * (s.u.array()-u_ref_.array());
+      += grid_info.dt * u_weight_.array() * (s.u.array()-u_ref_.array());
 }
 
 
 void ConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const int time_stage, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
-        += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
+        += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
   }
   else {
-    kkt_matrix.Qqq().diagonal().noalias() += dt * q_weight_;
+    kkt_matrix.Qqq().diagonal().noalias() += grid_info.dt * q_weight_;
   }
-  kkt_matrix.Qvv().diagonal().noalias() += dt * v_weight_;
-  kkt_matrix.Qaa.diagonal().noalias() += dt * a_weight_;
-  kkt_matrix.Quu.diagonal().noalias() += dt * u_weight_;
+  kkt_matrix.Qvv().diagonal().noalias() += grid_info.dt * v_weight_;
+  kkt_matrix.Qaa.diagonal().noalias() += grid_info.dt * a_weight_;
+  kkt_matrix.Quu.diagonal().noalias() += grid_info.dt * u_weight_;
 }
 
 
 double ConfigurationSpaceCost::evalTerminalCost(Robot& robot, 
                                                 CostFunctionData& data, 
-                                                const double t, 
+                                                const GridInfo& grid_info, 
                                                 const SplitSolution& s) const {
   double l = 0;
   robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
@@ -304,7 +303,7 @@ double ConfigurationSpaceCost::evalTerminalCost(Robot& robot,
 
 
 void ConfigurationSpaceCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
@@ -320,7 +319,7 @@ void ConfigurationSpaceCost::evalTerminalCostDerivatives(
 
 
 void ConfigurationSpaceCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info,
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
@@ -335,7 +334,7 @@ void ConfigurationSpaceCost::evalTerminalCostHessian(
 
 double ConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s) const {
+    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
   double l = 0;
   robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
   l += (qi_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
@@ -347,7 +346,7 @@ double ConfigurationSpaceCost::evalImpulseCost(
 
 void ConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
@@ -365,7 +364,7 @@ void ConfigurationSpaceCost::evalImpulseCostDerivatives(
 
 void ConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()

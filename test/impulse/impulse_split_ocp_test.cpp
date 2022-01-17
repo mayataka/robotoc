@@ -47,11 +47,12 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const auto grid_info = GridInfo::Random();
+  const double t = grid_info.t;
   ocp.initConstraints(robot, impulse_status, s);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   ImpulseSplitKKTResidual kkt_residual(robot);
-  ocp.computeKKTResidual(robot, impulse_status, t, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
+  ocp.computeKKTResidual(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   const double kkt_error = ocp.KKTError(kkt_residual);
   ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setImpulseStatus(impulse_status);
@@ -62,7 +63,7 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  double impulse_cost = cost->linearizeImpulseCost(robot, impulse_status, cost_data, t, s, kkt_residual_ref);
+  double impulse_cost = cost->linearizeImpulseCost(robot, impulse_status, cost_data, grid_info, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, impulse_status, constraints_data, s, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
@@ -88,11 +89,12 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const auto grid_info = GridInfo::Random();
+  const double t = grid_info.t;
   ocp.initConstraints(robot, impulse_status, s);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   ImpulseSplitKKTResidual kkt_residual(robot);
-  ocp.computeKKTSystem(robot, impulse_status, t, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
+  ocp.computeKKTSystem(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setImpulseStatus(impulse_status);
   ImpulseSplitKKTResidual kkt_residual_ref(robot);
@@ -102,7 +104,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  double impulse_cost = cost->quadratizeImpulseCost(robot, impulse_status, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
+  double impulse_cost = cost->quadratizeImpulseCost(robot, impulse_status, cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, impulse_status, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(impulse_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
@@ -147,10 +149,11 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const auto grid_info = GridInfo::Random();
+  const double t = grid_info.t;
   ocp.initConstraints(robot, impulse_status, s);
   ImpulseSplitKKTResidual kkt_residual(robot);
-  ocp.evalOCP(robot, impulse_status, t, s, s_prev.q, s_prev.v, kkt_residual);
+  ocp.evalOCP(robot, impulse_status, grid_info, s, s_prev.q, s_prev.v, kkt_residual);
   const double impulse_cost = ocp.stageCost();
   const double constraint_violation = ocp.constraintViolation(kkt_residual);
 
@@ -161,7 +164,7 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  double impulse_cost_ref = cost->evalImpulseCost(robot, impulse_status, cost_data, t, s);
+  double impulse_cost_ref = cost->evalImpulseCost(robot, impulse_status, cost_data, grid_info, s);
   constraints->evalConstraint(robot, impulse_status, constraints_data, s);
   impulse_cost_ref +=  constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);

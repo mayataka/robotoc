@@ -17,6 +17,7 @@
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -94,15 +95,12 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
-  /// @param[in] t Time.
-  /// @param[in] dt Time step.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
   double evalStageCost(Robot& robot, const ContactStatus& contact_status,
-                       CostFunctionData& data, const int time_stage_in_phase, 
-                       const double t, const double dt, 
+                       CostFunctionData& data, const GridInfo& grid_info, 
                        const SplitSolution& s) const;
 
   ///
@@ -110,17 +108,14 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
-  /// @param[in] t Time.
-  /// @param[in] dt Time step.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Stage cost.
   ///
   double linearizeStageCost(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const int time_stage_in_phase, 
-                            const double t, const double dt, 
+                            CostFunctionData& data, const GridInfo& grid_info, 
                             const SplitSolution& s, 
                             SplitKKTResidual& kkt_residual) const;
 
@@ -130,9 +125,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] time_stage_in_phase Time stage index counted in a phase.
-  /// @param[in] t Time.
-  /// @param[in] dt Time step.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
@@ -141,8 +134,7 @@ public:
   /// @return Stage cost.
   ///
   double quadratizeStageCost(Robot& robot, const ContactStatus& contact_status, 
-                             CostFunctionData& data, const int time_stage_in_phase, 
-                             const double t, const double dt, 
+                             CostFunctionData& data, const GridInfo& grid_info, 
                              const SplitSolution& s, 
                              SplitKKTResidual& kkt_residual,
                              SplitKKTMatrix& kkt_matrix) const;
@@ -151,25 +143,26 @@ public:
   /// @brief Computes the terminal cost. 
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Terminal cost.
   ///
-  double evalTerminalCost(Robot& robot, CostFunctionData& data, const double t, 
+  double evalTerminalCost(Robot& robot, CostFunctionData& data, 
+                          const GridInfo& grid_info, 
                           const SplitSolution& s) const;
 
   ///
   /// @brief Computes the terminal cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Stage cost.
   ///
   double linearizeTerminalCost(Robot& robot, CostFunctionData& data, 
-                               const double t, const SplitSolution& s, 
+                               const GridInfo& grid_info, const SplitSolution& s, 
                                SplitKKTResidual& kkt_residual) const;
 
   ///
@@ -177,7 +170,7 @@ public:
   /// and its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
@@ -186,7 +179,7 @@ public:
   /// @return Stage cost.
   ///
   double quadratizeTerminalCost(Robot& robot, CostFunctionData& data, 
-                                const double t, const SplitSolution& s, 
+                                const GridInfo& grid_info, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual,
                                 SplitKKTMatrix& kkt_matrix) const;
 
@@ -195,12 +188,12 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
   double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
-                         CostFunctionData& data, const double t, 
+                         CostFunctionData& data, const GridInfo& grid_info,
                          const ImpulseSplitSolution& s) const;
 
   ///
@@ -208,14 +201,14 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Stage cost.
   ///
   double linearizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
-                              CostFunctionData& data, const double t, 
+                              CostFunctionData& data, const GridInfo& grid_info,
                               const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTResidual& kkt_residual) const;
 
@@ -225,7 +218,7 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
@@ -234,7 +227,7 @@ public:
   /// @return Stage cost.
   ///
   double quadratizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
-                               CostFunctionData& data, const double t, 
+                               CostFunctionData& data, const GridInfo& grid_info,
                                const ImpulseSplitSolution& s, 
                                ImpulseSplitKKTResidual& kkt_residual,
                                ImpulseSplitKKTMatrix& kkt_matrix) const;

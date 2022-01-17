@@ -742,16 +742,20 @@ inline void TimeDiscretization::countContactPhase() {
   int num_events = 0;
   for (int i=0; i<N(); ++i) {
     grid_[i].contact_phase = num_events;
+    grid_[i].N_phase = N_phase(grid_[i].contact_phase);
     if (isTimeStageBeforeImpulse(i) || isTimeStageBeforeLift(i)) {
       ++num_events; 
     }
   }
   grid_[N()].contact_phase = num_events;
+  grid_[N()].N_phase = N_phase(grid_[N()].contact_phase);
   for (int impulse_index=0; impulse_index<N_impulse(); ++impulse_index) {
     grid_impulse_[impulse_index].contact_phase = contactPhase(timeStageAfterImpulse(impulse_index));
+    grid_impulse_[impulse_index].N_phase = N_phase(grid_impulse_[impulse_index].contact_phase);
   }
   for (int lift_index=0; lift_index<N_lift(); ++lift_index) {
     grid_lift_[lift_index].contact_phase = contactPhase(timeStageAfterLift(lift_index));
+    grid_lift_[lift_index].N_phase = N_phase(grid_lift_[lift_index].contact_phase);
   }
 }
 

@@ -51,17 +51,18 @@ inline void TerminalOCP::initConstraints(Robot& robot, const int time_stage,
 }
 
 
-inline void TerminalOCP::evalOCP(Robot& robot, const double t, 
+inline void TerminalOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
                                  const SplitSolution& s, 
                                  SplitKKTResidual& kkt_residual) {
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
-  terminal_cost_ = cost_->evalTerminalCost(robot, cost_data_, t, s);
+  terminal_cost_ = cost_->evalTerminalCost(robot, cost_data_, grid_info, s);
 }
 
 
-inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
+inline void TerminalOCP::computeKKTResidual(Robot& robot, 
+                                            const GridInfo& grid_info,
                                             const Eigen::VectorXd& q_prev,
                                             const SplitSolution& s,
                                             SplitKKTMatrix& kkt_matrix,
@@ -70,7 +71,7 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
     robot.updateKinematics(s.q, s.v);
   }
   kkt_residual.lx.setZero();
-  terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
+  terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, grid_info, s, 
                                                 kkt_residual);
   state_equation_.linearizeStateEquation(robot, q_prev, s, 
                                          kkt_matrix, kkt_residual);
@@ -78,7 +79,8 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
 }
 
 
-inline void TerminalOCP::computeKKTSystem(Robot& robot, const double t, 
+inline void TerminalOCP::computeKKTSystem(Robot& robot, 
+                                          const GridInfo& grid_info,
                                           const Eigen::VectorXd& q_prev,
                                           const SplitSolution& s,
                                           SplitKKTMatrix& kkt_matrix, 
@@ -88,7 +90,7 @@ inline void TerminalOCP::computeKKTSystem(Robot& robot, const double t,
   }
   kkt_matrix.Qxx.setZero();
   kkt_residual.lx.setZero();
-  terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
+  terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, grid_info, s, 
                                                  kkt_residual, kkt_matrix);
   state_equation_.linearizeStateEquation(robot, q_prev, s, 
                                          kkt_matrix, kkt_residual);

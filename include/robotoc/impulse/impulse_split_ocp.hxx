@@ -62,7 +62,7 @@ inline const ConstraintsData& ImpulseSplitOCP::constraintsData() const {
 
 inline void ImpulseSplitOCP::evalOCP(Robot& robot, 
                                      const ImpulseStatus& impulse_status, 
-                                     const double t, 
+                                     const GridInfo& grid_info, 
                                      const ImpulseSplitSolution& s, 
                                      const Eigen::VectorXd& q_next, 
                                      const Eigen::VectorXd& v_next, 
@@ -72,7 +72,8 @@ inline void ImpulseSplitOCP::evalOCP(Robot& robot,
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
-  stage_cost_ = cost_->evalImpulseCost(robot, impulse_status, cost_data_, t, s);
+  stage_cost_ = cost_->evalImpulseCost(robot, impulse_status, cost_data_, 
+                                       grid_info, s);
   constraints_->evalConstraint(robot, impulse_status, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
   state_equation_.evalStateEquation(robot, s, q_next, v_next, kkt_residual);
@@ -81,7 +82,7 @@ inline void ImpulseSplitOCP::evalOCP(Robot& robot,
 
 
 inline void ImpulseSplitOCP::computeKKTResidual(
-    Robot& robot, const ImpulseStatus& impulse_status, const double t, 
+    Robot& robot, const ImpulseStatus& impulse_status, const GridInfo& grid_info, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
@@ -92,7 +93,7 @@ inline void ImpulseSplitOCP::computeKKTResidual(
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeImpulseCost(robot, impulse_status, cost_data_, 
-                                            t, s, kkt_residual);
+                                            grid_info, s, kkt_residual);
   constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
@@ -105,7 +106,7 @@ inline void ImpulseSplitOCP::computeKKTResidual(
 
 
 inline void ImpulseSplitOCP::computeKKTSystem(
-    Robot& robot, const ImpulseStatus& impulse_status, const double t,  
+    Robot& robot, const ImpulseStatus& impulse_status, const GridInfo& grid_info,
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
@@ -116,7 +117,7 @@ inline void ImpulseSplitOCP::computeKKTSystem(
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeImpulseCost(robot, impulse_status, cost_data_,  
-                                             t, s, kkt_residual, kkt_matrix);
+                                             grid_info, s, kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();

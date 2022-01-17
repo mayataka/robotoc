@@ -71,13 +71,12 @@ inline void TerminalUnconstrParNMPC::initConstraints(Robot& robot,
 }
 
 
-inline void TerminalUnconstrParNMPC::evalOCP(Robot& robot, const int time_stage, 
-                                             const double t, const double dt, 
+inline void TerminalUnconstrParNMPC::evalOCP(Robot& robot, 
+                                             const GridInfo& grid_info, 
                                              const Eigen::VectorXd& q_prev, 
                                              const Eigen::VectorXd& v_prev, 
                                              const SplitSolution& s, 
                                              SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
@@ -85,22 +84,20 @@ inline void TerminalUnconstrParNMPC::evalOCP(Robot& robot, const int time_stage,
   }
   kkt_residual.setZero();
   stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, 
-                                     time_stage, t, dt, s);
-  stage_cost_ += cost_->evalTerminalCost(robot, cost_data_, t, s);
+                                     grid_info, s);
+  stage_cost_ += cost_->evalTerminalCost(robot, cost_data_, grid_info, s);
   constraints_->evalConstraint(robot, contact_status_, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
-                                                        kkt_residual);
+  unconstr::stateequation::computeBackwardEulerResidual(grid_info.dt, q_prev,  
+                                                        v_prev, s, kkt_residual);
   unconstr_dynamics_.evalUnconstrDynamics(robot, s);
 }
 
 
 inline void TerminalUnconstrParNMPC::computeKKTResidual(
-    Robot& robot, const int time_stage, const double t, const double dt, 
-    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
+    Robot& robot, const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
+    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
@@ -108,25 +105,24 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
   }
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
-                                          time_stage, t, dt, s, kkt_residual);
-  stage_cost_ += cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
+                                          grid_info, s, kkt_residual);
+  stage_cost_ += cost_->linearizeTerminalCost(robot, cost_data_, grid_info, s, 
                                               kkt_residual);
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::linearizeBackwardEulerTerminal(dt, q_prev, v_prev, s,  
+  unconstr::stateequation::linearizeBackwardEulerTerminal(grid_info.dt, q_prev, 
+                                                          v_prev, s,  
                                                           kkt_matrix, kkt_residual);
-  unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, dt);
+  unconstr_dynamics_.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
+  kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
 }
 
 
 inline void TerminalUnconstrParNMPC::computeKKTSystem(
-    Robot& robot, const int time_stage, const double t, const double dt, 
-    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
+    Robot& robot, const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
+    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
@@ -135,17 +131,16 @@ inline void TerminalUnconstrParNMPC::computeKKTSystem(
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 
-                                           time_stage, t, dt, s, 
-                                           kkt_residual, kkt_matrix);
-  stage_cost_ += cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
+                                           grid_info, s, kkt_residual, kkt_matrix);
+  stage_cost_ += cost_->quadratizeTerminalCost(robot, cost_data_, grid_info, s, 
                                                kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::linearizeBackwardEulerTerminal(dt, q_prev, v_prev, s,  
+  unconstr::stateequation::linearizeBackwardEulerTerminal(grid_info.dt, q_prev, v_prev, s,  
                                                           kkt_matrix, kkt_residual);
-  unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, dt);
+  unconstr_dynamics_.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
+  kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
   constraints_->condenseSlackAndDual(contact_status_, constraints_data_, 
                                      kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
@@ -217,14 +212,14 @@ inline double TerminalUnconstrParNMPC::constraintViolation(
 
 
 inline void TerminalUnconstrParNMPC::evalTerminalCostHessian(
-    Robot& robot, const double t, const SplitSolution& s, 
+    Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  double cost = cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
+  double cost = cost_->quadratizeTerminalCost(robot, cost_data_, grid_info, s, 
                                               kkt_residual, kkt_matrix);
 }
 
