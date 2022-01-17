@@ -22,9 +22,10 @@ namespace robotoc {
 class TerminalUnconstrParNMPCTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
     robot = testhelper::CreateRobotManipulator();
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
+    dt = grid_info.dt;
     cost = testhelper::CreateCost(robot);
     constraints = testhelper::CreateConstraints(robot);
   }
@@ -33,7 +34,8 @@ protected:
   }
 
   Robot robot;
-  double dt;
+  GridInfo grid_info;
+  double t, dt;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };
@@ -49,7 +51,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  parnmpc.computeKKTSystem(robot, t, dt, s_prev.q, s_prev.v, s, kkt_matrix, kkt_residual);
+  parnmpc.computeKKTSystem(robot, grid_info, s_prev.q, s_prev.v, s, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -57,7 +59,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTSystem) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
@@ -99,7 +101,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   const int dimv = robot.dimv();
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
-  parnmpc.computeKKTResidual(robot, t, dt, s_prev.q, s_prev.v, s, kkt_matrix, kkt_residual);
+  parnmpc.computeKKTResidual(robot, grid_info, s_prev.q, s_prev.v, s, kkt_matrix, kkt_residual);
   SplitKKTResidual kkt_residual_ref(robot);
   SplitKKTMatrix kkt_matrix_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -107,7 +109,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref);
+  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, grid_info, s, kkt_residual_ref);
   stage_cost += cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
@@ -134,7 +136,7 @@ TEST_F(TerminalUnconstrParNMPCTest, evalOCP) {
   const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   parnmpc.initConstraints(robot, 10, s);
   SplitKKTResidual kkt_residual(robot);
-  parnmpc.evalOCP(robot, t, dt, s_prev.q, s_prev.v, s, kkt_residual);
+  parnmpc.evalOCP(robot, grid_info, s_prev.q, s_prev.v, s, kkt_residual);
   const double stage_cost = parnmpc.stageCost();
   const double constraint_violation = parnmpc.constraintViolation(kkt_residual, dt);
   SplitKKTResidual kkt_residual_ref(robot);
@@ -143,7 +145,7 @@ TEST_F(TerminalUnconstrParNMPCTest, evalOCP) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, grid_info, s);
   stage_cost_ref += cost->evalTerminalCost(robot, cost_data, t, s);
   constraints->evalConstraint(robot, contact_status, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();

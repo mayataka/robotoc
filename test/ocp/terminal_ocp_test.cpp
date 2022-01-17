@@ -22,11 +22,15 @@ namespace robotoc {
 class TerminalOCPTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
   }
 
   virtual void TearDown() {
   }
+
+  GridInfo grid_info;
+  double t;
 };
 
 
@@ -40,14 +44,14 @@ TEST_P(TerminalOCPTest, computeKKTResidual) {
   TerminalOCP ocp(robot, cost, constraints);
   SplitKKTResidual kkt_residual(robot);  
   SplitKKTMatrix kkt_matrix(robot);  
-  ocp.computeKKTResidual(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
+  ocp.computeKKTResidual(robot, grid_info, s_prev.q, s, kkt_matrix, kkt_residual);
   const double KKT = ocp.KKTError(kkt_residual);
   robot.updateKinematics(s.q, s.v);
   SplitKKTResidual kkt_residual_ref(robot);  
   SplitKKTMatrix kkt_matrix_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
+  const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, grid_info, s, kkt_residual_ref);
   TerminalStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
@@ -68,13 +72,13 @@ TEST_P(TerminalOCPTest, computeKKTSystem) {
   TerminalOCP ocp(robot, cost, constraints);
   SplitKKTMatrix kkt_matrix(robot);  
   SplitKKTResidual kkt_residual(robot);  
-  ocp.computeKKTSystem(robot, t, s_prev.q, s, kkt_matrix, kkt_residual);
+  ocp.computeKKTSystem(robot, grid_info, s_prev.q, s, kkt_matrix, kkt_residual);
   robot.updateKinematics(s.q, s.v);
   SplitKKTMatrix kkt_matrix_ref(robot);  
   SplitKKTResidual kkt_residual_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
+  const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   TerminalStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   // kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
@@ -98,11 +102,11 @@ TEST_P(TerminalOCPTest, evalOCP) {
   auto constraints = testhelper::CreateConstraints(robot);
   TerminalOCP ocp(robot, cost, constraints);
   SplitKKTResidual kkt_residual(robot);  
-  ocp.evalOCP(robot, t, s, kkt_residual);
+  ocp.evalOCP(robot, grid_info, s, kkt_residual);
   const double terminal_cost = ocp.terminalCost();
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  const double terminal_cost_ref = cost->evalTerminalCost(robot, cost_data, t, s);
+  const double terminal_cost_ref = cost->evalTerminalCost(robot, cost_data, grid_info, s);
   EXPECT_DOUBLE_EQ(terminal_cost, terminal_cost_ref);
 }
 

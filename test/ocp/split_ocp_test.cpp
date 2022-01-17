@@ -34,6 +34,7 @@ protected:
     dt = grid_info.dt;
     dt_next = grid_info_next.dt;
     N_phase = 15;
+    grid_info.N_phase = N_phase;
   }
 
   virtual void TearDown() {
