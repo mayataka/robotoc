@@ -24,18 +24,18 @@ PeriodicCoMRef2::~PeriodicCoMRef2() {
 }
 
 
-void PeriodicCoMRef2::update_com_ref(const double t, 
+void PeriodicCoMRef2::update_com_ref(const GridInfo& grid_info,
                                      Eigen::VectorXd& com_ref) const {
   if (is_first_move_half_) {
-    if (t < t0_) {
+    if (grid_info.t < t0_) {
       com_ref = com_ref0_;
     }
-    else if (t < t0_+period_active_) {
-      com_ref = com_ref0_ + 0.5 * (t-t0_) * vcom_ref_;
+    else if (grid_info.t < t0_+period_active_) {
+      com_ref = com_ref0_ + 0.5 * (grid_info.t-t0_) * vcom_ref_;
     }
     else {
-      const int steps = std::floor((t-t0_)/period_);
-      const double tau = t - t0_ - steps * period_;
+      const int steps = std::floor((grid_info.t-t0_)/period_);
+      const double tau = grid_info.t - t0_ - steps * period_;
       if (tau < period_active_) {
         com_ref = com_ref0_ + ((steps-0.5)*period_active_+tau) * vcom_ref_;
       }
@@ -45,12 +45,12 @@ void PeriodicCoMRef2::update_com_ref(const double t,
     }
   }
   else {
-    if (t < t0_) {
+    if (grid_info.t < t0_) {
       com_ref = com_ref0_;
     }
     else {
-      const int steps = std::floor((t-t0_)/period_);
-      const double tau = t - t0_ - steps * period_;
+      const int steps = std::floor((grid_info.t-t0_)/period_);
+      const double tau = grid_info.t - t0_ - steps * period_;
       if (tau < period_active_) {
         com_ref = com_ref0_ + (steps*period_active_+tau) * vcom_ref_;
       }
@@ -62,7 +62,7 @@ void PeriodicCoMRef2::update_com_ref(const double t,
 }
 
 
-bool PeriodicCoMRef2::isActive(const double t) const {
+bool PeriodicCoMRef2::isActive(const GridInfo& grid_info) const {
   return true;
 }
 

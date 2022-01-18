@@ -36,9 +36,9 @@ public:
   ///
   ~PeriodicFootTrackRef();
 
-  void update_x3d_ref(const double t, Eigen::VectorXd& x3d_ref) const override;
+  void update_x3d_ref(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override;
 
-  bool isActive(const double t) const override;
+  bool isActive(const GridInfo& grid_info) const override;
 
 private:
   Eigen::Vector3d x3d0_;

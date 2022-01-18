@@ -5,6 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/periodic_foot_track_ref2.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -36,13 +37,15 @@ TEST_F(PeriodicFootTrackRefTest2, first_mode_half_true) {
                                                                    period_swing,
                                                                    period_stance, true);
   Eigen::VectorXd p(3), p_ref(3);
+  auto grid_info = GridInfo();
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_x3d_ref(t1, p);
+  grid_info.t = t1;
+  preiodic_foot_ref->update_x3d_ref(grid_info, p);
   EXPECT_TRUE(p.isApprox(p0));
-  EXPECT_TRUE(preiodic_foot_ref->isActive(t1));
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_x3d_ref(t2, p);
-  EXPECT_TRUE(preiodic_foot_ref->isActive(t2));
+  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
   if (t2 < t0+period_swing) {
     p_ref = p0;
     p_ref(0) += 0.5 * ((t2-t0)/period_swing) * step_length;
@@ -89,13 +92,15 @@ TEST_F(PeriodicFootTrackRefTest2, first_mode_half_false) {
                                                                    period_swing,
                                                                    period_stance, false);
   Eigen::VectorXd p(3), p_ref(3);
+  auto grid_info = GridInfo();
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_x3d_ref(t1, p);
-  EXPECT_TRUE(preiodic_foot_ref->isActive(t1));
+  grid_info.t = t1;
+  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
   EXPECT_TRUE(p.isApprox(p0));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_x3d_ref(t2, p);
-  EXPECT_TRUE(preiodic_foot_ref->isActive(t2));
+  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;
   if (tau < period_swing) {

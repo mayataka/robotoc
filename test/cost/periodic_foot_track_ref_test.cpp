@@ -5,6 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {

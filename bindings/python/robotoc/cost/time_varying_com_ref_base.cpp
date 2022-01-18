@@ -13,14 +13,15 @@ public:
   // Inherit the constructors
   using TimeVaryingCoMRefBase::TimeVaryingCoMRefBase;
 
-  void update_com_ref(const double t, Eigen::VectorXd& com_ref) const override {
+  void update_com_ref(const GridInfo& grid_info, 
+                      Eigen::VectorXd& com_ref) const override {
     PYBIND11_OVERRIDE_PURE(void, TimeVaryingCoMRefBase, 
-                           update_com_ref, t, com_ref);
+                           update_com_ref, grid_info, com_ref);
   }
 
-  bool isActive(const double t) const override {
+  bool isActive(const GridInfo& grid_info) const override {
     PYBIND11_OVERRIDE_PURE(bool, TimeVaryingCoMRefBase, 
-                           isActive, t);
+                           isActive, grid_info);
   }
 };
 
@@ -32,9 +33,9 @@ PYBIND11_MODULE(time_varying_com_ref_base, m) {
              std::shared_ptr<TimeVaryingCoMRefBase>>(m, "TimeVaryingCoMRefBase")
     .def(py::init<>())
     .def("update_com_ref", &TimeVaryingCoMRefBase::update_com_ref,
-          py::arg("t"), py::arg("com_ref"))
+          py::arg("grid_info"), py::arg("com_ref"))
     .def("is_active", &TimeVaryingCoMRefBase::isActive,
-          py::arg("t"));
+          py::arg("grid_info"));
 }
 
 } // namespace python

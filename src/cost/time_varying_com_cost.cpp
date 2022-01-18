@@ -58,9 +58,9 @@ double TimeVaryingCoMCost::evalStageCost(Robot& robot,
                                          CostFunctionData& data, 
                                          const GridInfo& grid_info, 
                                          const SplitSolution& s) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     double l = 0;
-    com_ref_->update_com_ref(grid_info.t, data.x3d_ref);
+    com_ref_->update_com_ref(grid_info, data.x3d_ref);
     data.diff_3d = robot.CoM() - data.x3d_ref;
     l += (com_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * grid_info.dt * l;
@@ -75,7 +75,7 @@ void TimeVaryingCoMCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 
@@ -88,7 +88,7 @@ void TimeVaryingCoMCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += grid_info.dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.J_3d;
   }
@@ -99,9 +99,9 @@ double TimeVaryingCoMCost::evalTerminalCost(Robot& robot,
                                             CostFunctionData& data, 
                                             const GridInfo& grid_info, 
                                             const SplitSolution& s) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     double l = 0;
-    com_ref_->update_com_ref(grid_info.t, data.x3d_ref);
+    com_ref_->update_com_ref(grid_info, data.x3d_ref);
     data.diff_3d = robot.CoM() - data.x3d_ref;
     l += (comf_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * l;
@@ -115,7 +115,7 @@ double TimeVaryingCoMCost::evalTerminalCost(Robot& robot,
 void TimeVaryingCoMCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 
@@ -127,7 +127,7 @@ void TimeVaryingCoMCost::evalTerminalCostDerivatives(
 void TimeVaryingCoMCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * comf_weight_.asDiagonal() * data.J_3d;
   }
@@ -137,9 +137,9 @@ void TimeVaryingCoMCost::evalTerminalCostHessian(
 double TimeVaryingCoMCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     double l = 0;
-    com_ref_->update_com_ref(grid_info.t, data.x3d_ref);
+    com_ref_->update_com_ref(grid_info, data.x3d_ref);
     data.diff_3d = robot.CoM() - data.x3d_ref;
     l += (comi_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * l;
@@ -154,7 +154,7 @@ void TimeVaryingCoMCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 
@@ -167,7 +167,7 @@ void TimeVaryingCoMCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (com_ref_->isActive(grid_info.t)) {
+  if (com_ref_->isActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * comi_weight_.asDiagonal() * data.J_3d;
   }

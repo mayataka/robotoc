@@ -43,13 +43,13 @@ public:
   TimeVaryingConfigurationRef& operator=(
       TimeVaryingConfigurationRef&&) noexcept = default;
 
-  void update_q_ref(const Robot& robot, const double t, 
+  void update_q_ref(const Robot& robot, const GridInfo& grid_info,
                     Eigen::VectorXd& q_ref) const override {
-    robot.integrateConfiguration(q0_ref_, v_ref_, (t-t0_), q_ref);
+    robot.integrateConfiguration(q0_ref_, v_ref_, (grid_info.t-t0_), q_ref);
   }
 
-  bool isActive(const double t) const override {
-    if (t0_ <= t && t <= tf_)
+  bool isActive(const GridInfo& grid_info) const override {
+    if (t0_ <= grid_info.t && grid_info.t <= tf_)
       return true;
     else 
       return false;

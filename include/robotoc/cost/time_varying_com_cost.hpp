@@ -16,6 +16,7 @@
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -61,19 +62,18 @@ public:
 
   ///
   /// @brief Computes the time-varying reference position. 
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] com_ref Reference position of the center of mass. Size is 3.
   ///
-  virtual void update_com_ref(const double t, 
+  virtual void update_com_ref(const GridInfo& grid_info, 
                               Eigen::VectorXd& com_ref) const = 0;
 
   ///
   /// @brief Checks wheather the cost is active or not at the specified time. 
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @return true if the cost is active at time t. false if not.
   ///
-  virtual bool isActive(const double t) const = 0;
-
+  virtual bool isActive(const GridInfo& grid_info) const = 0;
 };
 
 

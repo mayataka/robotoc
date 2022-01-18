@@ -65,14 +65,14 @@ LF_t0 = initial_lift_time + swing_time
 LH_t0 = initial_lift_time
 RF_t0 = initial_lift_time
 RH_t0 = initial_lift_time + swing_time 
-LF_foot_ref = robotoc.PeriodicFootTrackRef2(x3d_LF, step_length, step_height, 
-                                            LF_t0, swing_time, swing_time, False)
-LH_foot_ref = robotoc.PeriodicFootTrackRef2(x3d_LH, step_length, step_height, 
-                                            LH_t0, swing_time, swing_time, True)
-RF_foot_ref = robotoc.PeriodicFootTrackRef2(x3d_RF, step_length, step_height, 
-                                            RF_t0, swing_time, swing_time, True)
-RH_foot_ref = robotoc.PeriodicFootTrackRef2(x3d_RH, step_length, step_height, 
-                                            RH_t0, swing_time, swing_time, False)
+LF_foot_ref = robotoc.PeriodicFootTrackRef(x3d_LF, step_length, step_height, 
+                                           LF_t0, swing_time, swing_time, False)
+LH_foot_ref = robotoc.PeriodicFootTrackRef(x3d_LH, step_length, step_height, 
+                                           LH_t0, swing_time, swing_time, True)
+RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d_RF, step_length, step_height, 
+                                           RF_t0, swing_time, swing_time, True)
+RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d_RH, step_length, step_height, 
+                                           RH_t0, swing_time, swing_time, False)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
@@ -91,7 +91,7 @@ com_ref0 = (x3d_LF + x3d_LH + x3d_RF + x3d_RH) / 4
 com_ref0[2] = robot.com()[2]
 vcom_ref = np.zeros(3)
 vcom_ref[0] = 0.5 * step_length / swing_time
-com_ref = robotoc.PeriodicCoMRef2(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
+com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_com_weight(np.full(3, 1.0e04))
 cost.push_back(com_cost)
@@ -126,7 +126,7 @@ option_init.max_iter = 5
 mpc.init(t, q, v, option_init)
 
 option_mpc = robotoc.SolverOptions()
-option_mpc.max_iter = 2 # MPC iterations
+option_mpc.max_iter = 1 # MPC iterations
 mpc.set_solver_options(option_mpc)
 
 sim_time_step = 0.0025 # 400 Hz MPC
