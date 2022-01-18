@@ -1,15 +1,13 @@
-#ifndef ROBOTOC_TERMINAL_UNCONSTR_PARNMPC_HXX_
-#define ROBOTOC_TERMINAL_UNCONSTR_PARNMPC_HXX_
-
 #include "robotoc/unconstr/terminal_unconstr_parnmpc.hpp"
 
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
 
+
 namespace robotoc {
 
-inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
+TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
@@ -40,7 +38,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
 }
 
 
-inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC() 
+TerminalUnconstrParNMPC::TerminalUnconstrParNMPC() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -52,31 +50,28 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC()
 }
 
 
-inline TerminalUnconstrParNMPC::~TerminalUnconstrParNMPC() {
+TerminalUnconstrParNMPC::~TerminalUnconstrParNMPC() {
 }
 
 
-inline bool TerminalUnconstrParNMPC::isFeasible(Robot& robot, 
-                                                const SplitSolution& s) {
+bool TerminalUnconstrParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
   return constraints_->isFeasible(robot, contact_status_, constraints_data_, s);
 }
 
 
-inline void TerminalUnconstrParNMPC::initConstraints(Robot& robot, 
-                                                     const int time_step, 
-                                                     const SplitSolution& s) { 
+void TerminalUnconstrParNMPC::initConstraints(Robot& robot, const int time_step, 
+                                              const SplitSolution& s) { 
   assert(time_step >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, contact_status_, constraints_data_, s);
 }
 
 
-inline void TerminalUnconstrParNMPC::evalOCP(Robot& robot, 
-                                             const GridInfo& grid_info, 
-                                             const Eigen::VectorXd& q_prev, 
-                                             const Eigen::VectorXd& v_prev, 
-                                             const SplitSolution& s, 
-                                             SplitKKTResidual& kkt_residual) {
+void TerminalUnconstrParNMPC::evalOCP(Robot& robot, const GridInfo& grid_info, 
+                                      const Eigen::VectorXd& q_prev, 
+                                      const Eigen::VectorXd& v_prev, 
+                                      const SplitSolution& s, 
+                                      SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
@@ -94,10 +89,13 @@ inline void TerminalUnconstrParNMPC::evalOCP(Robot& robot,
 }
 
 
-inline void TerminalUnconstrParNMPC::computeKKTResidual(
-    Robot& robot, const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
-    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+void TerminalUnconstrParNMPC::computeKKTResidual(Robot& robot, 
+                                                 const GridInfo& grid_info, 
+                                                 const Eigen::VectorXd& q_prev, 
+                                                 const Eigen::VectorXd& v_prev, 
+                                                 const SplitSolution& s, 
+                                                 SplitKKTMatrix& kkt_matrix, 
+                                                 SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
@@ -119,10 +117,13 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
 }
 
 
-inline void TerminalUnconstrParNMPC::computeKKTSystem(
-    Robot& robot, const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
-    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+void TerminalUnconstrParNMPC::computeKKTSystem(Robot& robot, 
+                                               const GridInfo& grid_info, 
+                                               const Eigen::VectorXd& q_prev, 
+                                               const Eigen::VectorXd& v_prev, 
+                                               const SplitSolution& s, 
+                                               SplitKKTMatrix& kkt_matrix, 
+                                               SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
@@ -147,7 +148,7 @@ inline void TerminalUnconstrParNMPC::computeKKTSystem(
 }
 
 
-inline void TerminalUnconstrParNMPC::expandPrimalAndDual(
+void TerminalUnconstrParNMPC::expandPrimalAndDual(
     const double dt, const SplitSolution& s, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dt > 0);
@@ -157,20 +158,20 @@ inline void TerminalUnconstrParNMPC::expandPrimalAndDual(
 }
 
 
-inline double TerminalUnconstrParNMPC::maxPrimalStepSize() {
+double TerminalUnconstrParNMPC::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-inline double TerminalUnconstrParNMPC::maxDualStepSize() {
+double TerminalUnconstrParNMPC::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-inline void TerminalUnconstrParNMPC::updatePrimal(const Robot& robot, 
-                                                  const double primal_step_size, 
-                                                  const SplitDirection& d, 
-                                                  SplitSolution& s) {
+void TerminalUnconstrParNMPC::updatePrimal(const Robot& robot, 
+                                           const double primal_step_size, 
+                                           const SplitDirection& d, 
+                                           SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);
@@ -178,15 +179,15 @@ inline void TerminalUnconstrParNMPC::updatePrimal(const Robot& robot,
 }
 
 
-inline void TerminalUnconstrParNMPC::updateDual(const double dual_step_size) {
+void TerminalUnconstrParNMPC::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(constraints_data_, dual_step_size);
 }
 
 
-inline double TerminalUnconstrParNMPC::KKTError(
-    const SplitKKTResidual& kkt_residual, const double dt) const {
+double TerminalUnconstrParNMPC::KKTError(const SplitKKTResidual& kkt_residual, 
+                                         const double dt) const {
   assert(dt > 0);
   double err = 0;
   err += kkt_residual.KKTError();
@@ -196,12 +197,12 @@ inline double TerminalUnconstrParNMPC::KKTError(
 }
 
 
-inline double TerminalUnconstrParNMPC::stageCost() const {
+double TerminalUnconstrParNMPC::stageCost() const {
   return stage_cost_;
 }
 
 
-inline double TerminalUnconstrParNMPC::constraintViolation(
+double TerminalUnconstrParNMPC::constraintViolation(
     const SplitKKTResidual& kkt_residual, const double dt) const {
   double vio = 0;
   vio += kkt_residual.constraintViolation();
@@ -211,7 +212,7 @@ inline double TerminalUnconstrParNMPC::constraintViolation(
 }
 
 
-inline void TerminalUnconstrParNMPC::evalTerminalCostHessian(
+void TerminalUnconstrParNMPC::evalTerminalCostHessian(
     Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   if (use_kinematics_) {
@@ -224,5 +225,3 @@ inline void TerminalUnconstrParNMPC::evalTerminalCostHessian(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_TERMINAL_UNCONSTR_PARNMPC_HXX_ 

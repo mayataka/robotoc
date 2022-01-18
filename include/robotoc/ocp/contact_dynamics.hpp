@@ -100,7 +100,13 @@ public:
   /// f) of this stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void expandPrimal(SplitDirection& d) const;
+  void expandPrimal(SplitDirection& d) const {
+    d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx;
+    d.daf().noalias() 
+        += data_.MJtJinv().middleCols(dim_passive_, dimu_) * d.du;
+    d.daf().noalias() -= data_.MJtJinv_IDC();
+    d.df().array()    *= -1;
+  }
 
   ///
   /// @brief Expands the dual variables, i.e., computes the Newton direction 
@@ -112,7 +118,24 @@ public:
   /// 
   template <typename SplitDirectionType>
   void expandDual(const double dt, const double dts, 
-                  const SplitDirectionType& d_next, SplitDirection& d);
+                  const SplitDirectionType& d_next, SplitDirection& d) {
+    assert(dt > 0);
+    if (has_floating_base_) {
+      d.dnu_passive            = - data_.lu_passive;
+      d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+      d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
+      d.dnu_passive.noalias() 
+          -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+                * d_next.dgmm();
+    }
+    data_.laf().noalias() += data_.Qafqv() * d.dx;
+    data_.laf().noalias() += data_.Qafu() * d.du;
+    data_.la().noalias()  += dt * d_next.dgmm();
+    if (dts != 0.) {
+      data_.laf().noalias() += dts * data_.haf();
+    }
+    d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
+  }
 
   ///
   /// @brief Expands the dual variables, i.e., computes the Newton direction 
@@ -127,7 +150,25 @@ public:
   void expandDual(const double dt, const double dts, 
                   const SplitDirectionType& d_next, 
                   const SwitchingConstraintJacobian& sc_jacobian,
-                  SplitDirection& d);
+                  SplitDirection& d) {
+    assert(dt > 0);
+    if (has_floating_base_) {
+      d.dnu_passive            = - data_.lu_passive;
+      d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+      d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
+      d.dnu_passive.noalias() 
+          -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+                * d_next.dgmm();
+    }
+    data_.laf().noalias() += data_.Qafqv() * d.dx;
+    data_.laf().noalias() += data_.Qafu() * d.du;
+    data_.la().noalias()  += dt * d_next.dgmm();
+    data_.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
+    if (dts != 0.) {
+      data_.laf().noalias() += dts * data_.haf();
+    }
+    d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
+  }
 
   ///
   /// @brief Condenses the switching constraint. 
@@ -145,7 +186,9 @@ public:
   /// @return Squared norm of the KKT residual in the contact dynamics 
   /// constraint.
   ///
-  double KKTError() const;
+  double KKTError() const {
+    return (data_.IDC().squaredNorm() + data_.lu_passive.squaredNorm());
+  }
 
   ///
   /// @brief Returns the lp norm of the constraint violation, that is,
@@ -156,7 +199,9 @@ public:
   /// @return The lp norm of the constraint violation.
   ///
   template <int p=1>
-  double constraintViolation() const;
+  double constraintViolation() const {
+    return data_.IDC().template lpNorm<p>();
+  }
 
 private:
   ContactDynamicsData data_;
@@ -167,7 +212,5 @@ private:
 };
 
 } // namespace robotoc 
-
-#include "robotoc/ocp/contact_dynamics.hxx"
 
 #endif // ROBOTOC_CONTACT_DYNAMICS_HPP_ 

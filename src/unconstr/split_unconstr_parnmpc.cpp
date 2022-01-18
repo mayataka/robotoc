@@ -1,15 +1,14 @@
-#ifndef ROBOTOC_SPLIT_UNCONSTR_OCP_HXX_
-#define ROBOTOC_SPLIT_UNCONSTR_OCP_HXX_
-
-#include "robotoc/unconstr/split_unconstr_ocp.hpp"
+#include "robotoc/unconstr/split_unconstr_parnmpc.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cassert>
+
 
 namespace robotoc {
 
-inline SplitUnconstrOCP::SplitUnconstrOCP(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+SplitUnconstrParNMPC::SplitUnconstrParNMPC(
+    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
@@ -39,7 +38,7 @@ inline SplitUnconstrOCP::SplitUnconstrOCP(
 }
 
 
-inline SplitUnconstrOCP::SplitUnconstrOCP() 
+SplitUnconstrParNMPC::SplitUnconstrParNMPC() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -51,30 +50,30 @@ inline SplitUnconstrOCP::SplitUnconstrOCP()
 }
 
 
-inline SplitUnconstrOCP::~SplitUnconstrOCP() {
+SplitUnconstrParNMPC::~SplitUnconstrParNMPC() {
 }
 
 
-inline bool SplitUnconstrOCP::isFeasible(Robot& robot, const SplitSolution& s) {
+bool SplitUnconstrParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
   return constraints_->isFeasible(robot, contact_status_, constraints_data_, s);
 }
 
 
-inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step, 
-                                              const SplitSolution& s) { 
+void SplitUnconstrParNMPC::initConstraints(Robot& robot, const int time_step, 
+                                           const SplitSolution& s) { 
   assert(time_step >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, contact_status_, constraints_data_, s);
 }
 
 
-inline void SplitUnconstrOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
-                                      const SplitSolution& s, 
-                                      const Eigen::VectorXd& q_next, 
-                                      const Eigen::VectorXd& v_next, 
-                                      SplitKKTResidual& kkt_residual) {
-  assert(q_next.size() == robot.dimq());
-  assert(v_next.size() == robot.dimv());
+void SplitUnconstrParNMPC::evalOCP(Robot& robot, const GridInfo& grid_info,
+                                   const Eigen::VectorXd& q_prev, 
+                                   const Eigen::VectorXd& v_prev, 
+                                   const SplitSolution& s, 
+                                   SplitKKTResidual& kkt_residual) {
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
@@ -83,39 +82,48 @@ inline void SplitUnconstrOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
                                      grid_info, s);
   constraints_->evalConstraint(robot, contact_status_, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::computeForwardEulerResidual(grid_info.dt, s, q_next, 
-                                                       v_next, kkt_residual);
+  unconstr::stateequation::computeBackwardEulerResidual(grid_info.dt, q_prev, v_prev, 
+                                                        s, kkt_residual);
   unconstr_dynamics_.evalUnconstrDynamics(robot, s);
 }
 
 
-inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, 
-                                                 const GridInfo& grid_info,
-                                                 const SplitSolution& s,
-                                                 const SplitSolution& s_next,
-                                                 SplitKKTMatrix& kkt_matrix, 
-                                                 SplitKKTResidual& kkt_residual) {
+void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, 
+                                              const GridInfo& grid_info,
+                                              const Eigen::VectorXd& q_prev, 
+                                              const Eigen::VectorXd& v_prev, 
+                                              const SplitSolution& s, 
+                                              const SplitSolution& s_next, 
+                                              SplitKKTMatrix& kkt_matrix, 
+                                              SplitKKTResidual& kkt_residual) {
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
                                           grid_info, s, kkt_residual);
-  constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, s, kkt_residual);
+  constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
+                                     s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::linearizeForwardEuler(grid_info.dt, s, s_next, 
-                                                 kkt_matrix, kkt_residual);
+  unconstr::stateequation::linearizeBackwardEuler(grid_info.dt, q_prev, v_prev, 
+                                                  s, s_next, kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
 }
 
 
-inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot, 
-                                               const GridInfo& grid_info,
-                                               const SplitSolution& s, 
-                                               const SplitSolution& s_next, 
-                                               SplitKKTMatrix& kkt_matrix,
-                                               SplitKKTResidual& kkt_residual) {
+void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot,  
+                                            const GridInfo& grid_info,
+                                            const Eigen::VectorXd& q_prev, 
+                                            const Eigen::VectorXd& v_prev, 
+                                            const SplitSolution& s, 
+                                            const SplitSolution& s_next, 
+                                            SplitKKTMatrix& kkt_matrix,
+                                            SplitKKTResidual& kkt_residual) {
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
@@ -126,8 +134,8 @@ inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot,
   constraints_->linearizeConstraints(robot, contact_status_, constraints_data_, 
                                      s, kkt_residual);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::linearizeForwardEuler(grid_info.dt, s, s_next, 
-                                                 kkt_matrix, kkt_residual);
+  unconstr::stateequation::linearizeBackwardEuler(grid_info.dt, q_prev, v_prev, 
+                                                  s, s_next, kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
   constraints_->condenseSlackAndDual(contact_status_, constraints_data_, 
@@ -136,9 +144,11 @@ inline void SplitUnconstrOCP::computeKKTSystem(Robot& robot,
 }
 
 
-inline void SplitUnconstrOCP::expandPrimalAndDual(
-    const double dt, const SplitSolution& s, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
+void SplitUnconstrParNMPC::expandPrimalAndDual(const double dt, 
+                                               const SplitSolution& s, 
+                                               const SplitKKTMatrix& kkt_matrix, 
+                                               const SplitKKTResidual& kkt_residual, 
+                                               SplitDirection& d) {
   assert(dt > 0);
   unconstr_dynamics_.expandPrimal(d);
   unconstr_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d);
@@ -146,20 +156,20 @@ inline void SplitUnconstrOCP::expandPrimalAndDual(
 }
 
 
-inline double SplitUnconstrOCP::maxPrimalStepSize() {
+double SplitUnconstrParNMPC::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-inline double SplitUnconstrOCP::maxDualStepSize() {
+double SplitUnconstrParNMPC::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-inline void SplitUnconstrOCP::updatePrimal(const Robot& robot, 
-                                           const double primal_step_size, 
-                                           const SplitDirection& d, 
-                                           SplitSolution& s) {
+void SplitUnconstrParNMPC::updatePrimal(const Robot& robot, 
+                                        const double primal_step_size, 
+                                        const SplitDirection& d, 
+                                        SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);
@@ -167,15 +177,15 @@ inline void SplitUnconstrOCP::updatePrimal(const Robot& robot,
 }
 
 
-inline void SplitUnconstrOCP::updateDual(const double dual_step_size) {
+void SplitUnconstrParNMPC::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(constraints_data_, dual_step_size);
 }
 
 
-inline double SplitUnconstrOCP::KKTError(const SplitKKTResidual& kkt_residual, 
-                                         const double dt) const {
+double SplitUnconstrParNMPC::KKTError(const SplitKKTResidual& kkt_residual, 
+                                      const double dt) const {
   assert(dt > 0);
   double err = 0;
   err += kkt_residual.KKTError();
@@ -185,12 +195,12 @@ inline double SplitUnconstrOCP::KKTError(const SplitKKTResidual& kkt_residual,
 }
 
 
-inline double SplitUnconstrOCP::stageCost() const {
+double SplitUnconstrParNMPC::stageCost() const {
   return stage_cost_;
 }
 
 
-inline double SplitUnconstrOCP::constraintViolation(
+double SplitUnconstrParNMPC::constraintViolation(
     const SplitKKTResidual& kkt_residual, const double dt) const {
   double vio = 0;
   vio += kkt_residual.constraintViolation();
@@ -200,5 +210,3 @@ inline double SplitUnconstrOCP::constraintViolation(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_SPLIT_UNCONSTR_OCP_HXX_ 

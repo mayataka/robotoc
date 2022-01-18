@@ -225,6 +225,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/unconstr/split_unconstr_parnmpc.hxx"
-
 #endif // ROBOTOC_SPLIT_UNCONSTR_PARNMPC_HPP_ 

@@ -246,6 +246,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/impulse/impulse_split_ocp.hxx"
-
 #endif // ROBOTOC_IMPULSE_SPLIT_OCP_HPP_ 

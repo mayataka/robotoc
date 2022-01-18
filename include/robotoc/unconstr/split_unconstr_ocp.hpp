@@ -216,6 +216,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/unconstr/split_unconstr_ocp.hxx"
-
 #endif // ROBOTOC_SPLIT_UNCONSTR_OCP_HPP_ 

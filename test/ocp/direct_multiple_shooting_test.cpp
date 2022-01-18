@@ -386,14 +386,14 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
       const double dt_aux = grid_info_impulse.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
       const double dts_aux = (d_ref.aux[impulse_index].dts_next - d_ref.aux[impulse_index].dts) / ocp_ref.discrete().N_phase(contact_phase+1);
-      ocp_ref[i].expandDual(dt_i, d_ref.impulse[impulse_index], d_ref[i], dts_i);
+      ocp_ref[i].expandDual(grid_info, d_ref.impulse[impulse_index], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index], dts_aux);
+      ocp_ref.aux[impulse_index].expandDual(grid_info_impulse, d_ref[i+1], d_ref.aux[impulse_index], dts_aux);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
@@ -407,10 +407,10 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
       const double dt_lift = grid_info_lift.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
       const double dts_lift = (d_ref.lift[lift_index].dts_next - d_ref.lift[lift_index].dts) / ocp_ref.discrete().N_phase(contact_phase+1);
-      ocp_ref[i].expandDual(dt_i, d_ref.lift[lift_index], d_ref[i], dts_i);
+      ocp_ref[i].expandDual(grid_info, d_ref.lift[lift_index], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index], dts_lift);
+      ocp_ref.lift[lift_index].expandDual(grid_info_lift, d_ref[i+1], d_ref.lift[lift_index], dts_lift);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, 
                                             d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
@@ -422,7 +422,7 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
       const auto grid_info_next = ocp_ref.discrete().gridInfo(i+1);
       const double dt_i = grid_info.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
-      ocp_ref[i].expandDual(dt_i, d_ref[i+1], kkt_matrix_ref.switching[impulse_index], 
+      ocp_ref[i].expandDual(grid_info, d_ref[i+1], kkt_matrix_ref.switching[impulse_index], 
                             d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
@@ -432,7 +432,7 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
       const auto grid_info = ocp_ref.discrete().gridInfo(i);
       const double dt_i = grid_info.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
-      ocp_ref[i].expandDual(dt_i, d_ref[i+1], d_ref[i], dts_i);
+      ocp_ref[i].expandDual(grid_info, d_ref[i+1], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }

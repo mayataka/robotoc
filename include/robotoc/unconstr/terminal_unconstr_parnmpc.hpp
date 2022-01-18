@@ -237,6 +237,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/unconstr/terminal_unconstr_parnmpc.hxx"
-
 #endif // ROBOTOC_TERMINAL_UNCONSTR_PARNMPC_HPP_ 

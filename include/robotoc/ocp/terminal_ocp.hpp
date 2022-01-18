@@ -198,6 +198,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/ocp/terminal_ocp.hxx"
-
 #endif // IDOCPT_TERMINAL_OCP_HPP_

@@ -1,15 +1,13 @@
-#ifndef ROBOTOC_UNCONSTR_DYNAMICS_HXX_
-#define ROBOTOC_UNCONSTR_DYNAMICS_HXX_
-
 #include "robotoc/unconstr/unconstr_dynamics.hpp"
 
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
 
+
 namespace robotoc {
 
-inline UnconstrDynamics::UnconstrDynamics(const Robot& robot) 
+UnconstrDynamics::UnconstrDynamics(const Robot& robot) 
   : lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
     ID_(Eigen::VectorXd::Zero(robot.dimv())),
     Quu_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -35,7 +33,7 @@ inline UnconstrDynamics::UnconstrDynamics(const Robot& robot)
 }
 
 
-inline UnconstrDynamics::UnconstrDynamics() 
+UnconstrDynamics::UnconstrDynamics() 
   : lu_condensed_(),
     ID_(),
     Quu_(),
@@ -49,20 +47,20 @@ inline UnconstrDynamics::UnconstrDynamics()
 }
 
 
-inline UnconstrDynamics::~UnconstrDynamics() {
+UnconstrDynamics::~UnconstrDynamics() {
 }
 
 
-inline void UnconstrDynamics::evalUnconstrDynamics(Robot& robot, 
-                                                   const SplitSolution& s) {
+void UnconstrDynamics::evalUnconstrDynamics(Robot& robot, 
+                                            const SplitSolution& s) {
   robot.RNEA(s.q, s.v, s.a, ID_);
   ID_.noalias() -= s.u;
 }
 
 
-inline void UnconstrDynamics::linearizeUnconstrDynamics(
-    Robot& robot, const double dt, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) { 
+void UnconstrDynamics::linearizeUnconstrDynamics(Robot& robot, const double dt, 
+                                                 const SplitSolution& s, 
+                                                 SplitKKTResidual& kkt_residual) { 
   assert(dt > 0);
   evalUnconstrDynamics(robot, s);
   // augment inverse dynamics constraint
@@ -74,8 +72,8 @@ inline void UnconstrDynamics::linearizeUnconstrDynamics(
 }
 
 
-inline void UnconstrDynamics::condenseUnconstrDynamics(
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+void UnconstrDynamics::condenseUnconstrDynamics(SplitKKTMatrix& kkt_matrix, 
+                                                SplitKKTResidual& kkt_residual) {
   // condense KKT residual
   lu_condensed_ = kkt_residual.lu;
   lu_condensed_.noalias() += kkt_matrix.Quu.diagonal().asDiagonal() * ID_;
@@ -97,7 +95,7 @@ inline void UnconstrDynamics::condenseUnconstrDynamics(
 }
 
 
-inline void UnconstrDynamics::expandPrimal(SplitDirection& d) const {
+void UnconstrDynamics::expandPrimal(SplitDirection& d) const {
   d.du = ID_;
   d.du.noalias() += dID_dq_ * d.dq();
   d.du.noalias() += dID_dv_ * d.dv();
@@ -105,63 +103,12 @@ inline void UnconstrDynamics::expandPrimal(SplitDirection& d) const {
 }
 
 
-
-inline void UnconstrDynamics::expandDual(const double dt, 
-                                         const SplitKKTMatrix& kkt_matrix, 
-                                         const SplitKKTResidual& kkt_residual, 
-                                         SplitDirection& d) {
+void UnconstrDynamics::expandDual(const double dt, 
+                                  const SplitKKTMatrix& kkt_matrix, 
+                                  const SplitKKTResidual& kkt_residual, 
+                                  SplitDirection& d) {
   assert(dt > 0);
   d.dbeta().noalias() = (kkt_residual.lu  + kkt_matrix.Quu * d.du) / dt;
 }
 
-
-inline double UnconstrDynamics::KKTError() const {
-  return ID_.squaredNorm();
-}
-
-
-template <int p>
-inline double UnconstrDynamics::constraintViolation() const {
-  return ID_.template lpNorm<p>();
-}
-
-
-template <typename MatrixType1, typename MatrixType2>
-inline void UnconstrDynamics::getStateFeedbackGain(
-    const Eigen::MatrixBase<MatrixType1>& Ka,
-    const Eigen::MatrixBase<MatrixType2>& Ku) const {
-  assert(Ka.rows() == dimv_);
-  assert(Ka.cols() == 2*dimv_);
-  assert(Ku.rows() == dimv_);
-  assert(Ku.cols() == 2*dimv_);
-  getStateFeedbackGain(
-      Ka.leftCols(dimv_), Ka.rightCols(dimv_),
-      const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).leftCols(dimv_),
-      const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).rightCols(dimv_));
-}
-
-
-template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
-          typename MatrixType4>
-inline void UnconstrDynamics::getStateFeedbackGain(
-    const Eigen::MatrixBase<MatrixType1>& Kaq,
-    const Eigen::MatrixBase<MatrixType2>& Kav,
-    const Eigen::MatrixBase<MatrixType3>& Kuq,
-    const Eigen::MatrixBase<MatrixType4>& Kuv) const {
-  assert(Kaq.rows() == dimv_);
-  assert(Kaq.cols() == dimv_);
-  assert(Kav.rows() == dimv_);
-  assert(Kav.cols() == dimv_);
-  assert(Kuq.rows() == dimv_);
-  assert(Kuq.cols() == dimv_);
-  assert(Kuv.rows() == dimv_);
-  assert(Kuv.cols() == dimv_);
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(Kuq) = dID_dq_;
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(Kuq).noalias() += dID_da_ * Kaq;
-  const_cast<Eigen::MatrixBase<MatrixType4>&>(Kuv) = dID_dv_;
-  const_cast<Eigen::MatrixBase<MatrixType4>&>(Kuv).noalias() += dID_da_ * Kav;
-}
-
 } // namespace robotoc 
-
-#endif // ROBOTOC_UNCONSTR_DYNAMICS_HXX_ 

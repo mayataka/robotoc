@@ -1,13 +1,10 @@
-#ifndef ROBOTOC_SWITCHING_CONSTRAINT_HXX_ 
-#define ROBOTOC_SWITCHING_CONSTRAINT_HXX_
-
 #include "robotoc/ocp/switching_constraint.hpp"
 
 #include <cassert>
 
 namespace robotoc {
 
-inline SwitchingConstraint::SwitchingConstraint(const Robot& robot)
+SwitchingConstraint::SwitchingConstraint(const Robot& robot)
   : q_(Eigen::VectorXd::Zero(robot.dimq())),
     dq_(Eigen::VectorXd::Zero(robot.dimv())),
     PqT_xi_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -15,7 +12,7 @@ inline SwitchingConstraint::SwitchingConstraint(const Robot& robot)
 }
 
 
-inline SwitchingConstraint::SwitchingConstraint()
+SwitchingConstraint::SwitchingConstraint()
   : q_(),
     dq_(),
     PqT_xi_(),
@@ -23,11 +20,11 @@ inline SwitchingConstraint::SwitchingConstraint()
 }
 
 
-inline SwitchingConstraint::~SwitchingConstraint() {
+SwitchingConstraint::~SwitchingConstraint() {
 }
 
 
-inline void SwitchingConstraint::evalSwitchingConstraint(
+void SwitchingConstraint::evalSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, 
     SwitchingConstraintResidual& sc_residual) {
@@ -41,7 +38,7 @@ inline void SwitchingConstraint::evalSwitchingConstraint(
 }
 
 
-inline void SwitchingConstraint::linearizeSwitchingConstraint(
+void SwitchingConstraint::linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual, SwitchingConstraintJacobian& sc_jacobian,
@@ -79,5 +76,3 @@ inline void SwitchingConstraint::linearizeSwitchingConstraint(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_SWITCHING_CONSTRAINT_HXX_

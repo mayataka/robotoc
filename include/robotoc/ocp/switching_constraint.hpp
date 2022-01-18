@@ -102,6 +102,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/ocp/switching_constraint.hxx"
-
 #endif // ROBOTOC_SWITCHING_CONSTRAINT_HPP_ 
