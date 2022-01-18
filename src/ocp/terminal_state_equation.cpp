@@ -1,13 +1,10 @@
-#ifndef ROBOTOC_TERMINAL_STATE_EQUATION_HXX_
-#define ROBOTOC_TERMINAL_STATE_EQUATION_HXX_
-
 #include "robotoc/ocp/terminal_state_equation.hpp"
 
 #include <cassert>
 
 namespace robotoc {
 
-inline TerminalStateEquation::TerminalStateEquation(const Robot& robot)
+TerminalStateEquation::TerminalStateEquation(const Robot& robot)
   : Fqq_prev_inv_(),
     Fq_tmp_(),
     se3_jac_inverse_(),
@@ -21,7 +18,7 @@ inline TerminalStateEquation::TerminalStateEquation(const Robot& robot)
 }
 
 
-inline TerminalStateEquation::TerminalStateEquation()
+TerminalStateEquation::TerminalStateEquation()
   : Fqq_prev_inv_(),
     Fq_tmp_(),
     se3_jac_inverse_(),
@@ -29,13 +26,12 @@ inline TerminalStateEquation::TerminalStateEquation()
 }
 
 
-inline TerminalStateEquation::~TerminalStateEquation() {
+TerminalStateEquation::~TerminalStateEquation() {
 }
 
 
-template <typename ConfigVectorType>
-inline void TerminalStateEquation::linearizeStateEquation(
-    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+void TerminalStateEquation::linearizeStateEquation(
+    const Robot& robot, const Eigen::VectorXd& q_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -54,7 +50,7 @@ inline void TerminalStateEquation::linearizeStateEquation(
 }
 
 
-inline void TerminalStateEquation::correctLinearizedStateEquation(
+void TerminalStateEquation::correctLinearizedStateEquation(
     SplitKKTMatrix& kkt_matrix) {
   if (has_floating_base_) {
     se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
@@ -62,7 +58,7 @@ inline void TerminalStateEquation::correctLinearizedStateEquation(
 }
 
 
-inline void TerminalStateEquation::correctCostateDirection(SplitDirection& d) {
+void TerminalStateEquation::correctCostateDirection(SplitDirection& d) {
   if (has_floating_base_) {
     Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
     d.dlmdgmm.template head<6>() = - Fq_tmp_;
@@ -70,5 +66,3 @@ inline void TerminalStateEquation::correctCostateDirection(SplitDirection& d) {
 }
 
 } // namespace robotoc 
-
-#endif // ROBOTOC_TERMINAL_STATE_EQUATION_HXX_ 

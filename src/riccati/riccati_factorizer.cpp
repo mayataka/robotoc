@@ -1,14 +1,11 @@
-#ifndef ROBOTOC_RICCATI_FACTORIZER_HXX_ 
-#define ROBOTOC_RICCATI_FACTORIZER_HXX_
-
 #include "robotoc/riccati/riccati_factorizer.hpp"
 
 #include <cassert>
 
+
 namespace robotoc {
 
-inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot, 
-                                            const double max_dts0) 
+RiccatiFactorizer::RiccatiFactorizer(const Robot& robot, const double max_dts0) 
   : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
@@ -19,7 +16,7 @@ inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot,
 }
 
 
-inline RiccatiFactorizer::RiccatiFactorizer() 
+RiccatiFactorizer::RiccatiFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     dimu_(0),
@@ -30,17 +27,17 @@ inline RiccatiFactorizer::RiccatiFactorizer()
 }
 
 
-inline RiccatiFactorizer::~RiccatiFactorizer() {
+RiccatiFactorizer::~RiccatiFactorizer() {
 }
 
 
-inline void RiccatiFactorizer::setRegularization(const double max_dts0) {
+void RiccatiFactorizer::setRegularization(const double max_dts0) {
   assert(max_dts0 > 0);
   max_dts0_ = max_dts0;
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
+void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next,  
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy) {
@@ -58,7 +55,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
+void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next,  SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual, SplitRiccatiFactorization& riccati, 
     LQRPolicy& lqr_policy, const bool sto, const bool has_next_sto_phase) {
@@ -87,7 +84,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
+void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
     const SplitRiccatiFactorization& riccati, 
     SplitRiccatiFactorization& riccati_m, STOPolicy& sto_policy, 
     const bool has_next_sto_phase) const {
@@ -123,7 +120,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
+void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const SwitchingConstraintJacobian& sc_jacobian,
@@ -165,7 +162,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
+void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const SwitchingConstraintJacobian& sc_jacobian,
@@ -210,7 +207,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
+void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati) {
@@ -220,7 +217,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
+void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati, const bool sto) {
@@ -232,7 +229,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::computeSwitchingTimeDirection(
+void RiccatiFactorizer::computeSwitchingTimeDirection(
     const STOPolicy& sto_policy, SplitDirection& d, 
     const bool has_prev_sto_phase) {
   d.dts_next = sto_policy.dtsdx.dot(d.dx) + sto_policy.dts0;
@@ -242,31 +239,25 @@ inline void RiccatiFactorizer::computeSwitchingTimeDirection(
 }
 
 
-template <typename SplitDirectionType>
-inline void RiccatiFactorizer::forwardRiccatiRecursion(
+void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirectionType& d_next, 
+    const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirection& d_next, 
     const bool sto, const bool has_next_sto_phase) const {
-  d.du.noalias()  = lqr_policy.K * d.dx;
-  d.du.noalias() += lqr_policy.k;
-  if (sto) {
-    d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
-    if (has_next_sto_phase) {
-      d.du.noalias() -= lqr_policy.W * d.dts_next;
-    }
-  }
-  d_next.dx = kkt_residual.Fx;
-  d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
-  d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
-  if (sto) {
-    d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
-  }
-  d_next.dts = d.dts;
-  d_next.dts_next = d.dts_next;
+  forwardRiccatiRecursion_impl(kkt_matrix, kkt_residual, lqr_policy, d, d_next, 
+                               sto, has_next_sto_phase);
 }
 
 
-inline void RiccatiFactorizer::forwardRiccatiRecursion(
+void RiccatiFactorizer::forwardRiccatiRecursion(
+    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+    const LQRPolicy& lqr_policy, SplitDirection& d, ImpulseSplitDirection& d_next, 
+    const bool sto, const bool has_next_sto_phase) const {
+  forwardRiccatiRecursion_impl(kkt_matrix, kkt_residual, lqr_policy, d, d_next, 
+                               sto, has_next_sto_phase);
+}
+
+
+void RiccatiFactorizer::forwardRiccatiRecursion(
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
@@ -277,7 +268,7 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::computeCostateDirection(
+void RiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, SplitDirection& d,
     const bool sto, const bool has_next_sto_phase) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
@@ -290,7 +281,7 @@ inline void RiccatiFactorizer::computeCostateDirection(
 }
 
 
-inline void RiccatiFactorizer::computeCostateDirection(
+void RiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, ImpulseSplitDirection& d,
     const bool sto) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
@@ -300,7 +291,7 @@ inline void RiccatiFactorizer::computeCostateDirection(
 }
 
 
-inline void RiccatiFactorizer::computeLagrangeMultiplierDirection(
+void RiccatiFactorizer::computeLagrangeMultiplierDirection(
     const SplitConstrainedRiccatiFactorization& c_riccati, 
     SplitDirection& d, const bool sto, const bool has_next_sto_phase) {
   d.dxi().noalias()  = c_riccati.M() * d.dx;
@@ -314,5 +305,3 @@ inline void RiccatiFactorizer::computeLagrangeMultiplierDirection(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_RICCATI_FACTORIZER_HXX_ 

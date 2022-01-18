@@ -1,13 +1,11 @@
-#ifndef ROBOTOC_UNCONSTR_SPLIT_BACKWARD_CORRECTION_HXX_
-#define ROBOTOC_UNCONSTR_SPLIT_BACKWARD_CORRECTION_HXX_
-
-#include "robotoc/parnmpc/unconstr_split_backward_correction.hxx"
+#include "robotoc/parnmpc/unconstr_split_backward_correction.hpp"
 
 #include <cassert>
 
+
 namespace robotoc {
 
-inline UnconstrSplitBackwardCorrection::UnconstrSplitBackwardCorrection(
+UnconstrSplitBackwardCorrection::UnconstrSplitBackwardCorrection(
     const Robot& robot) 
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
@@ -22,7 +20,7 @@ inline UnconstrSplitBackwardCorrection::UnconstrSplitBackwardCorrection(
 }
 
 
-inline UnconstrSplitBackwardCorrection::UnconstrSplitBackwardCorrection() 
+UnconstrSplitBackwardCorrection::UnconstrSplitBackwardCorrection() 
   : dimv_(),
     dimx_(),
     dimkkt_(),
@@ -36,36 +34,27 @@ inline UnconstrSplitBackwardCorrection::UnconstrSplitBackwardCorrection()
 }
 
 
-inline UnconstrSplitBackwardCorrection::~UnconstrSplitBackwardCorrection() {
+UnconstrSplitBackwardCorrection::~UnconstrSplitBackwardCorrection() {
 }
 
 
-template <typename MatrixType>
-inline void UnconstrSplitBackwardCorrection::coarseUpdate(
-    const Eigen::MatrixBase<MatrixType>& aux_mat_next, const double dt,
+void UnconstrSplitBackwardCorrection::coarseUpdate(
+    const Eigen::MatrixXd& aux_mat_next, const double dt,
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const SplitSolution& s, SplitSolution& s_new) {
-  assert(aux_mat_next.rows() == dimx_);
-  assert(aux_mat_next.cols() == dimx_);
-  H_.topLeftCorner(dimv_, dimv_)     = kkt_matrix.Qaa;
-  H_.bottomLeftCorner(dimx_, dimv_)  = kkt_matrix.Qxu; // This is actually Qxa
-  H_.bottomRightCorner(dimx_, dimx_) = kkt_matrix.Qxx.transpose();
-  H_.bottomRightCorner(dimx_, dimx_).noalias() += aux_mat_next;
-  kkt_mat_inverter_.invert(dt, H_, kkt_mat_inv_);
-  kkt_res_.head(dimx_)           = kkt_residual.Fx;
-  kkt_res_.segment(dimx_, dimv_) = kkt_residual.la;
-  kkt_res_.tail(dimx_)           = kkt_residual.lx;
-  d_.noalias() = kkt_mat_inv_ * kkt_res_;
-
-  s_new.lmd = s.lmd - d_.head(dimv_);
-  s_new.gmm = s.gmm - d_.segment(dimv_, dimv_);
-  s_new.a   = s.a   - d_.segment(2*dimv_, dimv_); 
-  s_new.q   = s.q   - d_.segment(3*dimv_, dimv_);
-  s_new.v   = s.v   - d_.tail(dimv_);
+  coarseUpdate_impl(aux_mat_next, dt, kkt_matrix, kkt_residual, s, s_new);
 }
 
 
-inline void UnconstrSplitBackwardCorrection::coarseUpdate(
+void UnconstrSplitBackwardCorrection::coarseUpdate(
+    const Eigen::Block<Eigen::MatrixXd>& aux_mat_next, const double dt,
+    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+    const SplitSolution& s, SplitSolution& s_new) {
+  coarseUpdate_impl(aux_mat_next, dt, kkt_matrix, kkt_residual, s, s_new);
+}
+
+
+void UnconstrSplitBackwardCorrection::coarseUpdate(
     const double dt, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
     SplitSolution& s_new) {
@@ -77,7 +66,6 @@ inline void UnconstrSplitBackwardCorrection::coarseUpdate(
   kkt_res_.segment(dimx_, dimv_) = kkt_residual.la;
   kkt_res_.tail(dimx_)           = kkt_residual.lx;
   d_.noalias() = kkt_mat_inv_ * kkt_res_;
-
   s_new.lmd = s.lmd - d_.head(dimv_);
   s_new.gmm = s.gmm - d_.segment(dimv_, dimv_);
   s_new.a   = s.a   - d_.segment(2*dimv_, dimv_); 
@@ -86,13 +74,13 @@ inline void UnconstrSplitBackwardCorrection::coarseUpdate(
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> 
+const Eigen::Block<const Eigen::MatrixXd> 
 UnconstrSplitBackwardCorrection::auxMat() const {
   return kkt_mat_inv_.topLeftCorner(dimx_, dimx_);
 }
 
 
-inline void UnconstrSplitBackwardCorrection::backwardCorrectionSerial(
+void UnconstrSplitBackwardCorrection::backwardCorrectionSerial(
     const SplitSolution& s_next, const SplitSolution& s_new_next,
     SplitSolution& s_new) {
   x_res_.head(dimv_) = s_new_next.lmd - s_next.lmd;
@@ -103,7 +91,7 @@ inline void UnconstrSplitBackwardCorrection::backwardCorrectionSerial(
 }
 
 
-inline void UnconstrSplitBackwardCorrection::backwardCorrectionParallel(
+void UnconstrSplitBackwardCorrection::backwardCorrectionParallel(
     SplitSolution& s_new) {
   d_.tail(dimkkt_-dimx_).noalias()
       = kkt_mat_inv_.block(dimx_, dimkkt_-dimx_, dimkkt_-dimx_, dimx_) * x_res_;
@@ -113,7 +101,7 @@ inline void UnconstrSplitBackwardCorrection::backwardCorrectionParallel(
 }
 
 
-inline void UnconstrSplitBackwardCorrection::forwardCorrectionSerial(
+void UnconstrSplitBackwardCorrection::forwardCorrectionSerial(
     const SplitSolution& s_prev, const SplitSolution& s_new_prev, 
     SplitSolution& s_new) {
   x_res_.head(dimv_) = s_new_prev.q - s_prev.q;
@@ -124,7 +112,7 @@ inline void UnconstrSplitBackwardCorrection::forwardCorrectionSerial(
 }
 
 
-inline void UnconstrSplitBackwardCorrection::forwardCorrectionParallel(
+void UnconstrSplitBackwardCorrection::forwardCorrectionParallel(
     SplitSolution& s_new) {
   d_.head(dimkkt_-dimx_).noalias()
       = kkt_mat_inv_.topLeftCorner(dimkkt_-dimx_, dimx_) * x_res_;
@@ -134,7 +122,7 @@ inline void UnconstrSplitBackwardCorrection::forwardCorrectionParallel(
 }
 
 
-inline void UnconstrSplitBackwardCorrection::computeDirection(
+void UnconstrSplitBackwardCorrection::computeDirection(
     const SplitSolution& s, const SplitSolution& s_new, 
     SplitDirection& d) {
   d.dlmd() = s_new.lmd - s.lmd;
@@ -145,5 +133,3 @@ inline void UnconstrSplitBackwardCorrection::computeDirection(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_UNCONSTR_SPLIT_BACKWARD_CORRECTION_HXX_ 

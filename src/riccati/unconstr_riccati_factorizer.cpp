@@ -1,31 +1,29 @@
-#ifndef ROBOTOC_UNCONSTR_RICCATI_FACTORIZER_HXX_ 
-#define ROBOTOC_UNCONSTR_RICCATI_FACTORIZER_HXX_
-
 #include "robotoc/riccati/unconstr_riccati_factorizer.hpp"
 
 #include <cassert>
 
+
 namespace robotoc {
 
-inline UnconstrRiccatiFactorizer::UnconstrRiccatiFactorizer(const Robot& robot) 
+UnconstrRiccatiFactorizer::UnconstrRiccatiFactorizer(const Robot& robot) 
   : dimv_(robot.dimv()),
     llt_(robot.dimv()),
     backward_recursion_(robot) {
 }
 
 
-inline UnconstrRiccatiFactorizer::UnconstrRiccatiFactorizer() 
+UnconstrRiccatiFactorizer::UnconstrRiccatiFactorizer() 
   : dimv_(0),
     llt_(),
     backward_recursion_() {
 }
 
 
-inline UnconstrRiccatiFactorizer::~UnconstrRiccatiFactorizer() {
+UnconstrRiccatiFactorizer::~UnconstrRiccatiFactorizer() {
 }
 
 
-inline void UnconstrRiccatiFactorizer::backwardRiccatiRecursion(
+void UnconstrRiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, const double dt, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual,  
     SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy) {
@@ -43,7 +41,7 @@ inline void UnconstrRiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void UnconstrRiccatiFactorizer::forwardRiccatiRecursion(
+void UnconstrRiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTResidual& kkt_residual, const double dt, 
     const LQRPolicy& lqr_policy, SplitDirection& d, 
     SplitDirection& d_next) const {
@@ -55,11 +53,9 @@ inline void UnconstrRiccatiFactorizer::forwardRiccatiRecursion(
 }
 
 
-inline void UnconstrRiccatiFactorizer::computeCostateDirection(
+void UnconstrRiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, SplitDirection& d) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_UNCONSTR_RICCATI_FACTORIZER_HXX_ 

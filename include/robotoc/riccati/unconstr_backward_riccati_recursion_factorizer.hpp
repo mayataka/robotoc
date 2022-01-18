@@ -94,6 +94,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/riccati/unconstr_backward_riccati_recursion_factorizer.hxx"
-
 #endif // ROBOTOC_UNCONSTR_BACKWARD_RICCATI_RECURSION_FACTORIZER_HPP_
