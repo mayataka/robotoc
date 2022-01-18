@@ -36,7 +36,6 @@ protected:
 
 TEST_P(TerminalOCPTest, computeKKTResidual) {
   auto robot = GetParam();
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   const SplitSolution s_prev = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
@@ -64,7 +63,6 @@ TEST_P(TerminalOCPTest, computeKKTResidual) {
 
 TEST_P(TerminalOCPTest, computeKKTSystem) {
   auto robot = GetParam();
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   const auto s_prev = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
@@ -96,7 +94,6 @@ TEST_P(TerminalOCPTest, computeKKTSystem) {
 
 TEST_P(TerminalOCPTest, evalOCP) {
   auto robot = GetParam();
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const auto s = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);

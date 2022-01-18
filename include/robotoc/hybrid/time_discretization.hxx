@@ -331,7 +331,7 @@ inline const GridInfo& TimeDiscretization::gridInfoAux(
 inline const GridInfo& TimeDiscretization::gridInfoLift(
     const int lift_index) const {
   assert(lift_index >= 0);
-  assert(lift_index < N_impulse());
+  assert(lift_index < N_lift());
   return grid_lift_[lift_index];
 }
 

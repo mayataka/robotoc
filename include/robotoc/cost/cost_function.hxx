@@ -46,7 +46,7 @@ inline double CostFunction::evalStageCost(Robot& robot,
                                           CostFunctionData& data, 
                                           const GridInfo& grid_info,
                                           const SplitSolution& s) const {
-  assert(dt > 0);
+  assert(grid_info.dt > 0);
   double l = 0;
   for (const auto e : costs_) {
     l += e->evalStageCost(robot, contact_status, data, grid_info, s);
@@ -59,7 +59,7 @@ inline double CostFunction::linearizeStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dt > 0);
+  assert(grid_info.dt > 0);
   double l = 0;
   for (const auto e : costs_) {
     l += e->evalStageCost(robot, contact_status, data, grid_info, s);
@@ -74,7 +74,7 @@ inline double CostFunction::quadratizeStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual, SplitKKTMatrix& kkt_matrix) const {
-  assert(dt > 0);
+  assert(grid_info.dt > 0);
   double l = 0;
   for (const auto e : costs_) {
     l += e->evalStageCost(robot, contact_status, data, grid_info, s);
