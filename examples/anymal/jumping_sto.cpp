@@ -182,9 +182,6 @@ int main(int argc, char *argv[]) {
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
   std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
-  const int num_iteration = 5000;
-  robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
-
   // const int num_iteration = 10000;
   // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
 
