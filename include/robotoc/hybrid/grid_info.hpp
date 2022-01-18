@@ -89,6 +89,7 @@ struct GridInfo {
     os << "dt: " << dt << std::endl;
     os << "contact_phase: " << contact_phase << std::endl;
     os << "time_stage: " << time_stage << std::endl;
+    os << "grid_count_in_phase: " << grid_count_in_phase << std::endl;
   }
 
   friend std::ostream& operator<<(std::ostream& os, const GridInfo& grid_info) {

@@ -57,7 +57,7 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
 
     def run_simulation(self, mpc, q0, v0, feedback_delay=False, verbose=False, 
                        record=False, record_name='quadrupedal_mpc_sim.mp4'):
-        pybullet.connect(pybullet.DIRECT)
+        pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
         pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())

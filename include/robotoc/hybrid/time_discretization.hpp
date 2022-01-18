@@ -232,48 +232,30 @@ public:
   bool isTimeStageAfterLift(const int time_stage) const;
 
   ///
-  /// @brief Returns the time of the specified time stage. 
-  /// @param[in] time_stage Time stage of interest. 
-  /// @return Time of the time stage of interest.
+  /// @brief Returns the initial time of the horizon. 
+  /// @return Initial time of the horizon.
   ///
-  double t(const int time_stage) const;
+  double t0() const;
+
+  ///
+  /// @brief Returns the final time of the horizon. 
+  /// @return Final time of the horizon.
+  ///
+  double tf() const;
 
   ///
   /// @brief Returns the time of the specified impulse event. 
   /// @param[in] impulse_index Index of impulse event of interest. 
   /// @return Time of the impulse event of interest.
   ///
-  double t_impulse(const int impulse_index) const;
+  double impulseTime(const int impulse_index) const;
 
   ///
   /// @brief Returns the time of the specified lift event. 
   /// @param[in] lift_index Index of lift event of interest. 
   /// @return Time of the lift event of interest.
   ///
-  double t_lift(const int lift_index) const;
-
-  ///
-  /// @brief Returns the time step of the specified time stage. 
-  /// @param[in] time_stage Time stage of interest. 
-  /// @return Time step of the time stage of interest.
-  ///
-  double dt(const int time_stage) const;
-
-  ///
-  /// @brief Returns the time step of the auxiliary stage of the specified 
-  /// impulse event. 
-  /// @param[in] impulse_index Index of impulse event of interest. 
-  /// @return Time step of the auxiliary stage of the impulse event.
-  ///
-  double dt_aux(const int impulse_index) const;
-
-  ///
-  /// @brief Returns the time step of the auxiliary stage of the specified lift
-  /// event. 
-  /// @param[in] lift_index Index of lift event of interest. 
-  /// @return Time step of the auxiliary stage of the lift event.
-  ///
-  double dt_lift(const int lift_index) const;
+  double liftTime(const int lift_index) const;
 
   ///
   /// @brief Returns the maximum time step over the horizon. 
@@ -314,34 +296,6 @@ public:
   /// @return Grid info of the aux stage of the impulse event.
   ///
   const GridInfo& gridInfoLift(const int lift_index) const;
-
-  ///
-  /// @brief Returns the time stage index counded in the contact phase of the 
-  /// specified time stage. 
-  /// @param[in] time_stage Time stage of interest. 
-  /// @return Time stage index counded in the contact phase.
-  ///
-  int timeStageInPhase(const int time_stage) const;
-
-  ///
-  /// @brief Returns the time stage index counded in the contact phase of the 
-  /// specified lift index. 
-  /// @param[in] lift_index Index of lift event of interest. 
-  /// @return Time stage index counded in the contact phase.
-  ///
-  static constexpr int timeStageInPhaseLift(const int lift_index) {
-    return 0;
-  }
-
-  ///
-  /// @brief Returns the time stage index counded in the contact phase of the
-  /// specified impulse index. 
-  /// @param[in] impulse_index Index of impulse event of interest. 
-  /// @return Time stage index counded in the contact phase.
-  ///
-  static constexpr int timeStageInPhaseAux(const int impulse_index) {
-    return 0;
-  }
 
   ///
   /// @brief Checks wheather the STO is enabled for the specified discrete event. 

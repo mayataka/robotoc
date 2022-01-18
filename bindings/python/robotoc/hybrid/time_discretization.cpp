@@ -63,17 +63,11 @@ PYBIND11_MODULE(time_discretization, m) {
           py::arg("time_stage"))
     .def("is_time_stage_after_lift", &TimeDiscretization::isTimeStageAfterLift,
           py::arg("time_stage"))
-    .def("t", &TimeDiscretization::t,
-          py::arg("time_stage"))
-    .def("t_impulse", &TimeDiscretization::t_impulse,
+    .def("t0", &TimeDiscretization::t0)
+    .def("tf", &TimeDiscretization::tf)
+    .def("impulseTime", &TimeDiscretization::impulseTime,
           py::arg("impulse_index"))
-    .def("t_lift", &TimeDiscretization::t_lift,
-          py::arg("lift_index"))
-    .def("dt", &TimeDiscretization::dt,
-          py::arg("time_stage"))
-    .def("dt_aux", &TimeDiscretization::dt_aux,
-          py::arg("impulse_index"))
-    .def("dt_lift", &TimeDiscretization::dt_lift,
+    .def("liftTime", &TimeDiscretization::liftTime,
           py::arg("lift_index"))
     .def("dt_max", &TimeDiscretization::dt_max)
     .def("dt_ideal", &TimeDiscretization::dt_ideal)
@@ -85,9 +79,6 @@ PYBIND11_MODULE(time_discretization, m) {
           py::arg("aux_index"))
     .def("grid_info_lift", &TimeDiscretization::gridInfoLift,
           py::arg("lift_index"))
-    .def("time_stage_in_phase", &TimeDiscretization::timeStageInPhase)
-    .def("time_stage_in_phase_lift", &TimeDiscretization::timeStageInPhaseLift)
-    .def("time_stage_in_phase_aux", &TimeDiscretization::timeStageInPhaseAux)
     .def("is_STO_enabled_event", &TimeDiscretization::isSTOEnabledEvent,
           py::arg("event_index"))
     .def("is_STO_enabled_phase", &TimeDiscretization::isSTOEnabledPhase,

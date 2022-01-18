@@ -260,27 +260,27 @@ public:
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
   /// stage. 
   /// 
   template <typename SplitDirectionType>
-  void expandDual(const double dt, const SplitDirectionType& d_next, 
+  void expandDual(const GridInfo& grid_info, const SplitDirectionType& d_next, 
                   SplitDirection& d, const double dts);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
   /// stage. 
   /// 
-  void expandDual(const double dt, const SplitDirection& d_next, 
+  void expandDual(const GridInfo& grid_info, const SplitDirection& d_next, 
                   const SwitchingConstraintJacobian& sc_jacobian,
                   SplitDirection& d, const double dts);
 

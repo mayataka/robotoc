@@ -248,19 +248,21 @@ inline void SplitOCP::expandPrimal(const ContactStatus& contact_status,
 
 
 template <typename SplitDirectionType>
-inline void SplitOCP::expandDual(const double dt, 
+inline void SplitOCP::expandDual(const GridInfo& grid_info, 
                                  const SplitDirectionType& d_next, 
                                  SplitDirection& d, const double dts) {
-  assert(dt > 0);
-  contact_dynamics_.expandDual(dt, dts, d_next, d);
+  assert(grid_info.dt > 0);
+  contact_dynamics_.expandDual(grid_info.dt, dts, d_next, d);
   state_equation_.correctCostateDirection(d);
 }
 
 
-inline void SplitOCP::expandDual(const double dt, const SplitDirection& d_next, 
+inline void SplitOCP::expandDual(const GridInfo& grid_info, 
+                                 const SplitDirection& d_next, 
                                  const SwitchingConstraintJacobian& sc_jacobian,
                                  SplitDirection& d, const double dts) {
-  contact_dynamics_.expandDual(dt, dts, d_next, sc_jacobian, d);
+  assert(grid_info.dt > 0);
+  contact_dynamics_.expandDual(grid_info.dt, dts, d_next, sc_jacobian, d);
   state_equation_.correctCostateDirection(d);
 }
 

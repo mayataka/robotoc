@@ -114,10 +114,10 @@ inline void STOConstraints::setSlack(const TimeDiscretization& discretization) {
     return;
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
-    dtlb_[0].setSlack(min_dt_[0], discretization.t(0), discretization.t_impulse(0));
+    dtlb_[0].setSlack(min_dt_[0], discretization.t0(), discretization.impulseTime(0));
   }
   else {
-    dtlb_[0].setSlack(min_dt_[0], discretization.t(0), discretization.t_lift(0));
+    dtlb_[0].setSlack(min_dt_[0], discretization.t0(), discretization.liftTime(0));
   }
   int impulse_index = 0;
   int lift_index = 0;
@@ -127,39 +127,39 @@ inline void STOConstraints::setSlack(const TimeDiscretization& discretization) {
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
       if (next_event_type == DiscreteEventType::Impulse) {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1],
-                                      discretization.t_impulse(impulse_index),  
-                                      discretization.t_impulse(impulse_index+1));
+                                      discretization.impulseTime(impulse_index),  
+                                      discretization.impulseTime(impulse_index+1));
       }
       else {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1], 
-                                      discretization.t_impulse(impulse_index),  
-                                      discretization.t_lift(lift_index));
+                                      discretization.impulseTime(impulse_index),  
+                                      discretization.liftTime(lift_index));
       }
       ++impulse_index;
     }
     else {
       if (next_event_type == DiscreteEventType::Impulse) {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1],
-                                      discretization.t_lift(lift_index),  
-                                      discretization.t_impulse(impulse_index));
+                                      discretization.liftTime(lift_index),  
+                                      discretization.impulseTime(impulse_index));
       }
       else {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1],
-                                      discretization.t_lift(lift_index),  
-                                      discretization.t_lift(lift_index+1));
+                                      discretization.liftTime(lift_index),  
+                                      discretization.liftTime(lift_index+1));
       }
       ++lift_index;
     }
   }
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     dtlb_[num_events].setSlack(min_dt_[num_events], 
-                               discretization.t_impulse(impulse_index), 
-                               discretization.t(discretization.N()));
+                               discretization.impulseTime(impulse_index), 
+                               discretization.tf());
   }
   else {
     dtlb_[num_events].setSlack(min_dt_[num_events], 
-                               discretization.t_lift(lift_index), 
-                               discretization.t(discretization.N()));
+                               discretization.liftTime(lift_index), 
+                               discretization.tf());
   }
 }
 
@@ -174,14 +174,14 @@ inline void STOConstraints::evalConstraint(
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_impulse(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.impulseTime(0));
     }
   }
   else {
     if (discretization.isSTOEnabledLift(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_lift(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.liftTime(0));
     }
   }
   int impulse_index = 0;
@@ -193,13 +193,13 @@ inline void STOConstraints::evalConstraint(
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_impulse(impulse_index+1));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.impulseTime(impulse_index+1));
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_lift(lift_index));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.liftTime(lift_index));
         }
       }
       ++impulse_index;
@@ -208,13 +208,13 @@ inline void STOConstraints::evalConstraint(
       if (discretization.isSTOEnabledLift(lift_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_impulse(impulse_index));
+              min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.impulseTime(impulse_index));
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_lift(lift_index+1));
+              min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.liftTime(lift_index+1));
         }
       }
       ++lift_index;
@@ -223,15 +223,15 @@ inline void STOConstraints::evalConstraint(
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_impulse(impulse_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.impulseTime(impulse_index), 
+                                       discretization.tf());
     }
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_lift(lift_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.liftTime(lift_index), 
+                                       discretization.tf());
     }
   }
 }
@@ -248,15 +248,15 @@ inline void STOConstraints::linearizeConstraints(
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_impulse(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.impulseTime(0));
       dtlb_[0].evalDerivatives_lb(kkt_residual.aux[0]);
     }
   }
   else {
     if (discretization.isSTOEnabledLift(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_lift(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.liftTime(0));
       dtlb_[0].evalDerivatives_lb(kkt_residual.lift[0]);
     }
   }
@@ -269,16 +269,16 @@ inline void STOConstraints::linearizeConstraints(
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_impulse(impulse_index+1));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.impulseTime(impulse_index+1));
           dtlb_[event_index+1].evalDerivatives_lub( 
               kkt_residual.aux[impulse_index], 
               kkt_residual.aux[impulse_index+1]);
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_lift(lift_index));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.liftTime(lift_index));
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.aux[impulse_index], kkt_residual.lift[lift_index]);
         }
@@ -289,15 +289,15 @@ inline void STOConstraints::linearizeConstraints(
       if (discretization.isSTOEnabledLift(lift_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-               min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_impulse(impulse_index));
+               min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.impulseTime(impulse_index));
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.lift[lift_index], kkt_residual.aux[impulse_index]);
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_lift(lift_index+1));
+              min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.liftTime(lift_index+1));
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.lift[lift_index], kkt_residual.lift[lift_index+1]);
         }
@@ -308,16 +308,16 @@ inline void STOConstraints::linearizeConstraints(
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_impulse(impulse_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.impulseTime(impulse_index), 
+                                       discretization.tf());
       dtlb_[num_events].evalDerivatives_ub(kkt_residual.aux[impulse_index]);
     }
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_lift(lift_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.liftTime(lift_index), 
+                                       discretization.tf());
       dtlb_[num_events].evalDerivatives_ub(kkt_residual.lift[lift_index]);
     }
   }
