@@ -1,6 +1,3 @@
-#ifndef ROBOTOC_UNCONSTR_BACKWARD_RICCATI_RECURSION_FACTORIZER_HXX_
-#define ROBOTOC_UNCONSTR_BACKWARD_RICCATI_RECURSION_FACTORIZER_HXX_
-
 #include "robotoc/riccati/unconstr_backward_riccati_recursion_factorizer.hpp"
 
 #include <cassert>
@@ -8,26 +5,26 @@
 
 namespace robotoc {
 
-inline UnconstrBackwardRiccatiRecursionFactorizer::
+UnconstrBackwardRiccatiRecursionFactorizer::
 UnconstrBackwardRiccatiRecursionFactorizer(const Robot& robot) 
   : dimv_(robot.dimv()),
     GK_(Eigen::MatrixXd::Zero(robot.dimv(), 2*robot.dimv())) {
 }
 
 
-inline UnconstrBackwardRiccatiRecursionFactorizer::
+UnconstrBackwardRiccatiRecursionFactorizer::
 UnconstrBackwardRiccatiRecursionFactorizer() 
   : dimv_(0),
     GK_() {
 }
 
 
-inline UnconstrBackwardRiccatiRecursionFactorizer::
+UnconstrBackwardRiccatiRecursionFactorizer::
 ~UnconstrBackwardRiccatiRecursionFactorizer() {
 }
 
 
-inline void UnconstrBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
+void UnconstrBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     const SplitRiccatiFactorization& riccati_next, const double dt, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
@@ -51,7 +48,7 @@ inline void UnconstrBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
 }
 
 
-inline void UnconstrBackwardRiccatiRecursionFactorizer::
+void UnconstrBackwardRiccatiRecursionFactorizer::
 factorizeRiccatiFactorization(const SplitRiccatiFactorization& riccati_next, 
                               SplitKKTMatrix& kkt_matrix, 
                               const SplitKKTResidual& kkt_residual, 
@@ -73,5 +70,3 @@ factorizeRiccatiFactorization(const SplitRiccatiFactorization& riccati_next,
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_UNCONSTR_BACKWARD_RICCATI_RECURSION_FACTORIZER_HXX_ 

@@ -15,6 +15,7 @@
 #include "robotoc/ocp/kkt_residual.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/time_discretization.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {

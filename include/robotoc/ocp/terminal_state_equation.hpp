@@ -64,11 +64,11 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
-  template <typename ConfigVectorType>
-  static void linearizeStateEquation(
-      const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-      const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-      SplitKKTResidual& kkt_residual);
+  static void linearizeStateEquation(const Robot& robot, 
+                                     const Eigen::VectorXd& q_prev, 
+                                     const SplitSolution& s, 
+                                     SplitKKTMatrix& kkt_matrix, 
+                                     SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Corrects the linearized state equation using the Jacobian of the 
@@ -92,7 +92,5 @@ private:
 };
 
 } // namespace robotoc 
-
-#include "robotoc/ocp/terminal_state_equation.hxx"
 
 #endif // ROBOTOC_TERMINAL_STATE_EQUATION_HPP_ 

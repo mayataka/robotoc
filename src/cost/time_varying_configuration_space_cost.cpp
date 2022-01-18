@@ -93,13 +93,13 @@ bool TimeVaryingConfigurationSpaceCost::useKinematics() const {
 
 double TimeVaryingConfigurationSpaceCost::evalStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s) const {
-  if (q_ref_->isActive(t)) {
-    q_ref_->update_q_ref(robot, t, data.q_ref);
+    const GridInfo& grid_info, const SplitSolution& s) const {
+  if (q_ref_->isActive(grid_info.t)) {
+    q_ref_->update_q_ref(robot, grid_info.t, data.q_ref);
     double l = 0;
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (q_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
-    return 0.5 * dt * l;
+    return 0.5 * grid_info.dt * l;
   }
   else {
     return 0;
@@ -109,17 +109,17 @@ double TimeVaryingConfigurationSpaceCost::evalStageCost(
 
 void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (q_ref_->isActive(t)) {
-    q_ref_->update_q_ref(robot, t, data.q_ref);
+  if (q_ref_->isActive(grid_info.t)) {
+    q_ref_->update_q_ref(robot, grid_info.t, data.q_ref);
     if (robot.hasFloatingBase()) {
       robot.dSubtractConfiguration_dqf(s.q, data.q_ref, data.J_qdiff);
       kkt_residual.lq().noalias()
-          += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
+          += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
     }
     else {
-      kkt_residual.lq().array() += dt * q_weight_.array() * data.qdiff.array();
+      kkt_residual.lq().array() += grid_info.dt * q_weight_.array() * data.qdiff.array();
     }
   }
 }
@@ -127,25 +127,25 @@ void TimeVaryingConfigurationSpaceCost::evalStageCostDerivatives(
 
 void TimeVaryingConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
-  if (q_ref_->isActive(t)) {
+  if (q_ref_->isActive(grid_info.t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
-          += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
+          += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
     }
     else {
-      kkt_matrix.Qqq().diagonal().noalias() += dt * q_weight_;
+      kkt_matrix.Qqq().diagonal().noalias() += grid_info.dt * q_weight_;
     }
   }
 }
 
 
 double TimeVaryingConfigurationSpaceCost::evalTerminalCost(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s) const {
-  if (q_ref_->isActive(t)) {
-    q_ref_->update_q_ref(robot, t, data.q_ref);
+  if (q_ref_->isActive(grid_info.t)) {
+    q_ref_->update_q_ref(robot, grid_info.t, data.q_ref);
     double l = 0;
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (qf_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
@@ -158,9 +158,9 @@ double TimeVaryingConfigurationSpaceCost::evalTerminalCost(
 
 
 void TimeVaryingConfigurationSpaceCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (q_ref_->isActive(t)) {
+  if (q_ref_->isActive(grid_info.t)) {
     if (robot.hasFloatingBase()) {
       robot.dSubtractConfiguration_dqf(s.q, data.q_ref, data.J_qdiff);
       kkt_residual.lq().noalias()
@@ -174,9 +174,9 @@ void TimeVaryingConfigurationSpaceCost::evalTerminalCostDerivatives(
 
 
 void TimeVaryingConfigurationSpaceCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (q_ref_->isActive(t)) {
+  if (q_ref_->isActive(grid_info.t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;
@@ -190,9 +190,9 @@ void TimeVaryingConfigurationSpaceCost::evalTerminalCostHessian(
 
 double TimeVaryingConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s) const {
-  if (q_ref_->isActive(t)) {
-    q_ref_->update_q_ref(robot, t, data.q_ref);
+    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
+  if (q_ref_->isActive(grid_info.t)) {
+    q_ref_->update_q_ref(robot, grid_info.t, data.q_ref);
     double l = 0;
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (qi_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
@@ -206,9 +206,9 @@ double TimeVaryingConfigurationSpaceCost::evalImpulseCost(
 
 void TimeVaryingConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (q_ref_->isActive(t)) {
+  if (q_ref_->isActive(grid_info.t)) {
     if (robot.hasFloatingBase()) {
       robot.dSubtractConfiguration_dqf(s.q, data.q_ref, data.J_qdiff);
       kkt_residual.lq().noalias()
@@ -223,9 +223,9 @@ void TimeVaryingConfigurationSpaceCost::evalImpulseCostDerivatives(
 
 void TimeVaryingConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (q_ref_->isActive(t)) {
+  if (q_ref_->isActive(grid_info.t)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += data.J_qdiff.transpose() * qi_weight_.asDiagonal() * data.J_qdiff;

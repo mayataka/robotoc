@@ -67,10 +67,10 @@ public:
   /// @param[in] step_length Step length of the gait. 
   /// @param[in] step_height Step height of the gait. 
   /// @param[in] swing_time Swing time of the gait. 
-  /// @param[in] t0 Start time of the gait. 
+  /// @param[in] initial_lift_time Start time of the gait. 
   ///
   void setGaitPattern(const double step_length, const double step_height,
-                      const double swing_time, const double t0);
+                      const double swing_time, const double initial_lift_time);
 
   ///
   /// @brief Initializes the optimal control problem solover. 
@@ -120,7 +120,7 @@ public:
   ///
   double KKTError() const;
 
-  static constexpr double min_dt 
+  static constexpr double kMinDt 
       = std::sqrt(std::numeric_limits<double>::epsilon());
 
 private:
@@ -129,7 +129,8 @@ private:
   OCPSolver ocp_solver_;
   ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
   std::vector<Eigen::Vector3d> contact_positions_;
-  double step_length_, step_height_, swing_time_, t0_, T_, dt_, dtm_, ts_last_;
+  double step_length_, step_height_, swing_time_, initial_lift_time_, 
+         T_, dt_, dtm_, ts_last_;
   int N_, current_step_, predict_step_;
   SolverOptions solver_options_;
 

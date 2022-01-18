@@ -106,7 +106,9 @@ public:
   /// @return Squared norm of the residual in the unconstrained dynamics 
   /// constraint.
   ///
-  double KKTError() const;
+  double KKTError() const {
+    return ID_.squaredNorm();
+  }
 
   ///
   /// @brief Returns the lp norm of the constraint violation, that is,
@@ -117,18 +119,42 @@ public:
   /// @return The lp norm of the constraint violation.
   ///
   template <int p=1>
-  double constraintViolation() const;
+  double constraintViolation() const {
+    return ID_.template lpNorm<p>();
+  }
 
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ka,
-                            const Eigen::MatrixBase<MatrixType2>& Ku) const;
+                            const Eigen::MatrixBase<MatrixType2>& Ku) const {
+    assert(Ka.rows() == dimv_);
+    assert(Ka.cols() == 2*dimv_);
+    assert(Ku.rows() == dimv_);
+    assert(Ku.cols() == 2*dimv_);
+    getStateFeedbackGain(
+        Ka.leftCols(dimv_), Ka.rightCols(dimv_),
+        const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).leftCols(dimv_),
+        const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).rightCols(dimv_));
+  }
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kaq,
                             const Eigen::MatrixBase<MatrixType2>& Kav,
                             const Eigen::MatrixBase<MatrixType3>& Kuq,
-                            const Eigen::MatrixBase<MatrixType4>& Kuv) const;
+                            const Eigen::MatrixBase<MatrixType4>& Kuv) const {
+    assert(Kaq.rows() == dimv_);
+    assert(Kaq.cols() == dimv_);
+    assert(Kav.rows() == dimv_);
+    assert(Kav.cols() == dimv_);
+    assert(Kuq.rows() == dimv_);
+    assert(Kuq.cols() == dimv_);
+    assert(Kuv.rows() == dimv_);
+    assert(Kuv.cols() == dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(Kuq) = dID_dq_;
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(Kuq).noalias() += dID_da_ * Kaq;
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(Kuv) = dID_dv_;
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(Kuv).noalias() += dID_da_ * Kav;
+  }
 
 private:
   Eigen::VectorXd ID_, lu_condensed_;
@@ -139,7 +165,5 @@ private:
 };
 
 } // namespace robotoc 
-
-#include "robotoc/unconstr/unconstr_dynamics.hxx"
 
 #endif // ROBOTOC_UNCONSTR_DYNAMICS_HPP_ 

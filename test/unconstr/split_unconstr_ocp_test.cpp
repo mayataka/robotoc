@@ -22,9 +22,10 @@ namespace robotoc {
 class SplitUnconstrOCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
     robot = testhelper::CreateRobotManipulator();
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
+    dt = grid_info.dt;
     cost = testhelper::CreateCost(robot);
     constraints = testhelper::CreateConstraints(robot);
   }
@@ -33,7 +34,8 @@ protected:
   }
 
   Robot robot;
-  double dt;
+  GridInfo grid_info;
+  double t, dt;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };
@@ -43,13 +45,11 @@ TEST_F(SplitUnconstrOCPTest, computeKKTSystem) {
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
   SplitUnconstrOCP ocp(robot, cost, constraints);
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, s);
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  ocp.computeKKTSystem(robot, t, dt, s, s_next, kkt_matrix, kkt_residual);
+  ocp.computeKKTSystem(robot, grid_info, s, s_next, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -57,7 +57,7 @@ TEST_F(SplitUnconstrOCPTest, computeKKTSystem) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
+  double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
@@ -92,13 +92,11 @@ TEST_F(SplitUnconstrOCPTest, computeKKTResidual) {
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
   SplitUnconstrOCP ocp(robot, cost, constraints);
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, s);
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  ocp.computeKKTResidual(robot, t, dt, s, s_next, kkt_matrix, kkt_residual);
+  ocp.computeKKTResidual(robot, grid_info, s, s_next, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -106,7 +104,7 @@ TEST_F(SplitUnconstrOCPTest, computeKKTResidual) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, t, dt, s, kkt_residual_ref);
+  double stage_cost = cost->linearizeStageCost(robot, contact_status, cost_data, grid_info, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
   unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
@@ -128,11 +126,9 @@ TEST_F(SplitUnconstrOCPTest, evalOCP) {
   const auto s_next = SplitSolution::Random(robot);
   const auto d = SplitDirection::Random(robot);
   SplitUnconstrOCP ocp(robot, cost, constraints);
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, s);
   SplitKKTResidual kkt_residual(robot);
-  ocp.evalOCP(robot, t, dt, s, s_next.q, s_next.v, kkt_residual);
+  ocp.evalOCP(robot, grid_info, s, s_next.q, s_next.v, kkt_residual);
   const double stage_cost = ocp.stageCost();
   const double constraint_violation = ocp.constraintViolation(kkt_residual, dt);
   SplitKKTResidual kkt_residual_ref(robot);
@@ -141,7 +137,7 @@ TEST_F(SplitUnconstrOCPTest, evalOCP) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, t, dt, s);
+  double stage_cost_ref = cost->evalStageCost(robot, contact_status, cost_data, grid_info, s);
   constraints->evalConstraint(robot, contact_status, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);

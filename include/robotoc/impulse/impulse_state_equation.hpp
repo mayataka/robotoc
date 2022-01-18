@@ -66,12 +66,11 @@ public:
   /// @param[in, out] kkt_residual Impulse split KKT residual at the current 
   /// impulse stage. 
   ///
-  template <typename ConfigVectorType, typename TangentVectorType>
-  static void evalStateEquation(
-      const Robot& robot, const ImpulseSplitSolution& s, 
-      const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-      const Eigen::MatrixBase<TangentVectorType>& v_next, 
-      ImpulseSplitKKTResidual& kkt_residual);
+  static void evalStateEquation(const Robot& robot, 
+                                const ImpulseSplitSolution& s, 
+                                const Eigen::VectorXd& q_next, 
+                                const Eigen::VectorXd& v_next, 
+                                ImpulseSplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Linearizes the impulse state equation. 
@@ -84,12 +83,12 @@ public:
   /// @param[in, out] kkt_residual Impulse split KKT residual at the current 
   /// impulse stage. 
   ///
-  template <typename ConfigVectorType>
-  static void linearizeStateEquation(
-      const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-      const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-      ImpulseSplitKKTMatrix& kkt_matrix, 
-      ImpulseSplitKKTResidual& kkt_residual);
+  static void linearizeStateEquation(const Robot& robot, 
+                                     const Eigen::VectorXd& q_prev, 
+                                     const ImpulseSplitSolution& s, 
+                                     const SplitSolution& s_next, 
+                                     ImpulseSplitKKTMatrix& kkt_matrix, 
+                                     ImpulseSplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Corrects the linearized state equation using the Jacobian of the 
@@ -112,7 +111,12 @@ public:
   /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
   /// @param[in, out] d Split direction. 
   ///
-  void correctCostateDirection(ImpulseSplitDirection& d);
+  void correctCostateDirection(ImpulseSplitDirection& d) {
+    if (has_floating_base_) {
+      Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
+      d.dlmdgmm.template head<6>() = - Fq_tmp_;
+    }
+  }
 
 private:
   Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_, Fqq_tmp_;  
@@ -123,7 +127,5 @@ private:
 };
 
 } // namespace robotoc 
-
-#include "robotoc/impulse/impulse_state_equation.hxx"
 
 #endif // ROBOTOC_IMPULSE_STATE_EQUATION_HPP_ 

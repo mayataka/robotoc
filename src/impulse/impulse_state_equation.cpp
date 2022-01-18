@@ -1,13 +1,11 @@
-#ifndef ROBOTOC_IMPULSE_STATE_EQUATION_HXX_
-#define ROBOTOC_IMPULSE_STATE_EQUATION_HXX_
-
 #include "robotoc/impulse/impulse_state_equation.hpp"
 
 #include <cassert>
 
+
 namespace robotoc {
 
-inline ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
+ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
   : Fqq_inv_(),
     Fqq_prev_inv_(),
     Fqq_tmp_(),
@@ -27,7 +25,7 @@ inline ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
 }
 
 
-inline ImpulseStateEquation::ImpulseStateEquation()
+ImpulseStateEquation::ImpulseStateEquation()
   : Fqq_inv_(),
     Fqq_prev_inv_(),
     Fqq_tmp_(),
@@ -37,15 +35,13 @@ inline ImpulseStateEquation::ImpulseStateEquation()
 }
 
 
-inline ImpulseStateEquation::~ImpulseStateEquation() {
+ImpulseStateEquation::~ImpulseStateEquation() {
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void ImpulseStateEquation::evalStateEquation(
+void ImpulseStateEquation::evalStateEquation(
     const Robot& robot, const ImpulseSplitSolution& s, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    const Eigen::MatrixBase<TangentVectorType>& v_next, 
+    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
     ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
@@ -54,9 +50,8 @@ inline void ImpulseStateEquation::evalStateEquation(
 }
 
 
-template <typename ConfigVectorType>
-inline void ImpulseStateEquation::linearizeStateEquation(
-    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+void ImpulseStateEquation::linearizeStateEquation(
+    const Robot& robot, const Eigen::VectorXd& q_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -82,7 +77,7 @@ inline void ImpulseStateEquation::linearizeStateEquation(
 }
 
 
-inline void ImpulseStateEquation::correctLinearizedStateEquation(
+void ImpulseStateEquation::correctLinearizedStateEquation(
     const Robot& robot, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
@@ -97,15 +92,4 @@ inline void ImpulseStateEquation::correctLinearizedStateEquation(
   }
 }
 
-
-inline void ImpulseStateEquation::correctCostateDirection(
-    ImpulseSplitDirection& d) {
-  if (has_floating_base_) {
-    Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
-    d.dlmdgmm.template head<6>() = - Fq_tmp_;
-  }
-}
-
 } // namespace robotoc 
-
-#endif // ROBOTOC_IMPULSE_STATE_EQUATION_HXX_

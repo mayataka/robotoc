@@ -17,79 +17,79 @@ public:
   }
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                       CostFunctionData& data, const double t, const double dt, 
+                       CostFunctionData& data, const GridInfo& grid_info, 
                        const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalStageCost, 
-                           robot, contact_status, data, t, dt, s);
+                           robot, contact_status, data, grid_info, s);
   }
 
   void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
-                                CostFunctionData& data, const double t, 
-                                const double dt, const SplitSolution& s, 
+                                CostFunctionData& data, const GridInfo& grid_info, 
+                                const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalStageCostDerivatives, 
-                           robot, contact_status, data, t, dt, s, kkt_residual);
+                           robot, contact_status, data, grid_info, s, kkt_residual);
   }
 
   void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const double t, 
-                            const double dt, const SplitSolution& s, 
+                            CostFunctionData& data, const GridInfo& grid_info, 
+                            const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalStageCostHessian, 
-                           robot, contact_status, data, t, dt, s, kkt_matrix);
+                           robot, contact_status, data, grid_info, s, kkt_matrix);
   }
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                          const double t, 
+                          const GridInfo& grid_info, 
                           const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalTerminalCost, 
-                           robot, data, t, s);
+                           robot, data, grid_info, s);
   }
 
   void evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                   const double t, const SplitSolution& s, 
+                                   const GridInfo& grid_info, const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalTerminalCostDerivatives, 
-                           robot, data, t, s, kkt_residual);
+                           robot, data, grid_info, s, kkt_residual);
   }
 
   void evalTerminalCostHessian(Robot& robot, CostFunctionData& data, 
-                               const double t, const SplitSolution& s, 
+                               const GridInfo& grid_info, const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalTerminalCostHessian, 
-                           robot, data, t, s, kkt_matrix);
+                           robot, data, grid_info, s, kkt_matrix);
   }
 
   double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
-                         CostFunctionData& data, const double t, 
+                         CostFunctionData& data, const GridInfo& grid_info, 
                          const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
                            evalImpulseCost, 
-                           robot, impulse_status, data, t, s);
+                           robot, impulse_status, data, grid_info, s);
   }
 
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
-                                  CostFunctionData& data, const double t, 
+                                  CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
                                   ImpulseSplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalImpulseCostDerivatives, 
-                           robot, impulse_status, data, t, s, kkt_residual);
+                           robot, impulse_status, data, grid_info, s, kkt_residual);
   }
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
-                              CostFunctionData& data, const double t, 
+                              CostFunctionData& data, const GridInfo& grid_info,
                               const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalImpulseCostHessian, 
-                           robot, impulse_status, data, t, s, kkt_matrix);
+                           robot, impulse_status, data, grid_info, s, kkt_matrix);
   }
 };
 

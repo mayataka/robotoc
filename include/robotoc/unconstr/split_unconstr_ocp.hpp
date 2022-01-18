@@ -17,6 +17,7 @@
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/unconstr/unconstr_state_equation.hpp"
 #include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -88,47 +89,42 @@ public:
   /// @brief Computes the stage cost and constraint violation.
   /// Used in the line search.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info. 
   /// @param[in] s Split solution of this time stage.
   /// @param[in] q_next Configuration at the next time stage.
   /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void evalOCP(Robot& robot, const double t, const double dt, 
-               const SplitSolution& s, const Eigen::VectorXd& q_next, 
-               const Eigen::VectorXd& v_next, SplitKKTResidual& kkt_residual);
+  void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
+               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
+               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info. 
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void computeKKTResidual(Robot& robot, const double t, const double dt, 
+  void computeKKTResidual(Robot& robot, const GridInfo& grid_info, 
                           const SplitSolution& s, const SplitSolution& s_next, 
-                          SplitKKTMatrix& kkt_matrix, 
-                          SplitKKTResidual& kkt_residual);
+                          SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT system of this time stage, i.e., the condensed
   /// KKT matrix and KKT residual of this time stage for Newton's method.
   /// @param[in] robot Robot model. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info. 
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  void computeKKTSystem(Robot& robot, const double t, const double dt, 
+  void computeKKTSystem(Robot& robot, const GridInfo& grid_info, 
                         const SplitSolution& s, const SplitSolution& s_next, 
-                        SplitKKTMatrix& kkt_matrix, 
-                        SplitKKTResidual& kkt_residual);
+                        SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the primal and dual variables, i.e., computes the Newton 
@@ -219,7 +215,5 @@ private:
 };
 
 } // namespace robotoc
-
-#include "robotoc/unconstr/split_unconstr_ocp.hxx"
 
 #endif // ROBOTOC_SPLIT_UNCONSTR_OCP_HPP_ 

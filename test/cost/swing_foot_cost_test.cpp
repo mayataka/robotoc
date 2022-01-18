@@ -20,10 +20,9 @@ namespace robotoc {
 class SwingFootCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
-    std::random_device rnd;
-    t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
+    dt = grid_info.dt;
   }
 
   virtual void TearDown() {
@@ -33,6 +32,7 @@ protected:
   void testTerminalCost(Robot& robot, const int contact_index) const;
   void testImpulseCost(Robot& robot, const int contact_index) const;
 
+  GridInfo grid_info;
   double dt, t;
 };
 
@@ -82,9 +82,9 @@ TEST_F(SwingFootCostTest, testStageCost) {
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - x3d_ref;
   const double l_ref = dt * 0.5 * q_diff.transpose() * x3d_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), l_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
@@ -95,9 +95,9 @@ TEST_F(SwingFootCostTest, testStageCost) {
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     contact_status.activateContact(i);
   }
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), 0.);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0.);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -129,9 +129,9 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const double l_ref = 0;
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
-  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), l_ref);
+  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -164,9 +164,9 @@ TEST_F(SwingFootCostTest, testImpulseCost) {
   robot.updateKinematics(s.q, s.v);
   const double l_ref = 0.0;
   const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

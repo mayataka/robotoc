@@ -1,34 +1,30 @@
-#ifndef ROBOTOC_STO_COST_FUNCTION_HXX_
-#define ROBOTOC_STO_COST_FUNCTION_HXX_
-
 #include "robotoc/hybrid/sto_cost_function.hpp"
+
 
 namespace robotoc {
 
-inline STOCostFunction::STOCostFunction()
+STOCostFunction::STOCostFunction()
   : costs_(),
     lts_(),
     Qts_() {
 }
 
 
-inline STOCostFunction::~STOCostFunction() {
+STOCostFunction::~STOCostFunction() {
 }
 
 
-inline void STOCostFunction::push_back(
-    const STOCostFunctionComponentBasePtr& cost) {
+void STOCostFunction::push_back(const STOCostFunctionComponentBasePtr& cost) {
   costs_.push_back(cost);
 }
 
 
-inline void STOCostFunction::clear() {
+void STOCostFunction::clear() {
   costs_.clear();
 }
 
 
-inline double STOCostFunction::evalCost(
-    const TimeDiscretization& discretization) {
+double STOCostFunction::evalCost(const TimeDiscretization& discretization) {
   if (!costs_.empty()) {
     double cost = 0;
     for (auto& e : costs_) {
@@ -42,8 +38,8 @@ inline double STOCostFunction::evalCost(
 }
 
 
-inline double STOCostFunction::linearizeCost(
-    const TimeDiscretization& discretization, KKTResidual& kkt_residual) {
+double STOCostFunction::linearizeCost(const TimeDiscretization& discretization, 
+                                      KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
     lts_.resize(num_events);
@@ -62,9 +58,9 @@ inline double STOCostFunction::linearizeCost(
 }
 
 
-inline double STOCostFunction::quadratizeCost(
-    const TimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+double STOCostFunction::quadratizeCost(const TimeDiscretization& discretization, 
+                                       KKTMatrix& kkt_matrix, 
+                                       KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
     const int num_events = discretization.N_impulse() + discretization.N_lift();
     if (lts_.size() != num_events) {
@@ -90,8 +86,8 @@ inline double STOCostFunction::quadratizeCost(
 }
 
 
-inline void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
-                                      KKTResidual& kkt_residual) {
+void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
+                               KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
@@ -119,9 +115,8 @@ inline void STOCostFunction::setToKKT(const TimeDiscretization& discretization,
 }
 
 
-inline void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
-                                      KKTMatrix& kkt_matrix, 
-                                      KKTResidual& kkt_residual) {
+void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
+                               KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
@@ -161,5 +156,3 @@ inline void STOCostFunction::setToKKT(const TimeDiscretization& discretization,
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_STO_COST_FUNCTION_HXX_ 

@@ -35,12 +35,11 @@ void linearizeForwardEuler(const double dt, const SplitSolution& s,
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT reisdual at the current time stage. 
 ///
-template <typename ConfigVectorType, typename TangentVectorType>
-void linearizeBackwardEuler(
-    const double dt, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, const SplitSolution& s_next, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+void linearizeBackwardEuler(const double dt, const Eigen::VectorXd& q_prev, 
+                            const Eigen::VectorXd& v_prev,
+                            const SplitSolution& s, const SplitSolution& s_next, 
+                            SplitKKTMatrix& kkt_matrix, 
+                            SplitKKTResidual& kkt_residual);
 
 ///
 /// @brief Linearizes the state equation of backward Euler at the terminal stage. 
@@ -51,12 +50,12 @@ void linearizeBackwardEuler(
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT reisdual at the current time stage. 
 ///
-template <typename ConfigVectorType, typename TangentVectorType>
-void linearizeBackwardEulerTerminal(
-    const double dt, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual);
+void linearizeBackwardEulerTerminal(const double dt, 
+                                    const Eigen::VectorXd& q_prev, 
+                                    const Eigen::VectorXd& v_prev, 
+                                    const SplitSolution& s, 
+                                    SplitKKTMatrix& kkt_matrix, 
+                                    SplitKKTResidual& kkt_residual);
 
 ///
 /// @brief Computes the residual in the state equation of forward Euler. 
@@ -66,12 +65,10 @@ void linearizeBackwardEulerTerminal(
 /// @param[in] v_next Generalized velocity at the next time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
-template <typename ConfigVectorType, typename TangentVectorType>
-void computeForwardEulerResidual(
-    const double dt, const SplitSolution& s, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    const Eigen::MatrixBase<TangentVectorType>& v_next, 
-    SplitKKTResidual& kkt_residual);
+void computeForwardEulerResidual(const double dt, const SplitSolution& s, 
+                                 const Eigen::VectorXd& q_next, 
+                                 const Eigen::VectorXd& v_next, 
+                                 SplitKKTResidual& kkt_residual);
 
 ///
 /// @brief Computes the residual in the state equation of backward Euler. 
@@ -81,16 +78,13 @@ void computeForwardEulerResidual(
 /// @param[in] s Solution at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
-template <typename ConfigVectorType, typename TangentVectorType>
-void computeBackwardEulerResidual(
-    const double dt, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual);
+void computeBackwardEulerResidual(const double dt, const Eigen::VectorXd& q_prev, 
+                                  const Eigen::VectorXd& v_prev, 
+                                  const SplitSolution& s, 
+                                  SplitKKTResidual& kkt_residual);
 
 } // namespace stateequation 
 } // namespace unconstr
 } // namespace robotoc 
-
-#include "robotoc/unconstr/unconstr_state_equation.hxx"
 
 #endif // ROBOTOC_UNCONSTR_STATE_EQUATION_HPP_ 

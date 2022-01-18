@@ -13,6 +13,7 @@
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -68,14 +69,13 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dt Time step.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  virtual double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                               CostFunctionData& data, const double t, 
-                               const double dt, const SplitSolution& s) const = 0;
+  virtual double evalStageCost(Robot& robot, const ContactStatus& contact_status,
+                               CostFunctionData& data, const GridInfo& grid_info,
+                               const SplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the first-order partial derivatives of the stage cost. 
@@ -83,16 +83,16 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dt Time step.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   ///
   virtual void evalStageCostDerivatives(Robot& robot, 
                                         const ContactStatus& contact_status,
-                                        CostFunctionData& data, const double t, 
-                                        const double dt, const SplitSolution& s, 
+                                        CostFunctionData& data, 
+                                        const GridInfo& grid_info, 
+                                        const SplitSolution& s, 
                                         SplitKKTResidual& kkt_residual) const = 0;
 
   ///
@@ -102,41 +102,43 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dt Time step.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
   /// this object.
   ///
   virtual void evalStageCostHessian(Robot& robot, 
                                     const ContactStatus& contact_status,
-                                    CostFunctionData& data, const double t, 
-                                    const double dt, const SplitSolution& s, 
+                                    CostFunctionData& data, 
+                                    const GridInfo& grid_info, 
+                                    const SplitSolution& s, 
                                     SplitKKTMatrix& kkt_matrix) const = 0;
 
   ///
   /// @brief Computes the terminal cost. 
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Terminal cost.
   ///
   virtual double evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                                  const double t, const SplitSolution& s) const = 0;
+                                  const GridInfo& grid_info, 
+                                  const SplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the first-order partial derivatives of the terminal cost. 
   /// This function is always called just after evalTerminalCost().
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   ///
   virtual void evalTerminalCostDerivatives(Robot& robot, 
-                                           CostFunctionData& data, const double t, 
+                                           CostFunctionData& data,  
+                                           const GridInfo& grid_info, 
                                            const SplitSolution& s, 
                                            SplitKKTResidual& kkt_residual) const = 0;
 
@@ -146,13 +148,14 @@ public:
   /// evalTerminalCostDerivatives().
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
   /// this object.
   ///
   virtual void evalTerminalCostHessian(Robot& robot, 
-                                       CostFunctionData& data, const double t, 
+                                       CostFunctionData& data, 
+                                       const GridInfo& grid_info, 
                                        const SplitSolution& s, 
                                        SplitKKTMatrix& kkt_matrix) const = 0;
 
@@ -161,13 +164,14 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Impulse cost.
   ///
   virtual double evalImpulseCost(Robot& robot, 
                                  const ImpulseStatus& impulse_status,
-                                 CostFunctionData& data, const double t, 
+                                 CostFunctionData& data, 
+                                 const GridInfo& grid_info, 
                                  const ImpulseSplitSolution& s) const = 0;
 
   ///
@@ -176,14 +180,15 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   ///
   virtual void evalImpulseCostDerivatives(Robot& robot, 
                                           const ImpulseStatus& impulse_status, 
-                                          CostFunctionData& data, const double t, 
+                                          CostFunctionData& data,  
+                                          const GridInfo& grid_info, 
                                           const ImpulseSplitSolution& s, 
                                           ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
@@ -194,14 +199,15 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] data Cost function data.
-  /// @param[in] t Time.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_matrix Impulse split KKT matrix. The Hessians are  
   /// added to this object.
   ///
   virtual void evalImpulseCostHessian(Robot& robot, 
                                       const ImpulseStatus& impulse_status, 
-                                      CostFunctionData& data, const double t, 
+                                      CostFunctionData& data,  
+                                      const GridInfo& grid_info, 
                                       const ImpulseSplitSolution& s, 
                                       ImpulseSplitKKTMatrix& kkt_matrix) const = 0; 
 

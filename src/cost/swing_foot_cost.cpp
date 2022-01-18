@@ -45,14 +45,14 @@ bool SwingFootCost::useKinematics() const {
 double SwingFootCost::evalStageCost(Robot& robot, 
                                     const ContactStatus& contact_status, 
                                     CostFunctionData& data, 
-                                    const double t, const double dt, 
+                                    const GridInfo& grid_info, 
                                     const SplitSolution& s) const {
   if (!contact_status.isContactActive(contact_index_)) {
     double l = 0;
     x3d_ref_->update_x3d_ref(contact_status, data.x3d_ref);
     data.diff_3d = robot.framePosition(contact_frame_id_) - data.x3d_ref;
     l += (x3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-    return 0.5 * dt * l;
+    return 0.5 * grid_info.dt * l;
   }
   else {
     return 0.0;
@@ -62,7 +62,7 @@ double SwingFootCost::evalStageCost(Robot& robot,
 
 void SwingFootCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   if (!contact_status.isContactActive(contact_index_)) {
     data.J_6d.setZero();
@@ -70,38 +70,38 @@ void SwingFootCost::evalStageCostDerivatives(
     data.J_3d.noalias() 
         = robot.frameRotation(contact_frame_id_) * data.J_6d.template topRows<3>();
     kkt_residual.lq().noalias() 
-        += dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.diff_3d;
+        += grid_info.dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.diff_3d;
   }
 }
 
 
 void SwingFootCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
   if (!contact_status.isContactActive(contact_index_)) {
     kkt_matrix.Qqq().noalias()
-        += dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.J_3d;
+        += grid_info.dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.J_3d;
   }
 }
 
 
 double SwingFootCost::evalTerminalCost(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s) const {
   return 0.0;
 }
 
 
 void SwingFootCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   // Do nothing
 }
 
 
 void SwingFootCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   // Do nothing
 }
@@ -109,14 +109,14 @@ void SwingFootCost::evalTerminalCostHessian(
 
 double SwingFootCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s) const {
+    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
   return 0.0;
 }
 
 
 void SwingFootCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   // Do nothing
 }
@@ -124,7 +124,7 @@ void SwingFootCost::evalImpulseCostDerivatives(
 
 void SwingFootCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
   // Do nothing
 }

@@ -20,6 +20,9 @@
 #include "robotoc/ocp/switching_constraint.hpp"
 #include "robotoc/ocp/switching_constraint_residual.hpp"
 #include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -107,16 +110,15 @@ public:
   /// Used in the line search.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] q_next Configuration at the next time stage.
   /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void evalOCP(Robot& robot, const ContactStatus& contact_status,
-               const double t, const double dt, const SplitSolution& s, 
-               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
+               const GridInfo& grid_info, const SplitSolution& s, 
+               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
                SplitKKTResidual& kkt_residual);
 
   ///
@@ -124,40 +126,56 @@ public:
   /// Used in the line search.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] q_next Configuration at the next time stage.
   /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
-  /// @param[in] dt_next Time step of the next time stage. 
+  /// @param[in] grid_info_next Grid info of the next time stage.
   /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void evalOCP(Robot& robot, const ContactStatus& contact_status,
-               const double t, const double dt, const SplitSolution& s, 
-               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-               SplitKKTResidual& kkt_residual,
-               const ImpulseStatus& impulse_status, const double dt_next, 
+               const GridInfo& grid_info, const SplitSolution& s, 
+               const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
+               SplitKKTResidual& kkt_residual, 
+               const ImpulseStatus& impulse_status, 
+               const GridInfo& grid_info_next, 
                SwitchingConstraintResidual& sc_residual);
 
   ///
   /// @brief Computes the KKT residual of this time stage.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  template <typename SplitSolutionType>
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
-                          const double t, const double dt, 
+                          const GridInfo& grid_info, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                          const SplitSolutionType& s_next,
+                          const SplitSolution& s_next,
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Computes the KKT residual of this time stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  ///
+  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
+                          const GridInfo& grid_info, 
+                          const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                          const ImpulseSplitSolution& s_next,
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
 
@@ -166,26 +184,25 @@ public:
   /// switching constraint.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
-  /// @param[in] dt_next Time step of the next time stage. 
+  /// @param[in] grid_info_next Grid info of the next time stage.
   /// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
-                          const double t, const double dt, 
+                          const GridInfo& grid_info, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                           const SplitSolution& s_next, 
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual, 
                           const ImpulseStatus& impulse_status, 
-                          const double dt_next, 
+                          const GridInfo& grid_info_next, 
                           SwitchingConstraintJacobian& sc_jacobian,
                           SwitchingConstraintResidual& sc_residual);
 
@@ -194,19 +211,36 @@ public:
   /// KKT matrix and KKT residual of this time stage for Newton's method.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
-  template <typename SplitSolutionType>
   void computeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
-                        const double t, const double dt, 
+                        const GridInfo& grid_info, 
                         const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                        const SplitSolutionType& s_next, 
+                        const SplitSolution& s_next, 
+                        SplitKKTMatrix& kkt_matrix,
+                        SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Computes the KKT system of this time stage, i.e., the condensed
+  /// KKT matrix and KKT residual of this time stage for Newton's method.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  ///
+  void computeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
+                        const GridInfo& grid_info, 
+                        const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                        const ImpulseSplitSolution& s_next, 
                         SplitKKTMatrix& kkt_matrix,
                         SplitKKTResidual& kkt_residual);
 
@@ -216,25 +250,24 @@ public:
   /// switching constraint for Newton's method.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] t Time of this time stage. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
-  /// @param[in] dt_next Time step of the next time stage. 
+  /// @param[in] grid_info_next Grid info of the next time stage.
   /// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in, out] sc_residual Residual of the switching constraint. 
   ///
   void computeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
-                        const double t, const double dt, 
+                        const GridInfo& grid_info, 
                         const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                         const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix,
                         SplitKKTResidual& kkt_residual, 
                         const ImpulseStatus& impulse_status, 
-                        const double dt_next, 
+                        const GridInfo& grid_info_next, 
                         SwitchingConstraintJacobian& sc_jacobian,
                         SwitchingConstraintResidual& sc_residual);
 
@@ -264,27 +297,38 @@ public:
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
   /// stage. 
   /// 
-  template <typename SplitDirectionType>
-  void expandDual(const double dt, const SplitDirectionType& d_next, 
+  void expandDual(const GridInfo& grid_info, const SplitDirection& d_next, 
                   SplitDirection& d, const double dts);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] grid_info Grid info of this time stage.
+  /// @param[in] d_next Split direction of the next time stage.
+  /// @param[in, out] d Split direction of this time stage.
+  /// @param[in] dts Direction of the switching time regarding of this time 
+  /// stage. 
+  /// 
+  void expandDual(const GridInfo& grid_info, const ImpulseSplitDirection& d_next, 
+                  SplitDirection& d, const double dts);
+
+  ///
+  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
+  /// direction of the condensed dual variables of this stage.
+  /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
   /// stage. 
   /// 
-  void expandDual(const double dt, const SplitDirection& d_next, 
+  void expandDual(const GridInfo& grid_info, const SplitDirection& d_next, 
                   const SwitchingConstraintJacobian& sc_jacobian,
                   SplitDirection& d, const double dts);
 
@@ -391,6 +435,26 @@ private:
   ContactDynamics contact_dynamics_;
   SwitchingConstraint switching_constraint_;
   double stage_cost_;
+
+  template <typename SplitSolutionType>
+  void computeKKTResidual_impl(Robot& robot, const ContactStatus& contact_status, 
+                               const GridInfo& grid_info, 
+                               const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                               const SplitSolutionType& s_next, 
+                               SplitKKTMatrix& kkt_matrix,
+                               SplitKKTResidual& kkt_residual);
+
+  template <typename SplitSolutionType>
+  void computeKKTSystem_impl(Robot& robot, const ContactStatus& contact_status, 
+                             const GridInfo& grid_info, 
+                             const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                             const SplitSolutionType& s_next, 
+                             SplitKKTMatrix& kkt_matrix,
+                             SplitKKTResidual& kkt_residual);
+
+  template <typename SplitDirectionType>
+  void expandDual_impl(const GridInfo& grid_info, const SplitDirectionType& d_next, 
+                       SplitDirection& d, const double dts);
 
 };
 

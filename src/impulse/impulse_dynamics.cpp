@@ -1,30 +1,27 @@
-#ifndef ROBOTOC_IMPULSE_DYNAMICS_HXX_
-#define ROBOTOC_IMPULSE_DYNAMICS_HXX_
-
 #include "robotoc/impulse/impulse_dynamics.hpp"
 
 #include <cassert>
 
+
 namespace robotoc {
 
-inline ImpulseDynamics::ImpulseDynamics(
-    const Robot& robot) 
+ImpulseDynamics::ImpulseDynamics(const Robot& robot) 
   : data_(robot) {
 }
 
 
-inline ImpulseDynamics::ImpulseDynamics() 
+ImpulseDynamics::ImpulseDynamics() 
   : data_() {
 }
 
 
-inline ImpulseDynamics::~ImpulseDynamics() {
+ImpulseDynamics::~ImpulseDynamics() {
 }
 
 
-inline void ImpulseDynamics::evalImpulseDynamics(
-    Robot& robot, const ImpulseStatus& impulse_status,
-    const ImpulseSplitSolution& s) {
+void ImpulseDynamics::evalImpulseDynamics(Robot& robot, 
+                                          const ImpulseStatus& impulse_status, 
+                                          const ImpulseSplitSolution& s) {
   data_.setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data_.ImD());
@@ -32,7 +29,7 @@ inline void ImpulseDynamics::evalImpulseDynamics(
 }
 
 
-inline void ImpulseDynamics::linearizeImpulseDynamics(
+void ImpulseDynamics::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
   evalImpulseDynamics(robot, impulse_status, s);
@@ -50,7 +47,7 @@ inline void ImpulseDynamics::linearizeImpulseDynamics(
 }
 
 
-inline void ImpulseDynamics::condenseImpulseDynamics(
+void ImpulseDynamics::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
@@ -93,33 +90,4 @@ inline void ImpulseDynamics::condenseImpulseDynamics(
   kkt_residual.Fv().noalias() -= data_.MJtJinv_ImDC().head(dimv);
 }
 
-
-inline void ImpulseDynamics::expandPrimal(ImpulseSplitDirection& d) const {
-  d.ddvf().noalias()  = - data_.MJtJinv_dImDCdqv() * d.dx;
-  d.ddvf().noalias() -= data_.MJtJinv_ImDC();
-  d.df().array()     *= -1;
-}
-
-
-template <typename SplitDirectionType>
-inline void ImpulseDynamics::expandDual(const SplitDirectionType& d_next, 
-                                        ImpulseSplitDirection& d) {
-  data_.ldvf().noalias() += data_.Qdvfqv() * d.dx;
-  data_.ldv().noalias()  += d_next.dgmm();
-  d.dbetamu().noalias()   = - data_.MJtJinv() * data_.ldvf();
-}
-
-
-inline double ImpulseDynamics::KKTError() const {
-  return data_.ImDC().squaredNorm();
-}
-
-
-template <int p>
-inline double ImpulseDynamics::constraintViolation() const {
-  return data_.ImDC().template lpNorm<p>();
-}
-
 } // namespace robotoc 
-
-#endif // ROBOTOC_IMPULSE_DYNAMICS_HXX_ 

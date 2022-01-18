@@ -11,6 +11,7 @@
 #include "robotoc/ocp/terminal_ocp.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -39,7 +40,9 @@ public:
       cost_(cost),
       constraints_(constraints),
       T_(T),
-      N_(N) {
+      dt_(T/N),
+      N_(N),
+      grid_info_(N+1, GridInfo()) {
     try {
       if (T <= 0) {
         throw std::out_of_range("invalid value: T must be positive!");
@@ -51,6 +54,16 @@ public:
     catch(const std::exception& e) {
       std::cerr << e.what() << '\n';
       std::exit(EXIT_FAILURE);
+    }
+    for (int i=0; i<=N; ++i) {
+      grid_info_[i].t = dt_ * i;
+      grid_info_[i].dt = dt_;
+      grid_info_[i].contact_phase = -1;
+      grid_info_[i].time_stage = i;
+      grid_info_[i].impulse_index = -1;
+      grid_info_[i].lift_index = -1;
+      grid_info_[i].grid_count_in_phase= i;
+      grid_info_[i].N_phase = N;
     }
   }
 
@@ -64,7 +77,9 @@ public:
       cost_(),
       constraints_(),
       T_(0),
-      N_(0) {
+      dt_(0),
+      N_(0),
+      grid_info_() {
   }
 
   ///
@@ -129,6 +144,23 @@ public:
   }
 
   ///
+  /// @return Grid info.
+  ///
+  const GridInfo& gridInfo(const int i) const {
+    return grid_info_[i];
+  }
+
+  ///
+  /// @brief Discretizes the optimal control problem according to the 
+  /// intial time of the horizon.
+  ///
+  void discretize(const double t) {
+    for (int i=0; i<=N_; ++i) {
+      grid_info_[i].t = t + dt_ * i;
+    }
+  }
+
+  ///
   /// @brief Overload operator[] to access the data as std::vector. 
   ///
   SplitUnconstrOCP& operator[] (const int i) {
@@ -175,9 +207,9 @@ private:
   Robot robot_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;
-  double T_;
+  double T_, dt_;
   int N_;
-
+  std::vector<GridInfo> grid_info_;
 };
 
 } // namespace robotoc

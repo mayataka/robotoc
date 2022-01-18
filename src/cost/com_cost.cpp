@@ -51,39 +51,42 @@ bool CoMCost::useKinematics() const {
 
 
 double CoMCost::evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                              CostFunctionData& data, const double t, 
-                              const double dt, const SplitSolution& s) const {
+                              CostFunctionData& data, const GridInfo& grid_info, 
+                              const SplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.CoM() - com_ref_;
   l += (com_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * dt * l;
+  return 0.5 * grid_info.dt * l;
 }
 
 
 void CoMCost::evalStageCostDerivatives(Robot& robot, 
                                        const ContactStatus& contact_status, 
-                                       CostFunctionData& data, const double t, 
-                                       const double dt, const SplitSolution& s,
+                                       CostFunctionData& data, 
+                                       const GridInfo& grid_info,
+                                       const SplitSolution& s,
                                        SplitKKTResidual& kkt_residual) const {
   data.J_3d.setZero();
   robot.getCoMJacobian(data.J_3d);
   kkt_residual.lq().noalias() 
-      += dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.diff_3d;
+      += grid_info.dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.diff_3d;
 }
 
 
 void CoMCost::evalStageCostHessian(Robot& robot, 
                                    const ContactStatus& contact_status, 
-                                   CostFunctionData& data, const double t, 
-                                   const double dt, const SplitSolution& s, 
+                                   CostFunctionData& data, 
+                                   const GridInfo& grid_info,
+                                   const SplitSolution& s, 
                                    SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()
-      += dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.J_3d;
+      += grid_info.dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.J_3d;
 }
 
 
 double CoMCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                                 const double t, const SplitSolution& s) const {
+                                 const GridInfo& grid_info,
+                                 const SplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.CoM() - com_ref_;
   l += (comf_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -92,7 +95,8 @@ double CoMCost::evalTerminalCost(Robot& robot, CostFunctionData& data,
 
 
 void CoMCost::evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                          const double t, const SplitSolution& s, 
+                                          const GridInfo& grid_info,
+                                          const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual) const {
   data.diff_3d = robot.CoM() - com_ref_;
   data.J_3d.setZero();
@@ -103,7 +107,8 @@ void CoMCost::evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data,
 
 
 void CoMCost::evalTerminalCostHessian(Robot& robot, CostFunctionData& data, 
-                                      const double t, const SplitSolution& s, 
+                                      const GridInfo& grid_info,
+                                      const SplitSolution& s, 
                                       SplitKKTMatrix& kkt_matrix) const {
   data.J_3d.setZero();
   robot.getCoMJacobian(data.J_3d);
@@ -113,7 +118,8 @@ void CoMCost::evalTerminalCostHessian(Robot& robot, CostFunctionData& data,
 
 
 double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
-                                CostFunctionData& data, const double t, 
+                                CostFunctionData& data, 
+                                const GridInfo& grid_info,
                                 const ImpulseSplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.CoM() - com_ref_;
@@ -124,7 +130,7 @@ double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_statu
 
 void CoMCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   data.J_3d.setZero();
   robot.getCoMJacobian(data.J_3d);
@@ -135,7 +141,8 @@ void CoMCost::evalImpulseCostDerivatives(
 
 void CoMCost::evalImpulseCostHessian(Robot& robot, 
                                      const ImpulseStatus& impulse_status, 
-                                     CostFunctionData& data, const double t, 
+                                     CostFunctionData& data, 
+                                     const GridInfo& grid_info,
                                      const ImpulseSplitSolution& s, 
                                      ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()

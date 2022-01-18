@@ -1,16 +1,14 @@
-#ifndef ROBOTOC_CONSTRAINTS_HXX_
-#define ROBOTOC_CONSTRAINTS_HXX_
+#include "robotoc/constraints/constraints.hpp"
+#include "robotoc/constraints/constraints_impl.hpp"
 
 #include <stdexcept>
 #include <cassert>
 
-#include "robotoc/constraints/constraints_impl.hpp"
-
 
 namespace robotoc {
 
-inline Constraints::Constraints(const double barrier, 
-                                const double fraction_to_boundary_rule) 
+Constraints::Constraints(const double barrier, 
+                         const double fraction_to_boundary_rule) 
   : position_level_constraints_(),
     velocity_level_constraints_(),
     acceleration_level_constraints_(),
@@ -38,12 +36,11 @@ inline Constraints::Constraints(const double barrier,
 }
 
 
-inline Constraints::~Constraints() {
+Constraints::~Constraints() {
 }
 
 
-inline void Constraints::push_back(
-    ConstraintComponentBasePtr constraint_component) {
+void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
   constraint_component->setBarrier(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
@@ -61,8 +58,7 @@ inline void Constraints::push_back(
 }
 
 
-inline void Constraints::push_back(
-    ImpulseConstraintComponentBasePtr constraint_component) {
+void Constraints::push_back(ImpulseConstraintComponentBasePtr constraint_component) {
   constraint_component->setBarrier(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
@@ -73,7 +69,7 @@ inline void Constraints::push_back(
 }
 
 
-inline void Constraints::clear() {
+void Constraints::clear() {
   constraintsimpl::clear(position_level_constraints_);
   constraintsimpl::clear(velocity_level_constraints_);
   constraintsimpl::clear(acceleration_level_constraints_);
@@ -81,7 +77,7 @@ inline void Constraints::clear() {
 }
 
 
-inline bool Constraints::useKinematics() const {
+bool Constraints::useKinematics() const {
   if (constraintsimpl::useKinematics(position_level_constraints_)) {
     return true;
   }
@@ -95,8 +91,8 @@ inline bool Constraints::useKinematics() const {
 }
 
 
-inline ConstraintsData Constraints::createConstraintsData(
-    const Robot& robot, const int time_stage) const {
+ConstraintsData Constraints::createConstraintsData(const Robot& robot, 
+                                                   const int time_stage) const {
   ConstraintsData data(time_stage);
   if (data.isPositionLevelValid()) {
     constraintsimpl::createConstraintsData(position_level_constraints_, 
@@ -118,10 +114,9 @@ inline ConstraintsData Constraints::createConstraintsData(
 }
 
 
-inline bool Constraints::isFeasible(Robot& robot,
-                                    const ContactStatus& contact_status, 
-                                    ConstraintsData& data, 
-                                    const SplitSolution& s) const {
+bool Constraints::isFeasible(Robot& robot, const ContactStatus& contact_status, 
+                             ConstraintsData& data, 
+                             const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
     if (!constraintsimpl::isFeasible(position_level_constraints_, robot, 
                                      contact_status, 
@@ -147,10 +142,9 @@ inline bool Constraints::isFeasible(Robot& robot,
 }
 
 
-inline bool Constraints::isFeasible(Robot& robot, 
-                                    const ImpulseStatus& impulse_status, 
-                                    ConstraintsData& data, 
-                                    const ImpulseSplitSolution& s) const {
+bool Constraints::isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+                             ConstraintsData& data, 
+                             const ImpulseSplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
     if (!constraintsimpl::isFeasible(impulse_level_constraints_, robot, 
                                      impulse_status, 
@@ -162,10 +156,10 @@ inline bool Constraints::isFeasible(Robot& robot,
 }
 
 
-inline void Constraints::setSlackAndDual(Robot& robot, 
-                                         const ContactStatus& contact_status, 
-                                         ConstraintsData& data, 
-                                         const SplitSolution& s) const {
+void Constraints::setSlackAndDual(Robot& robot, 
+                                  const ContactStatus& contact_status, 
+                                  ConstraintsData& data, 
+                                  const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::setSlackAndDual(position_level_constraints_, robot, 
                                      contact_status, 
@@ -184,10 +178,10 @@ inline void Constraints::setSlackAndDual(Robot& robot,
 }
 
 
-inline void Constraints::setSlackAndDual(Robot& robot, 
-                                         const ImpulseStatus& impulse_status,
-                                         ConstraintsData& data, 
-                                         const ImpulseSplitSolution& s) const {
+void Constraints::setSlackAndDual(Robot& robot, 
+                                  const ImpulseStatus& impulse_status,
+                                  ConstraintsData& data, 
+                                  const ImpulseSplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::setSlackAndDual(impulse_level_constraints_, robot,
                                      impulse_status, 
@@ -196,10 +190,10 @@ inline void Constraints::setSlackAndDual(Robot& robot,
 }
 
 
-inline void Constraints::evalConstraint(Robot& robot, 
-                                        const ContactStatus& contact_status, 
-                                        ConstraintsData& data, 
-                                        const SplitSolution& s) const {
+void Constraints::evalConstraint(Robot& robot, 
+                                 const ContactStatus& contact_status, 
+                                 ConstraintsData& data, 
+                                 const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::evalConstraint(position_level_constraints_, robot, 
                                     contact_status, data.position_level_data, s);
@@ -215,9 +209,10 @@ inline void Constraints::evalConstraint(Robot& robot,
 }
 
 
-inline void Constraints::evalConstraint(
-    Robot& robot, const ImpulseStatus& impulse_status, ConstraintsData& data, 
-    const ImpulseSplitSolution& s) const {
+void Constraints::evalConstraint(Robot& robot, 
+                                 const ImpulseStatus& impulse_status, 
+                                 ConstraintsData& data, 
+                                 const ImpulseSplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::evalConstraint(impulse_level_constraints_, robot, 
                                     impulse_status, data.impulse_level_data, s);
@@ -225,9 +220,11 @@ inline void Constraints::evalConstraint(
 }
 
 
-inline void Constraints::linearizeConstraints(
-    Robot& robot, const ContactStatus& contact_status, ConstraintsData& data, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+void Constraints::linearizeConstraints(Robot& robot, 
+                                       const ContactStatus& contact_status, 
+                                       ConstraintsData& data, 
+                                       const SplitSolution& s, 
+                                       SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::linearizeConstraints(position_level_constraints_, robot, 
                                           contact_status, 
@@ -249,9 +246,11 @@ inline void Constraints::linearizeConstraints(
 }
 
 
-inline void Constraints::linearizeConstraints(
-    Robot& robot, const ImpulseStatus& impulse_status, ConstraintsData& data, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) const {
+void Constraints::linearizeConstraints(Robot& robot, 
+                                       const ImpulseStatus& impulse_status, 
+                                       ConstraintsData& data, 
+                                       const ImpulseSplitSolution& s, 
+                                       ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::linearizeConstraints(impulse_level_constraints_, robot, 
                                           impulse_status, 
@@ -260,9 +259,10 @@ inline void Constraints::linearizeConstraints(
 }
 
 
-inline void Constraints::condenseSlackAndDual(
-    const ContactStatus& contact_status, ConstraintsData& data, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
+void Constraints::condenseSlackAndDual(const ContactStatus& contact_status, 
+                                       ConstraintsData& data, 
+                                       SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::condenseSlackAndDual(position_level_constraints_, 
                                           contact_status, 
@@ -284,10 +284,10 @@ inline void Constraints::condenseSlackAndDual(
 }
 
 
-inline void Constraints::condenseSlackAndDual(
-     const ImpulseStatus& impulse_status, ConstraintsData& data, 
-     ImpulseSplitKKTMatrix& kkt_matrix, 
-     ImpulseSplitKKTResidual& kkt_residual) const {
+void Constraints::condenseSlackAndDual(const ImpulseStatus& impulse_status, 
+                                       ConstraintsData& data, 
+                                       ImpulseSplitKKTMatrix& kkt_matrix, 
+                                       ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::condenseSlackAndDual(impulse_level_constraints_, 
                                           impulse_status, 
@@ -297,9 +297,9 @@ inline void Constraints::condenseSlackAndDual(
 }
 
 
-inline void Constraints::expandSlackAndDual(const ContactStatus& contact_status,
-                                            ConstraintsData& data, 
-                                            const SplitDirection& d) const {
+void Constraints::expandSlackAndDual(const ContactStatus& contact_status,
+                                     ConstraintsData& data, 
+                                     const SplitDirection& d) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::expandSlackAndDual(position_level_constraints_, 
                                         contact_status,
@@ -318,9 +318,9 @@ inline void Constraints::expandSlackAndDual(const ContactStatus& contact_status,
 }
 
 
-inline void Constraints::expandSlackAndDual(
-    const ImpulseStatus& impulse_status, ConstraintsData& data, 
-    const ImpulseSplitDirection& d) const {
+void Constraints::expandSlackAndDual(const ImpulseStatus& impulse_status, 
+                                     ConstraintsData& data, 
+                                     const ImpulseSplitDirection& d) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::expandSlackAndDual(impulse_level_constraints_, 
                                         impulse_status, 
@@ -329,7 +329,7 @@ inline void Constraints::expandSlackAndDual(
 }
 
 
-inline double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
+double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   if (data.isPositionLevelValid()) {
     const double step_size = constraintsimpl::maxSlackStepSize(
@@ -363,7 +363,7 @@ inline double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
 }
 
 
-inline double Constraints::maxDualStepSize(const ConstraintsData& data) const {
+double Constraints::maxDualStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   if (data.isPositionLevelValid()) {
     const double step_size = constraintsimpl::maxDualStepSize(
@@ -397,8 +397,7 @@ inline double Constraints::maxDualStepSize(const ConstraintsData& data) const {
 }
 
 
-inline void Constraints::updateSlack(ConstraintsData& data, 
-                                     const double step_size) {
+void Constraints::updateSlack(ConstraintsData& data, const double step_size) {
   assert(step_size >= 0);
   assert(step_size <= 1);
   if (data.isPositionLevelValid()) {
@@ -416,8 +415,7 @@ inline void Constraints::updateSlack(ConstraintsData& data,
 }
 
 
-inline void Constraints::updateDual(ConstraintsData& data, 
-                                    const double step_size) {
+void Constraints::updateDual(ConstraintsData& data, const double step_size) {
   assert(step_size >= 0);
   assert(step_size <= 1);
   if (data.isPositionLevelValid()) {
@@ -435,7 +433,7 @@ inline void Constraints::updateDual(ConstraintsData& data,
 }
 
 
-inline void Constraints::setBarrier(const double _barrier) {
+void Constraints::setBarrier(const double _barrier) {
   assert(_barrier > 0);
   constraintsimpl::setBarrier(position_level_constraints_, _barrier);
   constraintsimpl::setBarrier(velocity_level_constraints_, _barrier);
@@ -445,7 +443,7 @@ inline void Constraints::setBarrier(const double _barrier) {
 }
 
 
-inline void Constraints::setFractionToBoundaryRule(
+void Constraints::setFractionToBoundaryRule(
     const double fraction_to_boundary_rule) {
   assert(fraction_to_boundary_rule > 0);
   constraintsimpl::setFractionToBoundaryRule(position_level_constraints_, 
@@ -460,15 +458,13 @@ inline void Constraints::setFractionToBoundaryRule(
 }
 
 
-inline double Constraints::barrier() const {
+double Constraints::barrier() const {
   return barrier_;
 }
 
 
-inline double Constraints::fractionToBoundaryRule() const {
+double Constraints::fractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_CONSTRAINTS_HXX_

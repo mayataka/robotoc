@@ -1,6 +1,3 @@
-#ifndef ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HXX_
-#define ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HXX_
-
 #include "robotoc/hybrid/switching_time_optimization.hpp"
 
 #include <cassert>
@@ -8,7 +5,7 @@
 
 namespace robotoc {
 
-inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp) 
+SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp) 
   : sto_cost_(ocp.sto_cost()), 
     sto_constraints_(ocp.sto_constraints()),
     sto_reg_(0),
@@ -19,7 +16,7 @@ inline SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp)
 }
 
 
-inline SwitchingTimeOptimization::SwitchingTimeOptimization() 
+SwitchingTimeOptimization::SwitchingTimeOptimization() 
   : sto_cost_(), 
     sto_constraints_(),
     sto_reg_(0),
@@ -30,19 +27,19 @@ inline SwitchingTimeOptimization::SwitchingTimeOptimization()
 }
 
 
-inline void SwitchingTimeOptimization::setRegularization(const double sto_reg) {
+void SwitchingTimeOptimization::setRegularization(const double sto_reg) {
   sto_reg_ = sto_reg;
 }
 
 
-inline void SwitchingTimeOptimization::initConstraints(const OCP& ocp) const {
+void SwitchingTimeOptimization::initConstraints(const OCP& ocp) const {
   if (is_sto_enabled_) {
     sto_constraints_->setSlack(ocp.discrete());
   }
 }
 
 
-inline void SwitchingTimeOptimization::computeKKTResidual(
+void SwitchingTimeOptimization::computeKKTResidual(
     const OCP& ocp, KKTResidual& kkt_residual) {
   if (is_sto_enabled_) {
     cost_val_ = sto_cost_->linearizeCost(ocp.discrete(), kkt_residual); 
@@ -52,7 +49,7 @@ inline void SwitchingTimeOptimization::computeKKTResidual(
 }
 
 
-inline void SwitchingTimeOptimization::computeKKTSystem(
+void SwitchingTimeOptimization::computeKKTSystem(
     const OCP& ocp, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   if (is_sto_enabled_) {
     cost_val_ = sto_cost_->quadratizeCost(ocp.discrete(), kkt_matrix, 
@@ -65,7 +62,7 @@ inline void SwitchingTimeOptimization::computeKKTSystem(
 }
 
 
-inline void SwitchingTimeOptimization::applyRegularization(
+void SwitchingTimeOptimization::applyRegularization(
     const OCP& ocp, KKTMatrix& kkt_matrix) const {
   for (int i=0; i<ocp.discrete().N_impulse(); ++i) {
     kkt_matrix.aux[i].Qtt += sto_reg_;
@@ -76,15 +73,15 @@ inline void SwitchingTimeOptimization::applyRegularization(
 }
 
 
-inline void SwitchingTimeOptimization::computeDirection(const OCP& ocp, 
-                                                        const Direction& d) {
+void SwitchingTimeOptimization::computeDirection(const OCP& ocp, 
+                                                 const Direction& d) {
   if (is_sto_enabled_) {
     sto_constraints_->expandSlackAndDual(ocp.discrete(), d);
   }
 }
 
 
-inline double SwitchingTimeOptimization::maxPrimalStepSize() const {
+double SwitchingTimeOptimization::maxPrimalStepSize() const {
   if (is_sto_enabled_) {
     return sto_constraints_->maxPrimalStepSize();
   }
@@ -94,7 +91,7 @@ inline double SwitchingTimeOptimization::maxPrimalStepSize() const {
 }
 
 
-inline double SwitchingTimeOptimization::maxDualStepSize() const {
+double SwitchingTimeOptimization::maxDualStepSize() const {
   if (is_sto_enabled_) {
     return sto_constraints_->maxDualStepSize();
   }
@@ -104,13 +101,13 @@ inline double SwitchingTimeOptimization::maxDualStepSize() const {
 }
 
 
-inline double SwitchingTimeOptimization::KKTError() const {
+double SwitchingTimeOptimization::KKTError() const {
   return kkt_error_;
 }
 
 
-inline double SwitchingTimeOptimization::KKTError(
-    const OCP& ocp, const KKTResidual& kkt_residual) {
+double SwitchingTimeOptimization::KKTError(const OCP& ocp, 
+                                           const KKTResidual& kkt_residual) {
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -155,12 +152,12 @@ inline double SwitchingTimeOptimization::KKTError(
 }
 
 
-inline double SwitchingTimeOptimization::totalCost() const {
+double SwitchingTimeOptimization::totalCost() const {
   return cost_val_;
 }
 
 
-inline void SwitchingTimeOptimization::integrateSolution(
+void SwitchingTimeOptimization::integrateSolution(
     const OCP& ocp, std::shared_ptr<ContactSequence>& contact_sequence,
     const double primal_step_size, const double dual_step_size, 
     const Direction& d) const {
@@ -187,5 +184,3 @@ inline void SwitchingTimeOptimization::integrateSolution(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HXX_ 

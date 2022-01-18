@@ -112,41 +112,44 @@ public:
   bool useKinematics() const override;
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                       CostFunctionData& data, const double t, const double dt, 
+                       CostFunctionData& data, const GridInfo& grid_info, 
                        const SplitSolution& s) const override;
 
   void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
-                                CostFunctionData& data, const double t, 
-                                const double dt, const SplitSolution& s, 
+                                CostFunctionData& data, const GridInfo& grid_info,
+                                const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual) const override;
 
   void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const double t, 
-                            const double dt, const SplitSolution& s, 
+                            CostFunctionData& data, const GridInfo& grid_info,  
+                            const SplitSolution& s, 
                             SplitKKTMatrix& kkt_matrix) const override;
 
   double evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                          const double t, const SplitSolution& s) const override;
+                          const GridInfo& grid_info, 
+                          const SplitSolution& s) const override;
 
   void evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                   const double t, const SplitSolution& s, 
+                                   const GridInfo& grid_info, 
+                                   const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const override;
 
   void evalTerminalCostHessian(Robot& robot, CostFunctionData& data, 
-                               const double t, const SplitSolution& s, 
+                               const GridInfo& grid_info, 
+                               const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
   double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
-                         CostFunctionData& data, const double t, 
+                         CostFunctionData& data, const GridInfo& grid_info, 
                          const ImpulseSplitSolution& s) const override;
 
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
-                                  CostFunctionData& data, const double t, 
+                                  CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
                                   ImpulseSplitKKTResidual& kkt_residual) const;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
-                              CostFunctionData& data, const double t, 
+                              CostFunctionData& data, const GridInfo& grid_info,
                               const ImpulseSplitSolution& s, 
                               ImpulseSplitKKTMatrix& kkt_matrix) const override;
 

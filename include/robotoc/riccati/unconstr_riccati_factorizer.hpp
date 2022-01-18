@@ -108,6 +108,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/riccati/unconstr_riccati_factorizer.hxx"
-
 #endif // ROBOTOC_UNCONSTR_RICCATI_FACTORIZER_HPP_ 

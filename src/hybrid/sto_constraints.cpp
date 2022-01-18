@@ -1,6 +1,3 @@
-#ifndef ROBOTOC_STO_CONSTRAINTS_HXX_ 
-#define ROBOTOC_STO_CONSTRAINTS_HXX_
-
 #include "robotoc/hybrid/sto_constraints.hpp"
 
 #include <cassert>
@@ -10,10 +7,9 @@
 
 namespace robotoc {
 
-inline STOConstraints::STOConstraints(const int _max_num_switches, 
-                                      const double _min_dt, 
-                                      const double _barrier, 
-                                      const double _fraction_to_boundary_rule) 
+STOConstraints::STOConstraints(const int _max_num_switches, const double _min_dt, 
+                               const double _barrier, 
+                               const double _fraction_to_boundary_rule) 
   : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
                                                    _fraction_to_boundary_rule)),
     min_dt_(_max_num_switches+1, _min_dt), 
@@ -49,10 +45,10 @@ inline STOConstraints::STOConstraints(const int _max_num_switches,
 }
 
 
-inline STOConstraints::STOConstraints(const int _max_num_switches, 
-                                      const std::vector<double>& _min_dt, 
-                                      const double _barrier, 
-                                      const double _fraction_to_boundary_rule) 
+STOConstraints::STOConstraints(const int _max_num_switches, 
+                               const std::vector<double>& _min_dt, 
+                               const double _barrier, 
+                               const double _fraction_to_boundary_rule) 
   : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
                                                    _fraction_to_boundary_rule)),
     min_dt_(_min_dt), 
@@ -93,7 +89,7 @@ inline STOConstraints::STOConstraints(const int _max_num_switches,
 }
 
 
-inline STOConstraints::STOConstraints()
+STOConstraints::STOConstraints()
   : dtlb_(),
     min_dt_(0), 
     num_switches_(0),
@@ -102,11 +98,11 @@ inline STOConstraints::STOConstraints()
 }
 
 
-inline STOConstraints::~STOConstraints() {
+STOConstraints::~STOConstraints() {
 }
 
 
-inline void STOConstraints::setSlack(const TimeDiscretization& discretization) {
+void STOConstraints::setSlack(const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
@@ -114,10 +110,10 @@ inline void STOConstraints::setSlack(const TimeDiscretization& discretization) {
     return;
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
-    dtlb_[0].setSlack(min_dt_[0], discretization.t(0), discretization.t_impulse(0));
+    dtlb_[0].setSlack(min_dt_[0], discretization.t0(), discretization.impulseTime(0));
   }
   else {
-    dtlb_[0].setSlack(min_dt_[0], discretization.t(0), discretization.t_lift(0));
+    dtlb_[0].setSlack(min_dt_[0], discretization.t0(), discretization.liftTime(0));
   }
   int impulse_index = 0;
   int lift_index = 0;
@@ -127,45 +123,44 @@ inline void STOConstraints::setSlack(const TimeDiscretization& discretization) {
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
       if (next_event_type == DiscreteEventType::Impulse) {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1],
-                                      discretization.t_impulse(impulse_index),  
-                                      discretization.t_impulse(impulse_index+1));
+                                      discretization.impulseTime(impulse_index),  
+                                      discretization.impulseTime(impulse_index+1));
       }
       else {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1], 
-                                      discretization.t_impulse(impulse_index),  
-                                      discretization.t_lift(lift_index));
+                                      discretization.impulseTime(impulse_index),  
+                                      discretization.liftTime(lift_index));
       }
       ++impulse_index;
     }
     else {
       if (next_event_type == DiscreteEventType::Impulse) {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1],
-                                      discretization.t_lift(lift_index),  
-                                      discretization.t_impulse(impulse_index));
+                                      discretization.liftTime(lift_index),  
+                                      discretization.impulseTime(impulse_index));
       }
       else {
         dtlb_[event_index+1].setSlack(min_dt_[event_index+1],
-                                      discretization.t_lift(lift_index),  
-                                      discretization.t_lift(lift_index+1));
+                                      discretization.liftTime(lift_index),  
+                                      discretization.liftTime(lift_index+1));
       }
       ++lift_index;
     }
   }
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     dtlb_[num_events].setSlack(min_dt_[num_events], 
-                               discretization.t_impulse(impulse_index), 
-                               discretization.t(discretization.N()));
+                               discretization.impulseTime(impulse_index), 
+                               discretization.tf());
   }
   else {
     dtlb_[num_events].setSlack(min_dt_[num_events], 
-                               discretization.t_lift(lift_index), 
-                               discretization.t(discretization.N()));
+                               discretization.liftTime(lift_index), 
+                               discretization.tf());
   }
 }
 
 
-inline void STOConstraints::evalConstraint(
-    const TimeDiscretization& discretization) {
+void STOConstraints::evalConstraint(const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
@@ -174,14 +169,14 @@ inline void STOConstraints::evalConstraint(
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_impulse(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.impulseTime(0));
     }
   }
   else {
     if (discretization.isSTOEnabledLift(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_lift(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.liftTime(0));
     }
   }
   int impulse_index = 0;
@@ -193,13 +188,13 @@ inline void STOConstraints::evalConstraint(
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_impulse(impulse_index+1));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.impulseTime(impulse_index+1));
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_lift(lift_index));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.liftTime(lift_index));
         }
       }
       ++impulse_index;
@@ -208,13 +203,13 @@ inline void STOConstraints::evalConstraint(
       if (discretization.isSTOEnabledLift(lift_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_impulse(impulse_index));
+              min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.impulseTime(impulse_index));
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_lift(lift_index+1));
+              min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.liftTime(lift_index+1));
         }
       }
       ++lift_index;
@@ -223,23 +218,22 @@ inline void STOConstraints::evalConstraint(
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_impulse(impulse_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.impulseTime(impulse_index), 
+                                       discretization.tf());
     }
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_lift(lift_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.liftTime(lift_index), 
+                                       discretization.tf());
     }
   }
 }
 
 
-inline void STOConstraints::linearizeConstraints(
-    const TimeDiscretization& discretization, 
-    KKTResidual& kkt_residual) {
+void STOConstraints::linearizeConstraints(
+    const TimeDiscretization& discretization, KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
@@ -248,15 +242,15 @@ inline void STOConstraints::linearizeConstraints(
   } 
   if (discretization.eventType(0) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_impulse(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.impulseTime(0));
       dtlb_[0].evalDerivatives_lb(kkt_residual.aux[0]);
     }
   }
   else {
     if (discretization.isSTOEnabledLift(0)) {
-      dtlb_[0].evalConstraint(min_dt_[0], discretization.t(0), 
-                              discretization.t_lift(0));
+      dtlb_[0].evalConstraint(min_dt_[0], discretization.t0(), 
+                              discretization.liftTime(0));
       dtlb_[0].evalDerivatives_lb(kkt_residual.lift[0]);
     }
   }
@@ -269,16 +263,16 @@ inline void STOConstraints::linearizeConstraints(
       if (discretization.isSTOEnabledImpulse(impulse_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_impulse(impulse_index+1));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.impulseTime(impulse_index+1));
           dtlb_[event_index+1].evalDerivatives_lub( 
               kkt_residual.aux[impulse_index], 
               kkt_residual.aux[impulse_index+1]);
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_impulse(impulse_index), 
-              discretization.t_lift(lift_index));
+              min_dt_[event_index+1], discretization.impulseTime(impulse_index), 
+              discretization.liftTime(lift_index));
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.aux[impulse_index], kkt_residual.lift[lift_index]);
         }
@@ -289,15 +283,15 @@ inline void STOConstraints::linearizeConstraints(
       if (discretization.isSTOEnabledLift(lift_index)) {
         if (next_event_type == DiscreteEventType::Impulse) {
           dtlb_[event_index+1].evalConstraint(
-               min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_impulse(impulse_index));
+               min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.impulseTime(impulse_index));
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.lift[lift_index], kkt_residual.aux[impulse_index]);
         }
         else {
           dtlb_[event_index+1].evalConstraint(
-              min_dt_[event_index+1], discretization.t_lift(lift_index), 
-              discretization.t_lift(lift_index+1));
+              min_dt_[event_index+1], discretization.liftTime(lift_index), 
+              discretization.liftTime(lift_index+1));
           dtlb_[event_index+1].evalDerivatives_lub(
               kkt_residual.lift[lift_index], kkt_residual.lift[lift_index+1]);
         }
@@ -308,23 +302,23 @@ inline void STOConstraints::linearizeConstraints(
   if (discretization.eventType(num_events-1) == DiscreteEventType::Impulse) {
     if (discretization.isSTOEnabledImpulse(impulse_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_impulse(impulse_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.impulseTime(impulse_index), 
+                                       discretization.tf());
       dtlb_[num_events].evalDerivatives_ub(kkt_residual.aux[impulse_index]);
     }
   }
   else {
     if (discretization.isSTOEnabledLift(lift_index)) {
       dtlb_[num_events].evalConstraint(min_dt_[num_events], 
-                                       discretization.t_lift(lift_index), 
-                                       discretization.t(discretization.N()));
+                                       discretization.liftTime(lift_index), 
+                                       discretization.tf());
       dtlb_[num_events].evalDerivatives_ub(kkt_residual.lift[lift_index]);
     }
   }
 }
 
 
-inline void STOConstraints::condenseSlackAndDual(
+void STOConstraints::condenseSlackAndDual(
     const TimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -394,7 +388,7 @@ inline void STOConstraints::condenseSlackAndDual(
 }
 
 
-inline void STOConstraints::expandSlackAndDual(
+void STOConstraints::expandSlackAndDual(
     const TimeDiscretization& discretization, const Direction& d) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   num_switches_ = num_events;
@@ -463,7 +457,7 @@ inline void STOConstraints::expandSlackAndDual(
 }
 
 
-inline double STOConstraints::maxPrimalStepSize() const {
+double STOConstraints::maxPrimalStepSize() const {
   if (num_switches_ > 0) {
     return primal_step_size_.head(num_switches_+1).minCoeff();
   }
@@ -473,7 +467,7 @@ inline double STOConstraints::maxPrimalStepSize() const {
 }
 
 
-inline double STOConstraints::maxDualStepSize() const {
+double STOConstraints::maxDualStepSize() const {
   if (num_switches_ > 0) {
     return dual_step_size_.head(num_switches_+1).minCoeff();
   }
@@ -483,21 +477,21 @@ inline double STOConstraints::maxDualStepSize() const {
 }
 
 
-inline void STOConstraints::updateSlack(const double step_size) {
+void STOConstraints::updateSlack(const double step_size) {
   for (int i=0; i<num_switches_+1; ++i) {
     dtlb_[i].updateSlack(step_size);
   }
 }
 
 
-inline void STOConstraints::updateDual(const double step_size) {
+void STOConstraints::updateDual(const double step_size) {
   for (int i=0; i<num_switches_+1; ++i) {
     dtlb_[i].updateDual(step_size);
   }
 }
 
 
-inline double STOConstraints::KKTError() const {
+double STOConstraints::KKTError() const {
   double err = 0;
   for (int i=0; i<num_switches_+1; ++i) {
     err += dtlb_[i].KKTError();
@@ -506,7 +500,7 @@ inline double STOConstraints::KKTError() const {
 }
 
 
-inline void STOConstraints::setMinimumDwellTimes(const double min_dt) {
+void STOConstraints::setMinimumDwellTimes(const double min_dt) {
   try {
     if (min_dt < 0) {
       throw std::out_of_range(
@@ -523,7 +517,7 @@ inline void STOConstraints::setMinimumDwellTimes(const double min_dt) {
 }
 
 
-inline void STOConstraints::setMinimumDwellTimes(
+void STOConstraints::setMinimumDwellTimes(
     const std::vector<double>& min_dt) {
   min_dt_ = min_dt;
   while (min_dt_.size() < (max_num_switches_+1)) {
@@ -532,12 +526,12 @@ inline void STOConstraints::setMinimumDwellTimes(
 }
 
 
-inline const std::vector<double>& STOConstraints::minimumDwellTimes() const {
+const std::vector<double>& STOConstraints::minimumDwellTimes() const {
   return min_dt_;
 }
 
 
-inline void STOConstraints::setBarrier(const double _barrier) {
+void STOConstraints::setBarrier(const double _barrier) {
   assert(_barrier > 0.0);
   for (auto& e : dtlb_) {
     e.setBarrier(_barrier);
@@ -546,7 +540,7 @@ inline void STOConstraints::setBarrier(const double _barrier) {
 }
 
 
-inline void STOConstraints::setFractionToBoundaryRule(
+void STOConstraints::setFractionToBoundaryRule(
     const double _fraction_to_boundary_rule) {
   assert(_fraction_to_boundary_rule > 0.0);
   assert(_fraction_to_boundary_rule < 1.0);
@@ -557,15 +551,13 @@ inline void STOConstraints::setFractionToBoundaryRule(
 }
 
 
-inline double STOConstraints::barrier() const {
+double STOConstraints::barrier() const {
   return barrier_;
 }
 
 
-inline double STOConstraints::fractionToBoundaryRule() const {
+double STOConstraints::fractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_STO_CONSTRAINTS_HXX_ 

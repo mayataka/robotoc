@@ -70,8 +70,21 @@ public:
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] s_new Coarse updated split solution of this time stage.
   ///
-  template <typename MatrixType>
-  void coarseUpdate(const Eigen::MatrixBase<MatrixType>& aux_mat_next,
+  void coarseUpdate(const Eigen::MatrixXd& aux_mat_next,
+                    const double dt, const SplitKKTMatrix& kkt_matrix, 
+                    const SplitKKTResidual& kkt_residual,
+                    const SplitSolution& s, SplitSolution& s_new);
+
+  ///
+  /// @brief Coarse updates the split solution of this time stage. 
+  /// @param[in] aux_mat_next Auxiliary matrix of the next time stage. 
+  /// @param[in] dt Time stage of time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
+  void coarseUpdate(const Eigen::Block<Eigen::MatrixXd>& aux_mat_next,
                     const double dt, const SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
@@ -144,10 +157,32 @@ private:
   Eigen::MatrixXd H_, kkt_mat_inv_;
   Eigen::VectorXd kkt_res_, d_, x_res_, dx_;
 
+
+  template <typename MatrixType>
+  void coarseUpdate_impl(const Eigen::MatrixBase<MatrixType>& aux_mat_next, 
+                         const double dt, const SplitKKTMatrix& kkt_matrix, 
+                         const SplitKKTResidual& kkt_residual, 
+                         const SplitSolution& s, SplitSolution& s_new) {
+    assert(aux_mat_next.rows() == dimx_);
+    assert(aux_mat_next.cols() == dimx_);
+    H_.topLeftCorner(dimv_, dimv_)     = kkt_matrix.Qaa;
+    H_.bottomLeftCorner(dimx_, dimv_)  = kkt_matrix.Qxu; // This is actually Qxa
+    H_.bottomRightCorner(dimx_, dimx_) = kkt_matrix.Qxx.transpose();
+    H_.bottomRightCorner(dimx_, dimx_).noalias() += aux_mat_next;
+    kkt_mat_inverter_.invert(dt, H_, kkt_mat_inv_);
+    kkt_res_.head(dimx_)           = kkt_residual.Fx;
+    kkt_res_.segment(dimx_, dimv_) = kkt_residual.la;
+    kkt_res_.tail(dimx_)           = kkt_residual.lx;
+    d_.noalias() = kkt_mat_inv_ * kkt_res_;
+    s_new.lmd = s.lmd - d_.head(dimv_);
+    s_new.gmm = s.gmm - d_.segment(dimv_, dimv_);
+    s_new.a   = s.a   - d_.segment(2*dimv_, dimv_); 
+    s_new.q   = s.q   - d_.segment(3*dimv_, dimv_);
+    s_new.v   = s.v   - d_.tail(dimv_);
+  }
+
 };
 
 } // namespace robotoc
-
-#include "robotoc/parnmpc/unconstr_split_backward_correction.hxx"
 
 #endif // ROBOTOC_UNCONSTR_SPLIT_BACKWARD_CORRECTION_HPP_ 

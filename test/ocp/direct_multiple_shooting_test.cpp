@@ -101,32 +101,26 @@ TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
-      const double ti = ocp_ref.discrete().t(i);
-      const double t_impulse = ocp_ref.discrete().t_impulse(impulse_index);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_aux = ocp_ref.discrete().dt_aux(impulse_index);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_impulse = ocp_ref.discrete().gridInfoImpulse(impulse_index);
       const bool sto = ocp.discrete().isSTOEnabledImpulse(impulse_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dt);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), grid_info, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
       ocp_ref.impulse[impulse_index].initConstraints(
           robot_ref, contact_sequence->impulseStatus(impulse_index), s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTResidual(
-          robot_ref, contact_sequence->impulseStatus(impulse_index), t_impulse, s[i].q, 
+          robot_ref, contact_sequence->impulseStatus(impulse_index), grid_info_impulse, s[i].q, 
           s.impulse[impulse_index], s.aux[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
       ocp_ref.aux[impulse_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.aux[impulse_index]);
       ocp_ref.aux[impulse_index].computeKKTResidual(
-          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), grid_info_impulse, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.aux[impulse_index], 
@@ -142,26 +136,20 @@ TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
-      const double ti = ocp_ref.discrete().t(i);
-      const double t_lift = ocp_ref.discrete().t_lift(lift_index);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_lift = ocp_ref.discrete().dt_lift(lift_index);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_lift = ocp_ref.discrete().gridInfoLift(lift_index);
       const bool sto = ocp_ref.discrete().isSTOEnabledLift(lift_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dt);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), grid_info, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
       ocp_ref.lift[lift_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTResidual(
-          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), grid_info_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.lift[lift_index], 
                                          kkt_residual_ref.lift[lift_index], 
@@ -173,18 +161,17 @@ TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_next = ocp_ref.discrete().dt(i+1);
       const int impulse_index  
           = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_next = ocp_ref.discrete().gridInfo(i+1);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase), 
-          ocp_ref.discrete().t(i), dti, q_prev, 
-          s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
+          grid_info, q_prev, s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
           contact_sequence->impulseStatus(impulse_index),
-          dt_next, kkt_matrix_ref.switching[impulse_index], 
+          grid_info_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
@@ -193,20 +180,20 @@ TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const double dti = ocp_ref.discrete().dt(i);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence->contactStatus(contact_phase), 
-          ocp_ref.discrete().t(i), dti, q_prev, 
-          s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+          grid_info, q_prev, s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
       kkt_error_ref += kkt_residual_ref[i].kkt_error;
       total_cost_ref += ocp_ref[i].stageCost();
     }
   }
-  ocp_ref.terminal.computeKKTResidual(robot_ref, t+T, s[ocp_ref.discrete().N()-1].q, 
+  const auto grid_info = ocp_ref.discrete().gridInfo(ocp_ref.discrete().N());
+  ocp_ref.terminal.computeKKTResidual(robot_ref, grid_info, s[ocp_ref.discrete().N()-1].q, 
                                       s[ocp_ref.discrete().N()], 
                                       kkt_matrix_ref[ocp_ref.discrete().N()], 
                                       kkt_residual_ref[ocp_ref.discrete().N()]);
@@ -260,32 +247,26 @@ TEST_P(DirectMultipleShootingTest, computeKKTSystem) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
-      const double ti = ocp_ref.discrete().t(i);
-      const double t_impulse = ocp_ref.discrete().t_impulse(impulse_index);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_aux = ocp_ref.discrete().dt_aux(impulse_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dt);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_impulse = ocp_ref.discrete().gridInfoImpulse(impulse_index);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTSystem(
-          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), grid_info, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
       ocp_ref.impulse[impulse_index].initConstraints(
           robot_ref, contact_sequence->impulseStatus(impulse_index), s.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeKKTSystem(
-          robot_ref, contact_sequence->impulseStatus(impulse_index), t_impulse, s[i].q, 
-          s.impulse[impulse_index], s.aux[impulse_index], 
+          robot_ref, contact_sequence->impulseStatus(impulse_index), grid_info_impulse, 
+          s[i].q, s.impulse[impulse_index], s.aux[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
       ocp_ref.aux[impulse_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.aux[impulse_index]);
       ocp_ref.aux[impulse_index].computeKKTSystem(
-          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
-          s.aux[impulse_index], s[i+1], 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), grid_info_impulse, 
+          s.impulse[impulse_index].q, s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.aux[impulse_index], 
                                          kkt_residual_ref.aux[impulse_index], 
@@ -294,25 +275,19 @@ TEST_P(DirectMultipleShootingTest, computeKKTSystem) {
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
-      const double ti = ocp_ref.discrete().t(i);
-      const double t_lift = ocp_ref.discrete().t_lift(lift_index);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_lift = ocp_ref.discrete().dt_lift(lift_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dt);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_lift = ocp_ref.discrete().gridInfoLift(lift_index);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTSystem(
-          robot_ref, contact_sequence->contactStatus(contact_phase), ti, dti, q_prev, 
+          robot_ref, contact_sequence->contactStatus(contact_phase), grid_info, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
       ocp_ref.lift[lift_index].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase+1), 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTSystem(
-          robot_ref, contact_sequence->contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
+          robot_ref, contact_sequence->contactStatus(contact_phase+1), grid_info_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref.lift[lift_index], 
                                          kkt_residual_ref.lift[lift_index], 
@@ -320,36 +295,36 @@ TEST_P(DirectMultipleShootingTest, computeKKTSystem) {
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_next = ocp_ref.discrete().dt(i+1);
       const int impulse_index  
           = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_next = ocp_ref.discrete().gridInfo(i+1);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase), 
-          ocp_ref.discrete().t(i), dti, q_prev, 
-          s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
+          grid_info, q_prev, s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
           contact_sequence->impulseStatus(impulse_index),
-          dt_next, kkt_matrix_ref.switching[impulse_index],
+          grid_info_next, kkt_matrix_ref.switching[impulse_index],
           kkt_residual_ref.switching[impulse_index]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const double dti = ocp_ref.discrete().dt(i);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
       ocp_ref[i].initConstraints(
           robot_ref, contact_sequence->contactStatus(contact_phase), i, s[i]);
       ocp_ref[i].computeKKTSystem(
           robot_ref, contact_sequence->contactStatus(contact_phase), 
-          ocp_ref.discrete().t(i), dti, q_prev, 
+          grid_info, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
       ocp_ref[i].correctSTOSensitivities(kkt_matrix_ref[i], kkt_residual_ref[i], 
                                          ocp.discrete().N_phase(contact_phase));
     }
   }
-  ocp_ref.terminal.computeKKTSystem(robot_ref, t+T, s[ocp_ref.discrete().N()-1].q, 
+  const auto grid_info = ocp_ref.discrete().gridInfo(ocp_ref.discrete().N());
+  ocp_ref.terminal.computeKKTSystem(robot_ref, grid_info, s[ocp_ref.discrete().N()-1].q, 
                                     s[ocp_ref.discrete().N()], 
                                     kkt_matrix_ref[ocp_ref.discrete().N()], 
                                     kkt_residual_ref[ocp_ref.discrete().N()]);
@@ -405,22 +380,20 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_aux = ocp_ref.discrete().dt_aux(impulse_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dt);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_impulse = ocp_ref.discrete().gridInfoImpulse(impulse_index);
+      const double dt_i = grid_info.dt;
+      const double dt_aux = grid_info_impulse.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
       const double dts_aux = (d_ref.aux[impulse_index].dts_next - d_ref.aux[impulse_index].dts) / ocp_ref.discrete().N_phase(contact_phase+1);
-      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i], dts_i);
+      ocp_ref[i].expandDual(grid_info, d_ref.impulse[impulse_index], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index], dts_aux);
+      ocp_ref.aux[impulse_index].expandDual(grid_info_impulse, d_ref[i+1], d_ref.aux[impulse_index], dts_aux);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
@@ -428,18 +401,16 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
-      const double dti = ocp_ref.discrete().dt(i);
-      const double dt_lift = ocp_ref.discrete().dt_lift(lift_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dt);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_lift = ocp_ref.discrete().gridInfoLift(lift_index);
+      const double dt_i = grid_info.dt;
+      const double dt_lift = grid_info_lift.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
       const double dts_lift = (d_ref.lift[lift_index].dts_next - d_ref.lift[lift_index].dts) / ocp_ref.discrete().N_phase(contact_phase+1);
-      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i], dts_i);
+      ocp_ref[i].expandDual(grid_info, d_ref.lift[lift_index], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index], dts_lift);
+      ocp_ref.lift[lift_index].expandDual(grid_info_lift, d_ref[i+1], d_ref.lift[lift_index], dts_lift);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, 
                                             d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
@@ -447,20 +418,21 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i+1)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
-      const double dti = ocp_ref.discrete().dt(i);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const auto grid_info_next = ocp_ref.discrete().gridInfo(i+1);
+      const double dt_i = grid_info.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
-      ocp_ref[i].expandDual(dti, d_ref[i+1], kkt_matrix_ref.switching[impulse_index], 
+      ocp_ref[i].expandDual(grid_info, d_ref[i+1], kkt_matrix_ref.switching[impulse_index], 
                             d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const double dti = ocp_ref.discrete().dt(i);
+      const auto grid_info = ocp_ref.discrete().gridInfo(i);
+      const double dt_i = grid_info.dt;
       const double dts_i = (d_ref[i].dts_next - d_ref[i].dts) / ocp_ref.discrete().N_phase(contact_phase);
-      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i], dts_i);
+      ocp_ref[i].expandDual(grid_info, d_ref[i+1], d_ref[i], dts_i);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
