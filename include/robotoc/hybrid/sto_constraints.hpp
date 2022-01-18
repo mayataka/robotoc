@@ -230,6 +230,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/sto_constraints.hxx"
-
 #endif // ROBOTOC_STO_CONSTRAINTS_HPP_ 

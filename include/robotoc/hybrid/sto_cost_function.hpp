@@ -114,6 +114,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/sto_cost_function.hxx"
-
 #endif // ROBOTOC_STO_COST_FUNCTION_HPP_ 

@@ -239,6 +239,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/cost/cost_function.hxx"
-
 #endif // ROBOTOC_COST_FUNCTION_HPP_

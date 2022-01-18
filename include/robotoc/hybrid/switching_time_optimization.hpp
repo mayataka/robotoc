@@ -152,6 +152,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/hybrid/switching_time_optimization.hxx"
-
 #endif // ROBOTOC_SWITCHING_TIME_OPTIMIZATION_HPP_ 
