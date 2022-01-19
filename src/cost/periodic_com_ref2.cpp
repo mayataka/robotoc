@@ -63,12 +63,12 @@ bool PeriodicCoMRef2::isActive(const GridInfo& grid_info) const {
   else {
     for (int cycle=0; ; ++cycle) {
       if (grid_info.contact_phase 
-            < start_phase_+cycle*(active_phases_+inactive_phases_)) {
-        return false;
-      }
-      if (grid_info.contact_phase 
             < start_phase_+cycle*(active_phases_+inactive_phases_)+active_phases_) {
         return true;
+      }
+      else if (grid_info.contact_phase 
+            < start_phase_+(cycle+1)*(active_phases_+inactive_phases_)) {
+        return false;
       }
     }
     return false;
