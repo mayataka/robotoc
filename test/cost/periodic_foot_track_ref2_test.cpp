@@ -16,110 +16,124 @@ protected:
     srand((unsigned int) time(0));
     std::random_device rnd;
     p0 = Eigen::Vector3d::Random();
+    step_length = std::abs(Eigen::VectorXd::Random(1)[0]);
+    step_height = std::abs(Eigen::VectorXd::Random(1)[0]);
 
-    t0 = std::abs(Eigen::VectorXd::Random(1)[0]);
-    period_swing = std::abs(Eigen::VectorXd::Random(1)[0]);
-    period_stance = std::abs(Eigen::VectorXd::Random(1)[0]);
-    period = period_swing + period_stance;
+    start_phase = 2;
+    end_phase = 21;
+    active_phases = 3;
+    inactive_phases = 4;
+
+    grid_info = GridInfo::Random();
+    grid_info.N_phase = 11;
+    grid_info.grid_count_in_phase = 4;
   }
 
   virtual void TearDown() {
   }
 
   Eigen::Vector3d p0;
-  double step_length, step_height, t0, period_swing, period_stance, period;
+  double step_length, step_height;
+  int start_phase, end_phase, active_phases, inactive_phases;
+  GridInfo grid_info;
 };
 
 
 TEST_F(PeriodicFootTrackRefTest2, first_mode_half_true) {
   auto preiodic_foot_ref = std::make_shared<PeriodicFootTrackRef2>(p0, step_length,
-                                                                   step_height, t0, 
-                                                                   period_swing,
-                                                                   period_stance, true);
+                                                                   step_height, 
+                                                                   start_phase, 
+                                                                   end_phase, 
+                                                                   active_phases,
+                                                                   inactive_phases, true);
   Eigen::VectorXd p(3), p_ref(3);
-  auto grid_info = GridInfo();
-  const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  grid_info.t = t1;
+  grid_info.contact_phase = start_phase - 1;
+  EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
+  grid_info.contact_phase = start_phase + 1;
   preiodic_foot_ref->update_x3d_ref(grid_info, p);
-  EXPECT_TRUE(p.isApprox(p0));
-  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
-  const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_x3d_ref(grid_info, p);
-  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
-  if (t2 < t0+period_swing) {
-    p_ref = p0;
-    p_ref(0) += 0.5 * ((t2-t0)/period_swing) * step_length;
-    const double tau = t2-t0;
-    const double rate = tau / period_swing;
-    if (rate < 0.5) {
-      p_ref(2) += 2 * step_height * rate;
-    }
-    else {
-      p_ref(2) += 2 * step_height * (1-rate);
-    }
-  }
-  else if (t2 < period) {
-    p_ref = p0;
-    p_ref(0) += 0.5 * step_length;
+  const double rate1 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  p_ref = p0;
+  p_ref(0) += 0.5 * rate1 * step_length;
+  if (rate1 < 0.5) {
+    p_ref(2) += 2 * step_height * rate1;
   }
   else {
-    const int steps = std::floor((t2-t0)/period);
-    const double tau = t2 - t0 - steps*period;
-    if (tau < period_swing) {
-      p_ref = p0;
-      p_ref(0) += (steps-0.5)*step_length; 
-      p_ref(0) += (tau/period_swing)*step_length; 
-      const double rate = tau / period_swing;
-      if (rate < 0.5) {
-        p_ref(2) += 2 * step_height * rate;
-      }
-      else {
-        p_ref(2) += 2 * step_height * (1-rate);
-      }
-    }
-    else {
-      p_ref = p0;
-      p_ref(0) += (steps+0.5)*step_length; 
-    }
+    p_ref(2) += 2 * step_height * (1-rate1);
   }
   EXPECT_TRUE(p.isApprox(p_ref));
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases;
+  EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases + inactive_phases;
+  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  const int steps = std::floor((grid_info.contact_phase-start_phase)/(active_phases+inactive_phases));
+  const double rate2 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  p_ref = p0;
+  p_ref(0) += ((steps-0.5) + rate2) * step_length;
+  if (rate2 < 0.5) {
+    p_ref(2) += 2 * step_height * rate2;
+  }
+  else {
+    p_ref(2) += 2 * step_height * (1-rate2);
+  }
+  EXPECT_TRUE(p.isApprox(p_ref));
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
+
+  grid_info.contact_phase = end_phase;
+  EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
 }
 
 
 TEST_F(PeriodicFootTrackRefTest2, first_mode_half_false) {
   auto preiodic_foot_ref = std::make_shared<PeriodicFootTrackRef2>(p0, step_length,
-                                                                   step_height, t0, 
-                                                                   period_swing,
-                                                                   period_stance, false);
+                                                                   step_height, 
+                                                                   start_phase, 
+                                                                   end_phase, 
+                                                                   active_phases,
+                                                                   inactive_phases, false);
   Eigen::VectorXd p(3), p_ref(3);
-  auto grid_info = GridInfo();
-  const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  grid_info.t = t1;
+  grid_info.contact_phase = start_phase - 1;
+  EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
+  grid_info.contact_phase = start_phase + 1;
   preiodic_foot_ref->update_x3d_ref(grid_info, p);
-  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
-  EXPECT_TRUE(p.isApprox(p0));
-  const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_foot_ref->update_x3d_ref(grid_info, p);
-  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
-  const int steps = std::floor((t2-t0)/period);
-  const double tau = t2 - t0 - steps*period;
-  if (tau < period_swing) {
-    p_ref = p0;
-    p_ref(0) += steps*step_length; 
-    p_ref(0) += (tau/period_swing)*step_length; 
-    const double rate = tau / period_swing;
-    if (rate < 0.5) {
-      p_ref(2) += 2 * step_height * rate;
-    }
-    else {
-      p_ref(2) += 2 * step_height * (1-rate);
-    }
+  const double rate1 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  p_ref = p0;
+  p_ref(0) += rate1 * step_length;
+  if (rate1 < 0.5) {
+    p_ref(2) += 2 * step_height * rate1;
   }
   else {
-    p_ref = p0;
-    p_ref(0) += (steps+1.0)*step_length; 
+    p_ref(2) += 2 * step_height * (1-rate1);
   }
   EXPECT_TRUE(p.isApprox(p_ref));
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases;
+  EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases + inactive_phases;
+  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  const int steps = std::floor((grid_info.contact_phase-start_phase)/(active_phases+inactive_phases));
+  const double rate2 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  p_ref = p0;
+  p_ref(0) += (steps + rate2) * step_length;
+  if (rate2 < 0.5) {
+    p_ref(2) += 2 * step_height * rate2;
+  }
+  else {
+    p_ref(2) += 2 * step_height * (1-rate2);
+  }
+  EXPECT_TRUE(p.isApprox(p_ref));
+  EXPECT_TRUE(preiodic_foot_ref->isActive(grid_info));
+
+  grid_info.contact_phase = end_phase;
+  EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
 }
 
 } // namespace robotoc

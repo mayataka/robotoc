@@ -43,7 +43,7 @@ public:
     com_ref = com0_ref_ + (grid_info.t-t0_) * vcom_ref_;
   }
 
-  bool isActive(const GridInfo grid_info) const override {
+  bool isActive(const GridInfo& grid_info) const override {
     if (t0_ <= grid_info.t && grid_info.t <= tf_)
       return true;
     else 
