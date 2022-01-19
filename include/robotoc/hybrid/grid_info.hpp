@@ -89,7 +89,10 @@ struct GridInfo {
     os << "dt: " << dt << std::endl;
     os << "contact_phase: " << contact_phase << std::endl;
     os << "time_stage: " << time_stage << std::endl;
+    os << "impulse_index: " << impulse_index << std::endl;
+    os << "lift_index: " << lift_index << std::endl;
     os << "grid_count_in_phase: " << grid_count_in_phase << std::endl;
+    os << "N_phase: " << N_phase << std::endl;
   }
 
   friend std::ostream& operator<<(std::ostream& os, const GridInfo& grid_info) {

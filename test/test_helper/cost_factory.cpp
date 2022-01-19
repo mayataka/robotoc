@@ -16,13 +16,13 @@ TimeVaryingConfigurationRef::TimeVaryingConfigurationRef(
 
 
 void TimeVaryingConfigurationRef::update_q_ref(const Robot& robot, 
-                                               const double t, 
+                                               const GridInfo& grid_info
                                                Eigen::VectorXd& q_ref) const {
-  robot.integrateConfiguration(q0_ref_, v_ref_, t, q_ref);
+  robot.integrateConfiguration(q0_ref_, v_ref_, grid_info.t, q_ref);
 }
 
 
-bool TimeVaryingConfigurationRef::isActive(const double t) const {
+bool TimeVaryingConfigurationRef::isActive(const GridInfo& grid_info) const {
   return true;
 }
 
