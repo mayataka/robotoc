@@ -17,10 +17,9 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.02
 step_length = 0.15
 step_height = 0.1
-swing_time = 0.5
-double_support_time = 0.04
-t0 = double_support_time 
-cycle = 3
+swing_time = 0.25
+t0 = 0.1
+cycle = 4
 
 # Create the cost function
 cost = robotoc.CostFunction()
@@ -63,20 +62,20 @@ x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
 LF_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_LF, step_length, step_height, 
-                                            start_phase=3, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
+                                            start_phase=2, end_phase=2*cycle+2, 
+                                            active_phases=1, inactive_phases=1,
                                             is_first_move_half=False)
 LH_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_LH, step_length, step_height, 
-                                            start_phase=1, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
+                                            start_phase=1, end_phase=2*cycle+2, 
+                                            active_phases=1, inactive_phases=1,
                                             is_first_move_half=True)
 RF_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_RF, step_length, step_height, 
-                                            start_phase=1, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
+                                            start_phase=1, end_phase=2*cycle+2, 
+                                            active_phases=1, inactive_phases=1,
                                             is_first_move_half=True)
 RH_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_RH, step_length, step_height, 
-                                            start_phase=3, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
+                                            start_phase=2, end_phase=2*cycle+2, 
+                                            active_phases=1, inactive_phases=1,
                                             is_first_move_half=False)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
@@ -97,8 +96,8 @@ com_ref0[2] = robot.com()[2]
 com_step_ref = np.zeros(3)
 com_step_ref[0] = 0.5 * step_length 
 com_ref = robotoc.PeriodicCoMRef2(com_ref0, com_step_ref, 
-                                  start_phase=1, end_phase=4*cycle+2, 
-                                  active_phases=1, inactive_phases=1, 
+                                  start_phase=1, end_phase=2*cycle+2, 
+                                  active_phases=1, inactive_phases=0, 
                                   is_first_move_half=True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_com_weight(np.full(3, 1.0e04))
@@ -136,43 +135,34 @@ contact_status_lhrf_swing = robot.create_contact_status()
 contact_status_lhrf_swing.activate_contacts([0, 3])
 contact_status_lhrf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lhrf_swing, t0, sto=True)
-
 contact_positions[1][0] += 0.5 * step_length
 contact_positions[2][0] += 0.5 * step_length
-contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_standing, t0+swing_time, sto=True)
 
 contact_status_lfrh_swing = robot.create_contact_status()
 contact_status_lfrh_swing.activate_contacts([1, 2])
 contact_status_lfrh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lfrh_swing, 
-                           t0+swing_time+double_support_time, sto=True)
-
+                           t0+swing_time, sto=True)
 contact_positions[0][0] += step_length
 contact_positions[3][0] += step_length
-contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_standing, 
-                           t0+2*swing_time+double_support_time, sto=True)
 
 for i in range(cycle-1):
-    t1 = t0 + (i+1)*(2*swing_time+2*double_support_time)
+    t1 = t0 + (i+1)*(2*swing_time)
     contact_status_lhrf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lhrf_swing, t1, sto=True)
-
     contact_positions[1][0] += step_length
     contact_positions[2][0] += step_length
-    contact_status_standing.set_contact_placements(contact_positions)
-    contact_sequence.push_back(contact_status_standing, t1+swing_time, sto=True)
 
     contact_status_lfrh_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lfrh_swing, 
-                               t1+swing_time+double_support_time, sto=True)
-
+                               t1+swing_time, sto=True)
     contact_positions[0][0] += step_length
     contact_positions[3][0] += step_length
-    contact_status_standing.set_contact_placements(contact_positions)
-    contact_sequence.push_back(contact_status_standing, 
-                               t1+2*swing_time+double_support_time, sto=True)
+
+
+t1 = t0 + cycle*(2*swing_time) 
+contact_status_standing.set_contact_placements(contact_positions)
+contact_sequence.push_back(contact_status_standing, t1, sto=False)
 
 # you can chech the contact sequence as 
 # print(contact_sequence)
@@ -180,13 +170,13 @@ for i in range(cycle-1):
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-min_dt = [0.02] + cycle * [0.2, 0.02, 0.2, 0.02]
+min_dt = [0.02] + cycle * [0.2, 0.2]
 sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
                                          min_dt=min_dt,
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
-T = t0 + cycle*(2*double_support_time+2*swing_time)
+T = t0 + cycle*(2*swing_time)
 N = math.floor(T/dt) 
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, 

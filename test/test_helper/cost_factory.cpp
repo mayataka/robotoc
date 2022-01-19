@@ -16,7 +16,7 @@ TimeVaryingConfigurationRef::TimeVaryingConfigurationRef(
 
 
 void TimeVaryingConfigurationRef::update_q_ref(const Robot& robot, 
-                                               const GridInfo& grid_info
+                                               const GridInfo& grid_info,
                                                Eigen::VectorXd& q_ref) const {
   robot.integrateConfiguration(q0_ref_, v_ref_, grid_info.t, q_ref);
 }
