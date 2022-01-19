@@ -13,7 +13,7 @@ STOConstraints::STOConstraints(const int _max_num_switches, const double _min_dt
   : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
                                                    _fraction_to_boundary_rule)),
     min_dt_(_max_num_switches+1, _min_dt), 
-    k_min_dt_(k_min_dt),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     barrier_(_barrier), 
     fraction_to_boundary_rule_(_fraction_to_boundary_rule),
     max_num_switches_(_max_num_switches),
@@ -52,7 +52,7 @@ STOConstraints::STOConstraints(const int _max_num_switches,
   : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
                                                    _fraction_to_boundary_rule)),
     min_dt_(_min_dt), 
-    k_min_dt_(k_min_dt),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     barrier_(_barrier), 
     fraction_to_boundary_rule_(_fraction_to_boundary_rule),
     max_num_switches_(_max_num_switches),
@@ -84,7 +84,7 @@ STOConstraints::STOConstraints(const int _max_num_switches,
     std::exit(EXIT_FAILURE);
   }
   while (min_dt_.size() < (_max_num_switches+1)) {
-    min_dt_.push_back(k_min_dt_);
+    min_dt_.push_back(eps_);
   }
 }
 
@@ -521,7 +521,7 @@ void STOConstraints::setMinimumDwellTimes(
     const std::vector<double>& min_dt) {
   min_dt_ = min_dt;
   while (min_dt_.size() < (max_num_switches_+1)) {
-    min_dt_.push_back(k_min_dt_);
+    min_dt_.push_back(eps_);
   }
 }
 

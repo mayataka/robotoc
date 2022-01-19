@@ -292,13 +292,10 @@ public:
 private:
   bool has_floating_base_;
   int dimv_, dimu_;
-  double max_dts0_;
+  double max_dts0_, eps_;
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
   LQRPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
-  static constexpr double keps_ 
-      = std::sqrt(std::numeric_limits<double>::epsilon());
-
 
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion_impl(
