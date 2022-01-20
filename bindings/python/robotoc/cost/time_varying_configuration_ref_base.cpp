@@ -13,16 +13,16 @@ public:
   // Inherit the constructors
   using TimeVaryingConfigurationRefBase::TimeVaryingConfigurationRefBase;
 
-  void update_q_ref(const Robot& robot, const double t, 
+  void update_q_ref(const Robot& robot, const GridInfo& grid_info,
                     Eigen::VectorXd& q_ref) const override {
     PYBIND11_OVERRIDE_PURE(void, TimeVaryingConfigurationRefBase, 
                            update_q_ref, 
-                           robot, t, q_ref);
+                           robot, grid_info, q_ref);
   }
 
-  bool isActive(const double t) const override {
+  bool isActive(const GridInfo& grid_info) const override {
     PYBIND11_OVERRIDE_PURE(bool, TimeVaryingConfigurationRefBase, 
-                           isActive, t);
+                           isActive, grid_info);
   }
 };
 
@@ -35,9 +35,9 @@ PYBIND11_MODULE(time_varying_configuration_ref_base, m) {
              std::shared_ptr<TimeVaryingConfigurationRefBase>>(m, "TimeVaryingConfigurationRefBase")
     .def(py::init<>())
     .def("update_q_ref", &TimeVaryingConfigurationRefBase::update_q_ref,
-          py::arg("robot"), py::arg("t"), py::arg("q_ref"))
+          py::arg("robot"), py::arg("grid_info"), py::arg("q_ref"))
     .def("isActive", &TimeVaryingConfigurationRefBase::isActive,
-          py::arg("t"));
+          py::arg("grid_info"));
 }
 
 } // namespace python

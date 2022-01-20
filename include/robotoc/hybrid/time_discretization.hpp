@@ -400,14 +400,8 @@ public:
   friend std::ostream& operator<<(std::ostream& os, 
                                   const TimeDiscretization& discretization);
 
-  ///
-  /// @brief Minimum time step size of the discretization. 
-  ///
-  static constexpr double k_min_dt 
-      = std::sqrt(std::numeric_limits<double>::epsilon());
-
 private:
-  double T_, dt_ideal_, max_dt_;
+  double T_, dt_ideal_, max_dt_, eps_;
   int N_, N_ideal_, N_impulse_, N_lift_, max_num_each_discrete_events_;
   std::vector<int> N_phase_, contact_phase_from_time_stage_, 
                    impulse_index_after_time_stage_, 

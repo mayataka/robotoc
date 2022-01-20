@@ -18,29 +18,33 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] com_ref0 Initial CoM position reference.
-  /// @param[in] vcom_ref Reference veloity of the CoM.
-  /// @param[in] t0 Start time of the reference tracking.
-  /// @param[in] period_active Period where the tracking is active.
-  /// @param[in] period_inactive Period where the tracking is inactive.
-  /// @param[in] is_first_move_half If true, the first reference CoM movement is 
-  /// half speed. 
+  /// @param[in] com_step Reference step of the CoM over a contact phase.
+  /// @param[in] start_phase Start contact phase.
+  /// @param[in] end_phase End contact phase.
+  /// @param[in] active_phases Number of phases where the tracking is active.
+  /// @param[in] inactive_phases Number of phases where the tracking is inactive.
+  /// @param[in] is_first_move_half If true, the first reference CoM step is 
+  /// half step. 
   ///
-  PeriodicCoMRef2(const Eigen::Vector3d com_ref0, const Eigen::Vector3d vcom_ref, 
-                  const double t0, const double period_active, 
-                  const double period_inactive, const bool is_first_move_half);
+  PeriodicCoMRef2(const Eigen::Vector3d com_ref0, 
+                  const Eigen::Vector3d com_step, 
+                  const int start_phase, const int end_phase, 
+                  const int active_phases, const int inactive_phases, 
+                  const bool is_first_move_half);
 
   ///
   /// @brief Destructor. 
   ///
   ~PeriodicCoMRef2();
 
-  void update_com_ref(const double t, Eigen::VectorXd& com_ref) const override;
+  void update_com_ref(const GridInfo& grid_info, 
+                      Eigen::VectorXd& com_ref) const override;
 
-  bool isActive(const double t) const override;
+  bool isActive(const GridInfo& grid_info) const override;
 
 private:
-  Eigen::Vector3d com_ref0_, vcom_ref_;
-  double step_length_, t0_, period_active_, period_inactive_, period_;
+  Eigen::Vector3d com_ref0_, com_step_;
+  int start_phase_, end_phase_, active_phases_, inactive_phases_; 
   bool is_first_move_half_;
 
 };

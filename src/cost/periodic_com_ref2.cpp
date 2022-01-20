@@ -4,18 +4,18 @@
 namespace robotoc {
 
 PeriodicCoMRef2::PeriodicCoMRef2(const Eigen::Vector3d com_ref0, 
-                                 const Eigen::Vector3d vcom_ref, 
-                                 const double t0, 
-                                 const double period_active, 
-                                 const double period_inactive, 
+                                 const Eigen::Vector3d com_step, 
+                                 const int start_phase, const int end_phase, 
+                                 const int active_phases, 
+                                 const int inactive_phases, 
                                  const bool is_first_move_half)
   : TimeVaryingCoMRefBase(),
     com_ref0_(com_ref0),
-    vcom_ref_(vcom_ref),
-    t0_(t0),
-    period_active_(period_active), 
-    period_inactive_(period_inactive),
-    period_(period_active+period_inactive),
+    com_step_(com_step),
+    start_phase_(start_phase),
+    end_phase_(end_phase),
+    active_phases_(active_phases),
+    inactive_phases_(inactive_phases),
     is_first_move_half_(is_first_move_half) {
 }
 
@@ -24,46 +24,55 @@ PeriodicCoMRef2::~PeriodicCoMRef2() {
 }
 
 
-void PeriodicCoMRef2::update_com_ref(const double t, 
+void PeriodicCoMRef2::update_com_ref(const GridInfo& grid_info,
                                      Eigen::VectorXd& com_ref) const {
-  if (is_first_move_half_) {
-    if (t < t0_) {
-      com_ref = com_ref0_;
-    }
-    else if (t < t0_+period_active_) {
-      com_ref = com_ref0_ + 0.5 * (t-t0_) * vcom_ref_;
+  if (grid_info.contact_phase < start_phase_+active_phases_) {
+    const double rate = static_cast<double>(grid_info.grid_count_in_phase) 
+                          / static_cast<double>(grid_info.N_phase);
+    if (is_first_move_half_) {
+      com_ref = com_ref0_ + 0.5 * rate * com_step_;
     }
     else {
-      const int steps = std::floor((t-t0_)/period_);
-      const double tau = t - t0_ - steps * period_;
-      if (tau < period_active_) {
-        com_ref = com_ref0_ + ((steps-0.5)*period_active_+tau) * vcom_ref_;
-      }
-      else {
-        com_ref = com_ref0_ + (steps+0.5)*period_active_*vcom_ref_;
-      }
+      com_ref = com_ref0_ + rate * com_step_;
     }
   }
   else {
-    if (t < t0_) {
-      com_ref = com_ref0_;
-    }
-    else {
-      const int steps = std::floor((t-t0_)/period_);
-      const double tau = t - t0_ - steps * period_;
-      if (tau < period_active_) {
-        com_ref = com_ref0_ + (steps*period_active_+tau) * vcom_ref_;
-      }
-      else {
-        com_ref = com_ref0_ + (steps+1)*period_active_*vcom_ref_;
+    for (int i=1; ; ++i) {
+      if (grid_info.contact_phase 
+            < start_phase_+i*(active_phases_+inactive_phases_)+active_phases_) {
+        const double rate = static_cast<double>(grid_info.grid_count_in_phase) 
+                              / static_cast<double>(grid_info.N_phase);
+        if (is_first_move_half_) {
+          com_ref = com_ref0_ + ((i-0.5)+rate) * com_step_;
+        } 
+        else {
+          com_ref = com_ref0_ + (i+rate) * com_step_;
+        }
+        break;
       }
     }
   }
 }
 
 
-bool PeriodicCoMRef2::isActive(const double t) const {
-  return true;
+bool PeriodicCoMRef2::isActive(const GridInfo& grid_info) const {
+  if (grid_info.contact_phase < start_phase_ 
+        || grid_info.contact_phase >= end_phase_) {
+    return false;
+  }
+  else {
+    for (int cycle=0; ; ++cycle) {
+      if (grid_info.contact_phase 
+            < start_phase_+cycle*(active_phases_+inactive_phases_)+active_phases_) {
+        return true;
+      }
+      else if (grid_info.contact_phase 
+            < start_phase_+(cycle+1)*(active_phases_+inactive_phases_)) {
+        return false;
+      }
+    }
+    return false;
+  }
 }
 
 } // namespace robotoc

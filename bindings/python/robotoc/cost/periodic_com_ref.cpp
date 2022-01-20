@@ -19,9 +19,9 @@ PYBIND11_MODULE(periodic_com_ref, m) {
           py::arg("period_active"), py::arg("period_inactive"), 
           py::arg("is_first_move_half"))
     .def("update_com_ref", &PeriodicCoMRef::update_com_ref,
-          py::arg("t"), py::arg("com_ref"))
+          py::arg("grid_info"), py::arg("com_ref"))
     .def("is_active", &PeriodicCoMRef::isActive,
-          py::arg("t"));
+          py::arg("grid_info"));
 }
 
 } // namespace python

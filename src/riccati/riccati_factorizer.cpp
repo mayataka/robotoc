@@ -10,6 +10,7 @@ RiccatiFactorizer::RiccatiFactorizer(const Robot& robot, const double max_dts0)
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
     max_dts0_(max_dts0),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     llt_(robot.dimu()),
     llt_s_(),
     backward_recursion_(robot) {
@@ -21,6 +22,7 @@ RiccatiFactorizer::RiccatiFactorizer()
     dimv_(0),
     dimu_(0),
     max_dts0_(0),
+    eps_(0),
     llt_(),
     llt_s_(),
     backward_recursion_() {
@@ -99,7 +101,7 @@ void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
   riccati_m.iota = riccati.eta;
   if (has_next_sto_phase) {
     double sgm = riccati.xi - 2.0 * riccati.chi + riccati.rho;
-    if ((sgm*max_dts0_) < std::abs(riccati.eta-riccati.iota) || sgm < keps_) {
+    if ((sgm*max_dts0_) < std::abs(riccati.eta-riccati.iota) || sgm < eps_) {
       // std::cout << "sgm reg ! sgm = " << sgm << std::endl;
       // std::cout << "sgm * max_dts0_ = " << sgm*max_dts0_ << std::endl;
       // std::cout << "std::abs(riccati.eta-riccati.iota) = " << std::abs(riccati.eta-riccati.iota) << std::endl;

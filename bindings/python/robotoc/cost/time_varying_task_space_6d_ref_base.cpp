@@ -14,15 +14,15 @@ public:
   // Inherit the constructors
   using TimeVaryingTaskSpace6DRefBase::TimeVaryingTaskSpace6DRefBase;
 
-  void update_x6d_ref(const double t, SE3& x6d_ref) const override {
+  void update_x6d_ref(const GridInfo& grid_info, SE3& x6d_ref) const override {
     PYBIND11_OVERRIDE_PURE(void, TimeVaryingTaskSpace6DRefBase, 
                            update_x6d_ref, 
-                           t, x6d_ref);
+                           grid_info, x6d_ref);
   }
 
-  bool isActive(const double t) const override {
+  bool isActive(const GridInfo& grid_info) const override {
     PYBIND11_OVERRIDE_PURE(bool, TimeVaryingTaskSpace6DRefBase, 
-                           isActive, t);
+                           isActive, grid_info);
   }
 };
 
@@ -35,9 +35,9 @@ PYBIND11_MODULE(time_varying_task_space_6d_ref_base, m) {
              std::shared_ptr<TimeVaryingTaskSpace6DRefBase>>(m, "TimeVaryingTaskSpace6DRefBase")
     .def(py::init<>())
     .def("update_x6d_ref", &TimeVaryingTaskSpace6DRefBase::update_x6d_ref,
-          py::arg("t"), py::arg("x6d_ref"))
+          py::arg("grid_info"), py::arg("x6d_ref"))
     .def("isActive", &TimeVaryingTaskSpace6DRefBase::isActive,
-          py::arg("t"));
+          py::arg("grid_info"));
 }
 
 } // namespace python

@@ -5,6 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/periodic_com_ref2.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -14,77 +15,94 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     com_ref0 = Eigen::Vector3d::Random();
-    vcom_ref = Eigen::Vector3d::Random();
+    com_step_ref = Eigen::Vector3d::Random();
 
-    t0 = std::abs(Eigen::VectorXd::Random(1)[0]);
-    period_active = std::abs(Eigen::VectorXd::Random(1)[0]);
-    period_inactive = std::abs(Eigen::VectorXd::Random(1)[0]);
-    period = period_active + period_inactive;
+    start_phase = 2;
+    end_phase = 21;
+    active_phases = 3;
+    inactive_phases = 4;
+
+    grid_info = GridInfo::Random();
+    grid_info.N_phase = 11;
+    grid_info.grid_count_in_phase = 4;
   }
 
   virtual void TearDown() {
   }
 
-  Eigen::Vector3d com_ref0, vcom_ref;
-  double t0, period_active, period_inactive, period;
+  Eigen::Vector3d com_ref0, com_step_ref;
+  int start_phase, end_phase, active_phases, inactive_phases;
+  GridInfo grid_info;
 };
 
 
 TEST_F(PeriodicCoMRefTest2, first_mode_half_true) {
-  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef2>(com_ref0, vcom_ref,
-                                                            t0, period_active,
-                                                            period_inactive,
-                                                            true);
+  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef2>(com_ref0, com_step_ref,
+                                                            start_phase, end_phase,
+                                                            active_phases,
+                                                            inactive_phases, true);
   Eigen::VectorXd com(3), com_ref(3);
-  const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_com_ref(t1, com);
-  EXPECT_TRUE(com.isApprox(com_ref0));
-  EXPECT_TRUE(preiodic_com_ref->isActive(t1));
-  const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_com_ref(t2, com);
-  EXPECT_TRUE(preiodic_com_ref->isActive(t2));
-  if (t2 < t0+period_active) {
-    com_ref = com_ref0 + 0.5*(t2-t0) * vcom_ref;
-  }
-  else if (t2 < t0+period) {
-    com_ref = com_ref0 + 0.5*period_active * vcom_ref;
-  }
-  else {
-    const int steps = std::floor((t2-t0)/period);
-    const double tau = t2 - t0 - steps*period;
-    if (tau < period_active) {
-      com_ref = com_ref0 + period_active*(steps-0.5)*vcom_ref + tau*vcom_ref;
-    }
-    else {
-      com_ref = com_ref0 + period_active*(steps+0.5)*vcom_ref;
-    }
-  }
+  grid_info.contact_phase = start_phase - 1;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
+  grid_info.contact_phase = start_phase + 1;
+  preiodic_com_ref->update_com_ref(grid_info, com);
+  const double rate1 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  com_ref = com_ref0;
+  com_ref += 0.5 * rate1 * com_step_ref;
   EXPECT_TRUE(com.isApprox(com_ref));
+  EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases + inactive_phases;
+  preiodic_com_ref->update_com_ref(grid_info, com);
+  const int steps = std::floor((grid_info.contact_phase-start_phase)/(active_phases+inactive_phases));
+  const double rate2 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  com_ref = com_ref0;
+  com_ref += ((steps-0.5) + rate2) * com_step_ref;
+  EXPECT_TRUE(com.isApprox(com_ref));
+  EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
+
+  grid_info.contact_phase = end_phase;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
 }
 
 
 TEST_F(PeriodicCoMRefTest2, first_mode_half_false) {
-  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef2>(com_ref0, vcom_ref,
-                                                            t0, period_active,
-                                                            period_inactive,
-                                                            false);
+  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef2>(com_ref0, com_step_ref,
+                                                            start_phase, end_phase,
+                                                            active_phases,
+                                                            inactive_phases, false);
   Eigen::VectorXd com(3), com_ref(3);
-  const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_com_ref(t1, com);
-  EXPECT_TRUE(preiodic_com_ref->isActive(t1));
-  EXPECT_TRUE(com.isApprox(com_ref0));
-  const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_com_ref(t2, com);
-  EXPECT_TRUE(preiodic_com_ref->isActive(t2));
-  const int steps = std::floor((t2-t0)/period);
-  const double tau = t2 - t0 - steps*period;
-  if (tau < period_active) {
-    com_ref = com_ref0 + period_active*steps*vcom_ref + tau*vcom_ref;
-  }
-  else {
-    com_ref = com_ref0 + period_active*(steps+1.0)*vcom_ref;
-  }
+  grid_info.contact_phase = start_phase - 1;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
+  grid_info.contact_phase = start_phase + 1;
+  preiodic_com_ref->update_com_ref(grid_info, com);
+  const double rate1 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  com_ref = com_ref0;
+  com_ref += rate1 * com_step_ref;
   EXPECT_TRUE(com.isApprox(com_ref));
+  EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
+
+  grid_info.contact_phase = start_phase + 1 + active_phases + inactive_phases;
+  preiodic_com_ref->update_com_ref(grid_info, com);
+  const int steps = std::floor((grid_info.contact_phase-start_phase)/(active_phases+inactive_phases));
+  const double rate2 = static_cast<double>(grid_info.grid_count_in_phase) 
+                        / static_cast<double>(grid_info.N_phase);
+  com_ref = com_ref0;
+  com_ref += (steps + rate2) * com_step_ref;
+  EXPECT_TRUE(com.isApprox(com_ref));
+  EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
+
+  grid_info.contact_phase = end_phase;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
 }
 
 } // namespace robotoc

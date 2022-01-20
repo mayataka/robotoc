@@ -5,6 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -37,17 +38,20 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
                                                            period_inactive,
                                                            true);
   Eigen::VectorXd com(3), com_ref(3);
+  auto grid_info = GridInfo();
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  EXPECT_FALSE(preiodic_com_ref->isActive(t1));
+  grid_info.t = t1;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_com_ref(t2, com);
+  grid_info.t = t2;
+  preiodic_com_ref->update_com_ref(grid_info, com);
   if (t2 < t0+period_active) {
     com_ref = com_ref0 + 0.5 * (t2-t0) * vcom_ref;
     EXPECT_TRUE(com_ref.isApprox(com));
-    EXPECT_TRUE(preiodic_com_ref->isActive(t2));
+    EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
   }
   else if (t2 < t0+period) {
-    EXPECT_FALSE(preiodic_com_ref->isActive(t2));
+    EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
   }
   else {
     const int steps = std::floor((t2-t0)/period);
@@ -55,10 +59,10 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
     if (tau < period_active) {
       com_ref = com_ref0 + period_active*(steps-0.5)*vcom_ref + tau*vcom_ref;
       EXPECT_TRUE(com_ref.isApprox(com));
-      EXPECT_TRUE(preiodic_com_ref->isActive(t2));
+      EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
     }
     else {
-      EXPECT_FALSE(preiodic_com_ref->isActive(t2));
+      EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
     }
   }
 }
@@ -70,19 +74,22 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_false) {
                                                            period_inactive,
                                                            false);
   Eigen::VectorXd com(3), com_ref(3);
+  auto grid_info = GridInfo();
   const double t1 = t0 - std::abs(Eigen::VectorXd::Random(1)[0]);
-  EXPECT_FALSE(preiodic_com_ref->isActive(t1));
+  grid_info.t = t1;
+  EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
-  preiodic_com_ref->update_com_ref(t2, com);
+  grid_info.t = t2;
+  preiodic_com_ref->update_com_ref(grid_info, com);
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;
   if (tau < period_active) {
     com_ref = com_ref0 + period_active*steps*vcom_ref + tau*vcom_ref;
-    EXPECT_TRUE(preiodic_com_ref->isActive(t2));
+    EXPECT_TRUE(preiodic_com_ref->isActive(grid_info));
     EXPECT_TRUE(com_ref.isApprox(com));
   }
   else {
-    EXPECT_FALSE(preiodic_com_ref->isActive(t2));
+    EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
   }
 }
 

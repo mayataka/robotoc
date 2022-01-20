@@ -45,16 +45,17 @@ public:
   TimeVaryingTaskSpace6DRef& operator=(
       TimeVaryingTaskSpace6DRef&&) noexcept = default;
 
-  void update_x6d_ref(const double t, SE3& x6d_ref) const override {
-    x6d_ref = SE3(rotm_, (x6d0_ref_+(t-t0_)*vx6d_ref_));
+  void update_x6d_ref(const GridInfo& grid_info, SE3& x6d_ref) const override {
+    x6d_ref = SE3(rotm_, (x6d0_ref_+(grid_info.t-t0_)*vx6d_ref_));
   }
 
-  bool isActive(const double t) const override {
-    if (t0_ <= t && t <= tf_)
+  bool isActive(const GridInfo& grid_info) const override {
+    if (t0_ <= grid_info.t && grid_info.t <= tf_)
       return true;
     else 
       return false;
   }
+
 
 private:
   Eigen::Vector3d x6d0_ref_, vx6d_ref_;

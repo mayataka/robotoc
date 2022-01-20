@@ -26,6 +26,7 @@ MPCQuadrupedalTrotting::MPCQuadrupedalTrotting(const OCP& ocp,
     T_(ocp.T()),
     dt_(ocp.T()/ocp.N()),
     dtm_(1.5*(ocp.T()/ocp.N())),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     ts_last_(0),
     N_(ocp.N()),
     current_step_(0),
@@ -122,7 +123,7 @@ void MPCQuadrupedalTrotting::updateSolution(const double t, const double dt,
   const auto ts = contact_sequence_->eventTimes();
   bool remove_step = false;
   if (!ts.empty()) {
-    if (ts.front()+kMinDt < t+dt) {
+    if (ts.front()+eps_ < t+dt) {
       ts_last_ = ts.front();
       ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();

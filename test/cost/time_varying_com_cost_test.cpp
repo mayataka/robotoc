@@ -38,12 +38,13 @@ public:
 
   TimeVaryingCoMRef& operator=(TimeVaryingCoMRef&&) noexcept = default;
 
-  void update_com_ref(const double t, Eigen::VectorXd& com_ref) const override {
-    com_ref = com0_ref_ + (t-t0_) * vcom_ref_;
+  void update_com_ref(const GridInfo& grid_info, 
+                      Eigen::VectorXd& com_ref) const override {
+    com_ref = com0_ref_ + (grid_info.t-t0_) * vcom_ref_;
   }
 
-  bool isActive(const double t) const override {
-    if (t0_ <= t && t <= tf_)
+  bool isActive(const GridInfo& grid_info) const override {
+    if (t0_ <= grid_info.t && grid_info.t <= tf_)
       return true;
     else 
       return false;

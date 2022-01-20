@@ -13,7 +13,8 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
                                               const int max_num_each_discrete_events) 
   : T_(T),
     dt_ideal_(T/N), 
-    max_dt_(dt_ideal_-k_min_dt),
+    max_dt_(dt_ideal_-std::sqrt(std::numeric_limits<double>::epsilon())),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(N),
     N_ideal_(N),
     N_impulse_(0),
@@ -445,12 +446,12 @@ inline bool TimeDiscretization::isFormulationTractable() const {
 
 inline bool TimeDiscretization::isSwitchingTimeConsistent() const {
   for (int i=0; i<N_impulse(); ++i) {
-    if (impulseTime(i) < t0()+k_min_dt || impulseTime(i) >= tf()-k_min_dt) {
+    if (impulseTime(i) < t0()+eps_ || impulseTime(i) >= tf()-eps_) {
       return false;
     }
   }
   for (int i=0; i<N_lift(); ++i) {
-    if (liftTime(i) < t0()+k_min_dt || liftTime(i) > tf()-k_min_dt) {
+    if (liftTime(i) < t0()+eps_ || liftTime(i) > tf()-eps_) {
       return false;
     }
   }
@@ -468,7 +469,7 @@ inline void TimeDiscretization::countDiscreteEvents(
   N_impulse_ = 0;
   for (int impulse_index=0; impulse_index<max_num_impulse_events; ++impulse_index) {
     const double t_impulse = contact_sequence->impulseTime(impulse_index);
-    if (t_impulse >= t+T_-k_min_dt) {
+    if (t_impulse >= t+T_-eps_) {
       break;
     }
     grid_impulse_[impulse_index].t = t_impulse;
@@ -484,7 +485,7 @@ inline void TimeDiscretization::countDiscreteEvents(
   N_lift_ = 0;
   for (int lift_index=0; lift_index<max_num_lift_events; ++lift_index) {
     const double t_lift = contact_sequence->liftTime(lift_index);
-    if (t_lift >= t+T_-k_min_dt) {
+    if (t_lift >= t+T_-eps_) {
       break;
     }
     grid_lift_[lift_index].t = t_lift;
@@ -513,9 +514,9 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
     const int stage = i - num_events_on_grid;
     if (i == time_stage_before_impulse_[impulse_index]) {
       grid_[stage].dt = grid_impulse_[impulse_index].t - i * dt_ideal_ - t;
-      assert(grid_[stage].dt >= -k_min_dt);
-      assert(grid_[stage].dt <= dt_ideal_+k_min_dt);
-      if (grid_[stage].dt <= k_min_dt) {
+      assert(grid_[stage].dt >= -eps_);
+      assert(grid_[stage].dt <= dt_ideal_+eps_);
+      if (grid_[stage].dt <= eps_) {
         time_stage_before_impulse_[impulse_index] = stage - 1;
         grid_impulse_[impulse_index].dt = dt_ideal_;
         grid_[stage].t = t + (i-1) * dt_ideal_;
@@ -539,9 +540,9 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
     }
     else if (i == time_stage_before_lift_[lift_index]) {
       grid_[stage].dt = grid_lift_[lift_index].t - i * dt_ideal_ - t;
-      assert(grid_[stage].dt >= -k_min_dt);
-      assert(grid_[stage].dt <= dt_ideal_+k_min_dt);
-      if (grid_[stage].dt <= k_min_dt) {
+      assert(grid_[stage].dt >= -eps_);
+      assert(grid_[stage].dt <= dt_ideal_+eps_);
+      if (grid_[stage].dt <= eps_) {
         time_stage_before_lift_[lift_index] = stage - 1;
         grid_lift_[lift_index].dt = dt_ideal_;
         grid_[stage].t = t + (i-1) * dt_ideal_;

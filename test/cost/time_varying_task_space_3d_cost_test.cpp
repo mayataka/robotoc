@@ -42,12 +42,13 @@ public:
   TimeVaryingTaskSpace3DRef& operator=(
       TimeVaryingTaskSpace3DRef&&) noexcept = default;
 
-  void update_x3d_ref(const double t, Eigen::VectorXd& x3d_ref) const override {
-    x3d_ref = x3d0_ref_ + (t-t0_) * vx3d0_ref_;
+  void update_x3d_ref(const GridInfo& grid_info, 
+                      Eigen::VectorXd& x3d_ref) const override {
+    x3d_ref = x3d0_ref_ + (grid_info.t-t0_) * vx3d0_ref_;
   }
 
-  bool isActive(const double t) const override {
-    if (t0_ <= t && t <= tf_)
+  bool isActive(const GridInfo& grid_info) const override {
+    if (t0_ <= grid_info.t && grid_info.t <= tf_)
       return true;
     else 
       return false;
