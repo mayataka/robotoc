@@ -59,39 +59,40 @@ public:
 
   ~TimeVaryingConfigurationRef() {}
 
-  void update_q_ref(const robotoc::Robot& robot, const double t, 
+  void update_q_ref(const robotoc::Robot& robot, 
+                    const robotoc::GridInfo& grid_info, 
                     Eigen::VectorXd& q_ref) const override {
-    if (t < t0_) {
+    if (grid_info.t < t0_) {
       q_ref = q0_;
     }
-    else if (t < t0_ + period_init1_) {
+    else if (grid_info.t < t0_ + period_init1_) {
       q_ref = q0_;
-      q_ref.coeffRef(0) += (t-t0_) * v_ref_init1_;
+      q_ref.coeffRef(0) += (grid_info.t-t0_) * v_ref_init1_;
     }
-    else if (t < t0_ + period_init1_ + period_init2_) {
+    else if (grid_info.t < t0_ + period_init1_ + period_init2_) {
       q_ref = q0_;
       q_ref.coeffRef(0) += period_init1_ * v_ref_init1_;
-      q_ref.coeffRef(0) += (t-t0_-period_init1_) * v_ref_init2_;
+      q_ref.coeffRef(0) += (grid_info.t-t0_-period_init1_) * v_ref_init2_;
     }
-    else if (t < tf_-period_final_) {
+    else if (grid_info.t < tf_-period_final_) {
       q_ref = q0_;
       q_ref.coeffRef(0) += period_init1_ * v_ref_init1_;
       q_ref.coeffRef(0) += period_init2_ * v_ref_init2_;
-      q_ref.coeffRef(0) += (t-t0_-period_init1_-period_init2_) * v_ref_;
+      q_ref.coeffRef(0) += (grid_info.t-t0_-period_init1_-period_init2_) * v_ref_;
     }
-    else if (t < tf_) {
+    else if (grid_info.t < tf_) {
       q_ref = q0_;
       q_ref.coeffRef(0) += period_init1_ * v_ref_init1_;
       q_ref.coeffRef(0) += period_init2_ * v_ref_init2_;
       q_ref.coeffRef(0) += steps_ * period_ * v_ref_;
-      q_ref.coeffRef(0) += (t-t0_-period_init1_-period_init2_-steps_*period_) * v_ref_final_;
+      q_ref.coeffRef(0) += (grid_info.t-t0_-period_init1_-period_init2_-steps_*period_) * v_ref_final_;
     }
     else {
       q_ref = qf_;
     }
   }
 
-  bool isActive(const double t) const override {
+  bool isActive(const robotoc::GridInfo& grid_info) const override {
     return true;
   }
 
