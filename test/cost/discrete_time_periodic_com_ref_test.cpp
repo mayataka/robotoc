@@ -4,13 +4,13 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/periodic_com_ref2.hpp"
+#include "robotoc/cost/discrete_time_periodic_com_ref.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
 
-class PeriodicCoMRefTest2 : public ::testing::Test {
+class DiscreteTimePeriodicCoMRefTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -36,11 +36,13 @@ protected:
 };
 
 
-TEST_F(PeriodicCoMRefTest2, first_mode_half_true) {
-  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef2>(com_ref0, com_step_ref,
-                                                            start_phase, end_phase,
-                                                            active_phases,
-                                                            inactive_phases, true);
+TEST_F(DiscreteTimePeriodicCoMRefTest, first_mode_half_true) {
+  auto preiodic_com_ref = std::make_shared<DiscreteTimePeriodicCoMRef>(com_ref0, 
+                                                                       com_step_ref, 
+                                                                       start_phase, 
+                                                                       end_phase, 
+                                                                       active_phases, 
+                                                                       inactive_phases, true);
   Eigen::VectorXd com(3), com_ref(3);
   grid_info.contact_phase = start_phase - 1;
   EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
@@ -71,11 +73,13 @@ TEST_F(PeriodicCoMRefTest2, first_mode_half_true) {
 }
 
 
-TEST_F(PeriodicCoMRefTest2, first_mode_half_false) {
-  auto preiodic_com_ref = std::make_shared<PeriodicCoMRef2>(com_ref0, com_step_ref,
-                                                            start_phase, end_phase,
-                                                            active_phases,
-                                                            inactive_phases, false);
+TEST_F(DiscreteTimePeriodicCoMRefTest, first_mode_half_false) {
+  auto preiodic_com_ref = std::make_shared<DiscreteTimePeriodicCoMRef>(com_ref0, 
+                                                                       com_step_ref, 
+                                                                       start_phase, 
+                                                                       end_phase, 
+                                                                       active_phases, 
+                                                                       inactive_phases, false);
   Eigen::VectorXd com(3), com_ref(3);
   grid_info.contact_phase = start_phase - 1;
   EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));

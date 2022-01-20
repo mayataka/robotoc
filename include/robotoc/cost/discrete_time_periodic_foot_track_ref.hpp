@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_PERIODIC_FOOT_TRACK_REF2_HPP_
-#define ROBOTOC_PERIODIC_FOOT_TRACK_REF2_HPP_
+#ifndef ROBOTOC_discrete_time_periodic_foot_track_ref_HPP_
+#define ROBOTOC_discrete_time_periodic_foot_track_ref_HPP_
 
 #include "Eigen/Core"
 
@@ -10,10 +10,10 @@
 namespace robotoc {
 
 ///
-/// @class PeriodicFootTrackRef2
-/// @brief Periodic reference of the foot position. 
+/// @class DiscreteTimePeriodicFootTrackRef
+/// @brief Discrete-time periodic reference of the foot position. 
 ///
-class PeriodicFootTrackRef2 : public TimeVaryingTaskSpace3DRefBase {
+class DiscreteTimePeriodicFootTrackRef : public TimeVaryingTaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -27,16 +27,16 @@ public:
   /// @param[in] is_first_step_half If true, the length ofh te first reference 
   /// foot step is half. 
   ///
-  PeriodicFootTrackRef2(const Eigen::Vector3d x3d0, 
-                        const double step_length, const double step_height, 
-                        const int start_phase, const int end_phase, 
-                        const int active_phases, const int inactive_phases, 
-                        const bool is_first_step_half);
+  DiscreteTimePeriodicFootTrackRef(const Eigen::Vector3d x3d0, 
+                                   const double step_length, const double step_height, 
+                                   const int start_phase, const int end_phase, 
+                                   const int active_phases, const int inactive_phases, 
+                                   const bool is_first_step_half);
 
   ///
   /// @brief Destructor. 
   ///
-  ~PeriodicFootTrackRef2();
+  ~DiscreteTimePeriodicFootTrackRef();
 
   void update_x3d_ref(const GridInfo& grid_info, 
                       Eigen::VectorXd& x3d_ref) const override;
@@ -53,4 +53,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_PERIODIC_FOOT_TRACK_REF2_HPP_ 
+#endif // ROBOTOC_discrete_time_periodic_foot_track_ref_HPP_ 

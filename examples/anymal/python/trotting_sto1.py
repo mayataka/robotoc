@@ -62,22 +62,22 @@ x3d0_LF = robot.frame_position(LF_foot_id)
 x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
-LF_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_LF, step_length, step_height, 
-                                            start_phase=3, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
-                                            is_first_move_half=False)
-LH_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_LH, step_length, step_height, 
-                                            start_phase=1, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
-                                            is_first_move_half=True)
-RF_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_RF, step_length, step_height, 
-                                            start_phase=1, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
-                                            is_first_move_half=True)
-RH_foot_ref = robotoc.PeriodicFootTrackRef2(x3d0_RH, step_length, step_height, 
-                                            start_phase=3, end_phase=4*cycle+2, 
-                                            active_phases=1, inactive_phases=3,
-                                            is_first_move_half=False)
+LF_foot_ref = robotoc.DiscreteTimePeriodicFootTrackRef(x3d0_LF, step_length, step_height, 
+                                                       start_phase=3, end_phase=4*cycle+2, 
+                                                       active_phases=1, inactive_phases=3,
+                                                       is_first_move_half=False)
+LH_foot_ref = robotoc.DiscreteTimePeriodicFootTrackRef(x3d0_LH, step_length, step_height, 
+                                                       start_phase=1, end_phase=4*cycle+2, 
+                                                       active_phases=1, inactive_phases=3,
+                                                       is_first_move_half=True)
+RF_foot_ref = robotoc.DiscreteTimePeriodicFootTrackRef(x3d0_RF, step_length, step_height, 
+                                                       start_phase=1, end_phase=4*cycle+2, 
+                                                       active_phases=1, inactive_phases=3,
+                                                       is_first_move_half=True)
+RH_foot_ref = robotoc.DiscreteTimePeriodicFootTrackRef(x3d0_RH, step_length, step_height, 
+                                                       start_phase=3, end_phase=4*cycle+2, 
+                                                       active_phases=1, inactive_phases=3,
+                                                       is_first_move_half=False)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
@@ -96,10 +96,10 @@ com_ref0 = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
 com_ref0[2] = robot.com()[2]
 com_step_ref = np.zeros(3)
 com_step_ref[0] = 0.5 * step_length 
-com_ref = robotoc.PeriodicCoMRef2(com_ref0, com_step_ref, 
-                                  start_phase=1, end_phase=4*cycle+2, 
-                                  active_phases=1, inactive_phases=1, 
-                                  is_first_move_half=True)
+com_ref = robotoc.DiscreteTimePeriodicCoMRef(com_ref0, com_step_ref, 
+                                             start_phase=1, end_phase=4*cycle+2, 
+                                             active_phases=1, inactive_phases=1, 
+                                             is_first_move_half=True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_com_weight(np.full(3, 1.0e04))
 cost.push_back(com_cost)

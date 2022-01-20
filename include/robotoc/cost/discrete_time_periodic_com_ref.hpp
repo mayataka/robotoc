@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_PERIODIC_COM_REF2_HPP_
-#define ROBOTOC_PERIODIC_COM_REF2_HPP_
+#ifndef ROBOTOC_discrete_time_periodic_com_ref_HPP_
+#define ROBOTOC_discrete_time_periodic_com_ref_HPP_
 
 #include "Eigen/Core"
 
@@ -10,10 +10,10 @@
 namespace robotoc {
 
 ///
-/// @class PeriodicCoMRef2
-/// @brief Periodic reference of the center of mass. 
+/// @class DiscreteTimePeriodicCoMRef
+/// @brief Discrete-time periodic reference of the center of mass. 
 ///
-class PeriodicCoMRef2 : public TimeVaryingCoMRefBase {
+class DiscreteTimePeriodicCoMRef : public TimeVaryingCoMRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -26,16 +26,16 @@ public:
   /// @param[in] is_first_move_half If true, the first reference CoM step is 
   /// half step. 
   ///
-  PeriodicCoMRef2(const Eigen::Vector3d com_ref0, 
-                  const Eigen::Vector3d com_step, 
-                  const int start_phase, const int end_phase, 
-                  const int active_phases, const int inactive_phases, 
-                  const bool is_first_move_half);
+  DiscreteTimePeriodicCoMRef(const Eigen::Vector3d com_ref0, 
+                             const Eigen::Vector3d com_step, 
+                             const int start_phase, const int end_phase, 
+                             const int active_phases, const int inactive_phases, 
+                             const bool is_first_move_half);
 
   ///
   /// @brief Destructor. 
   ///
-  ~PeriodicCoMRef2();
+  ~DiscreteTimePeriodicCoMRef();
 
   void update_com_ref(const GridInfo& grid_info, 
                       Eigen::VectorXd& com_ref) const override;
@@ -51,4 +51,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_PERIODIC_COM_REF2_HPP_ 
+#endif // ROBOTOC_discrete_time_periodic_com_ref_HPP_ 

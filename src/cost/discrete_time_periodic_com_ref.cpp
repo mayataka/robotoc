@@ -1,9 +1,9 @@
-#include "robotoc/cost/periodic_com_ref2.hpp"
+#include "robotoc/cost/discrete_time_periodic_com_ref.hpp"
 
 
 namespace robotoc {
 
-PeriodicCoMRef2::PeriodicCoMRef2(const Eigen::Vector3d com_ref0, 
+DiscreteTimePeriodicCoMRef::DiscreteTimePeriodicCoMRef(const Eigen::Vector3d com_ref0, 
                                  const Eigen::Vector3d com_step, 
                                  const int start_phase, const int end_phase, 
                                  const int active_phases, 
@@ -20,11 +20,11 @@ PeriodicCoMRef2::PeriodicCoMRef2(const Eigen::Vector3d com_ref0,
 }
 
 
-PeriodicCoMRef2::~PeriodicCoMRef2() {
+DiscreteTimePeriodicCoMRef::~DiscreteTimePeriodicCoMRef() {
 }
 
 
-void PeriodicCoMRef2::update_com_ref(const GridInfo& grid_info,
+void DiscreteTimePeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
                                      Eigen::VectorXd& com_ref) const {
   if (grid_info.contact_phase < start_phase_+active_phases_) {
     const double rate = static_cast<double>(grid_info.grid_count_in_phase) 
@@ -55,7 +55,7 @@ void PeriodicCoMRef2::update_com_ref(const GridInfo& grid_info,
 }
 
 
-bool PeriodicCoMRef2::isActive(const GridInfo& grid_info) const {
+bool DiscreteTimePeriodicCoMRef::isActive(const GridInfo& grid_info) const {
   if (grid_info.contact_phase < start_phase_ 
         || grid_info.contact_phase >= end_phase_) {
     return false;

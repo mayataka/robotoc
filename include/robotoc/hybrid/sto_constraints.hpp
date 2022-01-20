@@ -26,14 +26,16 @@ public:
   /// @brief Constructor. 
   /// @param[in] max_num_switches Maximum number of switches on the horizon. 
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
-  /// minimum dwell times are set to this value. 
+  /// minimum dwell times are set to this value. Default is 
+  /// std::numeric_limits<double>::epsilon().
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  STOConstraints(const int max_num_switches, const double min_dt,
+  STOConstraints(const int max_num_switches, 
+                 const double min_dt=std::numeric_limits<double>::epsilon(),
                  const double barrier=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
@@ -167,9 +169,11 @@ public:
   ///
   /// @brief Sets the minimum dwell times. 
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
-  /// minimum dwell times are set to this value. 
+  /// minimum dwell times are set to this value. Default is 
+  /// std::numeric_limits<double>::epsilon().
   ///
-  void setMinimumDwellTimes(const double min_dt);
+  void setMinimumDwellTimes(
+      const double min_dt=std::numeric_limits<double>::epsilon());
 
   ///
   /// @brief Sets the minimum dwell times. 

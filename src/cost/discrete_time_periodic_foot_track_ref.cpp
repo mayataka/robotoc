@@ -1,9 +1,9 @@
-#include "robotoc/cost/periodic_foot_track_ref2.hpp"
+#include "robotoc/cost/discrete_time_periodic_foot_track_ref.hpp"
 
 
 namespace robotoc {
 
-PeriodicFootTrackRef2::PeriodicFootTrackRef2(const Eigen::Vector3d x3d0, 
+DiscreteTimePeriodicFootTrackRef::DiscreteTimePeriodicFootTrackRef(const Eigen::Vector3d x3d0, 
                                              const double step_length, 
                                              const double step_height, 
                                              const int start_phase, 
@@ -23,11 +23,11 @@ PeriodicFootTrackRef2::PeriodicFootTrackRef2(const Eigen::Vector3d x3d0,
 }
 
 
-PeriodicFootTrackRef2::~PeriodicFootTrackRef2() {
+DiscreteTimePeriodicFootTrackRef::~DiscreteTimePeriodicFootTrackRef() {
 }
 
 
-void PeriodicFootTrackRef2::update_x3d_ref(const GridInfo& grid_info,
+void DiscreteTimePeriodicFootTrackRef::update_x3d_ref(const GridInfo& grid_info,
                                            Eigen::VectorXd& x3d_ref) const {
   if (grid_info.contact_phase < start_phase_+active_phases_) {
     const double rate = static_cast<double>(grid_info.grid_count_in_phase) 
@@ -72,7 +72,7 @@ void PeriodicFootTrackRef2::update_x3d_ref(const GridInfo& grid_info,
 }
 
 
-bool PeriodicFootTrackRef2::isActive(const GridInfo& grid_info) const {
+bool DiscreteTimePeriodicFootTrackRef::isActive(const GridInfo& grid_info) const {
   if (grid_info.contact_phase < start_phase_ 
         || grid_info.contact_phase >= end_phase_) {
     return false;
