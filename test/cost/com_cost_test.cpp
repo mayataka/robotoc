@@ -19,10 +19,9 @@ namespace robotoc {
 class CoMCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
-    std::random_device rnd;
-    t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
+    dt = grid_info.dt;
   }
 
   virtual void TearDown() {
@@ -32,6 +31,7 @@ protected:
   void testTerminalCost(Robot& robot) const;
   void testImpulseCost(Robot& robot) const;
 
+  GridInfo grid_info;
   double dt, t;
 };
 
@@ -58,9 +58,9 @@ void CoMCostTest::testStageCost(Robot& robot) const {
   const Eigen::Vector3d q_diff = robot.CoM() - com_ref;
   const double l_ref = dt * 0.5 * q_diff.transpose() * com_weight.asDiagonal() * q_diff;
   const auto contact_status = robot.createContactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), l_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += dt * J_3d.transpose() * com_weight.asDiagonal() * q_diff;
@@ -93,9 +93,9 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
   robot.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_diff = robot.CoM() - com_ref;
   const double l_ref = 0.5 * q_diff.transpose() * comf_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
-  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), l_ref);
+  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += J_3d.transpose() * comf_weight.asDiagonal() * q_diff;
@@ -129,9 +129,9 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
   const Eigen::Vector3d q_diff = robot.CoM() - com_ref;
   const double l_ref = 0.5 * q_diff.transpose() * comi_weight.asDiagonal() * q_diff;
   const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
   kkt_res_ref.lq() += J_3d.transpose() * comi_weight.asDiagonal() * q_diff;

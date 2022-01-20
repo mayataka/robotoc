@@ -4,6 +4,8 @@
 #include "robotoc/hybrid/time_discretization.hpp"
 
 #include <cassert>
+#include <numeric>
+
 
 namespace robotoc {
 
@@ -11,7 +13,8 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
                                               const int max_num_each_discrete_events) 
   : T_(T),
     dt_ideal_(T/N), 
-    max_dt_(dt_ideal_-k_min_dt),
+    max_dt_(dt_ideal_-std::sqrt(std::numeric_limits<double>::epsilon())),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(N),
     N_ideal_(N),
     N_impulse_(0),
@@ -25,12 +28,9 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
     time_stage_before_lift_(max_num_each_discrete_events+1, -1),
     is_time_stage_before_impulse_(N+1, false),
     is_time_stage_before_lift_(N+1, false),
-    t_(N+1, 0),
-    t_impulse_(max_num_each_discrete_events+1, 0),
-    t_lift_(max_num_each_discrete_events+1, 0),
-    dt_(N+1, static_cast<double>(T/N)),
-    dt_aux_(max_num_each_discrete_events+1, 0),
-    dt_lift_(max_num_each_discrete_events+1, 0),
+    grid_(N+1, GridInfo()), 
+    grid_impulse_(max_num_each_discrete_events+1, GridInfo()), 
+    grid_lift_(max_num_each_discrete_events+1, GridInfo()),
     event_types_(2*max_num_each_discrete_events+1, DiscreteEventType::None),
     sto_impulse_(max_num_each_discrete_events), 
     sto_lift_(max_num_each_discrete_events),
@@ -56,12 +56,9 @@ inline TimeDiscretization::TimeDiscretization()
     time_stage_before_lift_(),
     is_time_stage_before_impulse_(),
     is_time_stage_before_lift_(),
-    t_(),
-    t_impulse_(),
-    t_lift_(),
-    dt_(),
-    dt_aux_(),
-    dt_lift_(),
+    grid_(), 
+    grid_impulse_(), 
+    grid_lift_(),
     event_types_(),
     sto_impulse_(), 
     sto_lift_(),
@@ -152,19 +149,23 @@ inline int TimeDiscretization::numDiscreteEvents() const {
 inline int TimeDiscretization::contactPhase(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N());
-  return contact_phase_from_time_stage_[time_stage];
+  return grid_[time_stage].contact_phase;
 }
 
 
 inline int TimeDiscretization::contactPhaseAfterImpulse(
     const int impulse_index) const {
-  return contactPhase(timeStageAfterImpulse(impulse_index));
+  assert(impulse_index >= 0);
+  assert(impulse_index < N_impulse());
+  return grid_impulse_[impulse_index].contact_phase;
 }
 
 
 inline int TimeDiscretization::contactPhaseAfterLift(
     const int lift_index) const {
-  return contactPhase(timeStageAfterLift(lift_index));
+  assert(lift_index >= 0);
+  assert(lift_index < N_lift());
+  return grid_lift_[lift_index].contact_phase;
 }
 
 
@@ -244,56 +245,38 @@ inline bool TimeDiscretization::isTimeStageAfterLift(
 }
 
 
-inline double TimeDiscretization::t(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage <= N());
-  return t_[time_stage];
+inline double TimeDiscretization::t0() const {
+  return grid_[0].t;
 }
 
 
-inline double TimeDiscretization::t_impulse(const int impulse_index) const {
+inline double TimeDiscretization::tf() const {
+  return grid_[N()].t;
+}
+
+
+inline double TimeDiscretization::impulseTime(const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < N_impulse());
-  return t_impulse_[impulse_index];
+  return grid_impulse_[impulse_index].t;
 }
 
 
-inline double TimeDiscretization::t_lift(const int lift_index) const {
+inline double TimeDiscretization::liftTime(const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < N_lift());
-  return t_lift_[lift_index];
-}
-
-
-inline double TimeDiscretization::dt(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N());
-  return dt_[time_stage];
-}
-
-
-inline double TimeDiscretization::dt_aux(const int impulse_index) const {
-  assert(impulse_index >= 0);
-  assert(impulse_index < N_impulse());
-  return dt_aux_[impulse_index];
-}
-
-
-inline double TimeDiscretization::dt_lift(const int lift_index) const {
-  assert(lift_index >= 0);
-  assert(lift_index < N_lift());
-  return dt_lift_[lift_index];
+  return grid_lift_[lift_index].t;
 }
 
 
 inline double TimeDiscretization::dt_max() const {
   std::vector<double> dt_phase;
-  dt_phase.push_back(dt(0));
+  dt_phase.push_back(gridInfo(0).dt);
   for (int impulse_index=0; impulse_index<N_impulse(); ++impulse_index) {
-    dt_phase.push_back(dt_aux(impulse_index));
+    dt_phase.push_back(gridInfoAux(impulse_index).dt);
   }
   for (int lift_index=0; lift_index<N_lift(); ++lift_index) {
-    dt_phase.push_back(dt_lift(lift_index));
+    dt_phase.push_back(gridInfoLift(lift_index).dt);
   }
   return *std::max_element(dt_phase.begin(), dt_phase.end());
 }
@@ -301,6 +284,38 @@ inline double TimeDiscretization::dt_max() const {
 
 inline double TimeDiscretization::dt_ideal() const {
   return dt_ideal_;
+}
+
+
+inline const GridInfo& TimeDiscretization::gridInfo(
+    const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  return grid_[time_stage];
+}
+
+
+inline const GridInfo& TimeDiscretization::gridInfoImpulse(
+    const int impulse_index) const {
+  assert(impulse_index >= 0);
+  assert(impulse_index < N_impulse());
+  return grid_impulse_[impulse_index];
+}
+
+
+inline const GridInfo& TimeDiscretization::gridInfoAux(
+    const int impulse_index) const {
+  assert(impulse_index >= 0);
+  assert(impulse_index < N_impulse());
+  return grid_impulse_[impulse_index];
+}
+
+
+inline const GridInfo& TimeDiscretization::gridInfoLift(
+    const int lift_index) const {
+  assert(lift_index >= 0);
+  assert(lift_index < N_lift());
+  return grid_lift_[lift_index];
 }
 
 
@@ -330,11 +345,6 @@ inline bool TimeDiscretization::isSTOEnabledPhase(const int phase) const {
 inline bool TimeDiscretization::isSTOEnabledNextPhase(const int phase) const {
   if (phase+1 == numContactPhases()) return false;
   else return isSTOEnabledPhase(phase+1);
-}
-
-
-inline bool TimeDiscretization::isSTOEnabledStage(const int stage) const {
-  return isSTOEnabledPhase(contactPhase(stage));
 }
 
 
@@ -388,12 +398,12 @@ inline int TimeDiscretization::maxNumEachDiscreteEvents() const {
 inline std::vector<double> TimeDiscretization::timeSteps() const {
   std::vector<double> time_steps;
   for (int i=0; i<N(); ++i) {
-    time_steps.push_back(dt(i));
+    time_steps.push_back(gridInfo(i).dt);
     if (isTimeStageBeforeImpulse(i)) {
-      time_steps.push_back(dt_aux(impulseIndexAfterTimeStage(i)));
+      time_steps.push_back(gridInfoAux(impulseIndexAfterTimeStage(i)).dt);
     }
     else if (isTimeStageBeforeLift(i)) {
-      time_steps.push_back(dt_lift(liftIndexAfterTimeStage(i)));
+      time_steps.push_back(gridInfoLift(liftIndexAfterTimeStage(i)).dt);
     }
   }
   return time_steps;
@@ -403,15 +413,15 @@ inline std::vector<double> TimeDiscretization::timeSteps() const {
 inline std::vector<double> TimeDiscretization::timePoints() const {
   std::vector<double> time_points;
   for (int i=0; i<N(); ++i) {
-    time_points.push_back(t(i));
+    time_points.push_back(gridInfo(i).t);
     if (isTimeStageBeforeImpulse(i)) {
-      time_points.push_back(t_impulse(impulseIndexAfterTimeStage(i)));
+      time_points.push_back(gridInfoImpulse(impulseIndexAfterTimeStage(i)).t);
     }
     else if (isTimeStageBeforeLift(i)) {
-      time_points.push_back(t_lift(liftIndexAfterTimeStage(i)));
+      time_points.push_back(gridInfoLift(liftIndexAfterTimeStage(i)).t);
     }
   }
-  time_points.push_back(t(N()));
+  time_points.push_back(gridInfo(N()).t);
   return time_points;
 }
 
@@ -436,12 +446,12 @@ inline bool TimeDiscretization::isFormulationTractable() const {
 
 inline bool TimeDiscretization::isSwitchingTimeConsistent() const {
   for (int i=0; i<N_impulse(); ++i) {
-    if (t_impulse(i) < t(0)+k_min_dt || t_impulse(i) >= t(N())-k_min_dt) {
+    if (impulseTime(i) < t0()+eps_ || impulseTime(i) >= tf()-eps_) {
       return false;
     }
   }
   for (int i=0; i<N_lift(); ++i) {
-    if (t_lift(i) < t(0)+k_min_dt || t_lift(i) > t(N())-k_min_dt) {
+    if (liftTime(i) < t0()+eps_ || liftTime(i) > tf()-eps_) {
       return false;
     }
   }
@@ -459,10 +469,10 @@ inline void TimeDiscretization::countDiscreteEvents(
   N_impulse_ = 0;
   for (int impulse_index=0; impulse_index<max_num_impulse_events; ++impulse_index) {
     const double t_impulse = contact_sequence->impulseTime(impulse_index);
-    if (t_impulse >= t+T_-k_min_dt) {
+    if (t_impulse >= t+T_-eps_) {
       break;
     }
-    t_impulse_[impulse_index] = t_impulse;
+    grid_impulse_[impulse_index].t = t_impulse;
     if (refine_grids) {
       time_stage_before_impulse_[impulse_index] = std::floor((t_impulse-t)/dt_ideal_);
     }
@@ -475,10 +485,10 @@ inline void TimeDiscretization::countDiscreteEvents(
   N_lift_ = 0;
   for (int lift_index=0; lift_index<max_num_lift_events; ++lift_index) {
     const double t_lift = contact_sequence->liftTime(lift_index);
-    if (t_lift >= t+T_-k_min_dt) {
+    if (t_lift >= t+T_-eps_) {
       break;
     }
-    t_lift_[lift_index] = t_lift;
+    grid_lift_[lift_index].t = t_lift;
     if (refine_grids) {
       time_stage_before_lift_[lift_index] = std::floor((t_lift-t)/dt_ideal_);
     }
@@ -498,62 +508,72 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
   int impulse_index = 0;
   int lift_index = 0;
   int num_events_on_grid = 0;
+  int time_stage_before_prev_event = 0;
+  int phase = 0;
   for (int i=0; i<N_ideal_; ++i) {
     const int stage = i - num_events_on_grid;
     if (i == time_stage_before_impulse_[impulse_index]) {
-      dt_[stage] = t_impulse_[impulse_index] - i * dt_ideal_ - t;
-      assert(dt_[stage] >= -k_min_dt);
-      assert(dt_[stage] <= dt_ideal_+k_min_dt);
-      if (dt_[stage] <= k_min_dt) {
+      grid_[stage].dt = grid_impulse_[impulse_index].t - i * dt_ideal_ - t;
+      assert(grid_[stage].dt >= -eps_);
+      assert(grid_[stage].dt <= dt_ideal_+eps_);
+      if (grid_[stage].dt <= eps_) {
         time_stage_before_impulse_[impulse_index] = stage - 1;
-        dt_aux_[impulse_index] = dt_ideal_;
-        t_[stage] = t + (i-1) * dt_ideal_;
+        grid_impulse_[impulse_index].dt = dt_ideal_;
+        grid_[stage].t = t + (i-1) * dt_ideal_;
         ++num_events_on_grid;
         ++impulse_index;
       }
-      else if (dt_[stage] >= max_dt_) {
+      else if (grid_[stage].dt >= max_dt_) {
         time_stage_before_impulse_[impulse_index] = i + 1;
-        t_[stage] = t + i * dt_ideal_;
+        grid_[stage].t = t + i * dt_ideal_;
       }
       else {
         time_stage_before_impulse_[impulse_index] = stage;
-        dt_aux_[impulse_index] = dt_ideal_ - dt_[stage];
-        t_[stage] = t + i * dt_ideal_;
+        grid_impulse_[impulse_index].dt = dt_ideal_ - grid_[stage].dt;
+        grid_[stage].t = t + i * dt_ideal_;
         ++impulse_index;
       }
+      N_phase_[phase] = time_stage_before_impulse_[impulse_index-1] 
+                          - time_stage_before_prev_event + 1;
+      time_stage_before_prev_event = time_stage_before_impulse_[impulse_index-1];
+      ++phase;
     }
     else if (i == time_stage_before_lift_[lift_index]) {
-      dt_[stage] = t_lift_[lift_index] - i * dt_ideal_ - t;
-      assert(dt_[stage] >= -k_min_dt);
-      assert(dt_[stage] <= dt_ideal_+k_min_dt);
-      if (dt_[stage] <= k_min_dt) {
+      grid_[stage].dt = grid_lift_[lift_index].t - i * dt_ideal_ - t;
+      assert(grid_[stage].dt >= -eps_);
+      assert(grid_[stage].dt <= dt_ideal_+eps_);
+      if (grid_[stage].dt <= eps_) {
         time_stage_before_lift_[lift_index] = stage - 1;
-        dt_lift_[lift_index] = dt_ideal_;
-        t_[stage] = t + (i-1) * dt_ideal_;
+        grid_lift_[lift_index].dt = dt_ideal_;
+        grid_[stage].t = t + (i-1) * dt_ideal_;
         ++num_events_on_grid;
         ++lift_index;
       }
-      else if (dt_[stage] >= max_dt_) {
+      else if (grid_[stage].dt >= max_dt_) {
         time_stage_before_lift_[lift_index] = i + 1;
-        t_[stage] = t + i * dt_ideal_;
+        grid_[stage].t = t + i * dt_ideal_;
       }
       else {
         time_stage_before_lift_[lift_index] = stage;
-        dt_lift_[lift_index] = dt_ideal_ - dt_[stage];
-        t_[stage] = t + i * dt_ideal_;
+        grid_lift_[lift_index].dt = dt_ideal_ - grid_[stage].dt;
+        grid_[stage].t = t + i * dt_ideal_;
         ++lift_index;
       }
+      N_phase_[phase] = time_stage_before_lift_[lift_index-1] 
+                          - time_stage_before_prev_event + 1;
+      time_stage_before_prev_event = time_stage_before_lift_[lift_index-1];
+      ++phase;
     }
     else {
-      dt_[stage] = dt_ideal_;
-      t_[stage] = t + i * dt_ideal_;
+      grid_[stage].dt = dt_ideal_;
+      grid_[stage].t = t + i * dt_ideal_;
     }
+    grid_[stage].grid_count_in_phase = stage - time_stage_before_prev_event;
   }
   N_ = N_ideal_ - num_events_on_grid;
-  t_[N_] = t + T_;
-  for (auto& e : N_phase_) {
-    e = 1;
-  }
+  grid_[N_].t = t + T_;
+  N_phase_[phase] = N_ - time_stage_before_prev_event;
+  grid_[N_].grid_count_in_phase = N_ - time_stage_before_prev_event;
 }
 
 
@@ -562,7 +582,7 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
   int next_lift_index = 0;
   int time_stage_before_prev_event = 0;
   double t_prev_event = t;
-  t_[0] = t;
+  grid_[0].t = t;
   for (int phase=0; phase<N_impulse()+N_lift(); ++phase) {
     const int next_event_index = phase;
     const auto next_event_type = eventType(next_event_index);
@@ -574,18 +594,22 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
                                   - time_stage_before_prev_event + 1;
       N_phase_[phase] = num_phase_grids;
       const double dt_phase 
-          = (t_impulse(next_impulse_index)-t_prev_event) / num_phase_grids;
+          = (impulseTime(next_impulse_index)-t_prev_event) / num_phase_grids;
       for (int stage=time_stage_before_prev_event+1; 
             stage<=time_stage_before_next_event; ++stage) {
-        dt_[stage] = dt_phase;
+        grid_[stage].dt = dt_phase;
       }
-      t_[time_stage_before_prev_event+1] = t_prev_event + dt_phase;
+      grid_[time_stage_before_prev_event+1].t = t_prev_event + dt_phase;
       for (int stage=time_stage_before_prev_event+2; 
             stage<=time_stage_before_next_event; ++stage) {
-        t_[stage] = t_[stage-1] + dt_phase;
+        grid_[stage].t = grid_[stage-1].t + dt_phase;
+      }
+      for (int stage=time_stage_before_prev_event+1; 
+            stage<=time_stage_before_next_event; ++stage) {
+        grid_[stage].grid_count_in_phase = stage - time_stage_before_prev_event;
       }
       time_stage_before_prev_event = time_stage_before_next_event;
-      t_prev_event = t_impulse(next_impulse_index);
+      t_prev_event = impulseTime(next_impulse_index);
       ++next_impulse_index;
     }
     else {
@@ -595,18 +619,22 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
                                   - time_stage_before_prev_event + 1;
       N_phase_[phase] = num_phase_grids;
       const double dt_phase
-          = (t_lift(next_lift_index)-t_prev_event) / num_phase_grids;
+          = (liftTime(next_lift_index)-t_prev_event) / num_phase_grids;
       for (int stage=time_stage_before_prev_event+1; 
             stage<=time_stage_before_next_event; ++stage) {
-        dt_[stage] = dt_phase;
+        grid_[stage].dt = dt_phase;
       }
-      t_[time_stage_before_prev_event+1] = t_prev_event + dt_phase;
+      grid_[time_stage_before_prev_event+1].t = t_prev_event + dt_phase;
       for (int stage=time_stage_before_prev_event+2; 
             stage<=time_stage_before_next_event; ++stage) {
-        t_[stage] = t_[stage-1] + dt_phase;
+        grid_[stage].t = grid_[stage-1].t + dt_phase;
+      }
+      for (int stage=time_stage_before_prev_event+1; 
+            stage<=time_stage_before_next_event; ++stage) {
+        grid_[stage].grid_count_in_phase = stage - time_stage_before_prev_event;
       }
       time_stage_before_prev_event = time_stage_before_next_event;
-      t_prev_event = t_lift(next_lift_index);
+      t_prev_event = liftTime(next_lift_index);
       ++next_lift_index;
     }
   }
@@ -615,27 +643,32 @@ inline void TimeDiscretization::countTimeStepsPhaseBased(const double t) {
   N_phase_[last_phase] = num_phase_grids;
   const double dt_phase = (t+T_-t_prev_event) / num_phase_grids;
   for (int stage=time_stage_before_prev_event+1; stage<N_; ++stage) {
-    dt_[stage] = dt_phase;
+    grid_[stage].dt = dt_phase;
   }
-  t_[time_stage_before_prev_event+1] = t_prev_event + dt_phase;
+  grid_[time_stage_before_prev_event+1].t = t_prev_event + dt_phase;
   for (int stage=time_stage_before_prev_event+2; stage<=N_; ++stage) {
-    t_[stage] = t_[stage-1] + dt_phase;
+    grid_[stage].t = grid_[stage-1].t + dt_phase;
+  }
+  for (int stage=time_stage_before_prev_event+1; stage<=N_; ++stage) {
+    grid_[stage].grid_count_in_phase = stage - time_stage_before_prev_event;
   }
   for (int impulse_index=0; impulse_index<N_impulse(); ++impulse_index) {
-    dt_aux_[impulse_index] = dt_[time_stage_before_impulse_[impulse_index]+1];
+    grid_impulse_[impulse_index].dt 
+        = grid_[time_stage_before_impulse_[impulse_index]+1].dt;
   }
   for (int lift_index=0; lift_index<N_lift(); ++lift_index) {
-    dt_lift_[lift_index] = dt_[time_stage_before_lift_[lift_index]+1];
+    grid_lift_[lift_index].dt 
+        = grid_[time_stage_before_lift_[lift_index]+1].dt;
   }
-  dt_[0] = dt_[1];
+  grid_[0].dt = grid_[1].dt;
   if (N_impulse() > 0) {
     if (time_stage_before_impulse_[0] == 0) {
-      dt_[0] = t_impulse(0) - t;
+      grid_[0].dt = grid_impulse_[0].t - t;
     }
   }
   if (N_lift() > 0) {
     if (time_stage_before_lift_[0] == 0) {
-      dt_[0] = t_lift(0) - t;
+      grid_[0].dt = grid_lift_[0].t - t;
     }
   } 
 }
@@ -684,12 +717,22 @@ inline void TimeDiscretization::countTimeStages() {
 inline void TimeDiscretization::countContactPhase() {
   int num_events = 0;
   for (int i=0; i<N(); ++i) {
-    contact_phase_from_time_stage_[i] = num_events;
+    grid_[i].contact_phase = num_events;
+    grid_[i].N_phase = N_phase(grid_[i].contact_phase);
     if (isTimeStageBeforeImpulse(i) || isTimeStageBeforeLift(i)) {
       ++num_events; 
     }
   }
-  contact_phase_from_time_stage_[N()] = num_events;
+  grid_[N()].contact_phase = num_events;
+  grid_[N()].N_phase = N_phase(grid_[N()].contact_phase);
+  for (int impulse_index=0; impulse_index<N_impulse(); ++impulse_index) {
+    grid_impulse_[impulse_index].contact_phase = contactPhase(timeStageAfterImpulse(impulse_index));
+    grid_impulse_[impulse_index].N_phase = N_phase(grid_impulse_[impulse_index].contact_phase);
+  }
+  for (int lift_index=0; lift_index<N_lift(); ++lift_index) {
+    grid_lift_[lift_index].contact_phase = contactPhase(timeStageAfterLift(lift_index));
+    grid_lift_[lift_index].N_phase = N_phase(grid_lift_[lift_index].contact_phase);
+  }
 }
 
 

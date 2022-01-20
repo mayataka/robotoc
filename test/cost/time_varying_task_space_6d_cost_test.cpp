@@ -45,16 +45,17 @@ public:
   TimeVaryingTaskSpace6DRef& operator=(
       TimeVaryingTaskSpace6DRef&&) noexcept = default;
 
-  void update_x6d_ref(const double t, SE3& x6d_ref) const override {
-    x6d_ref = SE3(rotm_, (x6d0_ref_+(t-t0_)*vx6d_ref_));
+  void update_x6d_ref(const GridInfo& grid_info, SE3& x6d_ref) const override {
+    x6d_ref = SE3(rotm_, (x6d0_ref_+(grid_info.t-t0_)*vx6d_ref_));
   }
 
-  bool isActive(const double t) const override {
-    if (t0_ <= t && t <= tf_)
+  bool isActive(const GridInfo& grid_info) const override {
+    if (t0_ <= grid_info.t && grid_info.t <= tf_)
       return true;
     else 
       return false;
   }
+
 
 private:
   Eigen::Vector3d x6d0_ref_, vx6d_ref_;
@@ -66,12 +67,16 @@ private:
 class TimeVaryingTaskSpace6DCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
-    std::random_device rnd;
+    grid_info = GridInfo::Random();
+    grid_info0 = grid_info;
+    grid_infof = grid_info;
+    dt = grid_info0.dt;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     t0 = t - std::abs(Eigen::VectorXd::Random(1)[0]);
     tf = t + std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info.t = t;
+    grid_info0.t = t0 - dt;
+    grid_infof.t = tf + dt;
   }
 
   virtual void TearDown() {
@@ -81,6 +86,7 @@ protected:
   void testTerminalCost(Robot& robot, const int frame_id) const;
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
+  GridInfo grid_info, grid_info0, grid_infof;
   double dt, t, t0, tf;
 };
 
@@ -108,15 +114,15 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   robot.updateKinematics(s.q, s.v, s.a);
 
   const auto contact_status = robot.createContactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t0-dt, dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, tf+dt, dt, s), 0);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t0-dt, dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info0, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_infof, s), 0);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info0, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostDerivatives(robot, contact_status, data, tf+dt, dt, s, kkt_res);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_infof, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, t0-dt, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info0, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, tf+dt, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_infof, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = x6d0_ref + (t-t0) * vx6d_ref;
@@ -125,9 +131,9 @@ void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame
   const SE3 diff_x6d = x6d_ref.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
   const double l_ref = dt * 0.5 * diff_6d.transpose() * x6d_weight.asDiagonal() * diff_6d;
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), l_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   computeJLog6Map(diff_x6d, J_66);
@@ -165,15 +171,15 @@ void TimeVaryingTaskSpace6DCostTest::testTerminalCost(Robot& robot, const int fr
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t0-dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, tf+dt, s), 0);
-  cost->evalTerminalCostDerivatives(robot, data, t0-dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info0, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_infof, s), 0);
+  cost->evalTerminalCostDerivatives(robot, data, grid_info0, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostDerivatives(robot, data, tf+dt, s, kkt_res);
+  cost->evalTerminalCostDerivatives(robot, data, grid_infof, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostHessian(robot, data, t0-dt, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, grid_info0, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, grid_infof, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = x6d0_ref + (t-t0) * vx6d_ref;
@@ -182,9 +188,9 @@ void TimeVaryingTaskSpace6DCostTest::testTerminalCost(Robot& robot, const int fr
   const SE3 diff_x6d = x6d_ref.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
   const double l_ref = 0.5 * diff_6d.transpose() * x6df_weight.asDiagonal() * diff_6d;
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
-  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), l_ref);
+  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   computeJLog6Map(diff_x6d, J_66);
@@ -223,15 +229,15 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   robot.updateKinematics(s.q, s.v);
 
   const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t0-dt, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, tf+dt, s), 0);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t0-dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info0, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_infof, s), 0);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info0, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, tf+dt, s, kkt_res);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_infof, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostHessian(robot, impulse_status, data, t0-dt, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info0, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalImpulseCostHessian(robot, impulse_status, data, tf+dt, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_infof, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d q_ref = x6d0_ref + (t-t0) * vx6d_ref;
@@ -240,9 +246,9 @@ void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int fra
   const SE3 diff_x6d = x6d_ref.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
   const double l_ref = 0.5 * diff_6d.transpose() * x6di_weight.asDiagonal() * diff_6d;
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   computeJLog6Map(diff_x6d, J_66);

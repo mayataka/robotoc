@@ -23,10 +23,9 @@ namespace robotoc {
 class ConfigurationSpaceCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
-    std::random_device rnd;
-    t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
+    dt = grid_info.dt;
   }
 
   virtual void TearDown() {
@@ -36,6 +35,7 @@ protected:
   void testTerminalCost(Robot& robot) const;
   void testImpulseCost(Robot& robot) const;
 
+  GridInfo grid_info;
   double dt, t;
 };
 
@@ -85,8 +85,8 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
                             + (a_weight.array()*s.a.array()*s.a.array()).sum()
                             + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
   const auto contact_status = robot.createContactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), cost_ref);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), cost_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -99,7 +99,7 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   kkt_res_ref.la += dt * a_weight.asDiagonal() * s.a;
   kkt_res_ref.lu += dt * u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
@@ -152,8 +152,8 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   }
   const double cost_ref = 0.5 * ((qf_weight.array()* q_diff.array()*q_diff.array()).sum()
                                 + (vf_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), cost_ref);
-  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), cost_ref);
+  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -164,7 +164,7 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   }
   kkt_res_ref.lv() += vf_weight.asDiagonal() * (s.v-v_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
   }
@@ -221,8 +221,8 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
                                 + (vi_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
                                 + (dvi_weight.array()* s.dv.array()*s.dv.array()).sum());
   const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), cost_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), cost_ref);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -234,7 +234,7 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   kkt_res_ref.lv() += vi_weight.asDiagonal() * (s.v-v_ref);
   kkt_res_ref.ldv += dvi_weight.asDiagonal() * s.dv;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * qi_weight.asDiagonal() * Jq_diff;
   }

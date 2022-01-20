@@ -34,9 +34,9 @@ public:
   ///
   ~PeriodicCoMRef();
 
-  void update_com_ref(const double t, Eigen::VectorXd& com_ref) const override;
+  void update_com_ref(const GridInfo& grid_info, Eigen::VectorXd& com_ref) const override;
 
-  bool isActive(const double t) const override;
+  bool isActive(const GridInfo& grid_info) const override;
 
 private:
   Eigen::Vector3d com_ref0_, vcom_ref_;

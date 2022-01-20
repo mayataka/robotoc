@@ -19,10 +19,9 @@ namespace robotoc {
 class TaskSpace3DCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    srand((unsigned int) time(0));
-    std::random_device rnd;
-    t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
+    t = grid_info.t;
+    dt = grid_info.dt;
   }
 
   virtual void TearDown() {
@@ -32,6 +31,7 @@ protected:
   void testTerminalCost(Robot& robot, const int frame_id) const;
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
+  GridInfo grid_info;
   double dt, t;
 };
 
@@ -59,9 +59,9 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const Eigen::Vector3d q_diff = q_task - q_ref;
   const double l_ref = dt * 0.5 * q_diff.transpose() * x3d_weight.asDiagonal() * q_diff;
   const auto contact_status = robot.createContactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, t, dt, s), l_ref);
-  cost->evalStageCostDerivatives(robot, contact_status, data, t, dt, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, t, dt, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), l_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
@@ -96,9 +96,9 @@ void TaskSpace3DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
   const double l_ref = 0.5 * q_diff.transpose() * x3df_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, t, s), l_ref);
-  cost->evalTerminalCostDerivatives(robot, data, t, s, kkt_res);
-  cost->evalTerminalCostHessian(robot, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), l_ref);
+  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
+  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
@@ -134,9 +134,9 @@ void TaskSpace3DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   const Eigen::Vector3d q_diff = q_task - q_ref;
   const double l_ref = 0.5 * q_diff.transpose() * x3di_weight.asDiagonal() * q_diff;
   const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, t, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, t, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, t, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), l_ref);
+  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
+  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);

@@ -26,10 +26,10 @@ PeriodicFootTrackRef::~PeriodicFootTrackRef() {
 }
 
 
-void PeriodicFootTrackRef::update_x3d_ref(const double t, 
+void PeriodicFootTrackRef::update_x3d_ref(const GridInfo& grid_info,
                                           Eigen::VectorXd& x3d_ref) const {
-  if (t < t0_+period_swing_) {
-    const double rate = (t-t0_) / period_swing_;
+  if (grid_info.t < t0_+period_swing_) {
+    const double rate = (grid_info.t-t0_) / period_swing_;
     x3d_ref = x3d0_;
     if (is_first_step_half_) {
       x3d_ref.coeffRef(0) += 0.5 * rate * step_length_;
@@ -46,9 +46,9 @@ void PeriodicFootTrackRef::update_x3d_ref(const double t,
   }
   else {
     for (int i=1; ; ++i) {
-      if (t < t0_+i*period_+period_swing_) {
+      if (grid_info.t < t0_+i*period_+period_swing_) {
         x3d_ref = x3d0_;
-        const double rate = (t-t0_-i*period_) / period_swing_;
+        const double rate = (grid_info.t-t0_-i*period_) / period_swing_;
         if (is_first_step_half_) {
           x3d_ref.coeffRef(0) += (i - 0.5 + rate) * step_length_;
         }
@@ -68,12 +68,12 @@ void PeriodicFootTrackRef::update_x3d_ref(const double t,
 }
 
 
-bool PeriodicFootTrackRef::isActive(const double t) const {
+bool PeriodicFootTrackRef::isActive(const GridInfo& grid_info) const {
   for (int i=0; ; ++i) {
-    if (t < t0_+i*period_) {
+    if (grid_info.t < t0_+i*period_) {
       return false;
     }
-    if (t < t0_+i*period_+period_swing_) {
+    if (grid_info.t < t0_+i*period_+period_swing_) {
       return true;
     }
   }

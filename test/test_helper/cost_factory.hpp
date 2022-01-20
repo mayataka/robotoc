@@ -29,10 +29,10 @@ public:
   TimeVaryingConfigurationRef& operator=(
       TimeVaryingConfigurationRef&&) noexcept = default;
 
-  void update_q_ref(const Robot& robot, const double t, 
+  void update_q_ref(const Robot& robot, const GridInfo& grid_info, 
                     Eigen::VectorXd& q_ref) const override;
 
-  bool isActive(const double t) const override;
+  bool isActive(const GridInfo& grid_info) const override;
 
 private:
   Eigen::VectorXd q0_ref_, v_ref_;

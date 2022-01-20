@@ -95,7 +95,11 @@ public:
   /// the impulse forces f) of this impulse stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void expandPrimal(ImpulseSplitDirection& d) const;
+  void expandPrimal(ImpulseSplitDirection& d) const {
+    d.ddvf().noalias()  = - data_.MJtJinv_dImDCdqv() * d.dx;
+    d.ddvf().noalias() -= data_.MJtJinv_ImDC();
+    d.df().array()     *= -1;
+  }
 
   ///
   /// @brief Expands the dual variables, i.e., computes the Newton direction 
@@ -105,7 +109,11 @@ public:
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   template <typename SplitDirectionType>
-  void expandDual(const SplitDirectionType& d_next, ImpulseSplitDirection& d);
+  void expandDual(const SplitDirectionType& d_next, ImpulseSplitDirection& d) {
+    data_.ldvf().noalias() += data_.Qdvfqv() * d.dx;
+    data_.ldv().noalias()  += d_next.dgmm();
+    d.dbetamu().noalias()   = - data_.MJtJinv() * data_.ldvf();
+  }
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
@@ -113,7 +121,9 @@ public:
   /// @return Squared norm of the KKT residual in the impulse dynamics 
   /// constraint.
   ///
-  double KKTError() const;
+  double KKTError() const {
+    return data_.ImDC().squaredNorm();
+  }
 
   ///
   /// @brief Returns the lp norm of the constraint violation, that is,
@@ -124,7 +134,9 @@ public:
   /// @return The lp norm of the constraint violation.
   ///
   template <int p=1>
-  double constraintViolation() const;
+  double constraintViolation() const {
+    return data_.ImDC().template lpNorm<p>();
+  }
 
 private:
   ImpulseDynamicsData data_;
@@ -132,7 +144,5 @@ private:
 };
 
 } // namespace robotoc 
-
-#include "robotoc/impulse/impulse_dynamics.hxx"
 
 #endif // ROBOTOC_IMPULSE_DYNAMICS_HPP_ 

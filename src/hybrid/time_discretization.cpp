@@ -22,21 +22,23 @@ void TimeDiscretization::disp(std::ostream& os) const {
      << isFormulationTractable() << std::endl;;
   os << "  isSwitchingTimeConsistent: " << std::boolalpha
      << isSwitchingTimeConsistent() << std::endl;
-  os << " -----------------------------------------------------------" << std::endl;
-  os << "  grid point |      t |     dt | phase |  sto  | sto_next |" << std::endl;
-  os << " -----------------------------------------------------------" << std::endl;
+  os << " -----------------------------------------------------------------------" << std::endl;
+  os << "  grid point | grid count |      t |     dt | phase |  sto  | sto_next |" << std::endl;
+  os << " -----------------------------------------------------------------------" << std::endl;
   for (int i=0; i<N(); ++i) {
-    os << "  stage: " << std::setw(3) << i << " | "
-       << std::fixed << std::setprecision(4) << t(i) << " | " << dt(i)
+    os << "  stage: " << std::right << std::setw(3) << i << " | "
+       << "       " << std::right << std::setw(3) << gridInfo(i).grid_count_in_phase << " | " 
+       << std::fixed << std::setprecision(4) << gridInfo(i).t << " | " << gridInfo(i).dt
        << " |   " << std::setw(3) << contactPhase(i)
        << " | " << std::setw(5) << std::boolalpha << isSTOEnabledPhase(contactPhase(i)) 
        << " |   " << std::setw(5) << std::boolalpha << isSTOEnabledNextPhase(contactPhase(i)) 
        << "  |" << std::endl;
     if (isTimeStageBeforeImpulse(i)) {
       const int impulse_index = impulseIndexAfterTimeStage(i);
-      os << "    aux: " << std::setw(3) << impulse_index
-         << " | " << t_impulse(impulse_index) 
-         << " | " << dt_aux(impulse_index)
+      os << "    aux: " << std::right << std::setw(3) << impulse_index << " | "
+         << std::right << std::setw(3) << "         0" << " | " 
+         << std::fixed << std::setprecision(4) << gridInfoImpulse(impulse_index).t
+         << " | " << gridInfoImpulse(impulse_index).dt
          << " |   " << std::setw(3) << contactPhaseAfterImpulse(impulse_index)
          << " | " << std::setw(5) << std::boolalpha 
          << isSTOEnabledPhase(contactPhaseAfterImpulse(impulse_index)) 
@@ -46,9 +48,10 @@ void TimeDiscretization::disp(std::ostream& os) const {
     }
     else if (isTimeStageBeforeLift(i)) {
       const int lift_index = liftIndexAfterTimeStage(i);
-      os << "   lift: " << std::setw(3) << lift_index 
-         << " | " << t_lift(lift_index) 
-         << " | " << dt_lift(lift_index) 
+      os << "   lift: " << std::right << std::setw(3) << lift_index << " | "
+         << std::right << std::setw(3) << "         0" << " | " 
+         << std::fixed << std::setprecision(4) << gridInfoLift(lift_index).t
+         << " | " << gridInfoLift(lift_index).dt
          << " |   " << std::setw(3) << contactPhaseAfterLift(lift_index)
          << " | " << std::setw(5) << std::boolalpha
          << isSTOEnabledPhase(contactPhaseAfterLift(lift_index)) 
@@ -57,9 +60,11 @@ void TimeDiscretization::disp(std::ostream& os) const {
          << "  |" << std::endl;
     }
   }
-  os << "  stage: " << std::setw(3) << N() << " | " << t(N()) 
+  os << "  stage: " << std::right << std::setw(3) << N() << " | " 
+     << "       " << std::right << std::setw(3) << gridInfo(N()).grid_count_in_phase << " | " 
+     << std::fixed << std::setprecision(4) << gridInfo(N()).t
      << " |        |       |       |          |" << std::endl; 
-  os << " -----------------------------------------------------------" << std::flush;
+  os << " -----------------------------------------------------------------------" << std::flush;
 }
 
 

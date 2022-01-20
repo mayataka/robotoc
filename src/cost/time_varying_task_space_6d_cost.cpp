@@ -66,15 +66,15 @@ bool TimeVaryingTaskSpace6DCost::useKinematics() const {
 
 double TimeVaryingTaskSpace6DCost::evalStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s) const {
-  if (x6d_ref_->isActive(t)) {
+    const GridInfo& grid_info, const SplitSolution& s) const {
+  if (x6d_ref_->isActive(grid_info)) {
     double l = 0;
-    x6d_ref_->update_x6d_ref(t, data.x6d_ref);
+    x6d_ref_->update_x6d_ref(grid_info, data.x6d_ref);
     data.x6d_ref_inv = data.x6d_ref.inverse();
     data.diff_x6d = data.x6d_ref_inv * robot.framePlacement(frame_id_);
     data.diff_6d = Log6Map(data.diff_x6d);
     l += (x6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-    return 0.5 * dt * l;
+    return 0.5 * grid_info.dt * l;
   }
   else {
     return 0;
@@ -84,37 +84,37 @@ double TimeVaryingTaskSpace6DCost::evalStageCost(
 
 void TimeVaryingTaskSpace6DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.JJ_6d.noalias() = data.J_66 * data.J_6d;
     kkt_residual.lq().noalias() 
-        += dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.diff_6d;
+        += grid_info.dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.diff_6d;
   }
 }
 
 
 void TimeVaryingTaskSpace6DCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
-        += dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.JJ_6d;
+        += grid_info.dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.JJ_6d;
   }
 }
 
 
 double TimeVaryingTaskSpace6DCost::evalTerminalCost(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     double l = 0;
-    x6d_ref_->update_x6d_ref(t, data.x6d_ref);
+    x6d_ref_->update_x6d_ref(grid_info, data.x6d_ref);
     data.x6d_ref_inv = data.x6d_ref.inverse();
     data.diff_x6d = data.x6d_ref_inv * robot.framePlacement(frame_id_);
     data.diff_6d = Log6Map(data.diff_x6d);
@@ -128,9 +128,9 @@ double TimeVaryingTaskSpace6DCost::evalTerminalCost(
 
 
 void TimeVaryingTaskSpace6DCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
@@ -143,9 +143,9 @@ void TimeVaryingTaskSpace6DCost::evalTerminalCostDerivatives(
 
 
 void TimeVaryingTaskSpace6DCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.JJ_6d.transpose() * x6df_weight_.asDiagonal() * data.JJ_6d;
   }
@@ -154,10 +154,10 @@ void TimeVaryingTaskSpace6DCost::evalTerminalCostHessian(
 
 double TimeVaryingTaskSpace6DCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s) const {
-  if (x6d_ref_->isActive(t)) {
+    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
+  if (x6d_ref_->isActive(grid_info)) {
     double l = 0;
-    x6d_ref_->update_x6d_ref(t, data.x6d_ref);
+    x6d_ref_->update_x6d_ref(grid_info, data.x6d_ref);
     data.x6d_ref_inv = data.x6d_ref.inverse();
     data.diff_x6d = data.x6d_ref_inv * robot.framePlacement(frame_id_);
     data.diff_6d = Log6Map(data.diff_x6d);
@@ -172,9 +172,9 @@ double TimeVaryingTaskSpace6DCost::evalImpulseCost(
 
 void TimeVaryingTaskSpace6DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
@@ -188,9 +188,9 @@ void TimeVaryingTaskSpace6DCost::evalImpulseCostDerivatives(
 
 void TimeVaryingTaskSpace6DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (x6d_ref_->isActive(t)) {
+  if (x6d_ref_->isActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.JJ_6d.transpose() * x6di_weight_.asDiagonal() * data.JJ_6d;
   }

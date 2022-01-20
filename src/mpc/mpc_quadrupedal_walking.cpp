@@ -24,10 +24,11 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp,
     step_length_(0),
     step_height_(0),
     swing_time_(0),
-    t0_(0),
+    initial_lift_time_(0),
     T_(ocp.T()),
     dt_(ocp.T()/ocp.N()),
     dtm_(1.5*(ocp.T()/ocp.N())),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     ts_last_(0),
     N_(ocp.N()),
     current_step_(0),
@@ -51,7 +52,7 @@ MPCQuadrupedalWalking::~MPCQuadrupedalWalking() {
 void MPCQuadrupedalWalking::setGaitPattern(const double step_length, 
                                            const double step_height,
                                            const double swing_time,
-                                           const double t0) {
+                                           const double initial_lift_time) {
   try {
     if (step_length <= 0) {
       throw std::out_of_range("invalid value: step_length must be positive!");
@@ -62,8 +63,8 @@ void MPCQuadrupedalWalking::setGaitPattern(const double step_length,
     if (swing_time <= 0) {
       throw std::out_of_range("invalid value: swing_time must be positive!");
     }
-    if (t0 <= 0) {
-      throw std::out_of_range("invalid value: t0 must be positive!");
+    if (initial_lift_time <= 0) {
+      throw std::out_of_range("invalid value: initial_lift_time must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -73,7 +74,7 @@ void MPCQuadrupedalWalking::setGaitPattern(const double step_length,
   step_length_ = step_length;
   step_height_ = step_height;
   swing_time_ = swing_time;
-  t0_ = t0;
+  initial_lift_time_ = initial_lift_time;
 }
 
 
@@ -81,9 +82,9 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
                                  const Eigen::VectorXd& v, 
                                  const SolverOptions& solver_options) {
   try {
-    if (t >= t0_) {
+    if (t >= initial_lift_time_) {
       throw std::out_of_range(
-          "invalid value: t must be less than" + std::to_string(t0_) + "!");
+          "invalid value: t must be less than" + std::to_string(initial_lift_time_) + "!");
     }
   }
   catch(const std::exception& e) {
@@ -95,22 +96,9 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
   predict_step_ = 0;
   // Init contact status
   contact_sequence_->initContactSequence(cs_standing_);
-  double tt = t0_;
-  while (tt < t+T_-dtm_) {
-    if (predict_step_%4 == 1) {
-      contact_sequence_->push_back(cs_rf_, tt);
-    }
-    else if (predict_step_%4 == 2) {
-      contact_sequence_->push_back(cs_lh_, tt);
-    }
-    else if (predict_step_%4 == 3) {
-      contact_sequence_->push_back(cs_lf_, tt);
-    }
-    else { // predict_step_%4 == 0
-      contact_sequence_->push_back(cs_rh_, tt);
-    }
-    ++predict_step_;
-    tt += swing_time_;
+  bool add_step = addStep(t);
+  while (add_step) {
+    add_step = addStep(t);
   }
   resetContactPlacements(q);
 
@@ -121,7 +109,7 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
   ocp_solver_.setSolution("f", f_init);
   ocp_solver_.setSolverOptions(solver_options);
   ocp_solver_.solve(t, q, v, true);
-  ts_last_ = t0_;
+  ts_last_ = initial_lift_time_;
 }
 
 
@@ -139,7 +127,7 @@ void MPCQuadrupedalWalking::updateSolution(const double t, const double dt,
   const auto ts = contact_sequence_->eventTimes();
   bool remove_step = false;
   if (!ts.empty()) {
-    if (ts.front() < t+dt) {
+    if (ts.front()+eps_ < t+dt) {
       ts_last_ = ts.front();
       ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
@@ -173,8 +161,8 @@ double MPCQuadrupedalWalking::KKTError() const {
 
 bool MPCQuadrupedalWalking::addStep(const double t) {
   if (predict_step_ == 0) {
-    if (t0_ < t+T_-dtm_) {
-      contact_sequence_->push_back(cs_rh_, t0_);
+    if (initial_lift_time_ < t+T_-dtm_) {
+      contact_sequence_->push_back(cs_rh_, initial_lift_time_);
       ++predict_step_;
       return true;
     }

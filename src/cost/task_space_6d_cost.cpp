@@ -65,19 +65,19 @@ bool TaskSpace6DCost::useKinematics() const {
 double TaskSpace6DCost::evalStageCost(Robot& robot, 
                                       const ContactStatus& contact_status, 
                                       CostFunctionData& data, 
-                                      const double t, const double dt, 
+                                      const GridInfo& grid_info, 
                                       const SplitSolution& s) const {
   double l = 0;
   data.diff_x6d = x6d_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = Log6Map(data.diff_x6d);
   l += (x6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-  return 0.5 * dt * l;
+  return 0.5 * grid_info.dt * l;
 }
 
 
 void TaskSpace6DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   data.J_66.setZero();
   computeJLog6Map(data.diff_x6d, data.J_66);
@@ -85,23 +85,23 @@ void TaskSpace6DCost::evalStageCostDerivatives(
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_residual.lq().noalias() 
-      += dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.diff_6d;
+      += grid_info.dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.diff_6d;
 }
 
 
 void TaskSpace6DCost::evalStageCostHessian(Robot& robot, 
                                            const ContactStatus& contact_status, 
                                            CostFunctionData& data, 
-                                           const double t, const double dt, 
+                                           const GridInfo& grid_info, 
                                            const SplitSolution& s, 
                                            SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()
-      += dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.JJ_6d;
+      += grid_info.dt * data.JJ_6d.transpose() * x6d_weight_.asDiagonal() * data.JJ_6d;
 }
 
 
 double TaskSpace6DCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                                         const double t, 
+                                         const GridInfo& grid_info, 
                                          const SplitSolution& s) const {
   double l = 0;
   data.diff_x6d = x6d_ref_inv_ * robot.framePlacement(frame_id_);
@@ -112,7 +112,7 @@ double TaskSpace6DCost::evalTerminalCost(Robot& robot, CostFunctionData& data,
 
 
 void TaskSpace6DCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   data.J_66.setZero();
   computeJLog6Map(data.diff_x6d, data.J_66);
@@ -125,7 +125,7 @@ void TaskSpace6DCost::evalTerminalCostDerivatives(
 
 
 void TaskSpace6DCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()
       += data.JJ_6d.transpose() * x6df_weight_.asDiagonal() * data.JJ_6d;
@@ -134,7 +134,8 @@ void TaskSpace6DCost::evalTerminalCostHessian(
 
 double TaskSpace6DCost::evalImpulseCost(Robot& robot, 
                                         const ImpulseStatus& impulse_status,
-                                        CostFunctionData& data, const double t, 
+                                        CostFunctionData& data, 
+                                        const GridInfo& grid_info, 
                                         const ImpulseSplitSolution& s) const {
   double l = 0;
   data.diff_x6d = x6d_ref_inv_ * robot.framePlacement(frame_id_);
@@ -146,7 +147,7 @@ double TaskSpace6DCost::evalImpulseCost(Robot& robot,
 
 void TaskSpace6DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   data.J_66.setZero();
   computeJLog6Map(data.diff_x6d, data.J_66);
@@ -160,7 +161,7 @@ void TaskSpace6DCost::evalImpulseCostDerivatives(
 
 void TaskSpace6DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qqq().noalias()
       += data.JJ_6d.transpose() * x6di_weight_.asDiagonal() * data.JJ_6d;

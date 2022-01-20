@@ -23,20 +23,20 @@ PeriodicCoMRef::~PeriodicCoMRef() {
 }
 
 
-void PeriodicCoMRef::update_com_ref(const double t, 
+void PeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
                                     Eigen::VectorXd& com_ref) const {
-  if (t < t0_+period_active_) {
+  if (grid_info.t < t0_+period_active_) {
     if (is_first_move_half_) {
-      com_ref = com_ref0_ + 0.5 * (t-t0_) * vcom_ref_;
+      com_ref = com_ref0_ + 0.5 * (grid_info.t-t0_) * vcom_ref_;
     }
     else {
-      com_ref = com_ref0_ + (t-t0_) * vcom_ref_;
+      com_ref = com_ref0_ + (grid_info.t-t0_) * vcom_ref_;
     }
   }
   else {
     for (int i=1; ; ++i) {
-      if (t < t0_+i*period_+period_active_) {
-        const double t1 = (t-t0_-i*period_);
+      if (grid_info.t < t0_+i*period_+period_active_) {
+        const double t1 = (grid_info.t-t0_-i*period_);
         if (is_first_move_half_) {
           com_ref = com_ref0_ + ((i-0.5)*period_active_+t1) * vcom_ref_;
         } 
@@ -50,12 +50,12 @@ void PeriodicCoMRef::update_com_ref(const double t,
 }
 
 
-bool PeriodicCoMRef::isActive(const double t) const {
+bool PeriodicCoMRef::isActive(const GridInfo& grid_info) const {
   for (int i=0; ; ++i) {
-    if (t < t0_+i*period_) {
+    if (grid_info.t < t0_+i*period_) {
       return false;
     }
-    if (t < t0_+i*period_+period_active_) {
+    if (grid_info.t < t0_+i*period_+period_active_) {
       return true;
     }
   }

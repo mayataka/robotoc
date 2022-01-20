@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   const double swing_time = 0.5;
   const double double_support_time = 0.04;
   const double t0 = double_support_time;
-  const int cycle = 3; 
+  const int cycle = 1; 
 
   // Create the cost function
   auto cost = std::make_shared<robotoc::CostFunction>();
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
   const int N = T / dt; 
   robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 4;
+  const int nthreads = 8;
   robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
 
   // Initial time and initial state

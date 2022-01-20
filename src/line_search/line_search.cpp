@@ -99,7 +99,7 @@ void LineSearch::computeCostAndViolation(
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       ocp.discrete().gridInfo(i), s[i], 
                        s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].q,
                        s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].v,
                        kkt_residual_[i]);
@@ -109,7 +109,7 @@ void LineSearch::computeCostAndViolation(
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       ocp.discrete().gridInfo(i), s[i], 
                        s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].q,
                        s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].v,
                        kkt_residual_[i]);
@@ -121,10 +121,11 @@ void LineSearch::computeCostAndViolation(
             = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       ocp.discrete().gridInfo(i), s[i], 
                        s[i+1].q, s[i+1].v, kkt_residual_[i], 
                        contact_sequence->impulseStatus(impulse_index), 
-                       ocp.discrete().dt(i+1), kkt_residual_.switching[impulse_index]);
+                       ocp.discrete().gridInfoAux(impulse_index), 
+                       kkt_residual_.switching[impulse_index]);
         costs_.coeffRef(i) = ocp[i].stageCost();
         violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], 
                                                              kkt_residual_.switching[impulse_index]);
@@ -132,15 +133,15 @@ void LineSearch::computeCostAndViolation(
       else {
         ocp[i].evalOCP(robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(ocp.discrete().contactPhase(i)),
-                       ocp.discrete().t(i), ocp.discrete().dt(i), s[i], 
+                       ocp.discrete().gridInfo(i), s[i], 
                        s[i+1].q, s[i+1].v, kkt_residual_[i]);
         costs_.coeffRef(i) = ocp[i].stageCost();
         violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i]);
       }
     }
     else if (i == N) {
-      ocp.terminal.evalOCP(robots[omp_get_thread_num()], ocp.discrete().t(i), 
-                           s[i], kkt_residual_[i]);
+      ocp.terminal.evalOCP(robots[omp_get_thread_num()], 
+                           ocp.discrete().gridInfo(i), s[i], kkt_residual_[i]);
       costs_.coeffRef(i) = ocp.terminal.terminalCost();
     }
     else if (i < N+1+N_impulse) {
@@ -149,7 +150,7 @@ void LineSearch::computeCostAndViolation(
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
       ocp.impulse[impulse_index].evalOCP(robots[omp_get_thread_num()], 
                                          contact_sequence->impulseStatus(impulse_index), 
-                                         ocp.discrete().t_impulse(impulse_index), 
+                                         ocp.discrete().gridInfoImpulse(impulse_index), 
                                          s.impulse[impulse_index], 
                                          s.aux[impulse_index].q, 
                                          s.aux[impulse_index].v,
@@ -165,8 +166,7 @@ void LineSearch::computeCostAndViolation(
       ocp.aux[impulse_index].evalOCP(robots[omp_get_thread_num()], 
                                      contact_sequence->contactStatus(
                                         ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
-                                     ocp.discrete().t_impulse(impulse_index), 
-                                     ocp.discrete().dt_aux(impulse_index), 
+                                     ocp.discrete().gridInfoAux(impulse_index), 
                                      s.aux[impulse_index],
                                      s[time_stage_after_impulse].q, 
                                      s[time_stage_after_impulse].v,
@@ -182,8 +182,7 @@ void LineSearch::computeCostAndViolation(
       ocp.lift[lift_index].evalOCP(robots[omp_get_thread_num()], 
                                    contact_sequence->contactStatus(
                                        ocp.discrete().contactPhaseAfterLift(lift_index)), 
-                                   ocp.discrete().t_lift(lift_index), 
-                                   ocp.discrete().dt_lift(lift_index), 
+                                   ocp.discrete().gridInfoLift(lift_index), 
                                    s.lift[lift_index],
                                    s[time_stage_after_lift].q, 
                                    s[time_stage_after_lift].v,
@@ -235,6 +234,7 @@ void LineSearch::computeSolutionTrial(const OCP& ocp,
   }
 }
 
+
 double LineSearch::lineSearchFilterMethod(
     OCP& ocp, aligned_vector<Robot>& robots, 
     const std::shared_ptr<ContactSequence>& contact_sequence, 
@@ -258,6 +258,7 @@ double LineSearch::lineSearchFilterMethod(
   }
   return primal_step_size;
 }
+
 
 double LineSearch::meritBacktrackingLineSearch(
     OCP& ocp, aligned_vector<Robot>& robots, 
@@ -286,12 +287,14 @@ double LineSearch::meritBacktrackingLineSearch(
   return primal_step_size;
 }
 
+
 bool LineSearch::armijoCond(const double merit_now, const double merit_next, 
                             const double dd, const double step_size, 
                             const double armijo_control_rate) const {
   const double diff = armijo_control_rate * step_size * dd + merit_now - merit_next;
   return ((diff <= 0) ? true : false);
 }
+
 
 double LineSearch::penaltyParam(const OCP& ocp, const Solution& s) const {
   const int N = ocp.discrete().N();
@@ -320,6 +323,7 @@ double LineSearch::penaltyParam(const OCP& ocp, const Solution& s) const {
   return lagrangeMultiplierLinfNorms.maxCoeff() * (1 + settings_.margin_rate);
 }
 
+
 double LineSearch::merit(const double penalty_param) const {
   const double res = (costs_.head(violations_.size()) + penalty_param * violations_).sum() + costs_[violations_.size()];
   const double res_impulse = (costs_impulse_ + penalty_param * violations_impulse_).sum();
@@ -327,6 +331,7 @@ double LineSearch::merit(const double penalty_param) const {
   const double res_lift = (costs_lift_ + penalty_param * violations_lift_).sum();                                       
   return res + res_impulse + res_aux + res_lift;
 }
+
 
 void LineSearch::set(const LineSearchSettings& settings) {
   settings_ = settings;

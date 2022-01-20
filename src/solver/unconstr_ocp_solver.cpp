@@ -71,19 +71,20 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                        const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
+  ocp_.discretize(t);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
-      ocp_[0].computeKKTSystem(robots_[omp_get_thread_num()], t, dt_, s_[0], 
-                               s_[1], kkt_matrix_[0], kkt_residual_[0]);
+      ocp_[0].computeKKTSystem(robots_[omp_get_thread_num()], ocp_.gridInfo(0),  
+                               s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
     }
     else if (i < N_) {
-      ocp_[i].computeKKTSystem(robots_[omp_get_thread_num()], t+i*dt_, dt_, s_[i], 
-                               s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
+      ocp_[i].computeKKTSystem(robots_[omp_get_thread_num()], ocp_.gridInfo(i),
+                               s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
     }
     else {
-      ocp_.terminal.computeKKTSystem(robots_[omp_get_thread_num()], t+T_, 
-                                     s_[N_-1].q, s_[N_], 
+      ocp_.terminal.computeKKTSystem(robots_[omp_get_thread_num()], 
+                                     ocp_.gridInfo(N_), s_[N_-1].q, s_[N_], 
                                      kkt_matrix_[N_], kkt_residual_[N_]);
     }
   }
@@ -227,19 +228,20 @@ double UnconstrOCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
                                    const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
+  ocp_.discretize(t);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
-      ocp_[0].computeKKTResidual(robots_[omp_get_thread_num()], t, dt_, 
+      ocp_[0].computeKKTResidual(robots_[omp_get_thread_num()], ocp_.gridInfo(0), 
                                  s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
     }
     else if (i < N_) {
-      ocp_[i].computeKKTResidual(robots_[omp_get_thread_num()], t+i*dt_, dt_,  
+      ocp_[i].computeKKTResidual(robots_[omp_get_thread_num()], ocp_.gridInfo(i),   
                                  s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
     }
     else {
-      ocp_.terminal.computeKKTResidual(robots_[omp_get_thread_num()], t+T_, 
-                                       s_[N_-1].q, s_[N_], 
+      ocp_.terminal.computeKKTResidual(robots_[omp_get_thread_num()],  
+                                       ocp_.gridInfo(N_), s_[N_-1].q, s_[N_], 
                                        kkt_matrix_[N_], kkt_residual_[N_]);
     }
   }

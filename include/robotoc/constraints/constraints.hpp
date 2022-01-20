@@ -320,6 +320,4 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/constraints/constraints.hxx"
-
 #endif // ROBOTOC_CONSTRAINTS_HPP_

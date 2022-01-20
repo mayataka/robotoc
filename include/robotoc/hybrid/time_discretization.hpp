@@ -9,6 +9,7 @@
 
 #include "robotoc/hybrid/discretization_method.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
@@ -231,48 +232,30 @@ public:
   bool isTimeStageAfterLift(const int time_stage) const;
 
   ///
-  /// @brief Returns the time of the specified time stage. 
-  /// @param[in] time_stage Time stage of interest. 
-  /// @return Time of the time stage of interest.
+  /// @brief Returns the initial time of the horizon. 
+  /// @return Initial time of the horizon.
   ///
-  double t(const int time_stage) const;
+  double t0() const;
+
+  ///
+  /// @brief Returns the final time of the horizon. 
+  /// @return Final time of the horizon.
+  ///
+  double tf() const;
 
   ///
   /// @brief Returns the time of the specified impulse event. 
   /// @param[in] impulse_index Index of impulse event of interest. 
   /// @return Time of the impulse event of interest.
   ///
-  double t_impulse(const int impulse_index) const;
+  double impulseTime(const int impulse_index) const;
 
   ///
   /// @brief Returns the time of the specified lift event. 
   /// @param[in] lift_index Index of lift event of interest. 
   /// @return Time of the lift event of interest.
   ///
-  double t_lift(const int lift_index) const;
-
-  ///
-  /// @brief Returns the time step of the specified time stage. 
-  /// @param[in] time_stage Time stage of interest. 
-  /// @return Time step of the time stage of interest.
-  ///
-  double dt(const int time_stage) const;
-
-  ///
-  /// @brief Returns the time step of the auxiliary stage of the specified 
-  /// impulse event. 
-  /// @param[in] impulse_index Index of impulse event of interest. 
-  /// @return Time step of the auxiliary stage of the impulse event.
-  ///
-  double dt_aux(const int impulse_index) const;
-
-  ///
-  /// @brief Returns the time step of the auxiliary stage of the specified lift
-  /// event. 
-  /// @param[in] lift_index Index of lift event of interest. 
-  /// @return Time step of the auxiliary stage of the lift event.
-  ///
-  double dt_lift(const int lift_index) const;
+  double liftTime(const int lift_index) const;
 
   ///
   /// @brief Returns the maximum time step over the horizon. 
@@ -285,6 +268,34 @@ public:
   /// @return The ideal time step.
   ///
   double dt_ideal() const;
+
+  ///
+  /// @brief Returns the grid info of the specified time stage. 
+  /// @param[in] time_stage Time stage of interest. 
+  /// @return Grid info of the time stage of interest.
+  ///
+  const GridInfo& gridInfo(const int time_stage) const;
+
+  ///
+  /// @brief Returns the grid info of the specified impulse stage. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Grid info of the impulse stage of the impulse event.
+  ///
+  const GridInfo& gridInfoImpulse(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the grid info of the specified aux stage of an impulse. 
+  /// @param[in] impulse_index Index of impulse event of interest. 
+  /// @return Grid info of the aux stage of the impulse event.
+  ///
+  const GridInfo& gridInfoAux(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the grid info of the specified lift stage of a lift. 
+  /// @param[in] lift_index Index of lift event of interest. 
+  /// @return Grid info of the aux stage of the impulse event.
+  ///
+  const GridInfo& gridInfoLift(const int lift_index) const;
 
   ///
   /// @brief Checks wheather the STO is enabled for the specified discrete event. 
@@ -307,13 +318,6 @@ public:
   /// @return true if the STO is enabled. false if not.
   ///
   bool isSTOEnabledNextPhase(const int phase) const;
-
-  ///
-  /// @brief Checks wheather the STO is enabled at the specified time stage. 
-  /// @param[in] stage Time stage of interest. 
-  /// @return true if the STO is enabled. false if not.
-  ///
-  bool isSTOEnabledStage(const int stage) const;
 
   ///
   /// @brief Checks wheather the STO is enabled for the specified impulse event. 
@@ -396,14 +400,8 @@ public:
   friend std::ostream& operator<<(std::ostream& os, 
                                   const TimeDiscretization& discretization);
 
-  ///
-  /// @brief Minimum time step size of the discretization. 
-  ///
-  static constexpr double k_min_dt 
-      = std::sqrt(std::numeric_limits<double>::epsilon());
-
 private:
-  double T_, dt_ideal_, max_dt_;
+  double T_, dt_ideal_, max_dt_, eps_;
   int N_, N_ideal_, N_impulse_, N_lift_, max_num_each_discrete_events_;
   std::vector<int> N_phase_, contact_phase_from_time_stage_, 
                    impulse_index_after_time_stage_, 
@@ -411,7 +409,7 @@ private:
                    time_stage_before_lift_;
   std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_,
                     sto_impulse_, sto_lift_, sto_event_;
-  std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
+  std::vector<GridInfo> grid_, grid_impulse_, grid_lift_;
   std::vector<DiscreteEventType> event_types_;
   DiscretizationMethod discretization_method_;
 

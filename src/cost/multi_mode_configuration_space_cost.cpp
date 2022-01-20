@@ -311,7 +311,7 @@ bool MultiModeConfigurationSpaceCost::useKinematics() const {
 
 double MultiModeConfigurationSpaceCost::evalStageCost(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s) const {
+    const GridInfo& grid_info, const SplitSolution& s) const {
   const int contact_mode_id = contact_status.contactModeId();
   const auto& q_ref = q_ref_.at(contact_mode_id);
   const auto& v_ref = v_ref_.at(contact_mode_id);
@@ -326,13 +326,13 @@ double MultiModeConfigurationSpaceCost::evalStageCost(
   l += (v_weight.array()*(s.v-v_ref).array()*(s.v-v_ref).array()).sum();
   l += (a_weight.array()*s.a.array()*s.a.array()).sum();
   l += (u_weight.array()*(s.u-u_ref).array()*(s.u-u_ref).array()).sum();
-  return 0.5 * dt * l;
+  return 0.5 * grid_info.dt * l;
 }
 
 
 void MultiModeConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   const int contact_mode_id = contact_status.contactModeId();
   const auto& q_ref = q_ref_.at(contact_mode_id);
@@ -345,22 +345,22 @@ void MultiModeConfigurationSpaceCost::evalStageCostDerivatives(
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += dt * data.J_qdiff.transpose() * q_weight.asDiagonal() * data.qdiff;
+        += grid_info.dt * data.J_qdiff.transpose() * q_weight.asDiagonal() * data.qdiff;
   }
   else {
-    kkt_residual.lq().array() += dt * q_weight.array() * data.qdiff.array();
+    kkt_residual.lq().array() += grid_info.dt * q_weight.array() * data.qdiff.array();
   }
   kkt_residual.lv().array()
-      += dt * v_weight.array() * (s.v.array()-v_ref.array());
-  kkt_residual.la.array() += dt * a_weight.array() * s.a.array();
+      += grid_info.dt * v_weight.array() * (s.v.array()-v_ref.array());
+  kkt_residual.la.array() += grid_info.dt * a_weight.array() * s.a.array();
   kkt_residual.lu.array() 
-      += dt * u_weight.array() * (s.u.array()-u_ref.array());
+      += grid_info.dt * u_weight.array() * (s.u.array()-u_ref.array());
 }
 
 
 void MultiModeConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const double t, const double dt, const SplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
   const int contact_mode_id = contact_status.contactModeId();
   const auto& q_weight = q_weight_.at(contact_mode_id);
@@ -369,19 +369,19 @@ void MultiModeConfigurationSpaceCost::evalStageCostHessian(
   const auto& u_weight = u_weight_.at(contact_mode_id);
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
-        += dt * data.J_qdiff.transpose() * q_weight.asDiagonal() * data.J_qdiff;
+        += grid_info.dt * data.J_qdiff.transpose() * q_weight.asDiagonal() * data.J_qdiff;
   }
   else {
-    kkt_matrix.Qqq().diagonal().noalias() += dt * q_weight;
+    kkt_matrix.Qqq().diagonal().noalias() += grid_info.dt * q_weight;
   }
-  kkt_matrix.Qvv().diagonal().noalias() += dt * v_weight;
-  kkt_matrix.Qaa.diagonal().noalias() += dt * a_weight;
-  kkt_matrix.Quu.diagonal().noalias() += dt * u_weight;
+  kkt_matrix.Qvv().diagonal().noalias() += grid_info.dt * v_weight;
+  kkt_matrix.Qaa.diagonal().noalias() += grid_info.dt * a_weight;
+  kkt_matrix.Quu.diagonal().noalias() += grid_info.dt * u_weight;
 }
 
 
 double MultiModeConfigurationSpaceCost::evalTerminalCost(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s) const {
   const auto& q_ref = q_ref_.at(0);
   const auto& v_ref = v_ref_.at(0);
@@ -394,7 +394,7 @@ double MultiModeConfigurationSpaceCost::evalTerminalCost(
 
 
 void MultiModeConfigurationSpaceCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   const auto& q_ref = q_ref_.at(0);
   const auto& v_ref = v_ref_.at(0);
@@ -412,7 +412,7 @@ void MultiModeConfigurationSpaceCost::evalTerminalCostDerivatives(
 
 
 void MultiModeConfigurationSpaceCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()
@@ -427,7 +427,7 @@ void MultiModeConfigurationSpaceCost::evalTerminalCostHessian(
 
 double MultiModeConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s) const {
+    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
   const int impulse_mode_id = impulse_status.impulseModeId();
   const auto& q_ref = q_ref_.at(impulse_mode_id);
   const auto& v_ref = v_ref_.at(impulse_mode_id);
@@ -442,7 +442,7 @@ double MultiModeConfigurationSpaceCost::evalImpulseCost(
 
 void MultiModeConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   const int impulse_mode_id = impulse_status.impulseModeId();
   const auto& q_ref = q_ref_.at(impulse_mode_id);
@@ -463,7 +463,7 @@ void MultiModeConfigurationSpaceCost::evalImpulseCostDerivatives(
 
 void MultiModeConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const double t, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Qqq().noalias()

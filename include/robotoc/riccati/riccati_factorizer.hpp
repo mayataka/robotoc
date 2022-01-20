@@ -218,11 +218,28 @@ public:
   /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
   /// phase involving the STO problem.
   ///
-  template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
                                const LQRPolicy& lqr_policy, SplitDirection& d, 
-                               SplitDirectionType& d_next, const bool sto,
+                               SplitDirection& d_next, const bool sto,
+                               const bool has_next_sto_phase) const;
+
+  ///
+  /// @brief Performs the forward Riccati recursion and computes the state 
+  /// direction. 
+  /// @param[in] kkt_matrix Split KKT matrix of this stage. 
+  /// @param[in] kkt_residual Split KKT residual of this stage. 
+  /// @param[in] lqr_policy LQR policy of this stage. 
+  /// @param[in] d Split direction of this stage. 
+  /// @param[in, out] d_next Split direction of the next stage. 
+  /// @param[in] sto If true, the STO sensitivities are also considered. 
+  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
+  /// phase involving the STO problem.
+  ///
+  void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
+                               const SplitKKTResidual& kkt_residual,
+                               const LQRPolicy& lqr_policy, SplitDirection& d, 
+                               ImpulseSplitDirection& d_next, const bool sto,
                                const bool has_next_sto_phase) const;
 
   ///
@@ -275,17 +292,36 @@ public:
 private:
   bool has_floating_base_;
   int dimv_, dimu_;
-  double max_dts0_;
+  double max_dts0_, eps_;
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
   LQRPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
-  static constexpr double keps_ 
-      = std::sqrt(std::numeric_limits<double>::epsilon());
+
+  template <typename SplitDirectionType>
+  void forwardRiccatiRecursion_impl(
+      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+      const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirectionType& d_next, 
+      const bool sto, const bool has_next_sto_phase) const {
+    d.du.noalias()  = lqr_policy.K * d.dx;
+    d.du.noalias() += lqr_policy.k;
+    if (sto) {
+        d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
+        if (has_next_sto_phase) {
+        d.du.noalias() -= lqr_policy.W * d.dts_next;
+        }
+    }
+    d_next.dx = kkt_residual.Fx;
+    d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
+    d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
+    if (sto) {
+        d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
+    }
+    d_next.dts = d.dts;
+    d_next.dts_next = d.dts_next;
+  }
 
 };
 
 } // namespace robotoc
-
-#include "robotoc/riccati/riccati_factorizer.hxx"
 
 #endif // ROBOTOC_RICCATI_FACTORIZER_HPP_ 

@@ -122,16 +122,16 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased) {
   }
   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
     EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt-t, discretization.dt(time_stage_before_impulse[i]));
-    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_impulse[i])+discretization.dt_aux(i), dt);
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.impulseTime(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt-t, discretization.gridInfo(time_stage_before_impulse[i]).dt);
+    EXPECT_DOUBLE_EQ(discretization.gridInfo(time_stage_before_impulse[i]).dt+discretization.gridInfoAux(i).dt, dt);
     EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
   }
   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
     EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt-t, discretization.dt(time_stage_before_lift[i]));
-    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_lift[i])+discretization.dt_lift(i), dt);
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.liftTime(i));
+    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt-t, discretization.gridInfo(time_stage_before_lift[i]).dt);
+    EXPECT_DOUBLE_EQ(discretization.gridInfo(time_stage_before_lift[i]).dt+discretization.gridInfoLift(i).dt, dt);
     EXPECT_FALSE(discretization.isSTOEnabledLift(i));
   }
   std::vector<int> time_stage_before_events;
@@ -146,6 +146,7 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased) {
   int contact_phase_ref = 0;
   for (int i=0; i<=N; ++i) {
     EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
+    EXPECT_EQ(discretization.gridInfo(i).contact_phase, contact_phase_ref);
     if (i == time_stage_before_events[contact_phase_ref]) {
       ++contact_phase_ref;
     }
@@ -179,11 +180,11 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased) {
     }
   }
   for (int i=0; i<=N; ++i) {
-    EXPECT_DOUBLE_EQ(discretization.t(i), t+i*dt);
+    EXPECT_DOUBLE_EQ(discretization.gridInfo(i).t, t+i*dt);
   }
   for (int i=0; i<N; ++i) {
     if (!discretization.isTimeStageBeforeImpulse(i) && !discretization.isTimeStageBeforeLift(i)) {
-      EXPECT_DOUBLE_EQ(discretization.dt(i), dt);
+      EXPECT_DOUBLE_EQ(discretization.gridInfo(i).dt, dt);
     }
   }
   const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -216,14 +217,14 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased_switchingTimesOnGrids) {
   EXPECT_EQ(discretization.N_lift(), contact_sequence->numLiftEvents());
   double ti = t;
   for (int i=0; i<discretization.N(); ++i) {
-    EXPECT_NEAR(discretization.dt(i), dt, min_dt);
-    EXPECT_NEAR(discretization.t(i), ti, min_dt);
+    EXPECT_NEAR(discretization.gridInfo(i).dt, dt, min_dt);
+    EXPECT_NEAR(discretization.gridInfo(i).t, ti, min_dt);
     ti += dt;
     if (discretization.isTimeStageBeforeImpulse(i) || discretization.isTimeStageBeforeLift(i)) {
       ti += dt;
     }
   }
-  EXPECT_DOUBLE_EQ(discretization.t(discretization.N()), t+T);
+  EXPECT_DOUBLE_EQ(discretization.gridInfo(discretization.N()).t, t+T);
   EXPECT_NO_THROW(
     std::cout << discretization << std::endl;
   );
@@ -262,16 +263,21 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased_eventTimesAreLargerThanHorizo
   EXPECT_EQ(discretization.N_lift(), N_lift);
   for (int i=0; i<N_impulse; ++i) {
     EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt_short-t, discretization.dt(time_stage_before_impulse[i]));
-    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_impulse[i])+discretization.dt_aux(i), dt_short);
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.gridInfoImpulse(i).t);
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.gridInfoAux(i).t);
+    EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt_short-t, 
+                     discretization.gridInfo(time_stage_before_impulse[i]).dt);
+    EXPECT_DOUBLE_EQ(discretization.gridInfo(time_stage_before_impulse[i]).dt
+                     +discretization.gridInfoAux(i).dt, dt_short);
     EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
   }
   for (int i=0; i<N_lift; ++i) {
     EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt_short-t, discretization.dt(time_stage_before_lift[i]));
-    EXPECT_DOUBLE_EQ(discretization.dt(time_stage_before_lift[i])+discretization.dt_lift(i), dt_short);
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.gridInfoLift(i).t);
+    EXPECT_DOUBLE_EQ(t_lift[i]-time_stage_before_lift[i]*dt_short-t, 
+                     discretization.gridInfo(time_stage_before_lift[i]).dt);
+    EXPECT_DOUBLE_EQ(discretization.gridInfo(time_stage_before_lift[i]).dt
+                     +discretization.gridInfoLift(i).dt, dt_short);
     EXPECT_FALSE(discretization.isSTOEnabledLift(i));
   }
   std::vector<int> time_stage_before_events;
@@ -286,6 +292,7 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased_eventTimesAreLargerThanHorizo
   int contact_phase_ref = 0;
   for (int i=0; i<=N; ++i) {
     EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
+    EXPECT_EQ(discretization.gridInfo(i).contact_phase, contact_phase_ref);
     if (i == time_stage_before_events[contact_phase_ref]) {
       ++contact_phase_ref;
     }
@@ -319,11 +326,11 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased_eventTimesAreLargerThanHorizo
     }
   }
   for (int i=0; i<=N; ++i) {
-    EXPECT_DOUBLE_EQ(discretization.t(i), t+i*dt_short);
+    EXPECT_DOUBLE_EQ(discretization.gridInfo(i).t, t+i*dt_short);
   }
   for (int i=0; i<N; ++i) {
     if (!discretization.isTimeStageBeforeImpulse(i) && !discretization.isTimeStageBeforeLift(i)) {
-      EXPECT_DOUBLE_EQ(discretization.dt(i), dt_short);
+      EXPECT_DOUBLE_EQ(discretization.gridInfo(i).dt, dt_short);
     }
   }
   const int num_events = discretization.N_impulse() + discretization.N_lift();
@@ -346,16 +353,16 @@ TEST_P(TimeDiscretizationTest, discretizeGridBased_eventTimesAreLargerThanHorizo
   const auto time_steps = discretization.timeSteps();
   int j=0;
   for (int i=0; i<discretization.N(); ++i, ++j) {
-    EXPECT_DOUBLE_EQ(time_steps[j], discretization.dt(i));
+    EXPECT_DOUBLE_EQ(time_steps[j], discretization.gridInfo(i).dt);
     if (discretization.isTimeStageBeforeImpulse(i)) {
       ++j;
       EXPECT_DOUBLE_EQ(time_steps[j], 
-                       discretization.dt_aux(discretization.impulseIndexAfterTimeStage(i)));
+                       discretization.gridInfoAux(discretization.impulseIndexAfterTimeStage(i)).dt);
     }
     else if (discretization.isTimeStageBeforeLift(i)) {
       ++j;
       EXPECT_DOUBLE_EQ(time_steps[j], 
-                       discretization.dt_lift(discretization.liftIndexAfterTimeStage(i)));
+                       discretization.gridInfoLift(discretization.liftIndexAfterTimeStage(i)).dt);
     }
   }
 }
@@ -382,7 +389,8 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased) {
   }
   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
     EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.gridInfoImpulse(i).t);
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.impulseTime(i));
     EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
     EXPECT_EQ(discretization.isSTOEnabledImpulse(i), 
               discretization.isSTOEnabledEvent(discretization.eventIndexImpulse(i)));
@@ -391,7 +399,8 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased) {
   }
   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
     EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.gridInfoLift(i).t);
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.liftTime(i));
     EXPECT_FALSE(discretization.isSTOEnabledLift(i));
     EXPECT_EQ(discretization.isSTOEnabledLift(i), 
               discretization.isSTOEnabledEvent(discretization.eventIndexLift(i)));
@@ -416,6 +425,7 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased) {
   int contact_phase_ref = 0;
   for (int i=0; i<=N; ++i) {
     EXPECT_EQ(discretization.contactPhase(i), contact_phase_ref);
+    EXPECT_EQ(discretization.gridInfo(i).contact_phase, contact_phase_ref);
     if (i == time_stage_before_events[contact_phase_ref]) {
       ++contact_phase_ref;
     }
@@ -453,7 +463,7 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased) {
   int lift_index = 0;
   int time_stage_before_event = 0;
   double t_prev_event = t;
-  double dt_prev_aux = discretization.dt(0);
+  double dt_prev_aux = discretization.gridInfo(0).dt;
   for (int event_index=0; event_index<num_events; ++event_index) {
     ASSERT_FALSE(discretization.eventType(event_index)==DiscreteEventType::None);
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
@@ -461,21 +471,24 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased) {
       const int grids_phase = discretization.timeStageBeforeImpulse(impulse_index) 
                               - time_stage_before_event + 1;
       EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
-      const double dt_phase = (discretization.t_impulse(impulse_index)-t_prev_event) / grids_phase;
+      const double dt_phase = (discretization.impulseTime(impulse_index)-t_prev_event) / grids_phase;
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
-        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+        EXPECT_DOUBLE_EQ(discretization.gridInfo(stage).dt, dt_phase);
       }
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeImpulse(impulse_index)-1; ++stage) {
-        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+        EXPECT_NEAR(discretization.gridInfo(stage+1).t-discretization.gridInfo(stage).t, 
+                    dt_phase, min_dt);
       }
-      EXPECT_NEAR(discretization.t_impulse(impulse_index)-discretization.t(discretization.timeStageBeforeImpulse(impulse_index)), 
+      EXPECT_NEAR(discretization.impulseTime(impulse_index)-discretization.gridInfo(discretization.timeStageBeforeImpulse(impulse_index)).t, 
+                  dt_phase, min_dt);
+      EXPECT_NEAR(discretization.gridInfoImpulse(impulse_index).t-discretization.gridInfo(discretization.timeStageBeforeImpulse(impulse_index)).t, 
                   dt_phase, min_dt);
       EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
       time_stage_before_event = discretization.timeStageBeforeImpulse(impulse_index);
-      t_prev_event = discretization.t_impulse(impulse_index);
-      dt_prev_aux = discretization.dt_aux(impulse_index);
+      t_prev_event = discretization.gridInfoImpulse(impulse_index).t;
+      dt_prev_aux = discretization.gridInfoAux(impulse_index).dt;
       ++impulse_index;
     }
     else {
@@ -483,21 +496,23 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased) {
       const int grids_phase = discretization.timeStageBeforeLift(lift_index) 
                               - time_stage_before_event + 1;
       EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
-      const double dt_phase = (discretization.t_lift(lift_index)-t_prev_event) / grids_phase;
+      const double dt_phase = (discretization.liftTime(lift_index)-t_prev_event) / grids_phase;
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeLift(lift_index); ++stage) {
-        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+        EXPECT_DOUBLE_EQ(discretization.gridInfo(stage).dt, dt_phase);
       }
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeLift(lift_index)-1; ++stage) {
-        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+        EXPECT_NEAR(discretization.gridInfo(stage+1).t-discretization.gridInfo(stage).t, dt_phase, min_dt);
       }
-      EXPECT_NEAR(discretization.t_lift(lift_index)-discretization.t(discretization.timeStageBeforeLift(lift_index)), 
+      EXPECT_NEAR(discretization.liftTime(lift_index)-discretization.gridInfo(discretization.timeStageBeforeLift(lift_index)).t, 
+                  dt_phase, min_dt);
+      EXPECT_NEAR(discretization.gridInfoLift(lift_index).t-discretization.gridInfo(discretization.timeStageBeforeLift(lift_index)).t, 
                   dt_phase, min_dt);
       EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
       time_stage_before_event = discretization.timeStageBeforeLift(lift_index);
-      t_prev_event = discretization.t_lift(lift_index);
-      dt_prev_aux = discretization.dt_lift(lift_index);
+      t_prev_event = discretization.liftTime(lift_index);
+      dt_prev_aux = discretization.gridInfoLift(lift_index).dt;
       ++lift_index;
     }
   }
@@ -538,7 +553,7 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
   EXPECT_EQ(discretization.N_lift(), N_lift);
   for (int i=0; i<N_impulse; ++i) {
     EXPECT_EQ(time_stage_before_impulse[i], discretization.timeStageBeforeImpulse(i));
-    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.t_impulse(i));
+    EXPECT_DOUBLE_EQ(t_impulse[i], discretization.impulseTime(i));
     EXPECT_FALSE(discretization.isSTOEnabledImpulse(i));
     EXPECT_EQ(discretization.isSTOEnabledImpulse(i), 
               discretization.isSTOEnabledEvent(discretization.eventIndexImpulse(i)));
@@ -547,7 +562,7 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
   }
   for (int i=0; i<N_lift; ++i) {
     EXPECT_EQ(time_stage_before_lift[i], discretization.timeStageBeforeLift(i));
-    EXPECT_DOUBLE_EQ(t_lift[i], discretization.t_lift(i));
+    EXPECT_DOUBLE_EQ(t_lift[i], discretization.liftTime(i));
     EXPECT_FALSE(discretization.isSTOEnabledLift(i));
     EXPECT_EQ(discretization.isSTOEnabledLift(i), 
               discretization.isSTOEnabledEvent(discretization.eventIndexLift(i)));
@@ -609,7 +624,7 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
   int lift_index = 0;
   int time_stage_before_event = 0;
   double t_prev_event = t;
-  double dt_prev_aux = discretization.dt(0);
+  double dt_prev_aux = discretization.gridInfo(0).dt;
   for (int event_index=0; event_index<num_events; ++event_index) {
     ASSERT_FALSE(discretization.eventType(event_index)==DiscreteEventType::None);
     if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
@@ -617,21 +632,21 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
       const int grids_phase = discretization.timeStageBeforeImpulse(impulse_index) 
                               - time_stage_before_event + 1;
       EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
-      const double dt_phase = (discretization.t_impulse(impulse_index)-t_prev_event) / grids_phase;
+      const double dt_phase = (discretization.impulseTime(impulse_index)-t_prev_event) / grids_phase;
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
-        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+        EXPECT_DOUBLE_EQ(discretization.gridInfo(stage).dt, dt_phase);
       }
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeImpulse(impulse_index)-1; ++stage) {
-        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+        EXPECT_NEAR(discretization.gridInfo(stage+1).t-discretization.gridInfo(stage).t, dt_phase, min_dt);
       }
-      EXPECT_NEAR(discretization.t_impulse(impulse_index)-discretization.t(discretization.timeStageBeforeImpulse(impulse_index)), 
+      EXPECT_NEAR(discretization.impulseTime(impulse_index)-discretization.gridInfo(discretization.timeStageBeforeImpulse(impulse_index)).t, 
                   dt_phase, min_dt);
       EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
       time_stage_before_event = discretization.timeStageBeforeImpulse(impulse_index);
-      t_prev_event = discretization.t_impulse(impulse_index);
-      dt_prev_aux = discretization.dt_aux(impulse_index);
+      t_prev_event = discretization.impulseTime(impulse_index);
+      dt_prev_aux = discretization.gridInfoAux(impulse_index).dt;
       ++impulse_index;
     }
     else {
@@ -639,21 +654,21 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
       const int grids_phase = discretization.timeStageBeforeLift(lift_index) 
                               - time_stage_before_event + 1;
       EXPECT_EQ(discretization.N_phase(event_index), grids_phase);
-      const double dt_phase = (discretization.t_lift(lift_index)-t_prev_event) / grids_phase;
+      const double dt_phase = (discretization.liftTime(lift_index)-t_prev_event) / grids_phase;
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeLift(lift_index); ++stage) {
-        EXPECT_DOUBLE_EQ(discretization.dt(stage), dt_phase);
+        EXPECT_DOUBLE_EQ(discretization.gridInfo(stage).dt, dt_phase);
       }
       for (int stage=time_stage_before_event+1; 
             stage<discretization.timeStageBeforeLift(lift_index)-1; ++stage) {
-        EXPECT_NEAR(discretization.t(stage+1)-discretization.t(stage), dt_phase, min_dt);
+        EXPECT_NEAR(discretization.gridInfo(stage+1).t-discretization.gridInfo(stage).t, dt_phase, min_dt);
       }
-      EXPECT_NEAR(discretization.t_lift(lift_index)-discretization.t(discretization.timeStageBeforeLift(lift_index)), 
+      EXPECT_NEAR(discretization.liftTime(lift_index)-discretization.gridInfo(discretization.timeStageBeforeLift(lift_index)).t, 
                   dt_phase, min_dt);
       EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
       time_stage_before_event = discretization.timeStageBeforeLift(lift_index);
-      t_prev_event = discretization.t_lift(lift_index);
-      dt_prev_aux = discretization.dt_lift(lift_index);
+      t_prev_event = discretization.liftTime(lift_index);
+      dt_prev_aux = discretization.gridInfoLift(lift_index).dt;
       ++lift_index;
     }
   }
@@ -663,16 +678,16 @@ TEST_P(TimeDiscretizationTest, discretizePhaseBased_eventTimesAreLargerThanHoriz
   const auto time_steps = discretization.timeSteps();
   int j=0;
   for (int i=0; i<discretization.N(); ++i, ++j) {
-    EXPECT_DOUBLE_EQ(time_steps[j], discretization.dt(i));
+    EXPECT_DOUBLE_EQ(time_steps[j], discretization.gridInfo(i).dt);
     if (discretization.isTimeStageBeforeImpulse(i)) {
       ++j;
       EXPECT_DOUBLE_EQ(time_steps[j], 
-                       discretization.dt_aux(discretization.impulseIndexAfterTimeStage(i)));
+                       discretization.gridInfoAux(discretization.impulseIndexAfterTimeStage(i)).dt);
     }
     else if (discretization.isTimeStageBeforeLift(i)) {
       ++j;
       EXPECT_DOUBLE_EQ(time_steps[j], 
-                       discretization.dt_lift(discretization.liftIndexAfterTimeStage(i)));
+                       discretization.gridInfoLift(discretization.liftIndexAfterTimeStage(i)).dt);
     }
   }
 }
