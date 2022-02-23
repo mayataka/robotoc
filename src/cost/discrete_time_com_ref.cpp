@@ -50,25 +50,21 @@ void DiscreteTimeCoMRef::setCoMRef(
 
 void DiscreteTimeCoMRef::update_com_ref(const GridInfo& grid_info,
                                         Eigen::VectorXd& com_ref) const {
-  if ((!has_inactive_contacts_[grid_info.contact_phase])) {
-    const int next_active_contact_phase = nextActiveContactPhase(grid_info.contact_phase);
+  if (has_inactive_contacts_[grid_info.contact_phase]) {
+    const int next_active_contact_phase = grid_info.contact_phase + 1;
     const double rate = static_cast<double>(grid_info.grid_count_in_phase) 
                           / static_cast<double>(grid_info.N_phase);
-    if (grid_info.contact_phase == 0 && (!has_active_contacts_[0])) {
-      com_ref = (1.0-rate) * initial_com_position_
-                  + rate * com_position_[next_active_contact_phase];
-    }
-    else {
-      com_ref = (1.0-rate) * com_position_[grid_info.contact_phase]
-                  + rate * com_position_[next_active_contact_phase];
-    }
-    std::cout << "com_ref = " << com_ref.transpose() << std::endl;
+    com_ref = (1.0-rate) * com_position_[grid_info.contact_phase]
+                + rate * com_position_[next_active_contact_phase];
+  }
+  else {
+    com_ref = com_position_[grid_info.contact_phase];
   }
 }
 
 
 bool DiscreteTimeCoMRef::isActive(const GridInfo& grid_info) const {
-  return (!has_inactive_contacts_[grid_info.contact_phase]);
+  return true;
 }
 
 } // namespace robotoc
