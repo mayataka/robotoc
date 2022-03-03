@@ -32,19 +32,28 @@ public:
   ~DiscreteTimeSwingFootRef();
 
   ///
-  /// @brief Set swing foot reference. 
-  /// @param[in] contact_index Contact index of interest.
-  /// @param[in] initial_contact_frame_position Contact frame position at the 
-  /// initial time of the horizon. Used if the contact frame is in swinging 
-  /// phase at the beginning of the horizon.
-  /// @param[in] contact_position_before_initial_time Contact frame position 
-  /// before the initial time of the horizon. Used if the initial contact phase 
-  /// is inactive.
+  /// @brief Set the reference contact positions from the contact sequence. 
+  /// The first and last contact phases must have active contacts.
+  /// @param[in] contact_sequence Contact sequence.
   ///
-  void setSwingFootRef(
-      const std::shared_ptr<ContactSequence>& contact_sequence, 
-      const Eigen::Vector3d& initial_contact_frame_position=Eigen::Vector3d::Zero(), 
-      const Eigen::Vector3d& contact_position_before_initial_time=Eigen::Vector3d::Zero());
+  void setSwingFootRef(const std::shared_ptr<ContactSequence>& contact_sequence);
+
+  ///
+  /// @brief Set the reference contact positions from the contact sequence. 
+  /// The first and last contact phases must have active contacts.
+  /// Also, the position refs of the first and last contact phases are defined 
+  /// by user.
+  /// @param[in] contact_sequence Contact sequence.
+  /// @param[in] first_contact_position Reference contact position at the first 
+  /// contact phase.
+  /// @param[in] last_contact_position Reference contact position at the last 
+  /// contact phase.
+  /// @param[in] contact_index Contact index of interest.
+  ///
+  void setSwingFootRef(const std::shared_ptr<ContactSequence>& contact_sequence, 
+                       const Eigen::Vector3d& first_contact_position, 
+                       const Eigen::Vector3d& last_contact_position, 
+                       const double first_rate=0, const double last_rate=0);
 
   void update_x3d_ref(const GridInfo& grid_info, 
                       Eigen::VectorXd& x3d_ref) const override;
@@ -52,27 +61,10 @@ public:
   bool isActive(const GridInfo& grid_info) const override;
 
 private:
+  int contact_index_, num_contact_phases_;
+  double step_height_, first_rate_, last_rate_;
   std::vector<Eigen::Vector3d> contact_position_;
-  Eigen::Vector3d initial_contact_frame_position_;
-  double step_height_, initial_rate_from_step_length_;
-  int contact_index_;
   std::vector<bool> is_contact_active_;
-
-  int nextActiveContactPhase(const int contact_phase) const {
-    for (int phase=contact_phase+1; phase<is_contact_active_.size(); ++phase) {
-      if (is_contact_active_[phase]) {
-        return phase;
-      }
-    }
-    return is_contact_active_.size();
-  }
-
-  static double planarDistance(const Eigen::Vector3d& a, 
-                               const Eigen::Vector3d& b) {
-    const double xdiff = a.coeff(0) - b.coeff(0);
-    const double ydiff = a.coeff(1) - b.coeff(1);
-    return std::sqrt(xdiff*xdiff + ydiff*ydiff);
-  }
 
 };
 

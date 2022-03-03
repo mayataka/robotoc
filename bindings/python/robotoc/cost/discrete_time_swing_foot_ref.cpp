@@ -15,10 +15,15 @@ PYBIND11_MODULE(discrete_time_swing_foot_ref, m) {
              std::shared_ptr<DiscreteTimeSwingFootRef>>(m, "DiscreteTimeSwingFootRef")
     .def(py::init<const int, const double>(), 
           py::arg("contact_index"), py::arg("swing_height"))
-    .def("set_swing_foot_ref", &DiscreteTimeSwingFootRef::setSwingFootRef,
-          py::arg("contact_sequence"), 
-          py::arg("initial_contact_frame_position")=Eigen::Vector3d::Zero(),
-          py::arg("contact_position_before_initial_time")=Eigen::Vector3d::Zero())
+    .def("set_swing_foot_ref", 
+          static_cast<void (DiscreteTimeSwingFootRef::*)(const std::shared_ptr<ContactSequence>&)>(&DiscreteTimeSwingFootRef::setSwingFootRef),
+          py::arg("contact_sequence"))
+    .def("set_swing_foot_ref", 
+          static_cast<void (DiscreteTimeSwingFootRef::*)(const std::shared_ptr<ContactSequence>&,
+                                                         const Eigen::Vector3d&, const Eigen::Vector3d&, 
+                                                         const double, const double)>(&DiscreteTimeSwingFootRef::setSwingFootRef),
+          py::arg("contact_sequence"), py::arg("first_contact_position"), py::arg("last_contact_position"),
+          py::arg("first_rate")=0, py::arg("last_com_ref")=0)
     .def("update_x3d_ref", &DiscreteTimeSwingFootRef::update_x3d_ref,
           py::arg("grid_info"), py::arg("x3d_ref"))
     .def("is_active", &DiscreteTimeSwingFootRef::isActive,

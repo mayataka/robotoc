@@ -15,23 +15,17 @@ namespace robotoc {
 
 ///
 /// @class DiscreteTimeCoMRef
-/// @brief Discrete-time periodic reference of the center of mass. 
+/// @brief Discrete-time reference of the center of mass. 
 ///
 class DiscreteTimeCoMRef : public TimeVaryingCoMRefBase {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] com_ref0 Initial CoM position reference.
-  /// @param[in] com_step Reference step of the CoM over a contact phase.
-  /// @param[in] start_phase Start contact phase.
-  /// @param[in] end_phase End contact phase.
-  /// @param[in] active_phases Number of phases where the tracking is active.
-  /// @param[in] inactive_phases Number of phases where the tracking is inactive.
-  /// @param[in] is_first_move_half If true, the first reference CoM step is 
-  /// half step. 
+  /// @param[in] com_position_to_contact_position Relative contact positions 
+  /// from the CoM position position.
   ///
   DiscreteTimeCoMRef(
-      const std::vector<Eigen::Vector3d>& com_position_to_foot_position);
+      const std::vector<Eigen::Vector3d>& com_position_to_contact_position);
 
   ///
   /// @brief Destructor. 
@@ -39,15 +33,25 @@ public:
   ~DiscreteTimeCoMRef();
 
   ///
-  /// @brief Set swing foot reference. 
-  /// @param[in] contact_index Contact index of interest.
-  /// @param[in] initial_contact_frame_position Contact frame position at the 
-  /// initial time of the horizon. Used if the contact frame is in swinging 
-  /// phase at the beginning of the horizon.
+  /// @brief Set the CoM reference positions from the contact positions of the
+  /// contact sequence. The first and last contact phases must have active 
+  /// contacts.
+  /// @param[in] contact_sequence Contact sequence.
   ///
-  void setCoMRef(
-      const std::shared_ptr<ContactSequence>& contact_sequence, 
-      const Eigen::Vector3d& initial_com_position=Eigen::Vector3d::Zero());
+  void setCoMRef(const std::shared_ptr<ContactSequence>& contact_sequence);
+
+  ///
+  /// @brief Set the CoM reference positions from the contact positions of the
+  /// contact sequence. Also, the CoM refs of the first and last contact phases 
+  /// are defined by user.
+  /// @param[in] contact_sequence Contact sequence.
+  /// @param[in] first_com_ref CoM reference at the first contact phase.
+  /// @param[in] last_com_ref CoM reference at the last contact phase.
+  ///
+  void setCoMRef(const std::shared_ptr<ContactSequence>& contact_sequence,
+                 const Eigen::Vector3d& first_com_ref, 
+                 const Eigen::Vector3d& last_com_ref, 
+                 const double first_rate=0, const double last_rate=0);
 
   void update_com_ref(const GridInfo& grid_info, 
                       Eigen::VectorXd& com_ref) const override;
@@ -56,25 +60,9 @@ public:
 
 private:
   std::vector<Eigen::Vector3d> com_position_, com_position_to_foot_position_;
-  Eigen::Vector3d initial_com_position_, com_avg_;
-  double initial_rate_from_com_position_;
-  std::vector<bool> has_active_contacts_, has_inactive_contacts_;
-
-  int nextActiveContactPhase(const int contact_phase) const {
-    for (int phase=contact_phase+1; phase<has_active_contacts_.size(); ++phase) {
-      if (has_active_contacts_[phase]) {
-        return phase;
-      }
-    }
-    return has_active_contacts_.size();
-  }
-
-  static double planarDistance(const Eigen::Vector3d& a, 
-                               const Eigen::Vector3d& b) {
-    const double xdiff = a.coeff(0) - b.coeff(0);
-    const double ydiff = a.coeff(1) - b.coeff(1);
-    return std::sqrt(xdiff*xdiff + ydiff*ydiff);
-  }
+  std::vector<bool> has_inactive_contacts_;
+  double first_rate_, last_rate_;
+  int num_contact_phases_;
 
 };
 
