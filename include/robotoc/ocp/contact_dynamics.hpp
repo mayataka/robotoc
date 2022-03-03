@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_CONTACT_DYNAMICS_HPP_
 #define ROBOTOC_CONTACT_DYNAMICS_HPP_
 
+#include <limits>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -131,7 +133,8 @@ public:
     data_.laf().noalias() += data_.Qafqv() * d.dx;
     data_.laf().noalias() += data_.Qafu() * d.du;
     data_.la().noalias()  += dt * d_next.dgmm();
-    if (dts != 0.) {
+    constexpr double eps = std::numeric_limits<double>::epsilon();
+    if (dts < - eps || dts > eps) {
       data_.laf().noalias() += dts * data_.haf();
     }
     d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
@@ -164,7 +167,8 @@ public:
     data_.laf().noalias() += data_.Qafu() * d.du;
     data_.la().noalias()  += dt * d_next.dgmm();
     data_.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
-    if (dts != 0.) {
+    constexpr double eps = std::numeric_limits<double>::epsilon();
+    if (dts < - eps || dts > eps) {
       data_.laf().noalias() += dts * data_.haf();
     }
     d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();

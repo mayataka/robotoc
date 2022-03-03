@@ -200,7 +200,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
                                           kkt_residual.impulse[impulse_index],
                                           d.impulse[impulse_index], 
                                           d.aux[impulse_index]);
-     d.aux[impulse_index].dts = d.impulse[impulse_index].dts_next; 
+      d.aux[impulse_index].dts = d.impulse[impulse_index].dts_next;
       if (sto_next_next) {
         const int next_event_index = ocp.discrete().eventIndexImpulse(impulse_index) + 1;
         factorizer_.computeSwitchingTimeDirection(sto_policy_[next_event_index], 
