@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_discrete_time_periodic_com_ref_HPP_
-#define ROBOTOC_discrete_time_periodic_com_ref_HPP_
+#ifndef ROBOTOC_DISCRETE_TIME_PERIODIC_COM_REF_HPP_
+#define ROBOTOC_DISCRETE_TIME_PERIODIC_COM_REF_HPP_
 
 #include "Eigen/Core"
 
@@ -51,4 +51,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_discrete_time_periodic_com_ref_HPP_ 
+#endif // ROBOTOC_DISCRETE_TIME_PERIODIC_COM_REF_HPP_ 

@@ -17,7 +17,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 dt = 0.02
 step_length = 0.25
 step_height = 0.15
-swing_time = 0.5
+swing_time = 0.25
 initial_lift_time = 0.5
 
 cost = robotoc.CostFunction()
@@ -114,7 +114,7 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 T = 0.5
-N = 20
+N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
@@ -134,9 +134,9 @@ mpc.set_solver_options(option_mpc)
 
 sim_time_step = 0.0025 # 400 Hz MPC
 sim_start_time = 0.0
-sim_end_time = 10.0
+sim_end_time = 5.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='anymal_walking.mp4')
