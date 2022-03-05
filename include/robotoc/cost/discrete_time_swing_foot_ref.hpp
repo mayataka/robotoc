@@ -48,7 +48,10 @@ public:
   /// contact phase.
   /// @param[in] last_contact_position Reference contact position at the last 
   /// contact phase.
-  /// @param[in] contact_index Contact index of interest.
+  /// @param[in] first_rate Rate of the first contact position (0 <= rate <= 1).
+  /// Default is 0.
+  /// @param[in] last_rate Rate of the last contact position (0 <= rate <= 1).
+  /// Default is 0.
   ///
   void setSwingFootRef(const std::shared_ptr<ContactSequence>& contact_sequence, 
                        const Eigen::Vector3d& first_contact_position, 

@@ -33,20 +33,24 @@ public:
   ~DiscreteTimeCoMRef();
 
   ///
-  /// @brief Set the CoM reference positions from the contact positions of the
-  /// contact sequence. The first and last contact phases must have active 
+  /// @brief Set the reference positions of CoM from the contact positions of 
+  /// the contact sequence. The first and last contact phases must have active 
   /// contacts.
   /// @param[in] contact_sequence Contact sequence.
   ///
   void setCoMRef(const std::shared_ptr<ContactSequence>& contact_sequence);
 
   ///
-  /// @brief Set the CoM reference positions from the contact positions of the
-  /// contact sequence. Also, the CoM refs of the first and last contact phases 
-  /// are defined by user.
+  /// @brief Set the reference positions of CoM from the contact positions of 
+  /// the contact sequence. Also, the CoM refs of the first and last contact 
+  /// phases are defined by user.
   /// @param[in] contact_sequence Contact sequence.
   /// @param[in] first_com_ref CoM reference at the first contact phase.
   /// @param[in] last_com_ref CoM reference at the last contact phase.
+  /// @param[in] first_rate Rate of the first contact position (0 <= rate <= 1).
+  /// Default is 0.
+  /// @param[in] last_rate Rate of the last contact position (0 <= rate <= 1).
+  /// Default is 0.
   ///
   void setCoMRef(const std::shared_ptr<ContactSequence>& contact_sequence,
                  const Eigen::Vector3d& first_com_ref, 
