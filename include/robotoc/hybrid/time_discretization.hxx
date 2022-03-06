@@ -533,9 +533,7 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
         grid_[stage].t = t + i * dt_ideal_;
         ++impulse_index;
       }
-      N_phase_[phase] = time_stage_before_impulse_[impulse_index-1] 
-                          - time_stage_before_prev_event + 1;
-      time_stage_before_prev_event = time_stage_before_impulse_[impulse_index-1];
+      time_stage_before_prev_event = time_stage_before_impulse_[impulse_index];
       ++phase;
     }
     else if (i == time_stage_before_lift_[lift_index]) {
@@ -559,9 +557,7 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
         grid_[stage].t = t + i * dt_ideal_;
         ++lift_index;
       }
-      N_phase_[phase] = time_stage_before_lift_[lift_index-1] 
-                          - time_stage_before_prev_event + 1;
-      time_stage_before_prev_event = time_stage_before_lift_[lift_index-1];
+      time_stage_before_prev_event = time_stage_before_lift_[lift_index];
       ++phase;
     }
     else {
@@ -572,8 +568,10 @@ inline void TimeDiscretization::countTimeStepsGridBased(const double t) {
   }
   N_ = N_ideal_ - num_events_on_grid;
   grid_[N_].t = t + T_;
-  N_phase_[phase] = N_ - time_stage_before_prev_event;
   grid_[N_].grid_count_in_phase = N_ - time_stage_before_prev_event;
+  for (int i=0; i<phase+1; ++i) {
+    N_phase_[phase] = 1;
+  }
 }
 
 

@@ -3,7 +3,10 @@
 [![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/running_yoko.gif" width="530"> 
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="190"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="190"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="190"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="190"> 
 
 ## Features for efficient optimal control of robotic systems
 - Direct multiple-shooting method based on the **lifted contact dynamics** / **inverse dynamics**.
@@ -13,7 +16,7 @@
 
 ## Requirements
 - Ubuntu 18.04 or 20.04
-- gcc (at least C++11 is required), CMake (at least version 3.1)
+- gcc (at least C++11 is required), CMake (at least version 3.11)
 - Eigen3, [Pinocchio](https://stack-of-tasks.github.io/pinocchio/download.html)  , 
 - Python3, NumPy (for Python binding)
 - [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and/or [meshcat-python](https://github.com/rdeits/meshcat-python) (optional to visualize the solution trajectory in Python) 
@@ -143,10 +146,11 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="260">
 
 ### Whole-body MPC examples
-- The following two example implementations of whole-body MPC are provided:
+- The following three example implementations of whole-body MPC are provided:
   - `MPCQuadrupedalWalking` : MPC with `OCPSolver` for the walking gait of quadrupedal robots.
   - `MPCQuadrupedalTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
-- You can run the simulations of these MPC with `anymal/mpc/walking.py` and `anymal/mpc/trotting.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
+  - `MPCQuadrupedalJumping` : MPC with `OCPSolver` for the jumping motion of quadrupedal robots.
+- You can run the simulations of these MPC with `anymal/mpc/walking.py`, `anymal/mpc/trotting.py`, and `a1/mpc/jumping.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="280"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="280">
@@ -164,10 +168,10 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
   year={2021}}
 ```
 
-- Citing `OCPSolver` without the switching time optimization (STO) (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
+- Citing `OCPSolver` without the switching time optimization (STO):
 ```
 @misc{katayama2021liftedcd,
-  title={Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts}, 
+  title={Lifted contact dynamics for efficient optimal control of rigid body systems with contacts}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   url={arXiv:2108.01781},
   eprint={2108.01781},
@@ -186,7 +190,7 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 
 ## Related publications
 - S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021
-- S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
+- S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
 - S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021
 - S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021
 - H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019

@@ -68,7 +68,7 @@ Please see @ref page_installation.
 - Citing `robotoc::OCPSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
 ```
 @misc{katayama2021liftedcd,
-  title={Lifted contact dynamics for efficient direct optimal control of rigid body systems with contacts}, 
+  title={Lifted contact dynamics for efficient optimal control of rigid body systems with contacts}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   url={arXiv:2108.01781},
   eprint={2108.01781},

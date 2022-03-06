@@ -37,6 +37,11 @@ class TrajectoryViewer:
 
         self.viewer_type = viewer_type
         if viewer_type == 'gepetto':
+            import subprocess, os
+            launched = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
+            if int(launched[1]) == 0:
+                os.system('gepetto-gui &')
+            time.sleep(2)
             from pinocchio.visualize import GepettoVisualizer
             self.viewer = GepettoVisualizer(self.robot.model, 
                                             self.robot.collision_model,

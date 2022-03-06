@@ -1,4 +1,5 @@
 pybind11_add_robotoc_module(mpc_quadrupedal_walking)
 pybind11_add_robotoc_module(mpc_quadrupedal_trotting)
+pybind11_add_robotoc_module(mpc_quadrupedal_jumping)
 
 install_robotoc_pybind_module(mpc)

@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_discrete_time_periodic_foot_track_ref_HPP_
-#define ROBOTOC_discrete_time_periodic_foot_track_ref_HPP_
+#ifndef ROBOTOC_DISCRETE_TIME_PERIODIC_FOOT_TRACK_REF_HPP_
+#define ROBOTOC_DISCRETE_TIME_PERIODIC_FOOT_TRACK_REF_HPP_
 
 #include "Eigen/Core"
 
@@ -53,4 +53,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_discrete_time_periodic_foot_track_ref_HPP_ 
+#endif // ROBOTOC_DISCRETE_TIME_PERIODIC_FOOT_TRACK_REF_HPP_ 
