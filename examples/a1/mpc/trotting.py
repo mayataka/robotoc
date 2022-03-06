@@ -10,7 +10,7 @@ RF_foot_id = 24
 RH_foot_id = 44
 contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
 contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
-path_to_urdf = 'a1_description/urdf/a1.urdf'
+path_to_urdf = '../a1_description/urdf/a1.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
@@ -138,4 +138,4 @@ sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
-# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='anymal_trotting.mp4')
+# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')
