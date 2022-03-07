@@ -19,9 +19,9 @@ MPCQuadrupedalJumping::MPCQuadrupedalJumping(const OCP& ocp, const int nthreads)
     cs_ground_(ocp.robot().createContactStatus()),
     cs_flying_(ocp.robot().createContactStatus()),
     contact_positions_(),
+    contact_positions_local_(),
     contact_positions_goal_(),
     contact_positions_store_(),
-    com_to_contact_points_local_(),
     R_jump_yaw_(Eigen::Matrix3d::Identity()),
     s_(),
     jump_length_(Eigen::Vector3d::Zero()),
@@ -73,11 +73,11 @@ void MPCQuadrupedalJumping::setJumpPattern(const Eigen::Vector3d& jump_length,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
+  jump_length_ = jump_length;
   jump_yaw_ = jump_yaw;
   R_jump_yaw_ << std::cos(jump_yaw), -std::sin(jump_yaw), 0, 
                  std::sin(jump_yaw), std::cos(jump_yaw),  0,
                  0, 0, 1;
-  jump_length_.noalias() = R_jump_yaw_ * jump_length;
   flying_time_ = flying_time;
   min_flying_time_ = min_flying_time;
   ground_time_ = ground_time;
@@ -123,10 +123,10 @@ void MPCQuadrupedalJumping::reset(const double t, const Eigen::VectorXd& q,
   resetMinimumDwellTimes(t, dtm_);
   resetGoalContactPlacements(q);
   resetContactPlacements(q);
-  for (auto& e : s_.data)    { e.q.head<3>().noalias() += jump_length_; }
-  for (auto& e : s_.impulse) { e.q.head<3>().noalias() += jump_length_; }
-  for (auto& e : s_.aux)     { e.q.head<3>().noalias() += jump_length_; }
-  for (auto& e : s_.lift)    { e.q.head<3>().noalias() += jump_length_; }
+  for (auto& e : s_.data)    { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
+  for (auto& e : s_.impulse) { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
+  for (auto& e : s_.aux)     { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
+  for (auto& e : s_.lift)    { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
   ocp_solver_.setSolution(s_);
   ocp_solver_.setSolverOptions(solver_options);
   ocp_solver_.meshRefinement(t);
@@ -207,23 +207,24 @@ void MPCQuadrupedalJumping::resetGoalContactPlacements(const Eigen::VectorXd& q)
   robot_.updateFrameKinematics(q);
   const Eigen::Quaterniond quat_init = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5));
   const Eigen::Matrix3d R_init = quat_init.toRotationMatrix();
-  com_to_contact_points_local_.clear();
+  contact_positions_local_.clear();
   for (const auto frame : robot_.contactFrames()) {
-    com_to_contact_points_local_.push_back(
-        R_init.transpose() * (robot_.framePosition(frame) - robot_.CoM()));
-    com_to_contact_points_local_.back().coeffRef(2) = 0;
+    contact_positions_local_.push_back(
+        R_init.transpose() * (robot_.framePosition(frame) - q.template head<3>()));
+    // contact_positions_local_.back().coeffRef(2) = 0;
   }
   const Eigen::Matrix3d R_goal = R_jump_yaw_ * R_init;
   const Eigen::Quaterniond quat_goal = Eigen::Quaterniond(R_goal);
   Eigen::VectorXd q_goal = q;
-  q_goal.template head<3>().noalias() += jump_length_;
+  q_goal.template head<3>().noalias() += R_jump_yaw_ * jump_length_;
   q_goal.template segment<4>(3) = quat_goal.coeffs();
   robot_.updateFrameKinematics(q_goal);
   contact_positions_goal_.clear();
   for (int i=0; i<robot_.contactFrames().size(); ++i) {
     contact_positions_goal_.push_back(
-        R_goal * (robot_.CoM()+com_to_contact_points_local_[i]));
-    contact_positions_goal_.back().coeffRef(2) = 0.0;
+        q.template head<3>() + R_goal * contact_positions_local_[i] 
+                             + R_jump_yaw_ * jump_length_);
+    // contact_positions_goal_.back().coeffRef(2) = 0.0;
   }
 }
 

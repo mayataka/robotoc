@@ -15,7 +15,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.01
-jump_length = 0.5
+jump_length = np.array([0.5, 0, 0])
 jump_height = 0.1
 flying_up_time = 0.15
 flying_down_time = flying_up_time
@@ -64,9 +64,8 @@ x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
 
-com_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
-com_ref0_flying_up[2] = robot.com()[2]
-vcom_ref_flying_up = np.array([(0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time)])
+com_ref0_flying_up = robot.com()
+vcom_ref_flying_up = 0.5*jump_length/flying_up_time + np.array([0, 0, (jump_height/flying_up_time)])
 com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, vcom_ref_flying_up, 
                                            t0+ground_time, flying_up_time, 
                                            flying_down_time+2*ground_time, False)
@@ -74,9 +73,8 @@ com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
 com_cost_flying_up.set_com_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_flying_up)
 
-com_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
-com_ref0_landed[0] += jump_length
-com_ref0_landed[2] = robot.com()[2]
+com_ref0_landed = robot.com()
+com_ref0_landed += jump_length
 vcom_ref_landed = np.zeros(3)
 com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, vcom_ref_landed, 
                                         t0+ground_time+flying_time, ground_time, 
@@ -116,10 +114,10 @@ contact_sequence.init_contact_sequence(contact_status_standing)
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time)
 
-contact_positions[0][0] += jump_length
-contact_positions[1][0] += jump_length
-contact_positions[2][0] += jump_length
-contact_positions[3][0] += jump_length
+contact_positions[0] += jump_length
+contact_positions[1] += jump_length
+contact_positions[2] += jump_length
+contact_positions[3] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 

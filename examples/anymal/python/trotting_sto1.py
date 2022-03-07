@@ -15,7 +15,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-step_length = 0.15
+step_length = np.array([0.15, 0, 0])
 step_height = 0.1
 swing_time = 0.5
 double_support_time = 0.04

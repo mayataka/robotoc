@@ -3,8 +3,8 @@
 
 namespace robotoc {
 
-PeriodicFootTrackRef::PeriodicFootTrackRef(const Eigen::Vector3d x3d0, 
-                                           const double step_length, 
+PeriodicFootTrackRef::PeriodicFootTrackRef(const Eigen::Vector3d& x3d0, 
+                                           const Eigen::Vector3d& step_length, 
                                            const double step_height, 
                                            const double t0, 
                                            const double period_swing, 
@@ -32,10 +32,10 @@ void PeriodicFootTrackRef::update_x3d_ref(const GridInfo& grid_info,
     const double rate = (grid_info.t-t0_) / period_swing_;
     x3d_ref = x3d0_;
     if (is_first_step_half_) {
-      x3d_ref.coeffRef(0) += 0.5 * rate * step_length_;
+      x3d_ref.noalias() += 0.5 * rate * step_length_;
     }
     else {
-      x3d_ref.coeffRef(0) += rate * step_length_;
+      x3d_ref.noalias() += rate * step_length_;
     }
     if (rate < 0.5) {
       x3d_ref.coeffRef(2) += 2 * rate * step_height_;
@@ -50,10 +50,10 @@ void PeriodicFootTrackRef::update_x3d_ref(const GridInfo& grid_info,
         x3d_ref = x3d0_;
         const double rate = (grid_info.t-t0_-i*period_) / period_swing_;
         if (is_first_step_half_) {
-          x3d_ref.coeffRef(0) += (i - 0.5 + rate) * step_length_;
+          x3d_ref.noalias() += (i - 0.5 + rate) * step_length_;
         }
         else {
-          x3d_ref.coeffRef(0) += (i + rate) * step_length_;
+          x3d_ref.noalias() += (i + rate) * step_length_;
         }
         if (rate < 0.5) {
           x3d_ref.coeffRef(2) += 2 * rate * step_height_;

@@ -3,10 +3,10 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
-# jump_type = 'longitudinal'
+jump_type = 'longitudinal'
 # jump_type = 'lateral'
 # jump_type = 'back'
-jump_type = 'rotational'
+# jump_type = 'rotational'
 
 if jump_type == 'longitudinal':
     jump_length = [0.6, 0, 0]

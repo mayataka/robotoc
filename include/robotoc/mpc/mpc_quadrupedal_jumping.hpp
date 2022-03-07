@@ -139,6 +139,8 @@ public:
   ///
   double KKTError() const;
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   Robot robot_;
   std::shared_ptr<ContactSequence> contact_sequence_;
@@ -148,7 +150,7 @@ private:
   ContactStatus cs_ground_, cs_flying_;
   std::vector<Eigen::Vector3d> contact_positions_, contact_positions_goal_, 
                                contact_positions_store_, 
-                               com_to_contact_points_local_;
+                               contact_positions_local_;
   Eigen::Matrix3d R_jump_yaw_;
   robotoc::Solution s_;
   Eigen::Vector3d jump_length_;

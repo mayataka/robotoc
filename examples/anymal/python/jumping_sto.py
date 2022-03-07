@@ -15,7 +15,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-jump_length = 0.8
+jump_length = np.array([0.8, 0, 0])
 flying_up_time = 0.15
 flying_down_time = flying_up_time
 flying_time = flying_up_time + flying_down_time
@@ -31,7 +31,7 @@ q_standing = np.array([0., 0., 0.4792, 0., 0., 0., 1.0,
                         0.1,  0.7, -1.0, 
                         0.1, -0.7,  1.0])
 q_ref = q_standing.copy()
-q_ref[0] += jump_length
+q_ref[0:3] += jump_length
 q_weight = np.array([1.0, 0., 0., 1.0, 1.0, 1.0, 
                      0.001, 0.001, 0.001, 
                      0.001, 0.001, 0.001,
@@ -96,10 +96,10 @@ contact_sequence.init_contact_sequence(contact_status_standing)
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
 
-contact_positions[0][0] += jump_length
-contact_positions[1][0] += jump_length
-contact_positions[2][0] += jump_length
-contact_positions[3][0] += jump_length
+contact_positions[0] += jump_length
+contact_positions[1] += jump_length
+contact_positions[2] += jump_length
+contact_positions[3] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 

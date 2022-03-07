@@ -26,7 +26,8 @@ public:
   /// @param[in] is_first_step_half If true, the length ofh te first reference 
   /// foot step is half. 
   ///
-  PeriodicFootTrackRef(const Eigen::Vector3d x3d0, const double step_length, 
+  PeriodicFootTrackRef(const Eigen::Vector3d& x3d0, 
+                       const Eigen::Vector3d& step_length, 
                        const double step_height, const double t0, 
                        const double period_swing, const double period_stance, 
                        const bool is_first_step_half);
@@ -41,9 +42,8 @@ public:
   bool isActive(const GridInfo& grid_info) const override;
 
 private:
-  Eigen::Vector3d x3d0_;
-  double step_length_, step_height_, t0_, period_swing_, period_stance_,
-         period_;
+  Eigen::Vector3d x3d0_, step_length_;
+  double step_height_, t0_, period_swing_, period_stance_, period_;
   bool is_first_step_half_;
 
 };

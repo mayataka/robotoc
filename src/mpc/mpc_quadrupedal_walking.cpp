@@ -15,21 +15,27 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp,
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(
         ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
+    solver_options_(SolverOptions::defaultOptions()),
     cs_standing_(ocp.robot().createContactStatus()),
     cs_lf_(ocp.robot().createContactStatus()),
     cs_lh_(ocp.robot().createContactStatus()),
     cs_rf_(ocp.robot().createContactStatus()),
     cs_rh_(ocp.robot().createContactStatus()),
     contact_positions_(),
-    step_length_(0),
+    contact_positions_local_(),
+    vcom_cmd_(Eigen::Vector3d::Zero()),
+    step_length_(Eigen::Vector3d::Zero()),
+    R_(Eigen::Matrix3d::Identity()),
+    R_yaw_rate_cmd_(Eigen::Matrix3d::Identity()),
+    quat_(Eigen::Quaterniond::Identity()),
     step_height_(0),
     swing_time_(0),
     initial_lift_time_(0),
     T_(ocp.T()),
     dt_(ocp.T()/ocp.N()),
     dtm_(1.5*(ocp.T()/ocp.N())),
-    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     ts_last_(0),
+    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(ocp.N()),
     current_step_(0),
     predict_step_(0) {
@@ -49,17 +55,11 @@ MPCQuadrupedalWalking::~MPCQuadrupedalWalking() {
 }
 
 
-void MPCQuadrupedalWalking::setGaitPattern(const double step_length, 
-                                           const double step_height,
+void MPCQuadrupedalWalking::setGaitPattern(const Eigen::Vector3d& vcom_cmd, 
+                                           const double yaw_rate_cmd,
                                            const double swing_time,
                                            const double initial_lift_time) {
   try {
-    if (step_length <= 0) {
-      throw std::out_of_range("invalid value: step_length must be positive!");
-    }
-    if (step_height <= 0) {
-      throw std::out_of_range("invalid value: step_height must be positive!");
-    }
     if (swing_time <= 0) {
       throw std::out_of_range("invalid value: swing_time must be positive!");
     }
@@ -71,10 +71,14 @@ void MPCQuadrupedalWalking::setGaitPattern(const double step_length,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  step_length_ = step_length;
-  step_height_ = step_height;
+  vcom_cmd_ = vcom_cmd;
+  step_length_ = vcom_cmd * swing_time;
   swing_time_ = swing_time;
   initial_lift_time_ = initial_lift_time;
+  const double yaw_cmd = swing_time * yaw_rate_cmd;
+  R_yaw_rate_cmd_ << std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
+                     std::sin(yaw_cmd), std::cos(yaw_cmd),  0,
+                     0, 0, 1;
 }
 
 
@@ -196,9 +200,14 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
 
 void MPCQuadrupedalWalking::resetContactPlacements(const Eigen::VectorXd& q) {
   robot_.updateFrameKinematics(q);
+  quat_ = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5));
+  R_ = quat_.toRotationMatrix();
   contact_positions_.clear();
+  contact_positions_local_.clear();
   for (const auto frame : robot_.pointContactFrames()) {
     contact_positions_.push_back(robot_.framePosition(frame));
+    contact_positions_local_.push_back(
+        R_.transpose() * (robot_.framePosition(frame) - q.template head<3>()));
   }
   // frames = [LF, LH, RF, RH] (0, 1, 2, 3)
   if (current_step_ == 0) {
@@ -207,68 +216,79 @@ void MPCQuadrupedalWalking::resetContactPlacements(const Eigen::VectorXd& q) {
   else if (current_step_ == 1) {
     // retrive the initial contact position from the first step (stance legs: LF, LH, RF)
     // RH
-    contact_positions_[3] << contact_positions_[1].coeff(0), // x : same as LH
-                             contact_positions_[2].coeff(1), // y : same as RF
-                             contact_positions_[1].coeff(2); // z : same as LH
+    contact_positions_local_[3] << contact_positions_local_[1].coeff(0), // x : same as LH 
+                                   contact_positions_local_[2].coeff(1), // y : same as RF
+                                   contact_positions_local_[1].coeff(2); // z : same as LH
+    contact_positions_[3].noalias() = R_ * contact_positions_local_[3] + q.template head<3>();
   }
   else if (current_step_ == 2) {
     // retrive the initial contact position from the first step (stance legs: LF, LH, RH)
     // RF
-    contact_positions_[2] << contact_positions_[0].coeff(0), // x : same as LF 
-                             contact_positions_[3].coeff(1), // y : same as RH
-                             contact_positions_[0].coeff(2); // z : same as LF
+    contact_positions_local_[2] << contact_positions_local_[0].coeff(0), // x : same as LF 
+                                   contact_positions_local_[3].coeff(1), // y : same as RH
+                                   contact_positions_local_[0].coeff(2); // z : same as LF
+    contact_positions_[2].noalias() = R_ * contact_positions_local_[2] + q.template head<3>();
   }
   else if (current_step_%4 == 1) {
     // retrive the previous contact positions from the current step (stance legs: LF, LH, RF)
     // RH
-    contact_positions_[3] << contact_positions_[1].coeff(0)-0.5*step_length_, // x : same as LH-0.5*step_length_ 
-                             contact_positions_[2].coeff(1), // y : same as RF
-                             contact_positions_[1].coeff(2); // z : same as LH
+    contact_positions_local_[3] << contact_positions_local_[1].coeff(0), // x : same as LH 
+                                   contact_positions_local_[2].coeff(1), // y : same as RF
+                                   contact_positions_local_[1].coeff(2); // z : same as LH
+    contact_positions_local_[3].noalias() -= 0.5*step_length_; 
+    contact_positions_[3].noalias() = R_ * contact_positions_local_[3] + q.template head<3>();
   }
   else if (current_step_%4 == 2) {
     // retrive the previous contact positions from the current step (stance legs: LF, LH, RF)
     // RF
-    contact_positions_[2] << contact_positions_[0].coeff(0)-0.5*step_length_, // x : same as LF-0.5*step_length_ 
-                             contact_positions_[3].coeff(1), // y : same as RH
-                             contact_positions_[0].coeff(2); // z : same as LF
+    contact_positions_local_[2] << contact_positions_local_[0].coeff(0), // x : same as LF 
+                                   contact_positions_local_[3].coeff(1), // y : same as RH
+                                   contact_positions_local_[0].coeff(2); // z : same as LF
+    contact_positions_local_[2].noalias() -= 0.5*step_length_; 
+    contact_positions_[2].noalias() = R_ * contact_positions_local_[2] + q.template head<3>();
   }
   else if (current_step_%4 == 3) {
     // retrive the previous contact positions from the current step (stance legs: LF, RF, RH)
     // LH
-    contact_positions_[1] << contact_positions_[3].coeff(0)-0.5*step_length_, // x : same as RH-0.5*step_length_
-                             contact_positions_[0].coeff(1), // y : same as LF
-                             contact_positions_[3].coeff(2); // z : same as RH
+    contact_positions_local_[1] << contact_positions_local_[3].coeff(0), // x : same as RH 
+                                   contact_positions_local_[0].coeff(1), // y : same as LF
+                                   contact_positions_local_[3].coeff(2); // z : same as RH
+    contact_positions_local_[1].noalias() -= 0.5*step_length_; 
+    contact_positions_[1].noalias() = R_ * contact_positions_local_[1] + q.template head<3>();
   }
   else {
     // retrive the previous contact positions from the current step (stance legs: LH, RF, RH)
     // LF
-    contact_positions_[0] << contact_positions_[2].coeff(0)-0.5*step_length_, // x : same as RF-0.5*step_length_
-                             contact_positions_[1].coeff(1), // y : same as LH
-                             contact_positions_[2].coeff(2); // z : same as RF
+    contact_positions_local_[0] << contact_positions_local_[2].coeff(0), // x : same as RF
+                                   contact_positions_local_[1].coeff(1), // y : same as LH
+                                   contact_positions_local_[2].coeff(2); // z : same as RF
+    contact_positions_local_[0].noalias() -= 0.5*step_length_; 
+    contact_positions_[0].noalias() = R_ * contact_positions_local_[0] + q.template head<3>();
   }
   for (int step=current_step_; step<=predict_step_; ++step) {
     if (step == 0) {
       // do nothing (standing)
     }
     else if (step == 1) {
-      contact_positions_[3].coeffRef(0) += 0.5 * step_length_;
+      contact_positions_[3].noalias() += 0.5 * R_ * step_length_;
     }
     else if (step == 2) {
-      contact_positions_[2].coeffRef(0) += 0.5 * step_length_;
+      contact_positions_[2].noalias() += 0.5 * R_ * step_length_;
     }
     else if (step%4 == 1) {
-      contact_positions_[3].coeffRef(0) += step_length_;
+      contact_positions_[3].noalias() += R_ * step_length_;
     }
     else if (step%4 == 2) {
-      contact_positions_[2].coeffRef(0) += step_length_;
+      contact_positions_[2].noalias() += R_ * step_length_;
     }
     else if (step%4 == 3) {
-      contact_positions_[1].coeffRef(0) += step_length_;
+      contact_positions_[1].noalias() += R_ * step_length_;
     }
     else {
-      contact_positions_[0].coeffRef(0) += step_length_;
+      contact_positions_[0].noalias() += R_ * step_length_;
     }
     contact_sequence_->setContactPlacements(step-current_step_, contact_positions_);
+    R_ = (R_yaw_rate_cmd_ * R_).eval();
   }
 }
 

@@ -3,10 +3,10 @@
 [![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="190"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="190"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="190"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="190"> 
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="180"> 
 
 ## Features for efficient optimal control of robotic systems
 - Direct multiple-shooting method based on the **lifted contact dynamics** / **inverse dynamics**.
@@ -191,6 +191,6 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 ## Related publications
 - S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021
 - S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
-- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021
+- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, American Control Conference (ACC) (accepted), https://arxiv.org/abs/2102.09731, 2022
 - S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021
 - H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019

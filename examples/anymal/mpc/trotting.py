@@ -15,10 +15,13 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-step_length = 0.15
+step_length = np.array([0.15, 0, 0]) 
 step_height = 0.1
 swing_time = 0.25
 initial_lift_time = 0.5
+
+vcom_cmd = step_length / swing_time
+yaw_cmd = 0
 
 cost = robotoc.CostFunction()
 q_standing = np.array([0, 0, 0.4842, 0, 0, 0, 1, 
@@ -87,10 +90,8 @@ cost.push_back(LH_cost)
 cost.push_back(RF_cost)
 cost.push_back(RH_cost)
 
-com_ref0 = (x3d_LF + x3d_LH + x3d_RF + x3d_RH) / 4
-com_ref0[2] = robot.com()[2]
-vcom_ref = np.zeros(3)
-vcom_ref[0] = 0.5 * step_length / swing_time
+com_ref0 = robot.com()
+vcom_ref = 0.5 * step_length / swing_time
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_com_weight(np.full(3, 1.0e04))
@@ -112,13 +113,13 @@ constraints.push_back(joint_torques_upper)
 
 
 T = 0.5
-N = 20
+N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
 nthreads = 4
 mpc = robotoc.MPCQuadrupedalTrotting(ocp, nthreads)
-mpc.set_gait_pattern(step_length, step_height, swing_time, initial_lift_time)
+mpc.set_gait_pattern(vcom_cmd, yaw_cmd, swing_time, initial_lift_time)
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0

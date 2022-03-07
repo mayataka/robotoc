@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
                        contact_frames, contact_types, baumgarte_time_step);
 
   const double dt = 0.01;
-  const double jump_length = 0.5;
+  const Eigen::Vector3d jump_length = {0.5, 0, 0};
   const double jump_height = 0.1;
   const double flying_up_time = 0.15;
   const double flying_down_time = flying_up_time;
@@ -99,10 +99,9 @@ int main(int argc, char *argv[]) {
   const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
   const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
 
-  Eigen::Vector3d com_ref0_flying_up = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
-  com_ref0_flying_up(2) = robot.CoM()(2);
-  Eigen::Vector3d vcom_ref_flying_up = Eigen::Vector3d::Zero();
-  vcom_ref_flying_up << (0.5*jump_length/flying_up_time), 0, (jump_height/flying_up_time);
+  const Eigen::Vector3d com_ref0_flying_up = robot.CoM();
+  const Eigen::Vector3d vcom_ref_flying_up = 0.5*jump_length/flying_up_time 
+                                            + Eigen::Vector3d({0, 0, jump_height/flying_up_time});
   auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_flying_up, vcom_ref_flying_up, 
                                                                      t0+ground_time, flying_up_time, 
                                                                      flying_down_time+2*ground_time, false);
@@ -110,9 +109,7 @@ int main(int argc, char *argv[]) {
   com_cost_flying_up->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_flying_up);
 
-  Eigen::Vector3d com_ref0_landed = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
-  com_ref0_landed(0) += jump_length;
-  com_ref0_landed(2) = robot.CoM()(2);
+  const Eigen::Vector3d com_ref0_landed = robot.CoM() + jump_length;
   const Eigen::Vector3d vcom_ref_landed = Eigen::Vector3d::Zero();
   auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_landed, vcom_ref_landed, 
                                                                   t0+ground_time+flying_time, ground_time, 
@@ -154,10 +151,10 @@ int main(int argc, char *argv[]) {
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time);
 
-  contact_positions[0].coeffRef(0) += jump_length;
-  contact_positions[1].coeffRef(0) += jump_length;
-  contact_positions[2].coeffRef(0) += jump_length;
-  contact_positions[3].coeffRef(0) += jump_length;
+  contact_positions[0].noalias() += jump_length;
+  contact_positions[1].noalias() += jump_length;
+  contact_positions[2].noalias() += jump_length;
+  contact_positions[3].noalias() += jump_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);

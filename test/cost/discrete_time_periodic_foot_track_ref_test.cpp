@@ -16,7 +16,7 @@ protected:
     srand((unsigned int) time(0));
     std::random_device rnd;
     p0 = Eigen::Vector3d::Random();
-    step_length = std::abs(Eigen::VectorXd::Random(1)[0]);
+    step_length = Eigen::Vector3d::Random();
     step_height = std::abs(Eigen::VectorXd::Random(1)[0]);
 
     start_phase = 2;
@@ -32,8 +32,8 @@ protected:
   virtual void TearDown() {
   }
 
-  Eigen::Vector3d p0;
-  double step_length, step_height;
+  Eigen::Vector3d p0, step_length;
+  double step_height;
   int start_phase, end_phase, active_phases, inactive_phases;
   GridInfo grid_info;
 };
@@ -54,7 +54,7 @@ TEST_F(DiscreteTimePeriodicFootTrackRefTest, first_mode_half_true) {
   const double rate1 = static_cast<double>(grid_info.grid_count_in_phase) 
                         / static_cast<double>(grid_info.N_phase);
   p_ref = p0;
-  p_ref(0) += 0.5 * rate1 * step_length;
+  p_ref += 0.5 * rate1 * step_length;
   if (rate1 < 0.5) {
     p_ref(2) += 2 * step_height * rate1;
   }
@@ -73,7 +73,7 @@ TEST_F(DiscreteTimePeriodicFootTrackRefTest, first_mode_half_true) {
   const double rate2 = static_cast<double>(grid_info.grid_count_in_phase) 
                         / static_cast<double>(grid_info.N_phase);
   p_ref = p0;
-  p_ref(0) += ((steps-0.5) + rate2) * step_length;
+  p_ref += ((steps-0.5) + rate2) * step_length;
   if (rate2 < 0.5) {
     p_ref(2) += 2 * step_height * rate2;
   }
@@ -103,7 +103,7 @@ TEST_F(DiscreteTimePeriodicFootTrackRefTest, first_mode_half_false) {
   const double rate1 = static_cast<double>(grid_info.grid_count_in_phase) 
                         / static_cast<double>(grid_info.N_phase);
   p_ref = p0;
-  p_ref(0) += rate1 * step_length;
+  p_ref += rate1 * step_length;
   if (rate1 < 0.5) {
     p_ref(2) += 2 * step_height * rate1;
   }
@@ -122,7 +122,7 @@ TEST_F(DiscreteTimePeriodicFootTrackRefTest, first_mode_half_false) {
   const double rate2 = static_cast<double>(grid_info.grid_count_in_phase) 
                         / static_cast<double>(grid_info.N_phase);
   p_ref = p0;
-  p_ref(0) += (steps + rate2) * step_length;
+  p_ref += (steps + rate2) * step_length;
   if (rate2 < 0.5) {
     p_ref(2) += 2 * step_height * rate2;
   }
