@@ -129,12 +129,12 @@ private:
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_standing_, cs_lf_, cs_lh_, cs_rf_, cs_rh_;
-  std::vector<Eigen::Vector3d> contact_positions_, contact_positions_local_;
-  Eigen::Vector3d vcom_cmd_, step_length_;
-  Eigen::Matrix3d R_, R_yaw_rate_cmd_;
-  Eigen::Quaterniond quat_;
+  std::vector<Eigen::Vector3d> contact_positions_, contact_positions_curr_, 
+                               contact_positions_prev_;
+  Eigen::Vector3d vcom_cmd_, step_length_, com_, com_curr_, com_prev_;
+  Eigen::Matrix3d R_, R_yaw_cmd_;
   double step_height_, swing_time_, initial_lift_time_, 
-         T_, dt_, dtm_, ts_last_, eps_;
+         t_, T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;
 
   bool addStep(const double t);

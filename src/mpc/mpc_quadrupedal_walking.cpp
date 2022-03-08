@@ -22,15 +22,19 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp,
     cs_rf_(ocp.robot().createContactStatus()),
     cs_rh_(ocp.robot().createContactStatus()),
     contact_positions_(),
-    contact_positions_local_(),
+    contact_positions_curr_(),
+    contact_positions_prev_(),
     vcom_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
+    com_(Eigen::Vector3d::Zero()),
+    com_curr_(Eigen::Vector3d::Zero()),
+    com_prev_(Eigen::Vector3d::Zero()),
     R_(Eigen::Matrix3d::Identity()),
-    R_yaw_rate_cmd_(Eigen::Matrix3d::Identity()),
-    quat_(Eigen::Quaterniond::Identity()),
+    R_yaw_cmd_(Eigen::Matrix3d::Identity()),
     step_height_(0),
     swing_time_(0),
     initial_lift_time_(0),
+    t_(0),
     T_(ocp.T()),
     dt_(ocp.T()/ocp.N()),
     dtm_(1.5*(ocp.T()/ocp.N())),
@@ -76,9 +80,9 @@ void MPCQuadrupedalWalking::setGaitPattern(const Eigen::Vector3d& vcom_cmd,
   swing_time_ = swing_time;
   initial_lift_time_ = initial_lift_time;
   const double yaw_cmd = swing_time * yaw_rate_cmd;
-  R_yaw_rate_cmd_ << std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
-                     std::sin(yaw_cmd), std::cos(yaw_cmd),  0,
-                     0, 0, 1;
+  R_yaw_cmd_ << std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
+                std::sin(yaw_cmd), std::cos(yaw_cmd),  0,
+                0, 0, 1;
 }
 
 
@@ -105,7 +109,6 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
     add_step = addStep(t);
   }
   resetContactPlacements(q);
-
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   Eigen::Vector3d f_init;
@@ -134,6 +137,8 @@ void MPCQuadrupedalWalking::updateSolution(const double t, const double dt,
     if (ts.front()+eps_ < t+dt) {
       ts_last_ = ts.front();
       ocp_solver_.extrapolateSolutionInitialPhase(t);
+      contact_positions_prev_ = contact_positions_curr_;
+      com_prev_ = com_curr_;
       contact_sequence_->pop_front();
       remove_step = true;
       ++current_step_;
@@ -200,72 +205,51 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
 
 void MPCQuadrupedalWalking::resetContactPlacements(const Eigen::VectorXd& q) {
   robot_.updateFrameKinematics(q);
-  quat_ = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5));
-  R_ = quat_.toRotationMatrix();
+  R_ = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   contact_positions_.clear();
-  contact_positions_local_.clear();
   for (const auto frame : robot_.pointContactFrames()) {
     contact_positions_.push_back(robot_.framePosition(frame));
-    contact_positions_local_.push_back(
-        R_.transpose() * (robot_.framePosition(frame) - q.template head<3>()));
   }
+  com_ = robot_.CoM();
+  contact_positions_curr_ = contact_positions_;
+  com_curr_ = com_;
   // frames = [LF, LH, RF, RH] (0, 1, 2, 3)
   if (current_step_ == 0) {
-    // do nothing (standing)
+    contact_positions_prev_ = contact_positions_curr_;
+    com_prev_ = com_;
   }
   else if (current_step_ == 1) {
     // retrive the initial contact position from the first step (stance legs: LF, LH, RF)
     // RH
-    contact_positions_local_[3] << contact_positions_local_[1].coeff(0), // x : same as LH 
-                                   contact_positions_local_[2].coeff(1), // y : same as RF
-                                   contact_positions_local_[1].coeff(2); // z : same as LH
-    contact_positions_[3].noalias() = R_ * contact_positions_local_[3] + q.template head<3>();
+    contact_positions_[3] = contact_positions_prev_[3];
   }
   else if (current_step_ == 2) {
     // retrive the initial contact position from the first step (stance legs: LF, LH, RH)
     // RF
-    contact_positions_local_[2] << contact_positions_local_[0].coeff(0), // x : same as LF 
-                                   contact_positions_local_[3].coeff(1), // y : same as RH
-                                   contact_positions_local_[0].coeff(2); // z : same as LF
-    contact_positions_[2].noalias() = R_ * contact_positions_local_[2] + q.template head<3>();
+    contact_positions_[2] = contact_positions_prev_[2];
   }
   else if (current_step_%4 == 1) {
     // retrive the previous contact positions from the current step (stance legs: LF, LH, RF)
     // RH
-    contact_positions_local_[3] << contact_positions_local_[1].coeff(0), // x : same as LH 
-                                   contact_positions_local_[2].coeff(1), // y : same as RF
-                                   contact_positions_local_[1].coeff(2); // z : same as LH
-    contact_positions_local_[3].noalias() -= 0.5*step_length_; 
-    contact_positions_[3].noalias() = R_ * contact_positions_local_[3] + q.template head<3>();
+    contact_positions_[3] = contact_positions_prev_[3];
   }
   else if (current_step_%4 == 2) {
     // retrive the previous contact positions from the current step (stance legs: LF, LH, RF)
     // RF
-    contact_positions_local_[2] << contact_positions_local_[0].coeff(0), // x : same as LF 
-                                   contact_positions_local_[3].coeff(1), // y : same as RH
-                                   contact_positions_local_[0].coeff(2); // z : same as LF
-    contact_positions_local_[2].noalias() -= 0.5*step_length_; 
-    contact_positions_[2].noalias() = R_ * contact_positions_local_[2] + q.template head<3>();
+    contact_positions_[2] = contact_positions_prev_[2];
   }
   else if (current_step_%4 == 3) {
     // retrive the previous contact positions from the current step (stance legs: LF, RF, RH)
     // LH
-    contact_positions_local_[1] << contact_positions_local_[3].coeff(0), // x : same as RH 
-                                   contact_positions_local_[0].coeff(1), // y : same as LF
-                                   contact_positions_local_[3].coeff(2); // z : same as RH
-    contact_positions_local_[1].noalias() -= 0.5*step_length_; 
-    contact_positions_[1].noalias() = R_ * contact_positions_local_[1] + q.template head<3>();
+    contact_positions_[1] = contact_positions_prev_[1];
   }
   else {
     // retrive the previous contact positions from the current step (stance legs: LH, RF, RH)
     // LF
-    contact_positions_local_[0] << contact_positions_local_[2].coeff(0), // x : same as RF
-                                   contact_positions_local_[1].coeff(1), // y : same as LH
-                                   contact_positions_local_[2].coeff(2); // z : same as RF
-    contact_positions_local_[0].noalias() -= 0.5*step_length_; 
-    contact_positions_[0].noalias() = R_ * contact_positions_local_[0] + q.template head<3>();
+    contact_positions_[0] = contact_positions_prev_[0];
   }
   for (int step=current_step_; step<=predict_step_; ++step) {
+    R_ = (R_yaw_cmd_ * R_).eval();
     if (step == 0) {
       // do nothing (standing)
     }
@@ -288,7 +272,6 @@ void MPCQuadrupedalWalking::resetContactPlacements(const Eigen::VectorXd& q) {
       contact_positions_[0].noalias() += R_ * step_length_;
     }
     contact_sequence_->setContactPlacements(step-current_step_, contact_positions_);
-    R_ = (R_yaw_rate_cmd_ * R_).eval();
   }
 }
 

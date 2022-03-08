@@ -16,7 +16,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-step_length = np.array([0.15, 0, 0]) 
+step_length = np.array([0.1, 0, 0]) 
 # step_length = np.array([-0.1, 0, 0]) 
 # step_length = np.array([0, 0.1, 0]) 
 # step_length = np.array([0.1, -0.1, 0]) 
@@ -27,7 +27,6 @@ initial_lift_time = 0.5
 
 vcom_cmd = step_length / swing_time
 yaw_cmd = 0
-
 
 cost = robotoc.CostFunction()
 q_standing = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
@@ -100,7 +99,7 @@ com_ref0 = robot.com()
 vcom_ref = 0.5 * step_length / swing_time
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e04))
+com_cost.set_com_weight(np.full(3, 1.0e02))
 cost.push_back(com_cost)
 
 constraints           = robotoc.Constraints(barrier=1.0e-03)
@@ -110,16 +109,19 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
+mu = 0.5
+friction_cone         = robotoc.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
 constraints.push_back(joint_velocity_lower)
 constraints.push_back(joint_velocity_upper)
 constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
+constraints.push_back(friction_cone)
 
 
 T = 0.5
-N = 20
+N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
@@ -143,5 +145,5 @@ sim_end_time = 5.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')
