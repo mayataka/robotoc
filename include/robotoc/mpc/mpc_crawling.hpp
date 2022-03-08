@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_
-#define ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_
+#ifndef ROBOTOC_MPC_CRAWLING_HPP_
+#define ROBOTOC_MPC_CRAWLING_HPP_
 
 #include <vector>
 #include <memory>
@@ -15,17 +15,16 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
-#include "robotoc/mpc/trotting_foot_step_planner.hpp"
-#include "robotoc/cost/discrete_time_com_ref.hpp"
+#include "robotoc/mpc/crawling_foot_step_planner.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class MPCQuadrupedalTrotting
-/// @brief MPC solver for the trotting gait of quadrupeds. 
+/// @class MPCCrawling
+/// @brief MPC solver for the crawling gait of quadrupeds. 
 ///
-class MPCQuadrupedalTrotting {
+class MPCCrawling {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -33,37 +32,37 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalTrotting(const OCP& ocp, const int nthreads);
+  MPCCrawling(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCQuadrupedalTrotting();
+  MPCCrawling();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCQuadrupedalTrotting();
+  ~MPCCrawling();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCQuadrupedalTrotting(const MPCQuadrupedalTrotting&) = default;
+  MPCCrawling(const MPCCrawling&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCQuadrupedalTrotting& operator=(const MPCQuadrupedalTrotting&) = default;
+  MPCCrawling& operator=(const MPCCrawling&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCQuadrupedalTrotting(MPCQuadrupedalTrotting&&) noexcept = default;
+  MPCCrawling(MPCCrawling&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCQuadrupedalTrotting& operator=(MPCQuadrupedalTrotting&&) noexcept = default;
+  MPCCrawling& operator=(MPCCrawling&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -118,29 +117,23 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCQuadrupedalTrotting::updateSolution() must be computed.  
+  /// MPCCrawling::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
 
-  void setDiscreteTimeCoMRef(const std::shared_ptr<DiscreteTimeCoMRef>& com_ref) {
-    com_ref_ = com_ref;
-  }
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<TrottingFootStepPlanner> foot_step_planner_;
+  std::shared_ptr<CrawlingFootStepPlanner> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
-  ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
+  ContactStatus cs_standing_, cs_lf_, cs_lh_, cs_rf_, cs_rh_;
   Eigen::Vector3d vcom_, step_length_;
   double step_height_, swing_time_, initial_lift_time_, 
-         T_, dt_, dtm_, ts_last_, eps_;
+         t_, T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;
-
-  std::shared_ptr<DiscreteTimeCoMRef> com_ref_;
 
   bool addStep(const double t);
 
@@ -150,4 +143,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_ 
+#endif // ROBOTOC_MPC_CRAWLING_HPP_ 

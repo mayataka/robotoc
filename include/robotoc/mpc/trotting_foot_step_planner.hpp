@@ -21,9 +21,9 @@ class TrottingFootStepPlanner {
 public:
   ///
   /// @brief Constructs the planner.
-  /// @param[in] robot robot model. 
+  /// @param[in] quadeuped_robot Quadruped robot model. 
   ///
-  TrottingFootStepPlanner(const Robot& robot);
+  TrottingFootStepPlanner(const Robot& quadeuped_robot);
 
   ///
   /// @brief Default constructor. 

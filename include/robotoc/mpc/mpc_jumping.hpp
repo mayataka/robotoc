@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_QUADRUPEDAL_JUMPING_HPP_
-#define ROBOTOC_MPC_QUADRUPEDAL_JUMPING_HPP_
+#ifndef ROBOTOC_MPC_JUMPING_HPP_
+#define ROBOTOC_MPC_JUMPING_HPP_
 
 #include <vector>
 #include <memory>
@@ -14,15 +14,17 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/robot/se3.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class MPCQuadrupedalJumping
+/// @class MPCJumping
 /// @brief MPC solver for the jumping control of quadrupeds. 
 ///
-class MPCQuadrupedalJumping {
+class MPCJumping {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -30,37 +32,37 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalJumping(const OCP& ocp, const int nthreads);
+  MPCJumping(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCQuadrupedalJumping();
+  MPCJumping();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCQuadrupedalJumping();
+  ~MPCJumping();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCQuadrupedalJumping(const MPCQuadrupedalJumping&) = default;
+  MPCJumping(const MPCJumping&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCQuadrupedalJumping& operator=(const MPCQuadrupedalJumping&) = default;
+  MPCJumping& operator=(const MPCJumping&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCQuadrupedalJumping(MPCQuadrupedalJumping&&) noexcept = default;
+  MPCJumping(MPCJumping&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCQuadrupedalJumping& operator=(MPCQuadrupedalJumping&&) noexcept = default;
+  MPCJumping& operator=(MPCJumping&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -134,7 +136,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCQuadrupedalJumping::updateSolution() must be computed.  
+  /// MPCJumping::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -151,6 +153,9 @@ private:
   std::vector<Eigen::Vector3d> contact_positions_, contact_positions_goal_, 
                                contact_positions_store_, 
                                contact_positions_local_;
+  aligned_vector<SE3> contact_placements_, contact_placements_goal_,
+                      contact_placements_store_, 
+                      contact_placements_local_;
   Eigen::Matrix3d R_jump_yaw_;
   robotoc::Solution s_;
   Eigen::Vector3d jump_length_;
@@ -168,4 +173,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_QUADRUPEDAL_JUMPING_HPP_ 
+#endif // ROBOTOC_MPC_JUMPING_HPP_ 

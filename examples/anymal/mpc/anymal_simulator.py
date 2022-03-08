@@ -29,7 +29,7 @@ class ANYmalSimulator(robotoc_sim.QuadrupedalSimulator):
         q[17] = pybullet.getJointState(pybullet_robot, 17)[0]
         q[18] = pybullet.getJointState(pybullet_robot, 18)[0]
         # Base
-        baseVel, baseAngVel = pybullet.getBaseVelocity(pybullet_robot)
+        baseVel, baseAngVel = self.get_body_local_velocity(pybullet_robot)
         v[0:3] = baseVel
         v[3:6] = baseAngVel
         # LF 

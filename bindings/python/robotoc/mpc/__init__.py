@@ -1,3 +1,3 @@
-from .mpc_quadrupedal_walking import *
-from .mpc_quadrupedal_trotting import *
-from .mpc_quadrupedal_jumping import *
+from .mpc_crawling import *
+from .mpc_trotting import *
+from .mpc_jumping import *

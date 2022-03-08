@@ -105,7 +105,7 @@ ocp = robotoc.OCP(robot, cost, constraints, sto_cost, sto_constraints,
                   T, N, max_steps)
 
 nthreads = 4
-mpc = robotoc.MPCQuadrupedalJumping(ocp, nthreads)
+mpc = robotoc.MPCJumping(ocp, nthreads)
 mpc.set_jump_pattern(jump_length=jump_length, jump_yaw=jump_yaw,
                      flying_time=0.3, min_flying_time=0.2, 
                      ground_time=0.3, min_ground_time=0.2)

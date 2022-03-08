@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_quadrupedal_walking.hpp"
+#include "robotoc/mpc/mpc_trotting.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -9,24 +9,20 @@
 
 namespace robotoc {
 
-MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp, 
-                                             const int nthreads)
-  : foot_step_planner_(std::make_shared<CrawlingFootStepPlanner>(ocp.robot())),
+MPCTrotting::MPCTrotting(const OCP& ocp, const int nthreads)
+  : foot_step_planner_(std::make_shared<TrottingFootStepPlanner>(ocp.robot())),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(
         ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
     solver_options_(SolverOptions::defaultOptions()),
     cs_standing_(ocp.robot().createContactStatus()),
-    cs_lf_(ocp.robot().createContactStatus()),
-    cs_lh_(ocp.robot().createContactStatus()),
-    cs_rf_(ocp.robot().createContactStatus()),
-    cs_rh_(ocp.robot().createContactStatus()),
+    cs_lfrh_(ocp.robot().createContactStatus()),
+    cs_rflh_(ocp.robot().createContactStatus()),
     vcom_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     step_height_(0),
     swing_time_(0),
     initial_lift_time_(0),
-    t_(0),
     T_(ocp.T()),
     dt_(ocp.T()/ocp.N()),
     dtm_(ocp.T()/ocp.N()),
@@ -36,25 +32,22 @@ MPCQuadrupedalWalking::MPCQuadrupedalWalking(const OCP& ocp,
     current_step_(0),
     predict_step_(0) {
   cs_standing_.activateContacts({0, 1, 2, 3});
-  cs_lf_.activateContacts({1, 2, 3});
-  cs_lh_.activateContacts({0, 2, 3});
-  cs_rf_.activateContacts({0, 1, 3});
-  cs_rh_.activateContacts({0, 1, 2});
+  cs_lfrh_.activateContacts({0, 3});
+  cs_rflh_.activateContacts({1, 2});
 }
 
 
-MPCQuadrupedalWalking::MPCQuadrupedalWalking() {
+MPCTrotting::MPCTrotting() {
 }
 
 
-MPCQuadrupedalWalking::~MPCQuadrupedalWalking() {
+MPCTrotting::~MPCTrotting() {
 }
 
 
-void MPCQuadrupedalWalking::setGaitPattern(const Eigen::Vector3d& vcom, 
-                                           const double yaw_rate,
-                                           const double swing_time,
-                                           const double initial_lift_time) {
+void MPCTrotting::setGaitPattern(const Eigen::Vector3d& vcom, 
+                                 const double yaw_rate, const double swing_time,
+                                 const double initial_lift_time) {
   try {
     if (swing_time <= 0) {
       throw std::out_of_range("invalid value: swing_time must be positive!");
@@ -75,9 +68,9 @@ void MPCQuadrupedalWalking::setGaitPattern(const Eigen::Vector3d& vcom,
 }
 
 
-void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v, 
-                                 const SolverOptions& solver_options) {
+void MPCTrotting::init(const double t, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, 
+                       const SolverOptions& solver_options) {
   try {
     if (t >= initial_lift_time_) {
       throw std::out_of_range(
@@ -90,7 +83,6 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
   }
   current_step_ = 0;
   predict_step_ = 0;
-  // Init contact status
   contact_sequence_->initContactSequence(cs_standing_);
   bool add_step = addStep(t);
   while (add_step) {
@@ -106,15 +98,14 @@ void MPCQuadrupedalWalking::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCQuadrupedalWalking::setSolverOptions(
-    const SolverOptions& solver_options) {
+void MPCTrotting::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCQuadrupedalWalking::updateSolution(const double t, const double dt,
-                                           const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v) {
+void MPCTrotting::updateSolution(const double t, const double dt,
+                                 const Eigen::VectorXd& q, 
+                                 const Eigen::VectorXd& v) {
   assert(dt > 0);
   const bool add_step = addStep(t);
   const auto ts = contact_sequence_->eventTimes();
@@ -133,26 +124,26 @@ void MPCQuadrupedalWalking::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCQuadrupedalWalking::getInitialControlInput() const {
+const Eigen::VectorXd& MPCTrotting::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-double MPCQuadrupedalWalking::KKTError(const double t, const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v) {
+double MPCTrotting::KKTError(const double t, const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCQuadrupedalWalking::KKTError() const {
+double MPCTrotting::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-bool MPCQuadrupedalWalking::addStep(const double t) {
+bool MPCTrotting::addStep(const double t) {
   if (predict_step_ == 0) {
     if (initial_lift_time_ < t+T_-dtm_) {
-      contact_sequence_->push_back(cs_rh_, initial_lift_time_);
+      contact_sequence_->push_back(cs_lfrh_, initial_lift_time_);
       ++predict_step_;
       return true;
     }
@@ -164,17 +155,11 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
       tt = ts.back() + swing_time_;
     }
     if (tt < t+T_-dtm_) {
-      if (predict_step_%4 == 1) {
-        contact_sequence_->push_back(cs_rf_, tt);
+      if (predict_step_%2 != 0) {
+        contact_sequence_->push_back(cs_rflh_, tt);
       }
-      else if (predict_step_%4 == 2) {
-        contact_sequence_->push_back(cs_lh_, tt);
-      }
-      else if (predict_step_%4 == 3) {
-        contact_sequence_->push_back(cs_lf_, tt);
-      }
-      else { // predict_step_%4 == 0
-        contact_sequence_->push_back(cs_rh_, tt);
+      else {
+        contact_sequence_->push_back(cs_lfrh_, tt);
       }
       ++predict_step_;
       return true;
@@ -184,13 +169,24 @@ bool MPCQuadrupedalWalking::addStep(const double t) {
 }
 
 
-void MPCQuadrupedalWalking::resetContactPlacements(const Eigen::VectorXd& q) {
+void MPCTrotting::resetContactPlacements(const Eigen::VectorXd& q) {
   const bool success = foot_step_planner_->plan(q, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases()+1);
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 
                                             foot_step_planner_->contactPosition(phase+1));
   }
+  // std::cout << contact_sequence_->contactStatus(0) << std::endl;
+  // std::cout << foot_step_planner_ << std::endl;
+  // const double first_rate 
+  //     = std::max(((t_-initial_lift_time_-(current_step_-1)*swing_time_) / swing_time_), 0.0);
+  // const double last_rate 
+  //     = std::max(((initial_lift_time_+predict_step_*swing_time_-t_-T_) / swing_time_), 0.0);
+  // std::cout << "first_rate: " << first_rate << std::endl;
+  // std::cout << "last_rate: " << last_rate << std::endl;
+  // std::cout << "com_first: " << foot_step_planner_->com(0).transpose() << std::endl;
+  // std::cout << "com_last: " << foot_step_planner_->com(contact_sequence_->numContactPhases()+1).transpose() << std::endl;
+  // com_ref_->setCoMRef(contact_sequence_, com_prev_, com_, first_rate, last_rate);
 }
 
 } // namespace robotoc 

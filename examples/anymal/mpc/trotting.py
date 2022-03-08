@@ -121,7 +121,7 @@ max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
 nthreads = 4
-mpc = robotoc.MPCQuadrupedalTrotting(ocp, nthreads)
+mpc = robotoc.MPCTrotting(ocp, nthreads)
 mpc.set_gait_pattern(vcom_cmd, yaw_cmd, swing_time, initial_lift_time)
 q = q_standing
 v = np.zeros(robot.dimv())
