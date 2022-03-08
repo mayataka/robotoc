@@ -21,11 +21,10 @@ class DiscreteTimeCoMRef : public TimeVaryingCoMRefBase {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] com_position_to_contact_position Relative contact positions 
+  /// @param[in] com_to_contact_position Relative contact positions 
   /// from the CoM position position.
   ///
-  DiscreteTimeCoMRef(
-      const std::vector<Eigen::Vector3d>& com_position_to_contact_position);
+  DiscreteTimeCoMRef(const std::vector<Eigen::Vector3d>& com_to_contact_position);
 
   ///
   /// @brief Destructor. 
@@ -63,7 +62,7 @@ public:
   bool isActive(const GridInfo& grid_info) const override;
 
 private:
-  std::vector<Eigen::Vector3d> com_position_, com_position_to_foot_position_;
+  std::vector<Eigen::Vector3d> com_position_, com_to_contact_position_;
   std::vector<bool> has_inactive_contacts_;
   double first_rate_, last_rate_;
   int num_contact_phases_;

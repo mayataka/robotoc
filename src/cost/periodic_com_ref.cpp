@@ -23,6 +23,21 @@ PeriodicCoMRef::~PeriodicCoMRef() {
 }
 
 
+void PeriodicCoMRef::setCoMRef(const Eigen::Vector3d com_ref0, 
+                               const Eigen::Vector3d vcom_ref, const double t0, 
+                               const double period_active, 
+                               const double period_inactive, 
+                               const bool is_first_move_half) {
+  com_ref0_ = com_ref0;
+  vcom_ref_ = vcom_ref;
+  t0_ = t0;
+  period_active_ = period_active;
+  period_inactive_ = period_inactive;
+  period_ =  period_active+period_inactive;
+  is_first_move_half_ = is_first_move_half;
+}
+
+
 void PeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
                                     Eigen::VectorXd& com_ref) const {
   if (grid_info.t < t0_+period_active_) {

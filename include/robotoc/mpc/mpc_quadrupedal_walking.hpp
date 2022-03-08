@@ -15,6 +15,7 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/mpc/crawling_foot_step_planner.hpp"
 
 
 namespace robotoc {
@@ -65,12 +66,12 @@ public:
 
   ///
   /// @brief Sets the gait pattern. 
-  /// @param[in] vcom_cmd Center-of-mass velocity command. 
-  /// @param[in] yaw_rate_cmd Yaw-rate command. 
+  /// @param[in] vcom Center-of-mass velocity. 
+  /// @param[in] yaw_rate Yaw-rate. 
   /// @param[in] swing_time Swing time of the gait. 
   /// @param[in] initial_lift_time Start time of the gait. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& vcom_cmd, const double yaw_rate_cmd,
+  void setGaitPattern(const Eigen::Vector3d& vcom, const double yaw_rate,
                       const double swing_time, const double initial_lift_time);
 
   ///
@@ -124,15 +125,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Robot robot_;
+  std::shared_ptr<CrawlingFootStepPlanner> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_standing_, cs_lf_, cs_lh_, cs_rf_, cs_rh_;
-  std::vector<Eigen::Vector3d> contact_positions_, contact_positions_curr_, 
-                               contact_positions_prev_;
-  Eigen::Vector3d vcom_cmd_, step_length_, com_, com_curr_, com_prev_;
-  Eigen::Matrix3d R_, R_yaw_cmd_;
+  Eigen::Vector3d vcom_, step_length_;
   double step_height_, swing_time_, initial_lift_time_, 
          t_, T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;

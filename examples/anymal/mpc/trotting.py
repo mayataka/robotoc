@@ -127,7 +127,7 @@ q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0
 option_init = robotoc.SolverOptions()
-option_init.max_iter = 5
+option_init.max_iter = 10
 mpc.init(t, q, v, option_init)
 
 option_mpc = robotoc.SolverOptions()

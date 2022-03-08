@@ -18,6 +18,10 @@ PYBIND11_MODULE(periodic_com_ref, m) {
           py::arg("com_ref0"), py::arg("vcom_ref"), py::arg("t0"),
           py::arg("period_active"), py::arg("period_inactive"), 
           py::arg("is_first_move_half"))
+    .def("set_com_ref", &PeriodicCoMRef::setCoMRef,
+          py::arg("com_ref0"), py::arg("vcom_ref"), py::arg("t0"),
+          py::arg("period_active"), py::arg("period_inactive"), 
+          py::arg("is_first_move_half")=false)
     .def("update_com_ref", &PeriodicCoMRef::update_com_ref,
           py::arg("grid_info"), py::arg("com_ref"))
     .def("is_active", &PeriodicCoMRef::isActive,

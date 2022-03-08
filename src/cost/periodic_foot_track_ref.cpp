@@ -26,6 +26,24 @@ PeriodicFootTrackRef::~PeriodicFootTrackRef() {
 }
 
 
+void PeriodicFootTrackRef::setFootTrackRef(const Eigen::Vector3d& x3d0, 
+                                           const Eigen::Vector3d& step_length, 
+                                           const double step_height, 
+                                           const double t0, 
+                                           const double period_swing, 
+                                           const double period_stance, 
+                                           const bool is_first_step_half) {
+  x3d0_ = x3d0;
+  step_length_ = step_length;
+  step_height_ = step_height;
+  t0_ = t0;
+  period_swing_ = period_swing;
+  period_stance_ = period_stance;
+  period_= period_swing+period_stance;
+  is_first_step_half_ = is_first_step_half;
+}
+
+
 void PeriodicFootTrackRef::update_x3d_ref(const GridInfo& grid_info,
                                           Eigen::VectorXd& x3d_ref) const {
   if (grid_info.t < t0_+period_swing_) {

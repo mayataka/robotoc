@@ -6,9 +6,9 @@
 namespace robotoc {
 
 DiscreteTimeCoMRef::DiscreteTimeCoMRef(
-    const std::vector<Eigen::Vector3d>& com_position_to_foot_position)
+    const std::vector<Eigen::Vector3d>& com_to_contact_position)
   : com_position_(), 
-    com_position_to_foot_position_(com_position_to_foot_position),
+    com_to_contact_position_(com_to_contact_position),
     has_inactive_contacts_(),
     num_contact_phases_(1),
     first_rate_(0.0),
@@ -34,7 +34,7 @@ void DiscreteTimeCoMRef::setCoMRef(
     for (int i=0; i<contact_status.maxNumContacts(); ++i) {
       if (contact_status.isContactActive(i)) {
         com_avg.noalias() += contact_status.contactPosition(i);
-        com_avg.noalias() -= com_position_to_foot_position_[i];
+        com_avg.noalias() -= com_to_contact_position_[i];
         ++num_active_contacts;
       }
     }
