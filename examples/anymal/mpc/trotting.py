@@ -94,7 +94,7 @@ com_ref0 = robot.com()
 vcom_ref = 0.5 * step_length / swing_time
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e02))
+com_cost.set_com_weight(np.full(3, 1.0e03))
 cost.push_back(com_cost)
 
 constraints           = robotoc.Constraints(barrier=1.0e-03)

@@ -39,7 +39,7 @@ A moderate value such as several times of the time step of optimal control probl
 Then set the parameters for the optimal control problem of the jumping motion such as the jump length
 ```
 dt = 0.02
-jump_length = 0.5
+jump_length = np.array([0.5, 0, 0])
 flying_time = 0.25
 ground_time = 0.7
 t0 = 0.
@@ -130,8 +130,8 @@ contact_sequence.push_back(contact_status_flying, t0+ground_time, sto=True)
 Then a lift event is appended into the back of the contact sequence.
 The next contact status after touch-down as
 ```
-contact_placements[0].trans = contact_placements[0].trans + np.array([jump_length, 0, 0])
-contact_placements[1].trans = contact_placements[1].trans + np.array([jump_length, 0, 0])
+contact_placements[0].trans = contact_placements[0].trans + jump_length
+contact_placements[1].trans = contact_placements[1].trans + jump_length 
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
 ```
@@ -140,8 +140,8 @@ We further add an impulse event and a lift event as
 ```
 contact_sequence.push_back(contact_status_flying, t0+2*ground_time+flying_time, sto=True)
 
-contact_placements[0].trans = contact_placements[0].trans + np.array([jump_length, 0, 0])
-contact_placements[1].trans = contact_placements[1].trans + np.array([jump_length, 0, 0])
+contact_placements[0].trans = contact_placements[0].trans + jump_length 
+contact_placements[1].trans = contact_placements[1].trans + jump_length 
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_time, sto=True)
 ```

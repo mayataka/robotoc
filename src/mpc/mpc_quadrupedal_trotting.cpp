@@ -143,10 +143,7 @@ void MPCQuadrupedalTrotting::updateSolution(const double t, const double dt,
     }
   }
   resetContactPlacements(q);
-  if (add_step || remove_step) {
-    ocp_solver_.initConstraints(t);
-  }
-  ocp_solver_.solve(t, q, v, false);
+  ocp_solver_.solve(t, q, v, true);
 }
 
 

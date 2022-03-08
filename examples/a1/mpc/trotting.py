@@ -16,7 +16,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-step_length = np.array([0.1, 0, 0]) 
+step_length = np.array([0.15, 0, 0]) 
 # step_length = np.array([-0.1, 0, 0]) 
 # step_length = np.array([0, 0.1, 0]) 
 # step_length = np.array([0.1, -0.1, 0]) 
@@ -99,7 +99,7 @@ com_ref0 = robot.com()
 vcom_ref = 0.5 * step_length / swing_time
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e02))
+com_cost.set_com_weight(np.full(3, 1.0e03))
 cost.push_back(com_cost)
 
 constraints           = robotoc.Constraints(barrier=1.0e-03)
@@ -145,5 +145,5 @@ sim_end_time = 5.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')
