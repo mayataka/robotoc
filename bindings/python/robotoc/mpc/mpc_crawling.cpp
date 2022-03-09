@@ -29,7 +29,8 @@ PYBIND11_MODULE(mpc_crawling, m) {
           static_cast<double (MPCCrawling::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCCrawling::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
-          static_cast<double (MPCCrawling::*)() const>(&MPCCrawling::KKTError));
+          static_cast<double (MPCCrawling::*)() const>(&MPCCrawling::KKTError))
+    .def("get_planner", &MPCCrawling::getPlanner);
 }
 
 } // namespace python

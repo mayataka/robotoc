@@ -29,7 +29,8 @@ PYBIND11_MODULE(mpc_walking, m) {
           static_cast<double (MPCWalking::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCWalking::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
-          static_cast<double (MPCWalking::*)() const>(&MPCWalking::KKTError));
+          static_cast<double (MPCWalking::*)() const>(&MPCWalking::KKTError))
+    .def("get_planner", &MPCWalking::getPlanner);
 }
 
 } // namespace python

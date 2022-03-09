@@ -122,6 +122,8 @@ public:
   ///
   double KKTError() const;
 
+  std::shared_ptr<CrawlingFootStepPlanner> getPlanner();
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

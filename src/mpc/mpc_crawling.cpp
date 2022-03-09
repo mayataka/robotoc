@@ -146,6 +146,11 @@ double MPCCrawling::KKTError() const {
 }
 
 
+std::shared_ptr<CrawlingFootStepPlanner> MPCCrawling::getPlanner() {
+  return foot_step_planner_;
+}
+
+
 bool MPCCrawling::addStep(const double t) {
   if (predict_step_ == 0) {
     if (initial_lift_time_ < t+T_-dtm_) {

@@ -29,7 +29,8 @@ PYBIND11_MODULE(mpc_trotting, m) {
           static_cast<double (MPCTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCTrotting::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
-          static_cast<double (MPCTrotting::*)() const>(&MPCTrotting::KKTError));
+          static_cast<double (MPCTrotting::*)() const>(&MPCTrotting::KKTError))
+    .def("get_planner", &MPCTrotting::getPlanner);
 }
 
 } // namespace python
