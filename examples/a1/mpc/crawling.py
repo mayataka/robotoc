@@ -15,12 +15,8 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-step_length = np.array([0.15, 0, 0]) 
-# step_length = np.array([-0.1, 0, 0]) 
-# step_length = np.array([0, 0.1, 0]) 
-# step_length = np.array([0.1, -0.1, 0]) 
-
-step_height = 0.1
+step_length = np.array([0.2, 0, 0]) 
+step_height = 0.2
 swing_time = 0.25
 initial_lift_time = 0.5
 
@@ -68,23 +64,23 @@ x3d_LF = robot.frame_position(LF_foot_id)
 x3d_LH = robot.frame_position(LH_foot_id)
 x3d_RF = robot.frame_position(RF_foot_id)
 x3d_RH = robot.frame_position(RH_foot_id)
-LF_t0 = initial_lift_time + swing_time 
-LH_t0 = initial_lift_time
-RF_t0 = initial_lift_time
-RH_t0 = initial_lift_time + swing_time 
+LF_t0 = initial_lift_time + 3 * swing_time 
+LH_t0 = initial_lift_time + 2 * swing_time 
+RF_t0 = initial_lift_time + swing_time
+RH_t0 = initial_lift_time
 LF_foot_ref = robotoc.PeriodicFootTrackRef(x3d_LF, step_length, step_height, 
-                                           LF_t0, swing_time, swing_time, False)
+                                           LF_t0, swing_time, 3*swing_time, False)
 LH_foot_ref = robotoc.PeriodicFootTrackRef(x3d_LH, step_length, step_height, 
-                                           LH_t0, swing_time, swing_time, True)
+                                           LH_t0, swing_time, 3*swing_time, False)
 RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d_RF, step_length, step_height, 
-                                           RF_t0, swing_time, swing_time, True)
+                                           RF_t0, swing_time, 3*swing_time, True)
 RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d_RH, step_length, step_height, 
-                                           RH_t0, swing_time, swing_time, False)
+                                           RH_t0, swing_time, 3*swing_time, True)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
 RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
-foot_track_weight = np.full(3, 1.0e04)
+foot_track_weight = np.full(3, 1.0e03)
 LF_cost.set_x3d_weight(foot_track_weight)
 LH_cost.set_x3d_weight(foot_track_weight)
 RF_cost.set_x3d_weight(foot_track_weight)
@@ -95,18 +91,8 @@ cost.push_back(RF_cost)
 cost.push_back(RH_cost)
 
 com_ref0 = robot.com()
-vcom_ref = 0.5 * step_length / swing_time
-com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
-# com_ref0 = robot.com()
-# com_to_LF_foot_position = x3d_LF - com_ref0
-# com_to_LH_foot_position = x3d_LH - com_ref0
-# com_to_RF_foot_position = x3d_RF - com_ref0
-# com_to_RH_foot_position = x3d_RH - com_ref0
-# com_to_feet_position = [com_to_LF_foot_position, 
-#                         com_to_LH_foot_position,
-#                         com_to_RF_foot_position, 
-#                         com_to_RH_foot_position]
-# com_ref = robotoc.DiscreteTimeCoMRef(com_to_feet_position)
+vcom_ref = 0.25 * step_length / swing_time
+com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, 2*swing_time, 0., True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_com_weight(np.full(3, 1.0e03))
 cost.push_back(com_cost)
@@ -128,22 +114,21 @@ constraints.push_back(joint_torques_lower)
 constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
-
 T = 0.5
 N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
 nthreads = 4
-mpc = robotoc.MPCTrotting(ocp, nthreads)
+mpc = robotoc.MPCCrawling(ocp, nthreads)
 mpc.set_gait_pattern(vcom_cmd, yaw_cmd, swing_time, initial_lift_time)
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 10
-
 mpc.init(t, q, v, option_init)
+
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 1 # MPC iterations
 mpc.set_solver_options(option_mpc)
@@ -154,6 +139,5 @@ sim_end_time = 5.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
-# sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
-# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='anymal_crawling.mp4')

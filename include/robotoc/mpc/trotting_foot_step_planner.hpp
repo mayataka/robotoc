@@ -15,7 +15,7 @@ namespace robotoc {
 
 ///
 /// @class TrottingFootStepPlanner
-/// @brief MPC solver for the trotting gait of quadrupeds. 
+/// @brief Foot step planner for the trotting gait of quadrupeds. 
 ///
 class TrottingFootStepPlanner {
 public:
@@ -79,18 +79,18 @@ public:
             const int planning_steps);
 
   ///
-  /// @brief Gets the contact positions of a specified phase. 
-  /// @param[in] phase Phase of interest.
-  /// @return Contact positions of a specified phase. 
+  /// @brief Gets the contact positions of a specified step. 
+  /// @param[in] step Step of interest.
+  /// @return Contact positions of a specified step. 
   ///
-  const std::vector<Eigen::Vector3d>& contactPosition(const int phase) const;
+  const std::vector<Eigen::Vector3d>& contactPosition(const int step) const;
 
   ///
-  /// @brief Gets the CoM position of a specified phase. 
-  /// @param[in] phase Phase of interest.
-  /// @return CoM position of a specified phase. 
+  /// @brief Gets the CoM position of a specified step. 
+  /// @param[in] step Step of interest.
+  /// @return CoM position of a specified step. 
   ///
-  const Eigen::Vector3d& com(const int phase) const;
+  const Eigen::Vector3d& com(const int step) const;
 
   void disp(std::ostream& os) const;
 

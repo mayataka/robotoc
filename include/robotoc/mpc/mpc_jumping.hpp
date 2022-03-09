@@ -22,7 +22,7 @@ namespace robotoc {
 
 ///
 /// @class MPCJumping
-/// @brief MPC solver for the jumping control of quadrupeds. 
+/// @brief MPC solver for the jumping control. 
 ///
 class MPCJumping {
 public:
@@ -150,9 +150,6 @@ private:
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_ground_, cs_flying_;
-  std::vector<Eigen::Vector3d> contact_positions_, contact_positions_goal_, 
-                               contact_positions_store_, 
-                               contact_positions_local_;
   aligned_vector<SE3> contact_placements_, contact_placements_goal_,
                       contact_placements_store_, 
                       contact_placements_local_;

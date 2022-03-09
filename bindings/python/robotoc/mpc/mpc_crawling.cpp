@@ -16,7 +16,7 @@ PYBIND11_MODULE(mpc_crawling, m) {
     .def(py::init<const OCP&, const int>(),
          py::arg("ocp"), py::arg("nthreads"))
     .def("set_gait_pattern", &MPCCrawling::setGaitPattern,
-         py::arg("vcom_cmd"), py::arg("yaw_cmd"), py::arg("swing_time"), 
+         py::arg("vcom"), py::arg("yaw_rate"), py::arg("swing_time"), 
          py::arg("initial_lift_time"))
     .def("init", &MPCCrawling::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))

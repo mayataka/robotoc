@@ -18,10 +18,6 @@ MPCJumping::MPCJumping(const OCP& ocp, const int nthreads)
     solver_options_(SolverOptions::defaultOptions()),
     cs_ground_(ocp.robot().createContactStatus()),
     cs_flying_(ocp.robot().createContactStatus()),
-    // contact_positions_(),
-    // contact_positions_local_(),
-    // contact_positions_goal_(),
-    // contact_positions_store_(),
     contact_placements_(),
     contact_placements_local_(),
     contact_placements_goal_(),
@@ -44,7 +40,6 @@ MPCJumping::MPCJumping(const OCP& ocp, const int nthreads)
   for (int i=0; i<cs_ground_.maxNumContacts(); ++i) {
     cs_ground_.activateContact(i);
   }
-  // cs_ground_.activateContacts({0, 1, 2, 3});
 }
 
 
@@ -211,14 +206,11 @@ void MPCJumping::resetGoalContactPlacements(const Eigen::VectorXd& q) {
   robot_.updateFrameKinematics(q);
   const Eigen::Quaterniond quat_init = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5));
   const Eigen::Matrix3d R_init = quat_init.toRotationMatrix();
-  // contact_positions_local_.clear();
   contact_placements_local_.clear();
   for (const auto frame : robot_.contactFrames()) {
-    // contact_positions_local_.push_back(
     contact_placements_local_.emplace_back(
         R_init.transpose() * robot_.frameRotation(frame),
         R_init.transpose() * (robot_.framePosition(frame) - q.template head<3>()));
-    // contact_positions_local_.back().coeffRef(2) = 0;
   }
   const Eigen::Matrix3d R_goal = R_jump_yaw_ * R_init;
   const Eigen::Quaterniond quat_goal = Eigen::Quaterniond(R_goal);
@@ -226,37 +218,28 @@ void MPCJumping::resetGoalContactPlacements(const Eigen::VectorXd& q) {
   q_goal.template head<3>().noalias() += R_jump_yaw_ * jump_length_;
   q_goal.template segment<4>(3) = quat_goal.coeffs();
   robot_.updateFrameKinematics(q_goal);
-  // contact_positions_goal_.clear();
   contact_placements_goal_.clear();
   for (int i=0; i<robot_.contactFrames().size(); ++i) {
     contact_placements_goal_.emplace_back(
         R_goal * contact_placements_local_[i].rotation(),
         q.template head<3>() + R_goal * contact_placements_local_[i].translation()
                              + R_jump_yaw_ * jump_length_);
-    // contact_positions_goal_.back().coeffRef(2) = 0.0;
   }
 }
 
 
 void MPCJumping::resetContactPlacements(const Eigen::VectorXd& q) {
   robot_.updateFrameKinematics(q);
-  // contact_positions_.clear();
   contact_placements_.clear();
   // update contact points only if the current step is standing
   if (current_step_ == 0 || current_step_ == 2) {
-    // contact_positions_store_.clear();
     contact_placements_store_.clear();
     for (const auto frame : robot_.contactFrames()) {
-      // contact_positions_.push_back(robot_.framePosition(frame));
-      // contact_positions_store_.push_back(robot_.framePosition(frame));
       contact_placements_.push_back(robot_.framePlacement(frame));
       contact_placements_store_.push_back(robot_.framePlacement(frame));
     }
   }
   else {
-    // for (const auto& e : contact_positions_store_) {
-    //   contact_positions_.push_back(e);
-    // }
     for (const auto& e : contact_placements_store_) {
       contact_placements_.push_back(e);
     }
@@ -265,19 +248,13 @@ void MPCJumping::resetContactPlacements(const Eigen::VectorXd& q) {
     contact_sequence_->setContactPlacements(0, contact_placements_);
     contact_sequence_->setContactPlacements(1, contact_placements_goal_);
     contact_sequence_->setContactPlacements(2, contact_placements_goal_);
-    // contact_sequence_->setContactPlacements(0, contact_positions_);
-    // contact_sequence_->setContactPlacements(1, contact_positions_goal_);
-    // contact_sequence_->setContactPlacements(2, contact_positions_goal_);
   }
   else if (current_step_ == 1) {
     contact_sequence_->setContactPlacements(0, contact_placements_goal_);
     contact_sequence_->setContactPlacements(1, contact_placements_goal_);
-    // contact_sequence_->setContactPlacements(0, contact_positions_goal_);
-    // contact_sequence_->setContactPlacements(1, contact_positions_goal_);
   }
   else {
     contact_sequence_->setContactPlacements(0, contact_placements_);
-    // contact_sequence_->setContactPlacements(0, contact_positions_);
   }
 }
 

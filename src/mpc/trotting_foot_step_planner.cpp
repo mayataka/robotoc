@@ -138,13 +138,13 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
 
 
 const std::vector<Eigen::Vector3d>& TrottingFootStepPlanner::contactPosition(
-    const int phase) const {
-  return contact_position_ref_[phase];
+    const int step) const {
+  return contact_position_ref_[step];
 }
 
 
-const Eigen::Vector3d& TrottingFootStepPlanner::com(const int phase) const {
-  return com_ref_[phase];
+const Eigen::Vector3d& TrottingFootStepPlanner::com(const int step) const {
+  return com_ref_[step];
 }
   
 
