@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_trotting.hpp"
+#include "robotoc/mpc/mpc_walking.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -9,15 +9,15 @@
 
 namespace robotoc {
 
-MPCTrotting::MPCTrotting(const OCP& ocp, const int nthreads)
-  : foot_step_planner_(std::make_shared<TrottingFootStepPlanner>(ocp.robot())),
+MPCWalking::MPCWalking(const OCP& ocp, const int nthreads)
+  : foot_step_planner_(std::make_shared<WalkingFootStepPlanner>(ocp.robot())),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(
         ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
     solver_options_(SolverOptions::defaultOptions()),
     cs_standing_(ocp.robot().createContactStatus()),
-    cs_lfrh_(ocp.robot().createContactStatus()),
-    cs_rflh_(ocp.robot().createContactStatus()),
+    cs_right_swing_(ocp.robot().createContactStatus()),
+    cs_left_swing_(ocp.robot().createContactStatus()),
     vcom_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     step_height_(0),
@@ -32,21 +32,21 @@ MPCTrotting::MPCTrotting(const OCP& ocp, const int nthreads)
     N_(ocp.N()),
     current_step_(0),
     predict_step_(0) {
-  cs_standing_.activateContacts({0, 1, 2, 3});
-  cs_lfrh_.activateContacts({0, 3});
-  cs_rflh_.activateContacts({1, 2});
+  cs_standing_.activateContacts({0, 1});
+  cs_right_swing_.activateContacts({0});
+  cs_left_swing_.activateContacts({1});
 }
 
 
-MPCTrotting::MPCTrotting() {
+MPCWalking::MPCWalking() {
 }
 
 
-MPCTrotting::~MPCTrotting() {
+MPCWalking::~MPCWalking() {
 }
 
 
-void MPCTrotting::setGaitPattern(const Eigen::Vector3d& vcom, 
+void MPCWalking::setGaitPattern(const Eigen::Vector3d& vcom, 
                                  const double yaw_rate, const double swing_time,
                                  const double initial_lift_time) {
   try {
@@ -69,7 +69,7 @@ void MPCTrotting::setGaitPattern(const Eigen::Vector3d& vcom,
 }
 
 
-void MPCTrotting::init(const double t, const Eigen::VectorXd& q, 
+void MPCWalking::init(const double t, const Eigen::VectorXd& q, 
                        const Eigen::VectorXd& v, 
                        const SolverOptions& solver_options) {
   try {
@@ -100,12 +100,12 @@ void MPCTrotting::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCTrotting::setSolverOptions(const SolverOptions& solver_options) {
+void MPCWalking::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCTrotting::updateSolution(const double t, const double dt,
+void MPCWalking::updateSolution(const double t, const double dt,
                                  const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v) {
   assert(dt > 0);
@@ -126,26 +126,26 @@ void MPCTrotting::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCTrotting::getInitialControlInput() const {
+const Eigen::VectorXd& MPCWalking::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-double MPCTrotting::KKTError(const double t, const Eigen::VectorXd& q, 
+double MPCWalking::KKTError(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCTrotting::KKTError() const {
+double MPCWalking::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-bool MPCTrotting::addStep(const double t) {
+bool MPCWalking::addStep(const double t) {
   if (predict_step_ == 0) {
     if (initial_lift_time_ < t+T_-dtm_) {
-      contact_sequence_->push_back(cs_lfrh_, initial_lift_time_);
+      contact_sequence_->push_back(cs_right_swing_, initial_lift_time_);
       ++predict_step_;
       return true;
     }
@@ -158,10 +158,10 @@ bool MPCTrotting::addStep(const double t) {
     }
     if (tt < t+T_-dtm_) {
       if (predict_step_%2 != 0) {
-        contact_sequence_->push_back(cs_rflh_, tt);
+        contact_sequence_->push_back(cs_left_swing_, tt);
       }
       else {
-        contact_sequence_->push_back(cs_lfrh_, tt);
+        contact_sequence_->push_back(cs_right_swing_, tt);
       }
       ++predict_step_;
       return true;
@@ -171,12 +171,12 @@ bool MPCTrotting::addStep(const double t) {
 }
 
 
-void MPCTrotting::resetContactPlacements(const Eigen::VectorXd& q) {
+void MPCWalking::resetContactPlacements(const Eigen::VectorXd& q) {
   const bool success = foot_step_planner_->plan(q, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases()+1);
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 
-                                            foot_step_planner_->contactPosition(phase+1));
+                                            foot_step_planner_->contactPlacement(phase+1));
   }
 }
 

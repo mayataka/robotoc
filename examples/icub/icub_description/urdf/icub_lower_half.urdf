@@ -1,0 +1,1333 @@
+<?xml version="1.0" ?>
+<robot name="iCub">
+    <link name="base_link" />
+    <link name="chest">
+        <inertial>
+            <mass value="4.81" />
+            <origin xyz="0.00222898 0.075 -1.18362e-17" rpy="0 -0 0" />
+            <inertia ixx="0.07472" ixy="-3.6e-06" ixz="-4.705e-05" iyy="0.08145" iyz="0.004567" izz="0.01306" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.0055 -6.93889e-18 -1.72085e-18" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_chest.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.0055 -6.93889e-18 -1.72085e-18" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_chest.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="chest_skin_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="codyco_balancing_world">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="head">
+        <inertial>
+            <mass value="1.33687" />
+            <origin xyz="0.0185 -0.1108 6.78454e-18" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="2.40741e-35" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="0.0045 -0.0235 9.42554e-13" rpy="0 1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_head.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0.0045 -0.0235 9.42554e-13" rpy="0 1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_head.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="imu_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_ankle_1">
+        <inertial>
+            <mass value="0.746" />
+            <origin xyz="-0.0054 0.00163 0.0172" rpy="0 -0 0" />
+            <inertia ixx="0.00063323" ixy="-7.081e-06" ixz="4.1421e-05" iyy="0.00068776" iyz="2.0817e-05" izz="0.000313897" />
+        </inertial>
+        <visual>
+            <origin xyz="1.11022e-16 -5.54343e-12 4.45647e-12" rpy="1.5708 1.53106e-11 1.53105e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_ankle_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="1.11022e-16 -5.54343e-12 4.45647e-12" rpy="1.5708 1.53106e-11 1.53105e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_ankle_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_ankle_2">
+        <inertial>
+            <mass value="0.2675" />
+            <origin xyz="0.017 0 0.042" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_elbow_1">
+        <inertial>
+            <mass value="0.074" />
+            <origin xyz="-0.0013 0.00371 -0.00105" rpy="0 -0 0" />
+            <inertia ixx="2.8389e-05" ixy="-5.15e-07" ixz="-4.08e-07" iyy="9.244e-06" iyz="-3.71e-07" izz="2.9968e-05" />
+        </inertial>
+    </link>
+    <link name="l_foot">
+        <inertial>
+            <mass value="0.5935" />
+            <origin xyz="0.007069 -0.000613931 -0.0334154" rpy="0 -0 0" />
+            <inertia ixx="0.00193893" ixy="-1.3505e-05" ixz="0.0001823" iyy="0.0030191" iyz="-3.30533e-06" izz="0.00162801" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.017 -5.54343e-12 -0.042" rpy="0 1.5708 -2.0414e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_foot.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.017 -5.54343e-12 -0.042" rpy="0 1.5708 -2.0414e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_foot.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_foot_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_forearm">
+        <inertial>
+            <mass value="0.525" />
+            <origin xyz="0.000347 0.066 0.00476" rpy="0 -0 0" />
+            <inertia ixx="0.000765393" ixy="4.337e-06" ixz="2.39e-07" iyy="0.000164578" iyz="1.9381e-05" izz="0.00069806" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.000143922 -1.25977e-12 0.0204334" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_forearm.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.000143922 -1.25977e-12 0.0204334" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_forearm.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_forearm_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_gripper">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_hand">
+        <inertial>
+            <mass value="0.213" />
+            <origin xyz="0.07023 -0.00805 -0.007" rpy="0 -0 0" />
+            <inertia ixx="0.000157143" ixy="1.278e-05" ixz="4.823e-06" iyy="0.000247995" iyz="-1.8188e-05" izz="0.000380535" />
+        </inertial>
+        <visual>
+            <origin xyz="-1.25981e-12 0.0204334 -0.000143922" rpy="5.10195e-12 -2.64173e-12 1.49623e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_hand.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-1.25981e-12 0.0204334 -0.000143922" rpy="5.10195e-12 -2.64173e-12 1.49623e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_hand.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_hand_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_hip_1">
+        <inertial>
+            <mass value="0.754" />
+            <origin xyz="0 -0.0782 0" rpy="0 -0 0" />
+            <inertia ixx="0.000471076" ixy="2.059e-06" ixz="1.451e-06" iyy="0.000346478" iyz="1.545e-06" izz="0.000510315" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_hip_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_hip_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_hip_2">
+        <inertial>
+            <mass value="0.526" />
+            <origin xyz="0 0 0.03045" rpy="0 -0 0" />
+            <inertia ixx="0.000561583" ixy="-7.4e-08" ixz="1.0835e-05" iyy="0.000738049" iyz="-6.2e-08" izz="0.000294119" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -1.5708 3.14159" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_hip_2.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 -1.5708 3.14159" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_hip_2.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_hip_3">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_lower_leg">
+        <inertial>
+            <mass value="1.264" />
+            <origin xyz="-0.1071 0.00182 0.00211" rpy="0 -0 0" />
+            <inertia ixx="0.00099895" ixy="-0.000185699" ixz="-6.3147e-05" iyy="0.00445054" iyz="7.86e-07" izz="0.00420766" />
+        </inertial>
+        <visual>
+            <origin xyz="5.55112e-17 2.28232e-12 2.2823e-12" rpy="-3.14159 -2.33487e-16 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_shank.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="5.55112e-17 2.28232e-12 2.2823e-12" rpy="-3.14159 -2.33487e-16 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_shank.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_shoulder_1">
+        <inertial>
+            <mass value="0.189" />
+            <origin xyz="-5e-06 0.0187 -0.00119" rpy="0 -0 0" />
+            <inertia ixx="5.4421e-05" ixy="9e-09" ixz="0" iyy="9.331e-06" iyz="-1.7e-08" izz="5.4862e-05" />
+        </inertial>
+        <visual>
+            <origin xyz="3.08087e-14 0.109285 -0.00521101" rpy="0 1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_shoulder_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="3.08087e-14 0.109285 -0.00521101" rpy="0 1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_shoulder_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_shoulder_2">
+        <inertial>
+            <mass value="0.179" />
+            <origin xyz="9.4e-05 -0.00627 0.0166" rpy="0 -0 0" />
+            <inertia ixx="0.0001372" ixy="4.66e-07" ixz="3.65e-07" iyy="8.2927e-05" iyz="-2.0524e-05" izz="9.9274e-05" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.00154529 -0.00521101 -1.11181e-12" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_shoulder_2.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.00154529 -0.00521101 -1.11181e-12" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_shoulder_2.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_shoulder_3">
+        <inertial>
+            <mass value="0.156157" />
+            <origin xyz="0.00559398 9.77357e-05 0.0501346" rpy="0 -0 0" />
+            <inertia ixx="4.84118e-05" ixy="-5.662e-08" ixz="-4.3618e-06" iyy="5.79067e-05" iyz="-7.42844e-07" izz="6.7103e-05" />
+        </inertial>
+    </link>
+    <link name="l_sole">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_upper_arm">
+        <inertial>
+            <mass value="0.727843" />
+            <origin xyz="-0.000156 -9.87e-05 0.0298" rpy="0 -0 0" />
+            <inertia ixx="0.000408" ixy="-1.08e-06" ixz="-2.29e-06" iyy="0.00038" iyz="3.57e-06" izz="0.00026" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.0204334 0.000143922 -0.068" rpy="1.15275e-11 4.9296e-12 -1.309" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_arm.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.0204334 0.000143922 -0.068" rpy="1.15275e-11 4.9296e-12 -1.309" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_arm.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_upper_arm_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="l_upper_leg">
+        <inertial>
+            <mass value="2.175" />
+            <origin xyz="0.00144 -0.15943 -0.00039" rpy="0 -0 0" />
+            <inertia ixx="0.00759107" ixy="-6.726e-05" ixz="2.267e-06" iyy="0.00142302" iyz="3.63726e-05" izz="0.00755385" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_l_thigh.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_l_thigh.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="l_wrist_1">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="neck_1">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="-1.11022e-16 9.62964e-13 -0.0055" rpy="0 -1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_neck_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-1.11022e-16 9.62964e-13 -0.0055" rpy="0 -1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_neck_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="neck_2">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="-9.62967e-13 0.0055 0.0235" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_neck_2.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-9.62967e-13 0.0055 0.0235" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_neck_2.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_ankle_1">
+        <inertial>
+            <mass value="0.746" />
+            <origin xyz="-0.0054 0.00163 -0.0172" rpy="0 -0 0" />
+            <inertia ixx="2.71051e-20" ixy="-1.69407e-21" ixz="1.35525e-20" iyy="5.42101e-20" iyz="3.38813e-21" izz="1.35525e-20" />
+        </inertial>
+        <visual>
+            <origin xyz="1.11022e-16 -1.08717e-12 -4.45647e-12" rpy="-1.5708 -1.53106e-11 5.10376e-12" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_ankle_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="1.11022e-16 -1.08717e-12 -4.45647e-12" rpy="-1.5708 -1.53106e-11 5.10376e-12" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_ankle_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_ankle_2">
+        <inertial>
+            <mass value="0.2675" />
+            <origin xyz="0.017 0 0.042" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_elbow_1">
+        <inertial>
+            <mass value="0.074" />
+            <origin xyz="0.0013 -0.00371 0.00105" rpy="0 -0 0" />
+            <inertia ixx="2.84e-05" ixy="-5.02e-07" ixz="-3.99e-07" iyy="9.24e-06" iyz="-3.71e-07" izz="2.99e-05" />
+        </inertial>
+    </link>
+    <link name="r_foot">
+        <inertial>
+            <mass value="0.5935" />
+            <origin xyz="0.007069 0.000613931 -0.0334154" rpy="0 -0 0" />
+            <inertia ixx="0.00193893" ixy="1.3505e-05" ixz="0.0001823" iyy="0.0030191" iyz="3.30551e-06" izz="0.00162801" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.017 1.08717e-12 -0.042" rpy="0 1.5708 3.14159" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_foot.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.017 1.08717e-12 -0.042" rpy="0 1.5708 3.14159" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_foot.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_foot_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_forearm">
+        <inertial>
+            <mass value="0.525" />
+            <origin xyz="-0.000347 -0.066 -0.00476" rpy="0 -0 0" />
+            <inertia ixx="0.000766" ixy="5.66e-06" ixz="1.4e-06" iyy="0.000164" iyz="1.82e-05" izz="0.000699" />
+        </inertial>
+        <visual>
+            <origin xyz="0.000143922 -1.07216e-12 -0.0204334" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_forearm.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0.000143922 -1.07216e-12 -0.0204334" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_forearm.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_forearm_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_gripper">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_hand">
+        <inertial>
+            <mass value="0.213" />
+            <origin xyz="0.07023 -0.00805 0.007" rpy="0 -0 0" />
+            <inertia ixx="0.000154" ixy="1.26e-05" ixz="-6.08e-06" iyy="0.00025" iyz="1.76e-05" izz="0.000378" />
+        </inertial>
+        <visual>
+            <origin xyz="1.07207e-12 0.0204334 0.000143922" rpy="1.53098e-11 2.00665e-11 -3.14159" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_hand.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="1.07207e-12 0.0204334 0.000143922" rpy="1.53098e-11 2.00665e-11 -3.14159" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_hand.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_hand_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_hip_1">
+        <inertial>
+            <mass value="0.754" />
+            <origin xyz="0 -0.0782 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -1.5708 4.71239" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_hip_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 -1.5708 4.71239" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_hip_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_hip_2">
+        <inertial>
+            <mass value="0.526" />
+            <origin xyz="0 0 0.03045" rpy="0 -0 0" />
+            <inertia ixx="-5.42101e-20" ixy="0" ixz="0" iyy="-5.42101e-20" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -1.5708 1.02066e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_hip_2.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 -1.5708 1.02066e-11" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_hip_2.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_hip_3">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_lower_leg">
+        <inertial>
+            <mass value="1.264" />
+            <origin xyz="-0.1071 0.00182 -0.00211" rpy="0 -0 0" />
+            <inertia ixx="1.10961e-18" ixy="5.42101e-20" ixz="-5.42101e-20" iyy="0" iyz="8.47033e-22" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="5.55112e-17 2.28232e-12 -8.32667e-17" rpy="3.14159 -1.14424e-17 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_shank.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="5.55112e-17 2.28232e-12 -8.32667e-17" rpy="3.14159 -1.14424e-17 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_shank.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_shoulder_1">
+        <inertial>
+            <mass value="0.189" />
+            <origin xyz="5e-06 0.0187 0.00119" rpy="0 -0 0" />
+            <inertia ixx="0.000123" ixy="2.1e-08" ixz="-1e-09" iyy="2.44e-05" iyz="4.22e-06" izz="0.000113" />
+        </inertial>
+        <visual>
+            <origin xyz="-3.08642e-14 0.109285 0.00521101" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_shoulder_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-3.08642e-14 0.109285 0.00521101" rpy="0 1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_shoulder_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_shoulder_2">
+        <inertial>
+            <mass value="0.179" />
+            <origin xyz="-9.4e-05 -0.00627 -0.0166" rpy="0 -0 0" />
+            <inertia ixx="0.000137" ixy="-4.53e-07" ixz="2.03e-07" iyy="8.3e-05" iyz="2.07e-05" izz="9.93e-05" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.00154529 -0.00521101 -1.11186e-12" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_shoulder_2.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.00154529 -0.00521101 -1.11186e-12" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_shoulder_2.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_shoulder_3">
+        <inertial>
+            <mass value="0.155" />
+            <origin xyz="0.00553932 -2.47652e-05 0.0493895" rpy="0 -0 0" />
+            <inertia ixx="3.44122e-05" ixy="3.56977e-07" ixz="-3.95372e-06" iyy="4.33544e-05" iyz="-6.5128e-06" izz="6.49393e-05" />
+        </inertial>
+    </link>
+    <link name="r_sole">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_upper_arm">
+        <inertial>
+            <mass value="0.729" />
+            <origin xyz="-0.00015906 8.28733e-05 0.0298828" rpy="0 -0 0" />
+            <inertia ixx="0.000408" ixy="-1.08e-06" ixz="-2.29e-06" iyy="0.00038" iyz="3.57e-06" izz="0.00026" />
+        </inertial>
+        <visual>
+            <origin xyz="-0.0204334 -0.000143922 -0.068" rpy="-3.14159 -1.5137e-11 1.309" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_arm.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="-0.0204334 -0.000143922 -0.068" rpy="-3.14159 -1.5137e-11 1.309" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_arm.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_upper_arm_dh_frame">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="r_upper_leg">
+        <inertial>
+            <mass value="2.175" />
+            <origin xyz="0.00144 -0.15943 0.00039" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="4.07592e-18" iyz="-2.71051e-20" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_r_thigh.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 -1.5708 1.5708" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_r_thigh.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="r_wrist_1">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="root_link">
+        <inertial>
+            <mass value="4.72" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_root_link.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_root_link.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="torso">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+    <link name="torso_1">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0.0004544" ixy="-4.263e-05" ixz="-3.889e-08" iyy="0.001141" iyz="0" izz="0.001236" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 5.10314e-12 1.11022e-16" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/visual/icub_lap_belt_1.dae" scale="1 1 1" />
+            </geometry>
+            <material name="material.metal">
+                <texture />
+                <!-- <color rgba="0 0 0 1" /> -->
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="-1.5708 5.10314e-12 1.11022e-16" />
+            <geometry>
+                <mesh filename="package://icub_description/meshes/upmc/collision/icub_simple_collision_lap_belt_1.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="torso_2">
+        <inertial>
+            <mass value="0" />
+            <origin xyz="0 0 0" rpy="0 -0 0" />
+            <inertia ixx="0.0005308" ixy="-1.923e-06" ixz="5.095e-05" iyy="0.002031" iyz="-3.849e-07" izz="0.001803" />
+        </inertial>
+    </link>
+    <joint name="torso_yaw" type="fixed">
+        <origin xyz="-7.46298e-34 -0.0055 0" rpy="-1.5708 1.11022e-16 -1.5708" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="torso_2" />
+        <child link="chest" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="80" velocity="100" lower="-1.02974" upper="1.02974" />
+    </joint>
+    <joint name="chest_skin_frame_fixed_joint" type="fixed">
+        <origin xyz="-0.0055 -0.032 3.36778e-19" rpy="1.5708 -1.22465e-16 -3.14159" />
+        <axis xyz="0 0 0" />
+        <parent link="chest" />
+        <child link="chest_skin_frame" />
+    </joint>
+    <joint name="codyco_balancing_world_fixed_joint" type="fixed">
+        <origin xyz="-0.0353 -7.60894e-35 -0.001" rpy="3.14159 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_foot" />
+        <child link="codyco_balancing_world" />
+    </joint>
+    <joint name="neck_yaw" type="fixed">
+        <origin xyz="-5.77779e-34 0 0" rpy="-1.5708 -1.11022e-16 1.5708" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="neck_2" />
+        <child link="head" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="20" velocity="100" lower="-0.959931" upper="0.959931" />
+    </joint>
+    <joint name="imu_frame_fixed_joint" type="fixed">
+        <origin xyz="0.0185 -0.1108 0.0066" rpy="1.5708 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="head" />
+        <child link="imu_frame" />
+    </joint>
+    <joint name="l_ankle_pitch" type="revolute">
+        <origin xyz="-0.213 0 0" rpy="-1.5708 0 0" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="l_lower_leg" />
+        <child link="l_ankle_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="24" velocity="100" lower="-0.733038" upper="0.366519" />
+    </joint>
+    <joint name="l_ankle_roll" type="revolute">
+        <origin xyz="0 0 0" rpy="0 -1.5708 0" />
+        <axis xyz="1 0 0" />
+        <parent link="l_ankle_1" />
+        <child link="l_ankle_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="11" velocity="100" lower="-0.418879" upper="0.418879" />
+    </joint>
+    <joint name="l_elbow" type="fixed">
+        <origin xyz="0 0 0.08428" rpy="-6.12323e-17 0 0" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="l_upper_arm" />
+        <child link="l_elbow_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="20" velocity="100" lower="0.0959931" upper="1.85005" />
+    </joint>
+    <joint name="l_foot_ft_sensor" type="fixed">
+        <origin xyz="0.017 0 0.042" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_ankle_2" />
+        <child link="l_foot" />
+    </joint>
+    <joint name="l_foot_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="-0.0353 0 -0.001" rpy="0 1.5708 -0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_foot" />
+        <child link="l_foot_dh_frame" />
+    </joint>
+    <joint name="l_wrist_prosup" type="fixed">
+        <origin xyz="-0.015 0 0" rpy="1.5708 -1.11022e-16 -1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="l_elbow_1" />
+        <child link="l_forearm" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="0.45" velocity="100" lower="-0.872665" upper="0.872665" />
+    </joint>
+    <joint name="l_forearm_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="0 0.1373 8.4072e-18" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_forearm" />
+        <child link="l_forearm_dh_frame" />
+    </joint>
+    <joint name="l_gripper_joint" type="fixed">
+        <origin xyz="0.0625 0 -0.016" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_hand" />
+        <child link="l_gripper" />
+    </joint>
+    <joint name="l_wrist_yaw" type="fixed">
+        <origin xyz="0 0 0" rpy="0 -0 0" />
+        <axis xyz="0 0 1" />
+        <parent link="l_wrist_1" />
+        <child link="l_hand" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="0.65" velocity="100" lower="-0.436332" upper="0.436332" />
+    </joint>
+    <joint name="l_hand_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="0.0625 0 -0.016" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_hand" />
+        <child link="l_hand_dh_frame" />
+    </joint>
+    <joint name="l_hip_pitch" type="revolute">
+        <origin xyz="0 -0.0681 -0.1199" rpy="0 1.5708 -3.14159" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="root_link" />
+        <child link="l_hip_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="-0.767945" upper="2.30383" />
+    </joint>
+    <joint name="l_hip_roll" type="revolute">
+        <origin xyz="0 0 0" rpy="0 -1.5708 3.14159" />
+        <axis xyz="1 0 -6.12323e-17" />
+        <parent link="l_hip_1" />
+        <child link="l_hip_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="-2.07694" upper="0.296706" />
+    </joint>
+    <joint name="l_leg_ft_sensor" type="fixed">
+        <origin xyz="0 0 0.0665" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_hip_2" />
+        <child link="l_hip_3" />
+    </joint>
+    <joint name="l_knee" type="revolute">
+        <origin xyz="0 -0.2236 -1.36916e-17" rpy="3.14159 -1.2326e-32 1.5708" />
+        <axis xyz="0 1.22465e-16 -1" />
+        <parent link="l_upper_leg" />
+        <child link="l_lower_leg" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="30" velocity="100" lower="-2.18166" upper="0.401426" />
+    </joint>
+    <joint name="l_shoulder_pitch" type="fixed">
+        <origin xyz="0.00525 0.1433 -0.11026" rpy="1.309 5.55112e-17 1.5708" />
+        <axis xyz="0 -1 5.55112e-17" />
+        <parent link="chest" />
+        <child link="l_shoulder_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="-1.65806" upper="0.0872665" />
+    </joint>
+    <joint name="l_shoulder_roll" type="fixed">
+        <origin xyz="0 0 0" rpy="1.5708 -1.11022e-16 -1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="l_shoulder_1" />
+        <child link="l_shoulder_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="0" upper="2.80649" />
+    </joint>
+    <joint name="l_shoulder_yaw" type="fixed">
+        <origin xyz="4.33681e-19 1.73472e-18 0" rpy="6.12323e-17 -0 1.309" />
+        <axis xyz="0 6.12323e-17 1" />
+        <parent link="l_shoulder_2" />
+        <child link="l_shoulder_3" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="34" velocity="100" lower="-0.645772" upper="1.74533" />
+    </joint>
+    <joint name="l_sole_fixed_joint" type="fixed">
+        <origin xyz="-0.0353 -7.60894e-35 -0.001" rpy="3.14159 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_foot" />
+        <child link="l_sole" />
+    </joint>
+    <joint name="l_arm_ft_sensor" type="fixed">
+        <origin xyz="0.015 9.36797e-18 0.068" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_shoulder_3" />
+        <child link="l_upper_arm" />
+    </joint>
+    <joint name="l_upper_arm_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="0 0 0.08428" rpy="-1.5708 0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="l_upper_arm" />
+        <child link="l_upper_arm_dh_frame" />
+    </joint>
+    <joint name="l_hip_yaw" type="revolute">
+        <origin xyz="0 0 -0.0665" rpy="-1.5708 -6.16298e-33 -6.12323e-17" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="l_hip_3" />
+        <child link="l_upper_leg" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="40" velocity="100" lower="-1.37881" upper="1.37881" />
+    </joint>
+    <joint name="l_wrist_pitch" type="fixed">
+        <origin xyz="0 0.1373 8.4072e-18" rpy="1.5708 1.11022e-16 1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="l_forearm" />
+        <child link="l_wrist_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="0.65" velocity="100" lower="-1.13446" upper="0.174533" />
+    </joint>
+    <joint name="neck_pitch" type="fixed">
+        <origin xyz="0.00231 0.1933 -1.18362e-17" rpy="1.5708 1.11022e-16 1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="chest" />
+        <child link="neck_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="20" velocity="100" lower="-0.698132" upper="0.523599" />
+    </joint>
+    <joint name="neck_roll" type="fixed">
+        <origin xyz="0.0095 0 0" rpy="-1.5708 1.11022e-16 -1.5708" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="neck_1" />
+        <child link="neck_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="20" velocity="100" lower="-1.22173" upper="1.0472" />
+    </joint>
+    <joint name="r_ankle_pitch" type="revolute">
+        <origin xyz="-0.213 0 0" rpy="1.5708 -0 0" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="r_lower_leg" />
+        <child link="r_ankle_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="24" velocity="100" lower="-0.733038" upper="0.366519" />
+    </joint>
+    <joint name="r_ankle_roll" type="revolute">
+        <origin xyz="0 0 0" rpy="0 1.5708 3.14159" />
+        <axis xyz="-1 1.22465e-16 0" />
+        <parent link="r_ankle_1" />
+        <child link="r_ankle_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="11" velocity="100" lower="-0.418879" upper="0.418879" />
+    </joint>
+    <joint name="r_elbow" type="fixed">
+        <origin xyz="0 0 0.08428" rpy="3.14159 -0 3.14159" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="r_upper_arm" />
+        <child link="r_elbow_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="20" velocity="100" lower="0.0959931" upper="1.85005" />
+    </joint>
+    <joint name="r_foot_ft_sensor" type="fixed">
+        <origin xyz="0.017 0 0.042" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_ankle_2" />
+        <child link="r_foot" />
+    </joint>
+    <joint name="r_foot_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="-0.0353 0 -0.001" rpy="0 1.5708 -0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_foot" />
+        <child link="r_foot_dh_frame" />
+    </joint>
+    <joint name="r_wrist_prosup" type="fixed">
+        <origin xyz="0.015 0 0" rpy="1.5708 -1.11022e-16 -1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="r_elbow_1" />
+        <child link="r_forearm" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="0.45" velocity="100" lower="-0.872665" upper="0.872665" />
+    </joint>
+    <joint name="r_forearm_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="0 -0.1373 -8.4072e-18" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_forearm" />
+        <child link="r_forearm_dh_frame" />
+    </joint>
+    <joint name="r_gripper_joint" type="fixed">
+        <origin xyz="0.0625 0 0.016" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_hand" />
+        <child link="r_gripper" />
+    </joint>
+    <joint name="r_wrist_yaw" type="fixed">
+        <origin xyz="0 0 0" rpy="0 -0 3.14159" />
+        <axis xyz="0 0 1" />
+        <parent link="r_wrist_1" />
+        <child link="r_hand" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="0.65" velocity="100" lower="-0.436332" upper="0.436332" />
+    </joint>
+    <joint name="r_hand_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="0.0625 0 0.016" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_hand" />
+        <child link="r_hand_dh_frame" />
+    </joint>
+    <joint name="r_hip_pitch" type="revolute">
+        <origin xyz="0 0.0681 -0.1199" rpy="0 1.5708 6.12323e-17" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="root_link" />
+        <child link="r_hip_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="-0.767945" upper="2.30383" />
+    </joint>
+    <joint name="r_hip_roll" type="revolute">
+        <origin xyz="0 0 0" rpy="0 1.5708 -6.12323e-17" />
+        <axis xyz="-1 0 6.12323e-17" />
+        <parent link="r_hip_1" />
+        <child link="r_hip_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="-2.07694" upper="0.296706" />
+    </joint>
+    <joint name="r_leg_ft_sensor" type="fixed">
+        <origin xyz="0 0 0.0665" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_hip_2" />
+        <child link="r_hip_3" />
+    </joint>
+    <joint name="r_knee" type="revolute">
+        <origin xyz="0 -0.2236 1.36916e-17" rpy="3.14159 -1.2326e-32 1.5708" />
+        <axis xyz="0 1.22465e-16 -1" />
+        <parent link="r_upper_leg" />
+        <child link="r_lower_leg" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="30" velocity="100" lower="-2.18166" upper="0.401426" />
+    </joint>
+    <joint name="r_shoulder_pitch" type="fixed">
+        <origin xyz="0.00525 0.1433 0.11026" rpy="-1.309 -0 1.5708" />
+        <axis xyz="0 1 5.55112e-17" />
+        <parent link="chest" />
+        <child link="r_shoulder_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="-1.65806" upper="0.0872665" />
+    </joint>
+    <joint name="r_shoulder_roll" type="fixed">
+        <origin xyz="0 0 0" rpy="-1.5708 1.11022e-16 -1.5708" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="r_shoulder_1" />
+        <child link="r_shoulder_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="84" velocity="100" lower="0" upper="2.80649" />
+    </joint>
+    <joint name="r_shoulder_yaw" type="fixed">
+        <origin xyz="-4.33681e-19 0 0" rpy="3.14159 -0 1.309" />
+        <axis xyz="0 6.12323e-17 -1" />
+        <parent link="r_shoulder_2" />
+        <child link="r_shoulder_3" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="34" velocity="100" lower="-0.645772" upper="1.74533" />
+    </joint>
+    <joint name="r_sole_fixed_joint" type="fixed">
+        <origin xyz="-0.0353 -1.38778e-17 -0.001" rpy="3.14159 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_foot" />
+        <child link="r_sole" />
+    </joint>
+    <joint name="r_arm_ft_sensor" type="fixed">
+        <origin xyz="0.015 -8.93429e-18 0.068" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="r_shoulder_3" />
+        <child link="r_upper_arm" />
+    </joint>
+    <joint name="r_upper_arm_dh_frame_fixed_joint" type="fixed">
+        <origin xyz="0 0 0.08428" rpy="1.5708 -0 3.14159" />
+        <axis xyz="0 0 0" />
+        <parent link="r_upper_arm" />
+        <child link="r_upper_arm_dh_frame" />
+    </joint>
+    <joint name="r_hip_yaw" type="revolute">
+        <origin xyz="0 0 -0.0665" rpy="-1.5708 -6.16298e-33 6.12323e-17" />
+        <axis xyz="0 -1 6.12323e-17" />
+        <parent link="r_hip_3" />
+        <child link="r_upper_leg" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="40" velocity="100" lower="-1.37881" upper="1.37881" />
+    </joint>
+    <joint name="r_wrist_pitch" type="fixed">
+        <origin xyz="0 -0.1373 -8.4072e-18" rpy="1.5708 1.11022e-16 1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="r_forearm" />
+        <child link="r_wrist_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="0.65" velocity="100" lower="-1.13446" upper="0.174533" />
+    </joint>
+    <joint name="base_fixed_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 3.14159" />
+        <axis xyz="0 0 0" />
+        <parent link="base_link" />
+        <child link="root_link" />
+    </joint>
+    <joint name="torso_joint" type="fixed">
+        <origin xyz="0.00231 0.1933 -1.18362e-17" rpy="0 -0 0" />
+        <axis xyz="0 0 0" />
+        <parent link="chest" />
+        <child link="torso" />
+    </joint>
+    <joint name="torso_pitch" type="fixed">
+        <origin xyz="0 0 0" rpy="0 -1.5708 3.14159" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="root_link" />
+        <child link="torso_1" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="36" velocity="100" lower="-0.383972" upper="1.46608" />
+    </joint>
+    <joint name="torso_roll" type="fixed">
+        <origin xyz="0.032 -2.67276e-51 0" rpy="1.5708 -1.11022e-16 -1.5708" />
+        <axis xyz="0 1 6.12323e-17" />
+        <parent link="torso_1" />
+        <child link="torso_2" />
+        <dynamics damping="0" friction="0" />
+        <limit effort="80" velocity="100" lower="-0.680678" upper="0.680678" />
+    </joint>
+    <gazebo reference="l_arm_ft_sensor">
+        <sensor name="left_arm_ft" type="force_torque">
+            <force_torque>
+                <frame>child</frame>
+                <measure_direction>child_to_parent</measure_direction>
+            </force_torque>
+            <update_rate>100</update_rate>
+            <always_on>1</always_on>
+        </sensor>
+    </gazebo>
+    <gazebo reference="r_arm_ft_sensor">
+        <sensor name="right_arm_ft" type="force_torque">
+            <force_torque>
+                <frame>child</frame>
+                <measure_direction>child_to_parent</measure_direction>
+            </force_torque>
+            <update_rate>100</update_rate>
+            <always_on>1</always_on>
+        </sensor>
+    </gazebo>
+    <gazebo reference="l_leg_ft_sensor">
+        <sensor name="left_leg_ft" type="force_torque">
+            <force_torque>
+                <frame>child</frame>
+                <measure_direction>child_to_parent</measure_direction>
+            </force_torque>
+            <update_rate>100</update_rate>
+            <always_on>1</always_on>
+        </sensor>
+    </gazebo>
+    <gazebo reference="r_leg_ft_sensor">
+        <sensor name="right_leg_ft" type="force_torque">
+            <force_torque>
+                <frame>child</frame>
+                <measure_direction>child_to_parent</measure_direction>
+            </force_torque>
+            <update_rate>100</update_rate>
+            <always_on>1</always_on>
+        </sensor>
+    </gazebo>
+    <gazebo reference="l_foot_ft_sensor">
+        <sensor name="left_foot_ft" type="force_torque">
+            <force_torque>
+                <frame>child</frame>
+                <measure_direction>child_to_parent</measure_direction>
+            </force_torque>
+            <update_rate>100</update_rate>
+            <always_on>1</always_on>
+        </sensor>
+    </gazebo>
+    <gazebo reference="r_foot_ft_sensor">
+        <sensor name="right_foot_ft" type="force_torque">
+            <force_torque>
+                <frame>child</frame>
+                <measure_direction>child_to_parent</measure_direction>
+            </force_torque>
+            <update_rate>100</update_rate>
+            <always_on>1</always_on>
+        </sensor>
+    </gazebo>
+    <sensor type="force_torque" name="l_arm_ft_sensor">
+        <parent joint="l_arm_ft_sensor" />
+        <force_torque>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+    </sensor>
+    <sensor type="force_torque" name="r_arm_ft_sensor">
+        <parent joint="r_arm_ft_sensor" />
+        <force_torque>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+    </sensor>
+    <sensor type="force_torque" name="l_leg_ft_sensor">
+        <parent joint="l_leg_ft_sensor" />
+        <force_torque>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+    </sensor>
+    <sensor type="force_torque" name="r_leg_ft_sensor">
+        <parent joint="r_leg_ft_sensor" />
+        <force_torque>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+    </sensor>
+    <sensor type="force_torque" name="l_foot_ft_sensor">
+        <parent joint="l_foot_ft_sensor" />
+        <force_torque>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+    </sensor>
+    <sensor type="force_torque" name="r_foot_ft_sensor">
+        <parent joint="r_foot_ft_sensor" />
+        <force_torque>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+    </sensor>
+</robot>

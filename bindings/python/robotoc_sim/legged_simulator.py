@@ -6,7 +6,7 @@ import abc
 import numpy as np
 
 
-class QuadrupedalSimulator(metaclass=abc.ABCMeta):
+class LeggedSimulator(metaclass=abc.ABCMeta):
     def __init__(self, path_to_urdf, time_step, start_time, end_time):
         self.path_to_urdf = path_to_urdf
         self.time_step = time_step
@@ -65,7 +65,7 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
         pybullet.disconnect()
 
     def run_simulation(self, mpc, q0, v0, feedback_delay=False, verbose=False, 
-                       record=False, record_name='quadrupedal_mpc_sim.mp4'):
+                       record=False, record_name='mpc_sim.mp4'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)

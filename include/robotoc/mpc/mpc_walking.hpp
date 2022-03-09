@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_TROTTING_HPP_
-#define ROBOTOC_MPC_TROTTING_HPP_
+#ifndef ROBOTOC_MPC_WALKING_HPP_
+#define ROBOTOC_MPC_WALKING_HPP_
 
 #include <vector>
 #include <memory>
@@ -15,16 +15,16 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
-#include "robotoc/mpc/trotting_foot_step_planner.hpp"
+#include "robotoc/mpc/walking_foot_step_planner.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class MPCTrotting
-/// @brief MPC solver for the trotting gait of quadrupeds. 
+/// @class MPCWalking
+/// @brief MPC solver for the walking gait of bipedal robot. 
 ///
-class MPCTrotting {
+class MPCWalking {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -32,37 +32,37 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCTrotting(const OCP& ocp, const int nthreads);
+  MPCWalking(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCTrotting();
+  MPCWalking();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCTrotting();
+  ~MPCWalking();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCTrotting(const MPCTrotting&) = default;
+  MPCWalking(const MPCWalking&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCTrotting& operator=(const MPCTrotting&) = default;
+  MPCWalking& operator=(const MPCWalking&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCTrotting(MPCTrotting&&) noexcept = default;
+  MPCWalking(MPCWalking&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCTrotting& operator=(MPCTrotting&&) noexcept = default;
+  MPCWalking& operator=(MPCWalking&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -117,7 +117,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCTrotting::updateSolution() must be computed.  
+  /// MPCWalking::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -125,11 +125,11 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<TrottingFootStepPlanner> foot_step_planner_;
+  std::shared_ptr<WalkingFootStepPlanner> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
-  ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
+  ContactStatus cs_standing_, cs_right_swing_, cs_left_swing_;
   Eigen::Vector3d vcom_, step_length_;
   double step_height_, swing_time_, initial_lift_time_, 
          t_, T_, dt_, dtm_, ts_last_, eps_;
@@ -143,4 +143,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_TROTTING_HPP_ 
+#endif // ROBOTOC_MPC_WALKING_HPP_ 

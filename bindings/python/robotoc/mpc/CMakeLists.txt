@@ -1,7 +1,9 @@
 pybind11_add_robotoc_module(mpc_crawling)
 pybind11_add_robotoc_module(mpc_trotting)
+pybind11_add_robotoc_module(mpc_walking)
 pybind11_add_robotoc_module(mpc_jumping)
 pybind11_add_robotoc_module(trotting_foot_step_planner)
 pybind11_add_robotoc_module(crawling_foot_step_planner)
+pybind11_add_robotoc_module(walking_foot_step_planner)
 
 install_robotoc_pybind_module(mpc)
