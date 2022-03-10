@@ -16,8 +16,7 @@ PYBIND11_MODULE(mpc_trotting, m) {
     .def(py::init<const OCP&, const int>(),
          py::arg("ocp"), py::arg("nthreads"))
     .def("set_gait_pattern", &MPCTrotting::setGaitPattern,
-         py::arg("vcom"), py::arg("yaw_rate"), py::arg("swing_time"), 
-         py::arg("initial_lift_time"))
+         py::arg("planner"), py::arg("swing_time"), py::arg("initial_lift_time"))
     .def("init", &MPCTrotting::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
     .def("set_solver_options", &MPCTrotting::setSolverOptions,
@@ -29,8 +28,7 @@ PYBIND11_MODULE(mpc_trotting, m) {
           static_cast<double (MPCTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCTrotting::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
-          static_cast<double (MPCTrotting::*)() const>(&MPCTrotting::KKTError))
-    .def("get_planner", &MPCTrotting::getPlanner);
+          static_cast<double (MPCTrotting::*)() const>(&MPCTrotting::KKTError));
 }
 
 } // namespace python

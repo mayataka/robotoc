@@ -8,7 +8,8 @@
 namespace robotoc {
 
 WalkingFootStepPlanner::WalkingFootStepPlanner(const Robot& biped_robot)
-  : robot_(biped_robot),
+  : FootStepPlannerBase(),
+    robot_(biped_robot),
     L_foot_id_(biped_robot.surfaceContactFrames()[0]),
     R_foot_id_(biped_robot.surfaceContactFrames()[1]),
     previous_initial_step_(0),
@@ -180,6 +181,12 @@ bool WalkingFootStepPlanner::plan(const Eigen::VectorXd& q,
 const aligned_vector<SE3>& WalkingFootStepPlanner::contactPlacement(
     const int step) const {
   return contact_placement_ref_[step];
+}
+
+
+const std::vector<Eigen::Vector3d>& WalkingFootStepPlanner::contactPosition(
+    const int step) const {
+  return contact_position_ref_[step];
 }
 
 

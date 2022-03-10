@@ -97,16 +97,6 @@ cost.push_back(RH_cost)
 com_ref0 = robot.com()
 vcom_ref = 0.5 * step_length / swing_time
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, initial_lift_time, swing_time, 0., True)
-# com_ref0 = robot.com()
-# com_to_LF_foot_position = x3d_LF - com_ref0
-# com_to_LH_foot_position = x3d_LH - com_ref0
-# com_to_RF_foot_position = x3d_RF - com_ref0
-# com_to_RH_foot_position = x3d_RH - com_ref0
-# com_to_feet_position = [com_to_LF_foot_position, 
-#                         com_to_LH_foot_position,
-#                         com_to_RF_foot_position, 
-#                         com_to_RH_foot_position]
-# com_ref = robotoc.DiscreteTimeCoMRef(com_to_feet_position)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
 com_cost.set_com_weight(np.full(3, 1.0e03))
 cost.push_back(com_cost)
@@ -134,9 +124,13 @@ N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
+planner = robotoc.TrottingFootStepPlanner(robot)
+planner.set_gait_pattern(step_length, (yaw_cmd*swing_time))
+
 nthreads = 4
 mpc = robotoc.MPCTrotting(ocp, nthreads)
-mpc.set_gait_pattern(vcom_cmd, yaw_cmd, swing_time, initial_lift_time)
+mpc.set_gait_pattern(planner, swing_time, initial_lift_time)
+
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0

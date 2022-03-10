@@ -119,9 +119,13 @@ N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
+planner = robotoc.CrawlingFootStepPlanner(robot)
+planner.set_gait_pattern(step_length, (yaw_cmd*swing_time))
+
 nthreads = 4
 mpc = robotoc.MPCCrawling(ocp, nthreads)
-mpc.set_gait_pattern(vcom_cmd, yaw_cmd, swing_time, initial_lift_time)
+mpc.set_gait_pattern(planner, swing_time, initial_lift_time)
+
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0

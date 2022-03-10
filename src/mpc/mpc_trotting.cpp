@@ -11,7 +11,7 @@
 namespace robotoc {
 
 MPCTrotting::MPCTrotting(const OCP& ocp, const int nthreads)
-  : foot_step_planner_(std::make_shared<TrottingFootStepPlanner>(ocp.robot())),
+  : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(
         ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
@@ -57,8 +57,8 @@ MPCTrotting::~MPCTrotting() {
 }
 
 
-void MPCTrotting::setGaitPattern(const Eigen::Vector3d& vcom, 
-                                 const double yaw_rate, const double swing_time,
+void MPCTrotting::setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+                                 const double swing_time,
                                  const double initial_lift_time) {
   try {
     if (swing_time <= 0) {
@@ -72,11 +72,9 @@ void MPCTrotting::setGaitPattern(const Eigen::Vector3d& vcom,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  vcom_ = vcom;
-  step_length_ = vcom * swing_time;
+  foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
   initial_lift_time_ = initial_lift_time;
-  foot_step_planner_->setGaitPattern(step_length_, (swing_time*yaw_rate));
 }
 
 
@@ -150,11 +148,6 @@ double MPCTrotting::KKTError(const double t, const Eigen::VectorXd& q,
 
 double MPCTrotting::KKTError() const {
   return ocp_solver_.KKTError();
-}
-
-
-std::shared_ptr<TrottingFootStepPlanner> MPCTrotting::getPlanner() {
-  return foot_step_planner_;
 }
 
 

@@ -13,6 +13,7 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/mpc/foot_step_planner_base.hpp"
 #include "robotoc/mpc/crawling_foot_step_planner.hpp"
 
 
@@ -64,13 +65,13 @@ public:
 
   ///
   /// @brief Sets the gait pattern. 
-  /// @param[in] vcom Center-of-mass velocity. 
-  /// @param[in] yaw_rate Yaw-rate. 
+  /// @param[in] foot_step_planner Foot step planner of the gait. 
   /// @param[in] swing_time Swing time of the gait. 
   /// @param[in] initial_lift_time Start time of the gait. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& vcom, const double yaw_rate,
-                      const double swing_time, const double initial_lift_time);
+  void setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+                      const double swing_time, 
+                      const double initial_lift_time);
 
   ///
   /// @brief Initializes the optimal control problem solover. 
@@ -120,16 +121,10 @@ public:
   ///
   double KKTError() const;
 
-  ///
-  /// @brief Gets the foot step planner handle.
-  /// @return Shared ptr to the foot step planner.
-  ///
-  std::shared_ptr<CrawlingFootStepPlanner> getPlanner();
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<CrawlingFootStepPlanner> foot_step_planner_;
+  std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;

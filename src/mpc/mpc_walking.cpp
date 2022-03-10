@@ -11,7 +11,7 @@
 namespace robotoc {
 
 MPCWalking::MPCWalking(const OCP& ocp, const int nthreads)
-  : foot_step_planner_(std::make_shared<WalkingFootStepPlanner>(ocp.robot())),
+  : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(
         ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
@@ -59,10 +59,10 @@ MPCWalking::~MPCWalking() {
 }
 
 
-void MPCWalking::setGaitPattern(const Eigen::Vector3d& vcom, 
-                                 const double yaw_rate, const double swing_time,
-                                 const double double_support_time,
-                                 const double initial_lift_time) {
+void MPCWalking::setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+                                const double swing_time,
+                                const double double_support_time,
+                                const double initial_lift_time) {
   try {
     if (swing_time <= 0) {
       throw std::out_of_range("invalid value: swing_time must be positive!");
@@ -78,14 +78,10 @@ void MPCWalking::setGaitPattern(const Eigen::Vector3d& vcom,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  vcom_ = vcom;
-  step_length_ = vcom * swing_time;
+  foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
   double_support_time_ = double_support_time;
   initial_lift_time_ = initial_lift_time;
-  enable_double_support_phase_ = (double_support_time > 0);
-  foot_step_planner_->setGaitPattern(step_length_, (swing_time*yaw_rate), 
-                                     enable_double_support_phase_);
 }
 
 
@@ -158,11 +154,6 @@ double MPCWalking::KKTError(const double t, const Eigen::VectorXd& q,
 
 double MPCWalking::KKTError() const {
   return ocp_solver_.KKTError();
-}
-
-
-std::shared_ptr<WalkingFootStepPlanner> MPCWalking::getPlanner() {
-  return foot_step_planner_;
 }
 
 

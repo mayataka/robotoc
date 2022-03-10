@@ -16,7 +16,7 @@ PYBIND11_MODULE(mpc_walking, m) {
     .def(py::init<const OCP&, const int>(),
          py::arg("ocp"), py::arg("nthreads"))
     .def("set_gait_pattern", &MPCWalking::setGaitPattern,
-         py::arg("vcom"), py::arg("yaw_rate"), py::arg("swing_time"), 
+         py::arg("planner"), py::arg("swing_time"), 
          py::arg("double_support_time"), py::arg("initial_lift_time"))
     .def("init", &MPCWalking::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
@@ -29,8 +29,7 @@ PYBIND11_MODULE(mpc_walking, m) {
           static_cast<double (MPCWalking::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCWalking::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
-          static_cast<double (MPCWalking::*)() const>(&MPCWalking::KKTError))
-    .def("get_planner", &MPCWalking::getPlanner);
+          static_cast<double (MPCWalking::*)() const>(&MPCWalking::KKTError));
 }
 
 } // namespace python

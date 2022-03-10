@@ -9,6 +9,9 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
+#include "robotoc/robot/se3.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/mpc/foot_step_planner_base.hpp"
 
 
 namespace robotoc {
@@ -17,7 +20,7 @@ namespace robotoc {
 /// @class CrawlingFootStepPlanner
 /// @brief Foot step planner for the crawling gait of quadrupeds. 
 ///
-class CrawlingFootStepPlanner {
+class CrawlingFootStepPlanner final : public FootStepPlannerBase {
 public:
   ///
   /// @brief Constructs the planner.
@@ -62,35 +65,19 @@ public:
   ///
   void setGaitPattern(const Eigen::Vector3d& step_length, const double yaw_rate);
 
-  ///
-  /// @brief Initializes the planner. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  ///
-  void init(const Eigen::VectorXd& q);
+  void init(const Eigen::VectorXd& q) override;
 
-  ///
-  /// @brief Plans the foot steps. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] contact_status Initial contact status.
-  /// @param[in] planning_steps Number of planning steps. Must be non-negative.
-  /// @return True if the planning is succeeded. False if not.
-  ///
   bool plan(const Eigen::VectorXd& q, const ContactStatus& contact_status,
-            const int planning_steps);
+            const int planning_steps) override;
 
   ///
-  /// @brief Gets the contact positions of a specified step. 
-  /// @param[in] step Step of interest.
-  /// @return Contact positions of a specified step. 
+  /// @brief This is invalid in CrawlingFootStepPlanner. 
   ///
-  const std::vector<Eigen::Vector3d>& contactPosition(const int step) const;
+  const aligned_vector<SE3>& contactPlacement(const int step) const override;
 
-  ///
-  /// @brief Gets the CoM position of a specified step. 
-  /// @param[in] step Step of interest.
-  /// @return CoM position of a specified step. 
-  ///
-  const Eigen::Vector3d& com(const int step) const;
+  const std::vector<Eigen::Vector3d>& contactPosition(const int step) const override;
+
+  const Eigen::Vector3d& com(const int step) const override;
 
   void disp(std::ostream& os) const;
 
@@ -105,6 +92,7 @@ public:
 private:
   Robot robot_;
   int LF_foot_id_, LH_foot_id_, RF_foot_id_, RH_foot_id_;
+  aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
   std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
   Eigen::Vector3d step_length_, com_;

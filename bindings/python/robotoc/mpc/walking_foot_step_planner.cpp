@@ -12,7 +12,8 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(walking_foot_step_planner, m) {
-  py::class_<WalkingFootStepPlanner, std::shared_ptr<WalkingFootStepPlanner>>(m, "WalkingFootStepPlanner")
+  py::class_<WalkingFootStepPlanner, FootStepPlannerBase, 
+             std::shared_ptr<WalkingFootStepPlanner>>(m, "WalkingFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("biped_robot"))
     .def("set_gait_pattern", &WalkingFootStepPlanner::setGaitPattern,

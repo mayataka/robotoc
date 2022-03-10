@@ -120,9 +120,13 @@ N = 18
 max_steps = 3
 ocp = robotoc.OCP(robot, cost, constraints, T, N, max_steps)
 
+planner = robotoc.TrottingFootStepPlanner(robot)
+planner.set_gait_pattern(step_length, (yaw_cmd*swing_time))
+
 nthreads = 4
 mpc = robotoc.MPCTrotting(ocp, nthreads)
-mpc.set_gait_pattern(vcom_cmd, yaw_cmd, swing_time, initial_lift_time)
+mpc.set_gait_pattern(planner, swing_time, initial_lift_time)
+
 q = q_standing
 v = np.zeros(robot.dimv())
 t = 0.0
@@ -139,6 +143,6 @@ sim_start_time = 0.0
 sim_end_time = 5.0
 sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
-sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
+sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='anymal_trotting.mp4')

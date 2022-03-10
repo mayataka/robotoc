@@ -8,7 +8,8 @@
 namespace robotoc {
 
 CrawlingFootStepPlanner::CrawlingFootStepPlanner(const Robot& quadruped_robot)
-  : robot_(quadruped_robot),
+  : FootStepPlannerBase(),
+    robot_(quadruped_robot),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
     RF_foot_id_(quadruped_robot.pointContactFrames()[2]),
@@ -160,6 +161,12 @@ bool CrawlingFootStepPlanner::plan(const Eigen::VectorXd& q,
     com_ref_.push_back(com);
   }
   return true;
+}
+
+
+const aligned_vector<SE3>& CrawlingFootStepPlanner::contactPlacement(
+    const int step) const {
+  return contact_placement_ref_[step];
 }
 
 
