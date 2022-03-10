@@ -16,6 +16,7 @@
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/robot/se3.hpp"
+#include "robotoc/mpc/foot_step_planner_base.hpp"
 
 
 namespace robotoc {
@@ -66,8 +67,7 @@ public:
 
   ///
   /// @brief Sets the gait pattern. 
-  /// @param[in] jump_length Length of the jump. 
-  /// @param[in] jump_yaw Change in the yaw angle of the base after jumping. 
+  /// @param[in] foot_step_planner Foot step planner of the jump. 
   /// @param[in] flying_time If STO is enabled, this is initial guess of the 
   /// flying time. Otherwise, this is used as the fixed flying time.
   /// @param[in] min_flying_time Minimum flying time. 
@@ -75,7 +75,7 @@ public:
   /// ground time. Otherwise, this is used as the fixed ground time.
   /// @param[in] min_ground_time Minimum time duration after landing. 
   ///
-  void setJumpPattern(const Eigen::Vector3d& jump_length, const double jump_yaw,
+  void setJumpPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
                       const double flying_time, const double min_flying_time, 
                       const double ground_time, const double min_ground_time);
 
@@ -144,19 +144,14 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Robot robot_;
+  std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<robotoc::STOConstraints> sto_constraints_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_ground_, cs_flying_;
-  aligned_vector<SE3> contact_placements_, contact_placements_goal_,
-                      contact_placements_store_, 
-                      contact_placements_local_;
-  Eigen::Matrix3d R_jump_yaw_;
   robotoc::Solution s_;
-  Eigen::Vector3d jump_length_;
-  double jump_yaw_, flying_time_, min_flying_time_, ground_time_, min_ground_time_,
+  double flying_time_, min_flying_time_, ground_time_, min_ground_time_,
          T_, dt_, dtm_, t_mpc_start_, eps_;
   int N_, current_step_;
 

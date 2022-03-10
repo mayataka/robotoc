@@ -16,8 +16,7 @@ PYBIND11_MODULE(mpc_jumping, m) {
     .def(py::init<const OCP&, const int>(),
          py::arg("ocp"), py::arg("nthreads"))
     .def("set_jump_pattern", &MPCJumping::setJumpPattern,
-         py::arg("jump_length"), py::arg("jump_yaw"), 
-         py::arg("flying_time"), py::arg("min_flying_time"), 
+         py::arg("foot_step_planner"), py::arg("flying_time"), py::arg("min_flying_time"), 
          py::arg("ground_time"), py::arg("min_ground_time"))
     .def("init", &MPCJumping::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"), 

@@ -14,7 +14,6 @@
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/mpc/foot_step_planner_base.hpp"
-#include "robotoc/mpc/trotting_foot_step_planner.hpp"
 
 
 namespace robotoc {

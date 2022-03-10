@@ -11,7 +11,7 @@
 namespace robotoc {
 
 MPCJumping::MPCJumping(const OCP& ocp, const int nthreads)
-  : robot_(ocp.robot()),
+  : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(
         ocp.robot(), ocp.maxNumEachDiscreteEvents())),
     sto_constraints_(ocp.sto_constraints()),
@@ -19,14 +19,7 @@ MPCJumping::MPCJumping(const OCP& ocp, const int nthreads)
     solver_options_(SolverOptions::defaultOptions()),
     cs_ground_(ocp.robot().createContactStatus()),
     cs_flying_(ocp.robot().createContactStatus()),
-    contact_placements_(),
-    contact_placements_local_(),
-    contact_placements_goal_(),
-    contact_placements_store_(),
-    R_jump_yaw_(Eigen::Matrix3d::Identity()),
     s_(),
-    jump_length_(Eigen::Vector3d::Zero()),
-    jump_yaw_(0),
     flying_time_(0),
     min_flying_time_(0),
     ground_time_(0),
@@ -52,12 +45,10 @@ MPCJumping::~MPCJumping() {
 }
 
 
-void MPCJumping::setJumpPattern(const Eigen::Vector3d& jump_length, 
-                                const double jump_yaw, 
-                                const double flying_time, 
-                                const double min_flying_time, 
-                                const double ground_time, 
-                                const double min_ground_time) {
+void MPCJumping::setJumpPattern(
+    const std::shared_ptr<FootStepPlannerBase>& foot_step_planner, 
+    const double flying_time, const double min_flying_time, 
+    const double ground_time, const double min_ground_time) {
   try {
     if (flying_time <= 0) {
       throw std::out_of_range("invalid value: flying_time must be positive!");
@@ -76,11 +67,7 @@ void MPCJumping::setJumpPattern(const Eigen::Vector3d& jump_length,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  jump_length_ = jump_length;
-  jump_yaw_ = jump_yaw;
-  R_jump_yaw_ << std::cos(jump_yaw), -std::sin(jump_yaw), 0, 
-                 std::sin(jump_yaw), std::cos(jump_yaw),  0,
-                 0, 0, 1;
+  foot_step_planner_ = foot_step_planner;
   flying_time_ = flying_time;
   min_flying_time_ = min_flying_time;
   ground_time_ = ground_time;
@@ -98,7 +85,7 @@ void MPCJumping::init(const double t, const Eigen::VectorXd& q,
   contact_sequence_->push_back(cs_flying_, t_lift_off, sto);
   contact_sequence_->push_back(cs_ground_, t_touch_down, sto);
   resetMinimumDwellTimes(t, dtm_);
-  resetGoalContactPlacements(q);
+  foot_step_planner_->init(q);
   resetContactPlacements(q);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -109,6 +96,7 @@ void MPCJumping::init(const double t, const Eigen::VectorXd& q,
   ground_time_ = t + T_ - ts[1];
   flying_time_ = t + T_ - ts[0] - ground_time_;
   t_mpc_start_ = t;
+
 }
 
 
@@ -122,13 +110,11 @@ void MPCJumping::reset(const double t, const Eigen::VectorXd& q,
   contact_sequence_->push_back(cs_flying_, t_lift_off, sto);
   contact_sequence_->push_back(cs_ground_, t_touch_down, sto);
   resetMinimumDwellTimes(t, dtm_);
-  resetGoalContactPlacements(q);
+  foot_step_planner_->init(q);
   resetContactPlacements(q);
-  for (auto& e : s_.data)    { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
-  for (auto& e : s_.impulse) { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
-  for (auto& e : s_.aux)     { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
-  for (auto& e : s_.lift)    { e.q.head<3>().noalias() += R_jump_yaw_ * jump_length_; }
   ocp_solver_.setSolution(s_);
+  ocp_solver_.setSolution("q", q);
+  ocp_solver_.setSolution("q", v);
   ocp_solver_.setSolverOptions(solver_options);
   ocp_solver_.meshRefinement(t);
   ocp_solver_.solve(t, q, v, true);
@@ -203,59 +189,20 @@ void MPCJumping::resetMinimumDwellTimes(const double t, const double min_dt) {
 }
 
 
-void MPCJumping::resetGoalContactPlacements(const Eigen::VectorXd& q) {
-  robot_.updateFrameKinematics(q);
-  const Eigen::Quaterniond quat_init = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5));
-  const Eigen::Matrix3d R_init = quat_init.toRotationMatrix();
-  contact_placements_local_.clear();
-  for (const auto frame : robot_.contactFrames()) {
-    contact_placements_local_.emplace_back(
-        R_init.transpose() * robot_.frameRotation(frame),
-        R_init.transpose() * (robot_.framePosition(frame) - q.template head<3>()));
-  }
-  const Eigen::Matrix3d R_goal = R_jump_yaw_ * R_init;
-  const Eigen::Quaterniond quat_goal = Eigen::Quaterniond(R_goal);
-  Eigen::VectorXd q_goal = q;
-  q_goal.template head<3>().noalias() += R_jump_yaw_ * jump_length_;
-  q_goal.template segment<4>(3) = quat_goal.coeffs();
-  robot_.updateFrameKinematics(q_goal);
-  contact_placements_goal_.clear();
-  for (int i=0; i<robot_.contactFrames().size(); ++i) {
-    contact_placements_goal_.emplace_back(
-        R_goal * contact_placements_local_[i].rotation(),
-        q.template head<3>() + R_goal * contact_placements_local_[i].translation()
-                             + R_jump_yaw_ * jump_length_);
-  }
-}
-
-
 void MPCJumping::resetContactPlacements(const Eigen::VectorXd& q) {
-  robot_.updateFrameKinematics(q);
-  contact_placements_.clear();
-  // update contact points only if the current step is standing
-  if (current_step_ == 0 || current_step_ == 2) {
-    contact_placements_store_.clear();
-    for (const auto frame : robot_.contactFrames()) {
-      contact_placements_.push_back(robot_.framePlacement(frame));
-      contact_placements_store_.push_back(robot_.framePlacement(frame));
-    }
-  }
-  else {
-    for (const auto& e : contact_placements_store_) {
-      contact_placements_.push_back(e);
-    }
-  }
+  const bool success = foot_step_planner_->plan(q, contact_sequence_->contactStatus(0),
+                                                contact_sequence_->numContactPhases());
   if (current_step_ == 0) {
-    contact_sequence_->setContactPlacements(0, contact_placements_);
-    contact_sequence_->setContactPlacements(1, contact_placements_goal_);
-    contact_sequence_->setContactPlacements(2, contact_placements_goal_);
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
+    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacement(2));
+    contact_sequence_->setContactPlacements(2, foot_step_planner_->contactPlacement(2));
   }
   else if (current_step_ == 1) {
-    contact_sequence_->setContactPlacements(0, contact_placements_goal_);
-    contact_sequence_->setContactPlacements(1, contact_placements_goal_);
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
+    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacement(1));
   }
   else {
-    contact_sequence_->setContactPlacements(0, contact_placements_);
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
   }
 }
 
