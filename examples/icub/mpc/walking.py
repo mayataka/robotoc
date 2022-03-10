@@ -3,9 +3,9 @@ import numpy as np
 from icub_simulator import iCubSimulator
 
 
+path_to_urdf = '../icub_description/urdf/icub_lower_half.urdf'
 contact_frames = ['l_sole', 'r_sole']
 contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
-path_to_urdf = '../icub_description/urdf/icub_lower_half.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)

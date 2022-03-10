@@ -69,6 +69,8 @@ PYBIND11_MODULE(robot, m) {
       },  py::arg("q"))
     .def("create_contact_status", &Robot::createContactStatus)
     .def("create_impulse_status", &Robot::createImpulseStatus)
+    .def("frame_id", &Robot::frameId,
+          py::arg("frame_name"))
     .def("total_weight", &Robot::totalWeight)
     .def("dimq", &Robot::dimq)
     .def("dimv", &Robot::dimv)

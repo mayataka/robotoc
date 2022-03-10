@@ -143,6 +143,16 @@ Robot::Robot(const std::string& path_to_urdf,
   max_num_contacts_ = contact_frame_names.size();
   contact_frames_.clear();
   for (const auto& e : contact_frame_names) {
+    try {
+      if (!model_.existFrame(e)) {
+        throw std::invalid_argument(
+            "Invalid argument: frame " + e + " does not exit!");
+      }
+    }
+    catch(const std::exception& e) {
+      std::cerr << e.what() << '\n';
+      std::exit(EXIT_FAILURE);
+    }
     contact_frames_.push_back(model_.getFrameId(e));
   }
   contact_types_ = contact_types; 

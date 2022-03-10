@@ -16,6 +16,7 @@
 #include "pinocchio/algorithm/contact-dynamics.hpp"
 
 #include <cassert>
+#include <stdexcept>
 
 namespace robotoc {
 
@@ -755,6 +756,21 @@ inline void Robot::normalizeConfiguration(
     pinocchio::normalize(model_, 
                          const_cast<Eigen::MatrixBase<ConfigVectorType>&>(q));
   }
+}
+
+
+inline int Robot::frameId(const std::string& frame_name) const {
+  try {
+    if (!model_.existFrame(frame_name)) {
+      throw std::invalid_argument(
+          "Invalid argument: frame " + frame_name + " does not exit!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  return model_.getFrameId(frame_name);
 }
 
 

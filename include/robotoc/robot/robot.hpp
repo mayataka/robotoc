@@ -59,7 +59,7 @@ public:
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
   /// BaseJointType::FixedBase.
-  /// @param[in] contact_frames Collection of the frames that can have point and 
+  /// @param[in] contact_frames Collection of the frames that can have point or 
   /// surface contacts with the environments. 
   /// @param[in] contact_types Types of the contacts. Size must be same as 
   /// that of contact_frames.
@@ -84,7 +84,7 @@ public:
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
   /// BaseJointType::FixedBase.
   /// @param[in] contact_frame_names Collection of names of the frames that can 
-  /// have point and surface contacts with the environments. 
+  /// have point or surface contacts with the environments. 
   /// @param[in] contact_types Types of the contacts. Size must be same as 
   /// that of contact_frames.
   /// @param[in] baumgarte_weights The weight paramter of the Baumgarte's 
@@ -107,7 +107,7 @@ public:
   /// @param[in] path_to_urdf Path to the URDF file.
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. 
-  /// @param[in] contact_frames Collection of the frames that can have point and 
+  /// @param[in] contact_frames Collection of the frames that can have point or
   /// surface contacts with the environments. If this is empty, it is assumed 
   /// that this robot never has any contacts.
   /// @param[in] contact_types Types of the contacts. Size must be same as 
@@ -132,7 +132,7 @@ public:
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. 
   /// @param[in] contact_frame_names Collection of names of the frames that can  
-  /// have point and surface contacts with the environments. If this is empty,  
+  /// have point or surface contacts with the environments. If this is empty,  
   /// it is assumed that this robot never has any contacts.
   /// @param[in] contact_types Types of the contacts. Size must be same as 
   /// that of contact_frames.
@@ -653,6 +653,14 @@ public:
   /// @return The upper limit of the position of each joints.
   ///
   Eigen::VectorXd upperJointPositionLimit() const;
+
+  ///
+  /// @brief Gets the id of the specified frame.
+  /// @param[in] frame_name Frame name of interest.
+  /// @return id of the specified frame. Returns maximum number of the frames 
+  /// if the frame whose name is frame_name does not exist.
+  /// 
+  int frameId(const std::string& frame_name) const;
 
   ///
   /// @brief Returns the total weight of this robot model.

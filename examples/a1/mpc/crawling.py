@@ -3,9 +3,9 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
+path_to_urdf = '../a1_description/urdf/a1.urdf'
 contact_frames = ['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'] 
 contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
-path_to_urdf = '../a1_description/urdf/a1.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)

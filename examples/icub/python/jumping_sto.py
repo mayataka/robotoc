@@ -3,14 +3,13 @@ import numpy as np
 import math
 
 
-L_foot_id = 26
-R_foot_id = 46
-contact_frames = [L_foot_id, R_foot_id]
-contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 path_to_urdf = '../icub_description/urdf/icub.urdf'
+contact_frames = ['l_sole', 'r_sole']
+contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
+L_foot_id, R_foot_id = robot.contact_frames()
 
 dt = 0.02
 jump_length = np.array([0.5, 0, 0])
@@ -139,7 +138,7 @@ print(ocp_solver.get_solver_statistics())
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')
-viewer.set_contact_info(contact_frames, mu)
+viewer.set_contact_info(robot.contact_frames(), mu)
 discretization = ocp_solver.get_time_discretization()
 viewer.display(discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

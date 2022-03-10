@@ -3,9 +3,9 @@ import numpy as np
 from anymal_simulator import ANYmalSimulator
 
 
+path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 contact_frames = ['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'] 
 contact_types = [robotoc.ContactType.PointContact for i in range(4)]
-path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)

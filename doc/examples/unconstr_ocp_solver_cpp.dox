@@ -46,14 +46,14 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void update_x6d_ref(const double t, robotoc::SE3& x6d_ref) const override {
+  void update_x6d_ref(const robotoc::GridInfo& grid_info, robotoc::SE3& x6d_ref) const override {
     Eigen::Vector3d pos(pos0_);
-    pos.coeffRef(1) += radius_ * sin(M_PI*t);
-    pos.coeffRef(2) += radius_ * cos(M_PI*t);
+    pos.coeffRef(1) += radius_ * sin(M_PI*grid_info.t);
+    pos.coeffRef(2) += radius_ * cos(M_PI*grid_info.t);
     x6d_ref = robotoc::SE3(rotm_, pos);
   }
 
-  bool isActive(const double t) const override {
+  bool isActive(const robotoc::GridInfo& grid_info) const override {
     return true;
   }
 
@@ -70,6 +70,7 @@ We define the robot model.
 ```
   const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
   robotoc::Robot robot(path_to_urdf);
+  const int ee_frame_id = robot.frameId("iiwa_link_ee_kuka");
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 50));
   robot.setJointVelocityLimit(Eigen::VectorXd::Constant(robot.dimv(), M_PI_2));
 ```
@@ -84,7 +85,6 @@ Next, we construct the cost function.
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
-  const int ee_frame_id = 22; 
   auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
   auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, x6d_ref);
   task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
