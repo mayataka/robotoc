@@ -147,7 +147,6 @@ sim_start_time = 0.0
 sim_end_time = 5.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
-sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.5, 0., 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
-# sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')

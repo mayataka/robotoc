@@ -151,10 +151,11 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
   - `MPCTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
   - `MPCJumping` : MPC with `OCPSolver` for the jumping motion of quadrupedal or bipedal robots.
   - `MPCWalking` : MPC with `OCPSolver` for the walking motion of bipedal robots.
-- You can run the simulations of these MPC with `anymal/mpc/walking.py`, `anymal/mpc/trotting.py`, and `a1/mpc/jumping.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
+- You can find the simulations of these MPC at `a1/mpc`, `anymal/mpc`, and `icub/mpc` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="280"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="280">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/a1_trotting.gif" width="240"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/anymal_crawling.gif" width="240"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub_walking.gif" width="240">
 
 
 ## Citing robotoc
