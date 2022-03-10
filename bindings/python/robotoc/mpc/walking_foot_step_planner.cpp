@@ -16,7 +16,8 @@ PYBIND11_MODULE(walking_foot_step_planner, m) {
     .def(py::init<const Robot&>(),
          py::arg("biped_robot"))
     .def("set_gait_pattern", &WalkingFootStepPlanner::setGaitPattern,
-         py::arg("step_length"), py::arg("yaw_rate"))
+         py::arg("step_length"), py::arg("yaw_rate"), 
+         py::arg("enable_double_support_phase"))
     .def("init", &WalkingFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &WalkingFootStepPlanner::plan,

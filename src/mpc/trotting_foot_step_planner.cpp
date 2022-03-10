@@ -7,18 +7,28 @@
 
 namespace robotoc {
 
-TrottingFootStepPlanner::TrottingFootStepPlanner(const Robot& quadeuped_robot)
-  : robot_(quadeuped_robot),
-    LF_foot_id_(quadeuped_robot.pointContactFrames()[0]),
-    LH_foot_id_(quadeuped_robot.pointContactFrames()[1]),
-    RF_foot_id_(quadeuped_robot.pointContactFrames()[2]),
-    RH_foot_id_(quadeuped_robot.pointContactFrames()[3]),
+TrottingFootStepPlanner::TrottingFootStepPlanner(const Robot& quadruped_robot)
+  : robot_(quadruped_robot),
+    LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
+    LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
+    RF_foot_id_(quadruped_robot.pointContactFrames()[2]),
+    RH_foot_id_(quadruped_robot.pointContactFrames()[3]),
     contact_position_ref_(),
     com_ref_(),
     com_to_contact_position_local_(),
     step_length_(Eigen::Vector3d::Zero()),
     com_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()) {
+  try {
+    if (quadruped_robot.maxNumPointContacts() < 4) {
+      throw std::out_of_range(
+          "invalid argument: robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 

@@ -17,7 +17,7 @@ PYBIND11_MODULE(mpc_walking, m) {
          py::arg("ocp"), py::arg("nthreads"))
     .def("set_gait_pattern", &MPCWalking::setGaitPattern,
          py::arg("vcom"), py::arg("yaw_rate"), py::arg("swing_time"), 
-         py::arg("initial_lift_time"))
+         py::arg("double_support_time"), py::arg("initial_lift_time"))
     .def("init", &MPCWalking::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
     .def("set_solver_options", &MPCWalking::setSolverOptions,

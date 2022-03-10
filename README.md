@@ -3,10 +3,10 @@
 [![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="180"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="180"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="180"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="180"> 
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="150"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="150"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="150"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="150"> 
 
 ## Features for efficient optimal control of robotic systems
 - Direct multiple-shooting method based on the **lifted contact dynamics** / **inverse dynamics**.
@@ -134,16 +134,16 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 
 - Walking, trotting, pacing, and bounding gaits of quadruped ANYmal using `OCPSolver` (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints) with fixed contact timings (e.g., `anymal/walking.cpp` or `anymal/python/walking.py`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="195"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="195"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="195"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="195">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="180">
 
 ### Switching time optimization (STO) examples
 -  `OCPSolver` for the switching time optimization (STO) problem, which optimizes the trajectory and the contact timings simultaneously (`anymal/python/jumping_sto.py` and `icub/python/jumping_sto.py`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="280"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="260">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="230">
 
 ### Whole-body MPC examples
 - The following three example implementations of whole-body MPC are provided:

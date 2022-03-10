@@ -1,9 +1,7 @@
 #ifndef ROBOTOC_MPC_WALKING_HPP_
 #define ROBOTOC_MPC_WALKING_HPP_
 
-#include <vector>
 #include <memory>
-#include <limits>
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -69,10 +67,12 @@ public:
   /// @param[in] vcom Center-of-mass velocity. 
   /// @param[in] yaw_rate Yaw-rate. 
   /// @param[in] swing_time Swing time of the gait. 
+  /// @param[in] double_support_time Double support time of the gait. 
   /// @param[in] initial_lift_time Start time of the gait. 
   ///
   void setGaitPattern(const Eigen::Vector3d& vcom, const double yaw_rate,
-                      const double swing_time, const double initial_lift_time);
+                      const double swing_time, const double double_support_time, 
+                      const double initial_lift_time);
 
   ///
   /// @brief Initializes the optimal control problem solover. 
@@ -122,6 +122,10 @@ public:
   ///
   double KKTError() const;
 
+  ///
+  /// @brief Gets the foot step planner handle.
+  /// @return Shared ptr to the foot step planner.
+  ///
   std::shared_ptr<WalkingFootStepPlanner> getPlanner();
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -133,9 +137,10 @@ private:
   SolverOptions solver_options_;
   ContactStatus cs_standing_, cs_right_swing_, cs_left_swing_;
   Eigen::Vector3d vcom_, step_length_;
-  double step_height_, swing_time_, initial_lift_time_, 
+  double step_height_, swing_time_, double_support_time_, initial_lift_time_, 
          t_, T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;
+  bool enable_double_support_phase_;
 
   bool addStep(const double t);
 

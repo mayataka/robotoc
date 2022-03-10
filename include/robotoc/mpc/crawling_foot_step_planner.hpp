@@ -21,9 +21,9 @@ class CrawlingFootStepPlanner {
 public:
   ///
   /// @brief Constructs the planner.
-  /// @param[in] quadeuped_robot Quadruped robot model. 
+  /// @param[in] quadruped_robot Quadruped robot model. 
   ///
-  CrawlingFootStepPlanner(const Robot& quadeuped_robot);
+  CrawlingFootStepPlanner(const Robot& quadruped_robot);
 
   ///
   /// @brief Default constructor. 

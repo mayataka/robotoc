@@ -61,8 +61,11 @@ public:
   /// @brief Sets the gait pattern. 
   /// @param[in] step_length Step length of the gait. 
   /// @param[in] yaw_rate Yaw-rate of the gait. 
+  /// @param[in] enable_double_support_phase Falgs to enable the double support
+  /// phase or not. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& step_length, const double yaw_rate);
+  void setGaitPattern(const Eigen::Vector3d& step_length, const double yaw_rate,
+                      const bool enable_double_support_phase);
 
   ///
   /// @brief Initializes the planner. 
@@ -106,12 +109,13 @@ public:
 
 private:
   Robot robot_;
-  int L_foot_id_, R_foot_id_;
+  int L_foot_id_, R_foot_id_, previous_initial_step_;
   double left_to_right_leg_distance_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
   Eigen::Vector3d step_length_, com_;
-  Eigen::Matrix3d R_yaw_, R_yaw_half_;
+  Eigen::Matrix3d R_yaw_;
+  bool enable_double_support_phase_;
 
 };
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <algorithm>
 
 
@@ -22,6 +23,7 @@ MPCWalking::MPCWalking(const OCP& ocp, const int nthreads)
     step_length_(Eigen::Vector3d::Zero()),
     step_height_(0),
     swing_time_(0),
+    double_support_time_(0),
     initial_lift_time_(0),
     t_(0),
     T_(ocp.T()),
@@ -31,7 +33,18 @@ MPCWalking::MPCWalking(const OCP& ocp, const int nthreads)
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(ocp.N()),
     current_step_(0),
-    predict_step_(0) {
+    predict_step_(0),
+    enable_double_support_phase_(false) {
+  try {
+    if (ocp.robot().maxNumSurfaceContacts() < 2) {
+      throw std::out_of_range(
+          "invalid argument: robot is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   cs_standing_.activateContacts({0, 1});
   cs_right_swing_.activateContacts({0});
   cs_left_swing_.activateContacts({1});
@@ -48,10 +61,14 @@ MPCWalking::~MPCWalking() {
 
 void MPCWalking::setGaitPattern(const Eigen::Vector3d& vcom, 
                                  const double yaw_rate, const double swing_time,
+                                 const double double_support_time,
                                  const double initial_lift_time) {
   try {
     if (swing_time <= 0) {
       throw std::out_of_range("invalid value: swing_time must be positive!");
+    }
+    if (double_support_time < 0) {
+      throw std::out_of_range("invalid value: double_support_time must be non-negative!");
     }
     if (initial_lift_time <= 0) {
       throw std::out_of_range("invalid value: initial_lift_time must be positive!");
@@ -64,8 +81,11 @@ void MPCWalking::setGaitPattern(const Eigen::Vector3d& vcom,
   vcom_ = vcom;
   step_length_ = vcom * swing_time;
   swing_time_ = swing_time;
+  double_support_time_ = double_support_time;
   initial_lift_time_ = initial_lift_time;
-  foot_step_planner_->setGaitPattern(step_length_, (swing_time*yaw_rate));
+  enable_double_support_phase_ = (double_support_time > 0);
+  foot_step_planner_->setGaitPattern(step_length_, (swing_time*yaw_rate), 
+                                     enable_double_support_phase_);
 }
 
 
@@ -82,7 +102,6 @@ void MPCWalking::init(const double t, const Eigen::VectorXd& q,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  t_ = t;
   current_step_ = 0;
   predict_step_ = 0;
   contact_sequence_->initContactSequence(cs_standing_);
@@ -156,20 +175,53 @@ bool MPCWalking::addStep(const double t) {
     }
   }
   else {
-    double tt = ts_last_ + swing_time_;
-    const auto ts = contact_sequence_->eventTimes();
-    if (!ts.empty()) {
-      tt = ts.back() + swing_time_;
-    }
-    if (tt < t+T_-dtm_) {
-      if (predict_step_%2 != 0) {
-        contact_sequence_->push_back(cs_left_swing_, tt);
+    if (enable_double_support_phase_) {
+      double tt = ts_last_;
+      if (current_step_%2 == 0) {
+        tt += double_support_time_;
       }
       else {
-        contact_sequence_->push_back(cs_right_swing_, tt);
+        tt += swing_time_;
       }
-      ++predict_step_;
-      return true;
+      const auto ts = contact_sequence_->eventTimes();
+      if (!ts.empty()) {
+        if (predict_step_%2 != 1) {
+          tt = ts.back() + double_support_time_;
+        }
+        else {
+          tt = ts.back() + swing_time_;
+        }
+      }
+      if (tt < t+T_-dtm_) {
+        if (predict_step_%4 == 0) {
+          contact_sequence_->push_back(cs_right_swing_, tt);
+        }
+        else if (predict_step_%4 == 2) {
+          contact_sequence_->push_back(cs_left_swing_, tt);
+        }
+        else {
+          contact_sequence_->push_back(cs_standing_, tt);
+        }
+        ++predict_step_;
+        return true;
+      }
+    }
+    else {
+      double tt = ts_last_ + swing_time_;
+      const auto ts = contact_sequence_->eventTimes();
+      if (!ts.empty()) {
+        tt = ts.back() + swing_time_;
+      }
+      if (tt < t+T_-dtm_) {
+        if (predict_step_%2 != 0) {
+          contact_sequence_->push_back(cs_left_swing_, tt);
+        }
+        else {
+          contact_sequence_->push_back(cs_right_swing_, tt);
+        }
+        ++predict_step_;
+        return true;
+      }
     }
   }
   return false;

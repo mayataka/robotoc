@@ -1,9 +1,7 @@
 #ifndef ROBOTOC_MPC_CRAWLING_HPP_
 #define ROBOTOC_MPC_CRAWLING_HPP_
 
-#include <vector>
 #include <memory>
-#include <limits>
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -122,6 +120,10 @@ public:
   ///
   double KKTError() const;
 
+  ///
+  /// @brief Gets the foot step planner handle.
+  /// @return Shared ptr to the foot step planner.
+  ///
   std::shared_ptr<CrawlingFootStepPlanner> getPlanner();
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

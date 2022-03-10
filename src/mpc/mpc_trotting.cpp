@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <algorithm>
 
 
@@ -32,6 +33,16 @@ MPCTrotting::MPCTrotting(const OCP& ocp, const int nthreads)
     N_(ocp.N()),
     current_step_(0),
     predict_step_(0) {
+  try {
+    if (ocp.robot().maxNumPointContacts() < 4) {
+      throw std::out_of_range(
+          "invalid argument: robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   cs_standing_.activateContacts({0, 1, 2, 3});
   cs_lfrh_.activateContacts({0, 3});
   cs_rflh_.activateContacts({1, 2});
