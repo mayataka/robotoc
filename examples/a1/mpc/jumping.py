@@ -3,10 +3,10 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
-# jump_type = 'longitudinal'
+jump_type = 'longitudinal'
 # jump_type = 'lateral'
 # jump_type = 'back'
-jump_type = 'rotational'
+# jump_type = 'rotational'
 
 if jump_type == 'longitudinal':
     jump_length = [0.6, 0, 0]
@@ -97,17 +97,18 @@ constraints.push_back(friction_cone)
 
 T = 0.8
 N = 18
-
 max_steps = 1
 sto_cost = robotoc.STOCostFunction()
 sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_steps)
 ocp = robotoc.OCP(robot, cost, constraints, sto_cost, sto_constraints, 
                   T, N, max_steps)
 
+planner = robotoc.JumpingFootStepPlanner(robot)
+planner.set_jump_pattern(jump_length, jump_yaw)
+
 nthreads = 4
-mpc = robotoc.MPCQuadrupedalJumping(ocp, nthreads)
-mpc.set_jump_pattern(jump_length=jump_length, jump_yaw=jump_yaw,
-                     flying_time=0.3, min_flying_time=0.2, 
+mpc = robotoc.MPCJumping(ocp, nthreads)
+mpc.set_jump_pattern(planner, flying_time=0.3, min_flying_time=0.2, 
                      ground_time=0.3, min_ground_time=0.2)
 
 q = q_standing
@@ -140,5 +141,5 @@ elif jump_type == 'back':
 elif jump_type == 'rotational':
     sim.set_camera(2.0, 45, -10, q[0:3]+np.array([-0.1, 0.5, 0.]))
 
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=True, record_name=jump_type+'.mp4')

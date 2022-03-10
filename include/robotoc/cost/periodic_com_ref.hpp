@@ -34,6 +34,20 @@ public:
   ///
   ~PeriodicCoMRef();
 
+  ///
+  /// @brief Sets parameters. 
+  /// @param[in] com_ref0 Initial CoM position reference.
+  /// @param[in] vcom_ref Reference veloity of the CoM.
+  /// @param[in] t0 Start time of the reference tracking.
+  /// @param[in] period_active Period where the tracking is active.
+  /// @param[in] period_inactive Period where the tracking is inactive.
+  /// @param[in] is_first_move_half If true, the first reference CoM movement is 
+  /// half speed. Default is false.
+  ///
+  void setCoMRef(const Eigen::Vector3d com_ref0, const Eigen::Vector3d vcom_ref, 
+                 const double t0, const double period_active, 
+                 const double period_inactive, const bool is_first_move_half);
+
   void update_com_ref(const GridInfo& grid_info, Eigen::VectorXd& com_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;

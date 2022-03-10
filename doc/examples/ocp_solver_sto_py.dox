@@ -41,7 +41,7 @@ A moderate value such as several times of the time step of optimal control probl
 Then set the parameters for the optimal control problem of the jumping motion such as the jump length
 ```
 dt = 0.02
-jump_length = 0.8
+jump_length = np.array([0.8, 0, 0])
 flying_up_time = 0.15
 flying_down_time = flying_up_time
 flying_time = flying_up_time + flying_down_time
@@ -140,10 +140,10 @@ Then a lift event is appended into the back of the contact sequence.
 By setting `sto=True`, the switching time of this event is regarded as an optimization variable.
 Finally, we set the contact status after touch-down as
 ```
-contact_positions[0][0] += jump_length
-contact_positions[1][0] += jump_length
-contact_positions[2][0] += jump_length
-contact_positions[3][0] += jump_length
+contact_positions[0] += jump_length
+contact_positions[1] += jump_length
+contact_positions[2] += jump_length
+contact_positions[3] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 ```

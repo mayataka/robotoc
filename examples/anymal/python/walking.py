@@ -15,7 +15,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 dt = 0.02
-step_length = 0.25
+step_length = np.array([0.25, 0, 0])
 step_height = 0.15
 swing_time = 0.5
 double_support_time = 0.04
@@ -92,10 +92,8 @@ cost.push_back(LH_cost)
 cost.push_back(RF_cost)
 cost.push_back(RH_cost)
 
-com_ref0 = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4
-com_ref0[2] = robot.com()[2]
-vcom_ref = np.zeros(3)
-vcom_ref[0] = 0.25 * step_length / swing_time
+com_ref0 = robot.com()
+vcom_ref = 0.25 * step_length / swing_time
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, t0, 2*swing_time, 
                                  double_support_time, True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
@@ -135,13 +133,13 @@ contact_status_rh_swing.activate_contacts([0, 1, 2])
 contact_status_rh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_rh_swing, t0)
 
-contact_positions[3][0] += 0.5 * step_length
+contact_positions[3] += 0.5 * step_length
 contact_status_rf_swing = robot.create_contact_status()
 contact_status_rf_swing.activate_contacts([0, 1, 3])
 contact_status_rf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_rf_swing, t0+swing_time)
 
-contact_positions[2][0] += 0.5 * step_length
+contact_positions[2] += 0.5 * step_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+2*swing_time)
 
@@ -151,14 +149,14 @@ contact_status_lh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lh_swing, 
                            t0+double_support_time+2*swing_time)
 
-contact_positions[1][0] += step_length
+contact_positions[1] += step_length
 contact_status_lf_swing = robot.create_contact_status()
 contact_status_lf_swing.activate_contacts([1, 2, 3])
 contact_status_lf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lf_swing, 
                            t0+double_support_time+3*swing_time)
 
-contact_positions[0][0] += step_length
+contact_positions[0] += step_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, 
                            t0+double_support_time+4*swing_time)
@@ -168,11 +166,11 @@ for i in range (cycle-1):
     contact_status_rh_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_rh_swing, t1)
 
-    contact_positions[3][0] += step_length
+    contact_positions[3] += step_length
     contact_status_rf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_rf_swing, t1+swing_time)
 
-    contact_positions[2][0] += step_length
+    contact_positions[2] += step_length
     contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, t1+2*swing_time)
 
@@ -180,12 +178,12 @@ for i in range (cycle-1):
     contact_sequence.push_back(contact_status_lh_swing, 
                                t1+double_support_time+2*swing_time)
 
-    contact_positions[1][0] += step_length
+    contact_positions[1] += step_length
     contact_status_lf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lf_swing, 
                                t1+double_support_time+3*swing_time)
 
-    contact_positions[0][0] += step_length
+    contact_positions[0] += step_length
     contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, 
                                t1+double_support_time+4*swing_time)

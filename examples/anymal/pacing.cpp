@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
                        contact_frames, contact_types, baumgarte_time_step);
 
   const double dt = 0.02;
-  const double step_length = 0.25;
+  const Eigen::Vector3d step_length = {0.25, 0, 0};
   const double step_height = 0.1;
   const double swing_time = 0.24;
   const double double_support_time = 0.04;
@@ -127,10 +127,8 @@ int main(int argc, char *argv[]) {
   cost->push_back(RF_cost);
   cost->push_back(RH_cost);
 
-  Eigen::Vector3d com_ref0 = (x3d0_LF + x3d0_LH + x3d0_RF + x3d0_RH) / 4;
-  com_ref0(2) = robot.CoM()(2);
-  Eigen::Vector3d vcom_ref = Eigen::Vector3d::Zero();
-  vcom_ref.coeffRef(0) = 0.5 * step_length / swing_time;
+  const Eigen::Vector3d com_ref0 = robot.CoM();
+  const Eigen::Vector3d vcom_ref = 0.5 * step_length / swing_time;
   auto com_ref = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0, vcom_ref, t0, swing_time, 
                                                            double_support_time, true);
   auto com_cost = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref);
@@ -172,8 +170,8 @@ int main(int argc, char *argv[]) {
   contact_status_rfrh_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_rfrh_swing, t0);
 
-  contact_positions[2].coeffRef(0) += 0.5 * step_length;
-  contact_positions[3].coeffRef(0) += 0.5 * step_length;
+  contact_positions[2].noalias() += 0.5 * step_length;
+  contact_positions[3].noalias() += 0.5 * step_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, t0+swing_time);
 
@@ -183,8 +181,8 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_lflh_swing, 
                               t0+swing_time+double_support_time);
 
-  contact_positions[0].coeffRef(0) += step_length;
-  contact_positions[1].coeffRef(0) += step_length;
+  contact_positions[0].noalias() += step_length;
+  contact_positions[1].noalias() += step_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+2*swing_time+double_support_time);
@@ -194,8 +192,8 @@ int main(int argc, char *argv[]) {
     contact_status_rfrh_swing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_rfrh_swing, t1);
 
-    contact_positions[2].coeffRef(0) += step_length;
-    contact_positions[3].coeffRef(0) += step_length;
+    contact_positions[2].noalias() += step_length;
+    contact_positions[3].noalias() += step_length;
     contact_status_standing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_standing, t1+swing_time);
 
@@ -203,8 +201,8 @@ int main(int argc, char *argv[]) {
     contact_sequence->push_back(contact_status_lflh_swing, 
                                 t1+swing_time+double_support_time);
 
-    contact_positions[0].coeffRef(0) += step_length;
-    contact_positions[1].coeffRef(0) += step_length;
+    contact_positions[0].noalias() += step_length;
+    contact_positions[1].noalias() += step_length;
     contact_status_standing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_standing, 
                                 t1+2*swing_time+double_support_time);

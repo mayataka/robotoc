@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
                        contact_frames, contact_types, baumgarte_time_step);
 
   const double dt = 0.02;
-  const double jump_length = 0.8;
+  const Eigen::Vector3d jump_length = {0.8, 0, 0};
   const double flying_up_time = 0.15;
   const double flying_down_time = flying_up_time;
   const double flying_time = flying_up_time + flying_down_time;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
                  0.1,  0.7, -1.0, 
                  0.1, -0.7,  1.0;
   Eigen::VectorXd q_ref = q_standing;
-  q_ref.coeffRef(0) += jump_length;
+  q_ref.head(3).noalias() += jump_length;
   Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
   q_weight << 1.0, 0, 0, 1.0, 1.0, 1.0, 
               0.001, 0.001, 0.001, 
@@ -132,10 +132,10 @@ int main(int argc, char *argv[]) {
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time-0.3, true);
 
-  contact_positions[0].coeffRef(0) += jump_length;
-  contact_positions[1].coeffRef(0) += jump_length;
-  contact_positions[2].coeffRef(0) += jump_length;
-  contact_positions[3].coeffRef(0) += jump_length;
+  contact_positions[0].noalias() += jump_length;
+  contact_positions[1].noalias() += jump_length;
+  contact_positions[2].noalias() += jump_length;
+  contact_positions[3].noalias() += jump_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time-0.1, true);

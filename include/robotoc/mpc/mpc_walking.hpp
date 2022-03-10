@@ -1,11 +1,10 @@
-#ifndef ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_
-#define ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_
+#ifndef ROBOTOC_MPC_WALKING_HPP_
+#define ROBOTOC_MPC_WALKING_HPP_
 
-#include <vector>
 #include <memory>
-#include <limits>
 
 #include "Eigen/Core"
+#include "Eigen/Geometry"
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/ocp.hpp"
@@ -14,15 +13,16 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/mpc/foot_step_planner_base.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class MPCQuadrupedalTrotting
-/// @brief MPC solver for the trotting gait of quadrupeds. 
+/// @class MPCWalking
+/// @brief MPC solver for the walking gait of bipedal robot. 
 ///
-class MPCQuadrupedalTrotting {
+class MPCWalking {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -30,47 +30,49 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalTrotting(const OCP& ocp, const int nthreads);
+  MPCWalking(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCQuadrupedalTrotting();
+  MPCWalking();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCQuadrupedalTrotting();
+  ~MPCWalking();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCQuadrupedalTrotting(const MPCQuadrupedalTrotting&) = default;
+  MPCWalking(const MPCWalking&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCQuadrupedalTrotting& operator=(const MPCQuadrupedalTrotting&) = default;
+  MPCWalking& operator=(const MPCWalking&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCQuadrupedalTrotting(MPCQuadrupedalTrotting&&) noexcept = default;
+  MPCWalking(MPCWalking&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCQuadrupedalTrotting& operator=(MPCQuadrupedalTrotting&&) noexcept = default;
+  MPCWalking& operator=(MPCWalking&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
-  /// @param[in] step_length Step length of the gait. 
-  /// @param[in] step_height Step height of the gait. 
+  /// @param[in] foot_step_planner Foot step planner of the gait. 
   /// @param[in] swing_time Swing time of the gait. 
+  /// @param[in] double_support_time Double support time of the gait. 
   /// @param[in] initial_lift_time Start time of the gait. 
   ///
-  void setGaitPattern(const double step_length, const double step_height,
-                      const double swing_time, const double initial_lift_time);
+  void setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+                      const double swing_time, 
+                      const double double_support_time, 
+                      const double initial_lift_time);
 
   ///
   /// @brief Initializes the optimal control problem solover. 
@@ -115,21 +117,24 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCQuadrupedalTrotting::updateSolution() must be computed.  
+  /// MPCWalking::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
-  Robot robot_;
+  std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   OCPSolver ocp_solver_;
-  ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
-  std::vector<Eigen::Vector3d> contact_positions_;
-  double step_length_, step_height_, swing_time_, initial_lift_time_, 
-         T_, dt_, dtm_, ts_last_, eps_;
-  int N_, current_step_, predict_step_;
   SolverOptions solver_options_;
+  ContactStatus cs_standing_, cs_right_swing_, cs_left_swing_;
+  Eigen::Vector3d vcom_, step_length_;
+  double step_height_, swing_time_, double_support_time_, initial_lift_time_, 
+         t_, T_, dt_, dtm_, ts_last_, eps_;
+  int N_, current_step_, predict_step_;
+  bool enable_double_support_phase_;
 
   bool addStep(const double t);
 
@@ -139,4 +144,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_QUADRUPEDAL_TROTTING_HPP_ 
+#endif // ROBOTOC_MPC_WALKING_HPP_ 

@@ -17,7 +17,7 @@ The followings are examples:
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="270">
 
-- <b>Whole-body MPC</b> (400 Hz sampling rate) examples of quadrupedal walking and trotting on a physical simulator [PyBullet] (https://pybullet.org/wordpress/).
+- <b>Whole-body MPC</b> (400 Hz sampling rate) examples of quadrupedal crawling and trotting on a physical simulator [PyBullet] (https://pybullet.org/wordpress/).
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="250"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="250">
@@ -89,13 +89,11 @@ Moreover, there are many pieces of literature the solvers basing on.
 For example, 
 - `robotoc::OCPSolver` uses the Riccati recursion algorithm with the pure-state equality constraints 
 ```
-@misc{katayama2021purestate,
+@inproceedings{katayama2022purestate,
   title={Efficient {R}iccati recursion for optimal control problems with pure-state equality constraints},
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
-  url={arXiv:2102.09731},
-  eprint={2102.09731},
-  archivePrefix={arXiv}
-  year={2021}}
+  booktitle={{American Control Conference (ACC)}},
+  year={2022}}
 ```
 - `robotoc::UnconstrParNMPCSolver` uses the highly parallelizable Newton-type method 
 ```

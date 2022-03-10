@@ -1,1 +1,1 @@
-from .quadrupedal_simulator import *
+from .legged_simulator import *

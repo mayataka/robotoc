@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_QUADRUPEDAL_JUMPING_HPP_
-#define ROBOTOC_MPC_QUADRUPEDAL_JUMPING_HPP_
+#ifndef ROBOTOC_MPC_JUMPING_HPP_
+#define ROBOTOC_MPC_JUMPING_HPP_
 
 #include <vector>
 #include <memory>
@@ -14,15 +14,18 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/robot/se3.hpp"
+#include "robotoc/mpc/foot_step_planner_base.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class MPCQuadrupedalJumping
-/// @brief MPC solver for the jumping control of quadrupeds. 
+/// @class MPCJumping
+/// @brief MPC solver for the jumping control. 
 ///
-class MPCQuadrupedalJumping {
+class MPCJumping {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -30,42 +33,41 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. 
   ///
-  MPCQuadrupedalJumping(const OCP& ocp, const int nthreads);
+  MPCJumping(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCQuadrupedalJumping();
+  MPCJumping();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCQuadrupedalJumping();
+  ~MPCJumping();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCQuadrupedalJumping(const MPCQuadrupedalJumping&) = default;
+  MPCJumping(const MPCJumping&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCQuadrupedalJumping& operator=(const MPCQuadrupedalJumping&) = default;
+  MPCJumping& operator=(const MPCJumping&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCQuadrupedalJumping(MPCQuadrupedalJumping&&) noexcept = default;
+  MPCJumping(MPCJumping&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCQuadrupedalJumping& operator=(MPCQuadrupedalJumping&&) noexcept = default;
+  MPCJumping& operator=(MPCJumping&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
-  /// @param[in] jump_length Length of the jump. 
-  /// @param[in] jump_yaw Change in the yaw angle of the base after jumping. 
+  /// @param[in] foot_step_planner Foot step planner of the jump. 
   /// @param[in] flying_time If STO is enabled, this is initial guess of the 
   /// flying time. Otherwise, this is used as the fixed flying time.
   /// @param[in] min_flying_time Minimum flying time. 
@@ -73,7 +75,7 @@ public:
   /// ground time. Otherwise, this is used as the fixed ground time.
   /// @param[in] min_ground_time Minimum time duration after landing. 
   ///
-  void setJumpPattern(const Eigen::Vector3d& jump_length, const double jump_yaw,
+  void setJumpPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
                       const double flying_time, const double min_flying_time, 
                       const double ground_time, const double min_ground_time);
 
@@ -134,25 +136,22 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCQuadrupedalJumping::updateSolution() must be computed.  
+  /// MPCJumping::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
-  Robot robot_;
+  std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<robotoc::STOConstraints> sto_constraints_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_ground_, cs_flying_;
-  std::vector<Eigen::Vector3d> contact_positions_, contact_positions_goal_, 
-                               contact_positions_store_, 
-                               com_to_contact_points_local_;
-  Eigen::Matrix3d R_jump_yaw_;
   robotoc::Solution s_;
-  Eigen::Vector3d jump_length_;
-  double jump_yaw_, flying_time_, min_flying_time_, ground_time_, min_ground_time_,
+  double flying_time_, min_flying_time_, ground_time_, min_ground_time_,
          T_, dt_, dtm_, t_mpc_start_, eps_;
   int N_, current_step_;
 
@@ -166,4 +165,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_QUADRUPEDAL_JUMPING_HPP_ 
+#endif // ROBOTOC_MPC_JUMPING_HPP_ 

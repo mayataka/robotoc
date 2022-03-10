@@ -3,9 +3,10 @@ import pybullet_data
 import math
 import time
 import abc
+import numpy as np
 
 
-class QuadrupedalSimulator(metaclass=abc.ABCMeta):
+class LeggedSimulator(metaclass=abc.ABCMeta):
     def __init__(self, path_to_urdf, time_step, start_time, end_time):
         self.path_to_urdf = path_to_urdf
         self.time_step = time_step
@@ -32,6 +33,14 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
         self.camera_pitch = camera_pitch
         self.camera_target_pos = camera_target_pos
 
+    def get_body_local_velocity(pybullet_robot):
+        basePos, baseOrn = pybullet.getBasePositionAndOrientation(pybullet_robot)
+        R = np.reshape(pybullet.getMatrixFromQuaternion(baseOrn), [3, 3]) 
+        baseVel, baseAngVel = pybullet.getBaseVelocity(pybullet_robot)
+        baseVel = R.T @ np.array(baseVel)
+        baseAngVel = R.T @ np.array(baseAngVel)
+        return baseVel, baseAngVel
+
     @abc.abstractmethod
     def get_state_from_pybullet(self, pybullet_robot, q, v):
         return NotImplementedError()
@@ -56,7 +65,7 @@ class QuadrupedalSimulator(metaclass=abc.ABCMeta):
         pybullet.disconnect()
 
     def run_simulation(self, mpc, q0, v0, feedback_delay=False, verbose=False, 
-                       record=False, record_name='quadrupedal_mpc_sim.mp4'):
+                       record=False, record_name='mpc_sim.mp4'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)

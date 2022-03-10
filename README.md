@@ -3,10 +3,10 @@
 [![build](https://github.com/mayataka/robotoc/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/robotoc/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/robotoc/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/robotoc)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="190"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="190"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="190"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="190"> 
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/longitudinal_mpc_x05.gif" width="150"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/lateral_mpc_x05.gif" width="150"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/back_mpc_x05.gif" width="150"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/rotational_mpc_x05.gif" width="150"> 
 
 ## Features for efficient optimal control of robotic systems
 - Direct multiple-shooting method based on the **lifted contact dynamics** / **inverse dynamics**.
@@ -134,26 +134,28 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 
 - Walking, trotting, pacing, and bounding gaits of quadruped ANYmal using `OCPSolver` (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints) with fixed contact timings (e.g., `anymal/walking.cpp` or `anymal/python/walking.py`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="195"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="195"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="195"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="195">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/pacing.gif" width="180"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/bounding.gif" width="180">
 
 ### Switching time optimization (STO) examples
 -  `OCPSolver` for the switching time optimization (STO) problem, which optimizes the trajectory and the contact timings simultaneously (`anymal/python/jumping_sto.py` and `icub/python/jumping_sto.py`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="280"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="260">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="230">
 
 ### Whole-body MPC examples
 - The following three example implementations of whole-body MPC are provided:
-  - `MPCQuadrupedalWalking` : MPC with `OCPSolver` for the walking gait of quadrupedal robots.
-  - `MPCQuadrupedalTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
-  - `MPCQuadrupedalJumping` : MPC with `OCPSolver` for the jumping motion of quadrupedal robots.
-- You can run the simulations of these MPC with `anymal/mpc/walking.py`, `anymal/mpc/trotting.py`, and `a1/mpc/jumping.py` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
+  - `MPCCrawling` : MPC with `OCPSolver` for the crawling gait of quadrupedal robots.
+  - `MPCTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
+  - `MPCJumping` : MPC with `OCPSolver` for the jumping motion of quadrupedal or bipedal robots.
+  - `MPCWalking` : MPC with `OCPSolver` for the walking motion of bipedal robots.
+- You can find the simulations of these MPC at `a1/mpc`, `anymal/mpc`, and `icub/mpc` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="280"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="280">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/a1_trotting.gif" width="240"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/anymal_crawling.gif" width="240"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub_walking.gif" width="240">
 
 
 ## Citing robotoc
@@ -191,6 +193,6 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 ## Related publications
 - S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021
 - S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
-- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021
+- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, American Control Conference (ACC) (accepted), https://arxiv.org/abs/2102.09731, 2022
 - S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021
 - H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019

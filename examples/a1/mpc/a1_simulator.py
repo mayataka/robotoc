@@ -2,7 +2,7 @@ import robotoc_sim
 import pybullet
 
 
-class A1Simulator(robotoc_sim.QuadrupedalSimulator):
+class A1Simulator(robotoc_sim.LeggedSimulator):
     def __init__(self, path_to_urdf, time_step, start_time, end_time):
         super().__init__(path_to_urdf, time_step, start_time, end_time)
 
@@ -30,7 +30,7 @@ class A1Simulator(robotoc_sim.QuadrupedalSimulator):
         q[18] = pybullet.getJointState(pybullet_robot, 15)[0]
 
         # Base
-        baseVel, baseAngVel = pybullet.getBaseVelocity(pybullet_robot)
+        baseVel, baseAngVel = self.get_body_local_velocity(pybullet_robot)
         v[0:3] = baseVel
         v[3:6] = baseAngVel
         # FL
