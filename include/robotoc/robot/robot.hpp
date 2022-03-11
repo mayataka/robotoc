@@ -59,7 +59,7 @@ public:
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
   /// BaseJointType::FixedBase.
-  /// @param[in] contact_frames Collection of the frames that can have point and 
+  /// @param[in] contact_frames Collection of the frames that can have point or 
   /// surface contacts with the environments. 
   /// @param[in] contact_types Types of the contacts. Size must be same as 
   /// that of contact_frames.
@@ -78,12 +78,36 @@ public:
 
   ///
   /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
+  /// from URDF. 
+  /// @param[in] path_to_urdf Path to the URDF file.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
+  /// BaseJointType::FixedBase.
+  /// @param[in] contact_frame_names Collection of names of the frames that can 
+  /// have point or surface contacts with the environments. 
+  /// @param[in] contact_types Types of the contacts. Size must be same as 
+  /// that of contact_frames.
+  /// @param[in] baumgarte_weights The weight paramter of the Baumgarte's 
+  /// stabilization method on the error on the contact velocity (first element) 
+  /// and position (second element). Must be non-negative. 
+  /// @param[in] contact_inv_damping Damping paramter in matrix inversion of the 
+  /// contact-consistent forward dynamics. 1e-12 works well for two surface 
+  /// contacts. Must be non-negative. Default is 0.
+  ///
+  Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
+        const std::vector<std::string>& contact_frame_names, 
+        const std::vector<ContactType>& contact_types,
+        const std::pair<double, double>& baumgarte_weights,
+        const double contact_inv_damping=0.);
+
+  ///
+  /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
   /// from URDF. The weight parameter of the Baumgarte's stabilization method 
   /// is constructed by time_step.
   /// @param[in] path_to_urdf Path to the URDF file.
   /// @param[in] base_joint_type Type of the base joint. Choose from 
   /// BaseJointType::FixedBase or BaseJointType::FloatingBase. 
-  /// @param[in] contact_frames Collection of the frames that can have point and 
+  /// @param[in] contact_frames Collection of the frames that can have point or
   /// surface contacts with the environments. If this is empty, it is assumed 
   /// that this robot never has any contacts.
   /// @param[in] contact_types Types of the contacts. Size must be same as 
@@ -97,6 +121,30 @@ public:
   ///
   Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
         const std::vector<int>& contact_frames, 
+        const std::vector<ContactType>& contact_types, const double time_step,
+        const double contact_inv_damping=0.);
+
+  ///
+  /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
+  /// from URDF. The weight parameter of the Baumgarte's stabilization method 
+  /// is constructed by time_step.
+  /// @param[in] path_to_urdf Path to the URDF file.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. 
+  /// @param[in] contact_frame_names Collection of names of the frames that can  
+  /// have point or surface contacts with the environments. If this is empty,  
+  /// it is assumed that this robot never has any contacts.
+  /// @param[in] contact_types Types of the contacts. Size must be same as 
+  /// that of contact_frames.
+  /// @param[in] time_step Time steps of the Baumgarte's stabilization method.
+  /// The weight parameter on the velocity is set by 2/time_step and that on the 
+  /// position is by 1/(time_step*time_step). Must be positive.
+  /// @param[in] contact_inv_damping Damping paramter in matrix inversion of the 
+  /// contact-consistent forward dynamics. 1e-12 works well for two surface 
+  /// contacts. Must be non-negative. Default is 0.
+  ///
+  Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
+        const std::vector<std::string>& contact_frame_names, 
         const std::vector<ContactType>& contact_types, const double time_step,
         const double contact_inv_damping=0.);
 
@@ -605,6 +653,14 @@ public:
   /// @return The upper limit of the position of each joints.
   ///
   Eigen::VectorXd upperJointPositionLimit() const;
+
+  ///
+  /// @brief Gets the id of the specified frame.
+  /// @param[in] frame_name Frame name of interest.
+  /// @return id of the specified frame. Returns maximum number of the frames 
+  /// if the frame whose name is frame_name does not exist.
+  /// 
+  int frameId(const std::string& frame_name) const;
 
   ///
   /// @brief Returns the total weight of this robot model.

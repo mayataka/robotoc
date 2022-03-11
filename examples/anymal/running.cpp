@@ -105,19 +105,19 @@ private:
 
 
 int main(int argc, char *argv[]) {
-  const int LF_foot_id = 12;
-  const int LH_foot_id = 22;
-  const int RF_foot_id = 32;
-  const int RH_foot_id = 42;
-  const std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
+  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
+  const std::vector<std::string> contact_frames = {"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}; 
   const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
                                                            robotoc::ContactType::PointContact,
                                                            robotoc::ContactType::PointContact,
                                                            robotoc::ContactType::PointContact};
-  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
                        contact_frames, contact_types, baumgarte_time_step);
+  const int LF_foot_id = robot.contactFrames()[0];
+  const int LH_foot_id = robot.contactFrames()[1];
+  const int RF_foot_id = robot.contactFrames()[2];
+  const int RH_foot_id = robot.contactFrames()[3];
 
   const double stride = 0.45;
   const double additive_stride_hip = 0.2;

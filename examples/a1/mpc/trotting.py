@@ -3,16 +3,15 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
-LF_foot_id = 14
-LH_foot_id = 34
-RF_foot_id = 24
-RH_foot_id = 44
-contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id] 
-contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
 path_to_urdf = '../a1_description/urdf/a1.urdf'
+contact_frames = ['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'] 
+# contact_frames = [14, 34, 24, 44] 
+contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
+LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
+
 
 dt = 0.02
 step_length = np.array([0.15, 0, 0]) 

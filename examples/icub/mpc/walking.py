@@ -3,14 +3,13 @@ import numpy as np
 from icub_simulator import iCubSimulator
 
 
-L_foot_id = 26
-R_foot_id = 46
-contact_frames = [L_foot_id, R_foot_id]
-contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 path_to_urdf = '../icub_description/urdf/icub_lower_half.urdf'
+contact_frames = ['l_sole', 'r_sole']
+contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
+L_foot_id, R_foot_id = robot.contact_frames()
 
 dt = 0.02
 knee_angle = np.pi / 6
@@ -135,5 +134,4 @@ sim_end_time = 5.0
 sim = iCubSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=True)
-# sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)

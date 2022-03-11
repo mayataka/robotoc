@@ -61,6 +61,8 @@ public:
   /// @param[in] contact_status Initial contact status.
   /// @param[in] planning_steps Number of planning steps. Must be non-negative.
   /// @return True if the planning is succeeded. False if not.
+  /// @remark The implementation must follow: step=0: previous step, 
+  /// step=1: initial step (specified as q and contact_status).
   ///
   virtual bool plan(const Eigen::VectorXd& q, 
                     const ContactStatus& contact_status,
@@ -70,6 +72,7 @@ public:
   /// @brief Gets the contact placements of a specified step. 
   /// @param[in] step Step of interest.
   /// @return Contact placements of a specified step. 
+  /// @remark step=0: previous step, step=1: initial step.
   ///
   virtual const aligned_vector<SE3>& contactPlacement(const int step) const = 0;
 
@@ -77,6 +80,7 @@ public:
   /// @brief Gets the contact positions of a specified step. 
   /// @param[in] step Step of interest.
   /// @return Contact positions of a specified step. 
+  /// @remark step=0: previous step, step=1: initial step.
   ///
   virtual const std::vector<Eigen::Vector3d>& contactPosition(const int step) const = 0;
 
@@ -84,6 +88,7 @@ public:
   /// @brief Gets the CoM position of a specified step. 
   /// @param[in] step Step of interest.
   /// @return CoM position of a specified step. 
+  /// @remark step=0: previous step, step=1: initial step.
   ///
   virtual const Eigen::Vector3d& com(const int step) const = 0;
 

@@ -3,16 +3,14 @@ import numpy as np
 import math
 
 
-LF_foot_id = 12
-LH_foot_id = 22
-RF_foot_id = 32
-RH_foot_id = 42
-contact_frames = [LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id]
-contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
+contact_frames = ['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'] 
+contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
+LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
+
 
 dt = 0.02
 jump_length = np.array([0.8, 0, 0])
@@ -163,7 +161,7 @@ plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'),
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')
-viewer.set_contact_info(contact_frames, mu)
+viewer.set_contact_info(robot.contact_frames(), mu)
 discretization = ocp_solver.get_time_discretization()
 viewer.display(discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))
