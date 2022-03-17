@@ -20,13 +20,13 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] contact_index Contact index of the foot.
-  /// @param[in] step_height The step height of the gait.
+  /// @param[in] swing_height The swing height of the gait.
   /// @param[in] swing_start_time Start time of the reference tracking.
   /// @param[in] period_swing Period where the foot is swinging.
   /// @param[in] period_stance Period where the foot is stancing.
   ///
   MPCPeriodicSwingFootRef(const int contact_index,
-                          const double step_height, const double swing_start_time, 
+                          const double swing_height, const double swing_start_time, 
                           const double period_swing, const double period_stance);
 
   ///
@@ -37,8 +37,8 @@ public:
   ///
   /// @brief Set period. 
   /// @param[in] swing_start_time Start time of the reference tracking.
-  /// @param[in] period_active Period where the tracking is active.
-  /// @param[in] period_inactive Period where the tracking is inactive.
+  /// @param[in] period_swing Period where the leg is swinging.
+  /// @param[in] period_stance Period where the leg is in stance.
   ///
   void setPeriod(const double swing_start_time, const double period_swing, 
                  const double period_stance);
@@ -61,7 +61,7 @@ private:
   int contact_index_;
   std::vector<Eigen::Vector3d> contact_position_;
   std::vector<bool> is_contact_active_;
-  double step_height_, swing_start_time_, period_swing_, period_stance_, period_;
+  double swing_height_, swing_start_time_, period_swing_, period_stance_, period_;
 };
 
 } // namespace robotoc

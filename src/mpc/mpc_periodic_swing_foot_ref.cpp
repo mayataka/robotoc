@@ -7,14 +7,14 @@
 namespace robotoc {
 
 MPCPeriodicSwingFootRef::MPCPeriodicSwingFootRef(const int contact_index, 
-                                                 const double step_height, 
+                                                 const double swing_height, 
                                                  const double swing_start_time, 
                                                  const double period_swing, 
                                                  const double period_stance)
   : TimeVaryingTaskSpace3DRefBase(),
     contact_index_(contact_index),
     is_contact_active_(),
-    step_height_(step_height),
+    swing_height_(swing_height),
     swing_start_time_(swing_start_time),
     period_swing_(period_swing), 
     period_stance_(period_stance),
@@ -59,10 +59,10 @@ void MPCPeriodicSwingFootRef::update_x3d_ref(const GridInfo& grid_info,
     x3d_ref = (1.0-rate) * contact_position_[grid_info.contact_phase]
                 + rate * contact_position_[grid_info.contact_phase+1];
     if (rate < 0.5) {
-      x3d_ref.coeffRef(2) += 2 * rate * step_height_;
+      x3d_ref.coeffRef(2) += 2 * rate * swing_height_;
     }
     else {
-      x3d_ref.coeffRef(2) += 2 * (1-rate) * step_height_;
+      x3d_ref.coeffRef(2) += 2 * (1-rate) * swing_height_;
     }
   }
 }
