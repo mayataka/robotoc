@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_periodic_com_ref.hpp"
+#include "robotoc/mpc/mpc_periodic_configuration_ref.hpp"
 
 #include <stdexcept>
 #include <cmath>
@@ -6,11 +6,13 @@
 
 namespace robotoc {
 
-MPCPeriodicCoMRef::MPCPeriodicCoMRef(const double swing_start_time, 
-                                     const double period_active, 
-                                     const double period_inactive)
-  : TimeVaryingCoMRefBase(),
-    com_(), 
+MPCPeriodicConfigurationRef::MPCPeriodicConfigurationRef(const Eigen::VectorXd& q,
+                                                         const double swing_start_time, 
+                                                         const double period_active, 
+                                                         const double period_inactive)
+  : TimeVaryingConfigurationRefBase(),
+    q_(q), 
+    quat_(), 
     has_inactive_contacts_(),
     swing_start_time_(swing_start_time), 
     period_active_(period_active), 
@@ -19,13 +21,13 @@ MPCPeriodicCoMRef::MPCPeriodicCoMRef(const double swing_start_time,
 }
 
 
-MPCPeriodicCoMRef::~MPCPeriodicCoMRef() {
+MPCPeriodicConfigurationRef::~MPCPeriodicConfigurationRef() {
 }
 
 
-void MPCPeriodicCoMRef::setPeriod(const double swing_start_time, 
-                                  const double period_active, 
-                                  const double period_inactive) {
+void MPCPeriodicConfigurationRef::setPeriod(const double swing_start_time, 
+                                            const double period_active, 
+                                            const double period_inactive) {
   swing_start_time_ = swing_start_time;
   period_active_ = period_active;
   period_inactive_ = period_inactive;
@@ -33,7 +35,7 @@ void MPCPeriodicCoMRef::setPeriod(const double swing_start_time,
 }
 
 
-void MPCPeriodicCoMRef::setCoMRef(
+void MPCPeriodicConfigurationRef::setConfigurationRef(
     const std::shared_ptr<ContactSequence>& contact_sequence, 
     const std::shared_ptr<FootStepPlannerBase>& foot_step_planner) {
   has_inactive_contacts_.clear();
@@ -48,27 +50,33 @@ void MPCPeriodicCoMRef::setCoMRef(
     has_inactive_contacts_.push_back(
         num_active_contacts < contact_status.maxNumContacts());
   }
-  com_ = foot_step_planner->com();
+  quat_.clear();
+  for (const auto& e : foot_step_planner->R()) {
+    quat_.push_back(Eigen::Quaterniond(e));
+  }
 }
 
 
-void MPCPeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
-                                       Eigen::VectorXd& com_ref) const {
+void MPCPeriodicConfigurationRef::update_q_ref(const Robot& robot, 
+                                               const GridInfo& grid_info,
+                                               Eigen::VectorXd& q_ref) const {
   // if (isActive(grid_info)) { 
+  q_ref = q_;
   if ((grid_info.t > swing_start_time_) 
         && has_inactive_contacts_[grid_info.contact_phase]) {
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);
     const double rate = (grid_info.t-swing_start_time_-cycle*period_) / period_active_;
-    com_ref = (1.0-rate) * com_[grid_info.contact_phase]
-                + rate * com_[grid_info.contact_phase+1];
+    q_ref.template segment<4>(3) 
+        = quat_[grid_info.contact_phase].slerp(rate, 
+                                               quat_[grid_info.contact_phase+1]).coeffs();
   }
   else {
-    com_ref = com_[grid_info.contact_phase];
+    q_ref.template segment<4>(3) = quat_[grid_info.contact_phase].coeffs();
   }
 }
 
 
-bool MPCPeriodicCoMRef::isActive(const GridInfo& grid_info) const {
+bool MPCPeriodicConfigurationRef::isActive(const GridInfo& grid_info) const {
   // return ((grid_info.t > swing_start_time_) 
   //           && has_inactive_contacts_[grid_info.contact_phase]);
   return true;

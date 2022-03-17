@@ -158,7 +158,7 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
       if (step == 0) {
         // do nothing
       }
-      else if (step == 1) {
+      else if (current_step_ == 0 && step == 1) {
         R = (R_yaw_ * R).eval();
         com.noalias() += 0.25 * R * step_length_;
         contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
@@ -186,7 +186,7 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
       if (step == 0) {
         // do nothing
       }
-      else if (step == 1) {
+      else if (current_step_ == 0 && step == 1) {
         R = (R_yaw_ * R).eval();
         com.noalias() += 0.25 * R * step_length_;
         contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];

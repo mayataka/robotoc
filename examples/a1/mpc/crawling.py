@@ -20,6 +20,7 @@ swing_start_time = 0.5
 
 vcom_cmd = step_length / swing_time
 yaw_cmd = 0
+yaw_cmd = np.pi/ 12
 
 T = 0.5
 N = 18

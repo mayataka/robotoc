@@ -50,9 +50,9 @@ MPCCrawling::MPCCrawling(const Robot& robot, const double T, const int N,
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.001);
-  q_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
+  q_weight.template head<6>().setZero();
   Eigen::VectorXd qi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
-  qi_weight.template head<6>() << 0, 0, 1000, 1000, 1000, 1000;
+  qi_weight.template head<6>().setZero();
   config_cost_->set_q_weight(q_weight);
   config_cost_->set_qf_weight(q_weight);
   config_cost_->set_qi_weight(qi_weight);
@@ -61,6 +61,12 @@ MPCCrawling::MPCCrawling(const Robot& robot, const double T, const int N,
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
   config_cost_->set_vi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_dvi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  base_rot_cost_ = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, base_rot_ref_);
+  Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
+  base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
+  base_rot_cost_->set_q_weight(base_rot_weight);
+  base_rot_cost_->set_qf_weight(base_rot_weight);
+  base_rot_cost_->set_qi_weight(base_rot_weight);
   LF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
                                                                robot.contactFrames()[0],
                                                                LF_foot_ref_);
@@ -80,6 +86,7 @@ MPCCrawling::MPCCrawling(const Robot& robot, const double T, const int N,
   com_cost_ = std::make_shared<TimeVaryingCoMCost>(robot, com_ref_);
   com_cost_->set_com_weight(Eigen::Vector3d::Constant(1.0e03));
   cost_->push_back(config_cost_);
+  cost_->push_back(base_rot_cost_);
   cost_->push_back(LF_foot_cost_);
   cost_->push_back(LH_foot_cost_);
   cost_->push_back(RF_foot_cost_);
@@ -188,6 +195,9 @@ void MPCCrawling::init(const double t, const Eigen::VectorXd& q,
   }
   foot_step_planner_->init(q);
   config_cost_->set_q_ref(q);
+  base_rot_ref_ = std::make_shared<MPCPeriodicConfigurationRef>(q, swing_start_time_, 
+                                                                swing_time_, stance_time_);
+  base_rot_cost_->set_q_ref(base_rot_ref_);
   resetContactPlacements(q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -246,6 +256,11 @@ std::shared_ptr<CostFunction> MPCCrawling::getCostHandle() {
 
 std::shared_ptr<ConfigurationSpaceCost> MPCCrawling::getConfigCostHandle() {
   return config_cost_;
+}
+
+
+std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCCrawling::getBaseRotationCostHandle() {
+  return base_rot_cost_;
 }
 
 
@@ -353,6 +368,7 @@ void MPCCrawling::resetContactPlacements(const Eigen::VectorXd& q,
     contact_sequence_->setContactPlacements(phase, 
                                             foot_step_planner_->contactPosition(phase+1));
   }
+  base_rot_ref_->setConfigurationRef(contact_sequence_, foot_step_planner_);
   LF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);
   LH_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);
   RF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);

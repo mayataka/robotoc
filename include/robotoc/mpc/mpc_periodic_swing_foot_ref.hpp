@@ -15,7 +15,7 @@ namespace robotoc {
 /// @class MPCPeriodicSwingFootRef
 /// @brief Periodic reference of the foot position. 
 ///
-class MPCPeriodicSwingFootRef : public TimeVaryingTaskSpace3DRefBase {
+class MPCPeriodicSwingFootRef final : public TimeVaryingTaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
