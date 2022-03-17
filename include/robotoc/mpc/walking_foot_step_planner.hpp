@@ -70,17 +70,25 @@ public:
 
   void init(const Eigen::VectorXd& q) override;
 
-  bool plan(const Eigen::VectorXd& q, const ContactStatus& contact_status,
+  bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+            const ContactStatus& contact_status, 
             const int planning_steps) override;
 
   const aligned_vector<SE3>& contactPlacement(const int step) const override;
 
-  ///
-  /// @brief This is invalid in WalkingFootStepPlanner. 
-  ///
+  const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override;
+
   const std::vector<Eigen::Vector3d>& contactPosition(const int step) const override;
 
+  const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const override;
+
   const Eigen::Vector3d& com(const int step) const override;
+
+  const std::vector<Eigen::Vector3d>& com() const override;
+
+  const Eigen::Matrix3d& R(const int step) const override;
+
+  const std::vector<Eigen::Matrix3d>& R() const override;
 
   void disp(std::ostream& os) const;
 
@@ -94,12 +102,13 @@ public:
 
 private:
   Robot robot_;
-  int L_foot_id_, R_foot_id_, previous_initial_step_;
-  double left_to_right_leg_distance_;
+  int L_foot_id_, R_foot_id_, current_step_;
+  double left_to_right_leg_distance_, foot_height_to_com_height_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
-  std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
-  Eigen::Vector3d step_length_, com_;
+  std::vector<Eigen::Vector3d> com_ref_;
+  std::vector<Eigen::Matrix3d> R_;
+  Eigen::Vector3d step_length_;
   Eigen::Matrix3d R_yaw_;
   bool enable_double_support_phase_;
 

@@ -14,12 +14,14 @@ TrottingFootStepPlanner::TrottingFootStepPlanner(const Robot& quadruped_robot)
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
     RF_foot_id_(quadruped_robot.pointContactFrames()[2]),
     RH_foot_id_(quadruped_robot.pointContactFrames()[3]),
+    current_step_(0),
     contact_position_ref_(),
     com_ref_(),
+    R_(),
     com_to_contact_position_local_(),
     step_length_(Eigen::Vector3d::Zero()),
-    com_(Eigen::Vector3d::Zero()),
-    R_yaw_(Eigen::Matrix3d::Identity()) {
+    R_yaw_(Eigen::Matrix3d::Identity()),
+    enable_stance_phase_(false) {
   try {
     if (quadruped_robot.maxNumPointContacts() < 4) {
       throw std::out_of_range(
@@ -41,122 +43,193 @@ TrottingFootStepPlanner::~TrottingFootStepPlanner() {
 }
 
 
-void TrottingFootStepPlanner::setGaitPattern(
-    const Eigen::Vector3d& step_length, const double yaw_rate) {
+void TrottingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
+                                             const double yaw_rate, 
+                                             const bool enable_stance_phase) {
   step_length_ = step_length;
   R_yaw_<< std::cos(yaw_rate), -std::sin(yaw_rate), 0, 
            std::sin(yaw_rate), std::cos(yaw_rate),  0,
            0, 0, 1;
+  enable_stance_phase_ = enable_stance_phase;
 }
 
 
 void TrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
-  const Eigen::Matrix3d R 
-      = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
+  Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
+  R.coeffRef(0, 0) = 1.0;
+  R.coeffRef(0, 1) = 0.0;
+  R.coeffRef(0, 2) = 0.0;
+  R.coeffRef(1, 0) = 0.0;
+  R.coeffRef(2, 0) = 0.0;
   robot_.updateFrameKinematics(q);
   com_to_contact_position_local_ = { R.transpose() * (robot_.framePosition(LF_foot_id_)-robot_.CoM()), 
                                      R.transpose() * (robot_.framePosition(LH_foot_id_)-robot_.CoM()),
                                      R.transpose() * (robot_.framePosition(RF_foot_id_)-robot_.CoM()),
                                      R.transpose() * (robot_.framePosition(RH_foot_id_)-robot_.CoM()) };
+  contact_position_ref_.clear();
+  com_ref_.clear(),
+  R_.clear();
+  R_.push_back(R);
+  current_step_ = 0;
 }
 
 
 bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
+                                   const Eigen::VectorXd& v,
                                    const ContactStatus& contact_status,
                                    const int planning_steps) {
   assert(planning_steps >= 0);
-  Eigen::Matrix3d R 
-      = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   robot_.updateFrameKinematics(q);
-  std::vector<Eigen::Vector3d> contact_position, contact_position_local;
+  std::vector<Eigen::Vector3d> contact_position;
   for (const auto frame : robot_.pointContactFrames()) {
     contact_position.push_back(robot_.framePosition(frame));
-    contact_position_local.push_back(
-        R.transpose() * (robot_.framePosition(frame) - q.template head<3>()));
   }
-  int current_step = 0;
+  Eigen::Vector3d com = Eigen::Vector3d::Zero();
+  Eigen::Matrix3d R = R_.front();
   if (contact_status.isContactActive(0) && contact_status.isContactActive(1) 
       && contact_status.isContactActive(2) && contact_status.isContactActive(3)) {
-    current_step = 0;
+    if (enable_stance_phase_) {
+      if (current_step_%2 != 0) {
+        ++current_step_;
+      }
+    }
+    else {
+      current_step_ = 0;
+    }
+    for (int i=0; i<4; ++i) {
+      com.noalias() += contact_position[i];
+      com.noalias() -= R * com_to_contact_position_local_[i];
+    }
+    com.array() /= 4.0;
   }
   else if (contact_status.isContactActive(0) && contact_status.isContactActive(3)) {
-    current_step = 1;
-    // LH
-    contact_position_local[1] << contact_position_local[3].coeff(0), // x : same as RH 
-                                 contact_position_local[0].coeff(1), // y : same as LF
-                                 contact_position_local[3].coeff(2); // z : same as RH
-    contact_position_local[1].noalias() -= 0.5 * step_length_;
-    contact_position[1].noalias() = R * contact_position_local[1] + q.template head<3>();
-    // RF
-    contact_position_local[2] << contact_position_local[0].coeff(0), // x : same as LF 
-                                 contact_position_local[3].coeff(1), // y : same as RH
-                                 contact_position_local[0].coeff(2); // z : same as LF
-    contact_position_local[2].noalias() -= 0.5 * step_length_;
-    contact_position[2].noalias() = R * contact_position_local[2] + q.template head<3>();
+    if (enable_stance_phase_) {
+      if (current_step_%4 != 1) {
+        ++current_step_;
+        R = (R_yaw_ * R).eval();
+      }
+    }
+    else {
+      if (current_step_%2 != 1) {
+        ++current_step_;
+        R = (R_yaw_ * R).eval();
+      }
+    }
+    com.noalias() += contact_position[0];
+    com.noalias() -= R * com_to_contact_position_local_[0];
+    com.noalias() += contact_position[3];
+    com.noalias() -= R * com_to_contact_position_local_[3];
+    com.array() /= 2.0;
+    contact_position[1].noalias() = com + R * (com_to_contact_position_local_[1] - 0.5 * step_length_);
+    contact_position[2].noalias() = com + R * (com_to_contact_position_local_[2] - 0.5 * step_length_);
   }
   else if (contact_status.isContactActive(1) && contact_status.isContactActive(2)) {
-    current_step = 2;
-    // LF
-    contact_position_local[0] << contact_position_local[2].coeff(0), // x : same as RF
-                                 contact_position_local[1].coeff(1), // y : same as LH
-                                 contact_position_local[2].coeff(2); // z : same as RF
-    contact_position_local[0].noalias() -= 0.5 * step_length_; 
-    contact_position[0].noalias() = R * contact_position_local[0] + q.template head<3>();
-    // RH
-    contact_position_local[3] << contact_position_local[1].coeff(0), // x : same as LH 
-                                 contact_position_local[2].coeff(1), // y : same as RF
-                                 contact_position_local[1].coeff(2); // z : same as LH
-    contact_position_local[3].noalias() -= 0.5 * step_length_; 
-    contact_position[3].noalias() = R * contact_position_local[3] + q.template head<3>();
+    if (enable_stance_phase_) {
+      if (current_step_%4 != 3) {
+        ++current_step_;
+        R = (R_yaw_ * R).eval();
+      }
+    }
+    else {
+      if (current_step_%2 != 0) {
+        ++current_step_;
+        R = (R_yaw_ * R).eval();
+      }
+    }
+    com.noalias() += contact_position[1];
+    com.noalias() -= R * com_to_contact_position_local_[1];
+    com.noalias() += contact_position[2];
+    com.noalias() -= R * com_to_contact_position_local_[2];
+    com.array() /= 2.0;
+    contact_position[0].noalias() = com + R * (com_to_contact_position_local_[0] - 0.5 * step_length_);
+    contact_position[3].noalias() = com + R * (com_to_contact_position_local_[3] - 0.5 * step_length_);
   }
   else {
     return false;
   } 
-  Eigen::Vector3d com = Eigen::Vector3d::Zero();
-  for (int i=0; i<4; ++i) {
-    com.noalias() += contact_position[i];
-    com.noalias() -= R * com_to_contact_position_local_[i];
-  }
-  com.array() *= 0.25;
-  contact_position_ref_.clear();
-  contact_position_ref_.push_back(contact_position);
   com_ref_.clear();
   com_ref_.push_back(com);
-  for (int step=current_step; step<=planning_steps+current_step; ++step) {
-    R = (R_yaw_ * R).eval();
-    if (step == 0) {
-      contact_position_ref_.push_back(contact_position);
+  contact_position_ref_.clear();
+  contact_position_ref_.push_back(contact_position);
+  R_.clear();
+  R_.push_back(R);
+  if (enable_stance_phase_) {
+    for (int step=current_step_; step<=planning_steps+current_step_; ++step) {
+      if (step == 0) {
+        // do nothing
+      }
+      else if (step == 1) {
+        R = (R_yaw_ * R).eval();
+        com.noalias() += 0.25 * R * step_length_;
+        contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
+        contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
+      }
+      else if (step%4 == 1) {
+        R = (R_yaw_ * R).eval();
+        com.noalias() += 0.5 * R * step_length_;
+        contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
+        contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
+      }
+      else if (step%4 == 3) {
+        R = (R_yaw_ * R).eval();
+        com.noalias() += 0.5 * R * step_length_;
+        contact_position[0].noalias() = com + R * com_to_contact_position_local_[0];
+        contact_position[3].noalias() = com + R * com_to_contact_position_local_[3];
+      }
       com_ref_.push_back(com);
-      contact_position[1].noalias() += 0.5 * R * step_length_;
-      contact_position[2].noalias() += 0.5 * R * step_length_;
-      com.noalias() += 0.25 * R * step_length_;
+      contact_position_ref_.push_back(contact_position);
+      R_.push_back(R);
     }
-    else if (step%2 != 0) {
-      contact_position[1].noalias() += R * step_length_;
-      contact_position[2].noalias() += R * step_length_;
-      com.noalias() += 0.5 * R * step_length_;
+  }
+  else {
+    for (int step=current_step_; step<=planning_steps+current_step_; ++step) {
+      if (step == 0) {
+        // do nothing
+      }
+      else if (step == 1) {
+        R = (R_yaw_ * R).eval();
+        com.noalias() += 0.25 * R * step_length_;
+        contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
+        contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
+      }
+      else if (step%2 == 1) {
+        R = (R_yaw_ * R).eval();
+        com.noalias() += 0.5 * R * step_length_;
+        contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
+        contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
+      }
+      else {
+        R = (R_yaw_ * R).eval();
+        com.noalias() += 0.5 * R * step_length_;
+        contact_position[0].noalias() = com + R * com_to_contact_position_local_[0];
+        contact_position[3].noalias() = com + R * com_to_contact_position_local_[3];
+      }
+      com_ref_.push_back(com);
+      contact_position_ref_.push_back(contact_position);
+      R_.push_back(R);
     }
-    else {
-      contact_position[0].noalias() += R * step_length_;
-      contact_position[3].noalias() += R * step_length_;
-      com.noalias() += 0.5 * R * step_length_;
-    }
-    contact_position_ref_.push_back(contact_position);
-    com_ref_.push_back(com);
   }
   return true;
 }
 
 
-const aligned_vector<SE3>& TrottingFootStepPlanner::contactPlacement(
-    const int step) const {
+const aligned_vector<SE3>& TrottingFootStepPlanner::contactPlacement(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const std::vector<Eigen::Vector3d>& TrottingFootStepPlanner::contactPosition(
-    const int step) const {
+const aligned_vector<aligned_vector<SE3>>& TrottingFootStepPlanner::contactPlacement() const {
+  return contact_placement_ref_;
+}
+
+
+const std::vector<Eigen::Vector3d>& TrottingFootStepPlanner::contactPosition(const int step) const {
   return contact_position_ref_[step];
+}
+
+
+const std::vector<std::vector<Eigen::Vector3d>>& TrottingFootStepPlanner::contactPosition() const {
+  return contact_position_ref_;
 }
 
 
@@ -165,8 +238,24 @@ const Eigen::Vector3d& TrottingFootStepPlanner::com(const int step) const {
 }
   
 
+const std::vector<Eigen::Vector3d>& TrottingFootStepPlanner::com() const {
+  return com_ref_;
+}
+
+
+const Eigen::Matrix3d& TrottingFootStepPlanner::R(const int step) const {
+  return R_[step];
+}
+  
+
+const std::vector<Eigen::Matrix3d>& TrottingFootStepPlanner::R() const {
+  return R_;
+}
+
+
 void TrottingFootStepPlanner::disp(std::ostream& os) const {
   std::cout << "Trotting foot step planner:" << std::endl;
+  std::cout << "current_step:" << current_step_ << std::endl;
   const int planning_steps = contact_position_ref_.size();
   for (int i=0; i<planning_steps; ++i) {
     std::cout << "contact position[" << i << "]: ["  
@@ -175,6 +264,7 @@ void TrottingFootStepPlanner::disp(std::ostream& os) const {
               << contact_position_ref_[i][2].transpose() << "], [" 
               << contact_position_ref_[i][3].transpose() << "]" << std::endl;
     std::cout << "CoM position[" << i << "]: ["   << com_ref_[i].transpose() << "]" << std::endl;
+    std::cout << "R[" << i << "]: ["   << R_[i] << "]" << std::endl;
   }
 }
 

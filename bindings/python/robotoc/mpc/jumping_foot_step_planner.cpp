@@ -21,11 +21,22 @@ PYBIND11_MODULE(jumping_foot_step_planner, m) {
     .def("init", &JumpingFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &JumpingFootStepPlanner::plan,
-          py::arg("q"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_placement", &JumpingFootStepPlanner::contactPlacement,
+          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+    .def("contact_position", 
+          static_cast<const std::vector<Eigen::Vector3d>& (JumpingFootStepPlanner::*)(const int) const>(&JumpingFootStepPlanner::contactPosition),
           py::arg("step"))
-    .def("com", &JumpingFootStepPlanner::com,
+    .def("contact_position", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (JumpingFootStepPlanner::*)() const>(&JumpingFootStepPlanner::contactPosition))
+    .def("com", 
+          static_cast<const Eigen::Vector3d& (JumpingFootStepPlanner::*)(const int) const>(&JumpingFootStepPlanner::com),
           py::arg("step"))
+    .def("com", 
+          static_cast<const std::vector<Eigen::Vector3d>& (JumpingFootStepPlanner::*)() const>(&JumpingFootStepPlanner::com))
+    .def("R", 
+          static_cast<const Eigen::Matrix3d& (JumpingFootStepPlanner::*)(const int) const>(&JumpingFootStepPlanner::R),
+          py::arg("step"))
+    .def("R", 
+          static_cast<const std::vector<Eigen::Matrix3d>& (JumpingFootStepPlanner::*)() const>(&JumpingFootStepPlanner::R))
     .def("__str__", [](const JumpingFootStepPlanner& self) {
         std::stringstream ss;
         ss << self;

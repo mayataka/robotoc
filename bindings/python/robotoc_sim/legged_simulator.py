@@ -17,6 +17,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.camera_yaw = 0.0
         self.camera_pitch = 0.0
         self.camera_target_pos = [0., 0., 0.]
+        self.print_items = []
 
     def set_sim_settings(self, time_step, start_time, end_time):
         self.time_step = time_step
@@ -64,6 +65,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             print(info)
         pybullet.disconnect()
 
+    def add_print_item(self, item):
+        self.print_items.append(item)
+
     def run_simulation(self, mpc, q0, v0, feedback_delay=False, verbose=False, 
                        record=False, record_name='mpc_sim.mp4'):
         pybullet.connect(pybullet.GUI)
@@ -104,6 +108,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             if verbose:
                 print('KKT error = {:.6g}'.format(mpc.KKT_error(t, q, v)))
                 print('')
+                if self.print_items:
+                    for e in self.print_items:
+                        print(e)
             if not feedback_delay:
                 u = mpc.get_initial_control_input().copy()
             self.apply_control_input_to_pybullet(robot, u)

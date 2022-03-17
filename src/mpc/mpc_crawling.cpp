@@ -10,33 +10,35 @@
 
 namespace robotoc {
 
-MPCCrawling::MPCCrawling(const OCP& ocp, const int nthreads)
+MPCCrawling::MPCCrawling(const Robot& robot, const double T, const int N, 
+                         const int max_steps, const int nthreads)
   : foot_step_planner_(),
-    contact_sequence_(std::make_shared<robotoc::ContactSequence>(
-        ocp.robot(), ocp.maxNumEachDiscreteEvents())),
-    ocp_solver_(ocp, contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
+    cost_(std::make_shared<CostFunction>()),
+    constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
+    ocp_solver_(OCP(robot, cost_, constraints_, T, N, max_steps), 
+                contact_sequence_, SolverOptions::defaultOptions(), nthreads), 
     solver_options_(SolverOptions::defaultOptions()),
-    cs_standing_(ocp.robot().createContactStatus()),
-    cs_lf_(ocp.robot().createContactStatus()),
-    cs_lh_(ocp.robot().createContactStatus()),
-    cs_rf_(ocp.robot().createContactStatus()),
-    cs_rh_(ocp.robot().createContactStatus()),
-    vcom_(Eigen::Vector3d::Zero()),
-    step_length_(Eigen::Vector3d::Zero()),
-    step_height_(0),
+    cs_standing_(robot.createContactStatus()),
+    cs_lf_(robot.createContactStatus()),
+    cs_lh_(robot.createContactStatus()),
+    cs_rf_(robot.createContactStatus()),
+    cs_rh_(robot.createContactStatus()),
+    swing_height_(0),
     swing_time_(0),
-    initial_lift_time_(0),
-    t_(0),
-    T_(ocp.T()),
-    dt_(ocp.T()/ocp.N()),
-    dtm_(ocp.T()/ocp.N()),
+    stance_time_(0),
+    swing_start_time_(0),
+    T_(T),
+    dt_(T/N),
+    dtm_(T/N),
     ts_last_(0),
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
-    N_(ocp.N()),
+    N_(N),
     current_step_(0),
-    predict_step_(0) {
+    predict_step_(0),
+    enable_stance_phase_(false) {
   try {
-    if (ocp.robot().maxNumPointContacts() < 4) {
+    if (robot.maxNumPointContacts() < 4) {
       throw std::out_of_range(
           "invalid argument: robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
     }
@@ -45,6 +47,61 @@ MPCCrawling::MPCCrawling(const OCP& ocp, const int nthreads)
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
+  // create costs
+  config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
+  Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.001);
+  q_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
+  Eigen::VectorXd qi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
+  qi_weight.template head<6>() << 0, 0, 1000, 1000, 1000, 1000;
+  config_cost_->set_q_weight(q_weight);
+  config_cost_->set_qf_weight(q_weight);
+  config_cost_->set_qi_weight(qi_weight);
+  config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
+  config_cost_->set_vi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_dvi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  LF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
+                                                               robot.contactFrames()[0],
+                                                               LF_foot_ref_);
+  LH_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
+                                                               robot.contactFrames()[1],
+                                                               LH_foot_ref_);
+  RF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
+                                                               robot.contactFrames()[2],
+                                                               RF_foot_ref_);
+  RH_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
+                                                               robot.contactFrames()[3],
+                                                               RH_foot_ref_);
+  LF_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
+  LH_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
+  RF_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
+  RH_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
+  com_cost_ = std::make_shared<TimeVaryingCoMCost>(robot, com_ref_);
+  com_cost_->set_com_weight(Eigen::Vector3d::Constant(1.0e03));
+  cost_->push_back(config_cost_);
+  cost_->push_back(LF_foot_cost_);
+  cost_->push_back(LH_foot_cost_);
+  cost_->push_back(RF_foot_cost_);
+  cost_->push_back(RH_foot_cost_);
+  cost_->push_back(com_cost_);
+  // create constraints 
+  auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
+  const double mu = 0.5;
+  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  constraints_->push_back(joint_position_lower);
+  constraints_->push_back(joint_position_upper);
+  constraints_->push_back(joint_velocity_lower);
+  constraints_->push_back(joint_velocity_upper);
+  constraints_->push_back(joint_torques_lower);
+  constraints_->push_back(joint_torques_upper);
+  constraints_->push_back(friction_cone_);
+  // init contact status
   cs_standing_.activateContacts({0, 1, 2, 3});
   cs_lf_.activateContacts({1, 2, 3});
   cs_lh_.activateContacts({0, 2, 3});
@@ -62,14 +119,20 @@ MPCCrawling::~MPCCrawling() {
 
 
 void MPCCrawling::setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner, 
-                                 const double swing_time,
-                                 const double initial_lift_time) {
+                                 const double swing_height, const double swing_time,
+                                 const double stance_time, const double swing_start_time) {
   try {
+    if (swing_height <= 0) {
+      throw std::out_of_range("invalid value: swing_height must be positive!");
+    }
     if (swing_time <= 0) {
       throw std::out_of_range("invalid value: swing_time must be positive!");
     }
-    if (initial_lift_time <= 0) {
-      throw std::out_of_range("invalid value: initial_lift_time must be positive!");
+    if (stance_time < 0) {
+      throw std::out_of_range("invalid value: stance_time must be non-negative!");
+    }
+    if (swing_start_time <= 0) {
+      throw std::out_of_range("invalid value: swing_start_time must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -78,7 +141,28 @@ void MPCCrawling::setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foo
   }
   foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
-  initial_lift_time_ = initial_lift_time;
+  stance_time_ = stance_time;
+  swing_start_time_ = swing_start_time;
+  enable_stance_phase_ = (stance_time_ > 0.);
+  LF_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(0, swing_height, 
+                                                           swing_start_time_+3*swing_time_+3*stance_time_, 
+                                                           swing_time_, 3*swing_time_+4*stance_time_);
+  LH_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(1, swing_height, 
+                                                           swing_start_time_+2*swing_time_+2*stance_time_, 
+                                                           swing_time_, 3*swing_time_+4*stance_time_);
+  RF_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(2, swing_height, 
+                                                           swing_start_time_+swing_time_+stance_time_, 
+                                                           swing_time_, 3*swing_time_+4*stance_time_);
+  RH_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(3, swing_height, 
+                                                           swing_start_time_, 
+                                                           swing_time_, 3*swing_time_+4*stance_time_);
+  LF_foot_cost_->set_x3d_ref(LF_foot_ref_);
+  LH_foot_cost_->set_x3d_ref(LH_foot_ref_);
+  RF_foot_cost_->set_x3d_ref(RF_foot_ref_);
+  RH_foot_cost_->set_x3d_ref(RH_foot_ref_);
+  com_ref_ = std::make_shared<MPCPeriodicCoMRef>(swing_start_time_, 
+                                                 swing_time_, stance_time_);
+  com_cost_->set_com_ref(com_ref_);
 }
 
 
@@ -86,9 +170,9 @@ void MPCCrawling::init(const double t, const Eigen::VectorXd& q,
                        const Eigen::VectorXd& v, 
                        const SolverOptions& solver_options) {
   try {
-    if (t >= initial_lift_time_) {
+    if (t >= swing_start_time_) {
       throw std::out_of_range(
-          "invalid value: t must be less than" + std::to_string(initial_lift_time_) + "!");
+          "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
     }
   }
   catch(const std::exception& e) {
@@ -97,19 +181,19 @@ void MPCCrawling::init(const double t, const Eigen::VectorXd& q,
   }
   current_step_ = 0;
   predict_step_ = 0;
-  // Init contact status
   contact_sequence_->initContactSequence(cs_standing_);
   bool add_step = addStep(t);
   while (add_step) {
     add_step = addStep(t);
   }
   foot_step_planner_->init(q);
-  resetContactPlacements(q);
+  config_cost_->set_q_ref(q);
+  resetContactPlacements(q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
   ocp_solver_.solve(t, q, v, true);
-  ts_last_ = initial_lift_time_;
+  ts_last_ = swing_start_time_;
 }
 
 
@@ -134,7 +218,7 @@ void MPCCrawling::updateSolution(const double t, const double dt,
       ++current_step_;
     }
   }
-  resetContactPlacements(q);
+  resetContactPlacements(q, v);
   ocp_solver_.solve(t, q, v, true);
 }
 
@@ -145,7 +229,7 @@ const Eigen::VectorXd& MPCCrawling::getInitialControlInput() const {
 
 
 double MPCCrawling::KKTError(const double t, const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v) {
+                             const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
@@ -155,48 +239,125 @@ double MPCCrawling::KKTError() const {
 }
 
 
+std::shared_ptr<CostFunction> MPCCrawling::getCostHandle() {
+  return cost_;
+}
+
+
+std::shared_ptr<ConfigurationSpaceCost> MPCCrawling::getConfigCostHandle() {
+  return config_cost_;
+}
+
+
+std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCCrawling::getSwingFootCostHandle() {
+  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
+  swing_foot_cost = {LF_foot_cost_, LH_foot_cost_, RF_foot_cost_, RH_foot_cost_};
+  return swing_foot_cost;
+}
+
+
+std::shared_ptr<TimeVaryingCoMCost> MPCCrawling::getCoMCostHandle() {
+  return com_cost_;
+}
+
+
+std::shared_ptr<Constraints> MPCCrawling::getConstraintsHandle() {
+  return constraints_;
+}
+
+
+std::shared_ptr<FrictionCone> MPCCrawling::getFrictionConeHandle() {
+  return friction_cone_;
+}
+
+
 bool MPCCrawling::addStep(const double t) {
   if (predict_step_ == 0) {
-    if (initial_lift_time_ < t+T_-dtm_) {
-      contact_sequence_->push_back(cs_rh_, initial_lift_time_);
+    if (swing_start_time_ < t+T_-dtm_) {
+      contact_sequence_->push_back(cs_rh_, swing_start_time_);
       ++predict_step_;
       return true;
     }
   }
   else {
-    double tt = ts_last_ + swing_time_;
-    const auto ts = contact_sequence_->eventTimes();
-    if (!ts.empty()) {
-      tt = ts.back() + swing_time_;
+    if (enable_stance_phase_) {
+      double tt = ts_last_;
+      if (current_step_%2 == 0) {
+        tt += stance_time_;
+      }
+      else {
+        tt += swing_time_;
+      }
+      const auto ts = contact_sequence_->eventTimes();
+      if (!ts.empty()) {
+        if (predict_step_%2 == 0) {
+          tt = ts.back() + stance_time_;
+        }
+        else {
+          tt = ts.back() + swing_time_;
+        }
+      }
+      if (tt < t+T_-dtm_) {
+        if (predict_step_%8 == 0) {
+          contact_sequence_->push_back(cs_rh_, tt);
+        }
+        else if (predict_step_%8 == 2) {
+          contact_sequence_->push_back(cs_rf_, tt);
+        }
+        else if (predict_step_%8 == 4) {
+          contact_sequence_->push_back(cs_lh_, tt);
+        }
+        else if (predict_step_%8 == 6) {
+          contact_sequence_->push_back(cs_lf_, tt);
+        }
+        else {
+          contact_sequence_->push_back(cs_standing_, tt);
+        }
+        ++predict_step_;
+        return true;
+      }
     }
-    if (tt < t+T_-dtm_) {
-      if (predict_step_%4 == 1) {
-        contact_sequence_->push_back(cs_rf_, tt);
+    else {
+      double tt = ts_last_ + swing_time_;
+      const auto ts = contact_sequence_->eventTimes();
+      if (!ts.empty()) {
+        tt = ts.back() + swing_time_;
       }
-      else if (predict_step_%4 == 2) {
-        contact_sequence_->push_back(cs_lh_, tt);
+      if (tt < t+T_-dtm_) {
+        if (predict_step_%4 == 0) {
+          contact_sequence_->push_back(cs_rh_, tt);
+        }
+        else if (predict_step_%4 == 1) {
+          contact_sequence_->push_back(cs_rf_, tt);
+        }
+        else if (predict_step_%4 == 2) {
+          contact_sequence_->push_back(cs_lh_, tt);
+        }
+        else if (predict_step_%4 == 3) {
+          contact_sequence_->push_back(cs_lf_, tt);
+        }
+        ++predict_step_;
+        return true;
       }
-      else if (predict_step_%4 == 3) {
-        contact_sequence_->push_back(cs_lf_, tt);
-      }
-      else { // predict_step_%4 == 0
-        contact_sequence_->push_back(cs_rh_, tt);
-      }
-      ++predict_step_;
-      return true;
     }
   }
   return false;
 }
 
 
-void MPCCrawling::resetContactPlacements(const Eigen::VectorXd& q) {
-  const bool success = foot_step_planner_->plan(q, contact_sequence_->contactStatus(0),
-                                                contact_sequence_->numContactPhases()+1);
+void MPCCrawling::resetContactPlacements(const Eigen::VectorXd& q,
+                                         const Eigen::VectorXd& v) {
+  const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
+                                                contact_sequence_->numContactPhases());
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 
                                             foot_step_planner_->contactPosition(phase+1));
   }
+  LF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);
+  LH_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);
+  RF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);
+  RH_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);
+  com_ref_->setCoMRef(contact_sequence_, foot_step_planner_);
 }
 
 } // namespace robotoc 

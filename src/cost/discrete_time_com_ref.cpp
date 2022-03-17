@@ -43,7 +43,7 @@ void DiscreteTimeCoMRef::setCoMRef(
     }
     com_position_.push_back(com_avg);
     has_inactive_contacts_.push_back(num_active_contacts < contact_status.maxNumContacts());
-    if (!has_active_contacts_prev) {
+    if (!has_active_contacts_prev && (phase > 1)) {
       com_position_[phase-1] 
           = 0.5 * (com_position_[phase-2] + com_position_[phase]);
     }

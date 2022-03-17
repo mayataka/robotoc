@@ -17,15 +17,27 @@ PYBIND11_MODULE(trotting_foot_step_planner, m) {
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))
     .def("set_gait_pattern", &TrottingFootStepPlanner::setGaitPattern,
-         py::arg("step_length"), py::arg("yaw_rate"))
+         py::arg("step_length"), py::arg("yaw_rate"), 
+         py::arg("enable_stance_phase"))
     .def("init", &TrottingFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &TrottingFootStepPlanner::plan,
-          py::arg("q"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_position", &TrottingFootStepPlanner::contactPosition,
+          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+    .def("contact_position", 
+          static_cast<const std::vector<Eigen::Vector3d>& (TrottingFootStepPlanner::*)(const int) const>(&TrottingFootStepPlanner::contactPosition),
           py::arg("step"))
-    .def("com", &TrottingFootStepPlanner::com,
+    .def("contact_position", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (TrottingFootStepPlanner::*)() const>(&TrottingFootStepPlanner::contactPosition))
+    .def("com", 
+          static_cast<const Eigen::Vector3d& (TrottingFootStepPlanner::*)(const int) const>(&TrottingFootStepPlanner::com),
           py::arg("step"))
+    .def("com", 
+          static_cast<const std::vector<Eigen::Vector3d>& (TrottingFootStepPlanner::*)() const>(&TrottingFootStepPlanner::com))
+    .def("R", 
+          static_cast<const Eigen::Matrix3d& (TrottingFootStepPlanner::*)(const int) const>(&TrottingFootStepPlanner::R),
+          py::arg("step"))
+    .def("R", 
+          static_cast<const std::vector<Eigen::Matrix3d>& (TrottingFootStepPlanner::*)() const>(&TrottingFootStepPlanner::R))
     .def("__str__", [](const TrottingFootStepPlanner& self) {
         std::stringstream ss;
         ss << self;

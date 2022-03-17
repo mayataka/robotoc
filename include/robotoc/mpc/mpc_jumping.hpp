@@ -17,6 +17,14 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/constraints/joint_position_lower_limit.hpp"
+#include "robotoc/constraints/joint_position_upper_limit.hpp"
+#include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/constraints/joint_velocity_upper_limit.hpp"
+#include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/constraints/joint_torques_upper_limit.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
 
 
 namespace robotoc {
@@ -29,12 +37,14 @@ class MPCJumping {
 public:
   ///
   /// @brief Construct MPC solver.
-  /// @param[in] ocp Optimal contro problem. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] T Length of the horizon. 
+  /// @param[in] N Number of the discretization grids of the horizon. 
+  /// @param[in] max_steps Maximum number of trotting steps over the horizon.
+  /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCJumping(const OCP& ocp, const int nthreads);
-
+  MPCJumping(const Robot& robot, const double T, const int N, 
+             const int max_steps, const int nthreads);
   ///
   /// @brief Default constructor. 
   ///
@@ -141,11 +151,38 @@ public:
   ///
   double KKTError() const;
 
+  ///
+  /// @brief Gets the cost function handle.  
+  /// @return Shared ptr to the cost function.
+  ///
+  std::shared_ptr<CostFunction> getCostHandle();
+
+  ///
+  /// @brief Gets the configuration space cost handle.  
+  /// @return Shared ptr to the configuration space cost.
+  ///
+  std::shared_ptr<ConfigurationSpaceCost> getConfigCostHandle();
+
+  ///
+  /// @brief Gets the constraints handle.  
+  /// @return Shared ptr to the constraints.
+  ///
+  std::shared_ptr<Constraints> getConstraintsHandle();
+
+  ///
+  /// @brief Gets the friction cone constraints handle.  
+  /// @return Shared ptr to the friction cone constraints.
+  ///
+  std::shared_ptr<FrictionCone> getFrictionConeHandle();
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
+  std::shared_ptr<CostFunction> cost_;
+  std::shared_ptr<Constraints> constraints_;
+  std::shared_ptr<robotoc::STOCostFunction> sto_cost_;
   std::shared_ptr<robotoc::STOConstraints> sto_constraints_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
@@ -155,11 +192,14 @@ private:
          T_, dt_, dtm_, t_mpc_start_, eps_;
   int N_, current_step_;
 
+  std::shared_ptr<ConfigurationSpaceCost> config_cost_;
+  std::shared_ptr<FrictionCone> friction_cone_;
+
   void resetMinimumDwellTimes(const double t, const double min_dt);
 
   void resetGoalContactPlacements(const Eigen::VectorXd& q);
 
-  void resetContactPlacements(const Eigen::VectorXd& q);
+  void resetContactPlacements(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
 };
 
