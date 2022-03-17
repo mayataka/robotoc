@@ -68,6 +68,7 @@ void TrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
                                      R.transpose() * (robot_.framePosition(RH_foot_id_)-robot_.CoM()) };
   contact_position_ref_.clear();
   com_ref_.clear(),
+  com_ref_.push_back(robot_.CoM());
   R_.clear();
   R_.push_back(R);
   current_step_ = 0;
@@ -84,6 +85,7 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
   for (const auto frame : robot_.pointContactFrames()) {
     contact_position.push_back(robot_.framePosition(frame));
   }
+  // Eigen::Vector3d com = com_ref_.front();
   Eigen::Vector3d com = Eigen::Vector3d::Zero();
   Eigen::Matrix3d R = R_.front();
   if (contact_status.isContactActive(0) && contact_status.isContactActive(1) 
@@ -106,12 +108,14 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
     if (enable_stance_phase_) {
       if (current_step_%4 != 1) {
         ++current_step_;
+        // com.template head<2>() = robot_.CoM().template head<2>();
         R = (R_yaw_ * R).eval();
       }
     }
     else {
       if (current_step_%2 != 1) {
         ++current_step_;
+        // com.template head<2>() = robot_.CoM().template head<2>();
         R = (R_yaw_ * R).eval();
       }
     }
@@ -127,12 +131,14 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
     if (enable_stance_phase_) {
       if (current_step_%4 != 3) {
         ++current_step_;
+        // com.template head<2>() = robot_.CoM().template head<2>();
         R = (R_yaw_ * R).eval();
       }
     }
     else {
       if (current_step_%2 != 0) {
         ++current_step_;
+        // com.template head<2>() = robot_.CoM().template head<2>();
         R = (R_yaw_ * R).eval();
       }
     }
