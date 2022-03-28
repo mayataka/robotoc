@@ -3,6 +3,9 @@ from .trotting_foot_step_planner import *
 from .crawling_foot_step_planner import *
 from .walking_foot_step_planner import *
 from .jumping_foot_step_planner import *
+from .mpc_periodic_swing_foot_ref import *
+from .mpc_periodic_com_ref import *
+from .mpc_periodic_configuration_ref import *
 from .mpc_trotting import *
 from .mpc_crawling import *
 from .mpc_walking import *

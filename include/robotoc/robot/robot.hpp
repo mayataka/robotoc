@@ -179,8 +179,9 @@ public:
   Robot& operator=(Robot&&) noexcept = default;
 
   ///
-  /// @brief Integrates the generalized velocity via
-  /// \f[ q \leftto q \oplus integration_length * v . \f]
+  /// @brief Integrates the generalized velocity, that is, performs
+  /// q <- q + integration_length * v like computation on the configuration 
+  /// manifolds.
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
   /// @param[in, out] q Configuration. Size must be Robot::dimq().
@@ -192,8 +193,9 @@ public:
       const Eigen::MatrixBase<ConfigVectorType>& q) const;
 
   ///
-  /// @brief Integrates the generalized velocity via
-  /// \f[ /// q_{\rm integrated} = q \oplus integration_length * v. \f]
+  /// @brief Integrates the generalized velocity, that is, performs
+  /// q_integrated = q + integration_length * v like computation on the 
+  /// configuration manifolds.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
@@ -244,7 +246,7 @@ public:
       const Eigen::MatrixBase<MatrixType2>& Jout) const;
 
   ///
-  /// @brief Computes \f[ qf \ominus q0. \f] at the tangent space. 
+  /// @brief Computes qf - q0 at the tangent space. 
   /// The result means that the unit velocity from initial configuration
   /// q0 to terminal configuration qf.
   /// @param[in] qf Terminal configuration. Size must be Robot::dimq().
@@ -261,7 +263,7 @@ public:
 
   ///
   /// @brief Computes the partial derivative of the function of subtraction
-  /// \f[ qf \ominus q0. \f] w.r.t. the terminal configuration qf. 
+  /// qf - q0 w.r.t. the terminal configuration qf. 
   /// @param[in] qf Terminal configuration. Size must be Robot::dimq().
   /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
   /// @param[out] dqdiff_dqf The partial derivative of the subtraction.
@@ -276,7 +278,7 @@ public:
 
   ///
   /// @brief Computes the partial derivative of the function of subtraction
-  /// \f[ qf \ominus q0. \f] w.r.t. the initial configuration qf. 
+  /// qf - q0 w.r.t. the initial configuration qf. 
   /// @param[in] qf Terminal configuration. Size must be Robot::dimq().
   /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
   /// @param[out] dqdiff_dq0 The partial derivative of the subtraction.

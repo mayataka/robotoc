@@ -67,17 +67,31 @@ public:
 
   void init(const Eigen::VectorXd& q) override;
 
-  bool plan(const Eigen::VectorXd& q, const ContactStatus& contact_status,
+  bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+            const ContactStatus& contact_status, 
             const int planning_steps) override;
 
   const aligned_vector<SE3>& contactPlacement(const int step) const override;
+
+  const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override;
 
   ///
   /// @brief This is invalid in JumpingFootStepPlanner. 
   ///
   const std::vector<Eigen::Vector3d>& contactPosition(const int step) const override;
 
+  ///
+  /// @brief This is invalid in JumpingFootStepPlanner. 
+  ///
+  const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const override;
+
   const Eigen::Vector3d& com(const int step) const override;
+
+  const std::vector<Eigen::Vector3d>& com() const override;
+
+  const Eigen::Matrix3d& R(const int step) const override;
+
+  const std::vector<Eigen::Matrix3d>& R() const override;
 
   void disp(std::ostream& os) const;
 
@@ -92,11 +106,12 @@ public:
 private:
   Robot robot_;
   std::vector<int> contact_frames_;
-  int previous_initial_step_;
+  int current_step_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
   std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
-  Eigen::Vector3d jump_length_, com_;
+  std::vector<Eigen::Matrix3d> R_;
+  Eigen::Vector3d jump_length_;
   Eigen::Matrix3d R_yaw_;
 
 };
