@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(robotoc CXX)
+
 if (NOT "${CMAKE_CXX_STANDARD}")
   set(CMAKE_CXX_STANDARD 11)
 else()
