@@ -202,6 +202,11 @@ const Eigen::VectorXd& MPCJumping::getInitialControlInput() const {
 }
 
 
+const Solution& MPCJumping::getSolution() const {
+  return ocp_solver_.getSolution();
+}
+
+
 double MPCJumping::KKTError(const double t, const Eigen::VectorXd& q, 
                             const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);

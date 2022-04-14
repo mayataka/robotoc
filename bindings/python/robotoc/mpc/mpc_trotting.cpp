@@ -26,6 +26,7 @@ PYBIND11_MODULE(mpc_trotting, m) {
     .def("update_solution", &MPCTrotting::updateSolution,
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCTrotting::getInitialControlInput)
+    .def("get_solution", &MPCTrotting::getSolution)
     .def("KKT_error", 
           static_cast<double (MPCTrotting::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCTrotting::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

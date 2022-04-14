@@ -125,6 +125,12 @@ public:
   const Eigen::VectorXd& getInitialControlInput() const;
 
   ///
+  /// @brief Get the solution over the horizon. 
+  /// @return const reference to the solution.
+  ///
+  const Solution& getSolution() const;
+
+  ///
   /// @brief Computes the KKT residual of the optimal control problem. 
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().

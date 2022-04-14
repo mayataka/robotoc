@@ -1,5 +1,4 @@
 import pybullet
-import pybullet_data
 import math
 import time
 import abc
@@ -68,13 +67,19 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
     def add_print_item(self, item):
         self.print_items.append(item)
 
-    def run_simulation(self, mpc, q0, v0, feedback_delay=False, verbose=False, 
+    def run_simulation(self, mpc, q0, v0, feedback_delay=False, 
+                       terrain=False, verbose=False, 
                        record=False, record_name='mpc_sim.mp4'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
-        pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
-        plane = pybullet.loadURDF("plane.urdf")
+        if terrain:
+            import os
+            plane = pybullet.loadURDF(os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf"))
+        else:
+            import pybullet_data
+            pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
+            plane = pybullet.loadURDF("plane.urdf")
         robot = pybullet.loadURDF(self.path_to_urdf,  
                                   useFixedBase=False, 
                                   useMaximalCoordinates=False)

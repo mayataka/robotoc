@@ -26,6 +26,7 @@ PYBIND11_MODULE(mpc_walking, m) {
     .def("update_solution", &MPCWalking::updateSolution,
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCWalking::getInitialControlInput)
+    .def("get_solution", &MPCWalking::getSolution)
     .def("KKT_error", 
           static_cast<double (MPCWalking::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCWalking::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

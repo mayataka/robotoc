@@ -25,6 +25,7 @@ PYBIND11_MODULE(mpc_crawling, m) {
     .def("update_solution", &MPCCrawling::updateSolution,
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCCrawling::getInitialControlInput)
+    .def("get_solution", &MPCCrawling::getSolution)
     .def("KKT_error", 
           static_cast<double (MPCCrawling::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCCrawling::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

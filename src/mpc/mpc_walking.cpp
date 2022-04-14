@@ -220,8 +220,13 @@ const Eigen::VectorXd& MPCWalking::getInitialControlInput() const {
 }
 
 
+const Solution& MPCWalking::getSolution() const {
+  return ocp_solver_.getSolution();
+}
+
+
 double MPCWalking::KKTError(const double t, const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v) {
+                            const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 

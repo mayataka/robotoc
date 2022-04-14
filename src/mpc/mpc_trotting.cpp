@@ -236,6 +236,11 @@ const Eigen::VectorXd& MPCTrotting::getInitialControlInput() const {
 }
 
 
+const Solution& MPCTrotting::getSolution() const {
+  return ocp_solver_.getSolution();
+}
+
+
 double MPCTrotting::KKTError(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);

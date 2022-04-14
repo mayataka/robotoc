@@ -238,6 +238,11 @@ const Eigen::VectorXd& MPCCrawling::getInitialControlInput() const {
 }
 
 
+const Solution& MPCCrawling::getSolution() const {
+  return ocp_solver_.getSolution();
+}
+
+
 double MPCCrawling::KKTError(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
