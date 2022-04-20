@@ -160,7 +160,7 @@ void MPCJumping::reset(const double t, const Eigen::VectorXd& q,
   resetContactPlacements(q, v);
   ocp_solver_.setSolution(s_);
   ocp_solver_.setSolution("q", q);
-  ocp_solver_.setSolution("q", v);
+  ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
   ocp_solver_.meshRefinement(t);
   ocp_solver_.solve(t, q, v, true);
@@ -204,6 +204,11 @@ const Eigen::VectorXd& MPCJumping::getInitialControlInput() const {
 
 const Solution& MPCJumping::getSolution() const {
   return ocp_solver_.getSolution();
+}
+
+
+const hybrid_container<LQRPolicy>& MPCJumping::getLQRPolicy() const {
+  return ocp_solver_.getLQRPolicy();
 }
 
 

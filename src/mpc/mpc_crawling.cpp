@@ -243,6 +243,11 @@ const Solution& MPCCrawling::getSolution() const {
 }
 
 
+const hybrid_container<LQRPolicy>& MPCCrawling::getLQRPolicy() const {
+  return ocp_solver_.getLQRPolicy();
+}
+
+
 double MPCCrawling::KKTError(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);

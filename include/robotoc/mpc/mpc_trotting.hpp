@@ -125,10 +125,16 @@ public:
   const Eigen::VectorXd& getInitialControlInput() const;
 
   ///
-  /// @brief Get the solution over the horizon. 
+  /// @brief Get the solution. 
   /// @return const reference to the solution.
   ///
   const Solution& getSolution() const;
+
+  ///
+  /// @brief Gets of the local LQR policies over the horizon. 
+  /// @return const reference to the local LQR policies.
+  ///
+  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Computes the KKT residual of the optimal control problem. 

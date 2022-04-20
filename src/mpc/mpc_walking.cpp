@@ -225,6 +225,11 @@ const Solution& MPCWalking::getSolution() const {
 }
 
 
+const hybrid_container<LQRPolicy>& MPCWalking::getLQRPolicy() const {
+  return ocp_solver_.getLQRPolicy();
+}
+
+
 double MPCWalking::KKTError(const double t, const Eigen::VectorXd& q, 
                             const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);

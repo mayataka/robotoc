@@ -241,6 +241,11 @@ const Solution& MPCTrotting::getSolution() const {
 }
 
 
+const hybrid_container<LQRPolicy>& MPCTrotting::getLQRPolicy() const {
+  return ocp_solver_.getLQRPolicy();
+}
+
+
 double MPCTrotting::KKTError(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
