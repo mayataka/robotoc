@@ -34,6 +34,7 @@ PYBIND11_MODULE(mpc_trotting, m) {
           static_cast<double (MPCTrotting::*)() const>(&MPCTrotting::KKTError))
     .def("get_cost_handle", &MPCTrotting::getCostHandle)
     .def("get_config_cost_handle", &MPCTrotting::getConfigCostHandle)
+    .def("get_base_rotation_cost_handle", &MPCTrotting::getBaseRotationCostHandle)
     .def("get_swing_foot_cost_handle", &MPCTrotting::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCTrotting::getCoMCostHandle)
     .def("get_constraints_handle", &MPCTrotting::getConstraintsHandle)

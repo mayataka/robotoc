@@ -34,6 +34,7 @@ PYBIND11_MODULE(mpc_walking, m) {
           static_cast<double (MPCWalking::*)() const>(&MPCWalking::KKTError))
     .def("get_cost_handle", &MPCWalking::getCostHandle)
     .def("get_config_cost_handle", &MPCWalking::getConfigCostHandle)
+    .def("get_base_rotation_cost_handle", &MPCWalking::getBaseRotationCostHandle)
     .def("get_swing_foot_cost_handle", &MPCWalking::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCWalking::getCoMCostHandle)
     .def("get_constraints_handle", &MPCWalking::getConstraintsHandle)

@@ -33,6 +33,7 @@ PYBIND11_MODULE(mpc_crawling, m) {
           static_cast<double (MPCCrawling::*)() const>(&MPCCrawling::KKTError))
     .def("get_cost_handle", &MPCCrawling::getCostHandle)
     .def("get_config_cost_handle", &MPCCrawling::getConfigCostHandle)
+    .def("get_base_rotation_cost_handle", &MPCCrawling::getBaseRotationCostHandle)
     .def("get_swing_foot_cost_handle", &MPCCrawling::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCCrawling::getCoMCostHandle)
     .def("get_constraints_handle", &MPCCrawling::getConstraintsHandle)
