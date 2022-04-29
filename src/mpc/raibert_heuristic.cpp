@@ -39,7 +39,7 @@ void RaibertHeuristic::planStepLength(const Eigen::Vector2d& v_com,
                                       const Eigen::Vector2d& v_com_cmd, 
                                       const double yaw_rate_cmd) {
   step_length_.template head<2>() = 0.5 * t_stance_ * v_com
-                                    + gain_ * (v_com - v_com_cmd);
+                                    - gain_ * (v_com - v_com_cmd);
 }
 
 

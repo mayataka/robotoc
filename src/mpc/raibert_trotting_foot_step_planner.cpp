@@ -87,7 +87,7 @@ bool RaibertTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
   assert(planning_steps >= 0);
   raibert_heuristic_.planStepLength(v.template head<2>(), 
                                     v_com_cmd_.template head<2>(), yaw_rate_cmd_);
-  const Eigen::Vector3d& step_length = raibert_heuristic_.stepLength();
+  step_length_ = raibert_heuristic_.stepLength();
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position;
   for (const auto frame : robot_.pointContactFrames()) {
