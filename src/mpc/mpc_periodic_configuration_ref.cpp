@@ -1,6 +1,7 @@
 #include "robotoc/mpc/mpc_periodic_configuration_ref.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cmath>
 
 
@@ -9,7 +10,8 @@ namespace robotoc {
 MPCPeriodicConfigurationRef::MPCPeriodicConfigurationRef(const Eigen::VectorXd& q,
                                                          const double swing_start_time, 
                                                          const double period_active, 
-                                                         const double period_inactive)
+                                                         const double period_inactive,
+                                                         const int num_phases_in_period)
   : TimeVaryingConfigurationRefBase(),
     q_(q), 
     quat_(), 
@@ -17,7 +19,26 @@ MPCPeriodicConfigurationRef::MPCPeriodicConfigurationRef(const Eigen::VectorXd& 
     swing_start_time_(swing_start_time), 
     period_active_(period_active), 
     period_inactive_(period_inactive), 
-    period_(period_active+period_inactive) {
+    period_(period_active+period_inactive),
+    num_phases_in_period_(num_phases_in_period) {
+  try {
+    if (period_active < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (period_inactive < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (num_phases_in_period < 1) {
+      throw std::out_of_range(
+          "invalid argument: num_phases_in_period must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -27,11 +48,31 @@ MPCPeriodicConfigurationRef::~MPCPeriodicConfigurationRef() {
 
 void MPCPeriodicConfigurationRef::setPeriod(const double swing_start_time, 
                                             const double period_active, 
-                                            const double period_inactive) {
+                                            const double period_inactive,
+                                            const int num_phases_in_period) {
+  try {
+    if (period_active < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (period_inactive < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (num_phases_in_period < 1) {
+      throw std::out_of_range(
+          "invalid argument: num_phases_in_period must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   swing_start_time_ = swing_start_time;
   period_active_ = period_active;
   period_inactive_ = period_inactive;
   period_ = period_active + period_inactive;
+  num_phases_in_period_ = num_phases_in_period;
 }
 
 
@@ -67,8 +108,8 @@ void MPCPeriodicConfigurationRef::update_q_ref(const Robot& robot,
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);
     const double rate = (grid_info.t-swing_start_time_-cycle*period_) / period_active_;
     q_ref.template segment<4>(3) 
-        = quat_[grid_info.contact_phase].slerp(rate, 
-                                               quat_[grid_info.contact_phase+1]).coeffs();
+        = quat_[grid_info.contact_phase].slerp(
+              rate, quat_[grid_info.contact_phase+num_phases_in_period_]).coeffs();
   }
   else {
     q_ref.template segment<4>(3) = quat_[grid_info.contact_phase].coeffs();

@@ -25,9 +25,12 @@ public:
   /// @param[in] swing_start_time Start time of the reference tracking.
   /// @param[in] period_active Period where the tracking is active.
   /// @param[in] period_inactive Period where the tracking is inactive.
+  /// @param[in] num_phases_in_period Number of phases in a period. Must be 
+  /// positive. Default is 1.
   ///
   MPCPeriodicCoMRef(const double swing_start_time, const double period_active, 
-                    const double period_inactive);
+                    const double period_inactive, 
+                    const int num_phases_in_period=1);
 
   ///
   /// @brief Destructor. 
@@ -39,9 +42,12 @@ public:
   /// @param[in] swing_start_time Start time of the reference tracking.
   /// @param[in] period_active Period where the tracking is active.
   /// @param[in] period_inactive Period where the tracking is inactive.
+  /// @param[in] num_phases_in_period Number of phases in a period. Must be 
+  /// positive. Default is 1.
   ///
   void setPeriod(const double swing_start_time, const double period_active, 
-                 const double period_inactive);
+                 const double period_inactive, 
+                 const int num_phases_in_period=1);
 
   ///
   /// @brief Set the reference positions of CoM from the contact positions of 
@@ -62,7 +68,7 @@ private:
   std::vector<Eigen::Vector3d> com_;
   std::vector<bool> has_inactive_contacts_;
   double swing_start_time_, period_active_, period_inactive_, period_;
-
+  int num_phases_in_period_;
 };
 
 } // namespace robotoc

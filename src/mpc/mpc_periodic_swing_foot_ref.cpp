@@ -1,6 +1,7 @@
 #include "robotoc/mpc/mpc_periodic_swing_foot_ref.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cmath>
 
 
@@ -10,7 +11,8 @@ MPCPeriodicSwingFootRef::MPCPeriodicSwingFootRef(const int contact_index,
                                                  const double swing_height, 
                                                  const double swing_start_time, 
                                                  const double period_swing, 
-                                                 const double period_stance)
+                                                 const double period_stance,
+                                                 const int num_phases_in_period)
   : TimeVaryingTaskSpace3DRefBase(),
     contact_index_(contact_index),
     is_contact_active_(),
@@ -18,7 +20,30 @@ MPCPeriodicSwingFootRef::MPCPeriodicSwingFootRef(const int contact_index,
     swing_start_time_(swing_start_time),
     period_swing_(period_swing), 
     period_stance_(period_stance),
-    period_(period_swing+period_stance) {
+    period_(period_swing+period_stance),
+    num_phases_in_period_(num_phases_in_period) {
+  try {
+    if (swing_height < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: swing_height must be non-negative!");
+    }
+    if (period_swing <= 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_swing must be positive!");
+    }
+    if (period_stance <= 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_stance must be positive!");
+    }
+    if (num_phases_in_period < 1) {
+      throw std::out_of_range(
+          "invalid argument: num_phases_in_period must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -28,11 +53,31 @@ MPCPeriodicSwingFootRef::~MPCPeriodicSwingFootRef() {
 
 void MPCPeriodicSwingFootRef::setPeriod(const double swing_start_time, 
                                         const double period_swing, 
-                                        const double period_stance) {
+                                        const double period_stance,
+                                        const int num_phases_in_period) {
+  try {
+    if (period_swing <= 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_swing must be positive!");
+    }
+    if (period_stance <= 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_stance must be positive!");
+    }
+    if (num_phases_in_period < 1) {
+      throw std::out_of_range(
+          "invalid argument: num_phases_in_period must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   swing_start_time_ = swing_start_time;
   period_swing_ = period_swing;
   period_stance_ = period_stance;
   period_ = period_swing + period_stance;
+  num_phases_in_period_ = num_phases_in_period;
 }
 
 
@@ -57,7 +102,7 @@ void MPCPeriodicSwingFootRef::update_x3d_ref(const GridInfo& grid_info,
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);
     const double rate = (grid_info.t-swing_start_time_-cycle*period_) / period_swing_;
     x3d_ref = (1.0-rate) * contact_position_[grid_info.contact_phase]
-                + rate * contact_position_[grid_info.contact_phase+1];
+                + rate * contact_position_[grid_info.contact_phase+num_phases_in_period_];
     if (rate < 0.5) {
       x3d_ref.coeffRef(2) += 2 * rate * swing_height_;
     }

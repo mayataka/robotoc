@@ -24,10 +24,13 @@ public:
   /// @param[in] swing_start_time Start time of the reference tracking.
   /// @param[in] period_swing Period where the foot is swinging.
   /// @param[in] period_stance Period where the foot is stancing.
+  /// @param[in] num_phases_in_period Number of phases in a period. Must be 
+  /// positive. Default is 1.
   ///
   MPCPeriodicSwingFootRef(const int contact_index,
                           const double swing_height, const double swing_start_time, 
-                          const double period_swing, const double period_stance);
+                          const double period_swing, const double period_stance,
+                          const int num_phases_in_period=1);
 
   ///
   /// @brief Destructor. 
@@ -39,9 +42,11 @@ public:
   /// @param[in] swing_start_time Start time of the reference tracking.
   /// @param[in] period_swing Period where the leg is swinging.
   /// @param[in] period_stance Period where the leg is in stance.
+  /// @param[in] num_phases_in_period Number of phases in a period. Must be 
+  /// positive. Default is 1.
   ///
   void setPeriod(const double swing_start_time, const double period_swing, 
-                 const double period_stance);
+                 const double period_stance, const int num_phases_in_period=1);
 
   ///
   /// @brief Set the reference positions of CoM from the contact positions of 
@@ -62,6 +67,7 @@ private:
   std::vector<Eigen::Vector3d> contact_position_;
   std::vector<bool> is_contact_active_;
   double swing_height_, swing_start_time_, period_swing_, period_stance_, period_;
+  int num_phases_in_period_;
 };
 
 } // namespace robotoc
