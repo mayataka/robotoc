@@ -43,11 +43,11 @@ WalkingFootStepPlanner::~WalkingFootStepPlanner() {
 
 
 void WalkingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                            const double yaw_rate,
+                                            const double yaw_step,
                                             const bool enable_double_support_phase) {
   step_length_ = step_length;
-  R_yaw_ << std::cos(yaw_rate), -std::sin(yaw_rate), 0, 
-            std::sin(yaw_rate), std::cos(yaw_rate),  0,
+  R_yaw_ << std::cos(yaw_step), -std::sin(yaw_step), 0, 
+            std::sin(yaw_step), std::cos(yaw_step),  0,
             0, 0, 1;
   enable_double_support_phase_ = enable_double_support_phase;
 }

@@ -1,4 +1,4 @@
-#include "robotoc/mpc/trotting_foot_step_planner.hpp"
+#include "robotoc/mpc/raibert_trotting_foot_step_planner.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -7,9 +7,11 @@
 
 namespace robotoc {
 
-TrottingFootStepPlanner::TrottingFootStepPlanner(const Robot& quadruped_robot)
+RaibertTrottingFootStepPlanner::RaibertTrottingFootStepPlanner(
+    const Robot& quadruped_robot)
   : FootStepPlannerBase(),
     robot_(quadruped_robot),
+    raibert_heuristic_(),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
     RF_foot_id_(quadruped_robot.pointContactFrames()[2]),
@@ -19,8 +21,9 @@ TrottingFootStepPlanner::TrottingFootStepPlanner(const Robot& quadruped_robot)
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
-    step_length_(Eigen::Vector3d::Zero()),
+    v_com_cmd_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
+    yaw_rate_cmd_(0.0),
     enable_stance_phase_(false) {
   try {
     if (quadruped_robot.maxNumPointContacts() < 4) {
@@ -35,26 +38,28 @@ TrottingFootStepPlanner::TrottingFootStepPlanner(const Robot& quadruped_robot)
 }
 
 
-TrottingFootStepPlanner::TrottingFootStepPlanner() {
+RaibertTrottingFootStepPlanner::RaibertTrottingFootStepPlanner() {
 }
 
 
-TrottingFootStepPlanner::~TrottingFootStepPlanner() {
+RaibertTrottingFootStepPlanner::~RaibertTrottingFootStepPlanner() {
 }
 
 
-void TrottingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                             const double yaw_step, 
-                                             const bool enable_stance_phase) {
-  step_length_ = step_length;
-  R_yaw_<< std::cos(yaw_step), -std::sin(yaw_step), 0, 
-           std::sin(yaw_step), std::cos(yaw_step),  0,
+void RaibertTrottingFootStepPlanner::setGaitPattern(
+    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
+    const double t_swing, const double t_stance, const double gain) {
+  raibert_heuristic_ = RaibertHeuristic(t_stance, gain);
+  v_com_cmd_ = v_com_cmd;
+  const double yaw_cmd = yaw_rate_cmd * t_swing;
+  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
+           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
            0, 0, 1;
-  enable_stance_phase_ = enable_stance_phase;
+  enable_stance_phase_ = (t_stance > t_swing);
 }
 
 
-void TrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
+void RaibertTrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
   Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   R.coeffRef(0, 0) = 1.0;
   R.coeffRef(0, 1) = 0.0;
@@ -75,11 +80,14 @@ void TrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
-                                   const Eigen::VectorXd& v,
-                                   const ContactStatus& contact_status,
-                                   const int planning_steps) {
+bool RaibertTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
+                                          const Eigen::VectorXd& v,
+                                          const ContactStatus& contact_status,
+                                          const int planning_steps) {
   assert(planning_steps >= 0);
+  raibert_heuristic_.planStepLength(v.template head<2>(), 
+                                    v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+  const Eigen::Vector3d& step_length = raibert_heuristic_.stepLength();
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position;
   for (const auto frame : robot_.pointContactFrames()) {
@@ -124,8 +132,8 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
     com.noalias() += contact_position[3];
     com.noalias() -= R * com_to_contact_position_local_[3];
     com.array() /= 2.0;
-    contact_position[1].noalias() = com + R * (com_to_contact_position_local_[1] - 0.5 * step_length_);
-    contact_position[2].noalias() = com + R * (com_to_contact_position_local_[2] - 0.5 * step_length_);
+    contact_position[1].noalias() = com + R * (com_to_contact_position_local_[1] - step_length_);
+    contact_position[2].noalias() = com + R * (com_to_contact_position_local_[2] - step_length_);
   }
   else if (contact_status.isContactActive(1) && contact_status.isContactActive(2)) {
     if (enable_stance_phase_) {
@@ -147,8 +155,8 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
     com.noalias() += contact_position[2];
     com.noalias() -= R * com_to_contact_position_local_[2];
     com.array() /= 2.0;
-    contact_position[0].noalias() = com + R * (com_to_contact_position_local_[0] - 0.5 * step_length_);
-    contact_position[3].noalias() = com + R * (com_to_contact_position_local_[3] - 0.5 * step_length_);
+    contact_position[0].noalias() = com + R * (com_to_contact_position_local_[0] - step_length_);
+    contact_position[3].noalias() = com + R * (com_to_contact_position_local_[3] - step_length_);
   }
   else {
     return false;
@@ -166,19 +174,19 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
       }
       else if (current_step_ == 0 && step == 1) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.25 * R * step_length_;
+        com.noalias() += R * step_length_;
         contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
         contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
       }
       else if (step%4 == 1) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.5 * R * step_length_;
+        com.noalias() += R * step_length_;
         contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
         contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
       }
       else if (step%4 == 3) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.5 * R * step_length_;
+        com.noalias() += R * step_length_;
         contact_position[0].noalias() = com + R * com_to_contact_position_local_[0];
         contact_position[3].noalias() = com + R * com_to_contact_position_local_[3];
       }
@@ -219,47 +227,47 @@ bool TrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& TrottingFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& RaibertTrottingFootStepPlanner::contactPlacement(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& TrottingFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& RaibertTrottingFootStepPlanner::contactPlacement() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& TrottingFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& RaibertTrottingFootStepPlanner::contactPosition(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& TrottingFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& RaibertTrottingFootStepPlanner::contactPosition() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& TrottingFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& RaibertTrottingFootStepPlanner::com(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& TrottingFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& RaibertTrottingFootStepPlanner::com() const {
   return com_ref_;
 }
 
 
-const Eigen::Matrix3d& TrottingFootStepPlanner::R(const int step) const {
+const Eigen::Matrix3d& RaibertTrottingFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
 
-const std::vector<Eigen::Matrix3d>& TrottingFootStepPlanner::R() const {
+const std::vector<Eigen::Matrix3d>& RaibertTrottingFootStepPlanner::R() const {
   return R_;
 }
 
 
-void TrottingFootStepPlanner::disp(std::ostream& os) const {
+void RaibertTrottingFootStepPlanner::disp(std::ostream& os) const {
   std::cout << "Trotting foot step planner:" << std::endl;
   std::cout << "current_step:" << current_step_ << std::endl;
   const int planning_steps = contact_position_ref_.size();
@@ -276,14 +284,14 @@ void TrottingFootStepPlanner::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const TrottingFootStepPlanner& planner) {
+                         const RaibertTrottingFootStepPlanner& planner) {
   planner.disp(os);
   return os;
 }
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const std::shared_ptr<TrottingFootStepPlanner>& planner) {
+                         const std::shared_ptr<RaibertTrottingFootStepPlanner>& planner) {
   planner->disp(os);
   return os;
 }

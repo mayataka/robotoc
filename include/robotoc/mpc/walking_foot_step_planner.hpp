@@ -61,11 +61,11 @@ public:
   ///
   /// @brief Sets the gait pattern. 
   /// @param[in] step_length Step length of the gait. 
-  /// @param[in] yaw_rate Yaw-rate of the gait. 
+  /// @param[in] yaw_step Yaw step of the gait. 
   /// @param[in] enable_double_support_phase Falgs to enable the double support
   /// phase or not. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& step_length, const double yaw_rate,
+  void setGaitPattern(const Eigen::Vector3d& step_length, const double yaw_step,
                       const bool enable_double_support_phase);
 
   void init(const Eigen::VectorXd& q) override;
