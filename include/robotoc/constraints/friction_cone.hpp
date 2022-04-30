@@ -102,25 +102,30 @@ public:
   ///
   /// @brief Computes the friction cone residual.
   /// @param[in] mu Friction coefficient. Must be positive.
-  /// @param[in] f Contact force expressed in the world frame. Size must be 3.
+  /// @param[in] f_world Contact force expressed in the world frame. 
+  /// Size must be 3.
+  /// @param[in] R_surface Rotation matrix of the contact surface.
   /// @param[out] res Friction cone residual. Size must be 5.
   ///
   template <typename VectorType1, typename VectorType2>
   static void frictionConeResidual(const double mu, 
-                                   const Eigen::MatrixBase<VectorType1>& f,
+                                   const Eigen::MatrixBase<VectorType1>& f_world,
+                                   const Eigen::Matrix3d& R_surface,
                                    const Eigen::MatrixBase<VectorType2>& res) {
     assert(mu > 0);
-    assert(f.size() == 3);
+    assert(f_world.size() == 3);
+    assert((R_surface*R_surface.transpose()).isIdentity());
     assert(res.size() == 5);
-    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(0) = - f.coeff(2);
+    const Eigen::Vector3d f_local = R_surface.transpose() * f_world;
+    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(0) = - f_local.coeff(2);
     const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(1) 
-        = f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+        = f_local.coeff(0) - mu * f_local.coeff(2) / std::sqrt(2);
     const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(2) 
-        = - f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+        = - f_local.coeff(0) - mu * f_local.coeff(2) / std::sqrt(2);
     const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(3) 
-        = f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
+        = f_local.coeff(1) - mu * f_local.coeff(2) / std::sqrt(2);
     const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(4) 
-        = - f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
+        = - f_local.coeff(1) - mu * f_local.coeff(2) / std::sqrt(2);
   }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
@@ -160,6 +165,11 @@ private:
   Eigen::MatrixXd& r_dg_df(ConstraintComponentData& data, 
                            const int contact_idx) const {
     return data.J[3*max_num_contacts_+contact_idx];
+  }
+
+  Eigen::MatrixXd& cone_local(ConstraintComponentData& data, 
+                              const int contact_idx) const {
+    return data.J[4*max_num_contacts_+contact_idx];
   }
 
 };
