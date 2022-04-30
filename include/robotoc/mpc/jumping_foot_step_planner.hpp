@@ -113,6 +113,7 @@ private:
   std::vector<Eigen::Matrix3d> R_;
   Eigen::Vector3d jump_length_;
   Eigen::Matrix3d R_yaw_;
+  bool is_biped_;
 
 };
 

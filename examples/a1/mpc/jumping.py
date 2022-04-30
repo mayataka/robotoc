@@ -4,7 +4,7 @@ from a1_simulator import A1Simulator
 
 
 jump_type = 'longitudinal'
-# jump_type = 'lateral'
+# Jump_type = 'lateral'
 # jump_type = 'back'
 # jump_type = 'rotational'
 
@@ -65,8 +65,6 @@ sim_start_time = 0.0
 sim_end_time = 1.5
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
-sim.print_items.append(planner)
-
 if jump_type == 'longitudinal':
     sim.set_camera(2.0, 35, -0, q[0:3]+np.array([-0.1, 0.5, 0.]))
 elif jump_type == 'lateral':
@@ -76,5 +74,5 @@ elif jump_type == 'back':
 elif jump_type == 'rotational':
     sim.set_camera(2.0, 45, -10, q[0:3]+np.array([-0.1, 0.5, 0.]))
 
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
 # sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=True, record_name=jump_type+'.mp4')

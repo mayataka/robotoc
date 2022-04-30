@@ -17,7 +17,8 @@ JumpingFootStepPlanner::JumpingFootStepPlanner(const Robot& robot)
     com_to_contact_position_local_(),
     R_(),
     jump_length_(Eigen::Vector3d::Zero()),
-    R_yaw_(Eigen::Matrix3d::Identity()) {
+    R_yaw_(Eigen::Matrix3d::Identity()),
+    is_biped_(false) {
   try {
     if (robot.maxNumPointContacts() < 4 && robot.maxNumSurfaceContacts() < 2) {
       throw std::out_of_range(
@@ -27,6 +28,9 @@ JumpingFootStepPlanner::JumpingFootStepPlanner(const Robot& robot)
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
+  }
+  if (robot.maxNumPointContacts() < 4 && robot.maxNumSurfaceContacts() >= 2) {
+    is_biped_ = true;
   }
 }
 
@@ -79,6 +83,13 @@ void JumpingFootStepPlanner::init(const Eigen::VectorXd& q) {
   contact_placement_ref_.push_back(contact_placement);
   contact_placement_ref_.push_back(contact_placement);
   contact_placement_ref_.push_back(contact_placement_goal);
+  if (!is_biped_) {
+    for (auto& e : contact_placement_ref_) {
+      for (auto& ee : e) {
+        ee.rotation().setIdentity();
+      }
+    }
+  }
   robot_.updateFrameKinematics(q);
   com_ref_.push_back(robot_.CoM());
   com_ref_.push_back(robot_.CoM());
@@ -103,7 +114,14 @@ bool JumpingFootStepPlanner::plan(const Eigen::VectorXd& q,
     }
     robot_.updateFrameKinematics(q);
     for (int i=0; i<contact_frames_.size(); ++i) {
-      contact_placement_ref_[1][i] = robot_.framePlacement(contact_frames_[i]);
+      if (is_biped_) {
+        contact_placement_ref_[1][i] 
+            = robot_.framePlacement(contact_frames_[i]);
+      }
+      else {
+        contact_placement_ref_[1][i].translation() 
+            = robot_.framePosition(contact_frames_[i]);
+      }
     }
     contact_placement_ref_[0] = contact_placement_ref_[1];
   }
