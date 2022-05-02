@@ -156,11 +156,11 @@ void MPCFlyingTrotting::setGaitPattern(
                                                            2.*flying_time_+stance_time_, 
                                                            stance_time_, num_phases_in_period);
   LH_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(1, swing_height, 
-                                                           swing_start_time_, 
+                                                           swing_start_time_-flying_time_, 
                                                            2.*flying_time_+stance_time_, 
                                                            stance_time_, num_phases_in_period);
   RF_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(2, swing_height, 
-                                                           swing_start_time_, 
+                                                           swing_start_time_-flying_time_, 
                                                            2.*flying_time_+stance_time_, 
                                                            stance_time_, num_phases_in_period);
   RH_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(3, swing_height, 

@@ -3,35 +3,34 @@ import numpy as np
 import math
 
 
-path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
-contact_frames = ['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'] 
-# contact_frames = [12, 22, 32, 42] 
+path_to_urdf = '../a1_description/urdf/a1.urdf'
+contact_frames = ['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'] 
 contact_types = [robotoc.ContactType.PointContact for i in range(4)]
-baumgarte_time_step = 0.04
+baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
 LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
 dt = 0.02
-step_length = np.array([0.25, 0, 0])
+step_length = np.array([0.15, 0, 0])
 step_height = 0.1
-stance_time = 0.2
+stance_time = 0.15
 flying_time = 0.1
 t0 = stance_time
-cycle = 3
+cycle = 5
 
 # Create the cost function
 cost = robotoc.CostFunction()
-q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1, 
-                       -0.1,  0.7, -1.0, 
-                       -0.1, -0.7,  1.0, 
-                        0.1,  0.7, -1.0, 
-                        0.1, -0.7,  1.0])
-q_weight = np.array([0, 0, 0, 250000, 250000, 250000, 
-                     0.0001, 0.0001, 0.0001, 
-                     0.0001, 0.0001, 0.0001,
-                     0.0001, 0.0001, 0.0001,
-                     0.0001, 0.0001, 0.0001])
+q_standing = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
+                       0.0,  0.67, -1.3, 
+                       0.0,  0.67, -1.3, 
+                       0.0,  0.67, -1.3, 
+                       0.0,  0.67, -1.3])
+q_weight = np.array([0, 0, 0, 1000, 1000, 1000, 
+                     0.001, 0.001, 0.001, 
+                     0.001, 0.001, 0.001,
+                     0.001, 0.001, 0.001,
+                     0.001, 0.001, 0.001])
 v_weight = np.array([100, 100, 100, 100, 100, 100, 
                      1, 1, 1, 
                      1, 1, 1,
@@ -60,27 +59,29 @@ x3d0_LF = robot.frame_position(LF_foot_id)
 x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
+
 LF_t0 = t0 + stance_time 
 LH_t0 = t0 - flying_time
 RF_t0 = t0 - flying_time
 RH_t0 = t0 + stance_time
 LF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LF, step_length, step_height, 
-                                           LF_t0, stance_time+2*flying_time, 
+                                           LF_t0, stance_time+2.*flying_time, 
                                            stance_time, False)
 LH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LH, step_length, step_height, 
-                                           LH_t0, stance_time+2*flying_time, 
+                                           LH_t0, stance_time+2.*flying_time, 
                                            stance_time, True)
 RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RF, step_length, step_height, 
-                                           RF_t0, stance_time+2*flying_time, 
+                                           RF_t0, stance_time+2.*flying_time, 
                                            stance_time, True)
 RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RH, step_length, step_height, 
-                                           RH_t0, stance_time+2*flying_time, 
+                                           RH_t0, stance_time+2.*flying_time, 
                                            stance_time, False)
+
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
 RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
-foot_track_weight = np.full(3, 1.0e06)
+foot_track_weight = np.full(3, 1.0e05)
 LF_cost.set_x3d_weight(foot_track_weight)
 LH_cost.set_x3d_weight(foot_track_weight)
 RF_cost.set_x3d_weight(foot_track_weight)
@@ -95,7 +96,7 @@ vcom_ref = 0.5 * step_length / (stance_time+flying_time)
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, t0, stance_time+flying_time, 
                                  0, True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e06))
+com_cost.set_com_weight(np.full(3, 1.0e05))
 cost.push_back(com_cost)
 
 # Create the constraints
@@ -106,7 +107,7 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.7
+mu = 0.5
 friction_cone         = robotoc.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)

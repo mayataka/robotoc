@@ -11,6 +11,7 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
+step_length = np.array([0.25, 0.0, 0.0]) 
 step_length = np.array([0.0, 0.0, 0.0]) 
 
 step_height = 0.1
@@ -18,8 +19,8 @@ stance_time = 0.15
 flying_time = 0.1
 swing_start_time = 0.5
 
-# yaw_cmd = 0.
-yaw_cmd = np.pi / 18
+yaw_cmd = 0.
+yaw_cmd = np.pi / 12
 
 T = 0.5
 N = 18
