@@ -3,6 +3,29 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
+cmd_type = 'forward'
+# cmd_type = 'backward'
+# cmd_type = 'side'
+# cmd_type = 'curve'
+# cmd_type = 'rotation'
+
+if cmd_type == 'forward':
+    step_length = np.array([0.2, 0.0, 0.0]) 
+    yaw_cmd = 0.
+elif cmd_type == 'backward':
+    step_length = np.array([-0.1, 0.0, 0.0]) 
+    yaw_cmd = 0.
+elif cmd_type == 'side':
+    step_length = np.array([0.0, 0.15, 0.0]) 
+    yaw_cmd = 0.
+elif cmd_type == 'curve':
+    step_length = np.array([0.1, 0.0, 0.0]) 
+    yaw_cmd = np.pi / 12.
+elif cmd_type == 'rotation':
+    step_length = np.array([0.0, 0.0, 0.0]) 
+    yaw_cmd = np.pi / 6.
+
+
 path_to_urdf = '../a1_description/urdf/a1.urdf'
 contact_frames = ['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'] 
 contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
@@ -11,16 +34,10 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
-step_length = np.array([0.25, 0.0, 0.0]) 
-step_length = np.array([0.0, 0.0, 0.0]) 
-
 step_height = 0.1
 stance_time = 0.15
 flying_time = 0.1
 swing_start_time = 0.5
-
-yaw_cmd = 0.
-yaw_cmd = np.pi / 12
 
 T = 0.5
 N = 18
@@ -50,6 +67,7 @@ mpc.set_solver_options(option_mpc)
 sim_time_step = 0.0025 # 400 Hz MPC
 sim_start_time = 0.0
 sim_end_time = 10.0
+
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))

@@ -143,27 +143,40 @@ bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
       // do nothing
     }
     else if (current_step_ == 0 && step == 1) {
+      // do nothing
+    }
+    else if (current_step_ == 0 && step == 2) {
       R = (R_yaw_ * R).eval();
       com.noalias() += 0.25 * R * step_length_;
       contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
       contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
     }
     else if (step%4 == 1) {
+      // do nothing
+    }
+    else if (step%4 == 2) {
       R = (R_yaw_ * R).eval();
       com.noalias() += 0.5 * R * step_length_;
       contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
       contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
     }
     else if (step%4 == 3) {
+      // do nothing
+    }
+    else {
       R = (R_yaw_ * R).eval();
       com.noalias() += 0.5 * R * step_length_;
       contact_position[0].noalias() = com + R * com_to_contact_position_local_[0];
       contact_position[3].noalias() = com + R * com_to_contact_position_local_[3];
     }
+
     com_ref_.push_back(com);
     contact_position_ref_.push_back(contact_position);
     R_.push_back(R);
   }
+  com_ref_.push_back(com);
+  contact_position_ref_.push_back(contact_position);
+  R_.push_back(R);
   return true;
 }
 
