@@ -61,7 +61,9 @@ public:
 
   ///
   /// @brief Plans the step length.
-  /// @param[in] quadruped_robot Quadruped robot model. 
+  /// @param[in] v_com Current planar velocity of the COM. 
+  /// @param[in] v_com_cmd Commanded planar velocity of the COM. 
+  /// @param[in] yaw_rate_cmd Commanded yaw-rate of the COM. 
   ///
   void planStepLength(const Eigen::Vector2d& v_com,
                       const Eigen::Vector2d& v_com_cmd, 
