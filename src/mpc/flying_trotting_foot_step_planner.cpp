@@ -10,6 +10,8 @@ namespace robotoc {
 FlyingTrottingFootStepPlanner::FlyingTrottingFootStepPlanner(const Robot& quadruped_robot)
   : FootStepPlannerBase(),
     robot_(quadruped_robot),
+    raibert_heuristic_(),
+    enable_raibert_heuristic_(false),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
     RF_foot_id_(quadruped_robot.pointContactFrames()[2]),
@@ -19,8 +21,10 @@ FlyingTrottingFootStepPlanner::FlyingTrottingFootStepPlanner(const Robot& quadru
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
+    v_com_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
-    R_yaw_(Eigen::Matrix3d::Identity()) {
+    R_yaw_(Eigen::Matrix3d::Identity()),
+    yaw_rate_cmd_(0) {
   try {
     if (quadruped_robot.maxNumPointContacts() < 4) {
       throw std::out_of_range(
@@ -43,11 +47,41 @@ FlyingTrottingFootStepPlanner::~FlyingTrottingFootStepPlanner() {
 
 
 void FlyingTrottingFootStepPlanner::setGaitPattern(
-    const Eigen::Vector3d& step_length, const double yaw_rate) {
+    const Eigen::Vector3d& step_length, const double step_yaw) {
   step_length_ = step_length;
-  R_yaw_<< std::cos(yaw_rate), -std::sin(yaw_rate), 0, 
-           std::sin(yaw_rate), std::cos(yaw_rate),  0,
+  R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
+           std::sin(step_yaw),  std::cos(step_yaw), 0,
            0, 0, 1;
+  enable_raibert_heuristic_ = false;
+}
+
+
+void FlyingTrottingFootStepPlanner::setGaitPattern(
+    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
+    const double t_swing, const double t_stance, const double gain) {
+  try {
+    if (t_stance <= 0.0) {
+      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    }
+    if (t_swing <= 0.0) {
+      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    }
+    if (gain <= 0.0) {
+      throw std::out_of_range("invalid argument: gain must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  raibert_heuristic_.setParameters(t_stance, gain);
+  v_com_cmd_ = v_com_cmd;
+  const double yaw_cmd = yaw_rate_cmd * t_swing;
+  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
+           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
+           0, 0, 1;
+  yaw_rate_cmd_ = yaw_rate_cmd;
+  enable_raibert_heuristic_ = true;
 }
 
 
@@ -77,6 +111,11 @@ bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
                                          const ContactStatus& contact_status,
                                          const int planning_steps) {
   assert(planning_steps >= 0);
+  if (enable_raibert_heuristic_) {
+    raibert_heuristic_.planStepLength(v.template head<2>(), 
+                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    step_length_ = raibert_heuristic_.stepLength();
+  }
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position;
   for (const auto frame : robot_.pointContactFrames()) {
@@ -97,7 +136,6 @@ bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
   else if (contact_status.isContactActive(0) && contact_status.isContactActive(3)) {
     if (current_step_%4 != 1) {
       ++current_step_;
-      // com.template head<2>() = robot_.CoM().template head<2>();
       R = (R_yaw_ * R).eval();
     }
     com.setZero();
@@ -112,7 +150,6 @@ bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
   else if (contact_status.isContactActive(1) && contact_status.isContactActive(2)) {
     if (current_step_%4 != 3) {
       ++current_step_;
-      // com.template head<2>() = robot_.CoM().template head<2>();
       R = (R_yaw_ * R).eval();
     }
     com.setZero();
@@ -147,7 +184,12 @@ bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
     }
     else if (current_step_ == 0 && step == 2) {
       R = (R_yaw_ * R).eval();
-      com.noalias() += 0.25 * R * step_length_;
+      if (enable_raibert_heuristic_) {
+        com.noalias() += 0.5 * R * step_length_;
+      }
+      else {
+        com.noalias() += 0.25 * R * step_length_;
+      }
       contact_position[1].noalias() = com + R * com_to_contact_position_local_[1];
       contact_position[2].noalias() = com + R * com_to_contact_position_local_[2];
     }

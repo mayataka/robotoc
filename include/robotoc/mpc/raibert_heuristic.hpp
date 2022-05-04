@@ -60,6 +60,13 @@ public:
   RaibertHeuristic& operator=(RaibertHeuristic&&) noexcept = default;
 
   ///
+  /// @brief Set parameters.
+  /// @param[in] t_stance Stance time. 
+  /// @param[in] gain Feedback gain of the velocity. 
+  ///
+  void setParameters(const double t_stance, const double gain);
+
+  ///
   /// @brief Plans the step length.
   /// @param[in] v_com Current planar velocity of the COM. 
   /// @param[in] v_com_cmd Commanded planar velocity of the COM. 

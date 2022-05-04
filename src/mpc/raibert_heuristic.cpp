@@ -35,6 +35,24 @@ RaibertHeuristic::~RaibertHeuristic() {
 }
 
 
+void RaibertHeuristic::setParameters(const double t_stance, const double gain) {
+  try {
+    if (t_stance <= 0.0) {
+      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    }
+    if (gain <= 0.0) {
+      throw std::out_of_range("invalid argument: gain must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  t_stance_ = t_stance;
+  gain_ = gain;
+}
+
+
 void RaibertHeuristic::planStepLength(const Eigen::Vector2d& v_com,
                                       const Eigen::Vector2d& v_com_cmd, 
                                       const double yaw_rate_cmd) {

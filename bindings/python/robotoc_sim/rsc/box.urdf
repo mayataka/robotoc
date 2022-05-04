@@ -1,0 +1,29 @@
+<?xml version="1.0"?> 
+<robot name="box">
+    <material name="green">
+        <color rgba="0 1 0 0.85"/>
+    </material>
+
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <box size="0.6 0.6 0.2"/>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+            </geometry>
+            <material name="green"/>
+        </visual>
+        <collision> 
+             <geometry> 
+                <box size="0.6 0.6 0.2"/>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+            </geometry>
+        </collision> 
+        <inertial> 
+            <mass value="1.0"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial> 
+        <contact>
+            <lateral_friction value="0.6"/>
+        </contact>
+    </link>
+</robot>

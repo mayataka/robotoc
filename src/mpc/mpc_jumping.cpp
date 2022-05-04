@@ -36,6 +36,15 @@ MPCJumping::MPCJumping(const Robot& robot, const double T, const int N,
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(N),
     current_step_(0) {
+  try {
+    if (max_steps < 1) {
+      throw std::out_of_range("invalid value: max_steps must be larger than 1!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
@@ -98,6 +107,12 @@ void MPCJumping::setJumpPattern(
     }
     if (min_ground_time <= 0) {
       throw std::out_of_range("invalid value: min_ground_time must be positive!");
+    }
+    if (flying_time+ground_time > T_) {
+      throw std::out_of_range("invalid value: flying_time+ground_time must be less than T!");
+    }
+    if (min_flying_time+min_ground_time > T_) {
+      throw std::out_of_range("invalid value: min_flying_time+min_ground_time must be less than T!");
     }
   }
   catch(const std::exception& e) {

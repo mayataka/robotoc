@@ -3,6 +3,7 @@ import math
 import time
 import abc
 import numpy as np
+import os
 
 
 class LeggedSimulator(metaclass=abc.ABCMeta):
@@ -17,11 +18,12 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.camera_pitch = 0.0
         self.camera_target_pos = [0., 0., 0.]
         self.print_items = []
+        self.box_pos = []
 
     def set_sim_settings(self, time_step, start_time, end_time):
-        self.time_step = time_step
+        self.time_step  = time_step
         self.start_time = start_time
-        self.end_time =end_time
+        self.end_time   = end_time
 
     def set_urdf(self, path_to_urdf):
         self.path_to_urdf = path_to_urdf
@@ -40,6 +42,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         baseVel = R.T @ np.array(baseVel)
         baseAngVel = R.T @ np.array(baseAngVel)
         return baseVel, baseAngVel
+
+    def add_box(self, box_pos):
+        self.box_pos.append(box_pos)
 
     @abc.abstractmethod
     def get_state_from_pybullet(self, pybullet_robot, q, v):
@@ -74,12 +79,16 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
         if terrain:
-            import os
-            plane = pybullet.loadURDF(os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf"))
+            plane_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
+            plane = pybullet.loadURDF(fileName=plane_urdf)
         else:
             import pybullet_data
             pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
             plane = pybullet.loadURDF("plane.urdf")
+        if self.box_pos:
+            box_urdf = os.path.join(os.path.dirname(__file__), "rsc/box.urdf")
+            for pos in self.box_pos:
+                box = pybullet.loadURDF(fileName=box_urdf, basePosition=pos, useFixedBase=True)
         robot = pybullet.loadURDF(self.path_to_urdf,  
                                   useFixedBase=False, 
                                   useMaximalCoordinates=False)
