@@ -16,9 +16,13 @@ PYBIND11_MODULE(trotting_foot_step_planner, m) {
              std::shared_ptr<TrottingFootStepPlanner>>(m, "TrottingFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))
-    .def("set_gait_pattern", &TrottingFootStepPlanner::setGaitPattern,
-         py::arg("step_length"), py::arg("yaw_rate"), 
-         py::arg("enable_stance_phase"))
+    .def("set_gait_pattern", 
+          static_cast<void (TrottingFootStepPlanner::*)(const Eigen::Vector3d&, const double, const bool)>(&TrottingFootStepPlanner::setGaitPattern),
+          py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_stance_phase")) 
+    .def("set_gait_pattern", 
+          static_cast<void (TrottingFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&TrottingFootStepPlanner::setGaitPattern),
+          py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
+          py::arg("t_swing"), py::arg("t_stance"), py::arg("gain")) 
     .def("init", &TrottingFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &TrottingFootStepPlanner::plan,

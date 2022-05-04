@@ -15,6 +15,8 @@ step_length = np.array([0.15, 0, 0])
 # step_length = np.array([-0.1, 0, 0]) 
 # step_length = np.array([0, 0.1, 0]) 
 # step_length = np.array([0.1, -0.1, 0]) 
+yaw_cmd = np.pi / 18
+yaw_cmd = 0.0
 
 step_height = 0.1
 swing_time = 0.25
@@ -23,8 +25,7 @@ stance_time = 0
 swing_start_time = 0.5
 
 vcom_cmd = step_length / swing_time
-yaw_cmd = np.pi / 6
-# yaw_cmd = 0
+yaw_rate_cmd = yaw_cmd / swing_time
 
 T = 0.5
 N = 18
@@ -33,7 +34,9 @@ nthreads = 4
 mpc = robotoc.MPCTrotting(robot, T, N, max_steps, nthreads)
 
 planner = robotoc.TrottingFootStepPlanner(robot)
-planner.set_gait_pattern(step_length, (yaw_cmd*swing_time), (stance_time > 0.))
+planner.set_gait_pattern(step_length, yaw_cmd, (stance_time > 0.))
+# raibert_gain = 0.2
+# planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+stance_time, raibert_gain)
 mpc.set_gait_pattern(planner, step_height, swing_time, stance_time, swing_start_time)
 
 q = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
@@ -58,5 +61,6 @@ sim_end_time = 50.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
+# sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
 # sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')

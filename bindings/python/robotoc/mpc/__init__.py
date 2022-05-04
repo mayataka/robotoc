@@ -1,6 +1,5 @@
 from .foot_step_planner_base import *
 from .trotting_foot_step_planner import *
-from .raibert_trotting_foot_step_planner import *
 from .crawling_foot_step_planner import *
 from .walking_foot_step_planner import *
 from .jumping_foot_step_planner import *
