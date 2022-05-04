@@ -10,6 +10,8 @@ namespace robotoc {
 CrawlingFootStepPlanner::CrawlingFootStepPlanner(const Robot& quadruped_robot)
   : FootStepPlannerBase(),
     robot_(quadruped_robot),
+    raibert_heuristic_(),
+    enable_raibert_heuristic_(false),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
     RF_foot_id_(quadruped_robot.pointContactFrames()[2]),
@@ -19,8 +21,10 @@ CrawlingFootStepPlanner::CrawlingFootStepPlanner(const Robot& quadruped_robot)
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
+    v_com_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
+    yaw_rate_cmd_(0),
     enable_stance_phase_(false) {
   try {
     if (quadruped_robot.maxNumPointContacts() < 4) {
@@ -44,13 +48,44 @@ CrawlingFootStepPlanner::~CrawlingFootStepPlanner() {
 
 
 void CrawlingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                             const double yaw_step, 
+                                             const double step_yaw, 
                                              const bool enable_stance_phase) {
   step_length_ = step_length;
-  R_yaw_<< std::cos(yaw_step), -std::sin(yaw_step), 0, 
-           std::sin(yaw_step), std::cos(yaw_step),  0,
+  R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
+           std::sin(step_yaw), std::cos(step_yaw),  0,
            0, 0, 1;
   enable_stance_phase_ = enable_stance_phase;
+  enable_raibert_heuristic_ = false;
+}
+
+
+void CrawlingFootStepPlanner::setGaitPattern(
+    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
+    const double t_swing, const double t_stance, const double gain) {
+  try {
+    if (t_stance <= 0.0) {
+      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    }
+    if (t_swing <= 0.0) {
+      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    }
+    if (gain <= 0.0) {
+      throw std::out_of_range("invalid argument: gain must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  raibert_heuristic_.setParameters(t_stance, gain);
+  v_com_cmd_ = v_com_cmd;
+  const double yaw_cmd = yaw_rate_cmd * t_swing;
+  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
+           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
+           0, 0, 1;
+  yaw_rate_cmd_ = yaw_rate_cmd;
+  enable_stance_phase_ = (t_stance > t_swing);
+  enable_raibert_heuristic_ = true;
 }
 
 
@@ -79,6 +114,11 @@ bool CrawlingFootStepPlanner::plan(const Eigen::VectorXd& q,
                                    const ContactStatus& contact_status,
                                    const int planning_steps) {
   assert(planning_steps >= 0);
+  if (enable_raibert_heuristic_) {
+    raibert_heuristic_.planStepLength(v.template head<2>(), 
+                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    step_length_ = raibert_heuristic_.stepLength();
+  }
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position;
   for (const auto frame : robot_.pointContactFrames()) {
@@ -210,12 +250,22 @@ bool CrawlingFootStepPlanner::plan(const Eigen::VectorXd& q,
       }
       else if (step == 1) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.125 * R * step_length_;
+        if (enable_raibert_heuristic_) {
+          com.noalias() += 0.25 * R * step_length_;
+        }
+        else {
+          com.noalias() += 0.125 * R * step_length_;
+        }
         contact_position[3].noalias() += 0.5 * R * step_length_;
       }
       else if (step == 3) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.125 * R * step_length_;
+        if (enable_raibert_heuristic_) {
+          com.noalias() += 0.25 * R * step_length_;
+        }
+        else {
+          com.noalias() += 0.125 * R * step_length_;
+        }
         contact_position[2].noalias() += 0.5 * R * step_length_;
       }
       else if (step%8 == 1) {
@@ -250,12 +300,22 @@ bool CrawlingFootStepPlanner::plan(const Eigen::VectorXd& q,
       }
       else if (step == 1) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.125 * R * step_length_;
+        if (enable_raibert_heuristic_) {
+          com.noalias() += 0.25 * R * step_length_;
+        }
+        else {
+          com.noalias() += 0.125 * R * step_length_;
+        }
         contact_position[3].noalias() += 0.5 * R * step_length_;
       }
       else if (step == 2) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.125 * R * step_length_;
+        if (enable_raibert_heuristic_) {
+          com.noalias() += 0.25 * R * step_length_;
+        }
+        else {
+          com.noalias() += 0.125 * R * step_length_;
+        }
         contact_position[2].noalias() += 0.5 * R * step_length_;
       }
       else if (step%4 == 1) {
