@@ -1,4 +1,4 @@
-#include "robotoc/mpc/flying_trotting_foot_step_planner.hpp"
+#include "robotoc/mpc/flying_trot_foot_step_planner.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -7,7 +7,7 @@
 
 namespace robotoc {
 
-FlyingTrottingFootStepPlanner::FlyingTrottingFootStepPlanner(const Robot& quadruped_robot)
+FlyingTrotFootStepPlanner::FlyingTrotFootStepPlanner(const Robot& quadruped_robot)
   : ContactPlannerBase(),
     robot_(quadruped_robot),
     raibert_heuristic_(),
@@ -38,15 +38,15 @@ FlyingTrottingFootStepPlanner::FlyingTrottingFootStepPlanner(const Robot& quadru
 }
 
 
-FlyingTrottingFootStepPlanner::FlyingTrottingFootStepPlanner() {
+FlyingTrotFootStepPlanner::FlyingTrotFootStepPlanner() {
 }
 
 
-FlyingTrottingFootStepPlanner::~FlyingTrottingFootStepPlanner() {
+FlyingTrotFootStepPlanner::~FlyingTrotFootStepPlanner() {
 }
 
 
-void FlyingTrottingFootStepPlanner::setGaitPattern(
+void FlyingTrotFootStepPlanner::setGaitPattern(
     const Eigen::Vector3d& step_length, const double step_yaw) {
   step_length_ = step_length;
   R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
@@ -56,7 +56,7 @@ void FlyingTrottingFootStepPlanner::setGaitPattern(
 }
 
 
-void FlyingTrottingFootStepPlanner::setGaitPattern(
+void FlyingTrotFootStepPlanner::setGaitPattern(
     const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
     const double t_swing, const double t_stance, const double gain) {
   try {
@@ -85,7 +85,7 @@ void FlyingTrottingFootStepPlanner::setGaitPattern(
 }
 
 
-void FlyingTrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
+void FlyingTrotFootStepPlanner::init(const Eigen::VectorXd& q) {
   Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   R.coeffRef(0, 0) = 1.0;
   R.coeffRef(0, 1) = 0.0;
@@ -106,7 +106,7 @@ void FlyingTrottingFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
+bool FlyingTrotFootStepPlanner::plan(const Eigen::VectorXd& q,
                                          const Eigen::VectorXd& v,
                                          const ContactStatus& contact_status,
                                          const int planning_steps) {
@@ -223,48 +223,48 @@ bool FlyingTrottingFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& FlyingTrottingFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& FlyingTrotFootStepPlanner::contactPlacement(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& FlyingTrottingFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& FlyingTrotFootStepPlanner::contactPlacement() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& FlyingTrottingFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::contactPosition(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& FlyingTrottingFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& FlyingTrotFootStepPlanner::contactPosition() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& FlyingTrottingFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& FlyingTrotFootStepPlanner::com(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& FlyingTrottingFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::com() const {
   return com_ref_;
 }
 
 
-const Eigen::Matrix3d& FlyingTrottingFootStepPlanner::R(const int step) const {
+const Eigen::Matrix3d& FlyingTrotFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
 
-const std::vector<Eigen::Matrix3d>& FlyingTrottingFootStepPlanner::R() const {
+const std::vector<Eigen::Matrix3d>& FlyingTrotFootStepPlanner::R() const {
   return R_;
 }
 
 
-void FlyingTrottingFootStepPlanner::disp(std::ostream& os) const {
-  std::cout << "Flying trotting foot step planner:" << std::endl;
+void FlyingTrotFootStepPlanner::disp(std::ostream& os) const {
+  std::cout << "Flying trot foot step planner:" << std::endl;
   std::cout << "current_step:" << current_step_ << std::endl;
   const int planning_steps = contact_position_ref_.size();
   for (int i=0; i<planning_steps; ++i) {
@@ -280,14 +280,14 @@ void FlyingTrottingFootStepPlanner::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const FlyingTrottingFootStepPlanner& planner) {
+                         const FlyingTrotFootStepPlanner& planner) {
   planner.disp(os);
   return os;
 }
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const std::shared_ptr<FlyingTrottingFootStepPlanner>& planner) {
+                         const std::shared_ptr<FlyingTrotFootStepPlanner>& planner) {
   planner->disp(os);
   return os;
 }

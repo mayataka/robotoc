@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_TROTTING_FOOT_STEP_PLANNER_HPP_
-#define ROBOTOC_TROTTING_FOOT_STEP_PLANNER_HPP_
+#ifndef ROBOTOC_FLYING_TROT_FOOT_STEP_PLANNER_HPP_
+#define ROBOTOC_FLYING_TROT_FOOT_STEP_PLANNER_HPP_
 
 #include <vector>
 #include <iostream>
@@ -18,55 +18,53 @@
 namespace robotoc {
 
 ///
-/// @class TrottingFootStepPlanner
-/// @brief Foot step planner for the trotting gait of quadrupeds. 
+/// @class FlyingTrotFootStepPlanner
+/// @brief Foot step planner for the flying trot gait of quadrupeds. 
 ///
-class TrottingFootStepPlanner final : public ContactPlannerBase {
+class FlyingTrotFootStepPlanner final : public ContactPlannerBase {
 public:
   ///
   /// @brief Constructs the planner.
   /// @param[in] quadruped_robot Quadruped robot model. 
   ///
-  TrottingFootStepPlanner(const Robot& quadruped_robot);
+  FlyingTrotFootStepPlanner(const Robot& quadruped_robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  TrottingFootStepPlanner();
+  FlyingTrotFootStepPlanner();
 
   ///
   /// @brief Destructor. 
   ///
-  ~TrottingFootStepPlanner();
+  ~FlyingTrotFootStepPlanner();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  TrottingFootStepPlanner(const TrottingFootStepPlanner&) = default;
+  FlyingTrotFootStepPlanner(const FlyingTrotFootStepPlanner&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  TrottingFootStepPlanner& operator=(const TrottingFootStepPlanner&) = default;
+  FlyingTrotFootStepPlanner& operator=(const FlyingTrotFootStepPlanner&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  TrottingFootStepPlanner(TrottingFootStepPlanner&&) noexcept = default;
+  FlyingTrotFootStepPlanner(FlyingTrotFootStepPlanner&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  TrottingFootStepPlanner& operator=(TrottingFootStepPlanner&&) noexcept = default;
+  FlyingTrotFootStepPlanner& operator=(FlyingTrotFootStepPlanner&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern by step length and yaw step command. 
   /// @param[in] step_length Step length of the gait. 
   /// @param[in] step_yaw Yaw command at each step of the gait. 
-  /// @param[in] enable_stance_phase Enables the stance phase or not. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& step_length, const double step_yaw,
-                      const bool enable_stance_phase);
+  void setGaitPattern(const Eigen::Vector3d& step_length, const double step_yaw);
 
   ///
   /// @brief Sets the gait pattern by Raibert heuristic. 
@@ -87,7 +85,7 @@ public:
             const int planning_steps) override;
 
   ///
-  /// @brief This is invalid in TrottingFootStepPlanner. 
+  /// @brief This is invalid in FlyingTrotFootStepPlanner. 
   ///
   const aligned_vector<SE3>& contactPlacement(const int step) const override;
 
@@ -111,10 +109,10 @@ public:
   void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const TrottingFootStepPlanner& planner);
+                                  const FlyingTrotFootStepPlanner& planner);
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const std::shared_ptr<TrottingFootStepPlanner>& planner);
+                                  const std::shared_ptr<FlyingTrotFootStepPlanner>& planner);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -130,10 +128,8 @@ private:
   Eigen::Vector3d v_com_cmd_, step_length_;
   Eigen::Matrix3d R_yaw_;
   double yaw_rate_cmd_;
-  bool enable_stance_phase_;
-
 };
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_TROTTING_FOOT_STEP_PLANNER_HPP_ 
+#endif // ROBOTOC_FLYING_TROT_FOOT_STEP_PLANNER_HPP_ 

@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_flying_trotting.hpp"
+#include "robotoc/mpc/mpc_flying_trot.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -10,9 +10,9 @@
 
 namespace robotoc {
 
-MPCFlyingTrotting::MPCFlyingTrotting(const Robot& robot, const double T, 
-                                     const int N, const int max_steps, 
-                                     const int nthreads)
+MPCFlyingTrot::MPCFlyingTrot(const Robot& robot, const double T, 
+                             const int N, const int max_steps, 
+                             const int nthreads)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
     cost_(std::make_shared<CostFunction>()),
@@ -116,15 +116,15 @@ MPCFlyingTrotting::MPCFlyingTrotting(const Robot& robot, const double T,
 }
 
 
-MPCFlyingTrotting::MPCFlyingTrotting() {
+MPCFlyingTrot::MPCFlyingTrot() {
 }
 
 
-MPCFlyingTrotting::~MPCFlyingTrotting() {
+MPCFlyingTrot::~MPCFlyingTrot() {
 }
 
 
-void MPCFlyingTrotting::setGaitPattern(
+void MPCFlyingTrot::setGaitPattern(
     const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
     const double swing_height, const double flying_time, 
     const double stance_time, const double swing_start_time) {
@@ -179,9 +179,9 @@ void MPCFlyingTrotting::setGaitPattern(
 }
 
 
-void MPCFlyingTrotting::init(const double t, const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v, 
-                             const SolverOptions& solver_options) {
+void MPCFlyingTrot::init(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v, 
+                         const SolverOptions& solver_options) {
   try {
     if (t >= swing_start_time_) {
       throw std::out_of_range(
@@ -215,14 +215,14 @@ void MPCFlyingTrotting::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCFlyingTrotting::setSolverOptions(const SolverOptions& solver_options) {
+void MPCFlyingTrot::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCFlyingTrotting::updateSolution(const double t, const double dt,
-                                       const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v) {
+void MPCFlyingTrot::updateSolution(const double t, const double dt,
+                                   const Eigen::VectorXd& q, 
+                                   const Eigen::VectorXd& v) {
   assert(dt > 0);
   const bool add_step = addStep(t);
   const auto ts = contact_sequence_->eventTimes();
@@ -241,75 +241,75 @@ void MPCFlyingTrotting::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCFlyingTrotting::getInitialControlInput() const {
+const Eigen::VectorXd& MPCFlyingTrot::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-const Solution& MPCFlyingTrotting::getSolution() const {
+const Solution& MPCFlyingTrot::getSolution() const {
   return ocp_solver_.getSolution();
 }
 
 
-const hybrid_container<LQRPolicy>& MPCFlyingTrotting::getLQRPolicy() const {
+const hybrid_container<LQRPolicy>& MPCFlyingTrot::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 
 
-double MPCFlyingTrotting::KKTError(const double t, const Eigen::VectorXd& q, 
-                                   const Eigen::VectorXd& v) {
+double MPCFlyingTrot::KKTError(const double t, const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCFlyingTrotting::KKTError() const {
+double MPCFlyingTrot::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-std::shared_ptr<CostFunction> MPCFlyingTrotting::getCostHandle() {
+std::shared_ptr<CostFunction> MPCFlyingTrot::getCostHandle() {
   return cost_;
 }
 
 
-std::shared_ptr<ConfigurationSpaceCost> MPCFlyingTrotting::getConfigCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCFlyingTrot::getConfigCostHandle() {
   return config_cost_;
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCFlyingTrotting::getBaseRotationCostHandle() {
+std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCFlyingTrot::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCFlyingTrotting::getSwingFootCostHandle() {
+std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCFlyingTrot::getSwingFootCostHandle() {
   std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {LF_foot_cost_, LH_foot_cost_, RF_foot_cost_, RH_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCFlyingTrotting::getCoMCostHandle() {
+std::shared_ptr<TimeVaryingCoMCost> MPCFlyingTrot::getCoMCostHandle() {
   return com_cost_;
 }
 
 
-std::shared_ptr<Constraints> MPCFlyingTrotting::getConstraintsHandle() {
+std::shared_ptr<Constraints> MPCFlyingTrot::getConstraintsHandle() {
   return constraints_;
 }
 
 
-std::shared_ptr<FrictionCone> MPCFlyingTrotting::getFrictionConeHandle() {
+std::shared_ptr<FrictionCone> MPCFlyingTrot::getFrictionConeHandle() {
   return friction_cone_;
 }
 
 
-std::shared_ptr<ContactSequence> MPCFlyingTrotting::getContactSequenceHandle() {
+std::shared_ptr<ContactSequence> MPCFlyingTrot::getContactSequenceHandle() {
   return contact_sequence_;
 }
 
 
-bool MPCFlyingTrotting::addStep(const double t) {
+bool MPCFlyingTrot::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {
       contact_sequence_->push_back(cs_lfrh_, swing_start_time_);
@@ -352,8 +352,8 @@ bool MPCFlyingTrotting::addStep(const double t) {
 }
 
 
-void MPCFlyingTrotting::resetContactPlacements(const Eigen::VectorXd& q,
-                                               const Eigen::VectorXd& v) {
+void MPCFlyingTrot::resetContactPlacements(const Eigen::VectorXd& q,
+                                           const Eigen::VectorXd& v) {
   const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases()+1);
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {

@@ -26,9 +26,9 @@ T = 0.5
 N = 18
 max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCTrotting(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCTrot(robot, T, N, max_steps, nthreads)
 
-planner = robotoc.TrottingFootStepPlanner(robot)
+planner = robotoc.TrotFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, (yaw_cmd*swing_time), (stance_time > 0.))
 mpc.set_gait_pattern(planner, swing_height, swing_time, stance_time, swing_start_time)
 
@@ -54,4 +54,4 @@ sim = ANYmalSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
-# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')
+# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trot.mp4')

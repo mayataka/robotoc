@@ -17,7 +17,7 @@ The followings are examples:
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="270">
 
-- <b>Whole-body MPC</b> (400 Hz sampling rate) examples of quadrupedal crawl and trotting on a physical simulator [PyBullet] (https://pybullet.org/wordpress/).
+- <b>Whole-body MPC</b> (400 Hz sampling rate) examples of quadrupedal crawl and trot on a physical simulator [PyBullet] (https://pybullet.org/wordpress/).
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_walking.gif" width="250"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/mpc_trotting.gif" width="250">

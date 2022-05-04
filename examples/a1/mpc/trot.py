@@ -31,9 +31,9 @@ T = 0.5
 N = 18
 max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCTrotting(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCTrot(robot, T, N, max_steps, nthreads)
 
-planner = robotoc.TrottingFootStepPlanner(robot)
+planner = robotoc.TrotFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, yaw_cmd, (stance_time > 0.))
 # raibert_gain = 0.2
 # planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+stance_time, raibert_gain)
@@ -61,6 +61,5 @@ sim_end_time = 50.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=False)
-# sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
-# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trotting.mp4')
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
+# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trot.mp4')

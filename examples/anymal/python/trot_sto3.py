@@ -53,10 +53,10 @@ config_cost.set_vi_weight(v_weight)
 config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 
-LF_foot_ref = robotoc.TrottingSwingFootRef(0, 2, 1, step_length, step_height)
-LH_foot_ref = robotoc.TrottingSwingFootRef(1, 3, 0, step_length, step_height)
-RF_foot_ref = robotoc.TrottingSwingFootRef(2, 0, 3, step_length, step_height)
-RH_foot_ref = robotoc.TrottingSwingFootRef(3, 1, 2, step_length, step_height)
+LF_foot_ref = robotoc.TrotSwingFootRef(0, 2, 1, step_length, step_height)
+LH_foot_ref = robotoc.TrotSwingFootRef(1, 3, 0, step_length, step_height)
+RF_foot_ref = robotoc.TrotSwingFootRef(2, 0, 3, step_length, step_height)
+RH_foot_ref = robotoc.TrotSwingFootRef(3, 1, 2, step_length, step_height)
 LF_cost = robotoc.SwingFootCost(robot, 0, LF_foot_ref)
 LH_cost = robotoc.SwingFootCost(robot, 1, LH_foot_ref)
 RF_cost = robotoc.SwingFootCost(robot, 2, RF_foot_ref)
@@ -195,13 +195,13 @@ ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times(
 
 plot_ts = robotoc.utils.PlotConvergence()
 plot_ts.ylim = [0., 1.3]
-plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trotting_sto', 
-             save_dir='trotting_sto_log')
+plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='trot_sto', 
+             save_dir='trot_sto_log')
 
 plot_f = robotoc.utils.PlotContactForce(mu=mu)
 plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
             t=ocp_solver.get_time_discretization().time_points(), 
-            fig_name='trotting_sto_f', save_dir='trotting_sto_log')
+            fig_name='trot_sto_f', save_dir='trot_sto_log')
 
 
 # Display results

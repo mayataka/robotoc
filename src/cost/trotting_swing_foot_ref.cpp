@@ -1,11 +1,11 @@
-#include "robotoc/cost/trotting_swing_foot_ref.hpp"
+#include "robotoc/cost/trot_swing_foot_ref.hpp"
 
 #include <cmath>
 
 
 namespace robotoc {
 
-TrottingSwingFootRef::TrottingSwingFootRef(const int contact_index,
+TrotSwingFootRef::TrotSwingFootRef(const int contact_index,
                                            const int x_ref_foot_contact_index, 
                                            const int y_ref_foot_contact_index, 
                                            const double step_length, 
@@ -19,11 +19,11 @@ TrottingSwingFootRef::TrottingSwingFootRef(const int contact_index,
 }
 
 
-TrottingSwingFootRef::~TrottingSwingFootRef() {
+TrotSwingFootRef::~TrotSwingFootRef() {
 }
 
 
-void TrottingSwingFootRef::update_x3d_ref(const ContactStatus& contact_status, 
+void TrotSwingFootRef::update_x3d_ref(const ContactStatus& contact_status, 
                                           Eigen::VectorXd& x3d_ref) const {
   constexpr double eps = std::numeric_limits<double>::epsilon();
   const double xdiff = contact_status.contactPosition(contact_index_).coeff(0) 

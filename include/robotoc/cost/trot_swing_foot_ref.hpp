@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_TROTTING_SWING_FOOT_REF_HPP_
-#define ROBOTOC_TROTTING_SWING_FOOT_REF_HPP_
+#ifndef ROBOTOC_TROT_SWING_FOOT_REF_HPP_
+#define ROBOTOC_TROT_SWING_FOOT_REF_HPP_
 
 #include "Eigen/Core"
 
@@ -9,10 +9,10 @@
 namespace robotoc {
 
 ///
-/// @class TrottingSwingFootRef
+/// @class TrotSwingFootRef
 /// @brief Periodic reference of the foot position. 
 ///
-class TrottingSwingFootRef : public SwingFootRefBase {
+class TrotSwingFootRef : public SwingFootRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -24,7 +24,7 @@ public:
   /// @param[in] step_length The step length of the gait.
   /// @param[in] step_height The step height of the gait.
   ///
-  TrottingSwingFootRef(const int contact_index, 
+  TrotSwingFootRef(const int contact_index, 
                        const int x_ref_foot_contact_index, 
                        const int y_ref_foot_contact_index,
                        const double step_length, const double step_height);
@@ -32,7 +32,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~TrottingSwingFootRef();
+  ~TrotSwingFootRef();
 
   void update_x3d_ref(const ContactStatus& contact_status, 
                       Eigen::VectorXd& x3d_ref) const override;
@@ -45,4 +45,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_TROTTING_SWING_FOOT_REF_HPP_ 
+#endif // ROBOTOC_TROT_SWING_FOOT_REF_HPP_

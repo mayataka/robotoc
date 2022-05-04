@@ -43,14 +43,14 @@ T = 0.5
 N = 18
 max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCFlyingTrotting(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCFlyingTrot(robot, T, N, max_steps, nthreads)
 
 
 swing_time = stance_time + flying_time
 vcom_cmd = step_length / swing_time
 yaw_rate_cmd = yaw_cmd / swing_time
 
-planner = robotoc.FlyingTrottingFootStepPlanner(robot)
+planner = robotoc.FlyingTrotFootStepPlanner(robot)
 # planner.set_gait_pattern(step_length, yaw_cmd)
 raibert_gain = 0.2
 planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, stance_time, raibert_gain)

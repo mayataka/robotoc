@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_TROTTING_HPP_
-#define ROBOTOC_MPC_TROTTING_HPP_
+#ifndef ROBOTOC_MPC_TROT_HPP_
+#define ROBOTOC_MPC_TROT_HPP_
 
 #include <memory>
 
@@ -34,51 +34,51 @@
 namespace robotoc {
 
 ///
-/// @class MPCTrotting
-/// @brief MPC solver for the trotting gait of quadrupeds. 
+/// @class MPCTrot
+/// @brief MPC solver for the trot gait of quadrupeds. 
 ///
-class MPCTrotting {
+class MPCTrot {
 public:
   ///
   /// @brief Construct MPC solver.
   /// @param[in] quadruped_robot Quadruped robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] max_steps Maximum number of trotting steps over the horizon.
+  /// @param[in] max_steps Maximum number of trot steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCTrotting(const Robot& quadruped_robot, const double T, const int N, 
+  MPCTrot(const Robot& quadruped_robot, const double T, const int N, 
               const int max_steps, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCTrotting();
+  MPCTrot();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCTrotting();
+  ~MPCTrot();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCTrotting(const MPCTrotting&) = default;
+  MPCTrot(const MPCTrot&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCTrotting& operator=(const MPCTrotting&) = default;
+  MPCTrot& operator=(const MPCTrot&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCTrotting(MPCTrotting&&) noexcept = default;
+  MPCTrot(MPCTrot&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCTrotting& operator=(MPCTrotting&&) noexcept = default;
+  MPCTrot& operator=(MPCTrot&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -147,7 +147,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCTrotting::updateSolution() must be computed.  
+  /// MPCTrot::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -228,4 +228,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_TROTTING_HPP_ 
+#endif // ROBOTOC_MPC_TROT_HPP_ 

@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_trotting.hpp"
+#include "robotoc/mpc/mpc_trot.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -10,7 +10,7 @@
 
 namespace robotoc {
 
-MPCTrotting::MPCTrotting(const Robot& robot, const double T, const int N, 
+MPCTrot::MPCTrot(const Robot& robot, const double T, const int N, 
                          const int max_steps, const int nthreads)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
@@ -115,17 +115,17 @@ MPCTrotting::MPCTrotting(const Robot& robot, const double T, const int N,
 }
 
 
-MPCTrotting::MPCTrotting() {
+MPCTrot::MPCTrot() {
 }
 
 
-MPCTrotting::~MPCTrotting() {
+MPCTrot::~MPCTrot() {
 }
 
 
-void MPCTrotting::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
-                                 const double swing_height, const double swing_time,
-                                 const double stance_time, const double swing_start_time) {
+void MPCTrot::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
+                             const double swing_height, const double swing_time,
+                             const double stance_time, const double swing_start_time) {
   try {
     if (swing_height <= 0) {
       throw std::out_of_range("invalid value: swing_height must be positive!");
@@ -171,9 +171,9 @@ void MPCTrotting::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot
 }
 
 
-void MPCTrotting::init(const double t, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, 
-                       const SolverOptions& solver_options) {
+void MPCTrot::init(const double t, const Eigen::VectorXd& q, 
+                   const Eigen::VectorXd& v, 
+                   const SolverOptions& solver_options) {
   try {
     if (t >= swing_start_time_) {
       throw std::out_of_range(
@@ -205,12 +205,12 @@ void MPCTrotting::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCTrotting::setSolverOptions(const SolverOptions& solver_options) {
+void MPCTrot::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCTrotting::updateSolution(const double t, const double dt,
+void MPCTrot::updateSolution(const double t, const double dt,
                                  const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v) {
   assert(dt > 0);
@@ -231,70 +231,70 @@ void MPCTrotting::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCTrotting::getInitialControlInput() const {
+const Eigen::VectorXd& MPCTrot::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-const Solution& MPCTrotting::getSolution() const {
+const Solution& MPCTrot::getSolution() const {
   return ocp_solver_.getSolution();
 }
 
 
-const hybrid_container<LQRPolicy>& MPCTrotting::getLQRPolicy() const {
+const hybrid_container<LQRPolicy>& MPCTrot::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 
 
-double MPCTrotting::KKTError(const double t, const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v) {
+double MPCTrot::KKTError(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCTrotting::KKTError() const {
+double MPCTrot::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-std::shared_ptr<CostFunction> MPCTrotting::getCostHandle() {
+std::shared_ptr<CostFunction> MPCTrot::getCostHandle() {
   return cost_;
 }
 
 
-std::shared_ptr<ConfigurationSpaceCost> MPCTrotting::getConfigCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCTrot::getConfigCostHandle() {
   return config_cost_;
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCTrotting::getBaseRotationCostHandle() {
+std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCTrot::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCTrotting::getSwingFootCostHandle() {
+std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCTrot::getSwingFootCostHandle() {
   std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {LF_foot_cost_, LH_foot_cost_, RF_foot_cost_, RH_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCTrotting::getCoMCostHandle() {
+std::shared_ptr<TimeVaryingCoMCost> MPCTrot::getCoMCostHandle() {
   return com_cost_;
 }
 
 
-std::shared_ptr<Constraints> MPCTrotting::getConstraintsHandle() {
+std::shared_ptr<Constraints> MPCTrot::getConstraintsHandle() {
   return constraints_;
 }
 
 
-std::shared_ptr<FrictionCone> MPCTrotting::getFrictionConeHandle() {
+std::shared_ptr<FrictionCone> MPCTrot::getFrictionConeHandle() {
   return friction_cone_;
 }
 
 
-bool MPCTrotting::addStep(const double t) {
+bool MPCTrot::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {
       contact_sequence_->push_back(cs_lfrh_, swing_start_time_);
@@ -356,8 +356,8 @@ bool MPCTrotting::addStep(const double t) {
 }
 
 
-void MPCTrotting::resetContactPlacements(const Eigen::VectorXd& q,
-                                         const Eigen::VectorXd& v) {
+void MPCTrot::resetContactPlacements(const Eigen::VectorXd& q,
+                                     const Eigen::VectorXd& v) {
   const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {

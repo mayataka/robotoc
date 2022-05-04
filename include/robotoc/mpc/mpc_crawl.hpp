@@ -44,7 +44,7 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] max_steps Maximum number of trotting steps over the horizon.
+  /// @param[in] max_steps Maximum number of trot steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
   MPCCrawl(const Robot& robot, const double T, const int N, 

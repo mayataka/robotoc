@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/swing_foot_cost.hpp"
-#include "robotoc/cost/trotting_swing_foot_ref.hpp"
+#include "robotoc/cost/trot_swing_foot_ref.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -50,7 +50,7 @@ TEST_F(SwingFootCostTest, testStageCost) {
   const int y_ref_foot_contact_index = 2;
   const double step_length = 1.5;
   const double step_height = 1.0;
-  auto ref = std::make_shared<TrottingSwingFootRef>(contact_index,
+  auto ref = std::make_shared<TrotSwingFootRef>(contact_index,
                                                     x_ref_foot_contact_index, 
                                                     y_ref_foot_contact_index,
                                                     step_length, step_height);
@@ -118,7 +118,7 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
   const int y_ref_foot_contact_index = 2;
   const double step_length = 1.5;
   const double step_height = 1.0;
-  auto ref = std::make_shared<TrottingSwingFootRef>(contact_index,
+  auto ref = std::make_shared<TrotSwingFootRef>(contact_index,
                                                     x_ref_foot_contact_index, 
                                                     y_ref_foot_contact_index,
                                                     step_length, step_height);
@@ -152,7 +152,7 @@ TEST_F(SwingFootCostTest, testImpulseCost) {
   const int y_ref_foot_contact_index = 2;
   const double step_length = 1.5;
   const double step_height = 1.0;
-  auto ref = std::make_shared<TrottingSwingFootRef>(contact_index,
+  auto ref = std::make_shared<TrotSwingFootRef>(contact_index,
                                                     x_ref_foot_contact_index, 
                                                     y_ref_foot_contact_index,
                                                     step_length, step_height);

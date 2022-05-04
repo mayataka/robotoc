@@ -132,7 +132,7 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/task_ocp.gif" width="100">
 
 
-- Walking, trotting, pacing, and bounding gaits of quadruped ANYmal using `OCPSolver` (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints) with fixed contact timings (e.g., `anymal/walking.cpp` or `anymal/python/walking.py`):
+- Walking, trot, pacing, and bounding gaits of quadruped ANYmal using `OCPSolver` (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints) with fixed contact timings (e.g., `anymal/walking.cpp` or `anymal/python/walking.py`):
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/walking.gif" width="180"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/trotting.gif" width="180"> &nbsp;
@@ -148,7 +148,7 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 ### Whole-body MPC examples
 - The following three example implementations of whole-body MPC are provided:
   - `MPCCrawl` : MPC with `OCPSolver` for the crawl gait of quadrupedal robots.
-  - `MPCTrotting` : MPC with `OCPSolver` for the trotting gait of quadrupedal robots.
+  - `MPCTrot` : MPC with `OCPSolver` for the trot gait of quadrupedal robots.
   - `MPCJumping` : MPC with `OCPSolver` for the jumping motion of quadrupedal or bipedal robots.
   - `MPCWalking` : MPC with `OCPSolver` for the walking motion of bipedal robots.
 - You can find the simulations of these MPC at `a1/mpc`, `anymal/mpc`, and `icub/mpc` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):

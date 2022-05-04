@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_FLYING_TROTTING_HPP_
-#define ROBOTOC_MPC_FLYING_TROTTING_HPP_
+#ifndef ROBOTOC_MPC_FLYING_TROT_HPP_
+#define ROBOTOC_MPC_FLYING_TROT_HPP_
 
 #include <memory>
 
@@ -34,51 +34,51 @@
 namespace robotoc {
 
 ///
-/// @class MPCFlyingTrotting
-/// @brief MPC solver for the trotting gait of quadrupeds. 
+/// @class MPCFlyingTrot
+/// @brief MPC solver for the trot gait of quadrupeds. 
 ///
-class MPCFlyingTrotting {
+class MPCFlyingTrot {
 public:
   ///
   /// @brief Construct MPC solver.
   /// @param[in] quadruped_robot Quadruped robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] max_steps Maximum number of trotting steps over the horizon.
+  /// @param[in] max_steps Maximum number of trot steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCFlyingTrotting(const Robot& quadruped_robot, const double T, const int N, 
+  MPCFlyingTrot(const Robot& quadruped_robot, const double T, const int N, 
                     const int max_steps, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCFlyingTrotting();
+  MPCFlyingTrot();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCFlyingTrotting();
+  ~MPCFlyingTrot();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCFlyingTrotting(const MPCFlyingTrotting&) = default;
+  MPCFlyingTrot(const MPCFlyingTrot&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCFlyingTrotting& operator=(const MPCFlyingTrotting&) = default;
+  MPCFlyingTrot& operator=(const MPCFlyingTrot&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCFlyingTrotting(MPCFlyingTrotting&&) noexcept = default;
+  MPCFlyingTrot(MPCFlyingTrot&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCFlyingTrotting& operator=(MPCFlyingTrotting&&) noexcept = default;
+  MPCFlyingTrot& operator=(MPCFlyingTrot&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -147,7 +147,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCFlyingTrotting::updateSolution() must be computed.  
+  /// MPCFlyingTrot::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -233,4 +233,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_FLYING_TROTTING_HPP_
+#endif // ROBOTOC_MPC_FLYING_TROT_HPP_
