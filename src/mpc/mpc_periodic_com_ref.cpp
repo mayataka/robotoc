@@ -1,6 +1,7 @@
 #include "robotoc/mpc/mpc_periodic_com_ref.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <cmath>
 
 
@@ -8,14 +9,34 @@ namespace robotoc {
 
 MPCPeriodicCoMRef::MPCPeriodicCoMRef(const double swing_start_time, 
                                      const double period_active, 
-                                     const double period_inactive)
+                                     const double period_inactive,
+                                     const int num_phases_in_period)
   : TimeVaryingCoMRefBase(),
     com_(), 
     has_inactive_contacts_(),
     swing_start_time_(swing_start_time), 
     period_active_(period_active), 
     period_inactive_(period_inactive), 
-    period_(period_active+period_inactive) {
+    period_(period_active+period_inactive),
+    num_phases_in_period_(num_phases_in_period) {
+  try {
+    if (period_active < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (period_inactive < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (num_phases_in_period < 1) {
+      throw std::out_of_range(
+          "invalid argument: num_phases_in_period must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -25,17 +46,37 @@ MPCPeriodicCoMRef::~MPCPeriodicCoMRef() {
 
 void MPCPeriodicCoMRef::setPeriod(const double swing_start_time, 
                                   const double period_active, 
-                                  const double period_inactive) {
+                                  const double period_inactive,
+                                  const int num_phases_in_period) {
+  try {
+    if (period_active < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (period_inactive < 0.0) {
+      throw std::out_of_range(
+          "invalid argument: period_active must be non-negative!");
+    }
+    if (num_phases_in_period < 1) {
+      throw std::out_of_range(
+          "invalid argument: phaseas_period must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   swing_start_time_ = swing_start_time;
   period_active_ = period_active;
   period_inactive_ = period_inactive;
   period_ = period_active + period_inactive;
+  num_phases_in_period_ = num_phases_in_period;
 }
 
 
 void MPCPeriodicCoMRef::setCoMRef(
     const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const std::shared_ptr<FootStepPlannerBase>& foot_step_planner) {
+    const std::shared_ptr<ContactPlannerBase>& foot_step_planner) {
   has_inactive_contacts_.clear();
   for (int phase=0; phase<contact_sequence->numContactPhases(); ++phase) {
     const auto& contact_status = contact_sequence->contactStatus(phase);
@@ -60,7 +101,7 @@ void MPCPeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);
     const double rate = (grid_info.t-swing_start_time_-cycle*period_) / period_active_;
     com_ref = (1.0-rate) * com_[grid_info.contact_phase]
-                + rate * com_[grid_info.contact_phase+1];
+                + rate * com_[grid_info.contact_phase+num_phases_in_period_];
   }
   else {
     com_ref = com_[grid_info.contact_phase];
@@ -69,9 +110,9 @@ void MPCPeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
 
 
 bool MPCPeriodicCoMRef::isActive(const GridInfo& grid_info) const {
-  // return ((grid_info.t > swing_start_time_) 
-  //           && has_inactive_contacts_[grid_info.contact_phase]);
-  return true;
+  return ((grid_info.t > swing_start_time_) 
+            && has_inactive_contacts_[grid_info.contact_phase]);
+  // return true;
 }
 
 } // namespace robotoc

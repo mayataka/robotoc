@@ -50,11 +50,11 @@ endmacro()
 
 add_benchmark(ocp_benchmark)
 
-add_example(trotting)
-add_example(walking)
-add_example(pacing)
-add_example(bounding)
-add_example(jumping)
-add_example(running)
+add_example(trot)
+add_example(crawl)
+add_example(pace)
+add_example(bounce)
+add_example(jump)
+add_example(run)
 
-add_example(jumping_sto)
+add_example(jump_sto)
