@@ -146,9 +146,10 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="230">
 
 ### Whole-body MPC examples
-- The following three example implementations of whole-body MPC are provided:
+- The following example implementations of whole-body MPC are provided:
   - `MPCCrawl` : MPC with `OCPSolver` for the crawl gait of quadrupedal robots.
   - `MPCTrot` : MPC with `OCPSolver` for the trot gait of quadrupedal robots.
+  - `MPCFlyingTrot` : MPC with `OCPSolver` for the flying trot gait of quadrupedal robots.
   - `MPCJump` : MPC with `OCPSolver` for the jump motion of quadrupedal or bipedal robots.
   - `MPCBipedWalk` : MPC with `OCPSolver` for the walking motion of bipedal robots.
 - You can find the simulations of these MPC at `a1/mpc`, `anymal/mpc`, and `icub/mpc` (you need to install [PyBullet](https://pybullet.org/wordpress/), e.g., by `pip install pybullet`):
