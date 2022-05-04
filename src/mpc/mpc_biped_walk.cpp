@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_walking.hpp"
+#include "robotoc/mpc/mpc_biped_walk.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -10,8 +10,8 @@
 
 namespace robotoc {
 
-MPCWalking::MPCWalking(const Robot& robot, const double T, const int N, 
-                       const int max_steps, const int nthreads)
+MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N, 
+                           const int max_steps, const int nthreads)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
     cost_(std::make_shared<CostFunction>()),
@@ -107,18 +107,18 @@ MPCWalking::MPCWalking(const Robot& robot, const double T, const int N,
 }
 
 
-MPCWalking::MPCWalking() {
+MPCBipedWalk::MPCBipedWalk() {
 }
 
 
-MPCWalking::~MPCWalking() {
+MPCBipedWalk::~MPCBipedWalk() {
 }
 
 
-void MPCWalking::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
-                                const double swing_height, const double swing_time,
-                                const double double_support_time,
-                                const double swing_start_time) {
+void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
+                                  const double swing_height, const double swing_time,
+                                  const double double_support_time,
+                                  const double swing_start_time) {
   try {
     if (swing_height <= 0) {
       throw std::out_of_range("invalid value: swing_height must be positive!");
@@ -155,9 +155,9 @@ void MPCWalking::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_
 }
 
 
-void MPCWalking::init(const double t, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, 
-                       const SolverOptions& solver_options) {
+void MPCBipedWalk::init(const double t, const Eigen::VectorXd& q, 
+                        const Eigen::VectorXd& v, 
+                        const SolverOptions& solver_options) {
   try {
     if (t >= swing_start_time_) {
       throw std::out_of_range(
@@ -189,12 +189,12 @@ void MPCWalking::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCWalking::setSolverOptions(const SolverOptions& solver_options) {
+void MPCBipedWalk::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCWalking::updateSolution(const double t, const double dt,
+void MPCBipedWalk::updateSolution(const double t, const double dt,
                                  const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v) {
   assert(dt > 0);
@@ -215,75 +215,75 @@ void MPCWalking::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCWalking::getInitialControlInput() const {
+const Eigen::VectorXd& MPCBipedWalk::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-const Solution& MPCWalking::getSolution() const {
+const Solution& MPCBipedWalk::getSolution() const {
   return ocp_solver_.getSolution();
 }
 
 
-const hybrid_container<LQRPolicy>& MPCWalking::getLQRPolicy() const {
+const hybrid_container<LQRPolicy>& MPCBipedWalk::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 
 
-double MPCWalking::KKTError(const double t, const Eigen::VectorXd& q, 
+double MPCBipedWalk::KKTError(const double t, const Eigen::VectorXd& q, 
                             const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCWalking::KKTError() const {
+double MPCBipedWalk::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-std::shared_ptr<CostFunction> MPCWalking::getCostHandle() {
+std::shared_ptr<CostFunction> MPCBipedWalk::getCostHandle() {
   return cost_;
 }
 
 
-std::shared_ptr<ConfigurationSpaceCost> MPCWalking::getConfigCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCBipedWalk::getConfigCostHandle() {
   return config_cost_;
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCWalking::getBaseRotationCostHandle() {
+std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCBipedWalk::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCWalking::getSwingFootCostHandle() {
+std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCBipedWalk::getSwingFootCostHandle() {
   std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {L_foot_cost_, R_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCWalking::getCoMCostHandle() {
+std::shared_ptr<TimeVaryingCoMCost> MPCBipedWalk::getCoMCostHandle() {
   return com_cost_;
 }
 
 
-std::shared_ptr<Constraints> MPCWalking::getConstraintsHandle() {
+std::shared_ptr<Constraints> MPCBipedWalk::getConstraintsHandle() {
   return constraints_;
 }
 
 
-std::shared_ptr<WrenchFrictionCone> MPCWalking::getWrenchConeHandle() {
+std::shared_ptr<WrenchFrictionCone> MPCBipedWalk::getWrenchConeHandle() {
   return wrench_cone_;
 }
 
 
-std::shared_ptr<ImpulseWrenchFrictionCone> MPCWalking::getImpulseWrenchConeHandle() {
+std::shared_ptr<ImpulseWrenchFrictionCone> MPCBipedWalk::getImpulseWrenchConeHandle() {
   return impulse_wrench_cone_;
 }
 
 
-bool MPCWalking::addStep(const double t) {
+bool MPCBipedWalk::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {
       contact_sequence_->push_back(cs_right_swing_, swing_start_time_);
@@ -345,8 +345,8 @@ bool MPCWalking::addStep(const double t) {
 }
 
 
-void MPCWalking::resetContactPlacements(const Eigen::VectorXd& q,
-                                        const Eigen::VectorXd& v) {
+void MPCBipedWalk::resetContactPlacements(const Eigen::VectorXd& q,
+                                          const Eigen::VectorXd& v) {
   const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {

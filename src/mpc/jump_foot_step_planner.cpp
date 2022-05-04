@@ -1,4 +1,4 @@
-#include "robotoc/mpc/jumping_foot_step_planner.hpp"
+#include "robotoc/mpc/jump_foot_step_planner.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -7,7 +7,7 @@
 
 namespace robotoc {
 
-JumpingFootStepPlanner::JumpingFootStepPlanner(const Robot& robot)
+JumpFootStepPlanner::JumpFootStepPlanner(const Robot& robot)
   : ContactPlannerBase(),
     robot_(robot),
     contact_frames_(robot.contactFrames()),
@@ -35,16 +35,16 @@ JumpingFootStepPlanner::JumpingFootStepPlanner(const Robot& robot)
 }
 
 
-JumpingFootStepPlanner::JumpingFootStepPlanner() {
+JumpFootStepPlanner::JumpFootStepPlanner() {
 }
 
 
-JumpingFootStepPlanner::~JumpingFootStepPlanner() {
+JumpFootStepPlanner::~JumpFootStepPlanner() {
 }
 
 
-void JumpingFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length, 
-                                            const double yaw_step) {
+void JumpFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length, 
+                                         const double yaw_step) {
   jump_length_ = jump_length;
   R_yaw_ << std::cos(yaw_step), -std::sin(yaw_step), 0, 
             std::sin(yaw_step), std::cos(yaw_step),  0,
@@ -52,7 +52,7 @@ void JumpingFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length,
 }
 
 
-void JumpingFootStepPlanner::init(const Eigen::VectorXd& q) {
+void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
   const Eigen::Matrix3d R 
       = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   robot_.updateFrameKinematics(q);
@@ -103,10 +103,10 @@ void JumpingFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool JumpingFootStepPlanner::plan(const Eigen::VectorXd& q,
-                                  const Eigen::VectorXd& v,
-                                  const ContactStatus& contact_status,
-                                  const int planning_steps) {
+bool JumpFootStepPlanner::plan(const Eigen::VectorXd& q,
+                               const Eigen::VectorXd& v,
+                               const ContactStatus& contact_status,
+                               const int planning_steps) {
   assert(planning_steps >= 0);
   if (contact_status.hasActiveContacts()) {
     if (current_step_ == 1) {
@@ -140,48 +140,48 @@ bool JumpingFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& JumpingFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& JumpFootStepPlanner::contactPlacement(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& JumpingFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& JumpFootStepPlanner::contactPlacement() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& JumpingFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::contactPosition(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& JumpingFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& JumpFootStepPlanner::contactPosition() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& JumpingFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& JumpFootStepPlanner::com(const int step) const {
   return com_ref_[step];
 }
 
 
-const std::vector<Eigen::Vector3d>& JumpingFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::com() const {
   return com_ref_;
 }
 
 
-const Eigen::Matrix3d& JumpingFootStepPlanner::R(const int step) const {
+const Eigen::Matrix3d& JumpFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
 
-const std::vector<Eigen::Matrix3d>& JumpingFootStepPlanner::R() const {
+const std::vector<Eigen::Matrix3d>& JumpFootStepPlanner::R() const {
   return R_;
 }
 
 
-void JumpingFootStepPlanner::disp(std::ostream& os) const {
-  std::cout << "Jumping foot step planner:" << std::endl;
+void JumpFootStepPlanner::disp(std::ostream& os) const {
+  std::cout << "Jump foot step planner:" << std::endl;
   std::cout << "current_step:" << current_step_ << std::endl;
   const int planning_steps = contact_placement_ref_.size();
   for (int i=0; i<planning_steps; ++i) {
@@ -195,14 +195,14 @@ void JumpingFootStepPlanner::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const JumpingFootStepPlanner& planner) {
+                         const JumpFootStepPlanner& planner) {
   planner.disp(os);
   return os;
 }
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const std::shared_ptr<JumpingFootStepPlanner>& planner) {
+                         const std::shared_ptr<JumpFootStepPlanner>& planner) {
   planner->disp(os);
   return os;
 }

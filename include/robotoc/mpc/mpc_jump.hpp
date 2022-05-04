@@ -1,10 +1,11 @@
-#ifndef ROBOTOC_MPC_WALKING_HPP_
-#define ROBOTOC_MPC_WALKING_HPP_
+#ifndef ROBOTOC_MPC_JUMP_HPP_
+#define ROBOTOC_MPC_JUMP_HPP_
 
+#include <vector>
 #include <memory>
+#include <limits>
 
 #include "Eigen/Core"
-#include "Eigen/Geometry"
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/ocp.hpp"
@@ -13,85 +14,80 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/robot/se3.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
-#include "robotoc/mpc/mpc_periodic_swing_foot_ref.hpp"
-#include "robotoc/mpc/mpc_periodic_com_ref.hpp"
-#include "robotoc/mpc/mpc_periodic_configuration_ref.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
 #include "robotoc/constraints/joint_position_upper_limit.hpp"
 #include "robotoc/constraints/joint_velocity_lower_limit.hpp"
 #include "robotoc/constraints/joint_velocity_upper_limit.hpp"
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
-#include "robotoc/constraints/wrench_friction_cone.hpp"
-#include "robotoc/constraints/impulse_wrench_friction_cone.hpp"
+#include "robotoc/constraints/friction_cone.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class MPCWalking
-/// @brief MPC solver for the walking gait of bipedal robot. 
+/// @class MPCJump
+/// @brief MPC solver for the jump control. 
 ///
-class MPCWalking {
+class MPCJump {
 public:
   ///
   /// @brief Construct MPC solver.
-  /// @param[in] biped_robot Biped robot model. 
+  /// @param[in] robot Robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
   /// @param[in] max_steps Maximum number of steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCWalking(const Robot& biped_robot, const double T, const int N, 
+  MPCJump(const Robot& robot, const double T, const int N, 
              const int max_steps, const int nthreads);
-
   ///
   /// @brief Default constructor. 
   ///
-  MPCWalking();
+  MPCJump();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCWalking();
+  ~MPCJump();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCWalking(const MPCWalking&) = default;
+  MPCJump(const MPCJump&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCWalking& operator=(const MPCWalking&) = default;
+  MPCJump& operator=(const MPCJump&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCWalking(MPCWalking&&) noexcept = default;
+  MPCJump(MPCJump&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCWalking& operator=(MPCWalking&&) noexcept = default;
+  MPCJump& operator=(MPCJump&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
-  /// @param[in] foot_step_planner Foot step planner of the gait. 
-  /// @param[in] swing_height Swing height of the gait. 
-  /// @param[in] swing_time Swing time of the gait. 
-  /// @param[in] double_support_time Double support time of the gait. 
-  /// @param[in] swing_start_time Start time of the gait. 
+  /// @param[in] foot_step_planner Foot step planner of the jump. 
+  /// @param[in] flying_time If STO is enabled, this is initial guess of the 
+  /// flying time. Otherwise, this is used as the fixed flying time.
+  /// @param[in] min_flying_time Minimum flying time. 
+  /// @param[in] ground_time If STO is enabled, this is initial guess of the 
+  /// ground time. Otherwise, this is used as the fixed ground time.
+  /// @param[in] min_ground_time Minimum time duration after landing. 
   ///
-  void setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
-                      const double swing_height, const double swing_time, 
-                      const double double_support_time, 
-                      const double swing_start_time);
+  void setJumpPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
+                      const double flying_time, const double min_flying_time, 
+                      const double ground_time, const double min_ground_time);
 
   ///
   /// @brief Initializes the optimal control problem solover. 
@@ -99,9 +95,23 @@ public:
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] solver_options Solver options for the initialization. 
+  /// @param[in] sto If true, the STO algorithm is enabled, that is, the 
+  /// lift-off and touch-down timings are optimized. 
   ///
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-            const SolverOptions& solver_options);
+            const SolverOptions& solver_options, const bool sto=false);
+
+  ///
+  /// @brief Resets the optimal control problem solver using the previous 
+  /// results of init() or reset().
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @param[in] solver_options Solver options for the initialization. 
+  /// @param[in] sto If true, lift-off and touch-down timings are optimized. 
+  ///
+  void reset(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+             const SolverOptions& solver_options, const bool sto=false);
 
   ///
   /// @brief Sets the solver options. 
@@ -148,7 +158,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCWalking::updateSolution() must be computed.  
+  /// MPCJump::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -166,40 +176,16 @@ public:
   std::shared_ptr<ConfigurationSpaceCost> getConfigCostHandle();
 
   ///
-  /// @brief Gets the base rotation cost handle.  
-  /// @return Shared ptr to the base rotation cost.
-  ///
-  std::shared_ptr<TimeVaryingConfigurationSpaceCost> getBaseRotationCostHandle();
-
-  ///
-  /// @brief Gets the swing foot task space costs (LF, LH, RF, RH feet) handle.  
-  /// @return Shared ptr to the task space cost (LF, LH, RF, RH feet).
-  ///
-  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> getSwingFootCostHandle();
-
-  ///
-  /// @brief Gets the com cost handle.  
-  /// @return Shared ptr to the com cost.
-  ///
-  std::shared_ptr<TimeVaryingCoMCost> getCoMCostHandle();
-
-  ///
   /// @brief Gets the constraints handle.  
   /// @return Shared ptr to the constraints.
   ///
   std::shared_ptr<Constraints> getConstraintsHandle();
 
   ///
-  /// @brief Gets the wrench cone constraints handle.  
-  /// @return Shared ptr to the wrench cone constraints.
+  /// @brief Gets the friction cone constraints handle.  
+  /// @return Shared ptr to the friction cone constraints.
   ///
-  std::shared_ptr<WrenchFrictionCone> getWrenchConeHandle();
-
-  ///
-  /// @brief Gets the impulse wrench cone constraints handle.  
-  /// @return Shared ptr to the impulse wrench cone constraints.
-  ///
-  std::shared_ptr<ImpulseWrenchFrictionCone> getImpulseWrenchConeHandle();
+  std::shared_ptr<FrictionCone> getFrictionConeHandle();
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -208,25 +194,22 @@ private:
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;
+  std::shared_ptr<robotoc::STOCostFunction> sto_cost_;
+  std::shared_ptr<robotoc::STOConstraints> sto_constraints_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
-  ContactStatus cs_standing_, cs_right_swing_, cs_left_swing_;
-  double step_height_, swing_time_, double_support_time_, swing_start_time_, 
-         T_, dt_, dtm_, ts_last_, eps_;
-  int N_, current_step_, predict_step_;
-  bool enable_double_support_phase_;
+  ContactStatus cs_ground_, cs_flying_;
+  robotoc::Solution s_;
+  double flying_time_, min_flying_time_, ground_time_, min_ground_time_,
+         T_, dt_, dtm_, t_mpc_start_, eps_;
+  int N_, current_step_;
 
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;
-  std::shared_ptr<TimeVaryingConfigurationSpaceCost> base_rot_cost_;
-  std::shared_ptr<TimeVaryingTaskSpace3DCost> L_foot_cost_, R_foot_cost_;
-  std::shared_ptr<TimeVaryingCoMCost> com_cost_;
-  std::shared_ptr<MPCPeriodicConfigurationRef> base_rot_ref_;
-  std::shared_ptr<MPCPeriodicSwingFootRef> L_foot_ref_, R_foot_ref_;
-  std::shared_ptr<MPCPeriodicCoMRef> com_ref_;
-  std::shared_ptr<WrenchFrictionCone> wrench_cone_;
-  std::shared_ptr<ImpulseWrenchFrictionCone> impulse_wrench_cone_;
+  std::shared_ptr<FrictionCone> friction_cone_;
 
-  bool addStep(const double t);
+  void resetMinimumDwellTimes(const double t, const double min_dt);
+
+  void resetGoalContactPlacements(const Eigen::VectorXd& q);
 
   void resetContactPlacements(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
@@ -234,4 +217,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_WALKING_HPP_ 
+#endif // ROBOTOC_MPC_JUMP_HPP_

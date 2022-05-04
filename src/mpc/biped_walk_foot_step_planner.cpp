@@ -1,4 +1,4 @@
-#include "robotoc/mpc/walking_foot_step_planner.hpp"
+#include "robotoc/mpc/biped_walk_foot_step_planner.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -7,7 +7,7 @@
 
 namespace robotoc {
 
-WalkingFootStepPlanner::WalkingFootStepPlanner(const Robot& biped_robot)
+BipedWalkFootStepPlanner::BipedWalkFootStepPlanner(const Robot& biped_robot)
   : ContactPlannerBase(),
     robot_(biped_robot),
     raibert_heuristic_(),
@@ -38,15 +38,15 @@ WalkingFootStepPlanner::WalkingFootStepPlanner(const Robot& biped_robot)
 }
 
 
-WalkingFootStepPlanner::WalkingFootStepPlanner() {
+BipedWalkFootStepPlanner::BipedWalkFootStepPlanner() {
 }
 
 
-WalkingFootStepPlanner::~WalkingFootStepPlanner() {
+BipedWalkFootStepPlanner::~BipedWalkFootStepPlanner() {
 }
 
 
-void WalkingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
+void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
                                             const double step_yaw, 
                                             const bool enable_double_support_phase) {
   step_length_ = step_length;
@@ -58,7 +58,7 @@ void WalkingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length,
 }
 
 
-void WalkingFootStepPlanner::setGaitPattern(
+void BipedWalkFootStepPlanner::setGaitPattern(
     const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
     const double t_swing, const double t_stance, const double gain) {
   try {
@@ -88,7 +88,7 @@ void WalkingFootStepPlanner::setGaitPattern(
 }
 
 
-void WalkingFootStepPlanner::init(const Eigen::VectorXd& q) {
+void BipedWalkFootStepPlanner::init(const Eigen::VectorXd& q) {
   Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   R.coeffRef(0, 0) = 1.0;
   R.coeffRef(0, 1) = 0.0;
@@ -112,7 +112,7 @@ void WalkingFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool WalkingFootStepPlanner::plan(const Eigen::VectorXd& q,
+bool BipedWalkFootStepPlanner::plan(const Eigen::VectorXd& q,
                                   const Eigen::VectorXd& v,
                                   const ContactStatus& contact_status,
                                   const int planning_steps) {
@@ -274,48 +274,48 @@ bool WalkingFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& WalkingFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& BipedWalkFootStepPlanner::contactPlacement(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& WalkingFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& BipedWalkFootStepPlanner::contactPlacement() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& WalkingFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::contactPosition(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& WalkingFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& BipedWalkFootStepPlanner::contactPosition() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& WalkingFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& BipedWalkFootStepPlanner::com(const int step) const {
   return com_ref_[step];
 }
 
 
-const std::vector<Eigen::Vector3d>& WalkingFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::com() const {
   return com_ref_;
 }
 
 
-const Eigen::Matrix3d& WalkingFootStepPlanner::R(const int step) const {
+const Eigen::Matrix3d& BipedWalkFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
 
-const std::vector<Eigen::Matrix3d>& WalkingFootStepPlanner::R() const {
+const std::vector<Eigen::Matrix3d>& BipedWalkFootStepPlanner::R() const {
   return R_;
 }
 
 
-void WalkingFootStepPlanner::disp(std::ostream& os) const {
-  std::cout << "Walking foot step planner:" << std::endl;
+void BipedWalkFootStepPlanner::disp(std::ostream& os) const {
+  std::cout << "BipedWalk foot step planner:" << std::endl;
   std::cout << "current_step:" << current_step_ << std::endl;
   const int planning_steps = contact_placement_ref_.size();
   for (int i=0; i<planning_steps; ++i) {
@@ -329,14 +329,14 @@ void WalkingFootStepPlanner::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const WalkingFootStepPlanner& planner) {
+                         const BipedWalkFootStepPlanner& planner) {
   planner.disp(os);
   return os;
 }
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const std::shared_ptr<WalkingFootStepPlanner>& planner) {
+                         const std::shared_ptr<BipedWalkFootStepPlanner>& planner) {
   planner->disp(os);
   return os;
 }

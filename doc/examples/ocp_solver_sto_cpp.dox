@@ -2,7 +2,7 @@
 
 \page subpage_ocp_solver_sto_example_cpp Switching time optimization (STO) example of robotoc::OCPSolver in C++
 
-This page explains the example code in examples/anymal/jumping.cpp.
+This page explains the example code in examples/anymal/jump.cpp.
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="350">
 
@@ -65,7 +65,7 @@ The best choice of `baumgarte_time_step` may be the time step of the optimal con
 However, it is often too small to make the optimization problem high nonlinear. 
 A moderate value such as several times of the time step of optimal control problem may be sufficient 
 
-Then set the parameters for the optimal control problem of the jumping motion such as the jump length
+Then set the parameters for the optimal control problem of the jump motion such as the jump length
 ```
   const double dt = 0.02;
   const Eigen::Vector3d jump_length = {0.8, 0, 0};

@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_JUMPING_FOOT_STEP_PLANNER_HPP_
-#define ROBOTOC_JUMPING_FOOT_STEP_PLANNER_HPP_
+#ifndef ROBOTOC_JUMP_FOOT_STEP_PLANNER_HPP_
+#define ROBOTOC_JUMP_FOOT_STEP_PLANNER_HPP_
 
 #include <vector>
 #include <iostream>
@@ -17,46 +17,46 @@
 namespace robotoc {
 
 ///
-/// @class JumpingFootStepPlanner
-/// @brief Foot step planner for the jumping motion. 
+/// @class JumpFootStepPlanner
+/// @brief Foot step planner for the jump motion. 
 ///
-class JumpingFootStepPlanner final : public ContactPlannerBase {
+class JumpFootStepPlanner final : public ContactPlannerBase {
 public:
   ///
   /// @brief Constructs the planner.
   /// @param[in] robot Robot model. 
   ///
-  JumpingFootStepPlanner(const Robot& robot);
+  JumpFootStepPlanner(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  JumpingFootStepPlanner();
+  JumpFootStepPlanner();
 
   ///
   /// @brief Destructor. 
   ///
-  ~JumpingFootStepPlanner();
+  ~JumpFootStepPlanner();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  JumpingFootStepPlanner(const JumpingFootStepPlanner&) = default;
+  JumpFootStepPlanner(const JumpFootStepPlanner&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  JumpingFootStepPlanner& operator=(const JumpingFootStepPlanner&) = default;
+  JumpFootStepPlanner& operator=(const JumpFootStepPlanner&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  JumpingFootStepPlanner(JumpingFootStepPlanner&&) noexcept = default;
+  JumpFootStepPlanner(JumpFootStepPlanner&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  JumpingFootStepPlanner& operator=(JumpingFootStepPlanner&&) noexcept = default;
+  JumpFootStepPlanner& operator=(JumpFootStepPlanner&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -76,12 +76,12 @@ public:
   const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override;
 
   ///
-  /// @brief This is invalid in JumpingFootStepPlanner. 
+  /// @brief This is invalid in JumpFootStepPlanner. 
   ///
   const std::vector<Eigen::Vector3d>& contactPosition(const int step) const override;
 
   ///
-  /// @brief This is invalid in JumpingFootStepPlanner. 
+  /// @brief This is invalid in JumpFootStepPlanner. 
   ///
   const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const override;
 
@@ -96,10 +96,10 @@ public:
   void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const JumpingFootStepPlanner& planner);
+                                  const JumpFootStepPlanner& planner);
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const std::shared_ptr<JumpingFootStepPlanner>& planner);
+                                  const std::shared_ptr<JumpFootStepPlanner>& planner);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -119,4 +119,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_JUMPING_FOOT_STEP_PLANNER_HPP_ 
+#endif // ROBOTOC_JUMP_FOOT_STEP_PLANNER_HPP_

@@ -2,7 +2,7 @@
 
 \page subpage_ocp_solver_sto_example_py Switching time optimization (STO) example of robotoc::OCPSolver in Python
 
-This page explains the example code in examples/anymal/python/jumping_sto.py.
+This page explains the example code in examples/anymal/python/jump_sto.py.
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="350">
 
@@ -35,7 +35,7 @@ The best choice of `baumgarte_time_step` may be the time step of the optimal con
 However, it is often too small to make the optimization problem high nonlinear. 
 A moderate value such as several times of the time step of optimal control problem may be sufficient 
 
-Then set the parameters for the optimal control problem of the jumping motion such as the jump length
+Then set the parameters for the optimal control problem of the jump motion such as the jump length
 ```
 dt = 0.02
 jump_length = np.array([0.8, 0, 0])
@@ -213,13 +213,13 @@ ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times(
 
 plot_ts = robotoc.utils.PlotConvergence()
 plot_ts.ylim = [0., 1.5]
-plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto', 
-             save_dir='jumping_sto_log')
+plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto', 
+             save_dir='jump_sto_log')
 
 plot_f = robotoc.utils.PlotContactForce(mu=mu)
 plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
             t=ocp_solver.get_time_discretization().time_points(), 
-            fig_name='jumping_sto_f', save_dir='jumping_sto_log')
+            fig_name='jump_sto_f', save_dir='jump_sto_log')
 ```
 Then we obtain the convergence results ((left) switching times and (right) KKT error at each iteration)
 

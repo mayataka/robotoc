@@ -28,9 +28,9 @@ T = 0.7
 N = 20
 max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCWalking(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCBipedWalk(robot, T, N, max_steps, nthreads)
 
-planner = robotoc.WalkingFootStepPlanner(robot)
+planner = robotoc.BipedWalkFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, yaw_cmd, (double_support_time > 0.))
 # raibert_gain = 0.2
 # planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+double_support_time, raibert_gain)

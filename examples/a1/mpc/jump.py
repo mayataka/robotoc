@@ -4,7 +4,7 @@ from a1_simulator import A1Simulator
 
 
 jump_type = 'longitudinal'
-# Jump_type = 'lateral'
+# jump_type = 'lateral'
 # jump_type = 'back'
 # jump_type = 'rotational'
 
@@ -35,9 +35,9 @@ T = 0.8
 N = 18
 max_steps = 1
 nthreads = 4
-mpc = robotoc.MPCJumping(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCJump(robot, T, N, max_steps, nthreads)
 
-planner = robotoc.JumpingFootStepPlanner(robot)
+planner = robotoc.JumpFootStepPlanner(robot)
 planner.set_jump_pattern(jump_length, jump_yaw)
 mpc.set_jump_pattern(planner, flying_time=0.3, min_flying_time=0.2, 
                      ground_time=0.3, min_ground_time=0.2)

@@ -149,13 +149,13 @@ ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times(
 
 plot_ts = robotoc.utils.PlotConvergence()
 plot_ts.ylim = [0., 1.5]
-plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jumping_sto', 
-             save_dir='jumping_sto_log')
+plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto', 
+             save_dir='jump_sto_log')
 
 plot_f = robotoc.utils.PlotContactForce(mu=mu)
 plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
             t=ocp_solver.get_time_discretization().time_points(), 
-            fig_name='jumping_sto_f', save_dir='jumping_sto_log')
+            fig_name='jump_sto_f', save_dir='jump_sto_log')
 
 # Display results
 viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 

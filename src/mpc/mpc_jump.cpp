@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_jumping.hpp"
+#include "robotoc/mpc/mpc_jump.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -10,8 +10,8 @@
 
 namespace robotoc {
 
-MPCJumping::MPCJumping(const Robot& robot, const double T, const int N, 
-                       const int max_steps, const int nthreads)
+MPCJump::MPCJump(const Robot& robot, const double T, const int N, 
+                 const int max_steps, const int nthreads)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
     cost_(std::make_shared<CostFunction>()),
@@ -83,15 +83,15 @@ MPCJumping::MPCJumping(const Robot& robot, const double T, const int N,
 }
 
 
-MPCJumping::MPCJumping() {
+MPCJump::MPCJump() {
 }
 
 
-MPCJumping::~MPCJumping() {
+MPCJump::~MPCJump() {
 }
 
 
-void MPCJumping::setJumpPattern(
+void MPCJump::setJumpPattern(
     const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
     const double flying_time, const double min_flying_time, 
     const double ground_time, const double min_ground_time) {
@@ -127,9 +127,9 @@ void MPCJumping::setJumpPattern(
 }
 
 
-void MPCJumping::init(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, 
-                      const SolverOptions& solver_options, const bool sto) {
+void MPCJump::init(const double t, const Eigen::VectorXd& q, 
+                   const Eigen::VectorXd& v, 
+                   const SolverOptions& solver_options, const bool sto) {
   current_step_ = 0;
   contact_sequence_->initContactSequence(cs_ground_);
   const double t_lift_off   = t + T_ - ground_time_ - flying_time_;
@@ -156,9 +156,9 @@ void MPCJumping::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCJumping::reset(const double t, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, 
-                       const SolverOptions& solver_options, const bool sto) {
+void MPCJump::reset(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, 
+                    const SolverOptions& solver_options, const bool sto) {
   current_step_ = 0;
   contact_sequence_->initContactSequence(cs_ground_);
   const double t_lift_off   = t + T_ - ground_time_ - flying_time_;
@@ -187,14 +187,14 @@ void MPCJumping::reset(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCJumping::setSolverOptions(const SolverOptions& solver_options) {
+void MPCJump::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCJumping::updateSolution(const double t, const double dt,
-                                const Eigen::VectorXd& q, 
-                                const Eigen::VectorXd& v) {
+void MPCJump::updateSolution(const double t, const double dt,
+                             const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v) {
   assert(dt > 0);
   const auto ts = contact_sequence_->eventTimes();
   bool remove_step = false;
@@ -212,53 +212,53 @@ void MPCJumping::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCJumping::getInitialControlInput() const {
+const Eigen::VectorXd& MPCJump::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-const Solution& MPCJumping::getSolution() const {
+const Solution& MPCJump::getSolution() const {
   return ocp_solver_.getSolution();
 }
 
 
-const hybrid_container<LQRPolicy>& MPCJumping::getLQRPolicy() const {
+const hybrid_container<LQRPolicy>& MPCJump::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 
 
-double MPCJumping::KKTError(const double t, const Eigen::VectorXd& q, 
-                            const Eigen::VectorXd& v) {
+double MPCJump::KKTError(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCJumping::KKTError() const {
+double MPCJump::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-std::shared_ptr<CostFunction> MPCJumping::getCostHandle() {
+std::shared_ptr<CostFunction> MPCJump::getCostHandle() {
   return cost_;
 }
 
 
-std::shared_ptr<ConfigurationSpaceCost> MPCJumping::getConfigCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCJump::getConfigCostHandle() {
   return config_cost_;
 }
 
 
-std::shared_ptr<Constraints> MPCJumping::getConstraintsHandle() {
+std::shared_ptr<Constraints> MPCJump::getConstraintsHandle() {
   return constraints_;
 }
 
 
-std::shared_ptr<FrictionCone> MPCJumping::getFrictionConeHandle() {
+std::shared_ptr<FrictionCone> MPCJump::getFrictionConeHandle() {
   return friction_cone_;
 }
 
 
-void MPCJumping::resetMinimumDwellTimes(const double t, const double min_dt) {
+void MPCJump::resetMinimumDwellTimes(const double t, const double min_dt) {
   const int num_switches = contact_sequence_->numDiscreteEvents();
   if (num_switches > 0) {
     std::vector<double> minimum_dwell_times;
@@ -280,8 +280,8 @@ void MPCJumping::resetMinimumDwellTimes(const double t, const double min_dt) {
 }
 
 
-void MPCJumping::resetContactPlacements(const Eigen::VectorXd& q,
-                                        const Eigen::VectorXd& v) {
+void MPCJump::resetContactPlacements(const Eigen::VectorXd& q,
+                                     const Eigen::VectorXd& v) {
   const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   if (current_step_ == 0) {
