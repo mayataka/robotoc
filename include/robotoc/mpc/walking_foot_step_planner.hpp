@@ -12,6 +12,7 @@
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/mpc/raibert_heuristic.hpp"
 
 
 namespace robotoc {
@@ -59,14 +60,26 @@ public:
   WalkingFootStepPlanner& operator=(WalkingFootStepPlanner&&) noexcept = default;
 
   ///
-  /// @brief Sets the gait pattern. 
+  /// @brief Sets the gait pattern by step length and yaw step command. 
   /// @param[in] step_length Step length of the gait. 
-  /// @param[in] yaw_step Yaw step of the gait. 
-  /// @param[in] enable_double_support_phase Falgs to enable the double support
+  /// @param[in] step_yaw Yaw command at each step of the gait. 
+  /// @param[in] enable_double_support_phase Enables the double-support 
   /// phase or not. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& step_length, const double yaw_step,
+  void setGaitPattern(const Eigen::Vector3d& step_length, const double step_yaw,
                       const bool enable_double_support_phase);
+
+  ///
+  /// @brief Sets the gait pattern by Raibert heuristic. 
+  /// @param[in] v_com_cmd Command of the COM velocity. 
+  /// @param[in] yaw_rate_cmd Command of the yaw-rate of the body. 
+  /// @param[in] t_swing Duration of swing. 
+  /// @param[in] t_stance Duration of stance. 
+  /// @param[in] gain The feedback gain of the v_com_cmd. 
+  ///
+  void setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
+                      const double yaw_rate_cmd, const double t_swing, 
+                      const double t_stance, const double gain);
 
   void init(const Eigen::VectorXd& q) override;
 
@@ -102,14 +115,17 @@ public:
 
 private:
   Robot robot_;
+  RaibertHeuristic raibert_heuristic_;
+  bool enable_raibert_heuristic_;
   int L_foot_id_, R_foot_id_, current_step_;
   double left_to_right_leg_distance_, foot_height_to_com_height_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
   std::vector<Eigen::Vector3d> com_ref_;
   std::vector<Eigen::Matrix3d> R_;
-  Eigen::Vector3d step_length_;
+  Eigen::Vector3d v_com_cmd_, step_length_;
   Eigen::Matrix3d R_yaw_;
+  double yaw_rate_cmd_;
   bool enable_double_support_phase_;
 
 };

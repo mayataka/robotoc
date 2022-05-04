@@ -10,6 +10,8 @@ namespace robotoc {
 WalkingFootStepPlanner::WalkingFootStepPlanner(const Robot& biped_robot)
   : FootStepPlannerBase(),
     robot_(biped_robot),
+    raibert_heuristic_(),
+    enable_raibert_heuristic_(false),
     L_foot_id_(biped_robot.surfaceContactFrames()[0]),
     R_foot_id_(biped_robot.surfaceContactFrames()[1]),
     current_step_(0),
@@ -18,8 +20,10 @@ WalkingFootStepPlanner::WalkingFootStepPlanner(const Robot& biped_robot)
     contact_placement_ref_(),
     com_ref_(),
     R_(),
+    v_com_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
+    yaw_rate_cmd_(0),
     enable_double_support_phase_(false) {
   try {
     if (biped_robot.maxNumSurfaceContacts() < 2) {
@@ -43,13 +47,44 @@ WalkingFootStepPlanner::~WalkingFootStepPlanner() {
 
 
 void WalkingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                            const double yaw_step,
+                                            const double step_yaw, 
                                             const bool enable_double_support_phase) {
   step_length_ = step_length;
-  R_yaw_ << std::cos(yaw_step), -std::sin(yaw_step), 0, 
-            std::sin(yaw_step), std::cos(yaw_step),  0,
-            0, 0, 1;
+  R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
+           std::sin(step_yaw), std::cos(step_yaw),  0,
+           0, 0, 1;
   enable_double_support_phase_ = enable_double_support_phase;
+  enable_raibert_heuristic_ = false;
+}
+
+
+void WalkingFootStepPlanner::setGaitPattern(
+    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
+    const double t_swing, const double t_stance, const double gain) {
+  try {
+    if (t_stance <= 0.0) {
+      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    }
+    if (t_swing <= 0.0) {
+      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    }
+    if (gain <= 0.0) {
+      throw std::out_of_range("invalid argument: gain must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  raibert_heuristic_.setParameters(t_stance, gain);
+  v_com_cmd_ = v_com_cmd;
+  const double yaw_cmd = yaw_rate_cmd * t_swing;
+  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
+           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
+           0, 0, 1;
+  yaw_rate_cmd_ = yaw_rate_cmd;
+  enable_double_support_phase_ = (t_stance > t_swing);
+  enable_raibert_heuristic_ = true;
 }
 
 
@@ -82,6 +117,11 @@ bool WalkingFootStepPlanner::plan(const Eigen::VectorXd& q,
                                   const ContactStatus& contact_status,
                                   const int planning_steps) {
   assert(planning_steps >= 0);
+  if (enable_raibert_heuristic_) {
+    raibert_heuristic_.planStepLength(v.template head<2>(), 
+                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    step_length_ = raibert_heuristic_.stepLength();
+  }
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;
   for (const auto frame : robot_.surfaceContactFrames()) {
@@ -166,7 +206,12 @@ bool WalkingFootStepPlanner::plan(const Eigen::VectorXd& q,
       }
       else if (current_step_ == 0 && step == 1) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.25 * R * step_length_;
+        if (enable_raibert_heuristic_) {
+          com.noalias() += 0.5 * R * step_length_;
+        }
+        else {
+          com.noalias() += 0.25 * R * step_length_;
+        }
         contact_placement[1].translation().noalias() += 0.5 * R * step_length_;
         contact_placement[1].rotation() = R;
       }
@@ -194,7 +239,12 @@ bool WalkingFootStepPlanner::plan(const Eigen::VectorXd& q,
       }
       else if (current_step_ == 0 && step == 1) {
         R = (R_yaw_ * R).eval();
-        com.noalias() += 0.25 * R * step_length_;
+        if (enable_raibert_heuristic_) {
+          com.noalias() += 0.5 * R * step_length_;
+        }
+        else {
+          com.noalias() += 0.25 * R * step_length_;
+        }
         contact_placement[1].translation().noalias() += 0.5 * R * step_length_;
         contact_placement[1].rotation() = R;
       }

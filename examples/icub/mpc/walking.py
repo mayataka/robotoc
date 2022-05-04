@@ -13,6 +13,8 @@ L_foot_id, R_foot_id = robot.contact_frames()
 
 knee_angle = np.pi / 6
 step_length = np.array([0.2, 0, 0]) 
+yaw_cmd = np.pi / 60
+
 step_height = 0.1
 swing_time = 0.7
 double_support_time = 0.0
@@ -20,7 +22,7 @@ double_support_time = 0.0
 swing_start_time = 0.5
 
 vcom_cmd = step_length / swing_time
-yaw_cmd = 0
+yaw_rate_cmd = yaw_cmd / swing_time
 
 T = 0.7
 N = 20
@@ -29,7 +31,9 @@ nthreads = 4
 mpc = robotoc.MPCWalking(robot, T, N, max_steps, nthreads)
 
 planner = robotoc.WalkingFootStepPlanner(robot)
-planner.set_gait_pattern(step_length, (yaw_cmd*swing_time), (double_support_time > 0.))
+planner.set_gait_pattern(step_length, yaw_cmd, (double_support_time > 0.))
+# raibert_gain = 0.2
+# planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+double_support_time, raibert_gain)
 mpc.set_gait_pattern(planner, step_height, swing_time, double_support_time, swing_start_time)
 
 # wrench cone

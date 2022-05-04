@@ -16,9 +16,13 @@ PYBIND11_MODULE(walking_foot_step_planner, m) {
              std::shared_ptr<WalkingFootStepPlanner>>(m, "WalkingFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("biped_robot"))
-    .def("set_gait_pattern", &WalkingFootStepPlanner::setGaitPattern,
-         py::arg("step_length"), py::arg("yaw_rate"), 
-         py::arg("enable_double_support_phase"))
+    .def("set_gait_pattern", 
+          static_cast<void (WalkingFootStepPlanner::*)(const Eigen::Vector3d&, const double, const bool)>(&WalkingFootStepPlanner::setGaitPattern),
+          py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_double_support_phase")) 
+    .def("set_gait_pattern", 
+          static_cast<void (WalkingFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&WalkingFootStepPlanner::setGaitPattern),
+          py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
+          py::arg("t_swing"), py::arg("t_stance"), py::arg("gain")) 
     .def("init", &WalkingFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &WalkingFootStepPlanner::plan,
