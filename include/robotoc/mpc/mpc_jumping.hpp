@@ -16,7 +16,7 @@
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/robot/se3.hpp"
-#include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
 #include "robotoc/constraints/joint_position_upper_limit.hpp"
@@ -85,7 +85,7 @@ public:
   /// ground time. Otherwise, this is used as the fixed ground time.
   /// @param[in] min_ground_time Minimum time duration after landing. 
   ///
-  void setJumpPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+  void setJumpPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                       const double flying_time, const double min_flying_time, 
                       const double ground_time, const double min_ground_time);
 
@@ -190,7 +190,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
+  std::shared_ptr<ContactPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;

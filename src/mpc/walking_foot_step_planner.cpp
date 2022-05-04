@@ -8,7 +8,7 @@
 namespace robotoc {
 
 WalkingFootStepPlanner::WalkingFootStepPlanner(const Robot& biped_robot)
-  : FootStepPlannerBase(),
+  : ContactPlannerBase(),
     robot_(biped_robot),
     raibert_heuristic_(),
     enable_raibert_heuristic_(false),

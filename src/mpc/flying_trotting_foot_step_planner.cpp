@@ -8,7 +8,7 @@
 namespace robotoc {
 
 FlyingTrottingFootStepPlanner::FlyingTrottingFootStepPlanner(const Robot& quadruped_robot)
-  : FootStepPlannerBase(),
+  : ContactPlannerBase(),
     robot_(quadruped_robot),
     raibert_heuristic_(),
     enable_raibert_heuristic_(false),

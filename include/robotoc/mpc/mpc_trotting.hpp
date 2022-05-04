@@ -13,7 +13,7 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
-#include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/time_varying_configuration_space_cost.hpp"
 #include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
@@ -88,7 +88,7 @@ public:
   /// @param[in] stance_time Stance time of the gait. 
   /// @param[in] swing_start_time Start time of the gait. 
   ///
-  void setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+  void setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                       const double swing_height, const double swing_time, 
                       const double stance_time, const double swing_start_time);
 
@@ -197,7 +197,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<FootStepPlannerBase> foot_step_planner_;
+  std::shared_ptr<ContactPlannerBase> foot_step_planner_;
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;

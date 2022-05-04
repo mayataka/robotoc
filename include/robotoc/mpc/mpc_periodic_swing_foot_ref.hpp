@@ -6,7 +6,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/mpc/contact_planner_base.hpp"
 
 
 namespace robotoc {
@@ -56,7 +56,7 @@ public:
   /// @param[in] foot_step_planner Foot step planner.
   ///
   void setSwingFootRef(const std::shared_ptr<ContactSequence>& contact_sequence,
-                       const std::shared_ptr<FootStepPlannerBase>& foot_step_planner);
+                       const std::shared_ptr<ContactPlannerBase>& foot_step_planner);
 
   void update_x3d_ref(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override;
 

@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_FOOT_STEP_PLANNER_BASE_HPP_
-#define ROBOTOC_FOOT_STEP_PLANNER_BASE_HPP_
+#ifndef ROBOTOC_CONTACT_PLANNER_BASE_HPP_
+#define ROBOTOC_CONTACT_PLANNER_BASE_HPP_
 
 #include <vector>
 
@@ -14,40 +14,40 @@
 namespace robotoc {
 
 ///
-/// @class FootStepPlannerBase
-/// @brief Base interface of foot step planners.
+/// @class ContactPlannerBase
+/// @brief Base interface of contact planners.
 ///
-class FootStepPlannerBase {
+class ContactPlannerBase {
 public:
   ///
   /// @brief Default constructor. 
   ///
-  FootStepPlannerBase() {}
+  ContactPlannerBase() {}
 
   ///
   /// @brief Destructor. 
   ///
-  virtual ~FootStepPlannerBase() {}
+  virtual ~ContactPlannerBase() {}
 
   ///
   /// @brief Default copy constructor. 
   ///
-  FootStepPlannerBase(const FootStepPlannerBase&) = default;
+  ContactPlannerBase(const ContactPlannerBase&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  FootStepPlannerBase& operator=(const FootStepPlannerBase&) = default;
+  ContactPlannerBase& operator=(const ContactPlannerBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  FootStepPlannerBase(FootStepPlannerBase&&) noexcept = default;
+  ContactPlannerBase(ContactPlannerBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  FootStepPlannerBase& operator=(FootStepPlannerBase&&) noexcept = default;
+  ContactPlannerBase& operator=(ContactPlannerBase&&) noexcept = default;
 
   ///
   /// @brief Initializes the planner. 
@@ -133,4 +133,4 @@ public:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_FOOT_STEP_PLANNER_BASE_HPP_ 
+#endif // ROBOTOC_CONTACT_PLANNER_BASE_HPP_ 

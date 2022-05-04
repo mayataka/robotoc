@@ -125,7 +125,7 @@ MPCFlyingTrotting::~MPCFlyingTrotting() {
 
 
 void MPCFlyingTrotting::setGaitPattern(
-    const std::shared_ptr<FootStepPlannerBase>& foot_step_planner, 
+    const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
     const double swing_height, const double flying_time, 
     const double stance_time, const double swing_start_time) {
   try {

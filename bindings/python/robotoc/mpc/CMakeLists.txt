@@ -1,4 +1,4 @@
-pybind11_add_robotoc_module(foot_step_planner_base)
+pybind11_add_robotoc_module(contact_planner_base)
 pybind11_add_robotoc_module(trotting_foot_step_planner)
 pybind11_add_robotoc_module(crawling_foot_step_planner)
 pybind11_add_robotoc_module(walking_foot_step_planner)

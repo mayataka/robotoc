@@ -115,7 +115,7 @@ MPCWalking::~MPCWalking() {
 }
 
 
-void MPCWalking::setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+void MPCWalking::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                                 const double swing_height, const double swing_time,
                                 const double double_support_time,
                                 const double swing_start_time) {

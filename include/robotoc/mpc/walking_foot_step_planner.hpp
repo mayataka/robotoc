@@ -11,7 +11,7 @@
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
-#include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/mpc/raibert_heuristic.hpp"
 
 
@@ -21,7 +21,7 @@ namespace robotoc {
 /// @class WalkingFootStepPlanner
 /// @brief Foot step planner for the walking gait of biped robot. 
 ///
-class WalkingFootStepPlanner final : public FootStepPlannerBase {
+class WalkingFootStepPlanner final : public ContactPlannerBase {
 public:
   ///
   /// @brief Constructs the planner.

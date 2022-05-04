@@ -12,7 +12,7 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(flying_trotting_foot_step_planner, m) {
-  py::class_<FlyingTrottingFootStepPlanner, FootStepPlannerBase, 
+  py::class_<FlyingTrottingFootStepPlanner, ContactPlannerBase, 
              std::shared_ptr<FlyingTrottingFootStepPlanner>>(m, "FlyingTrottingFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))

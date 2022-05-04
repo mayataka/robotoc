@@ -8,7 +8,7 @@
 namespace robotoc {
 
 JumpingFootStepPlanner::JumpingFootStepPlanner(const Robot& robot)
-  : FootStepPlannerBase(),
+  : ContactPlannerBase(),
     robot_(robot),
     contact_frames_(robot.contactFrames()),
     current_step_(0),

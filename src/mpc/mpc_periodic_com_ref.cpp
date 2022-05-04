@@ -76,7 +76,7 @@ void MPCPeriodicCoMRef::setPeriod(const double swing_start_time,
 
 void MPCPeriodicCoMRef::setCoMRef(
     const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const std::shared_ptr<FootStepPlannerBase>& foot_step_planner) {
+    const std::shared_ptr<ContactPlannerBase>& foot_step_planner) {
   has_inactive_contacts_.clear();
   for (int phase=0; phase<contact_sequence->numContactPhases(); ++phase) {
     const auto& contact_status = contact_sequence->contactStatus(phase);

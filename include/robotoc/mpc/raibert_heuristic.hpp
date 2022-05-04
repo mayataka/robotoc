@@ -11,7 +11,7 @@
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
-#include "robotoc/mpc/foot_step_planner_base.hpp"
+#include "robotoc/mpc/contact_planner_base.hpp"
 
 
 namespace robotoc {

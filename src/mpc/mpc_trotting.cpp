@@ -123,7 +123,7 @@ MPCTrotting::~MPCTrotting() {
 }
 
 
-void MPCTrotting::setGaitPattern(const std::shared_ptr<FootStepPlannerBase>& foot_step_planner,
+void MPCTrotting::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                                  const double swing_height, const double swing_time,
                                  const double stance_time, const double swing_start_time) {
   try {

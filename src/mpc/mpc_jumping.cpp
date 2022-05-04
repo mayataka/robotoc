@@ -92,7 +92,7 @@ MPCJumping::~MPCJumping() {
 
 
 void MPCJumping::setJumpPattern(
-    const std::shared_ptr<FootStepPlannerBase>& foot_step_planner, 
+    const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
     const double flying_time, const double min_flying_time, 
     const double ground_time, const double min_ground_time) {
   try {
