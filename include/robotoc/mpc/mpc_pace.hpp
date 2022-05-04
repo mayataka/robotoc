@@ -34,10 +34,10 @@
 namespace robotoc {
 
 ///
-/// @class MPCTrot
-/// @brief MPC solver for the trot gait of quadrupeds. 
+/// @class MPCPace
+/// @brief MPC solver for the pace gait of quadrupeds. 
 ///
-class MPCTrot {
+class MPCPace {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -47,38 +47,38 @@ public:
   /// @param[in] max_steps Maximum number of trot steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCTrot(const Robot& quadruped_robot, const double T, const int N, 
-              const int max_steps, const int nthreads);
+  MPCPace(const Robot& quadruped_robot, const double T, const int N, 
+          const int max_steps, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCTrot();
+  MPCPace();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCTrot();
+  ~MPCPace();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCTrot(const MPCTrot&) = default;
+  MPCPace(const MPCPace&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCTrot& operator=(const MPCTrot&) = default;
+  MPCPace& operator=(const MPCPace&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCTrot(MPCTrot&&) noexcept = default;
+  MPCPace(MPCPace&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCTrot& operator=(MPCTrot&&) noexcept = default;
+  MPCPace& operator=(MPCPace&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -147,7 +147,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCTrot::updateSolution() must be computed.  
+  /// MPCPace::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -203,7 +203,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
-  ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
+  ContactStatus cs_standing_, cs_left_swing_, cs_right_swing_;
   double swing_height_, swing_time_, stance_time_, swing_start_time_, 
          T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;
