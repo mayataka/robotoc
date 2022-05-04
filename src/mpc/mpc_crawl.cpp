@@ -1,4 +1,4 @@
-#include "robotoc/mpc/mpc_crawling.hpp"
+#include "robotoc/mpc/mpc_crawl.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -10,8 +10,8 @@
 
 namespace robotoc {
 
-MPCCrawling::MPCCrawling(const Robot& robot, const double T, const int N, 
-                         const int max_steps, const int nthreads)
+MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N, 
+                   const int max_steps, const int nthreads)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
     cost_(std::make_shared<CostFunction>()),
@@ -117,17 +117,17 @@ MPCCrawling::MPCCrawling(const Robot& robot, const double T, const int N,
 }
 
 
-MPCCrawling::MPCCrawling() {
+MPCCrawl::MPCCrawl() {
 }
 
 
-MPCCrawling::~MPCCrawling() {
+MPCCrawl::~MPCCrawl() {
 }
 
 
-void MPCCrawling::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
-                                 const double swing_height, const double swing_time,
-                                 const double stance_time, const double swing_start_time) {
+void MPCCrawl::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
+                              const double swing_height, const double swing_time,
+                              const double stance_time, const double swing_start_time) {
   try {
     if (swing_height <= 0) {
       throw std::out_of_range("invalid value: swing_height must be positive!");
@@ -173,9 +173,9 @@ void MPCCrawling::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot
 }
 
 
-void MPCCrawling::init(const double t, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, 
-                       const SolverOptions& solver_options) {
+void MPCCrawl::init(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, 
+                    const SolverOptions& solver_options) {
   try {
     if (t >= swing_start_time_) {
       throw std::out_of_range(
@@ -207,14 +207,14 @@ void MPCCrawling::init(const double t, const Eigen::VectorXd& q,
 }
 
 
-void MPCCrawling::setSolverOptions(const SolverOptions& solver_options) {
+void MPCCrawl::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
 
 
-void MPCCrawling::updateSolution(const double t, const double dt,
-                                 const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v) {
+void MPCCrawl::updateSolution(const double t, const double dt,
+                              const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v) {
   assert(dt > 0);
   const bool add_step = addStep(t);
   const auto ts = contact_sequence_->eventTimes();
@@ -233,70 +233,70 @@ void MPCCrawling::updateSolution(const double t, const double dt,
 }
 
 
-const Eigen::VectorXd& MPCCrawling::getInitialControlInput() const {
+const Eigen::VectorXd& MPCCrawl::getInitialControlInput() const {
   return ocp_solver_.getSolution(0).u;
 }
 
 
-const Solution& MPCCrawling::getSolution() const {
+const Solution& MPCCrawl::getSolution() const {
   return ocp_solver_.getSolution();
 }
 
 
-const hybrid_container<LQRPolicy>& MPCCrawling::getLQRPolicy() const {
+const hybrid_container<LQRPolicy>& MPCCrawl::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 
 
-double MPCCrawling::KKTError(const double t, const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v) {
+double MPCCrawl::KKTError(const double t, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v) {
   return ocp_solver_.KKTError(t, q, v);
 }
 
 
-double MPCCrawling::KKTError() const {
+double MPCCrawl::KKTError() const {
   return ocp_solver_.KKTError();
 }
 
 
-std::shared_ptr<CostFunction> MPCCrawling::getCostHandle() {
+std::shared_ptr<CostFunction> MPCCrawl::getCostHandle() {
   return cost_;
 }
 
 
-std::shared_ptr<ConfigurationSpaceCost> MPCCrawling::getConfigCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCCrawl::getConfigCostHandle() {
   return config_cost_;
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCCrawling::getBaseRotationCostHandle() {
+std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCCrawl::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCCrawling::getSwingFootCostHandle() {
+std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCCrawl::getSwingFootCostHandle() {
   std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {LF_foot_cost_, LH_foot_cost_, RF_foot_cost_, RH_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCCrawling::getCoMCostHandle() {
+std::shared_ptr<TimeVaryingCoMCost> MPCCrawl::getCoMCostHandle() {
   return com_cost_;
 }
 
 
-std::shared_ptr<Constraints> MPCCrawling::getConstraintsHandle() {
+std::shared_ptr<Constraints> MPCCrawl::getConstraintsHandle() {
   return constraints_;
 }
 
 
-std::shared_ptr<FrictionCone> MPCCrawling::getFrictionConeHandle() {
+std::shared_ptr<FrictionCone> MPCCrawl::getFrictionConeHandle() {
   return friction_cone_;
 }
 
 
-bool MPCCrawling::addStep(const double t) {
+bool MPCCrawl::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {
       contact_sequence_->push_back(cs_rh_, swing_start_time_);
@@ -370,8 +370,8 @@ bool MPCCrawling::addStep(const double t) {
 }
 
 
-void MPCCrawling::resetContactPlacements(const Eigen::VectorXd& q,
-                                         const Eigen::VectorXd& v) {
+void MPCCrawl::resetContactPlacements(const Eigen::VectorXd& q,
+                                      const Eigen::VectorXd& v) {
   const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {

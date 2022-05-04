@@ -92,7 +92,7 @@ public:
   const aligned_vector<SE3>& contactPlacement(const int step) const override;
 
   ///
-  /// @brief This is invalid in CrawlingFootStepPlanner. 
+  /// @brief This is invalid in CrawlFootStepPlanner. 
   ///
   const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override;
 

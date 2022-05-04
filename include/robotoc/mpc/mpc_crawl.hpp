@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_MPC_CRAWLING_HPP_
-#define ROBOTOC_MPC_CRAWLING_HPP_
+#ifndef ROBOTOC_MPC_CRAWL_HPP_
+#define ROBOTOC_MPC_CRAWL_HPP_
 
 #include <memory>
 
@@ -34,10 +34,10 @@
 namespace robotoc {
 
 ///
-/// @class MPCCrawling
-/// @brief MPC solver for the crawling gait of quadrupeds. 
+/// @class MPCCrawl
+/// @brief MPC solver for the crawl gait of quadrupeds. 
 ///
-class MPCCrawling {
+class MPCCrawl {
 public:
   ///
   /// @brief Construct MPC solver.
@@ -47,38 +47,38 @@ public:
   /// @param[in] max_steps Maximum number of trotting steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCCrawling(const Robot& robot, const double T, const int N, 
+  MPCCrawl(const Robot& robot, const double T, const int N, 
               const int max_steps, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  MPCCrawling();
+  MPCCrawl();
 
   ///
   /// @brief Destructor. 
   ///
-  ~MPCCrawling();
+  ~MPCCrawl();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  MPCCrawling(const MPCCrawling&) = default;
+  MPCCrawl(const MPCCrawl&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  MPCCrawling& operator=(const MPCCrawling&) = default;
+  MPCCrawl& operator=(const MPCCrawl&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  MPCCrawling(MPCCrawling&&) noexcept = default;
+  MPCCrawl(MPCCrawl&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  MPCCrawling& operator=(MPCCrawling&&) noexcept = default;
+  MPCCrawl& operator=(MPCCrawl&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern. 
@@ -147,7 +147,7 @@ public:
 
   ///
   /// @brief Returns the l2-norm of the KKT residuals.
-  /// MPCCrawling::updateSolution() must be computed.  
+  /// MPCCrawl::updateSolution() must be computed.  
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
@@ -228,4 +228,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_MPC_CRAWLING_HPP_ 
+#endif // ROBOTOC_MPC_CRAWL_HPP_

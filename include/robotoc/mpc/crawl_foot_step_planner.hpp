@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_CRAWLING_FOOT_STEP_PLANNER_HPP_
-#define ROBOTOC_CRAWLING_FOOT_STEP_PLANNER_HPP_
+#ifndef ROBOTOC_CRAWL_FOOT_STEP_PLANNER_HPP_
+#define ROBOTOC_CRAWL_FOOT_STEP_PLANNER_HPP_
 
 #include <vector>
 #include <iostream>
@@ -18,46 +18,46 @@
 namespace robotoc {
 
 ///
-/// @class CrawlingFootStepPlanner
-/// @brief Foot step planner for the crawling gait of quadrupeds. 
+/// @class CrawlFootStepPlanner
+/// @brief Foot step planner for the crawl gait of quadrupeds. 
 ///
-class CrawlingFootStepPlanner final : public ContactPlannerBase {
+class CrawlFootStepPlanner final : public ContactPlannerBase {
 public:
   ///
   /// @brief Constructs the planner.
   /// @param[in] quadruped_robot Quadruped robot model. 
   ///
-  CrawlingFootStepPlanner(const Robot& quadruped_robot);
+  CrawlFootStepPlanner(const Robot& quadruped_robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  CrawlingFootStepPlanner();
+  CrawlFootStepPlanner();
 
   ///
   /// @brief Destructor. 
   ///
-  ~CrawlingFootStepPlanner();
+  ~CrawlFootStepPlanner();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  CrawlingFootStepPlanner(const CrawlingFootStepPlanner&) = default;
+  CrawlFootStepPlanner(const CrawlFootStepPlanner&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  CrawlingFootStepPlanner& operator=(const CrawlingFootStepPlanner&) = default;
+  CrawlFootStepPlanner& operator=(const CrawlFootStepPlanner&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  CrawlingFootStepPlanner(CrawlingFootStepPlanner&&) noexcept = default;
+  CrawlFootStepPlanner(CrawlFootStepPlanner&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  CrawlingFootStepPlanner& operator=(CrawlingFootStepPlanner&&) noexcept = default;
+  CrawlFootStepPlanner& operator=(CrawlFootStepPlanner&&) noexcept = default;
 
   ///
   /// @brief Sets the gait pattern by step length and yaw step command. 
@@ -87,12 +87,12 @@ public:
             const int planning_steps) override;
 
   ///
-  /// @brief This is invalid in CrawlingFootStepPlanner. 
+  /// @brief This is invalid in CrawlFootStepPlanner. 
   ///
   const aligned_vector<SE3>& contactPlacement(const int step) const override;
 
   ///
-  /// @brief This is invalid in CrawlingFootStepPlanner. 
+  /// @brief This is invalid in CrawlFootStepPlanner. 
   ///
   const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override;
 
@@ -111,10 +111,10 @@ public:
   void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const CrawlingFootStepPlanner& planner);
+                                  const CrawlFootStepPlanner& planner);
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const std::shared_ptr<CrawlingFootStepPlanner>& planner);
+                                  const std::shared_ptr<CrawlFootStepPlanner>& planner);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -136,4 +136,4 @@ private:
 
 } // namespace robotoc 
 
-#endif // ROBOTOC_CRAWLING_FOOT_STEP_PLANNER_HPP_ 
+#endif // ROBOTOC_CRAWL_FOOT_STEP_PLANNER_HPP_ 

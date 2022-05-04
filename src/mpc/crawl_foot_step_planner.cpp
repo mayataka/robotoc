@@ -1,4 +1,4 @@
-#include "robotoc/mpc/crawling_foot_step_planner.hpp"
+#include "robotoc/mpc/crawl_foot_step_planner.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -7,7 +7,7 @@
 
 namespace robotoc {
 
-CrawlingFootStepPlanner::CrawlingFootStepPlanner(const Robot& quadruped_robot)
+CrawlFootStepPlanner::CrawlFootStepPlanner(const Robot& quadruped_robot)
   : ContactPlannerBase(),
     robot_(quadruped_robot),
     raibert_heuristic_(),
@@ -39,17 +39,17 @@ CrawlingFootStepPlanner::CrawlingFootStepPlanner(const Robot& quadruped_robot)
 }
 
 
-CrawlingFootStepPlanner::CrawlingFootStepPlanner() {
+CrawlFootStepPlanner::CrawlFootStepPlanner() {
 }
 
 
-CrawlingFootStepPlanner::~CrawlingFootStepPlanner() {
+CrawlFootStepPlanner::~CrawlFootStepPlanner() {
 }
 
 
-void CrawlingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                             const double step_yaw, 
-                                             const bool enable_stance_phase) {
+void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
+                                          const double step_yaw, 
+                                          const bool enable_stance_phase) {
   step_length_ = step_length;
   R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
            std::sin(step_yaw), std::cos(step_yaw),  0,
@@ -59,9 +59,11 @@ void CrawlingFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length,
 }
 
 
-void CrawlingFootStepPlanner::setGaitPattern(
-    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
-    const double t_swing, const double t_stance, const double gain) {
+void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
+                                          const double yaw_rate_cmd, 
+                                          const double t_swing, 
+                                          const double t_stance, 
+                                          const double gain) {
   try {
     if (t_stance <= 0.0) {
       throw std::out_of_range("invalid argument: t_stance must be positive!");
@@ -89,7 +91,7 @@ void CrawlingFootStepPlanner::setGaitPattern(
 }
 
 
-void CrawlingFootStepPlanner::init(const Eigen::VectorXd& q) {
+void CrawlFootStepPlanner::init(const Eigen::VectorXd& q) {
   Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
   R.coeffRef(0, 0) = 1.0;
   R.coeffRef(0, 1) = 0.0;
@@ -109,10 +111,10 @@ void CrawlingFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool CrawlingFootStepPlanner::plan(const Eigen::VectorXd& q,
-                                   const Eigen::VectorXd& v,
-                                   const ContactStatus& contact_status,
-                                   const int planning_steps) {
+bool CrawlFootStepPlanner::plan(const Eigen::VectorXd& q,
+                                const Eigen::VectorXd& v,
+                                const ContactStatus& contact_status,
+                                const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
     raibert_heuristic_.planStepLength(v.template head<2>(), 
@@ -347,48 +349,48 @@ bool CrawlingFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& CrawlingFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& CrawlFootStepPlanner::contactPlacement(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& CrawlingFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& CrawlFootStepPlanner::contactPlacement() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& CrawlingFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& CrawlFootStepPlanner::contactPosition(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& CrawlingFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& CrawlFootStepPlanner::contactPosition() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& CrawlingFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& CrawlFootStepPlanner::com(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& CrawlingFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& CrawlFootStepPlanner::com() const {
   return com_ref_;
 }
 
 
-const Eigen::Matrix3d& CrawlingFootStepPlanner::R(const int step) const {
+const Eigen::Matrix3d& CrawlFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
 
-const std::vector<Eigen::Matrix3d>& CrawlingFootStepPlanner::R() const {
+const std::vector<Eigen::Matrix3d>& CrawlFootStepPlanner::R() const {
   return R_;
 }
 
 
-void CrawlingFootStepPlanner::disp(std::ostream& os) const {
-  std::cout << "Crawling foot step planner:" << std::endl;
+void CrawlFootStepPlanner::disp(std::ostream& os) const {
+  std::cout << "Crawl foot step planner:" << std::endl;
   std::cout << "current_step:" << current_step_ << std::endl;
   const int planning_steps = contact_position_ref_.size();
   for (int i=0; i<planning_steps; ++i) {
@@ -404,14 +406,14 @@ void CrawlingFootStepPlanner::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const CrawlingFootStepPlanner& planner) {
+                         const CrawlFootStepPlanner& planner) {
   planner.disp(os);
   return os;
 }
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const std::shared_ptr<CrawlingFootStepPlanner>& planner) {
+                         const std::shared_ptr<CrawlFootStepPlanner>& planner) {
   planner->disp(os);
   return os;
 }

@@ -26,9 +26,9 @@ T = 0.5
 N = 18
 max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCCrawling(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCCrawl(robot, T, N, max_steps, nthreads)
 
-planner = robotoc.CrawlingFootStepPlanner(robot)
+planner = robotoc.CrawlFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, (yaw_cmd*swing_time), (stance_time > 0.))
 mpc.set_gait_pattern(planner, swing_height, swing_time, stance_time, swing_start_time)
 
