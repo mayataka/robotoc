@@ -60,17 +60,6 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
-  /// @param[in] impulse_status Impulse status.
-  ///
-  void setImpulseStatus(const ImpulseStatus& impulse_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
-  ///
-  void setImpulseStatus();
-
-  ///
   /// @brief Residual in the state equation. Size is 2 * Robot::dimv().
   ///
   Eigen::VectorXd Fx;

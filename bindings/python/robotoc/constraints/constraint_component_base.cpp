@@ -95,7 +95,27 @@ PYBIND11_MODULE(constraint_component_base, m) {
              PyConstraintComponentBase,
              std::shared_ptr<ConstraintComponentBase>>(m, "ConstraintComponentBase")
     .def(py::init<const double, const double>(),
-          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995);
+          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
+    .def("useKinematics", &ConstraintComponentBase::useKinematics)
+    .def("kinematicsLevel", &ConstraintComponentBase::kinematicsLevel)
+    .def("allocateExtraData", &ConstraintComponentBase::allocateExtraData,
+          py::arg("data"))
+    .def("isFeasible", &ConstraintComponentBase::isFeasible,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"))
+    .def("setSlack", &ConstraintComponentBase::setSlack,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"))
+    .def("evalConstraint", &ConstraintComponentBase::evalConstraint,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"))
+    .def("evalDerivatives", &ConstraintComponentBase::evalDerivatives,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"),
+          py::arg("kkt_residual"))
+    .def("condenseSlackAndDual", &ConstraintComponentBase::condenseSlackAndDual,
+          py::arg("contact_status"), py::arg("data"), py::arg("kkt_matrix"), 
+          py::arg("kkt_residual"))
+    .def("expandSlackAndDual", &ConstraintComponentBase::expandSlackAndDual,
+          py::arg("contact_status"), py::arg("data"), py::arg("d"))
+    .def("dimc", &ConstraintComponentBase::dimc);
+
 }
 
 } // namespace python
