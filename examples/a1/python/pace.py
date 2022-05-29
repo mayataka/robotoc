@@ -12,11 +12,11 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
 dt = 0.02
-step_length = np.array([0.15, 0, 0])
+step_length = np.array([0.10, 0, 0])
 step_height = 0.1
-stance_time = 0.15
-flying_time = 0.1
-t0 = stance_time
+swing_time = 0.25
+double_support_time = 0.05
+t0 = double_support_time 
 cycle = 5
 
 # Create the cost function
@@ -26,11 +26,11 @@ q_standing = np.array([0, 0, 0.3181, 0, 0, 0, 1,
                        0.0,  0.67, -1.3, 
                        0.0,  0.67, -1.3, 
                        0.0,  0.67, -1.3])
-q_weight = np.array([0, 0, 0, 10000, 10000, 10000, 
-                     0.001, 0.001, 0.001, 
-                     0.001, 0.001, 0.001,
-                     0.001, 0.001, 0.001,
-                     0.001, 0.001, 0.001])
+q_weight = np.array([0, 0, 0, 250000, 250000, 250000, 
+                     0.0001, 0.0001, 0.0001, 
+                     0.0001, 0.0001, 0.0001,
+                     0.0001, 0.0001, 0.0001,
+                     0.0001, 0.0001, 0.0001])
 v_weight = np.array([100, 100, 100, 100, 100, 100, 
                      1, 1, 1, 
                      1, 1, 1,
@@ -59,29 +59,27 @@ x3d0_LF = robot.frame_position(LF_foot_id)
 x3d0_LH = robot.frame_position(LH_foot_id)
 x3d0_RF = robot.frame_position(RF_foot_id)
 x3d0_RH = robot.frame_position(RH_foot_id)
-
-LF_t0 = t0 + stance_time 
-LH_t0 = t0 - flying_time
-RF_t0 = t0 - flying_time
-RH_t0 = t0 + stance_time
+LF_t0 = t0 + swing_time + double_support_time
+LH_t0 = t0 + swing_time + double_support_time
+RF_t0 = t0 
+RH_t0 = t0 
 LF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LF, step_length, step_height, 
-                                           LF_t0, stance_time+2.*flying_time, 
-                                           stance_time, False)
+                                           LF_t0, swing_time, 
+                                           swing_time+2*double_support_time, False)
 LH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LH, step_length, step_height, 
-                                           LH_t0, stance_time+2.*flying_time, 
-                                           stance_time, True)
+                                           LH_t0, swing_time, 
+                                           swing_time+2*double_support_time, False)
 RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RF, step_length, step_height, 
-                                           RF_t0, stance_time+2.*flying_time, 
-                                           stance_time, True)
+                                           RF_t0, swing_time, 
+                                           swing_time+2*double_support_time, True)
 RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RH, step_length, step_height, 
-                                           RH_t0, stance_time+2.*flying_time, 
-                                           stance_time, False)
-
+                                           RH_t0, swing_time, 
+                                           swing_time+2*double_support_time, True)
 LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
 LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
 RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
 RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
-foot_track_weight = np.full(3, 1.0e05)
+foot_track_weight = np.full(3, 1.0e06)
 LF_cost.set_x3d_weight(foot_track_weight)
 LH_cost.set_x3d_weight(foot_track_weight)
 RF_cost.set_x3d_weight(foot_track_weight)
@@ -92,11 +90,11 @@ cost.push_back(RF_cost)
 cost.push_back(RH_cost)
 
 com_ref0 = robot.com()
-vcom_ref = 0.5 * step_length / (stance_time+flying_time)
-com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, t0, stance_time+flying_time, 
-                                 0, True)
+vcom_ref = 0.5 * step_length / swing_time
+com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, t0, swing_time, 
+                                 double_support_time, True)
 com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e05))
+com_cost.set_com_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
 # Create the constraints
@@ -107,7 +105,7 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.5
+mu = 0.6
 friction_cone         = robotoc.FrictionCone(robot, mu)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
@@ -118,7 +116,7 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_each_discrete_events = 3*cycle
+max_num_each_discrete_events = 2*cycle
 contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
@@ -127,49 +125,52 @@ contact_status_standing.activate_contacts([0, 1, 2, 3])
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
-contact_status_lhrf_swing = robot.create_contact_status()
-contact_status_lhrf_swing.activate_contacts([0, 3])
-contact_status_lhrf_swing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_lhrf_swing, t0)
+contact_status_rfrh_swing = robot.create_contact_status()
+contact_status_rfrh_swing.activate_contacts([0, 1])
+contact_status_rfrh_swing.set_contact_placements(contact_positions)
+contact_sequence.push_back(contact_status_rfrh_swing, t0)
 
-contact_status_flying = robot.create_contact_status()
-contact_status_flying.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_flying, t0+stance_time)
-
-contact_positions[1] += 0.5 * step_length
 contact_positions[2] += 0.5 * step_length
-contact_status_rhlf_swing = robot.create_contact_status()
-contact_status_rhlf_swing.activate_contacts([1, 2])
-contact_status_rhlf_swing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_rhlf_swing, t0+stance_time+flying_time)
+contact_positions[3] += 0.5 * step_length
+contact_status_standing.set_contact_placements(contact_positions)
+contact_sequence.push_back(contact_status_standing, t0+swing_time)
 
-contact_status_flying.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_flying, t0+2*stance_time+flying_time)
+contact_status_lflh_swing = robot.create_contact_status()
+contact_status_lflh_swing.activate_contacts([2, 3])
+contact_status_lflh_swing.set_contact_placements(contact_positions)
+contact_sequence.push_back(contact_status_lflh_swing, 
+                           t0+swing_time+double_support_time)
 
 contact_positions[0] += step_length
-contact_positions[3] += step_length
-contact_status_lhrf_swing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_lhrf_swing, t0+2*stance_time+2*flying_time)
+contact_positions[1] += step_length
+contact_status_standing.set_contact_placements(contact_positions)
+contact_sequence.push_back(contact_status_standing, 
+                           t0+2*swing_time+double_support_time)
 
-for j in range(cycle-1):
-    i = j + 1
-    contact_status_flying.set_contact_placements(contact_positions)
-    contact_sequence.push_back(contact_status_flying, t0+(2*i+1)*stance_time+(2*i)*flying_time)
+for i in range(cycle-1):
+    t1 = t0 + (i+1)*(2*swing_time+2*double_support_time)
+    contact_status_rfrh_swing.set_contact_placements(contact_positions)
+    contact_sequence.push_back(contact_status_rfrh_swing, t1)
 
-    contact_positions[1] += step_length
     contact_positions[2] += step_length
-    contact_status_rhlf_swing.set_contact_placements(contact_positions)
-    contact_sequence.push_back(contact_status_rhlf_swing, t0+(2*i+1)*stance_time+(2*i+1)*flying_time)
+    contact_positions[3] += step_length
+    contact_status_standing.set_contact_placements(contact_positions)
+    contact_sequence.push_back(contact_status_standing, t1+swing_time)
 
-    contact_status_flying.set_contact_placements(contact_positions)
-    contact_sequence.push_back(contact_status_flying, t0+(2*i+2)*stance_time+(2*i+1)*flying_time)
+    contact_status_lflh_swing.set_contact_placements(contact_positions)
+    contact_sequence.push_back(contact_status_lflh_swing, 
+                               t1+swing_time+double_support_time)
 
     contact_positions[0] += step_length
-    contact_positions[3] += step_length
-    contact_status_lhrf_swing.set_contact_placements(contact_positions)
-    contact_sequence.push_back(contact_status_lhrf_swing, t0+(2*i+2)*stance_time+(2*i+2)*flying_time)
+    contact_positions[1] += step_length
+    contact_status_standing.set_contact_placements(contact_positions)
+    contact_sequence.push_back(contact_status_standing, 
+                               t1+2*swing_time+double_support_time)
 
-T = t0 + cycle*(2*stance_time+2*flying_time) + stance_time
+# you can check the contact sequence via 
+# print(contact_sequence)
+
+T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
