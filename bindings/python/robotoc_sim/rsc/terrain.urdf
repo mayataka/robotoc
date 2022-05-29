@@ -2,7 +2,7 @@
 <robot name="terrain">
   <link name="terrainLink">
   <contact>
-      <lateral_friction value="1"/>
+      <lateral_friction value="0.7"/>
   </contact>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -12,7 +12,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-		<mesh filename="terrain.obj" scale="0.2 0.2 0.5"/>
+		<mesh filename="terrain.obj" scale="0.25 0.25 0.5"/>
       </geometry>
        <material name="white">
         <color rgba="1 1 1 1"/>
@@ -21,7 +21,7 @@
 		<collision concave="yes">
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-		<mesh filename="terrain.obj" scale="0.2 0.2 0.5"/>
+		<mesh filename="terrain.obj" scale="0.25 0.25 0.5"/>
       </geometry>
     </collision>
   </link>
