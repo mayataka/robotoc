@@ -111,7 +111,7 @@ PYBIND11_MODULE(cost_function_component_base, m) {
     .def("evalStageCostHessian", &CostFunctionComponentBase::evalStageCostHessian,
           py::arg("robot"), py::arg("contact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_matrix"))
-    .def("eval_terminal_cost", &CostFunctionComponentBase::evalTerminalCost,
+    .def("evalTerminalCost", &CostFunctionComponentBase::evalTerminalCost,
           py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"))
     .def("evalTerminalCostDerivatives", &CostFunctionComponentBase::evalTerminalCostDerivatives,
           py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"), 
