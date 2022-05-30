@@ -33,6 +33,13 @@ public:
       = std::shared_ptr<CostFunctionComponentBase>;
 
   ///
+  /// @brief Constructor with discount factor. 
+  /// @param[in] discount_factor Discount factor. Must be positive and smaller 
+  /// than 1.0.
+  ///
+  CostFunction(const double discount_factor);
+
+  ///
   /// @brief Default constructor. 
   ///
   CostFunction();
@@ -61,6 +68,13 @@ public:
   /// @brief Default move assign operator. 
   ///
   CostFunction& operator=(CostFunction&&) noexcept = default;
+
+  ///
+  /// @brief Sets the discount facor. 
+  /// @param[in] discount_factor Discount factor. Must be positive and smaller 
+  /// than 1.0. Otherwise, the discounted cost is disabled.
+  ///
+  void setDiscountFactor(const double discount_factor);
 
   ///
   /// @brief Append a cost function component to the cost function.
@@ -234,7 +248,17 @@ public:
 
 private:
   std::vector<CostFunctionComponentBasePtr> costs_;
+  double discount_factor_;
+  bool discounted_cost_;
 
+  template <typename Scalar_t, typename size_t>
+  static Scalar_t pow(const Scalar_t x, const size_t n) {
+    Scalar_t ret = 1.0;
+    for (int i=0; i<n; ++i) {
+      ret = ret * x;
+    }
+    return ret;
+  }
 };
 
 } // namespace robotoc

@@ -709,6 +709,37 @@ inline void TimeDiscretization::countTimeStages() {
   }
   is_time_stage_before_impulse_[N()] = false;
   is_time_stage_before_lift_[N()] = false;
+  // count time stages
+  if (discretization_method_ == DiscretizationMethod::PhaseBased) {
+    int count = 0;
+    for (int i=0; i<N(); ++i) {
+      grid_[i].time_stage = count;
+      ++count;
+      if (isTimeStageBeforeImpulse(i)) {
+        grid_impulse_[impulseIndexAfterTimeStage(i)].time_stage = count;
+        ++count;
+      }
+      else if (isTimeStageBeforeLift(i)) {
+        grid_lift_[liftIndexAfterTimeStage(i)].time_stage = count;
+        ++count;
+      }
+    }
+    grid_[N()].time_stage = count;
+  }
+  else {
+    int count = 0;
+    for (int i=0; i<N(); ++i) {
+      grid_[i].time_stage = count;
+      if (isTimeStageBeforeImpulse(i)) {
+        grid_impulse_[impulseIndexAfterTimeStage(i)].time_stage = count;
+      }
+      else if (isTimeStageBeforeLift(i)) {
+        grid_lift_[liftIndexAfterTimeStage(i)].time_stage = count;
+      }
+      ++count;
+    }
+    grid_[N()].time_stage = count;
+  }
 }
 
 

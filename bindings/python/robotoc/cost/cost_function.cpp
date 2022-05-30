@@ -10,7 +10,11 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(cost_function, m) {
   py::class_<CostFunction, std::shared_ptr<CostFunction>>(m, "CostFunction")
+    .def(py::init<const double>(),
+          py::arg("discount_factor"))
     .def(py::init<>())
+    .def("set_discount_factor", &CostFunction::setDiscountFactor,
+          py::arg("discount_factor"))
     .def("push_back", &CostFunction::push_back)
     .def("clear", &CostFunction::clear)
     .def("eval_stage_cost", &CostFunction::evalStageCost,
