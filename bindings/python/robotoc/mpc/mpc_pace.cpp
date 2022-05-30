@@ -38,7 +38,8 @@ PYBIND11_MODULE(mpc_pace, m) {
     .def("get_swing_foot_cost_handle", &MPCPace::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCPace::getCoMCostHandle)
     .def("get_constraints_handle", &MPCPace::getConstraintsHandle)
-    .def("get_friction_cone_handle", &MPCPace::getFrictionConeHandle);
+    .def("get_friction_cone_handle", &MPCPace::getFrictionConeHandle)
+    .def("get_solver", &MPCPace::getSolver);
 }
 
 } // namespace python

@@ -201,6 +201,12 @@ public:
   ///
   std::shared_ptr<ImpulseWrenchFrictionCone> getImpulseWrenchConeHandle();
 
+  ///
+  /// @brief Gets the const handle of the MPC solver.  
+  /// @return Const reference to the MPC solver.
+  ///
+  const OCPSolver& getSolver() const { return ocp_solver_; }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

@@ -37,7 +37,8 @@ PYBIND11_MODULE(mpc_crawl, m) {
     .def("get_swing_foot_cost_handle", &MPCCrawl::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCCrawl::getCoMCostHandle)
     .def("get_constraints_handle", &MPCCrawl::getConstraintsHandle)
-    .def("get_friction_cone_handle", &MPCCrawl::getFrictionConeHandle);
+    .def("get_friction_cone_handle", &MPCCrawl::getFrictionConeHandle)
+    .def("get_solver", &MPCCrawl::getSolver);
 }
 
 } // namespace python

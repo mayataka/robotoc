@@ -38,7 +38,8 @@ PYBIND11_MODULE(mpc_trot, m) {
     .def("get_swing_foot_cost_handle", &MPCTrot::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCTrot::getCoMCostHandle)
     .def("get_constraints_handle", &MPCTrot::getConstraintsHandle)
-    .def("get_friction_cone_handle", &MPCTrot::getFrictionConeHandle);
+    .def("get_friction_cone_handle", &MPCTrot::getFrictionConeHandle)
+    .def("get_solver", &MPCTrot::getSolver);
 }
 
 } // namespace python
