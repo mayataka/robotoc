@@ -14,7 +14,8 @@ TerminalOCP::TerminalOCP(const Robot& robot,
     constraints_data_(),
     state_equation_(robot),
     use_kinematics_(false),
-    terminal_cost_(0) {
+    terminal_cost_(0),
+    barrier_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
@@ -28,7 +29,8 @@ TerminalOCP::TerminalOCP()
     constraints_data_(),
     state_equation_(),
     use_kinematics_(false),
-    terminal_cost_(0) {
+    terminal_cost_(0),
+    barrier_cost_(0) {
 }
 
 
@@ -144,7 +146,7 @@ double TerminalOCP::KKTError(const SplitKKTResidual& kkt_residual) {
 }
 
 
-double TerminalOCP::terminalCost() const {
+double TerminalOCP::terminalCost(const bool) const {
   return terminal_cost_;
 }
 

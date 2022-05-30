@@ -132,8 +132,10 @@ public:
   ///
   /// @brief Returns the total value of the cost function.
   /// @param[in] ocp Optimal control problem.
+  /// @param[in] include_cost_barrier If true, includes the cost due to the 
+  /// barrier function. Default is true.
   ///
-  static double totalCost(const OCP& ocp);
+  static double totalCost(const OCP& ocp, const bool include_cost_barrier=true);
 
   ///
   /// @brief Computes the initial state direction.

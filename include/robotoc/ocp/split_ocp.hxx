@@ -25,7 +25,7 @@ inline void SplitOCP::computeKKTResidual_impl(Robot& robot,
   kkt_residual.h = (1.0/grid_info.dt) * stage_cost_;
   constraints_->linearizeConstraints(robot, contact_status, constraints_data_, 
                                      s, kkt_residual);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s, 
@@ -55,7 +55,7 @@ inline void SplitOCP::computeKKTSystem_impl(Robot& robot,
   setHamiltonianDerivatives(grid_info.dt, kkt_matrix, kkt_residual);
   constraints_->linearizeConstraints(robot, contact_status, constraints_data_, 
                                      s, kkt_residual);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,

@@ -13,7 +13,8 @@ ImpulseSplitOCP::ImpulseSplitOCP(
     constraints_data_(constraints->createConstraintsData(robot, -1)),
     state_equation_(robot),
     impulse_dynamics_(robot),
-    stage_cost_(0) {
+    stage_cost_(0),
+    barrier_cost_(0) {
 }
 
 
@@ -24,7 +25,8 @@ ImpulseSplitOCP::ImpulseSplitOCP()
     constraints_data_(),
     state_equation_(),
     impulse_dynamics_(),
-    stage_cost_(0) {
+    stage_cost_(0),
+    barrier_cost_(0) {
 }
 
 
@@ -71,7 +73,7 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
   stage_cost_ = cost_->evalImpulseCost(robot, impulse_status, cost_data_, 
                                        grid_info, s);
   constraints_->evalConstraint(robot, impulse_status, constraints_data_, s);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.evalStateEquation(robot, s, q_next, v_next, kkt_residual);
   impulse_dynamics_.evalImpulseDynamics(robot, impulse_status, s);
 }
@@ -92,7 +94,7 @@ void ImpulseSplitOCP::computeKKTResidual(
                                             grid_info, s, kkt_residual);
   constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
                                      s, kkt_residual);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
@@ -116,7 +118,7 @@ void ImpulseSplitOCP::computeKKTSystem(
                                              grid_info, s, kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
                                      s, kkt_residual);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
@@ -184,8 +186,13 @@ double ImpulseSplitOCP::KKTError(
 }
 
 
-double ImpulseSplitOCP::stageCost() const {
-  return stage_cost_;
+double ImpulseSplitOCP::stageCost(const bool include_cost_barrier) const {
+  if (include_cost_barrier) {
+    return stage_cost_ + barrier_cost_; 
+  }
+  else {
+    return stage_cost_;
+  }
 }
 
 

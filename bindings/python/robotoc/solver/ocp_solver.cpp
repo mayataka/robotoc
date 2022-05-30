@@ -54,7 +54,8 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (OCPSolver::*)() const>(&OCPSolver::KKTError))
-    .def("cost", &OCPSolver::cost)
+    .def("cost", &OCPSolver::cost,
+          py::arg("include_cost_barrier")=true)
     .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
           py::arg("verbose")=false)
     .def("get_time_discretization", &OCPSolver::getTimeDiscretization)
