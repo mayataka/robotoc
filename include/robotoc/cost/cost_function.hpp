@@ -77,6 +77,12 @@ public:
   void setDiscountFactor(const double discount_factor);
 
   ///
+  /// @brief Gets the discount facor. 
+  /// @return The discount facor. 
+  ///
+  double discountFactor() const;
+
+  ///
   /// @brief Append a cost function component to the cost function.
   /// @param[in] cost shared pointer to the cost function component appended 
   /// to the cost.

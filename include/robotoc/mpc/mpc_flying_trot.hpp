@@ -206,6 +206,14 @@ public:
   ///
   const OCPSolver& getSolver() const { return ocp_solver_; }
 
+  ///
+  /// @brief Gets the const handle of the contact sequence.  
+  /// @return Const reference to the shared_ptr of the contact sequence.
+  ///
+  const std::shared_ptr<ContactSequence>& getContactSequence() const { 
+    return contact_sequence_; 
+  }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

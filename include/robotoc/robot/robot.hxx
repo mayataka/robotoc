@@ -140,6 +140,18 @@ inline void Robot::dSubtractConfiguration_dq0(
 }
 
 
+template <typename ConfigVectorType, typename MatrixType>
+inline void Robot::integrateCoeffWiseJacobian(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<MatrixType>& J) const {
+  assert(q.size() == dimq_);
+  assert(J.rows() == dimq_);
+  assert(J.cols() == dimv_);
+  pinocchio::integrateCoeffWiseJacobian(model_, q, 
+                                        const_cast<Eigen::MatrixBase<MatrixType>&>(J));
+}
+
+
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2>
 inline void Robot::updateKinematics(

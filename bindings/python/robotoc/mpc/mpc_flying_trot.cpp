@@ -40,7 +40,8 @@ PYBIND11_MODULE(mpc_flying_trot, m) {
     .def("get_constraints_handle", &MPCFlyingTrot::getConstraintsHandle)
     .def("get_friction_cone_handle", &MPCFlyingTrot::getFrictionConeHandle)
     .def("get_contact_sequence_handle", &MPCFlyingTrot::getContactSequenceHandle)
-    .def("get_solver", &MPCFlyingTrot::getSolver);
+    .def("get_solver", &MPCFlyingTrot::getSolver)
+    .def("get_contact_sequence", &MPCFlyingTrot::getContactSequence);
 }
 
 } // namespace python

@@ -21,6 +21,7 @@ PYBIND11_MODULE(mpc_trot, m) {
          py::arg("stance_time"), py::arg("swing_start_time"))
     .def("init", &MPCTrot::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
+    .def("reset", &MPCTrot::reset)
     .def("set_solver_options", &MPCTrot::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCTrot::updateSolution,
@@ -39,7 +40,8 @@ PYBIND11_MODULE(mpc_trot, m) {
     .def("get_com_cost_handle", &MPCTrot::getCoMCostHandle)
     .def("get_constraints_handle", &MPCTrot::getConstraintsHandle)
     .def("get_friction_cone_handle", &MPCTrot::getFrictionConeHandle)
-    .def("get_solver", &MPCTrot::getSolver);
+    .def("get_solver", &MPCTrot::getSolver)
+    .def("get_contact_sequence", &MPCTrot::getContactSequence);
 }
 
 } // namespace python

@@ -102,6 +102,8 @@ public:
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const SolverOptions& solver_options);
 
+  void reset();
+
   ///
   /// @brief Sets the solver options. 
   /// @param[in] solver_options Solver options.  
@@ -200,6 +202,14 @@ public:
   ///
   const OCPSolver& getSolver() const { return ocp_solver_; }
 
+  ///
+  /// @brief Gets the const handle of the contact sequence.  
+  /// @return Const reference to the shared_ptr of the contact sequence.
+  ///
+  const std::shared_ptr<ContactSequence>& getContactSequence() const { 
+    return contact_sequence_; 
+  }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
@@ -210,6 +220,7 @@ private:
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
+  robotoc::Solution s_;
   double swing_height_, swing_time_, stance_time_, swing_start_time_, 
          T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;

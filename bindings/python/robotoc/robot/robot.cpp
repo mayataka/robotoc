@@ -47,6 +47,9 @@ PYBIND11_MODULE(robot, m) {
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
           py::arg("contact_frame_names"), py::arg("contact_types"), 
           py::arg("baumgarte_time_step"), py::arg("contact_inv_damping")=0.)
+    .def("integrate_coeff_wise_jacobian", [](const Robot& self, const Eigen::VectorXd& q, Eigen::MatrixXd& J) {
+        self.integrateCoeffWiseJacobian(q, J);
+      },  py::arg("q"), py::arg("J"))
     .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q) {
         self.updateFrameKinematics(q);
       },  py::arg("q"))

@@ -49,6 +49,16 @@ void CostFunction::setDiscountFactor(const double discount_factor) {
 }
 
 
+double CostFunction::discountFactor() const {
+  if (discounted_cost_) {
+    return discount_factor_;
+  }
+  else {
+    return 1.0;
+  }
+}
+
+
 void CostFunction::push_back(const CostFunctionComponentBasePtr& cost) {
   costs_.push_back(cost);
 }
