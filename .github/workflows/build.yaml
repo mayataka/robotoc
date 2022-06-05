@@ -37,6 +37,15 @@ jobs:
           sudo apt update
           sudo apt install -qqy robotpkg-py38-pinocchio
           sudo apt install -qqy robotpkg-py38-qt5-gepetto-viewer-corba
+      - name: Install pinocchio and gepetto-viewer-corba for ubuntu 22.04
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt install -qqy lsb-release gnupg2 curl
+          echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
+          curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
+          sudo apt update
+          sudo apt install -qqy robotpkg-py39-pinocchio
+          sudo apt install -qqy robotpkg-py39-qt5-gepetto-viewer-corba
       - name: Install pinocchio-gepetto-viewer
         run: |
           export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
