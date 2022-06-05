@@ -38,8 +38,8 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt update
-          sudo apt install -qqy robotpkg-py38-pinocchio
-          sudo apt install -qqy robotpkg-py38-qt5-gepetto-viewer-corba
+          sudo apt install -qqy robotpkg-py310-pinocchio
+          sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer-corba
       - name: Install pinocchio-gepetto-viewer
         run: |
           export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
