@@ -47,6 +47,18 @@ PYBIND11_MODULE(robot, m) {
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
           py::arg("contact_frame_names"), py::arg("contact_types"), 
           py::arg("baumgarte_time_step"), py::arg("contact_inv_damping")=0.)
+    .def("integrate_configuration", [](const Robot& self, const Eigen::VectorXd& q, 
+                                       const Eigen::VectorXd& v, const double dt) {
+        Eigen::VectorXd q_ret = Eigen::VectorXd::Zero(self.dimq());
+        self.integrateConfiguration(q, v, dt, q_ret);
+        return q_ret;
+     }, py::arg("q"), py::arg("v"), py::arg("dt"))
+    .def("subtract_configuration", [](const Robot& self, const Eigen::VectorXd& qf, 
+                                      const Eigen::VectorXd& q0) {
+        Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(self.dimv());
+        self.subtractConfiguration(qf, q0, qdiff);
+        return qdiff;
+     }, py::arg("qf"), py::arg("q0"))
     .def("integrate_coeff_wise_jacobian", [](const Robot& self, const Eigen::VectorXd& q) {
         Eigen::MatrixXd J = Eigen::MatrixXd::Zero(self.dimq(), self.dimv());
         self.integrateCoeffWiseJacobian(q, J);
