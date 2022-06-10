@@ -21,7 +21,13 @@ PYBIND11_MODULE(mpc_jump, m) {
     .def("init", &MPCJump::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"), 
           py::arg("sto")=false)
-    .def("reset", &MPCJump::reset,
+    .def("reset", 
+          static_cast<void (MPCJump::*)()>(&MPCJump::reset))
+    .def("reset", 
+          static_cast<void (MPCJump::*)(const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCJump::reset),
+          py::arg("q"), py::arg("v"))
+    .def("reset", 
+          static_cast<void (MPCJump::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&, const SolverOptions&, const bool)>(&MPCJump::reset),
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"), 
           py::arg("sto")=false)
     .def("set_solver_options", &MPCJump::setSolverOptions,

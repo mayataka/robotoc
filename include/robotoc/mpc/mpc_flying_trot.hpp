@@ -103,6 +103,18 @@ public:
             const SolverOptions& solver_options);
 
   ///
+  /// @brief Resets the optimal control problem solover via the solution 
+  /// computed by init(). 
+  ///
+  void reset();
+
+  ///
+  /// @brief Resets the optimal control problem solover via the solution 
+  /// computed by init(), q, and v.
+  ///
+  void reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+
+  ///
   /// @brief Sets the solver options. 
   /// @param[in] solver_options Solver options.  
   ///
@@ -224,6 +236,7 @@ private:
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_standing_, cs_lfrh_, cs_rflh_, cs_flying_;
+  robotoc::Solution s_;
   double swing_height_, flying_time_, stance_time_, swing_start_time_, 
          T_, dt_, dtm_, ts_last_, eps_;
   int N_, current_step_, predict_step_;

@@ -21,7 +21,11 @@ PYBIND11_MODULE(mpc_trot, m) {
          py::arg("stance_time"), py::arg("swing_start_time"))
     .def("init", &MPCTrot::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
-    .def("reset", &MPCTrot::reset)
+    .def("reset", 
+          static_cast<void (MPCTrot::*)()>(&MPCTrot::reset))
+    .def("reset", 
+          static_cast<void (MPCTrot::*)(const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCTrot::reset),
+          py::arg("q"), py::arg("v"))
     .def("set_solver_options", &MPCTrot::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCTrot::updateSolution,

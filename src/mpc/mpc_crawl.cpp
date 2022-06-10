@@ -213,6 +213,13 @@ void MPCCrawl::reset() {
 }
 
 
+void MPCCrawl::reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
+  ocp_solver_.setSolution(s_);
+  ocp_solver_.setSolution("q", q);
+  ocp_solver_.setSolution("v", v);
+}
+
+
 void MPCCrawl::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }

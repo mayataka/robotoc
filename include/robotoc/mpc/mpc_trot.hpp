@@ -102,7 +102,17 @@ public:
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const SolverOptions& solver_options);
 
+  ///
+  /// @brief Resets the optimal control problem solover via the solution 
+  /// computed by init(). 
+  ///
   void reset();
+
+  ///
+  /// @brief Resets the optimal control problem solover via the solution 
+  /// computed by init(), q, and v.
+  ///
+  void reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   ///
   /// @brief Sets the solver options. 

@@ -215,6 +215,18 @@ void MPCFlyingTrot::init(const double t, const Eigen::VectorXd& q,
 }
 
 
+void MPCFlyingTrot::reset() {
+  ocp_solver_.setSolution(s_);
+}
+
+
+void MPCFlyingTrot::reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
+  ocp_solver_.setSolution(s_);
+  ocp_solver_.setSolution("q", q);
+  ocp_solver_.setSolution("v", v);
+}
+
+
 void MPCFlyingTrot::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }

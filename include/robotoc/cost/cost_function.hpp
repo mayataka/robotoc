@@ -256,15 +256,6 @@ private:
   std::vector<CostFunctionComponentBasePtr> costs_;
   double discount_factor_;
   bool discounted_cost_;
-
-  template <typename Scalar_t, typename size_t>
-  static Scalar_t pow(const Scalar_t x, const size_t n) {
-    Scalar_t ret = 1.0;
-    for (int i=0; i<n; ++i) {
-      ret = ret * x;
-    }
-    return ret;
-  }
 };
 
 } // namespace robotoc

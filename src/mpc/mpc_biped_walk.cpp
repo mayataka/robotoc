@@ -189,6 +189,18 @@ void MPCBipedWalk::init(const double t, const Eigen::VectorXd& q,
 }
 
 
+void MPCBipedWalk::reset() {
+  ocp_solver_.setSolution(s_);
+}
+
+
+void MPCBipedWalk::reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
+  ocp_solver_.setSolution(s_);
+  ocp_solver_.setSolution("q", q);
+  ocp_solver_.setSolution("v", v);
+}
+
+
 void MPCBipedWalk::setSolverOptions(const SolverOptions& solver_options) {
   ocp_solver_.setSolverOptions(solver_options);
 }
