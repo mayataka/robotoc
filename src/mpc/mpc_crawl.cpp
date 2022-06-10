@@ -203,7 +203,20 @@ void MPCCrawl::init(const double t, const Eigen::VectorXd& q,
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
   ocp_solver_.solve(t, q, v, true);
+  s_ = ocp_solver_.getSolution();
   ts_last_ = swing_start_time_;
+}
+
+
+void MPCCrawl::reset() {
+  ocp_solver_.setSolution(s_);
+}
+
+
+void MPCCrawl::reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
+  ocp_solver_.setSolution(s_);
+  ocp_solver_.setSolution("q", q);
+  ocp_solver_.setSolution("v", v);
 }
 
 

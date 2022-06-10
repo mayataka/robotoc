@@ -222,9 +222,11 @@ public:
   /// @brief Returns the value of the cost function.
   /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
   /// called.  
+  /// @param[in] include_cost_barrier If true, includes the cost due to the 
+  /// barrier function. Default is true.
   /// @return The value of the cost function.
   ///
-  double cost() const;
+  double cost(const bool include_cost_barrier=true) const;
 
   ///
   /// @return true if the current solution is feasible subject to the 

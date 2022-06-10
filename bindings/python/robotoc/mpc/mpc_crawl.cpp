@@ -20,6 +20,11 @@ PYBIND11_MODULE(mpc_crawl, m) {
          py::arg("stance_time"), py::arg("swing_start_time"))
     .def("init", &MPCCrawl::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
+    .def("reset", 
+          static_cast<void (MPCCrawl::*)()>(&MPCCrawl::reset))
+    .def("reset", 
+          static_cast<void (MPCCrawl::*)(const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCCrawl::reset),
+          py::arg("q"), py::arg("v"))
     .def("set_solver_options", &MPCCrawl::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCCrawl::updateSolution,
@@ -37,7 +42,9 @@ PYBIND11_MODULE(mpc_crawl, m) {
     .def("get_swing_foot_cost_handle", &MPCCrawl::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCCrawl::getCoMCostHandle)
     .def("get_constraints_handle", &MPCCrawl::getConstraintsHandle)
-    .def("get_friction_cone_handle", &MPCCrawl::getFrictionConeHandle);
+    .def("get_friction_cone_handle", &MPCCrawl::getFrictionConeHandle)
+    .def("get_solver", &MPCCrawl::getSolver)
+    .def("get_contact_sequence", &MPCCrawl::getContactSequence);
 }
 
 } // namespace python

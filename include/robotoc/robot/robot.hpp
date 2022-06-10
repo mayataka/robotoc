@@ -292,6 +292,15 @@ public:
       const Eigen::MatrixBase<MatrixType>& dqdiff_dq0) const;
 
   ///
+  /// @brief Transforms the Jacobian w.r.t. configuration to tangentspace.
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in, out] J Jacobian. Size must be Robot::dimq() x Robot::dimv().
+  ///
+  template <typename ConfigVectorType, typename MatrixType>
+  void integrateCoeffWiseJacobian(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                                  const Eigen::MatrixBase<MatrixType>& J) const;
+
+  ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
   /// velocity, frame acceleration, and the relevant Jacobians are calculated. 
   /// @param[in] q Configuration. Size must be Robot::dimq().

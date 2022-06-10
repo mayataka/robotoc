@@ -14,7 +14,8 @@ SplitOCP::SplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost
     state_equation_(robot),
     contact_dynamics_(robot),
     switching_constraint_(robot),
-    stage_cost_(0) {
+    stage_cost_(0),
+    barrier_cost_(0) {
 }
 
 
@@ -26,7 +27,8 @@ SplitOCP::SplitOCP()
     state_equation_(),
     contact_dynamics_(),
     switching_constraint_(),
-    stage_cost_(0) {
+    stage_cost_(0),
+    barrier_cost_(0) {
 }
 
 
@@ -71,7 +73,7 @@ void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
   stage_cost_ = cost_->evalStageCost(robot, contact_status, cost_data_, 
                                      grid_info, s);
   constraints_->evalConstraint(robot, contact_status, constraints_data_, s);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.evalStateEquation(robot, grid_info.dt, s, q_next, v_next, 
                                     kkt_residual);
   contact_dynamics_.evalContactDynamics(robot, contact_status, s);
@@ -192,7 +194,7 @@ void SplitOCP::computeKKTSystem(Robot& robot,
   setHamiltonianDerivatives(grid_info.dt, kkt_matrix, kkt_residual);
   constraints_->linearizeConstraints(robot, contact_status, constraints_data_, 
                                      s, kkt_residual);
-  stage_cost_ += constraints_data_.logBarrier();
+  barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
@@ -299,8 +301,13 @@ double SplitOCP::KKTError(
 }
 
 
-double SplitOCP::stageCost() const {
-  return stage_cost_;
+double SplitOCP::stageCost(const bool include_cost_barrier) const {
+  if (include_cost_barrier) {
+    return stage_cost_ + barrier_cost_; 
+  }
+  else {
+    return stage_cost_;
+  }
 } 
 
 

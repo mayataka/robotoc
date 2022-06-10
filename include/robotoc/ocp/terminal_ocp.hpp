@@ -182,8 +182,10 @@ public:
   /// Before calling this function, TerminalOCP::evalOCP(), 
   /// TerminalOCP::computeKKTResidual(), or TerminalOCP::computeKKTSystem() 
   /// must be called.
+  /// @param[in] include_cost_barrier If true, includes the cost due to the 
+  /// barrier function. Default is true.
   /// 
-  double terminalCost() const;
+  double terminalCost(const bool include_cost_barrier=true) const;
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -192,7 +194,7 @@ private:
   ConstraintsData constraints_data_;
   TerminalStateEquation state_equation_;
   bool use_kinematics_;
-  double terminal_cost_;
+  double terminal_cost_, barrier_cost_;
 
 };
 

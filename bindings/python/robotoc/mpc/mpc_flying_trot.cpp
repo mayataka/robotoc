@@ -21,6 +21,11 @@ PYBIND11_MODULE(mpc_flying_trot, m) {
          py::arg("stance_time"), py::arg("swing_start_time"))
     .def("init", &MPCFlyingTrot::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
+    .def("reset", 
+          static_cast<void (MPCFlyingTrot::*)()>(&MPCFlyingTrot::reset))
+    .def("reset", 
+          static_cast<void (MPCFlyingTrot::*)(const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCFlyingTrot::reset),
+          py::arg("q"), py::arg("v"))
     .def("set_solver_options", &MPCFlyingTrot::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCFlyingTrot::updateSolution,
@@ -39,7 +44,9 @@ PYBIND11_MODULE(mpc_flying_trot, m) {
     .def("get_com_cost_handle", &MPCFlyingTrot::getCoMCostHandle)
     .def("get_constraints_handle", &MPCFlyingTrot::getConstraintsHandle)
     .def("get_friction_cone_handle", &MPCFlyingTrot::getFrictionConeHandle)
-    .def("get_contact_sequence_handle", &MPCFlyingTrot::getContactSequenceHandle);
+    .def("get_contact_sequence_handle", &MPCFlyingTrot::getContactSequenceHandle)
+    .def("get_solver", &MPCFlyingTrot::getSolver)
+    .def("get_contact_sequence", &MPCFlyingTrot::getContactSequence);
 }
 
 } // namespace python

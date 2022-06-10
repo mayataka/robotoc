@@ -506,8 +506,8 @@ double OCPSolver::KKTError() const {
 }
 
 
-double OCPSolver::cost() const {
-  return dms_.totalCost(ocp_);
+double OCPSolver::cost(const bool include_cost_barrier) const {
+  return dms_.totalCost(ocp_, include_cost_barrier);
 }
 
 

@@ -218,9 +218,11 @@ public:
   /// Before calling this function, ImpulseSplitOCP::evalOCP(),
   /// ImpulseSplitOCP::computeKKTResidual(),
   /// or ImpulseSplitOCP::computeKKTSystem() must be called.
+  /// @param[in] include_cost_barrier If true, includes the cost due to the 
+  /// barrier function. Default is true.
   /// @return The stage cost of this impulse stage.
   /// 
-  double stageCost() const;
+  double stageCost(const bool include_cost_barrier=true) const;
 
   ///
   /// @brief Returns the constraint violation of this impulse stage for the 
@@ -240,7 +242,7 @@ private:
   ConstraintsData constraints_data_;
   ImpulseStateEquation state_equation_;
   ImpulseDynamics impulse_dynamics_;
-  double stage_cost_;
+  double stage_cost_, barrier_cost_;
 
 };
 

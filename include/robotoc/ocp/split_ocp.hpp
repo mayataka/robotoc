@@ -386,9 +386,11 @@ public:
   /// @brief Returns the stage cost of this time stage for the line search.
   /// Before calling this function, SplitOCP::evalOCP(), 
   /// SplitOCP::computeKKTResidual(), SplitOCP::computeKKTSystem() must be called.
+  /// @param[in] include_cost_barrier If true, includes the cost due to the 
+  /// barrier function. Default is true.
   /// @return Stage cost of this time stage.
   /// 
-  double stageCost() const;
+  double stageCost(const bool include_cost_barrier=true) const;
 
   ///
   /// @brief Returns the constraint violation of this time stage for the 
@@ -434,7 +436,7 @@ private:
   StateEquation state_equation_;
   ContactDynamics contact_dynamics_;
   SwitchingConstraint switching_constraint_;
-  double stage_cost_;
+  double stage_cost_, barrier_cost_;
 
   template <typename SplitSolutionType>
   void computeKKTResidual_impl(Robot& robot, const ContactStatus& contact_status, 
