@@ -123,7 +123,9 @@ double CostFunction::linearizeStageCost(Robot& robot,
     kkt_residual.lx.array() *= f;
     kkt_residual.lu.array() *= f;
     kkt_residual.la.array() *= f;
-    kkt_residual.lf().array() *= f;
+    if (kkt_residual.lf().size() > 0) {
+      kkt_residual.lf().array() *= f;
+    }
   }
   return l;
 }
@@ -151,13 +153,15 @@ double CostFunction::quadratizeStageCost(Robot& robot,
     kkt_residual.lx.array() *= f;
     kkt_residual.lu.array() *= f;
     kkt_residual.la.array() *= f;
-    kkt_residual.lf().array() *= f;
     kkt_matrix.Qxx.array() *= f;
     kkt_matrix.Qxu.array() *= f;
     kkt_matrix.Quu.array() *= f;
     kkt_matrix.Qaa.array() *= f;
-    kkt_matrix.Qff().array() *= f;
-    kkt_matrix.Qqf().array() *= f;
+    if (kkt_residual.lf().size() > 0) {
+      kkt_residual.lf().array() *= f;
+      kkt_matrix.Qff().array() *= f;
+      kkt_matrix.Qqf().array() *= f;
+    }
   }
   return l;
 }
@@ -252,7 +256,9 @@ double CostFunction::linearizeImpulseCost(Robot& robot,
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_residual.ldv.array() *= f;
-    kkt_residual.lf().array() *= f;
+    if (kkt_residual.lf().size() > 0) {
+      kkt_residual.lf().array() *= f;
+    }
   }
   return l;
 }
@@ -278,11 +284,13 @@ double CostFunction::quadratizeImpulseCost(Robot& robot,
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_residual.ldv.array() *= f;
-    kkt_residual.lf().array() *= f;
     kkt_matrix.Qxx.array() *= f;
     kkt_matrix.Qdvdv.array() *= f;
-    kkt_matrix.Qff().array() *= f;
-    kkt_matrix.Qqf().array() *= f;
+    if (kkt_residual.lf().size() > 0) {
+      kkt_residual.lf().array() *= f;
+      kkt_matrix.Qff().array() *= f;
+      kkt_matrix.Qqf().array() *= f;
+    }
   }
   return l;
 }
