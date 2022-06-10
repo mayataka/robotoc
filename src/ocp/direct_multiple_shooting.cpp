@@ -165,18 +165,19 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
 }
 
 
-double DirectMultipleShooting::totalCost(const OCP& ocp) {
+double DirectMultipleShooting::totalCost(const OCP& ocp, 
+                                         const bool include_cost_barrier) {
   double total_cost = 0;
   for (int i=0; i<ocp.discrete().N(); ++i) {
-    total_cost += ocp[i].stageCost();
+    total_cost += ocp[i].stageCost(include_cost_barrier);
   }
-  total_cost += ocp.terminal.terminalCost();
+  total_cost += ocp.terminal.terminalCost(include_cost_barrier);
   for (int i=0; i<ocp.discrete().N_impulse(); ++i) {
-    total_cost += ocp.impulse[i].stageCost();
-    total_cost += ocp.aux[i].stageCost();
+    total_cost += ocp.impulse[i].stageCost(include_cost_barrier);
+    total_cost += ocp.aux[i].stageCost(include_cost_barrier);
   }
   for (int i=0; i<ocp.discrete().N_lift(); ++i) {
-    total_cost += ocp.lift[i].stageCost();
+    total_cost += ocp.lift[i].stageCost(include_cost_barrier);
   }
   return total_cost;
 }

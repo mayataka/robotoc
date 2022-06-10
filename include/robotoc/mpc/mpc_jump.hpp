@@ -102,6 +102,18 @@ public:
             const SolverOptions& solver_options, const bool sto=false);
 
   ///
+  /// @brief Resets the optimal control problem solover via the solution 
+  /// computed by init() or reset(). 
+  ///
+  void reset();
+
+  ///
+  /// @brief Resets the optimal control problem solover via the solution 
+  /// computed by init(), q, and v.
+  ///
+  void reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+
+  ///
   /// @brief Resets the optimal control problem solver using the previous 
   /// results of init() or reset().
   /// @param[in] t Initial time of the horizon. 
@@ -186,6 +198,20 @@ public:
   /// @return Shared ptr to the friction cone constraints.
   ///
   std::shared_ptr<FrictionCone> getFrictionConeHandle();
+
+  ///
+  /// @brief Gets the const handle of the MPC solver.  
+  /// @return Const reference to the MPC solver.
+  ///
+  const OCPSolver& getSolver() const { return ocp_solver_; }
+
+  ///
+  /// @brief Gets the const handle of the contact sequence.  
+  /// @return Const reference to the shared_ptr of the contact sequence.
+  ///
+  const std::shared_ptr<ContactSequence>& getContactSequence() const { 
+    return contact_sequence_; 
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

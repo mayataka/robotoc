@@ -21,6 +21,11 @@ PYBIND11_MODULE(mpc_pace, m) {
          py::arg("stance_time"), py::arg("swing_start_time"))
     .def("init", &MPCPace::init,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
+    .def("reset", 
+          static_cast<void (MPCPace::*)()>(&MPCPace::reset))
+    .def("reset", 
+          static_cast<void (MPCPace::*)(const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCPace::reset),
+          py::arg("q"), py::arg("v"))
     .def("set_solver_options", &MPCPace::setSolverOptions,
           py::arg("solver_options"))
     .def("update_solution", &MPCPace::updateSolution,
@@ -38,7 +43,9 @@ PYBIND11_MODULE(mpc_pace, m) {
     .def("get_swing_foot_cost_handle", &MPCPace::getSwingFootCostHandle)
     .def("get_com_cost_handle", &MPCPace::getCoMCostHandle)
     .def("get_constraints_handle", &MPCPace::getConstraintsHandle)
-    .def("get_friction_cone_handle", &MPCPace::getFrictionConeHandle);
+    .def("get_friction_cone_handle", &MPCPace::getFrictionConeHandle)
+    .def("get_solver", &MPCPace::getSolver)
+    .def("get_contact_sequence", &MPCPace::getContactSequence);
 }
 
 } // namespace python

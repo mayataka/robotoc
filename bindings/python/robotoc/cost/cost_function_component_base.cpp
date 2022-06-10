@@ -100,7 +100,34 @@ PYBIND11_MODULE(cost_function_component_base, m) {
   py::class_<CostFunctionComponentBase, 
              PyCostFunctionComponentBase, 
              std::shared_ptr<CostFunctionComponentBase>>(m, "CostFunctionComponentBase")
-    .def(py::init<>());
+    .def(py::init<>())
+    .def("useKinematics", &CostFunctionComponentBase::useKinematics)
+    .def("evalStageCost", &CostFunctionComponentBase::evalStageCost,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), 
+          py::arg("grid_info"), py::arg("s"))
+    .def("evalStageCostDerivatives", &CostFunctionComponentBase::evalStageCostDerivatives,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), 
+          py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"))
+    .def("evalStageCostHessian", &CostFunctionComponentBase::evalStageCostHessian,
+          py::arg("robot"), py::arg("contact_status"), py::arg("data"), 
+          py::arg("grid_info"), py::arg("s"), py::arg("kkt_matrix"))
+    .def("evalTerminalCost", &CostFunctionComponentBase::evalTerminalCost,
+          py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"))
+    .def("evalTerminalCostDerivatives", &CostFunctionComponentBase::evalTerminalCostDerivatives,
+          py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"), 
+          py::arg("kkt_residual"))
+    .def("evalTerminalCostHessian", &CostFunctionComponentBase::evalTerminalCostHessian,
+          py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"), 
+          py::arg("kkt_matrix"))
+    .def("evalImpulseCost", &CostFunctionComponentBase::evalImpulseCost,
+          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+          py::arg("grid_info"), py::arg("s"))
+    .def("evalImpulseCostDerivatives", &CostFunctionComponentBase::evalImpulseCostDerivatives,
+          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+          py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"))
+    .def("evalImpulseCostHessian", &CostFunctionComponentBase::evalImpulseCostHessian,
+          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+          py::arg("grid_info"), py::arg("s"), py::arg("kkt_matrix"));
 
 }
 
