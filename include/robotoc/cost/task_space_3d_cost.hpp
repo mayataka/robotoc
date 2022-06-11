@@ -124,7 +124,7 @@ public:
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const;
+                                  ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,

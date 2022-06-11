@@ -62,7 +62,7 @@ public:
 
   KinematicsLevel kinematicsLevel() const override;
 
-  void allocateExtraData(ConstraintComponentData& data) const {}
+  void allocateExtraData(ConstraintComponentData& data) const override {}
 
   bool isFeasible(Robot& robot, const ContactStatus& contact_status, 
                   ConstraintComponentData& data, 
