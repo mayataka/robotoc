@@ -69,6 +69,22 @@ if (OPTIMIZE_FOR_NATIVE)
   )
 endif()
 
+#############
+## Mac OSX ##
+#############
+# In Mac OSX, we have to explicitly include Boost to avoid compilation errors.
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(MACOSX TRUE)
+endif()
+if (MACOSX)
+  find_package(Boost REQUIRED)
+  target_include_directories(
+    ${PROJECT_NAME} 
+    PUBLIC
+    ${Boost_INCLUDE_DIRS}
+  )
+endif()
+
 ##################
 ## Build viewer ##
 ##################

@@ -20,7 +20,7 @@
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [Pinocchio](https://github.com/stack-of-tasks/pinocchio).
 
 ## Requirements
-- Ubuntu 18.04 or 20.04
+- Ubuntu 22.04, 20.04, and 18.04 (possibly Mac OSX, but not well tested)
 - gcc (at least C++11 is required), CMake (at least version 3.11)
 - Eigen3, [Pinocchio](https://stack-of-tasks.github.io/pinocchio/download.html)  , 
 - Python3, NumPy (for Python binding)
@@ -81,6 +81,15 @@ cmake .. -DBUILD_VIEWER=ON
 cmake .. -DBUILD_PYTHON_INTERFACE=OFF
 ```
 
+8. In OSX, explicitly set g++ as the complier. First, find the path of g++ as 
+```
+ls -l /usr/local/bin | grep g++
+```
+Then set the full path in the cmake as 
+```
+cmake .. -DCMAKE_CXX_COMPILER=FULL_PATH_TO_GPLUSPLUS
+```
+
 
 ## Usage
 ### C++:
@@ -96,11 +105,6 @@ target_link_libraries(
     YOUR_EXECTABLE
     PRIVATE
     robotoc::robotoc
-)
-target_include_directories(
-    YOUR_EXECTABLE
-    PRIVATE
-    ${ROBOTOC_INCLUDE_DIR}
 )
 ```
 
