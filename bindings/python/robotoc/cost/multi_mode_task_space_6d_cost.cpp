@@ -16,6 +16,8 @@ PYBIND11_MODULE(multi_mode_task_space_6d_cost, m) {
              std::shared_ptr<MultiModeTaskSpace6DCost>>(m, "MultiModeTaskSpace6DCost")
     .def(py::init<const Robot&, const int>(),
           py::arg("robot"), py::arg("frame_id"))
+    .def(py::init<const Robot&, const std::string&>(),
+          py::arg("robot"), py::arg("frame_name"))
     .def("set_x6d_ref", 
           static_cast<void (MultiModeTaskSpace6DCost::*)(const Eigen::Vector3d&, const Eigen::Matrix3d&, const int)>(&MultiModeTaskSpace6DCost::set_x6d_ref),
           py::arg("trans_ref"), py::arg("rot_ref"), py::arg("contact_mode_id")=0)

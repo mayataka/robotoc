@@ -9,7 +9,6 @@ contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-L_foot_id, R_foot_id = robot.contact_frames()
 
 knee_angle = np.pi / 6
 step_length = np.array([0.2, 0, 0]) 
@@ -49,7 +48,7 @@ q = np.array([0, 0, 0, 0, 0, 0, 1,
               0.5*knee_angle, 0, 0, -knee_angle, 0.5*knee_angle, 0,  # left leg
               0.5*knee_angle, 0, 0, -knee_angle, 0.5*knee_angle, 0]) # right leg
 robot.forward_kinematics(q)
-q[2] = - 0.5 * (robot.frame_position(L_foot_id)[2] + robot.frame_position(R_foot_id)[2]) 
+q[2] = - 0.5 * (robot.frame_position('l_sole')[2] + robot.frame_position('r_sole')[2]) 
 v = np.zeros(robot.dimv())
 t = 0.0
 option_init = robotoc.SolverOptions()

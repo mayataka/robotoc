@@ -19,6 +19,8 @@ PYBIND11_MODULE(mpc_biped_walk, m) {
     .def("set_gait_pattern", &MPCBipedWalk::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("double_support_time"), py::arg("swing_start_time"))
+    .def("init", &MPCBipedWalk::init,
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("solver_options"))
     .def("reset", 
           static_cast<void (MPCBipedWalk::*)()>(&MPCBipedWalk::reset))
     .def("reset", 

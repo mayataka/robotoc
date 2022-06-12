@@ -110,9 +110,9 @@ MPCFlyingTrot::MPCFlyingTrot(const Robot& robot, const double T,
   constraints_->push_back(friction_cone_);
   // constraints_->push_back(impulse_friction_cone);
   // create contact status
-  cs_standing_.activateContacts({0, 1, 2, 3});
-  cs_lfrh_.activateContacts({0, 3});
-  cs_rflh_.activateContacts({1, 2});
+  cs_standing_.activateContacts(std::vector<int>({0, 1, 2, 3}));
+  cs_lfrh_.activateContacts(std::vector<int>({0, 3}));
+  cs_rflh_.activateContacts(std::vector<int>({1, 2}));
 }
 
 

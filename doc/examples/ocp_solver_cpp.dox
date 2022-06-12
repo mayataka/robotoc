@@ -47,18 +47,9 @@ First, define the robot model with contact frames (in this case, the contact fra
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
                        contact_frames, contact_types, baumgarte_time_step);
-  const int LF_foot_id = robot.contactFrames()[0];
-  const int LH_foot_id = robot.contactFrames()[1];
-  const int RF_foot_id = robot.contactFrames()[2];
-  const int RH_foot_id = robot.contactFrames()[3];
 ```
 @note 
-- If you do not know the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
-```
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase);
-  std::cout << robot << std::endl;
-```
-- `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
+`baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
 The best choice of `baumgarte_time_step` may be the time step of the optimal control problem. 
 However, it is often too small to make the optimization problem high nonlinear. 
 A moderate value such as several times of the time step of optimal control problem may be sufficient 
@@ -116,10 +107,10 @@ Next, we construct the cost function (TODO: write details about the cost functio
   cost->push_back(config_cost);
 
   robot.updateFrameKinematics(q_standing);
-  const Eigen::Vector3d x3d0_LF = robot.framePosition(LF_foot_id);
-  const Eigen::Vector3d x3d0_LH = robot.framePosition(LH_foot_id);
-  const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
-  const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
+  const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
+  const Eigen::Vector3d x3d0_LH = robot.framePosition("LH_FOOT");
+  const Eigen::Vector3d x3d0_RF = robot.framePosition("RF_FOOT");
+  const Eigen::Vector3d x3d0_RH = robot.framePosition("RH_FOOT");
 
   const Eigen::Vector3d com_ref0_flying_up = robot.CoM();
   const Eigen::Vector3d vcom_ref_flying_up = 0.5*jump_length/flying_up_time 
@@ -174,9 +165,10 @@ Then we can set an impulse event and a lift event to the contact sequence.
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
-  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
+      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
-  contact_status_standing.activateContacts({0, 1, 2, 3});
+  contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 ```
@@ -190,10 +182,10 @@ Then the all the contacts are inactive.
 Then a lift event is appended into the back of the contact sequence.
 Finally, we set the contact status after touch-down as
 ```
-  contact_positions[0].noalias() += jump_length;
-  contact_positions[1].noalias() += jump_length;
-  contact_positions[2].noalias() += jump_length;
-  contact_positions[3].noalias() += jump_length;
+  contact_positions["LF_FOOT"].noalias() += jump_length;
+  contact_positions["LH_FOOT"].noalias() += jump_length;
+  contact_positions["RF_FOOT"].noalias() += jump_length;
+  contact_positions["RH_FOOT"].noalias() += jump_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);

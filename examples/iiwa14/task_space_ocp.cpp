@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
   // Create a robot.
   const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
   robotoc::Robot robot(path_to_urdf);
-  const int ee_frame_id = robot.frameId("iiwa_link_ee_kuka");
+  const std::string ee_frame = "iiwa_link_ee_kuka";
 
   // Change the limits from the default parameters.
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 50));
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
   auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
-  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, x6d_ref);
+  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame, x6d_ref);
   task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   task_cost->set_x6df_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);

@@ -1,6 +1,7 @@
 #ifndef ROBOTOC_SWING_FOOT_COST_HPP_
 #define ROBOTOC_SWING_FOOT_COST_HPP_
 
+#include <string>
 #include <memory>
 
 #include "Eigen/Core"
@@ -83,6 +84,15 @@ public:
                 const std::shared_ptr<SwingFootRefBase>& x3d_ref);
 
   ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] contact_frame_name Name of the contact frame of the foot of interest.
+  /// @param[in] x3d_ref Reference position.
+  ///
+  SwingFootCost(const Robot& robot, const std::string& contact_frame_name,
+                const std::shared_ptr<SwingFootRefBase>& x3d_ref);
+
+  ///
   /// @brief Default constructor. 
   ///
   SwingFootCost();
@@ -161,7 +171,7 @@ public:
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const;
+                                  ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,

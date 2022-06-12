@@ -99,7 +99,7 @@ void TimeVaryingTaskSpace3DCostTest::testStageCost(Robot& robot, const int frame
   const Eigen::Vector3d x3d0_ref = Eigen::Vector3d::Random();
   const Eigen::Vector3d vx3d0_ref = Eigen::Vector3d::Random();
   auto ref = std::make_shared<TimeVaryingTaskSpace3DRef>(x3d0_ref, vx3d0_ref, t0, tf);
-  auto cost = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, frame_id, ref);
+  auto cost = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, robot.frameName(frame_id), ref);
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());

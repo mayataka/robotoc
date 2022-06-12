@@ -109,9 +109,9 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   constraints_->push_back(friction_cone_);
   // constraints_->push_back(impulse_friction_cone);
   // create contact status
-  cs_standing_.activateContacts({0, 1, 2, 3});
-  cs_left_swing_.activateContacts({2, 3});
-  cs_right_swing_.activateContacts({0, 1});
+  cs_standing_.activateContacts(std::vector<int>({0, 1, 2, 3}));
+  cs_left_swing_.activateContacts(std::vector<int>({2, 3}));
+  cs_right_swing_.activateContacts(std::vector<int>({0, 1}));
 }
 
 

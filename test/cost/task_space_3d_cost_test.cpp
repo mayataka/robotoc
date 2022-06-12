@@ -46,7 +46,7 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const Eigen::Vector3d x3df_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d x3di_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();
-  auto cost = std::make_shared<TaskSpace3DCost >(robot, frame_id);
+  auto cost = std::make_shared<TaskSpace3DCost >(robot, robot.frameName(frame_id));
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
   cost->set_x3d_weight(x3d_weight);

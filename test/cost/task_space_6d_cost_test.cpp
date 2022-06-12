@@ -50,7 +50,7 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const SE3 x6d_ref = SE3::Random();
   const Eigen::Vector3d position_ref = x6d_ref.translation();
   const Eigen::Matrix3d rotation_ref = x6d_ref.rotation();
-  auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
+  auto cost = std::make_shared<TaskSpace6DCost>(robot, robot.frameName(frame_id));
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
   cost->set_x6d_weight(x6d_weight.tail(3), x6d_weight.head(3));

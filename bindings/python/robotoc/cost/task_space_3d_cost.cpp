@@ -15,6 +15,8 @@ PYBIND11_MODULE(task_space_3d_cost, m) {
              std::shared_ptr<TaskSpace3DCost>>(m, "TaskSpace3DCost")
     .def(py::init<const Robot&, const int>(),
           py::arg("robot"), py::arg("frame_id"))
+    .def(py::init<const Robot&, const std::string&>(),
+          py::arg("robot"), py::arg("frame_name"))
     .def("set_x3d_ref", &TaskSpace3DCost::set_x3d_ref,
           py::arg("x3d_ref"))
     .def("set_x3d_weight", &TaskSpace3DCost::set_x3d_weight, 

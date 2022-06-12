@@ -16,6 +16,9 @@ PYBIND11_MODULE(swing_foot_cost, m) {
     .def(py::init<const Robot&, const int,
                   const std::shared_ptr<SwingFootRefBase>&>(),
           py::arg("robot"), py::arg("contact_index"), py::arg("x3d_ref"))
+    .def(py::init<const Robot&, const std::string&,
+                  const std::shared_ptr<SwingFootRefBase>&>(),
+          py::arg("robot"), py::arg("contact_frame_name"), py::arg("x3d_ref"))
     .def("set_x3d_ref", &SwingFootCost::set_x3d_ref,
           py::arg("x3d_ref"))
     .def("set_x3d_weight", &SwingFootCost::set_x3d_weight,

@@ -348,6 +348,14 @@ public:
   const Eigen::Vector3d& framePosition(const int frame_id) const;
 
   ///
+  /// @brief Returns the position of the frame. Before calling this function, 
+  /// updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @return Const reference to the position of the frame.
+  ///
+  const Eigen::Vector3d& framePosition(const std::string& frame_name) const;
+
+  ///
   /// @brief Returns the rotation matrix of the frame. Before calling this  
   /// function, updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
@@ -356,12 +364,28 @@ public:
   const Eigen::Matrix3d& frameRotation(const int frame_id) const;
 
   ///
+  /// @brief Returns the rotation matrix of the frame. Before calling this  
+  /// function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @return Const reference to the rotation matrix of the frame.
+  ///
+  const Eigen::Matrix3d& frameRotation(const std::string& frame_name) const;
+
+  ///
   /// @brief Returns the SE(3) of the frame. Before calling this function, 
   /// updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
   /// @return Const reference to the SE(3) of the frame.
   ///
   const SE3& framePlacement(const int frame_id) const;
+
+  ///
+  /// @brief Returns the SE(3) of the frame. Before calling this function, 
+  /// updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @return Const reference to the SE(3) of the frame.
+  ///
+  const SE3& framePlacement(const std::string& frame_name) const;
 
   ///
   /// @brief Returns the position of the center of mass. Before calling this 
@@ -674,6 +698,13 @@ public:
   int frameId(const std::string& frame_name) const;
 
   ///
+  /// @brief Gets the name of the specified frame.
+  /// @param[in] frame_id Frame id of interest.
+  /// @return Name of the specified frame. 
+  /// 
+  std::string frameName(const int frame_id) const;
+
+  ///
   /// @brief Returns the total weight of this robot model.
   /// @return The total weight of this robot model.
   ///
@@ -758,16 +789,35 @@ public:
   std::vector<int> contactFrames() const;
 
   ///
+  /// @brief Retruns the names of the contact frames involving the point or 
+  //// surface contacts. 
+  /// @return Names of the contact frames.
+  /// 
+  std::vector<std::string> contactFrameNames() const;
+
+  ///
   /// @brief Retruns the indices of the frames involving the contacts. 
   /// @return Indices of the contact frames.
   /// 
   std::vector<int> pointContactFrames() const;
 
   ///
+  /// @brief Retruns the names of the frames involving the contacts. 
+  /// @return Names of the contact frames.
+  /// 
+  std::vector<std::string> pointContactFrameNames() const;
+
+  ///
   /// @brief Retruns the indices of the frames involving the surface contacts. 
   /// @return Indices of the surface contact frames.
   /// 
   std::vector<int> surfaceContactFrames() const;
+
+  ///
+  /// @brief Retruns the names of the frames involving the surface contacts. 
+  /// @return Names of the surface contact frames.
+  /// 
+  std::vector<std::string> surfaceContactFrameNames() const;
 
   ///
   /// @brief Creates a ContactStatus for this robot model. 
@@ -830,6 +880,7 @@ private:
   pinocchio::Data data_, impulse_data_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
   std::vector<int> contact_frames_;
+  std::vector<std::string> contact_frame_names_;
   std::vector<ContactType> contact_types_;
   aligned_vector<PointContact> point_contacts_;
   aligned_vector<SurfaceContact> surface_contacts_;

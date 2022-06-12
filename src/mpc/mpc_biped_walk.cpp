@@ -101,9 +101,9 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
   constraints_->push_back(wrench_cone_);
   constraints_->push_back(impulse_wrench_cone_);
   // create contact status
-  cs_standing_.activateContacts({0, 1});
-  cs_right_swing_.activateContacts({0});
-  cs_left_swing_.activateContacts({1});
+  cs_standing_.activateContacts(std::vector<int>({0, 1}));
+  cs_right_swing_.activateContacts(std::vector<int>({0}));
+  cs_left_swing_.activateContacts(std::vector<int>({1}));
 }
 
 

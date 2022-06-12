@@ -206,13 +206,30 @@ inline const Eigen::Vector3d& Robot::framePosition(const int frame_id) const {
 }
 
 
+inline const Eigen::Vector3d& Robot::framePosition(
+    const std::string& frame_name) const {
+  return framePosition(frameId(frame_name));
+}
+
+
 inline const Eigen::Matrix3d& Robot::frameRotation(const int frame_id) const {
   return data_.oMf[frame_id].rotation();
 }
 
 
+inline const Eigen::Matrix3d& Robot::frameRotation(
+    const std::string& frame_name) const {
+  return frameRotation(frameId(frame_name));
+}
+
+
 inline const SE3& Robot::framePlacement(const int frame_id) const {
   return data_.oMf[frame_id];
+}
+
+
+inline const SE3& Robot::framePlacement(const std::string& frame_name) const {
+  return framePlacement(frameId(frame_name));
 }
 
 
@@ -786,6 +803,11 @@ inline int Robot::frameId(const std::string& frame_name) const {
 }
 
 
+inline std::string Robot::frameName(const int frame_id) const {
+  return  model_.frames[frame_id].name;
+}
+
+
 inline Eigen::VectorXd Robot::jointEffortLimit() const {
   return joint_effort_limit_;
 }
@@ -873,12 +895,26 @@ inline std::vector<int> Robot::contactFrames() const {
 }
 
 
+inline std::vector<std::string> Robot::contactFrameNames() const {
+  return contact_frame_names_;
+}
+
+
 inline std::vector<int> Robot::pointContactFrames() const {
   std::vector<int> point_contact_frames;
   for (const auto& e : point_contacts_) {
     point_contact_frames.push_back(e.contact_frame_id());
   }
   return point_contact_frames;
+}
+
+
+inline std::vector<std::string> Robot::pointContactFrameNames() const {
+  std::vector<std::string> point_contact_frame_names;
+  for (const auto& e : point_contacts_) {
+    point_contact_frame_names.push_back(frameName(e.contact_frame_id()));
+  }
+  return point_contact_frame_names;
 }
 
 
@@ -891,13 +927,22 @@ inline std::vector<int> Robot::surfaceContactFrames() const {
 }
 
 
+inline std::vector<std::string> Robot::surfaceContactFrameNames() const {
+  std::vector<std::string> surface_contact_frame_names;
+  for (const auto& e : surface_contacts_) {
+    surface_contact_frame_names.push_back(frameName(e.contact_frame_id()));
+  }
+  return surface_contact_frame_names;
+}
+
+
 inline ContactStatus Robot::createContactStatus() const {
-  return ContactStatus(contact_types_);
+  return ContactStatus(contact_types_, contact_frame_names_);
 }
 
 
 inline ImpulseStatus Robot::createImpulseStatus() const {
-  return ImpulseStatus(contact_types_);
+  return ImpulseStatus(contact_types_, contact_frame_names_);
 }
 
 } // namespace robotoc

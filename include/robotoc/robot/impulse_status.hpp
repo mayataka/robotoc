@@ -23,10 +23,12 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] contact_types Types of contacts. 
+  /// @param[in] contact_frame_names Names of contact frames. Default is empty.
   /// @param[in] impulse_mode_id Identifier number of the impulse. Can be used 
   /// only in user-defined cost and constraints. Default is 0.
   ///
   ImpulseStatus(const std::vector<ContactType>& contact_types, 
+                const std::vector<std::string>& contact_frame_names={},
                 const int impulse_mode_id=0);
 
   ///

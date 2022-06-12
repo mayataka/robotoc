@@ -12,11 +12,6 @@ macro(add_benchmark BENCHMARK)
     ${BENCHMARK} 
     ${BENCHMARK}.cpp
   )
-  target_include_directories(
-    ${BENCHMARK} 
-    PRIVATE
-    ${ROBOTOC_INCLUDE_DIR}
-  )
   target_link_libraries(
     ${BENCHMARK} 
     PRIVATE
@@ -28,11 +23,6 @@ macro(add_example EXAMPLE)
   add_executable(
     ${EXAMPLE} 
     ${EXAMPLE}.cpp
-  )
-  target_include_directories(
-    ${EXAMPLE} 
-    PRIVATE
-  ${ROBOTOC_INCLUDE_DIR}
   )
   target_link_libraries(
     ${EXAMPLE} 

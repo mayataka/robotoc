@@ -40,10 +40,6 @@ int main(int argc, char *argv[]) {
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
                        contact_frames, contact_types, baumgarte_time_step);
-  const int LF_foot_id = robot.contactFrames()[0];
-  const int LH_foot_id = robot.contactFrames()[1];
-  const int RF_foot_id = robot.contactFrames()[2];
-  const int RH_foot_id = robot.contactFrames()[3];
 
   const double dt = 0.02;
   const Eigen::Vector3d step_length = {0.275, 0, 0};
@@ -93,10 +89,10 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
 
   robot.updateFrameKinematics(q_standing);
-  const Eigen::Vector3d x3d0_LF = robot.framePosition(LF_foot_id);
-  const Eigen::Vector3d x3d0_LH = robot.framePosition(LH_foot_id);
-  const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
-  const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
+  const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
+  const Eigen::Vector3d x3d0_LH = robot.framePosition("LH_FOOT");
+  const Eigen::Vector3d x3d0_RF = robot.framePosition("RF_FOOT");
+  const Eigen::Vector3d x3d0_RH = robot.framePosition("RH_FOOT");
   const double LF_t0 = t0 + swing_time + double_support_time;
   const double LH_t0 = t0;
   const double RF_t0 = t0 + swing_time + double_support_time;
@@ -113,10 +109,10 @@ int main(int argc, char *argv[]) {
   auto RH_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_RH, step_length, step_height, 
                                                                      RH_t0, swing_time, 
                                                                      swing_time+2*double_support_time, false);
-  auto LF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, LF_foot_id, LF_foot_ref);
-  auto LH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, LH_foot_id, LH_foot_ref);
-  auto RF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, RF_foot_id, RF_foot_ref);
-  auto RH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, RH_foot_id, RH_foot_ref);
+  auto LF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "LF_FOOT", LF_foot_ref);
+  auto LH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "LH_FOOT", LH_foot_ref);
+  auto RF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "RF_FOOT", RF_foot_ref);
+  auto RH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "RH_FOOT", RH_foot_ref);
   const Eigen::Vector3d foot_track_weight = Eigen::Vector3d::Constant(1.0e06);
   LF_cost->set_x3d_weight(foot_track_weight);
   LH_cost->set_x3d_weight(foot_track_weight);
@@ -159,30 +155,31 @@ int main(int argc, char *argv[]) {
   const int max_num_each_discrete_events = 2*cycle;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
-  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
+      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
-  contact_status_standing.activateContacts({0, 1, 2, 3});
+  contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 
   auto contact_status_hip_swing = robot.createContactStatus();
-  contact_status_hip_swing.activateContacts({0, 2});
+  contact_status_hip_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "RF_FOOT"}));
   contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, t0);
 
-  contact_positions[1].noalias() += step_length;
-  contact_positions[3].noalias() += step_length;
+  contact_positions["LH_FOOT"].noalias() += step_length;
+  contact_positions["RH_FOOT"].noalias() += step_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, t0+swing_time);
 
   auto contact_status_lfrf_swing = robot.createContactStatus();
-  contact_status_lfrf_swing.activateContacts({1, 3});
+  contact_status_lfrf_swing.activateContacts(std::vector<std::string>({"LH_FOOT", "RH_FOOT"}));
   contact_status_lfrf_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_lfrf_swing, 
                               t0+swing_time+double_support_time);
 
-  contact_positions[0].noalias() += step_length;
-  contact_positions[2].noalias() += step_length;
+  contact_positions["LF_FOOT"].noalias() += step_length;
+  contact_positions["RF_FOOT"].noalias() += step_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+2*swing_time+double_support_time);
@@ -192,8 +189,8 @@ int main(int argc, char *argv[]) {
     contact_status_hip_swing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_hip_swing, t1);
 
-    contact_positions[1].noalias() += step_length;
-    contact_positions[3].noalias() += step_length;
+    contact_positions["LH_FOOT"].noalias() += step_length;
+    contact_positions["RH_FOOT"].noalias() += step_length;
     contact_status_standing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_standing, t1+swing_time);
 
@@ -201,8 +198,8 @@ int main(int argc, char *argv[]) {
     contact_sequence->push_back(contact_status_lfrf_swing, 
                                 t1+swing_time+double_support_time);
 
-    contact_positions[0].noalias() += step_length;
-    contact_positions[2].noalias() += step_length;
+    contact_positions["LF_FOOT"].noalias() += step_length;
+    contact_positions["RF_FOOT"].noalias() += step_length;
     contact_status_standing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_standing, 
                                 t1+2*swing_time+double_support_time);

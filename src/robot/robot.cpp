@@ -11,6 +11,7 @@ Robot::Robot(const std::string& path_to_urdf,
     impulse_model_(),
     data_(),
     impulse_data_(),
+    contact_frame_names_(),
     contact_frames_(),
     contact_types_(),
     point_contacts_(),
@@ -82,6 +83,10 @@ Robot::Robot(const std::string& path_to_urdf,
                 model_.joints.size(), pinocchio::Force::Zero());
   max_num_contacts_ = contact_frames.size();
   contact_frames_ = contact_frames;
+  contact_frame_names_.clear();
+  for (const auto e : contact_frames_) {
+    contact_frame_names_.push_back(model_.frames[e].name);
+  }
   contact_types_ = contact_types; 
   for (int i=0; i<contact_frames.size(); ++i) {
     switch (contact_types[i]) {
@@ -155,6 +160,7 @@ Robot::Robot(const std::string& path_to_urdf,
     }
     contact_frames_.push_back(model_.getFrameId(e));
   }
+  contact_frame_names_ = contact_frame_names;
   contact_types_ = contact_types; 
   for (int i=0; i<contact_frames_.size(); ++i) {
     switch (contact_types[i]) {
@@ -211,6 +217,7 @@ Robot::Robot()
     data_(),
     impulse_data_(),
     contact_frames_(),
+    contact_frame_names_(),
     contact_types_(),
     point_contacts_(),
     surface_contacts_(),
@@ -348,13 +355,13 @@ void Robot::disp(std::ostream& os) const {
     os << "      name: " << model_.names[i] << std::endl;
     os << model_.joints[i] << std::endl;
   }
-  os << "  effort limit = [" << model_.effortLimit.transpose() << "]" 
+  os << "  effort limit = [" << joint_effort_limit_.transpose() << "]" 
             << std::endl;
-  os << "  velocity limit = [" << model_.velocityLimit.transpose() << "]"
+  os << "  velocity limit = [" << joint_velocity_limit_.transpose() << "]"
             << std::endl;
-  os << "  lowerl position limit = [" << model_.lowerPositionLimit.transpose() 
+  os << "  lowerl position limit = [" << lower_joint_position_limit_.transpose() 
             << "]" << std::endl;
-  os << "  upper position limit = [" << model_.upperPositionLimit.transpose() 
+  os << "  upper position limit = [" << upper_joint_position_limit_.transpose() 
             << "]" << std::flush; 
 }
 

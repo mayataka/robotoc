@@ -16,6 +16,9 @@ PYBIND11_MODULE(time_varying_task_space_6d_cost, m) {
     .def(py::init<const Robot&, const int, 
                   const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>&>(),
           py::arg("robot"), py::arg("frame_id"), py::arg("x6d_ref"))
+    .def(py::init<const Robot&, const std::string&, 
+                  const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>&>(),
+          py::arg("robot"), py::arg("frame_name"), py::arg("x6d_ref"))
     .def("set_x6d_ref", &TimeVaryingTaskSpace6DCost::set_x6d_ref,
           py::arg("x6d_ref"))
     .def("set_x6d_weight", &TimeVaryingTaskSpace6DCost::set_x6d_weight,

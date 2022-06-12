@@ -15,6 +15,8 @@ PYBIND11_MODULE(task_space_6d_cost, m) {
              std::shared_ptr<TaskSpace6DCost>>(m, "TaskSpace6DCost")
     .def(py::init<const Robot&, const int>(),
           py::arg("robot"), py::arg("frame_id"))
+    .def(py::init<const Robot&, const std::string&>(),
+          py::arg("robot"), py::arg("frame_name"))
     .def("set_x6d_ref", &TaskSpace6DCost::set_x6d_ref,
           py::arg("trans_ref"), py::arg("rot_ref"))
     .def("set_x6d_weight", &TaskSpace6DCost::set_x6d_weight,

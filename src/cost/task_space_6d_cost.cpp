@@ -14,6 +14,12 @@ TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id)
 }
 
 
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, 
+                                 const std::string& frame_name)
+  : TaskSpace6DCost(robot, robot.frameId(frame_name)) {
+}
+
+
 TaskSpace6DCost::TaskSpace6DCost()
   : CostFunctionComponentBase(),
     frame_id_(0),

@@ -1,6 +1,7 @@
 #ifndef ROBOTOC_TIME_VARYING_TASK_SPACE_6D_COST_HPP_
 #define ROBOTOC_TIME_VARYING_TASK_SPACE_6D_COST_HPP_
 
+#include <string>
 #include <memory>
 
 #include "Eigen/Core"
@@ -92,6 +93,16 @@ public:
   ///
   TimeVaryingTaskSpace6DCost(
       const Robot& robot, const int frame_id, 
+      const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_name Frame of interest.
+  /// @param[in] ref Shared ptr to the reference position.
+  ///
+  TimeVaryingTaskSpace6DCost(
+      const Robot& robot, const std::string& frame_name, 
       const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref);
 
   ///
@@ -198,7 +209,7 @@ public:
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const;
+                                  ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,

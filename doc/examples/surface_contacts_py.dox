@@ -22,15 +22,9 @@ contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-L_foot_id, R_foot_id = robot.contact_frames()
 ```
 @note 
-- If you do not know the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
-```
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase)
-print(robot)
-```
-- `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
+`baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
 The best choice of `baumgarte_time_step` may be the time step of the optimal control problem. 
 However, it is often too small to make the optimization problem high nonlinear. 
 A moderate value such as several times of the time step of optimal control problem may be sufficient 
@@ -110,12 +104,12 @@ We set the initial contact status of the robot.
 In the beginning, the robot is standing, so all the contacts are active.
 ```
 robot.forward_kinematics(q_standing)
-x3d0_L = robot.frame_placement(L_foot_id)
-x3d0_R = robot.frame_placement(R_foot_id)
-contact_placements = [x3d0_L, x3d0_R]
+x3d0_L = robot.frame_placement('l_sole')
+x3d0_R = robot.frame_placement('r_sole')
+contact_placements = {'l_sole': x3d0_L, 'r_sole': x3d0_R} 
 
 contact_status_standing = robot.create_contact_status()
-contact_status_standing.activate_contacts([0, 1])
+contact_status_standing.activate_contacts(['l_sole', 'r_sole'])
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.init_contact_sequence(contact_status_standing)
 ```
@@ -129,8 +123,8 @@ contact_sequence.push_back(contact_status_flying, t0+ground_time, sto=True)
 Then a lift event is appended into the back of the contact sequence.
 The next contact status after touch-down as
 ```
-contact_placements[0].trans = contact_placements[0].trans + jump_length
-contact_placements[1].trans = contact_placements[1].trans + jump_length 
+contact_placements['l_sole'].trans = contact_placements['l_sole'].trans + jump_length
+contact_placements['r_sole'].trans = contact_placements['r_sole'].trans + jump_length 
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
 ```
@@ -139,8 +133,8 @@ We further add an impulse event and a lift event as
 ```
 contact_sequence.push_back(contact_status_flying, t0+2*ground_time+flying_time, sto=True)
 
-contact_placements[0].trans = contact_placements[0].trans + jump_length 
-contact_placements[1].trans = contact_placements[1].trans + jump_length 
+contact_placements['l_sole'].trans = contact_placements['l_sole'].trans + jump_length 
+contact_placements['r_sole'].trans = contact_placements['r_sole'].trans + jump_length 
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_time, sto=True)
 ```

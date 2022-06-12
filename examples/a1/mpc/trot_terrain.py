@@ -9,7 +9,6 @@ contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
 step_length = np.array([0.15, 0, 0]) 
 yaw_cmd = 0.0

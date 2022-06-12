@@ -40,10 +40,6 @@ int main(int argc, char *argv[]) {
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
                        contact_frames, contact_types, baumgarte_time_step);
-  const int LF_foot_id = robot.contactFrames()[0];
-  const int LH_foot_id = robot.contactFrames()[1];
-  const int RF_foot_id = robot.contactFrames()[2];
-  const int RH_foot_id = robot.contactFrames()[3];
 
   const double dt = 0.01;
   const Eigen::Vector3d jump_length = {0.5, 0, 0};
@@ -94,10 +90,10 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
 
   robot.updateFrameKinematics(q_standing);
-  const Eigen::Vector3d x3d0_LF = robot.framePosition(LF_foot_id);
-  const Eigen::Vector3d x3d0_LH = robot.framePosition(LH_foot_id);
-  const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
-  const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
+  const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
+  const Eigen::Vector3d x3d0_LH = robot.framePosition("LH_FOOT");
+  const Eigen::Vector3d x3d0_RF = robot.framePosition("RF_FOOT");
+  const Eigen::Vector3d x3d0_RH = robot.framePosition("RH_FOOT");
 
   const Eigen::Vector3d com_ref0_flying_up = robot.CoM();
   const Eigen::Vector3d vcom_ref_flying_up = 0.5*jump_length/flying_up_time 
@@ -142,19 +138,20 @@ int main(int argc, char *argv[]) {
   const int max_num_each_discrete_events = 1;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
-  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
+      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
-  contact_status_standing.activateContacts({0, 1, 2, 3});
+  contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time);
 
-  contact_positions[0].noalias() += jump_length;
-  contact_positions[1].noalias() += jump_length;
-  contact_positions[2].noalias() += jump_length;
-  contact_positions[3].noalias() += jump_length;
+  contact_positions["LF_FOOT"].noalias() += jump_length;
+  contact_positions["LH_FOOT"].noalias() += jump_length;
+  contact_positions["RF_FOOT"].noalias() += jump_length;
+  contact_positions["RH_FOOT"].noalias() += jump_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);

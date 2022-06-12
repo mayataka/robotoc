@@ -15,8 +15,9 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(impulse_status, m) {
   py::class_<ImpulseStatus>(m, "ImpulseStatus")
-    .def(py::init<const std::vector<ContactType>&, const int>(),
-          py::arg("contact_types"), py::arg("contact_mode_id")=0)
+    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const int>(),
+          py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
+          py::arg("contact_mode_id")=0)
     .def("max_num_contacts", &ImpulseStatus::maxNumContacts)
     .def("is_impulse_active", 
           static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),

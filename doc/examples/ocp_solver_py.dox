@@ -22,15 +22,9 @@ contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.04
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 ```
 @note 
-- If you do not know the contact frames, you can first construct the robot model with arbitrary contact frames and see the robot model in the console, e.g., as
-```
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase)
-print(robot)
-```
-- `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
+`baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
 The best choice of `baumgarte_time_step` may be the time step of the optimal control problem. 
 However, it is often too small to make the optimization problem high nonlinear. 
 A moderate value such as several times of the time step of optimal control problem may be sufficient 
@@ -84,10 +78,10 @@ config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
 robot.forward_kinematics(q_standing)
-x3d0_LF = robot.frame_position(LF_foot_id)
-x3d0_LH = robot.frame_position(LH_foot_id)
-x3d0_RF = robot.frame_position(RF_foot_id)
-x3d0_RH = robot.frame_position(RH_foot_id)
+x3d0_LF = robot.frame_position('LF_FOOT')
+x3d0_LH = robot.frame_position('LH_FOOT')
+x3d0_RF = robot.frame_position('RF_FOOT')
+x3d0_RH = robot.frame_position('RH_FOOT')
 
 com_ref0_flying_up = robot.com()
 vcom_ref_flying_up = 0.5*jump_length/flying_up_time + np.array([0, 0, (jump_height/flying_up_time)])
@@ -140,9 +134,9 @@ Then we can set an impulse event and a lift event to the contact sequence.
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
-contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 contact_status_standing = robot.create_contact_status()
-contact_status_standing.activate_contacts([0, 1, 2, 3])
+contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 ```
@@ -156,10 +150,10 @@ contact_sequence.push_back(contact_status_flying, t0+ground_time)
 Then a lift event is appended into the back of the contact sequence.
 Finally, we set the contact status after touch-down as
 ```
-contact_positions[0] += jump_length
-contact_positions[1] += jump_length
-contact_positions[2] += jump_length
-contact_positions[3] += jump_length
+contact_positions['LF_FOOT'] += jump_length
+contact_positions['LH_FOOT'] += jump_length
+contact_positions['RF_FOOT'] += jump_length
+contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 ```

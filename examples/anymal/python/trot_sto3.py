@@ -9,17 +9,15 @@ contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
 dt = 0.02
-step_length = 0.15
+step_length = np.array([0.15, 0., 0.])
 step_height = 0.08
 swing_time = 0.40
 double_support_time = 0.05
 t0 = 0.1
 cycle = 1
 cycle = 5
-
 
 # Create the cost function
 cost = robotoc.CostFunction()
@@ -29,7 +27,7 @@ q_standing = np.array([0, 0, 0.4792, 0, 0, 0, 1,
                         0.1,  0.7, -1.0, 
                         0.1, -0.7,  1.0])
 q_ref = q_standing.copy()
-q_ref[0] += step_length
+q_ref[0:3] += step_length
 q_weight = np.array([0, 10000, 10000, 10000, 10000, 10000, 
                      0.001, 0.001, 0.001, 
                      0.001, 0.001, 0.001, 
@@ -37,8 +35,8 @@ q_weight = np.array([0, 10000, 10000, 10000, 10000, 10000,
                      0.001, 0.001, 0.001])
 v_weight = np.full(robot.dimv(), 0.1)
 v_weight[:6] = np.full(6, 100.0)
-v_ref = np.full(robot.dimv(), 0.0)
-v_ref[0] = 0.5 * step_length / (swing_time+double_support_time)
+v_ref = np.zeros(robot.dimv())
+v_ref[0:3] = 0.5 * step_length / (swing_time+double_support_time)
 a_weight = np.full(robot.dimv(), 1.0e-03)
 dvi_weight  = np.full(robot.dimv(), 1.0e-03)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
@@ -53,10 +51,10 @@ config_cost.set_vi_weight(v_weight)
 config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 
-LF_foot_ref = robotoc.TrotSwingFootRef(0, 2, 1, step_length, step_height)
-LH_foot_ref = robotoc.TrotSwingFootRef(1, 3, 0, step_length, step_height)
-RF_foot_ref = robotoc.TrotSwingFootRef(2, 0, 3, step_length, step_height)
-RH_foot_ref = robotoc.TrotSwingFootRef(3, 1, 2, step_length, step_height)
+LF_foot_ref = robotoc.TrotSwingFootRef(0, 2, 1, step_length[0], step_height)
+LH_foot_ref = robotoc.TrotSwingFootRef(1, 3, 0, step_length[0], step_height)
+RF_foot_ref = robotoc.TrotSwingFootRef(2, 0, 3, step_length[0], step_height)
+RH_foot_ref = robotoc.TrotSwingFootRef(3, 1, 2, step_length[0], step_height)
 LF_cost = robotoc.SwingFootCost(robot, 0, LF_foot_ref)
 LH_cost = robotoc.SwingFootCost(robot, 1, LH_foot_ref)
 RF_cost = robotoc.SwingFootCost(robot, 2, RF_foot_ref)
@@ -94,35 +92,35 @@ max_num_each_discrete_events = 2*cycle
 contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
-x3d0_LF = robot.frame_position(LF_foot_id)
-x3d0_LH = robot.frame_position(LH_foot_id)
-x3d0_RF = robot.frame_position(RF_foot_id)
-x3d0_RH = robot.frame_position(RH_foot_id)
-contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+x3d0_LF = robot.frame_position('LF_FOOT')
+x3d0_LH = robot.frame_position('LH_FOOT')
+x3d0_RF = robot.frame_position('RF_FOOT')
+x3d0_RH = robot.frame_position('RH_FOOT')
+contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 
 contact_status_standing = robot.create_contact_status()
-contact_status_standing.activate_contacts([0, 1, 2, 3])
+contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_lhrf_swing = robot.create_contact_status()
-contact_status_lhrf_swing.activate_contacts([0, 3])
+contact_status_lhrf_swing.activate_contacts(['LF_FOOT', 'RH_FOOT'])
 contact_status_lhrf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status=contact_status_lhrf_swing, 
                            switching_time=t0, sto=True)
 
-contact_positions[1][0] += 0.5 * step_length
-contact_positions[2][0] += 0.5 * step_length
+contact_positions['LH_FOOT'] += 0.5 * step_length
+contact_positions['RF_FOOT'] += 0.5 * step_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+0.21, sto=True)
 
 contact_status_lfrh_swing = robot.create_contact_status()
-contact_status_lfrh_swing.activate_contacts([1, 2])
+contact_status_lfrh_swing.activate_contacts(['LH_FOOT', 'RF_FOOT'])
 contact_status_lfrh_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lfrh_swing, t0+0.42, sto=True)
 
-contact_positions[0][0] += step_length
-contact_positions[3][0] += step_length
+contact_positions['LF_FOOT'] += step_length
+contact_positions['RH_FOOT'] += step_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+0.63, sto=True)
 
@@ -131,8 +129,8 @@ for i in range(cycle-1):
     contact_status_lhrf_swing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_lhrf_swing, t1, sto=True)
 
-    contact_positions[1][0] += step_length
-    contact_positions[2][0] += step_length
+    contact_positions['LH_FOOT'] += step_length
+    contact_positions['RF_FOOT'] += step_length
     contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, t1+0.21, sto=True)
 
@@ -140,8 +138,8 @@ for i in range(cycle-1):
     contact_sequence.push_back(contact_status_lfrh_swing, 
                                t1+0.42, sto=True)
 
-    contact_positions[0][0] += step_length
-    contact_positions[3][0] += step_length
+    contact_positions['LF_FOOT'] += step_length
+    contact_positions['RH_FOOT'] += step_length
     contact_status_standing.set_contact_placements(contact_positions)
     contact_sequence.push_back(contact_status_standing, 
                                t1+0.63, sto=True)

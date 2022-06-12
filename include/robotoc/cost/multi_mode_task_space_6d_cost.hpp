@@ -1,6 +1,7 @@
 #ifndef ROBOTOC_MULTI_MODE_TASK_SPACE_6D_COST_HPP_
 #define ROBOTOC_MULTI_MODE_TASK_SPACE_6D_COST_HPP_
 
+#include <string>
 #include <vector>
 #include <unordered_map>
 
@@ -36,6 +37,13 @@ public:
   /// @param[in] frame_id Frame of interest.
   ///
   MultiModeTaskSpace6DCost(const Robot& robot, const int frame_id);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_name Frame of interest.
+  ///
+  MultiModeTaskSpace6DCost(const Robot& robot, const std::string& frame_name);
 
   ///
   /// @brief Default constructor. 
@@ -164,7 +172,7 @@ public:
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const;
+                                  ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,

@@ -3,11 +3,11 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
-cmd_type = 'forward'
+# cmd_type = 'forward'
 # cmd_type = 'backward'
 # cmd_type = 'side'
 # cmd_type = 'curve'
-# cmd_type = 'rotation'
+cmd_type = 'rotation'
 
 if cmd_type == 'forward':
     step_length = np.array([0.30, 0.0, 0.0]) 
@@ -32,7 +32,6 @@ contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
 step_height = 0.1
 stance_time = 0.15
