@@ -159,7 +159,8 @@ int main(int argc, char *argv[]) {
   const int max_num_each_discrete_events = 2*cycle;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
-  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
+      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
@@ -170,8 +171,8 @@ int main(int argc, char *argv[]) {
   contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, t0);
 
-  contact_positions[1].noalias() += step_length;
-  contact_positions[3].noalias() += step_length;
+  contact_positions["LH_FOOT"].noalias() += step_length;
+  contact_positions["RH_FOOT"].noalias() += step_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, t0+swing_time);
 
@@ -181,8 +182,8 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_lfrf_swing, 
                               t0+swing_time+double_support_time);
 
-  contact_positions[0].noalias() += step_length;
-  contact_positions[2].noalias() += step_length;
+  contact_positions["LF_FOOT"].noalias() += step_length;
+  contact_positions["RF_FOOT"].noalias() += step_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+2*swing_time+double_support_time);
@@ -192,8 +193,8 @@ int main(int argc, char *argv[]) {
     contact_status_hip_swing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_hip_swing, t1);
 
-    contact_positions[1].noalias() += step_length;
-    contact_positions[3].noalias() += step_length;
+    contact_positions["LH_FOOT"].noalias() += step_length;
+    contact_positions["RH_FOOT"].noalias() += step_length;
     contact_status_standing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_standing, t1+swing_time);
 
@@ -201,8 +202,8 @@ int main(int argc, char *argv[]) {
     contact_sequence->push_back(contact_status_lfrf_swing, 
                                 t1+swing_time+double_support_time);
 
-    contact_positions[0].noalias() += step_length;
-    contact_positions[2].noalias() += step_length;
+    contact_positions["LF_FOOT"].noalias() += step_length;
+    contact_positions["RF_FOOT"].noalias() += step_length;
     contact_status_standing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_standing, 
                                 t1+2*swing_time+double_support_time);

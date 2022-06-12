@@ -103,7 +103,7 @@ constraints.push_back(friction_cone)
 max_num_each_discrete_events = 1
 contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
-contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
+contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
@@ -112,10 +112,10 @@ contact_sequence.init_contact_sequence(contact_status_standing)
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time)
 
-contact_positions[0] += jump_length
-contact_positions[1] += jump_length
-contact_positions[2] += jump_length
-contact_positions[3] += jump_length
+contact_positions['LF_FOOT'] += jump_length
+contact_positions['LH_FOOT'] += jump_length
+contact_positions['RF_FOOT'] += jump_length
+contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 

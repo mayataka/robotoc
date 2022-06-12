@@ -142,7 +142,8 @@ int main(int argc, char *argv[]) {
   const int max_num_each_discrete_events = 1;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
-  std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
+      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
@@ -151,10 +152,10 @@ int main(int argc, char *argv[]) {
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time);
 
-  contact_positions[0].noalias() += jump_length;
-  contact_positions[1].noalias() += jump_length;
-  contact_positions[2].noalias() += jump_length;
-  contact_positions[3].noalias() += jump_length;
+  contact_positions["LF_FOOT"].noalias() += jump_length;
+  contact_positions["LH_FOOT"].noalias() += jump_length;
+  contact_positions["RF_FOOT"].noalias() += jump_length;
+  contact_positions["RH_FOOT"].noalias() += jump_length;
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);

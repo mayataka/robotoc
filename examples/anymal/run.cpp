@@ -195,10 +195,11 @@ int main(int argc, char *argv[]) {
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
   robot.updateFrameKinematics(q_standing);
-  std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
-                                                    robot.framePosition(LH_foot_id),
-                                                    robot.framePosition(RF_foot_id),
-                                                    robot.framePosition(RH_foot_id)};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
+      = {{"LF_FOOT", robot.framePosition(LF_foot_id)}, 
+         {"LH_FOOT", robot.framePosition(LH_foot_id)}, 
+         {"RF_FOOT", robot.framePosition(RF_foot_id)}, 
+         {"RH_FOOT", robot.framePosition(RH_foot_id)}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   auto contact_status_front_swing = robot.createContactStatus();
@@ -225,10 +226,10 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_front_hip_swing, 
                               t_start+t_initial_front_swing);
 
-  contact_positions[0].coeffRef(0) += 0.25 * stride;
-  contact_positions[1].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
-  contact_positions[2].coeffRef(0) += 0.25 * stride;
-  contact_positions[3].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
+  contact_positions["LF_FOOT"].coeffRef(0) += 0.25 * stride;
+  contact_positions["RF_FOOT"].coeffRef(0) += 0.25 * stride;
+  contact_positions["LH_FOOT"].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
+  contact_positions["RH_FOOT"].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
 
   contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, 
@@ -240,10 +241,10 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_front_hip_swing, 
                               t_start+t_initial+t_initial_front_swing2);
 
-  contact_positions[0].coeffRef(0) += 0.5 * stride;
-  contact_positions[1].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
-  contact_positions[2].coeffRef(0) += 0.5 * stride;
-  contact_positions[3].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
+  contact_positions["LF_FOOT"].coeffRef(0) += 0.5 * stride;
+  contact_positions["RF_FOOT"].coeffRef(0) += 0.5 * stride;
+  contact_positions["LH_FOOT"].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
+  contact_positions["RH_FOOT"].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
 
   contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, 
@@ -255,10 +256,10 @@ int main(int argc, char *argv[]) {
     contact_sequence->push_back(contact_status_front_swing, t_end_init+i*t_period);
     contact_sequence->push_back(contact_status_front_hip_swing, 
                                 t_end_init+i*t_period+t_front_swing);
-    contact_positions[0].coeffRef(0) += stride;
-    contact_positions[2].coeffRef(0) += stride;
-    contact_positions[1].coeffRef(0) += stride;
-    contact_positions[3].coeffRef(0) += stride;
+    contact_positions["LF_FOOT"].coeffRef(0) += stride;
+    contact_positions["LH_FOOT"].coeffRef(0) += stride;
+    contact_positions["RF_FOOT"].coeffRef(0) += stride;
+    contact_positions["RH_FOOT"].coeffRef(0) += stride;
     contact_status_hip_swing.setContactPlacements(contact_positions);
     contact_sequence->push_back(contact_status_hip_swing, 
                                 t_end_init+i*t_period+t_front_swing+t_front_hip_swing);
@@ -276,10 +277,10 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_front_hip_swing, 
                               t_end_init+steps*t_period+t_end_front_swing);
 
-  contact_positions[0].coeffRef(0) += 0.75 * stride;
-  contact_positions[2].coeffRef(0) += 0.75 * stride;
-  contact_positions[1].coeffRef(0) += 0.75 * stride - additive_stride_hip;
-  contact_positions[3].coeffRef(0) += 0.75 * stride - additive_stride_hip;
+  contact_positions["LF_FOOT"].coeffRef(0) += 0.75 * stride;
+  contact_positions["LH_FOOT"].coeffRef(0) += 0.75 * stride;
+  contact_positions["RF_FOOT"].coeffRef(0) += 0.75 * stride - additive_stride_hip;
+  contact_positions["RH_FOOT"].coeffRef(0) += 0.75 * stride - additive_stride_hip;
   contact_status_hip_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_hip_swing, 
                               t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing);

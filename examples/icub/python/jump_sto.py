@@ -75,7 +75,7 @@ contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 robot.forward_kinematics(q_standing)
 x3d0_L = robot.frame_placement(L_foot_id)
 x3d0_R = robot.frame_placement(R_foot_id)
-contact_placements = [x3d0_L, x3d0_R]
+contact_placements = {'l_sole': x3d0_L, 'r_sole': x3d0_R} 
 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['l_sole', 'r_sole'])
@@ -85,15 +85,15 @@ contact_sequence.init_contact_sequence(contact_status_standing)
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time, sto=True)
 
-contact_placements[0].trans = contact_placements[0].trans + jump_length
-contact_placements[1].trans = contact_placements[1].trans + jump_length 
+contact_placements['l_sole'].trans = contact_placements['l_sole'].trans + jump_length
+contact_placements['r_sole'].trans = contact_placements['r_sole'].trans + jump_length 
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
 
 contact_sequence.push_back(contact_status_flying, t0+2*ground_time+flying_time, sto=True)
 
-contact_placements[0].trans = contact_placements[0].trans + jump_length 
-contact_placements[1].trans = contact_placements[1].trans + jump_length 
+contact_placements['l_sole'].trans = contact_placements['l_sole'].trans + jump_length 
+contact_placements['r_sole'].trans = contact_placements['r_sole'].trans + jump_length 
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_time, sto=True)
 
