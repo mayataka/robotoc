@@ -1,6 +1,7 @@
 #ifndef ROBOTOC_MULTI_MODE_TASK_SPACE_3D_COST_HPP_
 #define ROBOTOC_MULTI_MODE_TASK_SPACE_3D_COST_HPP_
 
+#include <string>
 #include <vector>
 #include <unordered_map>
 
@@ -33,6 +34,13 @@ public:
   /// @param[in] frame_id Frame of interest.
   ///
   MultiModeTaskSpace3DCost(const Robot& robot, const int frame_id);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_name Frame of interest.
+  ///
+  MultiModeTaskSpace3DCost(const Robot& robot, const std::string& frame_name);
 
   ///
   /// @brief Default constructor. 

@@ -13,6 +13,12 @@ TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id)
 }
 
 
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, 
+                                 const std::string& frame_name)
+  : TaskSpace3DCost(robot, robot.frameId(frame_name)) {
+}
+
+
 TaskSpace3DCost::TaskSpace3DCost()
   : CostFunctionComponentBase(),
     frame_id_(),

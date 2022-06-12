@@ -123,7 +123,7 @@ inline bool ContactStatus::isContactActive(const int contact_index) const {
 
 inline bool ContactStatus::isContactActive(
     const std::string& contact_frame_name) const {
-  return isContactActive(find_contact_index(contact_frame_name));
+  return isContactActive(findContactIndex(contact_frame_name));
 }
 
 
@@ -163,12 +163,12 @@ inline void ContactStatus::activateContact(const int contact_index) {
         break;
     }
   }
-  set_has_active_contacts();
+  setHasActiveContacts();
 }
 
 
 inline void ContactStatus::activateContact(const std::string& contact_frame_name) {
-  activateContact(find_contact_index(contact_frame_name));
+  activateContact(findContactIndex(contact_frame_name));
 }
 
 
@@ -188,12 +188,12 @@ inline void ContactStatus::deactivateContact(const int contact_index) {
         break;
     }
   }
-  set_has_active_contacts();
+  setHasActiveContacts();
 }
 
 
 inline void ContactStatus::deactivateContact(const std::string& contact_frame_name) {
-  deactivateContact(find_contact_index(contact_frame_name));
+  deactivateContact(findContactIndex(contact_frame_name));
 }
 
 
@@ -243,7 +243,7 @@ inline void ContactStatus::setContactPlacement(
 inline void ContactStatus::setContactPlacement(
     const std::string& contact_frame_name,
     const Eigen::Vector3d& contact_position) {
-  setContactPlacement(find_contact_index(contact_frame_name), contact_position, 
+  setContactPlacement(findContactIndex(contact_frame_name), contact_position, 
                       Eigen::Matrix3d::Identity());
 }
 
@@ -263,7 +263,7 @@ inline void ContactStatus::setContactPlacement(
     const std::string& contact_frame_name, 
     const Eigen::Vector3d& contact_position,
     const Eigen::Matrix3d& contact_rotation) {
-  setContactPlacement(find_contact_index(contact_frame_name), contact_position,
+  setContactPlacement(findContactIndex(contact_frame_name), contact_position,
                       contact_rotation);
 }
 
@@ -350,7 +350,7 @@ inline const SE3& ContactStatus::contactPlacement(
 
 inline const SE3& ContactStatus::contactPlacement(
     const std::string& contact_frame_name) const {
-  return contactPlacement(find_contact_index(contact_frame_name));
+  return contactPlacement(findContactIndex(contact_frame_name));
 }
 
 
@@ -362,7 +362,7 @@ inline const Eigen::Vector3d& ContactStatus::contactPosition(
 
 inline const Eigen::Vector3d& ContactStatus::contactPosition(
     const std::string& contact_frame_name) const {
-  return contactPosition(find_contact_index(contact_frame_name));
+  return contactPosition(findContactIndex(contact_frame_name));
 }
 
 
@@ -374,7 +374,7 @@ inline const Eigen::Matrix3d& ContactStatus::contactRotation(
 
 inline const Eigen::Matrix3d& ContactStatus::contactRotation(
     const std::string& contact_frame_name) const {
-  return contactRotation(find_contact_index(contact_frame_name));
+  return contactRotation(findContactIndex(contact_frame_name));
 }
 
 
@@ -392,6 +392,32 @@ ContactStatus::contactPositions() const {
 inline const std::vector<Eigen::Matrix3d>& 
 ContactStatus::contactRotations() const {
   return contact_rotations_;
+}
+
+
+inline int ContactStatus::findContactIndex(
+    const std::string& contact_frame_name) const {
+  try {
+    if (contact_frame_names_.empty()) {
+      throw std::runtime_error("Invalid argument: contact_frame_names_ is empty!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  try {
+    for (int i=0; i<contact_frame_names_.size(); ++i) {
+      if (contact_frame_names_[i] == contact_frame_name) {
+        return i;
+      }
+    }
+    throw std::runtime_error("Cannot find the input contact_frame_name: " + contact_frame_name);
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -419,35 +445,10 @@ inline void ContactStatus::setRandom() {
 }
 
 
-inline void ContactStatus::set_has_active_contacts() {
+inline void ContactStatus::setHasActiveContacts() {
   has_active_contacts_ = (dimf_ > 0);
 }
 
-
-inline int ContactStatus::find_contact_index(
-    const std::string& contact_frame_name) const {
-  try {
-    if (contact_frame_names_.empty()) {
-      throw std::runtime_error("Invalid argument: contact_frame_names_ is empty!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  try {
-    for (int i=0; i<contact_frame_names_.size(); ++i) {
-      if (contact_frame_names_[i] == contact_frame_name) {
-        return i;
-      }
-    }
-    throw std::runtime_error("Cannot find the input contact_frame_name: " + contact_frame_name);
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-}
 
 } // namespace robotoc
 

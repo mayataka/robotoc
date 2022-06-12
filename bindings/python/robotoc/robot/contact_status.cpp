@@ -114,6 +114,8 @@ PYBIND11_MODULE(contact_status, m) {
           static_cast<const Eigen::Matrix3d& (ContactStatus::*)(const std::string&) const>(&ContactStatus::contactRotation),
           py::arg("contact_frame_name"))
     .def("contact_rotations", &ContactStatus::contactRotations)
+    .def("find_contact_index", &ContactStatus::findContactIndex,
+          py::arg("contact_frame_name"))
     .def("set_contact_mode_id", &ContactStatus::setContactModeId,
           py::arg("contact_mode_id"))
     .def("contact_mode_id", &ContactStatus::contactModeId)

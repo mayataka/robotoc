@@ -16,6 +16,9 @@ PYBIND11_MODULE(time_varying_task_space_3d_cost, m) {
     .def(py::init<const Robot&, const int, 
                   const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>&>(),
           py::arg("robot"), py::arg("frame_id"), py::arg("x3d_ref"))
+    .def(py::init<const Robot&, const std::string&, 
+                  const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>&>(),
+          py::arg("robot"), py::arg("frame_name"), py::arg("x3d_ref"))
     .def("set_x3d_ref", &TimeVaryingTaskSpace3DCost::set_x3d_ref,
           py::arg("x3d_ref"))
     .def("set_x3d_weight", &TimeVaryingTaskSpace3DCost::set_x3d_weight,

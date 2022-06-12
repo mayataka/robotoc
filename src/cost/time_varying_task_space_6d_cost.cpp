@@ -15,6 +15,13 @@ TimeVaryingTaskSpace6DCost::TimeVaryingTaskSpace6DCost(
 }
 
 
+TimeVaryingTaskSpace6DCost::TimeVaryingTaskSpace6DCost(
+    const Robot& robot, const std::string& frame_name, 
+    const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& x6d_ref) 
+  : TimeVaryingTaskSpace6DCost(robot, robot.frameId(frame_name), x6d_ref) {
+}
+
+
 TimeVaryingTaskSpace6DCost::TimeVaryingTaskSpace6DCost()
   : CostFunctionComponentBase(),
     frame_id_(0),

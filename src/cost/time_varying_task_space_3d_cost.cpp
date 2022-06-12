@@ -15,6 +15,13 @@ TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost(
 }
 
 
+TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost(
+    const Robot& robot, const std::string& frame_name, 
+    const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& x3d_ref) 
+  : TimeVaryingTaskSpace3DCost(robot, robot.frameId(frame_name), x3d_ref) {
+}
+
+
 TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost()
   : CostFunctionComponentBase(),
     frame_id_(),

@@ -206,13 +206,30 @@ inline const Eigen::Vector3d& Robot::framePosition(const int frame_id) const {
 }
 
 
+inline const Eigen::Vector3d& Robot::framePosition(
+    const std::string& frame_name) const {
+  return framePosition(frameId(frame_name));
+}
+
+
 inline const Eigen::Matrix3d& Robot::frameRotation(const int frame_id) const {
   return data_.oMf[frame_id].rotation();
 }
 
 
+inline const Eigen::Matrix3d& Robot::frameRotation(
+    const std::string& frame_name) const {
+  return frameRotation(frameId(frame_name));
+}
+
+
 inline const SE3& Robot::framePlacement(const int frame_id) const {
   return data_.oMf[frame_id];
+}
+
+
+inline const SE3& Robot::framePlacement(const std::string& frame_name) const {
+  return framePlacement(frameId(frame_name));
 }
 
 

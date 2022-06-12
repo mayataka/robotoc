@@ -1,6 +1,7 @@
 #ifndef ROBOTOC_TIME_VARYING_TASK_SPACE_6D_COST_HPP_
 #define ROBOTOC_TIME_VARYING_TASK_SPACE_6D_COST_HPP_
 
+#include <string>
 #include <memory>
 
 #include "Eigen/Core"
@@ -93,6 +94,16 @@ public:
   TimeVaryingTaskSpace6DCost(
       const Robot& robot, const int frame_id, 
       const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_name Frame of interest.
+  /// @param[in] ref Shared ptr to the reference position.
+  ///
+  TimeVaryingTaskSpace6DCost(
+      const Robot& robot, const std::string& frame_name, 
+      const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& x3d_ref);
 
   ///
   /// @brief Default constructor. 

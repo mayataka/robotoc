@@ -6,10 +6,10 @@
 namespace robotoc {
 
 TrotSwingFootRef::TrotSwingFootRef(const int contact_index,
-                                           const int x_ref_foot_contact_index, 
-                                           const int y_ref_foot_contact_index, 
-                                           const double step_length, 
-                                           const double step_height) 
+                                   const int x_ref_foot_contact_index, 
+                                   const int y_ref_foot_contact_index, 
+                                   const double step_length, 
+                                   const double step_height) 
   : SwingFootRefBase(),
     contact_index_(contact_index),
     x_ref_foot_contact_index_(x_ref_foot_contact_index), 
@@ -19,12 +19,24 @@ TrotSwingFootRef::TrotSwingFootRef(const int contact_index,
 }
 
 
+TrotSwingFootRef::TrotSwingFootRef(const Robot& robot, 
+                                   const std::string& contact_frame_name,
+                                   const int x_ref_foot_contact_index, 
+                                   const int y_ref_foot_contact_index, 
+                                   const double step_length, 
+                                   const double step_height) 
+  : TrotSwingFootRef(robot.createContactStatus().findContactIndex(contact_frame_name),
+                     x_ref_foot_contact_index, y_ref_foot_contact_index,
+                     step_length, step_height) {
+}
+
+
 TrotSwingFootRef::~TrotSwingFootRef() {
 }
 
 
 void TrotSwingFootRef::update_x3d_ref(const ContactStatus& contact_status, 
-                                          Eigen::VectorXd& x3d_ref) const {
+                                      Eigen::VectorXd& x3d_ref) const {
   constexpr double eps = std::numeric_limits<double>::epsilon();
   const double xdiff = contact_status.contactPosition(contact_index_).coeff(0) 
                         - contact_status.contactPosition(x_ref_foot_contact_index_).coeff(0);

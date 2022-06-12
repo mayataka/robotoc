@@ -348,6 +348,14 @@ public:
   const Eigen::Vector3d& framePosition(const int frame_id) const;
 
   ///
+  /// @brief Returns the position of the frame. Before calling this function, 
+  /// updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @return Const reference to the position of the frame.
+  ///
+  const Eigen::Vector3d& framePosition(const std::string& frame_name) const;
+
+  ///
   /// @brief Returns the rotation matrix of the frame. Before calling this  
   /// function, updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
@@ -356,12 +364,28 @@ public:
   const Eigen::Matrix3d& frameRotation(const int frame_id) const;
 
   ///
+  /// @brief Returns the rotation matrix of the frame. Before calling this  
+  /// function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @return Const reference to the rotation matrix of the frame.
+  ///
+  const Eigen::Matrix3d& frameRotation(const std::string& frame_name) const;
+
+  ///
   /// @brief Returns the SE(3) of the frame. Before calling this function, 
   /// updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
   /// @return Const reference to the SE(3) of the frame.
   ///
   const SE3& framePlacement(const int frame_id) const;
+
+  ///
+  /// @brief Returns the SE(3) of the frame. Before calling this function, 
+  /// updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @return Const reference to the SE(3) of the frame.
+  ///
+  const SE3& framePlacement(const std::string& frame_name) const;
 
   ///
   /// @brief Returns the position of the center of mass. Before calling this 

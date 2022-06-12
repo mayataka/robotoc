@@ -18,6 +18,12 @@ MultiModeTaskSpace6DCost::MultiModeTaskSpace6DCost(const Robot& robot,
 }
 
 
+MultiModeTaskSpace6DCost::MultiModeTaskSpace6DCost(const Robot& robot, 
+                                                   const std::string& frame_name)
+  : MultiModeTaskSpace6DCost(robot, robot.frameId(frame_name)) {
+}
+
+
 MultiModeTaskSpace6DCost::MultiModeTaskSpace6DCost()
   : CostFunctionComponentBase(),
     frame_id_(0),

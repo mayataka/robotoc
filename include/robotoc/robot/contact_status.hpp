@@ -392,6 +392,13 @@ public:
   const std::vector<Eigen::Matrix3d>& contactRotations() const;
 
   ///
+  /// @brief Finds the contact index correspoinding to the input contact frame name.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @return Contact index. 
+  ///
+  int findContactIndex(const std::string& contact_frame_name) const;
+
+  ///
   /// @brief Sets contact mode id.
   /// @param[in] contact_mode_id Contact mode id. 
   /// @note Default contact mode id is 0.
@@ -430,9 +437,7 @@ private:
   int dimf_, max_contacts_, max_num_contacts_, contact_mode_id_;
   bool has_active_contacts_;
 
-  void set_has_active_contacts();
-
-  int find_contact_index(const std::string& contact_frame_name) const;
+  void setHasActiveContacts();
 
 };
 
