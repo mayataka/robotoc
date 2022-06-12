@@ -109,11 +109,11 @@ MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N,
   constraints_->push_back(joint_torques_upper);
   constraints_->push_back(friction_cone_);
   // init contact status
-  cs_standing_.activateContacts({0, 1, 2, 3});
-  cs_lf_.activateContacts({1, 2, 3});
-  cs_lh_.activateContacts({0, 2, 3});
-  cs_rf_.activateContacts({0, 1, 3});
-  cs_rh_.activateContacts({0, 1, 2});
+  cs_standing_.activateContacts(std::vector<int>({0, 1, 2, 3}));
+  cs_lf_.activateContacts(std::vector<int>({1, 2, 3}));
+  cs_lh_.activateContacts(std::vector<int>({0, 2, 3}));
+  cs_rf_.activateContacts(std::vector<int>({0, 1, 3}));
+  cs_rh_.activateContacts(std::vector<int>({0, 1, 2}));
 }
 
 

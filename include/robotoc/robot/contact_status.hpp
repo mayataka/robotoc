@@ -2,6 +2,7 @@
 #define ROBOTOC_CONTACT_STATUS_HPP_
 
 #include <vector>
+#include <string>
 #include <iostream>
 
 #include "Eigen/Core"
@@ -31,10 +32,12 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] contact_types Types of contacts. 
+  /// @param[in] contact_frame_names Names of contact frames. Default is empty.
   /// @param[in] contact_mode_id Identifier number of the contact mode. Can be  
   /// used only in user-defined cost and constraints. Default is 0.
   ///
   ContactStatus(const std::vector<ContactType>& contact_types, 
+                const std::vector<std::string>& contact_frame_names={},
                 const int contact_mode_id=0);
 
   ///
@@ -91,11 +94,31 @@ public:
   const std::vector<ContactType>& contactTypes() const;
 
   ///
+  /// @brief Returns the name of the contact frame.
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @return Name of the contact frame. 
+  ///
+  const std::string& contactFrameName(const int contact_index) const;
+
+  ///
+  /// @brief Returns the names of the contact frames.
+  /// @return Name of the contact frames. 
+  ///
+  const std::vector<std::string>& contactFrameNames() const;
+
+  ///
   /// @brief Returns true if a contact is active and false if not.
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return true if a contact is active and false if not. 
   ///
   bool isContactActive(const int contact_index) const;
+
+  ///
+  /// @brief Returns true if a contact is active and false if not.
+  /// @param[in] contact_frame_name Name of the contact frame that is activated.
+  /// @return true if a contact is active and false if not. 
+  ///
+  bool isContactActive(const std::string& contact_frame_name) const;
 
   ///
   /// @brief Returns the activity of the contacts.
@@ -128,10 +151,22 @@ public:
   void activateContact(const int contact_index);
 
   ///
+  /// @brief Activates a contact.
+  /// @param[in] contact_frame_name Name of the contact frame that is activated.
+  ///
+  void activateContact(const std::string& contact_frame_name);
+
+  ///
   /// @brief Deactivates a contact.
   /// @param[in] contact_index Index of the contact that is deactivated.
   ///
   void deactivateContact(const int contact_index);
+
+  ///
+  /// @brief Deactivates a contact.
+  /// @param[in] contact_frame_name Name of the contact frame that is deactivated.
+  ///
+  void deactivateContact(const std::string& contact_frame_name);
 
   ///
   /// @brief Activates contacts.
@@ -140,10 +175,22 @@ public:
   void activateContacts(const std::vector<int>& contact_indices);
 
   ///
+  /// @brief Activates contacts.
+  /// @param[in] contact_frame_names Frame names of the contacts that are activated.
+  ///
+  void activateContacts(const std::vector<std::string>& contact_frame_names);
+
+  ///
   /// @brief Deactivates contacts.
   /// @param[in] contact_indices Indices of the contacts that are deactivated.
   ///
   void deactivateContacts(const std::vector<int>& contact_indices);
+
+  ///
+  /// @brief Deactivates contacts.
+  /// @param[in] contact_frame_names Frame names of the contacts that are deactivated.
+  ///
+  void deactivateContacts(const std::vector<std::string>& contact_frame_names);
 
   ///
   /// @brief Sets a contact placement, that is, the position and rotation of 
@@ -156,6 +203,19 @@ public:
   /// @param[in] contact_position Contact position.
   ///
   void setContactPlacement(const int contact_index, 
+                           const Eigen::Vector3d& contact_position);
+
+  ///
+  /// @brief Sets a contact placement, that is, the position and rotation of 
+  /// the contact. The contact rotation is set to Eigen::Matrix3d::Identity(), 
+  /// which represents the vertical direction to the ground. For the point 
+  /// contacts, the rotation is only used in the friction cone constraints.
+  /// For the surface contacts, the rotation represents the rotational contact
+  /// constraints on the contact frame of the robot.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @param[in] contact_position Contact position.
+  ///
+  void setContactPlacement(const std::string& contact_frame_name, 
                            const Eigen::Vector3d& contact_position);
 
   ///
@@ -178,10 +238,36 @@ public:
   /// friction cone constraints.
   /// For the surface contacts, the rotation represents the rotational contact
   /// constraints on the contact frame of the robot.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @param[in] contact_position Contact position.
+  /// @param[in] contact_rotation Contact rotation.
+  ///
+  void setContactPlacement(const std::string& contact_frame_name, 
+                           const Eigen::Vector3d& contact_position, 
+                           const Eigen::Matrix3d& contact_rotation);
+
+  ///
+  /// @brief Sets a contact placement, that is, the position and rotation of 
+  /// the contact. For the point contacts, the rotation is only used in the 
+  /// friction cone constraints.
+  /// For the surface contacts, the rotation represents the rotational contact
+  /// constraints on the contact frame of the robot.
   /// @param[in] contact_index Index of the contact.
   /// @param[in] contact_placement Contact placement.
   ///
   void setContactPlacement(const int contact_index, 
+                           const SE3& contact_placement);
+
+  ///
+  /// @brief Sets a contact placement, that is, the position and rotation of 
+  /// the contact. For the point contacts, the rotation is only used in the 
+  /// friction cone constraints.
+  /// For the surface contacts, the rotation represents the rotational contact
+  /// constraints on the contact frame of the robot.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @param[in] contact_placement Contact placement.
+  ///
+  void setContactPlacement(const std::string& contact_frame_name, 
                            const SE3& contact_placement);
 
   ///
@@ -220,6 +306,13 @@ public:
   const SE3& contactPlacement(const int contact_index) const;
 
   ///
+  /// @brief Gets the contact placement.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @return const reference to the contact placement. 
+  ///
+  const SE3& contactPlacement(const std::string& contact_frame_name) const;
+
+  ///
   /// @brief Gets the contact position.
   /// @param[in] contact_index Index of the contact .
   /// @return const reference to the contact position. 
@@ -227,11 +320,27 @@ public:
   const Eigen::Vector3d& contactPosition(const int contact_index) const;
 
   ///
+  /// @brief Gets the contact position.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @return const reference to the contact position. 
+  ///
+  const Eigen::Vector3d& contactPosition(
+      const std::string& contact_frame_name) const;
+
+  ///
   /// @brief Gets the contact rotation.
   /// @param[in] contact_index Index of the contact .
   /// @return const reference to the contact rotation. 
   ///
   const Eigen::Matrix3d& contactRotation(const int contact_index) const;
+
+  ///
+  /// @brief Gets the contact rotation.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @return const reference to the contact rotation. 
+  ///
+  const Eigen::Matrix3d& contactRotation(
+      const std::string& contact_frame_name) const;
 
   ///
   /// @brief Gets the contact placements.
@@ -282,6 +391,7 @@ public:
 
 private:
   std::vector<ContactType> contact_types_;
+  std::vector<std::string> contact_frame_names_;
   std::vector<bool> is_contact_active_;
   aligned_vector<SE3> contact_placements_;
   std::vector<Eigen::Vector3d> contact_positions_;
@@ -290,6 +400,8 @@ private:
   bool has_active_contacts_;
 
   void set_has_active_contacts();
+
+  int find_contact_index(const std::string& contact_frame_name) const;
 
 };
 

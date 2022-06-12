@@ -72,7 +72,7 @@ endif()
 #############
 ## Mac OSX ##
 #############
-# In Mac OSX, we have to explicitly include Boost to avoid compilation errors.
+# In Mac OSX, we explicitly include boost to avoid compilation error
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
 endif()

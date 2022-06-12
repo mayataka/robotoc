@@ -10,8 +10,10 @@
 namespace robotoc {
 
 inline ImpulseStatus::ImpulseStatus(
-    const std::vector<ContactType>& contact_types, const int impulse_mode_id)
-  : contact_status_(contact_types, impulse_mode_id) {
+    const std::vector<ContactType>& contact_types, 
+    const std::vector<std::string>& contact_frame_names,
+    const int impulse_mode_id)
+  : contact_status_(contact_types, contact_frame_names, impulse_mode_id) {
 }
 
 
