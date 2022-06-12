@@ -95,6 +95,15 @@ inline const std::string& ContactStatus::contactFrameName(
     const int contact_index) const {
   assert(contact_index >= 0);
   assert(contact_index < max_num_contacts_);
+  try {
+    if (contact_frame_names_.empty()) {
+      throw std::runtime_error("Invalid argument: contact_frame_names_ is empty!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   return contact_frame_names_[contact_index];
 }
 
@@ -283,6 +292,16 @@ inline void ContactStatus::setContactPlacements(
 
 
 inline void ContactStatus::setContactPlacements(
+    const std::unordered_map<std::string, Eigen::Vector3d>& contact_positions) {
+  assert(contact_positions.size() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
+    setContactPlacement(i, contact_positions.at(contactFrameName(i)),
+                        Eigen::Matrix3d::Identity());
+  }
+}
+
+
+inline void ContactStatus::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions,
     const std::vector<Eigen::Matrix3d>& contact_rotations) {
   assert(contact_positions.size() == max_num_contacts_);
@@ -294,10 +313,31 @@ inline void ContactStatus::setContactPlacements(
 
 
 inline void ContactStatus::setContactPlacements(
+    const std::unordered_map<std::string, Eigen::Vector3d>& contact_positions,
+    const std::unordered_map<std::string, Eigen::Matrix3d>& contact_rotations) {
+  assert(contact_positions.size() == max_num_contacts_);
+  assert(contact_rotations.size() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
+    setContactPlacement(i, contact_positions.at(contactFrameName(i)),
+                        contact_rotations.at(contactFrameName(i)));
+  }
+}
+
+
+inline void ContactStatus::setContactPlacements(
     const aligned_vector<SE3>& contact_placements) {
   assert(contact_placements.size() == max_num_contacts_);
   for (int i=0; i<max_num_contacts_; ++i) {
     setContactPlacement(i, contact_placements[i]);
+  }
+}
+
+
+inline void ContactStatus::setContactPlacements(
+    const aligned_unordered_map<std::string, SE3>& contact_placements) {
+  assert(contact_placements.size() == max_num_contacts_);
+  for (int i=0; i<max_num_contacts_; ++i) {
+    setContactPlacement(i, contact_placements.at(contactFrameName(i)));
   }
 }
 

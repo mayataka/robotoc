@@ -78,10 +78,20 @@ PYBIND11_MODULE(contact_status, m) {
           static_cast<void (ContactStatus::*)(const std::vector<Eigen::Vector3d>&)>(&ContactStatus::setContactPlacements),
           py::arg("contact_positions"))
     .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const std::unordered_map<std::string, Eigen::Vector3d>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_positions"))
+    .def("set_contact_placements", 
           static_cast<void (ContactStatus::*)(const std::vector<Eigen::Vector3d>&, const std::vector<Eigen::Matrix3d>&)>(&ContactStatus::setContactPlacements),
           py::arg("contact_positions"), py::arg("contact_rotations"))
     .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const std::unordered_map<std::string, Eigen::Vector3d>&, 
+                                              const std::unordered_map<std::string, Eigen::Matrix3d>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_positions"), py::arg("contact_rotations"))
+    .def("set_contact_placements", 
           static_cast<void (ContactStatus::*)(const aligned_vector<SE3>&)>(&ContactStatus::setContactPlacements),
+          py::arg("contact_placements"))
+    .def("set_contact_placements", 
+          static_cast<void (ContactStatus::*)(const aligned_unordered_map<std::string, SE3>&)>(&ContactStatus::setContactPlacements),
           py::arg("contact_placements"))
     .def("contact_placement", 
           static_cast<const SE3& (ContactStatus::*)(const int) const>(&ContactStatus::contactPlacement),

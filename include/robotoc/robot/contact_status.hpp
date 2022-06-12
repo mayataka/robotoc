@@ -3,12 +3,14 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <iostream>
 
 #include "Eigen/Core"
 
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/utils/aligned_unordered_map.hpp"
 
 
 namespace robotoc {
@@ -281,6 +283,16 @@ public:
       const std::vector<Eigen::Vector3d>& contact_positions);
 
   ///
+  /// @brief Sets contact placements. The rotation of each contact is set to
+  /// Eigen::Matrix3d::Identity(), which represents the vertical direction
+  /// to the ground.
+  /// @param[in] contact_positions Contact positions. Size must be 
+  /// ContactStatus::maxNumContacts().
+  ///
+  void setContactPlacements(
+      const std::unordered_map<std::string, Eigen::Vector3d>& contact_positions);
+
+  ///
   /// @brief Sets contact placements.
   /// @param[in] contact_positions Contact positions. Size must be 
   /// ContactStatus::maxNumContacts().
@@ -293,10 +305,29 @@ public:
 
   ///
   /// @brief Sets contact placements.
+  /// @param[in] contact_positions Contact positions. Size must be 
+  /// ContactStatus::maxNumContacts().
+  /// @param[in] contact_rotations Contact rotations. Size must be 
+  /// ContactStatus::maxNumContacts().
+  ///
+  void setContactPlacements(
+      const std::unordered_map<std::string, Eigen::Vector3d>& contact_positions,
+      const std::unordered_map<std::string, Eigen::Matrix3d>& contact_rotations);
+
+  ///
+  /// @brief Sets contact placements.
   /// @param[in] contact_placements Contact placements. Size must be 
   /// ContactStatus::maxNumContacts().
   ///
   void setContactPlacements(const aligned_vector<SE3>& contact_placements);
+ 
+  ///
+  /// @brief Sets contact placements.
+  /// @param[in] contact_placements Contact placements. Size must be 
+  /// ContactStatus::maxNumContacts().
+  ///
+  void setContactPlacements(
+      const aligned_unordered_map<std::string, SE3>& contact_placements);
 
   ///
   /// @brief Gets the contact placement.
