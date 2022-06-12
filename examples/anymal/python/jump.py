@@ -9,8 +9,6 @@ contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.04
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
-
 
 dt = 0.01
 jump_length = np.array([0.5, 0, 0])
@@ -57,10 +55,10 @@ config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
 robot.forward_kinematics(q_standing)
-x3d0_LF = robot.frame_position(LF_foot_id)
-x3d0_LH = robot.frame_position(LH_foot_id)
-x3d0_RF = robot.frame_position(RF_foot_id)
-x3d0_RH = robot.frame_position(RH_foot_id)
+x3d0_LF = robot.frame_position('LF_FOOT')
+x3d0_LH = robot.frame_position('LH_FOOT')
+x3d0_RF = robot.frame_position('RF_FOOT')
+x3d0_RH = robot.frame_position('RH_FOOT')
 
 com_ref0_flying_up = robot.com()
 vcom_ref_flying_up = 0.5*jump_length/flying_up_time + np.array([0, 0, (jump_height/flying_up_time)])

@@ -9,8 +9,6 @@ contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.04
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
-
 
 dt = 0.02
 step_length = np.array([0.25, 0, 0])
@@ -56,10 +54,10 @@ config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
 robot.forward_kinematics(q_standing)
-x3d0_LF = robot.frame_position(LF_foot_id)
-x3d0_LH = robot.frame_position(LH_foot_id)
-x3d0_RF = robot.frame_position(RF_foot_id)
-x3d0_RH = robot.frame_position(RH_foot_id)
+x3d0_LF = robot.frame_position('LF_FOOT')
+x3d0_LH = robot.frame_position('LH_FOOT')
+x3d0_RF = robot.frame_position('RF_FOOT')
+x3d0_RH = robot.frame_position('RH_FOOT')
 LF_t0 = t0 + swing_time + double_support_time
 LH_t0 = t0 + swing_time + double_support_time
 RF_t0 = t0 
@@ -76,10 +74,10 @@ RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RF, step_length, step_height,
 RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RH, step_length, step_height, 
                                            RH_t0, swing_time, 
                                            swing_time+2*double_support_time, True)
-LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LF_foot_id, LF_foot_ref)
-LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, LH_foot_id, LH_foot_ref)
-RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RF_foot_id, RF_foot_ref)
-RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, RH_foot_id, RH_foot_ref)
+LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'LF_FOOT', LF_foot_ref)
+LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'LH_FOOT', LH_foot_ref)
+RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'RF_FOOT', RF_foot_ref)
+RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'RH_FOOT', RH_foot_ref)
 foot_track_weight = np.full(3, 1.0e06)
 LF_cost.set_x3d_weight(foot_track_weight)
 LH_cost.set_x3d_weight(foot_track_weight)

@@ -9,7 +9,6 @@ contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-L_foot_id, R_foot_id = robot.contact_frames()
 
 dt = 0.02
 jump_length = np.array([0.5, 0, 0])
@@ -73,8 +72,8 @@ max_num_each_discrete_events = 2
 contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
-x3d0_L = robot.frame_placement(L_foot_id)
-x3d0_R = robot.frame_placement(R_foot_id)
+x3d0_L = robot.frame_placement('l_sole')
+x3d0_R = robot.frame_placement('r_sole')
 contact_placements = {'l_sole': x3d0_L, 'r_sole': x3d0_R} 
 
 contact_status_standing = robot.create_contact_status()

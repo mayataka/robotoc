@@ -114,10 +114,6 @@ int main(int argc, char *argv[]) {
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
                        contact_frames, contact_types, baumgarte_time_step);
-  const int LF_foot_id = robot.contactFrames()[0];
-  const int LH_foot_id = robot.contactFrames()[1];
-  const int RF_foot_id = robot.contactFrames()[2];
-  const int RH_foot_id = robot.contactFrames()[3];
 
   const double stride = 0.45;
   const double additive_stride_hip = 0.2;
@@ -196,10 +192,10 @@ int main(int argc, char *argv[]) {
 
   robot.updateFrameKinematics(q_standing);
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
-      = {{"LF_FOOT", robot.framePosition(LF_foot_id)}, 
-         {"LH_FOOT", robot.framePosition(LH_foot_id)}, 
-         {"RF_FOOT", robot.framePosition(RF_foot_id)}, 
-         {"RH_FOOT", robot.framePosition(RH_foot_id)}};
+      = {{"LF_FOOT", robot.framePosition("LF_FOOT")}, 
+         {"LH_FOOT", robot.framePosition("LH_FOOT")}, 
+         {"RF_FOOT", robot.framePosition("RF_FOOT")}, 
+         {"RH_FOOT", robot.framePosition("RH_FOOT")}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   auto contact_status_front_swing = robot.createContactStatus();

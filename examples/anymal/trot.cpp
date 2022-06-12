@@ -41,10 +41,6 @@ int main(int argc, char *argv[]) {
   const double baumgarte_time_step = 0.04;
   robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
                        contact_frames, contact_types, baumgarte_time_step);
-  const int LF_foot_id = robot.contactFrames()[0];
-  const int LH_foot_id = robot.contactFrames()[1];
-  const int RF_foot_id = robot.contactFrames()[2];
-  const int RH_foot_id = robot.contactFrames()[3];
 
   const double dt = 0.02;
   const Eigen::Vector3d step_length = {0.15, 0, 0};
@@ -94,10 +90,10 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
 
   robot.updateFrameKinematics(q_standing);
-  const Eigen::Vector3d x3d0_LF = robot.framePosition(LF_foot_id);
-  const Eigen::Vector3d x3d0_LH = robot.framePosition(LH_foot_id);
-  const Eigen::Vector3d x3d0_RF = robot.framePosition(RF_foot_id);
-  const Eigen::Vector3d x3d0_RH = robot.framePosition(RH_foot_id);
+  const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
+  const Eigen::Vector3d x3d0_LH = robot.framePosition("LH_FOOT");
+  const Eigen::Vector3d x3d0_RF = robot.framePosition("RF_FOOT");
+  const Eigen::Vector3d x3d0_RH = robot.framePosition("RH_FOOT");
   const double LF_t0 = t0 + swing_time + double_support_time;
   const double LH_t0 = t0;
   const double RF_t0 = t0;
@@ -114,10 +110,10 @@ int main(int argc, char *argv[]) {
   auto RH_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_RH, step_length, step_height, 
                                                                      RH_t0, swing_time, 
                                                                      swing_time+2*double_support_time, false);
-  auto LF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, LF_foot_id, LF_foot_ref);
-  auto LH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, LH_foot_id, LH_foot_ref);
-  auto RF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, RF_foot_id, RF_foot_ref);
-  auto RH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, RH_foot_id, RH_foot_ref);
+  auto LF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "LF_FOOT", LF_foot_ref);
+  auto LH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "LH_FOOT", LH_foot_ref);
+  auto RF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "RF_FOOT", RF_foot_ref);
+  auto RH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "RH_FOOT", RH_foot_ref);
   const Eigen::Vector3d foot_track_weight = Eigen::Vector3d::Constant(1.0e06);
   LF_cost->set_x3d_weight(foot_track_weight);
   LH_cost->set_x3d_weight(foot_track_weight);

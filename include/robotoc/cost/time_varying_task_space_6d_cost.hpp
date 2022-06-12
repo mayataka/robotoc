@@ -103,7 +103,7 @@ public:
   ///
   TimeVaryingTaskSpace6DCost(
       const Robot& robot, const std::string& frame_name, 
-      const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& x3d_ref);
+      const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref);
 
   ///
   /// @brief Default constructor. 

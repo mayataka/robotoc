@@ -9,7 +9,6 @@ contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
-LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id = robot.contact_frames()
 
 dt = 0.02
 step_length = np.array([0.15, 0., 0.])
@@ -19,7 +18,6 @@ double_support_time = 0.05
 t0 = 0.1
 cycle = 1
 cycle = 5
-
 
 # Create the cost function
 cost = robotoc.CostFunction()
@@ -94,10 +92,10 @@ max_num_each_discrete_events = 2*cycle
 contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 robot.forward_kinematics(q_standing)
-x3d0_LF = robot.frame_position(LF_foot_id)
-x3d0_LH = robot.frame_position(LH_foot_id)
-x3d0_RF = robot.frame_position(RF_foot_id)
-x3d0_RH = robot.frame_position(RH_foot_id)
+x3d0_LF = robot.frame_position('LF_FOOT')
+x3d0_LH = robot.frame_position('LH_FOOT')
+x3d0_RF = robot.frame_position('RF_FOOT')
+x3d0_RH = robot.frame_position('RH_FOOT')
 contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 
 contact_status_standing = robot.create_contact_status()
