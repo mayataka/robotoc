@@ -196,15 +196,15 @@ int main(int argc, char *argv[]) {
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
-                                                 robot.framePosition(LH_foot_id),
-                                                 robot.framePosition(RF_foot_id),
-                                                 robot.framePosition(RH_foot_id)};
+                                                    robot.framePosition(LH_foot_id),
+                                                    robot.framePosition(RF_foot_id),
+                                                    robot.framePosition(RH_foot_id)};
   auto contact_status_standing = robot.createContactStatus();
-  contact_status_standing.activateContacts({0, 1, 2, 3});
+  contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   auto contact_status_front_swing = robot.createContactStatus();
-  contact_status_front_swing.activateContacts({1, 3});
+  contact_status_front_swing.activateContacts(std::vector<std::string>({"LH_FOOT", "RH_FOOT"}));
   auto contact_status_hip_swing = robot.createContactStatus();
-  contact_status_hip_swing.activateContacts({0, 2});
+  contact_status_hip_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "RF_FOOT"}));
   auto contact_status_front_hip_swing = robot.createContactStatus();
 
   contact_status_standing.setContactPlacements(contact_positions);

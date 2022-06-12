@@ -123,12 +123,12 @@ contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 contact_status_standing = robot.create_contact_status()
-contact_status_standing.activate_contacts([0, 1, 2, 3])
+contact_status_standing.activate_contacts(['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'])
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
 contact_status_lhrf_swing = robot.create_contact_status()
-contact_status_lhrf_swing.activate_contacts([0, 3])
+contact_status_lhrf_swing.activate_contacts(['FL_foot', 'RR_foot'])
 contact_status_lhrf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_lhrf_swing, t0)
 
@@ -139,7 +139,7 @@ contact_sequence.push_back(contact_status_flying, t0+stance_time)
 contact_positions[1] += 0.5 * step_length
 contact_positions[2] += 0.5 * step_length
 contact_status_rhlf_swing = robot.create_contact_status()
-contact_status_rhlf_swing.activate_contacts([1, 2])
+contact_status_rhlf_swing.activate_contacts(['RL_foot', 'FR_foot'])
 contact_status_rhlf_swing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_rhlf_swing, t0+stance_time+flying_time)
 

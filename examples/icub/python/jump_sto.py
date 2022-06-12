@@ -78,7 +78,7 @@ x3d0_R = robot.frame_placement(R_foot_id)
 contact_placements = [x3d0_L, x3d0_R]
 
 contact_status_standing = robot.create_contact_status()
-contact_status_standing.activate_contacts([0, 1])
+contact_status_standing.activate_contacts(['l_sole', 'r_sole'])
 contact_status_standing.set_contact_placements(contact_placements)
 contact_sequence.init_contact_sequence(contact_status_standing)
 

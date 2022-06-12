@@ -162,18 +162,18 @@ int main(int argc, char *argv[]) {
 
   std::vector<Eigen::Vector3d> contact_positions = {x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH};
   auto contact_status_standing = robot.createContactStatus();
-  contact_status_standing.activateContacts({0, 1, 2, 3});
+  contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->initContactSequence(contact_status_standing);
 
   auto contact_status_rh_swing = robot.createContactStatus();
-  contact_status_rh_swing.activateContacts({0, 1, 2});
+  contact_status_rh_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT"}));
   contact_status_rh_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_rh_swing, t0);
 
   contact_positions[3].noalias() += 0.5 * step_length;
   auto contact_status_rf_swing = robot.createContactStatus();
-  contact_status_rf_swing.activateContacts({0, 1, 3});
+  contact_status_rf_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RH_FOOT"}));
   contact_status_rf_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_rf_swing, t0+swing_time);
 
@@ -182,14 +182,14 @@ int main(int argc, char *argv[]) {
   contact_sequence->push_back(contact_status_standing, t0+2*swing_time);
 
   auto contact_status_lh_swing = robot.createContactStatus();
-  contact_status_lh_swing.activateContacts({0, 2, 3});
+  contact_status_lh_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_lh_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_lh_swing, 
                               t0+double_support_time+2*swing_time);
 
   contact_positions[1].noalias() += step_length;
   auto contact_status_lf_swing = robot.createContactStatus();
-  contact_status_lf_swing.activateContacts({1, 2, 3});
+  contact_status_lf_swing.activateContacts(std::vector<std::string>({"LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_lf_swing.setContactPlacements(contact_positions);
   contact_sequence->push_back(contact_status_lf_swing, 
                               t0+double_support_time+3*swing_time);

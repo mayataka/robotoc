@@ -105,7 +105,7 @@ contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
 
 contact_positions = [x3d0_LF, x3d0_LH, x3d0_RF, x3d0_RH]
 contact_status_standing = robot.create_contact_status()
-contact_status_standing.activate_contacts([0, 1, 2, 3])
+contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.init_contact_sequence(contact_status_standing)
 
