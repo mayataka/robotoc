@@ -29,16 +29,19 @@ protected:
   void testStageCost(Robot& robot);
 
   GridInfo grid_info;
-  double dt, t;
+  double dt, t0, t;
 };
 
 
 void CostFunctionTest::testStageCost(Robot& robot) {
   const double discount_factor = 0.99;
+  const double discount_time_step = 0.02;
   auto non_discounted_cost = std::make_shared<CostFunction>();
-  auto discounted_cost = std::make_shared<CostFunction>(discount_factor);
+  auto discounted_cost = std::make_shared<CostFunction>(discount_factor, discount_time_step);
   EXPECT_DOUBLE_EQ(non_discounted_cost->discountFactor(), 1.0);
+  EXPECT_DOUBLE_EQ(non_discounted_cost->discountTimeStep(), 0.0);
   EXPECT_DOUBLE_EQ(discounted_cost->discountFactor(), discount_factor);
+  EXPECT_DOUBLE_EQ(discounted_cost->discountTimeStep(), discount_time_step);
 
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
@@ -75,8 +78,8 @@ void CostFunctionTest::testStageCost(Robot& robot) {
 
   const double non_discounted_value = non_discounted_cost->evalStageCost(robot, contact_status, data, grid_info, s);
   const double discounted_value = discounted_cost->evalStageCost(robot, contact_status, data, grid_info, s);
-  EXPECT_DOUBLE_EQ(non_discounted_value*std::pow(discount_factor, grid_info.time_stage), discounted_value);
-  non_discounted_cost->setDiscountFactor(discount_factor);
+  EXPECT_DOUBLE_EQ(non_discounted_value*std::pow(discount_factor, (grid_info.t-grid_info.t0)/discount_time_step), discounted_value);
+  non_discounted_cost->setDiscountFactor(discount_factor, discount_time_step);
   EXPECT_DOUBLE_EQ(discounted_value, non_discounted_cost->evalStageCost(robot, contact_status, data, grid_info, s));
 }
 

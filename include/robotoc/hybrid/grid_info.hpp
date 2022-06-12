@@ -2,6 +2,7 @@
 #define ROBOTOC_GRID_INFO_HPP_
 
 #include <random>
+#include <cmath>
 #include <chrono>
 #include <iostream>
 
@@ -13,6 +14,11 @@ namespace robotoc {
 /// @brief Grid information.
 ///
 struct GridInfo {
+  ///
+  /// @brief Initial time of the horizon.
+  ///
+  double t0 = 0;
+
   ///
   /// @brief Time of this grid.
   ///
@@ -62,7 +68,8 @@ struct GridInfo {
     std::random_device rand;
     std::default_random_engine eng(rand());
     std::uniform_real_distribution<double> d_distr(0, 10);
-    t = d_distr(eng);
+    t0 = d_distr(eng);
+    t = t0 + std::abs(d_distr(eng));
     dt = d_distr(eng);
     std::uniform_int_distribution<int> i_distr(0, 100);
     contact_phase = i_distr(eng);
@@ -85,6 +92,7 @@ struct GridInfo {
   ///
   void disp(std::ostream& os) const {
     os << "Grid info: " << std::endl;
+    os << "t0:  " << t0 << std::endl;
     os << "t:  " << t << std::endl;
     os << "dt: " << dt << std::endl;
     os << "contact_phase: " << contact_phase << std::endl;

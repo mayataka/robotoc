@@ -426,6 +426,8 @@ private:
   void countContactPhase();
 
   void countSTOEvents();
+
+  void setInitialTime(const double t);
 };
 
 } // namespace robotoc
