@@ -69,8 +69,8 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
     def add_print_item(self, item):
         self.print_items.append(item)
 
-    def run_simulation(self, mpc, q0, v0, feedback_delay=False, 
-                       terrain=False, verbose=False, 
+    def run_simulation(self, mpc, q0, v0, feedback_delay=False, terrain=False, 
+                       verbose=False, log=False, log_name='mpc_sim', 
                        record=False, record_name='mpc_sim.mp4'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
@@ -93,6 +93,16 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         sim_time = self.end_time - self.start_time
         sim_steps = math.floor(sim_time/self.time_step)
 
+        if log:
+            log_dir = os.path.join(os.getcwd(), "log")
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            q_log = open(os.path.join(log_dir, log_name+"_q.log"), mode='w')
+            v_log = open(os.path.join(log_dir, log_name+"_v.log"), mode='w')
+            u_log = open(os.path.join(log_dir, log_name+"_u.log"), mode='w')
+            t_log = open(os.path.join(log_dir, log_name+"_t.log"), mode='w')
+            kkt_log = open(os.path.join(log_dir, log_name+"_kkt.log"), mode='w')
+
         if self.calib_camera:
             pybullet.resetDebugVisualizerCamera(self.camera_distance,
                                                 self.camera_yaw,
@@ -111,8 +121,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             if feedback_delay:
                 u = mpc.get_initial_control_input().copy()
             mpc.update_solution(t, self.time_step, q, v)
+            kkt_error = mpc.KKT_error(t, q, v) 
             if verbose:
-                print('KKT error = {:.6g}'.format(mpc.KKT_error(t, q, v)))
+                print('KKT error = {:.6g}'.format(kkt_error))
                 print('')
                 if self.print_items:
                     for e in self.print_items:
@@ -122,5 +133,19 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             self.apply_control_input_to_pybullet(robot, u)
             pybullet.stepSimulation()
             time.sleep(self.time_step)
+            if log:
+                np.savetxt(q_log, [q])
+                np.savetxt(v_log, [v])
+                np.savetxt(u_log, [u])
+                np.savetxt(t_log, np.array([t]))
+                np.savetxt(kkt_log, np.array([kkt_error]))
             t = t + self.time_step
+
+        if log:
+            q_log.close()
+            v_log.close()
+            u_log.close()
+            t_log.close()
+            kkt_log.close()
+
         pybullet.disconnect()
