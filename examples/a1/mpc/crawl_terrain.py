@@ -10,12 +10,11 @@ baumgarte_time_step = 0.05
 robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
                       contact_frames, contact_types, baumgarte_time_step)
 
-step_length = np.array([0.2, 0, 0]) 
+step_length = np.array([0.25, 0, 0]) 
 yaw_cmd = 0.0
 
 step_height = 0.1
 swing_time = 0.25
-# stance_time = 0
 stance_time = 0.05
 swing_start_time = 0.5
 
@@ -29,8 +28,9 @@ nthreads = 4
 mpc = robotoc.MPCCrawl(robot, T, N, max_steps, nthreads)
 
 planner = robotoc.CrawlFootStepPlanner(robot)
-raibert_gain = 0.2
-planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+stance_time, raibert_gain)
+planner.set_gait_pattern(step_length, yaw_cmd, (stance_time > 0.))
+# raibert_gain = 0.2
+# planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+stance_time, raibert_gain)
 mpc.set_gait_pattern(planner, step_height, swing_time, stance_time, swing_start_time)
 
 q = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
@@ -38,6 +38,7 @@ q = np.array([0, 0, 0.3181, 0, 0, 0, 1,
               0.0,  0.67, -1.3, 
               0.0,  0.67, -1.3, 
               0.0,  0.67, -1.3])
+q[0] -= 2.5
 v = np.zeros(robot.dimv())
 t = 0.0
 option_init = robotoc.SolverOptions()
@@ -55,12 +56,18 @@ sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
 log = False
 record = False
+log = True
+record = True
 
 q0 = q.copy()
-q0[2] += 0.1 # to avoid penetration at the initial configuraion
+q0[2] += 0.04 # to avoid penetration at the initial configuraion
 sim.set_camera(3.0, 15, 8, q[0:3]+np.array([0.0, 1.5, 0.2]))
 sim.run_simulation(mpc, q0, v, feedback_delay=True, verbose=False, terrain=True, 
                    record=record, log=log, sim_name='a1_crawl_terrain')
+
+if record:
+    robotoc.utils.adjust_video_duration('a1_crawl_terrain.mp4', 
+                                        desired_duration_sec=(sim_end_time-sim_start_time))
 
 if log:
     q_log = np.genfromtxt(sim.q_log)

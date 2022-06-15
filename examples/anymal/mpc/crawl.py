@@ -57,6 +57,10 @@ sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, 
                    record=record, log=log, sim_name='anymal_crawl')
 
+if record:
+    robotoc.utils.adjust_video_duration('anymal_crawl.mp4', 
+                                        desired_duration_sec=(sim_end_time-sim_start_time))
+
 if log:
     q_log = np.genfromtxt(sim.q_log)
     v_log = np.genfromtxt(sim.v_log)

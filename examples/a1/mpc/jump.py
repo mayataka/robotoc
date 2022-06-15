@@ -76,7 +76,11 @@ log = False
 record = False
 
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, 
-                   record=record, log=log, sim_name='a1_jump_'+jump_type+'.mp4')
+                   record=record, log=log, sim_name='a1_jump_'+jump_type)
+
+if record:
+    robotoc.utils.adjust_video_duration('a1_jump_'+jump_type+'.mp4', 
+                                        desired_duration_sec=(sim_end_time-sim_start_time))
 
 if log:
     q_log = np.genfromtxt(sim.q_log)
