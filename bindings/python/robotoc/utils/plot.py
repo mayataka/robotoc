@@ -301,8 +301,8 @@ class PlotCoMVelocity:
     def __init__(self):
         self.wspace = 0.45
         self.hspace = 0.1
-        self.figsize = 6, 2
-        self.legend_bbox_to_anchor = (0.515, 1.0)
+        self.figsize = 6, 4
+        self.legend_bbox_to_anchor = (0.5, 1.0)
         self.legend_ncols = 2
         self.ylim = None
         self.xlim = None
@@ -330,6 +330,10 @@ class PlotCoMVelocity:
         # Set the width of lines and axes.
         plt.rcParams['lines.linewidth'] = 1.5
         plt.rcParams['axes.linewidth'] = 0.5
+
+        plt.rcParams['figure.figsize'] = self.figsize
+        plt.rcParams['xtick.labelsize'] = 8
+        plt.rcParams['ytick.labelsize'] = 8
 
         cmap = plt.get_cmap("tab10")
         fig = plt.figure()
