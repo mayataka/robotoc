@@ -206,7 +206,7 @@ void MPCFlyingTrot::init(const double t, const Eigen::VectorXd& q,
                                                                 flying_time_+stance_time_, 0.0,
                                                                 num_phases_in_period);
   base_rot_cost_->set_q_ref(base_rot_ref_);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
@@ -248,7 +248,7 @@ void MPCFlyingTrot::updateSolution(const double t, const double dt,
       ++current_step_;
     }
   }
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.solve(t, q, v, true);
 }
 
@@ -364,9 +364,10 @@ bool MPCFlyingTrot::addStep(const double t) {
 }
 
 
-void MPCFlyingTrot::resetContactPlacements(const Eigen::VectorXd& q,
+void MPCFlyingTrot::resetContactPlacements(const double t, 
+                                           const Eigen::VectorXd& q,
                                            const Eigen::VectorXd& v) {
-  const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
+  const bool success = foot_step_planner_->plan(t, q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases()+1);
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 

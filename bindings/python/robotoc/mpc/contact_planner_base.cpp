@@ -19,12 +19,12 @@ public:
                            init, q);
   }
 
-  bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+  bool plan(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const ContactStatus& contact_status, 
             const int planning_steps) override {
     PYBIND11_OVERRIDE_PURE(bool, ContactPlannerBase, 
                            plan, 
-                           q, v, contact_status, planning_steps);
+                           t, q, v, contact_status, planning_steps);
   }
 
   const aligned_vector<SE3>& contactPlacement(const int step) const override {
@@ -75,7 +75,30 @@ PYBIND11_MODULE(contact_planner_base, m) {
   py::class_<ContactPlannerBase, 
              PyContactPlannerBase, 
              std::shared_ptr<ContactPlannerBase>>(m, "ContactPlannerBase")
-    .def(py::init<>());
+    .def(py::init<>()) 
+    .def("plan", &ContactPlannerBase::plan,
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), 
+          py::arg("planning_steps"))
+    .def("contactPlacement", 
+          static_cast<const aligned_vector<SE3>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactPlacement),
+          py::arg("step"))
+    .def("contactPlacement", 
+          static_cast<const aligned_vector<aligned_vector<SE3>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPlacement))
+    .def("contactPosition", 
+          static_cast<const std::vector<Eigen::Vector3d>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactPosition),
+          py::arg("step"))
+    .def("contactPosition", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPosition))
+    .def("com", 
+          static_cast<const Eigen::Vector3d& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::com),
+          py::arg("step"))
+    .def("com", 
+          static_cast<const std::vector<Eigen::Vector3d>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::com))
+    .def("R", 
+          static_cast<const Eigen::Matrix3d& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::R),
+          py::arg("step"))
+    .def("R", 
+          static_cast<const std::vector<Eigen::Matrix3d>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::R));
 }
 
 } // namespace python

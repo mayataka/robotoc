@@ -143,7 +143,7 @@ void MPCJump::init(const double t, const Eigen::VectorXd& q,
                                           - foot_step_planner_->com(0));
   q_ref.template segment<4>(3) = Eigen::Quaterniond(foot_step_planner_->R(2)).coeffs();
   config_cost_->set_q_ref(q_ref);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
@@ -172,7 +172,7 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
                                           - foot_step_planner_->com(0));
   q_ref.template segment<4>(3) = Eigen::Quaterniond(foot_step_planner_->R(2)).coeffs();
   config_cost_->set_q_ref(q_ref);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.setSolution(s_);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -219,7 +219,7 @@ void MPCJump::updateSolution(const double t, const double dt,
     }
   }
   resetMinimumDwellTimes(t, dt);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.solve(t, q, v, true);
 }
 
@@ -292,9 +292,9 @@ void MPCJump::resetMinimumDwellTimes(const double t, const double min_dt) {
 }
 
 
-void MPCJump::resetContactPlacements(const Eigen::VectorXd& q,
+void MPCJump::resetContactPlacements(const double t, const Eigen::VectorXd& q,
                                      const Eigen::VectorXd& v) {
-  const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
+  const bool success = foot_step_planner_->plan(t, q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   if (current_step_ == 0) {
     contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));

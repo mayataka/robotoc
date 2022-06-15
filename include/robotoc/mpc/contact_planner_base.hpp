@@ -56,7 +56,8 @@ public:
   virtual void init(const Eigen::VectorXd& q) = 0;
 
   ///
-  /// @brief Plans the foot steps. 
+  /// @brief Plans the foot steps in the MPC (receding-horizon) fashion. 
+  /// @param[in] t Initial time.
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] contact_status Initial contact status.
@@ -65,7 +66,8 @@ public:
   /// @remark The implementation must follow: step=0: previous step, 
   /// step=1: initial step (specified as q and contact_status).
   ///
-  virtual bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+  virtual bool plan(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, 
                     const ContactStatus& contact_status,
                     const int planning_steps) = 0;
 

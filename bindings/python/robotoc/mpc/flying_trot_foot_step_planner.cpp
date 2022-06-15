@@ -26,7 +26,7 @@ PYBIND11_MODULE(flying_trot_foot_step_planner, m) {
     .def("init", &FlyingTrotFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &FlyingTrotFootStepPlanner::plan,
-          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
     .def("contact_position", 
           static_cast<const std::vector<Eigen::Vector3d>& (FlyingTrotFootStepPlanner::*)(const int) const>(&FlyingTrotFootStepPlanner::contactPosition),
           py::arg("step"))

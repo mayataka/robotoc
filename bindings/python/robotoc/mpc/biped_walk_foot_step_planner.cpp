@@ -22,11 +22,11 @@ PYBIND11_MODULE(biped_walk_foot_step_planner, m) {
     .def("set_gait_pattern", 
           static_cast<void (BipedWalkFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&BipedWalkFootStepPlanner::setGaitPattern),
           py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
-          py::arg("t_swing"), py::arg("t_stance"), py::arg("gain")) 
+          py::arg("swing_time"), py::arg("double_support_time"), py::arg("gain")) 
     .def("init", &BipedWalkFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &BipedWalkFootStepPlanner::plan,
-          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
     .def("contact_position", 
           static_cast<const std::vector<Eigen::Vector3d>& (BipedWalkFootStepPlanner::*)(const int) const>(&BipedWalkFootStepPlanner::contactPosition),
           py::arg("step"))

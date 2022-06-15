@@ -26,7 +26,7 @@ PYBIND11_MODULE(crawl_foot_step_planner, m) {
     .def("init", &CrawlFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &CrawlFootStepPlanner::plan,
-          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
     .def("contact_position", 
           static_cast<const std::vector<Eigen::Vector3d>& (CrawlFootStepPlanner::*)(const int) const>(&CrawlFootStepPlanner::contactPosition),
           py::arg("step"))

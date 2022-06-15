@@ -67,7 +67,7 @@ public:
 
   void init(const Eigen::VectorXd& q) override;
 
-  bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+  bool plan(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const ContactStatus& contact_status, 
             const int planning_steps) override;
 

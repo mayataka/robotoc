@@ -21,7 +21,7 @@ PYBIND11_MODULE(jump_foot_step_planner, m) {
     .def("init", &JumpFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &JumpFootStepPlanner::plan,
-          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
     .def("contact_position", 
           static_cast<const std::vector<Eigen::Vector3d>& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::contactPosition),
           py::arg("step"))

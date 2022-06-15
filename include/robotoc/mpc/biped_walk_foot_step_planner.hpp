@@ -73,17 +73,17 @@ public:
   /// @brief Sets the gait pattern by Raibert heuristic. 
   /// @param[in] v_com_cmd Command of the COM velocity. 
   /// @param[in] yaw_rate_cmd Command of the yaw-rate of the body. 
-  /// @param[in] t_swing Duration of swing. 
-  /// @param[in] t_stance Duration of stance. 
+  /// @param[in] swing_time Swing time of the gait. 
+  /// @param[in] double_support_time Double support time of the gait. 
   /// @param[in] gain The feedback gain of the v_com_cmd. 
   ///
   void setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
-                      const double yaw_rate_cmd, const double t_swing, 
-                      const double t_stance, const double gain);
+                      const double yaw_rate_cmd, const double swing_time, 
+                      const double double_support_time, const double gain);
 
   void init(const Eigen::VectorXd& q) override;
 
-  bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+  bool plan(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const ContactStatus& contact_status, 
             const int planning_steps) override;
 
@@ -123,7 +123,7 @@ private:
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
   std::vector<Eigen::Vector3d> com_ref_;
   std::vector<Eigen::Matrix3d> R_;
-  Eigen::Vector3d v_com_cmd_, step_length_;
+  Eigen::Vector3d v_com_, v_com_cmd_, step_length_;
   Eigen::Matrix3d R_yaw_;
   double yaw_rate_cmd_;
   bool enable_double_support_phase_;

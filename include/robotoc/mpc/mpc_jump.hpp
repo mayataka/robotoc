@@ -237,8 +237,8 @@ private:
 
   void resetGoalContactPlacements(const Eigen::VectorXd& q);
 
-  void resetContactPlacements(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
-
+  void resetContactPlacements(const double t, const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v);
 };
 
 } // namespace robotoc 

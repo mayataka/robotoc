@@ -103,7 +103,7 @@ void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool JumpFootStepPlanner::plan(const Eigen::VectorXd& q,
+bool JumpFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v,
                                const ContactStatus& contact_status,
                                const int planning_steps) {

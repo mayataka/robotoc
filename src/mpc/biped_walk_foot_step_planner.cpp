@@ -20,6 +20,7 @@ BipedWalkFootStepPlanner::BipedWalkFootStepPlanner(const Robot& biped_robot)
     contact_placement_ref_(),
     com_ref_(),
     R_(),
+    v_com_(Eigen::Vector3d::Zero()),
     v_com_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
@@ -47,8 +48,8 @@ BipedWalkFootStepPlanner::~BipedWalkFootStepPlanner() {
 
 
 void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                            const double step_yaw, 
-                                            const bool enable_double_support_phase) {
+                                              const double step_yaw, 
+                                              const bool enable_double_support_phase) {
   step_length_ = step_length;
   R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
            std::sin(step_yaw), std::cos(step_yaw),  0,
@@ -58,15 +59,17 @@ void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length
 }
 
 
-void BipedWalkFootStepPlanner::setGaitPattern(
-    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
-    const double t_swing, const double t_stance, const double gain) {
+void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
+                                              const double yaw_rate_cmd, 
+                                              const double swing_time, 
+                                              const double double_support_time, 
+                                              const double gain) {
   try {
-    if (t_stance <= 0.0) {
-      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    if (swing_time <= 0) {
+      throw std::out_of_range("invalid value: swing_time must be positive!");
     }
-    if (t_swing <= 0.0) {
-      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    if (double_support_time < 0) {
+      throw std::out_of_range("invalid value: double_support_time must be non-negative!");
     }
     if (gain <= 0.0) {
       throw std::out_of_range("invalid argument: gain must be positive!");
@@ -76,14 +79,14 @@ void BipedWalkFootStepPlanner::setGaitPattern(
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raibert_heuristic_.setParameters(t_stance, gain);
+  raibert_heuristic_.setParameters(2.0*(swing_time+double_support_time), gain);
   v_com_cmd_ = v_com_cmd;
-  const double yaw_cmd = yaw_rate_cmd * t_swing;
+  const double yaw_cmd = yaw_rate_cmd * swing_time;
   R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
            std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
            0, 0, 1;
   yaw_rate_cmd_ = yaw_rate_cmd;
-  enable_double_support_phase_ = (t_stance > t_swing);
+  enable_double_support_phase_ = (double_support_time > 0.0);
   enable_raibert_heuristic_ = true;
 }
 
@@ -112,15 +115,17 @@ void BipedWalkFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool BipedWalkFootStepPlanner::plan(const Eigen::VectorXd& q,
-                                  const Eigen::VectorXd& v,
-                                  const ContactStatus& contact_status,
-                                  const int planning_steps) {
+bool BipedWalkFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
+                                    const Eigen::VectorXd& v,
+                                    const ContactStatus& contact_status,
+                                    const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    raibert_heuristic_.planStepLength(v.template head<2>(), 
+    v_com_.transpose() = R_.front().transpose() * v.template head<3>();
+    raibert_heuristic_.planStepLength(v_com_.template head<2>(), 
                                       v_com_cmd_.template head<2>(), yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
+    std::cout << "step_length_: " << step_length_ << std::endl;
   }
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;

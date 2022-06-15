@@ -255,7 +255,8 @@ private:
 
   bool addStep(const double t);
 
-  void resetContactPlacements(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+  void resetContactPlacements(const double t, const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v);
 
 };
 

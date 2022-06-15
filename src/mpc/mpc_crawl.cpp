@@ -198,7 +198,7 @@ void MPCCrawl::init(const double t, const Eigen::VectorXd& q,
   base_rot_ref_ = std::make_shared<MPCPeriodicConfigurationRef>(q, swing_start_time_, 
                                                                 swing_time_, stance_time_);
   base_rot_cost_->set_q_ref(base_rot_ref_);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
@@ -241,7 +241,7 @@ void MPCCrawl::updateSolution(const double t, const double dt,
       ++current_step_;
     }
   }
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.solve(t, q, v, true);
 }
 
@@ -383,9 +383,9 @@ bool MPCCrawl::addStep(const double t) {
 }
 
 
-void MPCCrawl::resetContactPlacements(const Eigen::VectorXd& q,
+void MPCCrawl::resetContactPlacements(const double t, const Eigen::VectorXd& q,
                                       const Eigen::VectorXd& v) {
-  const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
+  const bool success = foot_step_planner_->plan(t, q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 

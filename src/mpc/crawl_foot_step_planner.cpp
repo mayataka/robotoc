@@ -21,6 +21,7 @@ CrawlFootStepPlanner::CrawlFootStepPlanner(const Robot& quadruped_robot)
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
+    v_com_(Eigen::Vector3d::Zero()),
     v_com_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
@@ -79,7 +80,7 @@ void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raibert_heuristic_.setParameters(t_stance, gain);
+  raibert_heuristic_.setParameters(2.0*(t_swing+t_stance), gain);
   v_com_cmd_ = v_com_cmd;
   const double yaw_cmd = yaw_rate_cmd * t_swing;
   R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
@@ -111,13 +112,14 @@ void CrawlFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool CrawlFootStepPlanner::plan(const Eigen::VectorXd& q,
+bool CrawlFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
                                 const Eigen::VectorXd& v,
                                 const ContactStatus& contact_status,
                                 const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    raibert_heuristic_.planStepLength(v.template head<2>(), 
+    v_com_.transpose() = R_.front().transpose() * v.template head<3>();
+    raibert_heuristic_.planStepLength(v_com_.template head<2>(), 
                                       v_com_cmd_.template head<2>(), yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
   }

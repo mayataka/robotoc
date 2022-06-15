@@ -82,7 +82,7 @@ public:
 
   void init(const Eigen::VectorXd& q) override;
 
-  bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+  bool plan(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const ContactStatus& contact_status, 
             const int planning_steps) override;
 
@@ -127,7 +127,7 @@ private:
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
   std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
   std::vector<Eigen::Matrix3d> R_;
-  Eigen::Vector3d v_com_cmd_, step_length_;
+  Eigen::Vector3d v_com_, v_com_cmd_, step_length_;
   Eigen::Matrix3d R_yaw_;
   double yaw_rate_cmd_;
   bool enable_stance_phase_;
