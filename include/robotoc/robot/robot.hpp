@@ -332,6 +332,29 @@ public:
   void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q);
 
   ///
+  /// @brief Updates the frame kinematics of the robot. The frame placements, 
+  /// velocities, and accelerations are calculated. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
+  ///
+  template <typename ConfigVectorType, typename TangentVectorType1, 
+            typename TangentVectorType2>
+  void updateFrameKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                             const Eigen::MatrixBase<TangentVectorType1>& v, 
+                             const Eigen::MatrixBase<TangentVectorType2>& a);
+
+  ///
+  /// @brief Updates the frame kinematics of the robot. The frame placements 
+  /// and velocities are calculated. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  ///
+  template <typename ConfigVectorType, typename TangentVectorType>
+  void updateFrameKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                             const Eigen::MatrixBase<TangentVectorType>& v);
+
+  ///
   /// @brief Updates the frame kinematics of the robot. The frame placements 
   /// are calculated. 
   /// @param[in] q Configuration. Size must be Robot::dimq().

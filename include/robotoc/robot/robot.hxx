@@ -192,6 +192,33 @@ inline void Robot::updateKinematics(
 }
 
 
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2>
+inline void Robot::updateFrameKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& v, 
+    const Eigen::MatrixBase<TangentVectorType2>& a) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v, a);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::centerOfMass(model_, data_, q, v, a, false);
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void Robot::updateFrameKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& v) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::centerOfMass(model_, data_, q, v, false);
+}
+
+
 template <typename ConfigVectorType>
 inline void Robot::updateFrameKinematics(
     const Eigen::MatrixBase<ConfigVectorType>& q) {

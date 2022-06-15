@@ -67,6 +67,15 @@ PYBIND11_MODULE(robot, m) {
     .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q) {
         self.updateFrameKinematics(q);
       },  py::arg("q"))
+    .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v) {
+        self.updateFrameKinematics(q, v);
+      },  py::arg("q"), py::arg("v"))
+    .def("forward_kinematics", [](Robot& self, const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v, 
+                                  const Eigen::VectorXd& a) {
+        self.updateFrameKinematics(q, v, a);
+      },  py::arg("q"), py::arg("v"), py::arg("a"))
     .def("frame_position", 
           static_cast<const Eigen::Vector3d& (Robot::*)(const int) const>(&Robot::framePosition),
           py::arg("frame_id"))
