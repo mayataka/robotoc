@@ -1,4 +1,5 @@
 #include "robotoc/mpc/biped_walk_foot_step_planner.hpp"
+#include "robotoc/utils/rotation.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -92,12 +93,8 @@ void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd,
 
 
 void BipedWalkFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
-  R.coeffRef(0, 0) = 1.0;
-  R.coeffRef(0, 1) = 0.0;
-  R.coeffRef(0, 2) = 0.0;
-  R.coeffRef(1, 0) = 0.0;
-  R.coeffRef(2, 0) = 0.0;
+  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
+  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position_local 
       = { R.transpose() * (robot_.framePosition(L_foot_id_)-q.template head<3>()),
@@ -125,7 +122,6 @@ bool BipedWalkFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
     raibert_heuristic_.planStepLength(v_com_.template head<2>(), 
                                       v_com_cmd_.template head<2>(), yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
-    std::cout << "step_length_: " << step_length_ << std::endl;
   }
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;

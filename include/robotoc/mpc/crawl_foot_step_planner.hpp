@@ -72,13 +72,13 @@ public:
   /// @brief Sets the gait pattern by Raibert heuristic. 
   /// @param[in] v_com_cmd Command of the COM velocity. 
   /// @param[in] yaw_rate_cmd Command of the yaw-rate of the body. 
-  /// @param[in] t_swing Duration of swing. 
-  /// @param[in] t_stance Duration of stance. 
+  /// @param[in] swing_time Swing time of the gait. 
+  /// @param[in] stance_time Stance time of the gait. 
   /// @param[in] gain The feedback gain of the v_com_cmd. 
   ///
   void setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
-                      const double yaw_rate_cmd, const double t_swing, 
-                      const double t_stance, const double gain);
+                      const double yaw_rate_cmd, const double swing_time,
+                      const double stance_time, const double gain);
 
   void init(const Eigen::VectorXd& q) override;
 
@@ -131,7 +131,6 @@ private:
   Eigen::Matrix3d R_yaw_;
   double yaw_rate_cmd_;
   bool enable_stance_phase_;
-
 };
 
 } // namespace robotoc 

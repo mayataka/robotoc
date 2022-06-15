@@ -22,7 +22,7 @@ PYBIND11_MODULE(flying_trot_foot_step_planner, m) {
     .def("set_gait_pattern", 
           static_cast<void (FlyingTrotFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&FlyingTrotFootStepPlanner::setGaitPattern),
           py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
-          py::arg("t_swing"), py::arg("t_stance"), py::arg("gain")) 
+          py::arg("flying_time"), py::arg("stance_time"), py::arg("gain")) 
     .def("init", &FlyingTrotFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &FlyingTrotFootStepPlanner::plan,

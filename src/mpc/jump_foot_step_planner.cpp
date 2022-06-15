@@ -1,4 +1,5 @@
 #include "robotoc/mpc/jump_foot_step_planner.hpp"
+#include "robotoc/utils/rotation.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -53,8 +54,8 @@ void JumpFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length,
 
 
 void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
-  const Eigen::Matrix3d R 
-      = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
+  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
+  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;
   for (const auto frame : robot_.contactFrames()) {

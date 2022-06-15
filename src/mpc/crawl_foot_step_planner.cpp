@@ -1,4 +1,5 @@
 #include "robotoc/mpc/crawl_foot_step_planner.hpp"
+#include "robotoc/utils/rotation.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -62,15 +63,15 @@ void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length,
 
 void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
                                           const double yaw_rate_cmd, 
-                                          const double t_swing, 
-                                          const double t_stance, 
+                                          const double swing_time,
+                                          const double stance_time,
                                           const double gain) {
   try {
-    if (t_stance <= 0.0) {
-      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    if (swing_time <= 0.0) {
+      throw std::out_of_range("invalid argument: swing_time must be positive!");
     }
-    if (t_swing <= 0.0) {
-      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    if (stance_time < 0.0) {
+      throw std::out_of_range("invalid argument: stance_time must be non-negative!");
     }
     if (gain <= 0.0) {
       throw std::out_of_range("invalid argument: gain must be positive!");
@@ -80,25 +81,21 @@ void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raibert_heuristic_.setParameters(2.0*(t_swing+t_stance), gain);
+  raibert_heuristic_.setParameters(2.0*(swing_time+stance_time), gain);
   v_com_cmd_ = v_com_cmd;
-  const double yaw_cmd = yaw_rate_cmd * t_swing;
+  const double yaw_cmd = yaw_rate_cmd * swing_time;
   R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
            std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
            0, 0, 1;
   yaw_rate_cmd_ = yaw_rate_cmd;
-  enable_stance_phase_ = (t_stance > t_swing);
+  enable_stance_phase_ = (stance_time > 0.0);
   enable_raibert_heuristic_ = true;
 }
 
 
 void CrawlFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
-  R.coeffRef(0, 0) = 1.0;
-  R.coeffRef(0, 1) = 0.0;
-  R.coeffRef(0, 2) = 0.0;
-  R.coeffRef(1, 0) = 0.0;
-  R.coeffRef(2, 0) = 0.0;
+  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
+  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   com_to_contact_position_local_ = { R.transpose() * (robot_.framePosition(LF_foot_id_)-robot_.CoM()), 
                                      R.transpose() * (robot_.framePosition(LH_foot_id_)-robot_.CoM()),
