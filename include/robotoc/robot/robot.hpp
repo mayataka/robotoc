@@ -417,6 +417,85 @@ public:
   const Eigen::Vector3d& CoM() const;
 
   ///
+  /// @brief Returns the linear (translational) velocity of the frame. Before calling  
+  /// this function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_id Index of the frame.
+  /// @param[in] reference_frame Reference frame. Default is 
+  /// pinocchio::LOCAL_WORLD_ALIGNED (world velocity).
+  /// @return Translational velocity of the frame.
+  ///
+  Eigen::Vector3d frameLinearVelocity(
+      const int frame_id, 
+      const pinocchio::ReferenceFrame reference_frame=pinocchio::LOCAL_WORLD_ALIGNED) const;
+
+  ///
+  /// @brief Returns the linear (translational) velocity of the frame. Before calling  
+  /// this function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @param[in] reference_frame Reference frame. Default is 
+  /// pinocchio::LOCAL_WORLD_ALIGNED (world velocity).
+  /// @return Translational velocity of the frame.
+  ///
+  Eigen::Vector3d frameLinearVelocity(
+      const std::string& frame_name, 
+      const pinocchio::ReferenceFrame reference_frame=pinocchio::LOCAL_WORLD_ALIGNED) const;
+
+  ///
+  /// @brief Returns the angular velocity of the frame. Before calling  
+  /// this function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_id Index of the frame.
+  /// @param[in] reference_frame Reference frame. Default is 
+  /// pinocchio::LOCAL_WORLD_ALIGNED (world velocity).
+  /// @return Angular velocity of the frame.
+  ///
+  Eigen::Vector3d frameAngularVelocity(
+      const int frame_id, 
+      const pinocchio::ReferenceFrame reference_frame=pinocchio::LOCAL_WORLD_ALIGNED) const;
+
+  ///
+  /// @brief Returns the angular velocity of the frame. Before calling  
+  /// this function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @param[in] reference_frame Reference frame. Default is 
+  /// pinocchio::LOCAL_WORLD_ALIGNED (world velocity).
+  /// @return Angular velocity of the frame.
+  ///
+  Eigen::Vector3d frameAngularVelocity(
+      const std::string& frame_name, 
+      const pinocchio::ReferenceFrame reference_frame=pinocchio::LOCAL_WORLD_ALIGNED) const;
+
+  ///
+  /// @brief Returns the spatial velocity of the frame. Before calling  
+  /// this function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_id Index of the frame.
+  /// @param[in] reference_frame Reference frame. Default is 
+  /// pinocchio::LOCAL_WORLD_ALIGNED (world velocity).
+  /// @return Spatial velocity of the frame.
+  ///
+  Vector6d frameSpatialVelocity(
+      const int frame_id, 
+      const pinocchio::ReferenceFrame reference_frame=pinocchio::LOCAL_WORLD_ALIGNED) const;
+
+  ///
+  /// @brief Returns the spatial velocity of the frame. Before calling  
+  /// this function, updateKinematics() or updateFrameKinematics() must be called.
+  /// @param[in] frame_name Name of the frame.
+  /// @param[in] reference_frame Reference frame. Default is 
+  /// pinocchio::LOCAL_WORLD_ALIGNED (world velocity).
+  /// @return Spatial velocity of the frame.
+  ///
+  Vector6d frameSpatialVelocity(
+      const std::string& frame_name, 
+      const pinocchio::ReferenceFrame reference_frame=pinocchio::LOCAL_WORLD_ALIGNED) const;
+
+  ///
+  /// @brief Returns the linear velocity of the center of mass expressed in the 
+  /// world frame. Before calling this function, updateKinematics() or 
+  /// updateFrameKinematics() must be called.
+  /// 
+  const Eigen::Vector3d& CoMVelocity() const;
+
+  ///
   /// @brief Computes the Jacobian of the frame position expressed in the local 
   /// coordinate. Before calling this function, updateKinematics() must be 
   /// called.

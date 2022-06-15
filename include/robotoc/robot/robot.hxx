@@ -265,6 +265,50 @@ inline const Eigen::Vector3d& Robot::CoM() const {
 }
 
 
+inline Eigen::Vector3d Robot::frameLinearVelocity(
+    const int frame_id, const pinocchio::ReferenceFrame reference_frame) const {
+  return pinocchio::getFrameVelocity(model_, data_, frame_id, reference_frame).linear();
+}
+
+
+inline Eigen::Vector3d Robot::frameLinearVelocity(
+    const std::string& frame_name, 
+    const pinocchio::ReferenceFrame reference_frame) const {
+  return frameLinearVelocity(frameId(frame_name), reference_frame);
+}
+
+
+inline Eigen::Vector3d Robot::frameAngularVelocity(
+    const int frame_id, const pinocchio::ReferenceFrame reference_frame) const {
+  return pinocchio::getFrameVelocity(model_, data_, frame_id, reference_frame).angular();
+}
+
+
+inline Eigen::Vector3d Robot::frameAngularVelocity(
+    const std::string& frame_name, 
+    const pinocchio::ReferenceFrame reference_frame) const {
+  return frameAngularVelocity(frameId(frame_name), reference_frame);
+}
+
+
+inline Robot::Vector6d Robot::frameSpatialVelocity(
+    const int frame_id, const pinocchio::ReferenceFrame reference_frame) const {
+  return pinocchio::getFrameVelocity(model_, data_, frame_id, reference_frame).toVector();
+}
+
+
+inline Robot::Vector6d Robot::frameSpatialVelocity(
+    const std::string& frame_name, 
+    const pinocchio::ReferenceFrame reference_frame) const {
+  return frameSpatialVelocity(frameId(frame_name), reference_frame);
+}
+
+
+inline const Eigen::Vector3d& Robot::CoMVelocity() const {
+  return data_.vcom[0];
+}
+
+
 template <typename MatrixType>
 inline void Robot::getFrameJacobian(const int frame_id, 
                                     const Eigen::MatrixBase<MatrixType>& J) {

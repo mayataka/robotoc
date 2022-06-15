@@ -19,6 +19,12 @@ PYBIND11_MODULE(robot, m) {
     .value("FloatingBase", BaseJointType::FloatingBase)
     .export_values();
 
+  py::enum_<pinocchio::ReferenceFrame>(m, "ReferenceFrame", py::arithmetic())
+    .value("LOCAL", pinocchio::ReferenceFrame::LOCAL)
+    .value("WORLD", pinocchio::ReferenceFrame::WORLD)
+    .value("LOCAL_WORLD_ALIGNED", pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED)
+    .export_values();
+
   py::class_<Robot>(m, "Robot")
     .def(py::init<const std::string&, const BaseJointType&>(), 
           py::arg("path_to_urdf"),
@@ -95,6 +101,25 @@ PYBIND11_MODULE(robot, m) {
           static_cast<const SE3& (Robot::*)(const std::string&) const>(&Robot::framePlacement),
           py::arg("frame_name"))
     .def("com", &Robot::CoM)
+    .def("frame_linear_velocity", [](const Robot& self, const int frame_id) {
+        return self.frameLinearVelocity(frame_id);
+      }, py::arg("frame_id"))
+    .def("frame_linear_velocity", [](const Robot& self, const std::string& frame_name) {
+        return self.frameLinearVelocity(frame_name);
+      }, py::arg("frame_name"))
+    .def("frame_angular_velocity", [](const Robot& self, const int frame_id) {
+        return self.frameAngularVelocity(frame_id);
+      }, py::arg("frame_id"))
+    .def("frame_angular_velocity", [](const Robot& self, const std::string& frame_name) {
+        return self.frameAngularVelocity(frame_name);
+      }, py::arg("frame_name"))
+    .def("frame_spatial_velocity", [](const Robot& self, const int frame_id) {
+        return self.frameSpatialVelocity(frame_id);
+      }, py::arg("frame_id"))
+    .def("frame_spatial_velocity", [](const Robot& self, const std::string& frame_name) {
+        return self.frameSpatialVelocity(frame_name);
+      }, py::arg("frame_name"))
+    .def("com_velocity", &Robot::CoMVelocity)
     .def("transform_from_local_to_world", [](const Robot& self, 
                                              const int frame_id, 
                                              const Eigen::Vector3d& vec_local) {

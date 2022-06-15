@@ -95,8 +95,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
 
         if log:
             log_dir = os.path.join(os.getcwd(), "log")
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir)
+            os.makedirs(log_dir, exist_ok=True)
             q_log = open(os.path.join(log_dir, log_name+"_q.log"), mode='w')
             v_log = open(os.path.join(log_dir, log_name+"_v.log"), mode='w')
             u_log = open(os.path.join(log_dir, log_name+"_u.log"), mode='w')
