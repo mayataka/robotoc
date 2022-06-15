@@ -19,6 +19,7 @@
 #include "robotoc/line_search/unconstr_line_search.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
+#include "robotoc/utils/timer.hpp"
 
 
 namespace robotoc {
@@ -189,6 +190,7 @@ private:
   double T_, dt_;
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
+  Timer timer_;
 
 };
 

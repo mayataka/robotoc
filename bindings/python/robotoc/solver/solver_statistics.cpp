@@ -23,6 +23,7 @@ PYBIND11_MODULE(solver_statistics, m) {
     .def_readonly("dual_step_size", &SolverStatistics::dual_step_size)
     .def_readonly("ts", &SolverStatistics::ts)
     .def_readonly("mesh_refinement_iter", &SolverStatistics::mesh_refinement_iter)
+    .def_readonly("cpu_time", &SolverStatistics::cpu_time)
     .def("__str__", [](const SolverStatistics& self) {
         std::stringstream ss;
         ss << self;

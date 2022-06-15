@@ -40,13 +40,9 @@ LineSearchSettings::LineSearchSettings(const LineSearchMethod _line_search_metho
 }
 
 
+
 LineSearchSettings::LineSearchSettings() 
-  : line_search_method(),
-    step_size_reduction_rate(0),
-    min_step_size(0),
-    armijo_control_rate(0),
-    margin_rate(0),
-    eps(0) {
+  : LineSearchSettings(LineSearchMethod::Filter, 0.75, 0.05, 0.001, 0.05, 1.0e-08) {
 }
 
 
@@ -55,8 +51,7 @@ LineSearchSettings::~LineSearchSettings() {
 
 
 LineSearchSettings LineSearchSettings::defaultSettings() {
-  LineSearchSettings s(LineSearchMethod::Filter, 0.75, 0.05, 0.001, 0.05, 1.0e-08);
-  return s;
+  return LineSearchSettings();
 }
 
 

@@ -27,6 +27,7 @@
 #include "robotoc/hybrid/sto_constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
+#include "robotoc/utils/timer.hpp"
 
 
 namespace robotoc {
@@ -263,6 +264,7 @@ private:
   RiccatiFactorization riccati_factorization_;
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
+  Timer timer_;
 
   void discretizeSolution();
 

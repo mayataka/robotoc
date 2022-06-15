@@ -111,6 +111,9 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 
 void OCPSolver::solve(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v, const bool init_solver) {
+  if (solver_options_.enable_benchmark) {
+    timer_.tick();
+  }
   if (init_solver) {
     meshRefinement(t);
     initConstraints(t);
@@ -151,6 +154,10 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   }
   if (!solver_statistics_.convergence) {
     solver_statistics_.iter = solver_options_.max_iter;
+  }
+  if (solver_options_.enable_benchmark) {
+    timer_.tock();
+    solver_statistics_.cpu_time = timer_.ms();
   }
 }
 

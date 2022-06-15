@@ -12,7 +12,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(solver_options, m) {
   py::class_<SolverOptions>(m, "SolverOptions")
-    .def(py::init(&SolverOptions::defaultOptions))
+    .def(py::init<>())
     .def_readwrite("max_iter", &SolverOptions::max_iter)
     .def_readwrite("kkt_tol", &SolverOptions::kkt_tol)
     .def_readwrite("mu_init", &SolverOptions::mu_init)
@@ -28,6 +28,7 @@ PYBIND11_MODULE(solver_options, m) {
     .def_readwrite("kkt_tol_mesh", &SolverOptions::kkt_tol_mesh)
     .def_readwrite("max_dt_mesh", &SolverOptions::max_dt_mesh)
     .def_readwrite("max_dts_riccati", &SolverOptions::max_dts_riccati)
+    .def_readwrite("enable_benchmark", &SolverOptions::enable_benchmark)
     .def("__str__", [](const SolverOptions& self) {
         std::stringstream ss;
         ss << self;

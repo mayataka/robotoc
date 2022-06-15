@@ -49,55 +49,55 @@ public:
   /// @brief Maximum number of iterations. Must be non-negative. 
   /// Default is 100. 
   ///
-  int max_iter;
+  int max_iter = 100;
 
   ///
   /// @brief Tolerance of the l2-norm of the (perturbed) KKT residual for 
   /// convergence. Default is 1.0e-07. Must be positive.
   ///
-  double kkt_tol;
+  double kkt_tol = 1.0e-07;
 
   ///
   /// @brief Initial barrier parameter. Must be positive. Default is 1.0e-03.
   ///
-  double mu_init;
+  double mu_init = 1.0e-03;
 
   ///
   /// @brief Minimum barrier parameter. Must be positive. Default is 1.0e-03
   /// (that is, no barrier parameter reduction with the default settings).
   ///
-  double mu_min;
+  double mu_min = 1.0e-03;
 
   ///
   /// @brief Tolerance of the l2-norm of the (perturbed) KKT residual for 
   /// the barrier parameter update. Default is 1.0e-07. Must be positive.
   ///
-  double kkt_tol_mu;
+  double kkt_tol_mu = 1.0e-07;
 
   ///
   /// @brief Linear decrease rate of barrier parameter. Default is 0.2.
   /// @note New barrier parameter mu is obtained by taking the minimum of 
   /// mu*"mu_linear_decrease_factor" and mu^"superlinear_decrease_power".
   ///
-  double mu_linear_decrease_factor;
+  double mu_linear_decrease_factor = 0.2;
 
   ///
   /// @brief Superlinear decrease rate of barrier parameter. Default is 1.5.
   /// @note New barrier parameter mu is obtained by taking the minimum of 
   /// mu*"mu_linear_decrease_factor" and mu^"superlinear_decrease_power".
   ///
-  double mu_superlinear_decrease_power;
+  double mu_superlinear_decrease_power = 1.5;
 
   ///
   /// @brief Flag to enable the line search. Default is false.
   ///
-  bool enable_line_search;
+  bool enable_line_search = false;
 
   ///
   /// @brief Line search settings. Default is 
   /// LineSearchSettings::defaultSettings().
   ///
-  LineSearchSettings line_search_settings;
+  LineSearchSettings line_search_settings = LineSearchSettings::defaultSettings();
 
   ///
   /// @brief Discretization method of the hybrid optimal control problem.
@@ -106,7 +106,7 @@ public:
   /// @note For the STO problem, discretization method is fixed to 
   /// DiscretizationMethod::PhaseBased regardless of this value.
   ///
-  DiscretizationMethod discretization_method;
+  DiscretizationMethod discretization_method = DiscretizationMethod::GridBased;
 
   ///
   /// @brief Number of initial inner iterations in which a large regularization 
@@ -118,7 +118,7 @@ public:
   /// regularization on the STO, the optimization problem involving the STO 
   /// problem is the same as one without STO problem.
   ///
-  int initial_sto_reg_iter;
+  int initial_sto_reg_iter = 0;
 
   ///
   /// @brief Magnitude of the large regularization for the STO problem at the 
@@ -129,19 +129,19 @@ public:
   /// regularization on the STO, the optimization problem involving the STO 
   /// problem is the same as one without STO problem.
   ///
-  double initial_sto_reg;
+  double initial_sto_reg = 1.0e30;
 
   ///
   /// @brief Tolerance of the KKT residual to perform mesh-refinement in the
   /// STO problem. Default is 1.0e-01. Must be positive.
   ///
-  double kkt_tol_mesh;
+  double kkt_tol_mesh = 0.1;
 
   ///
   /// @brief Tolerance of the maximum discretization step size to perform  
   /// mesh-refinement in the STO problem. Default is 0.
   ///
-  double max_dt_mesh;
+  double max_dt_mesh = 0.0;
 
   ///
   /// @brief Maximum magnitude of the nominal direction of the switching time 
@@ -155,7 +155,12 @@ public:
   /// a regularization is added so that the magnitude of the nominal switching  
   /// time direction is limited to under 0.1 in default.
   ///
-  double max_dts_riccati;
+  double max_dts_riccati = 0.1;
+
+  ///
+  /// @brief If true, the CPU time is measured at each solve().
+  ///
+  bool enable_benchmark = false;
 
   ///
   /// @brief Returns options with default parameters.
