@@ -17,7 +17,6 @@ class PlotConvergence:
                           (0, (3, 1, 1, 1, 1, 1)),
                           (0, (3, 1, 1, 1, 1))]
 
-
     def plot(self, kkt_data, ts_data=None, fig_name=None, save_dir='./'):
         import matplotlib.pyplot as plt
         import seaborn 
@@ -298,7 +297,7 @@ class PlotContactForce:
             plt.show()
 
 
-class PlotLeggedMPC:
+class PlotCoMVelocity:
     def __init__(self):
         self.wspace = 0.45
         self.hspace = 0.1

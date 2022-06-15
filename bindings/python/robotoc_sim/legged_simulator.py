@@ -19,6 +19,11 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.camera_target_pos = [0., 0., 0.]
         self.print_items = []
         self.terrain_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
+        self.q_log = None
+        self.v_log = None
+        self.u_log = None
+        self.t_log = None
+        self.kkt_log = None
 
     def set_sim_settings(self, time_step, start_time, end_time):
         self.time_step  = time_step
@@ -70,8 +75,8 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.print_items.append(item)
 
     def run_simulation(self, mpc, q0, v0, feedback_delay=False, terrain=False, 
-                       verbose=False, log=False, log_name='mpc_sim', 
-                       record=False, record_name='mpc_sim.mp4'):
+                       verbose=False, log=False, record=False, 
+                       sim_name='mpc_sim'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
@@ -94,13 +99,14 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         sim_steps = math.floor(sim_time/self.time_step)
 
         if log:
-            log_dir = os.path.join(os.getcwd(), "log")
+            log_dir = os.path.join(os.getcwd(), sim_name+"_log")
+            self.log_dir = log_dir
             os.makedirs(log_dir, exist_ok=True)
-            q_log = open(os.path.join(log_dir, log_name+"_q.log"), mode='w')
-            v_log = open(os.path.join(log_dir, log_name+"_v.log"), mode='w')
-            u_log = open(os.path.join(log_dir, log_name+"_u.log"), mode='w')
-            t_log = open(os.path.join(log_dir, log_name+"_t.log"), mode='w')
-            kkt_log = open(os.path.join(log_dir, log_name+"_kkt.log"), mode='w')
+            q_log = open(os.path.join(log_dir, "q.log"), mode='w')
+            v_log = open(os.path.join(log_dir, "v.log"), mode='w')
+            u_log = open(os.path.join(log_dir, "u.log"), mode='w')
+            t_log = open(os.path.join(log_dir, "t.log"), mode='w')
+            kkt_log = open(os.path.join(log_dir, "kkt.log"), mode='w')
 
         if self.calib_camera:
             pybullet.resetDebugVisualizerCamera(self.camera_distance,
@@ -111,7 +117,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
 
         if record:
             pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, 
-                                       record_name)
+                                       sim_name+".mp4")
 
         for i in range(sim_steps):
             self.get_state_from_pybullet(robot, q, v)
@@ -146,5 +152,10 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             u_log.close()
             t_log.close()
             kkt_log.close()
+            self.q_log =  os.path.join(log_dir, "q.log")
+            self.v_log =  os.path.join(log_dir, "v.log")
+            self.u_log =  os.path.join(log_dir, "u.log")
+            self.t_log =  os.path.join(log_dir, "t.log")
+            self.kkt_log =  os.path.join(log_dir, "kkt.log")
 
         pybullet.disconnect()
