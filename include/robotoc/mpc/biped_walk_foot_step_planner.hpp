@@ -126,7 +126,7 @@ private:
   std::vector<Eigen::Vector3d> com_ref_;
   std::vector<Eigen::Matrix3d> R_;
   Eigen::Vector3d vcom_, vcom_cmd_, step_length_;
-  Eigen::Matrix3d R_yaw_;
+  Eigen::Matrix3d R_yaw_, R_current_;
   double yaw_rate_cmd_;
   bool enable_double_support_phase_;
 

@@ -21,7 +21,7 @@ PYBIND11_MODULE(biped_walk_foot_step_planner, m) {
           py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_double_support_phase")) 
     .def("set_gait_pattern", 
           static_cast<void (BipedWalkFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&BipedWalkFootStepPlanner::setGaitPattern),
-          py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
+          py::arg("vcom_cmd"), py::arg("yaw_rate_cmd"), 
           py::arg("swing_time"), py::arg("double_support_time"), py::arg("gain")) 
     .def("init", &BipedWalkFootStepPlanner::init,
           py::arg("q"))

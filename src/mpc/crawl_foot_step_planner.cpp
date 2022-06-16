@@ -12,6 +12,7 @@ CrawlFootStepPlanner::CrawlFootStepPlanner(const Robot& quadruped_robot)
   : ContactPlannerBase(),
     robot_(quadruped_robot),
     raibert_heuristic_(),
+    vcom_moving_window_filter_(),
     enable_raibert_heuristic_(false),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
@@ -22,10 +23,11 @@ CrawlFootStepPlanner::CrawlFootStepPlanner(const Robot& quadruped_robot)
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
-    v_com_(Eigen::Vector3d::Zero()),
-    v_com_cmd_(Eigen::Vector3d::Zero()),
+    vcom_(Eigen::Vector3d::Zero()),
+    vcom_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
+    R_current_(Eigen::Matrix3d::Identity()),
     yaw_rate_cmd_(0),
     enable_stance_phase_(false) {
   try {
@@ -61,7 +63,7 @@ void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length,
 }
 
 
-void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd, 
+void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& vcom_cmd, 
                                           const double yaw_rate_cmd, 
                                           const double swing_time,
                                           const double stance_time,
@@ -81,11 +83,13 @@ void CrawlFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raibert_heuristic_.setParameters(2.0*(swing_time+stance_time), gain);
-  v_com_cmd_ = v_com_cmd;
-  const double yaw_cmd = yaw_rate_cmd * swing_time;
-  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
-           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
+  const double period = 4.0 * (swing_time + stance_time);
+  raibert_heuristic_.setParameters(period, gain);
+  vcom_moving_window_filter_.setParameters(period, 0.1*period);
+  vcom_cmd_ = vcom_cmd;
+  const double step_yaw = yaw_rate_cmd * swing_time;
+  R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
+           std::sin(step_yaw),  std::cos(step_yaw), 0,
            0, 0, 1;
   yaw_rate_cmd_ = yaw_rate_cmd;
   enable_stance_phase_ = (stance_time > 0.0);
@@ -115,9 +119,12 @@ bool CrawlFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
                                 const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    v_com_.transpose() = R_.front().transpose() * v.template head<3>();
-    raibert_heuristic_.planStepLength(v_com_.template head<2>(), 
-                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    R_current_ = rotation::toRotationMatrix(q.template segment<4>(3));
+    vcom_ = R_current_.transpose() * v.template head<3>();
+    vcom_moving_window_filter_.push_back(t, vcom_.template head<2>());
+    const Eigen::Vector2d& vcom_avg = vcom_moving_window_filter_.average();
+    raibert_heuristic_.planStepLength(vcom_avg, vcom_cmd_.template head<2>(), 
+                                      yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
   }
   robot_.updateFrameKinematics(q);

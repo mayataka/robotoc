@@ -45,10 +45,10 @@ JumpFootStepPlanner::~JumpFootStepPlanner() {
 
 
 void JumpFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length, 
-                                         const double yaw_step) {
+                                         const double step_yaw) {
   jump_length_ = jump_length;
-  R_yaw_ << std::cos(yaw_step), -std::sin(yaw_step), 0, 
-            std::sin(yaw_step), std::cos(yaw_step),  0,
+  R_yaw_ << std::cos(step_yaw), -std::sin(step_yaw), 0, 
+            std::sin(step_yaw), std::cos(step_yaw),  0,
             0, 0, 1;
 }
 

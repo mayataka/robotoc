@@ -126,6 +126,7 @@ public:
     if (time_.empty()) {
       time_.push_back(t);
       data_.push_back(data);
+      average_ = data;
       last_sampling_time_ = t;
     }
     else {
@@ -137,7 +138,7 @@ public:
           data_.pop_front();
         }
         average_.setZero();
-        for (const auto& e : data_) {
+        for (const auto& e : data_) { 
           average_.noalias() += e;
         }
         average_.array() /= data_.size();

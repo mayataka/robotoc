@@ -24,10 +24,11 @@ class RaibertHeuristic {
 public:
   ///
   /// @brief Constructs the planner.
-  /// @param[in] stance_time Stance time. 
-  /// @param[in] gain Feedback gain of the velocity. 
+  /// @param[in] period Period of a foot step. 
+  /// @param[in] gain Feedback gain of the velocity. Must be positive and less 
+  /// than 1.0.
   ///
-  RaibertHeuristic(const double stance_time, const double gain);
+  RaibertHeuristic(const double period, const double gain);
 
   ///
   /// @brief Default constructor. 
@@ -61,10 +62,11 @@ public:
 
   ///
   /// @brief Set parameters.
-  /// @param[in] stance_time Stance time. 
-  /// @param[in] gain Feedback gain of the velocity. 
+  /// @param[in] period Period of a foot step. 
+  /// @param[in] gain Feedback gain of the velocity. Must be positive and less 
+  /// than 1.0.
   ///
-  void setParameters(const double stance_time, const double gain);
+  void setParameters(const double period, const double gain);
 
   ///
   /// @brief Plans the step length.
@@ -84,7 +86,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  double stance_time_, gain_;
+  double period_, gain_;
   Eigen::Vector3d step_length_;
 
 };
