@@ -16,11 +16,9 @@ PYBIND11_MODULE(crawl_foot_step_planner, m) {
              std::shared_ptr<CrawlFootStepPlanner>>(m, "CrawlFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))
-    .def("set_gait_pattern", 
-          static_cast<void (CrawlFootStepPlanner::*)(const Eigen::Vector3d&, const double, const bool)>(&CrawlFootStepPlanner::setGaitPattern),
+    .def("set_gait_pattern", &CrawlFootStepPlanner::setGaitPattern,
           py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_stance_phase")) 
-    .def("set_gait_pattern", 
-          static_cast<void (CrawlFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&CrawlFootStepPlanner::setGaitPattern),
+    .def("set_raibert_gait_pattern", &CrawlFootStepPlanner::setRaibertGaitPattern,
           py::arg("vcom_cmd"), py::arg("yaw_rate_cmd"), 
           py::arg("swing_time"), py::arg("stance_time"), py::arg("gain")) 
     .def("init", &CrawlFootStepPlanner::init,

@@ -49,7 +49,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         return baseVel, baseAngVel
 
     @abc.abstractmethod
-    def get_state_from_pybullet(self, pybullet_robot, q, v):
+    def get_state_from_pybullet(self, pybullet_robot):
         return NotImplementedError()
 
     @abc.abstractmethod
@@ -120,7 +120,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
                                        sim_name+".mp4")
 
         for i in range(sim_steps):
-            self.get_state_from_pybullet(robot, q, v)
+            q, v = self.get_state_from_pybullet(robot)
             if verbose:
                 print('t = {:.6g}:'.format(t))
             if feedback_delay:
@@ -157,5 +157,3 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             self.u_log =  os.path.join(log_dir, "u.log")
             self.t_log =  os.path.join(log_dir, "t.log")
             self.kkt_log =  os.path.join(log_dir, "kkt.log")
-
-        pybullet.disconnect()

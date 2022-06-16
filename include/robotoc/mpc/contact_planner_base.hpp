@@ -63,6 +63,8 @@ public:
   /// @param[in] contact_status Initial contact status.
   /// @param[in] planning_steps Number of planning steps. Must be non-negative.
   /// @return True if the planning is succeeded. False if not.
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   /// @remark The implementation must follow: step=0: previous step, 
   /// step=1: initial step (specified as q and contact_status).
   ///

@@ -63,11 +63,11 @@ void PaceFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length,
 }
 
 
-void PaceFootStepPlanner::setGaitPattern(const Eigen::Vector3d& vcom_cmd,
-                                         const double yaw_rate_cmd, 
-                                         const double swing_time,
-                                         const double stance_time,
-                                         const double gain) {
+void PaceFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom_cmd,
+                                                const double yaw_rate_cmd, 
+                                                const double swing_time,
+                                                const double stance_time,
+                                                const double gain) {
   try {
     if (swing_time <= 0.0) {
       throw std::out_of_range("invalid argument: swing_time must be positive!");
@@ -120,8 +120,7 @@ bool PaceFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
                                const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    R_current_ = rotation::toRotationMatrix(q.template segment<4>(3));
-    vcom_ = R_current_.transpose() * v.template head<3>();
+    vcom_ = v.template head<3>();
     vcom_moving_window_filter_.push_back(t, vcom_.template head<2>());
     const Eigen::Vector2d& vcom_avg = vcom_moving_window_filter_.average();
     raibert_heuristic_.planStepLength(vcom_avg, vcom_cmd_.template head<2>(), 

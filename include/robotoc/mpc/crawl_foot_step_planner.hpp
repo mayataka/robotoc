@@ -77,9 +77,9 @@ public:
   /// @param[in] stance_time Stance time of the gait. 
   /// @param[in] gain The feedback gain of the vcom_cmd. 
   ///
-  void setGaitPattern(const Eigen::Vector3d& vcom_cmd, 
-                      const double yaw_rate_cmd, const double swing_time,
-                      const double stance_time, const double gain);
+  void setRaibertGaitPattern(const Eigen::Vector3d& vcom_cmd, 
+                             const double yaw_rate_cmd, const double swing_time,
+                             const double stance_time, const double gain);
 
   void init(const Eigen::VectorXd& q) override;
 
