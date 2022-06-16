@@ -62,7 +62,7 @@ MPCFlyingTrot::MPCFlyingTrot(const Robot& robot, const double T,
   config_cost_->set_dvi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   base_rot_cost_ = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, base_rot_ref_);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
-  base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
+  base_rot_weight.template head<6>() << 0, 0, 0, 1.0e04, 1.0e04, 1.0e04;
   base_rot_cost_->set_q_weight(base_rot_weight);
   base_rot_cost_->set_qf_weight(base_rot_weight);
   base_rot_cost_->set_qi_weight(base_rot_weight);

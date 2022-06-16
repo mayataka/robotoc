@@ -87,7 +87,7 @@ void PaceFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom_cmd,
   raibert_heuristic_.setParameters(period, gain);
   vcom_moving_window_filter_.setParameters(period, 0.1*period);
   vcom_cmd_ = vcom_cmd;
-  const double step_yaw = yaw_rate_cmd * swing_time;
+  const double step_yaw = yaw_rate_cmd * (swing_time + stance_time);
   R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
            std::sin(step_yaw),  std::cos(step_yaw), 0,
            0, 0, 1;
