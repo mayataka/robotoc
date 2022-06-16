@@ -12,6 +12,7 @@ TrotFootStepPlanner::TrotFootStepPlanner(const Robot& quadruped_robot)
   : ContactPlannerBase(),
     robot_(quadruped_robot),
     raibert_heuristic_(),
+    vcom_moving_window_filter_(),
     enable_raibert_heuristic_(false),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
@@ -22,8 +23,8 @@ TrotFootStepPlanner::TrotFootStepPlanner(const Robot& quadruped_robot)
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
-    v_com_(Eigen::Vector3d::Zero()),
-    v_com_cmd_(Eigen::Vector3d::Zero()),
+    vcom_(Eigen::Vector3d::Zero()),
+    vcom_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
     yaw_rate_cmd_(0),
@@ -61,7 +62,7 @@ void TrotFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length,
 }
 
 
-void TrotFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd,
+void TrotFootStepPlanner::setGaitPattern(const Eigen::Vector3d& vcom_cmd,
                                          const double yaw_rate_cmd, 
                                          const double swing_time,
                                          const double stance_time,
@@ -82,7 +83,9 @@ void TrotFootStepPlanner::setGaitPattern(const Eigen::Vector3d& v_com_cmd,
     std::exit(EXIT_FAILURE);
   }
   raibert_heuristic_.setParameters(2.0*(swing_time+stance_time), gain);
-  v_com_cmd_ = v_com_cmd;
+  vcom_moving_window_filter_.setParameters(2.0*(swing_time+stance_time),
+                                           0.1*2.0*(swing_time+stance_time));
+  vcom_cmd_ = vcom_cmd;
   const double yaw_cmd = yaw_rate_cmd * swing_time;
   R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
            std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
@@ -106,6 +109,7 @@ void TrotFootStepPlanner::init(const Eigen::VectorXd& q) {
   com_ref_.push_back(robot_.CoM());
   R_.clear();
   R_.push_back(R);
+  vcom_moving_window_filter_.clear();
   current_step_ = 0;
 }
 
@@ -116,9 +120,14 @@ bool TrotFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
                                const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    v_com_.transpose() = R_.front().transpose() * v.template head<3>();
-    raibert_heuristic_.planStepLength(v_com_.template head<2>(), 
-                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    const Eigen::Matrix3d Rt = rotation::toRotationMatrix(q.template segment<4>(3));
+    vcom_.transpose() = Rt.transpose() * v.template head<3>();
+    vcom_moving_window_filter_.push_back(t, vcom_.template head<2>());
+    const Eigen::Vector2d& vcom_avg = vcom_moving_window_filter_.average();
+    std::cout << "filter_.size() = " << vcom_moving_window_filter_.size() << std::endl;
+    std::cout << "filter_.average() = " << vcom_moving_window_filter_.average().transpose() << std::endl;
+    raibert_heuristic_.planStepLength(vcom_avg, vcom_cmd_.template head<2>(), 
+                                      yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
   }
   robot_.updateFrameKinematics(q);
