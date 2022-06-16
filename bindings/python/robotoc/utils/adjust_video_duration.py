@@ -19,7 +19,7 @@ def adjust_video_duration(video: str, desired_duration_sec: float, output_name=N
     if video_rutation_sec is not None:
         video_name_split = video.rsplit('.', maxsplit=1)
         if output_name is None:
-            output_name = video_name_split[0] + '_adjusted.mp4'
+            output_name = video_name_split[0] + '_adjusted.' + video_name_split[1]
         ptsrate = video_rutation_sec / desired_duration_sec
         os.system('ffmpeg -i ' + video + ' -vf setpts=PTS/' + str(ptsrate) + ' -an ' + output_name)
     else:
