@@ -1,0 +1,2 @@
+add_robotoc_test(moving_window_filter_test)
+add_robotoc_test(raibert_heuristic_test)

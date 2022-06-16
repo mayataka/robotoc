@@ -8,13 +8,13 @@
 
 namespace robotoc {
 
-RaibertHeuristic::RaibertHeuristic(const double t_stance, const double gain)
-  : t_stance_(t_stance),
+RaibertHeuristic::RaibertHeuristic(const double stance_time, const double gain)
+  : stance_time_(stance_time),
     gain_(gain),
     step_length_(Eigen::Vector3d::Zero()) {
   try {
-    if (t_stance <= 0.0) {
-      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    if (stance_time <= 0.0) {
+      throw std::out_of_range("invalid argument: stance_time must be positive!");
     }
     if (gain <= 0.0) {
       throw std::out_of_range("invalid argument: gain must be positive!");
@@ -27,7 +27,10 @@ RaibertHeuristic::RaibertHeuristic(const double t_stance, const double gain)
 }
 
 
-RaibertHeuristic::RaibertHeuristic() {
+RaibertHeuristic::RaibertHeuristic() 
+  : stance_time_(0.0),
+    gain_(0.0),
+    step_length_(Eigen::Vector3d::Zero()) {
 }
 
 
@@ -35,10 +38,10 @@ RaibertHeuristic::~RaibertHeuristic() {
 }
 
 
-void RaibertHeuristic::setParameters(const double t_stance, const double gain) {
+void RaibertHeuristic::setParameters(const double stance_time, const double gain) {
   try {
-    if (t_stance <= 0.0) {
-      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    if (stance_time <= 0.0) {
+      throw std::out_of_range("invalid argument: stance_time must be positive!");
     }
     if (gain <= 0.0) {
       throw std::out_of_range("invalid argument: gain must be positive!");
@@ -48,16 +51,16 @@ void RaibertHeuristic::setParameters(const double t_stance, const double gain) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  t_stance_ = t_stance;
+  stance_time_ = stance_time;
   gain_ = gain;
 }
 
 
-void RaibertHeuristic::planStepLength(const Eigen::Vector2d& v_com,
-                                      const Eigen::Vector2d& v_com_cmd, 
+void RaibertHeuristic::planStepLength(const Eigen::Vector2d& vcom,
+                                      const Eigen::Vector2d& vcom_cmd, 
                                       const double yaw_rate_cmd) {
-  step_length_.template head<2>() = 0.5 * t_stance_ * v_com
-                                    - gain_ * (v_com - v_com_cmd);
+  step_length_.template head<2>() = 0.5 * stance_time_ * vcom
+                                    - gain_ * (vcom - vcom_cmd);
 }
 
 
