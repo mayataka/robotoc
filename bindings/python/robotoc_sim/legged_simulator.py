@@ -19,11 +19,13 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.camera_target_pos = [0., 0., 0.]
         self.print_items = []
         self.terrain_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
+        self.log_dir = None
         self.q_log = None
         self.v_log = None
         self.u_log = None
         self.t_log = None
         self.kkt_log = None
+        self.sim_name = None
 
     def set_sim_settings(self, time_step, start_time, end_time):
         self.time_step  = time_step
@@ -121,6 +123,8 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
 
         for i in range(sim_steps):
             q, v = self.get_state_from_pybullet(robot)
+            assert q.shape[0] == q0.shape[0]
+            assert v.shape[0] == v0.shape[0]
             if verbose:
                 print('t = {:.6g}:'.format(t))
             if feedback_delay:
@@ -152,8 +156,16 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             u_log.close()
             t_log.close()
             kkt_log.close()
-            self.q_log =  os.path.join(log_dir, "q.log")
-            self.v_log =  os.path.join(log_dir, "v.log")
-            self.u_log =  os.path.join(log_dir, "u.log")
-            self.t_log =  os.path.join(log_dir, "t.log")
-            self.kkt_log =  os.path.join(log_dir, "kkt.log")
+            self.q_log = os.path.abspath(os.path.join(log_dir, "q.log"))
+            self.v_log = os.path.abspath(os.path.join(log_dir, "v.log"))
+            self.u_log = os.path.abspath(os.path.join(log_dir, "u.log"))
+            self.t_log = os.path.abspath(os.path.join(log_dir, "t.log"))
+            self.kkt_log = os.path.abspath(os.path.join(log_dir, "kkt.log"))
+            self.log_dir = os.path.abspath(log_dir)
+            print('Logs are saved at ' + self.log_dir)
+        
+        self.sim_name = sim_name
+
+
+    def disconnect(self):
+        pybullet.disconnect()

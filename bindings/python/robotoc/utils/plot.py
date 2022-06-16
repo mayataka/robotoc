@@ -75,6 +75,7 @@ class PlotConvergence:
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+            print('Figure is saved at ' + os.path.abspath(os.path.join(save_dir, fig_name+'.pdf')))
         else:
             plt.show()
 
@@ -293,6 +294,7 @@ class PlotContactForce:
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+            print('Figure is saved at ' + os.path.abspath(os.path.join(save_dir, fig_name+'.pdf')))
         else:
             plt.show()
 
@@ -386,5 +388,6 @@ class PlotCoMVelocity:
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+            print('Figure is saved at ' + os.path.abspath(os.path.join(save_dir, fig_name+'.pdf')))
         else:
             plt.show()
