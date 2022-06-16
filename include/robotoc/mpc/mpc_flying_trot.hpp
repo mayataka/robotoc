@@ -98,6 +98,8 @@ public:
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] solver_options Solver options for the initialization. 
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const SolverOptions& solver_options);
@@ -126,6 +128,8 @@ public:
   /// @param[in] dt Sampling time of MPC. Must be positive.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void updateSolution(const double t, const double dt, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);
@@ -153,6 +157,8 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);

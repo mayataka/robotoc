@@ -109,6 +109,8 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);
@@ -122,6 +124,8 @@ public:
   /// @param[in] init_solver If true, initializes the solver, that is, calls
   /// meshRefinement(), initConstraints(), and clears the line search filter.
   /// Default is true.
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void solve(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
              const bool init_solver=true);
@@ -208,6 +212,8 @@ public:
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @return The KKT error, that is, the l2-norm of the KKT residual.
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);
