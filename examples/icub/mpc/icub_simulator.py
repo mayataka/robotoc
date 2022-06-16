@@ -29,7 +29,7 @@ class iCubSimulator(robotoc_sim.LeggedSimulator):
         q[17] = pybullet.getJointState(pybullet_robot, 17)[0]
         q[18] = pybullet.getJointState(pybullet_robot, 18)[0]
 
-        v = np.zeros(19)
+        v = np.zeros(18)
         # Base
         baseVel, baseAngVel = self.get_body_local_velocity(pybullet_robot)
         v[0:3] = baseVel

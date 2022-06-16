@@ -11,14 +11,16 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
                       contact_frames, contact_types, baumgarte_time_step)
 
 step_length = np.array([0.15, 0, 0]) 
+step_yaw = 0
+
 swing_height = 0.1
 swing_time = 0.25
 stance_time = 0.05
 stance_time = 0.0
 swing_start_time = 0.5
 
-vcom_cmd = step_length / swing_time
-yaw_cmd = 0
+vcom_cmd = 0.25 * step_length / (swing_time+stance_time)
+yaw_rate_cmd = step_yaw / (swing_time+stance_time)
 
 T = 0.5
 N = 18
@@ -27,7 +29,7 @@ nthreads = 4
 mpc = robotoc.MPCCrawl(robot, T, N, max_steps, nthreads)
 
 planner = robotoc.CrawlFootStepPlanner(robot)
-planner.set_gait_pattern(step_length, (yaw_cmd*swing_time), (stance_time > 0.))
+planner.set_gait_pattern(step_length, (step_yaw*swing_time), (stance_time > 0.))
 mpc.set_gait_pattern(planner, swing_height, swing_time, stance_time, swing_start_time)
 
 q = np.array([0, 0, 0.4842, 0, 0, 0, 1, 
@@ -58,7 +60,8 @@ sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False,
                    record=record, log=log, sim_name='anymal_crawl')
 
 if record:
-    robotoc.utils.adjust_video_duration('anymal_crawl.mp4', 
+    sim.disconnect()
+    robotoc.utils.adjust_video_duration(sim.sim_name+'.mp4', 
                                         desired_duration_sec=(sim_end_time-sim_start_time))
 
 if log:
@@ -68,13 +71,18 @@ if log:
     sim_steps = t_log.shape[0]
 
     from scipy.spatial.transform import Rotation
-    v_com_log = []
-    w_com_log = []
+    vcom_log = []
+    wcom_log = []
+    vcom_cmd_log = []
+    yaw_rate_cmd_log = []
     for i in range(sim_steps):
-        robot.forward_kinematics(q_log[i], v_log[i])
         R = Rotation.from_quat(q_log[i][3:7]).as_matrix()
-        v_com_log.append(R.T@robot.com_velocity())
-        w_com_log.append(R.T@v_log[i][3:6])
+        robot.forward_kinematics(q_log[i], v_log[i])
+        vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
+        wcom_log.append(v_log[i][3:6])
+        vcom_cmd_log.append(vcom_cmd)
+        yaw_rate_cmd_log.append(yaw_rate_cmd)
 
     plot_mpc = robotoc.utils.PlotCoMVelocity()
-    plot_mpc.plot(t_log, v_com_log, w_com_log, fig_name='anymal_crawl_com_vel')
+    plot_mpc.plot(t_log, vcom_log, wcom_log, vcom_cmd_log, yaw_rate_cmd_log, 
+                  fig_name=sim.sim_name+'_com_vel')
