@@ -63,8 +63,8 @@ sim_start_time = 0.0
 sim_end_time = 20.0
 sim = iCubSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
-log = True
-record = True
+log = False
+record = False
 
 sim.set_camera(2.0, 40, -10, q[0:3]+np.array([0.7, 1.2, 0.]))
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, 
