@@ -15,14 +15,17 @@ PYBIND11_MODULE(com_cost, m) {
              std::shared_ptr<CoMCost>>(m, "CoMCost")
     .def(py::init<const Robot&>(),
           py::arg("robot"))
-    .def("set_com_ref", &CoMCost::set_com_ref,
-          py::arg("com_ref"))
-    .def("set_com_weight", &CoMCost::set_com_weight,
-          py::arg("com_weight"))
-    .def("set_comf_weight", &CoMCost::set_comf_weight,
-          py::arg("comf_weight"))
-    .def("set_comi_weight", &CoMCost::set_comi_weight,
-          py::arg("comi_weight"));
+    .def(py::init<>())
+    .def("set_ref", &CoMCost::set_ref,
+          py::arg("ref"))
+    .def("set_const_ref", &CoMCost::set_const_ref,
+          py::arg("const_ref"))
+    .def("set_weight", &CoMCost::set_weight,
+          py::arg("weight"))
+    .def("set_weight_terminal", &CoMCost::set_weight_terminal,
+          py::arg("weight_terminal"))
+    .def("set_weight_impulse", &CoMCost::set_weight_impulse,
+          py::arg("weight_impulse"));
 }
 
 } // namespace python
