@@ -173,40 +173,6 @@ public:
     }
   }
 
-  ///
-  /// @brief Sets the reference position. 
-  /// @param[in] x3d_ref Reference position.
-  ///
-  void set_x3d_ref(const Eigen::Vector3d& x3d_ref) {
-    set_const_ref(x3d_ref);
-  }
-
-  ///
-  /// @brief Sets the weight vector. 
-  /// @param[in] x3d_weight Weight vector on the position error. 
-  ///
-  void set_x3d_weight(const Eigen::Vector3d& x3d_weight) {
-    set_weight(x3d_weight);
-  }
-
-  ///
-  /// @brief Sets the weight vector at the terminal stage. 
-  /// @param[in] x3df_weight Weight vector on the position error at the
-  /// terminal stage. 
-  ///
-  void set_x3df_weight(const Eigen::Vector3d& x3df_weight) {
-    set_weight_terminal(x3df_weight);
-  }
-
-  ///
-  /// @brief Sets the weight vector at the impulse stage. 
-  /// @param[in] x3di_weight Weight vector on the position error at the 
-  /// impulse stage. 
-  ///
-  void set_x3di_weight(const Eigen::Vector3d& x3di_weight) {
-    set_weight_impulse(x3di_weight);
-  }
-
   bool useKinematics() const override;
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 

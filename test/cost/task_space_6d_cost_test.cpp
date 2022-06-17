@@ -107,10 +107,10 @@ void TaskSpace6DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   auto cost = std::make_shared<TaskSpace6DCost>(robot, robot.frameName(frame_id));
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x6d_weight(weight.tail(3), weight.head(3));
-  cost->set_x6df_weight(weight_terminal.tail(3), weight_terminal.head(3));
-  cost->set_x6di_weight(weight_impulse.tail(3), weight_impulse.head(3));
-  cost->set_x6d_ref(position_ref, rotation_ref);
+  cost->set_weight(weight.tail(3), weight.head(3));
+  cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
+  cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
+  cost->set_const_ref(position_ref, rotation_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const SE3 placement = robot.framePlacement(frame_id);
@@ -151,10 +151,10 @@ void TaskSpace6DCostTest::testTerminalCostConstRef(Robot& robot, const int frame
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x6d_weight(weight.tail(3), weight.head(3));
-  cost->set_x6df_weight(weight_terminal.tail(3), weight_terminal.head(3));
-  cost->set_x6di_weight(weight_impulse.tail(3), weight_impulse.head(3));
-  cost->set_x6d_ref(position_ref, rotation_ref);
+  cost->set_weight(weight.tail(3), weight.head(3));
+  cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
+  cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
+  cost->set_const_ref(position_ref, rotation_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const SE3 placement = robot.framePlacement(frame_id);
@@ -194,10 +194,10 @@ void TaskSpace6DCostTest::testImpulseCostConstRef(Robot& robot, const int frame_
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x6d_weight(weight.tail(3), weight.head(3));
-  cost->set_x6df_weight(weight_terminal.tail(3), weight_terminal.head(3));
-  cost->set_x6di_weight(weight_impulse.tail(3), weight_impulse.head(3));
-  cost->set_x6d_ref(position_ref, rotation_ref);
+  cost->set_weight(weight.tail(3), weight.head(3));
+  cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
+  cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
+  cost->set_const_ref(position_ref, rotation_ref);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const SE3 placement = robot.framePlacement(frame_id);
@@ -239,9 +239,9 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x6d_weight(weight.tail(3), weight.head(3));
-  cost->set_x6df_weight(weight_terminal.tail(3), weight_terminal.head(3));
-  cost->set_x6di_weight(weight_impulse.tail(3), weight_impulse.head(3));
+  cost->set_weight(weight.tail(3), weight.head(3));
+  cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
+  cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -297,9 +297,9 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x6d_weight(weight.tail(3), weight.head(3));
-  cost->set_x6df_weight(weight_terminal.tail(3), weight_terminal.head(3));
-  cost->set_x6di_weight(weight_impulse.tail(3), weight_impulse.head(3));
+  cost->set_weight(weight.tail(3), weight.head(3));
+  cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
+  cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -354,9 +354,9 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
 
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x6d_weight(weight.tail(3), weight.head(3));
-  cost->set_x6df_weight(weight_terminal.tail(3), weight_terminal.head(3));
-  cost->set_x6di_weight(weight_impulse.tail(3), weight_impulse.head(3));
+  cost->set_weight(weight.tail(3), weight.head(3));
+  cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
+  cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 

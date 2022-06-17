@@ -216,50 +216,6 @@ public:
     }
   }
 
-  ///
-  /// @brief Sets the reference pose. 
-  /// @param[in] trans_ref Reference translation.
-  /// @param[in] rot_ref Reference rotation matrix.
-  ///
-  void set_x6d_ref(const Eigen::Vector3d& trans_ref, 
-                   const Eigen::Matrix3d& rot_ref) {
-    set_const_ref(SE3(rot_ref, trans_ref));
-  }
-
-  ///
-  /// @brief Sets the weight vectors. 
-  /// @param[in] trans_weight Weight vector on the position error. 
-  /// @param[in] rot_weight Weight vector on the rotation error. 
-  ///
-  void set_x6d_weight(const Eigen::Vector3d& trans_weight, 
-                      const Eigen::Vector3d& rot_weight) {
-    set_weight(trans_weight, rot_weight);
-  }
-
-  ///
-  /// @brief Sets the weight vectors at the terminal stage. 
-  /// @param[in] trans_weight Weight vector on the position error at the 
-  /// terminal stage. 
-  /// @param[in] rot_weight Weight vector on the rotation error at the 
-  /// terminal stage.
-  ///
-  void set_x6df_weight(const Eigen::Vector3d& trans_weight, 
-                       const Eigen::Vector3d& rot_weight) {
-    set_weight_terminal(trans_weight, rot_weight);
- }
-
-  ///
-  /// @brief Sets the weight vectors at the impulse stages. 
-  /// @param[in] trans_weight Weight vector on the position error at the 
-  /// impulse stages. 
-  /// @param[in] rot_weight Weight vector on the rotation error at the 
-  /// impulse stages.
-  ///
-  void set_x6di_weight(const Eigen::Vector3d& trans_weight, 
-                       const Eigen::Vector3d& rot_weight) {
-    set_weight_impulse(trans_weight, rot_weight);
- }
-
   bool useKinematics() const override;
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 

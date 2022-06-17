@@ -141,40 +141,6 @@ public:
     }
   }
 
-  ///
-  /// @brief Sets the reference position of the center of mass. 
-  /// @param[in] com_ref Reference position of the center of mass.
-  ///
-  void set_com_ref(const Eigen::Vector3d& com_ref) {
-    set_const_ref(com_ref);
-  }
-
-  ///
-  /// @brief Sets the weight vector. 
-  /// @param[in] com_weight Weight vector on the com position error. 
-  ///
-  void set_com_weight(const Eigen::Vector3d& com_weight) {
-    set_weight(com_weight);
-  }
-
-  ///
-  /// @brief Sets the weight vector at the terminal stage. 
-  /// @param[in] comf_weight Weight vector on the com position error at the 
-  /// terminal stage. 
-  ///
-  void set_comf_weight(const Eigen::Vector3d& comf_weight) {
-    set_weight_terminal(comf_weight);
-  }
-
-  ///
-  /// @brief Sets the weight vector at the impulse stage. 
-  /// @param[in] comi_weight Weight vector on the com position error at the 
-  /// impulse stage. 
-  ///
-  void set_comi_weight(const Eigen::Vector3d& comi_weight) {
-    set_weight_impulse(comi_weight);
-  }
-
   bool useKinematics() const override;
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
