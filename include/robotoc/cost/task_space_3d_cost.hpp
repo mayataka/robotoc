@@ -42,6 +42,42 @@ public:
   TaskSpace3DCost(const Robot& robot, const std::string& frame_name);
 
   ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_id Frame of interest.
+  /// @param[in] ref Reference task-space position.
+  ///
+  TaskSpace3DCost(const Robot& robot, const int frame_id, 
+                  const std::shared_ptr<TaskSpace3DRefBase>& ref);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_id Frame of interest.
+  /// @param[in] const_ref Const reference task-space position.
+  ///
+  TaskSpace3DCost(const Robot& robot, const int frame_id, 
+                  const Eigen::Vector3d& const_ref);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_name Frame of interest.
+  /// @param[in] ref Reference task-space position.
+  ///
+  TaskSpace3DCost(const Robot& robot, const std::string& frame_name,
+                  const std::shared_ptr<TaskSpace3DRefBase>& ref);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_name Frame of interest.
+  /// @param[in] const_ref Const reference task-space position.
+  ///
+  TaskSpace3DCost(const Robot& robot, const std::string& frame_name,
+                  const Eigen::Vector3d& const_ref);
+
+  ///
   /// @brief Default constructor. 
   ///
   TaskSpace3DCost();

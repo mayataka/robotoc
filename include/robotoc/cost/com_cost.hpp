@@ -32,6 +32,20 @@ public:
   CoMCost(const Robot& robot);
 
   ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] ref Reference CoM position.
+  ///
+  CoMCost(const Robot& robot, const std::shared_ptr<CoMRefBase>& ref);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] const_ref Const reference CoM position.
+  ///
+  CoMCost(const Robot& robot, const Eigen::Vector3d& const_ref);
+
+  ///
   /// @brief Default constructor. 
   ///
   CoMCost();

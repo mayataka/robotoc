@@ -22,6 +22,53 @@ TaskSpace6DCost::TaskSpace6DCost(const Robot& robot,
 }
 
 
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id,
+                                 const std::shared_ptr<TaskSpace6DRefBase>& ref)
+  : TaskSpace6DCost(robot, frame_id) {
+  set_ref(ref);
+}
+
+
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id,
+                                 const SE3& const_ref)
+  : TaskSpace6DCost(robot, frame_id) {
+  set_const_ref(const_ref);
+}
+
+
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id,
+                                 const Eigen::Vector3d& const_position_ref,
+                                 const Eigen::Matrix3d& const_rotation_ref) 
+  : TaskSpace6DCost(robot, frame_id) {
+  set_const_ref(const_position_ref, const_rotation_ref);
+}
+
+
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, 
+                                 const std::string& frame_name,
+                                 const std::shared_ptr<TaskSpace6DRefBase>& ref)
+  : TaskSpace6DCost(robot, frame_name) {
+  set_ref(ref);
+}
+
+
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot,
+                                 const std::string& frame_name,
+                                 const SE3& const_ref)
+  : TaskSpace6DCost(robot, frame_name) {
+  set_const_ref(const_ref);
+}
+
+
+TaskSpace6DCost::TaskSpace6DCost(const Robot& robot,
+                                 const std::string& frame_name,
+                                 const Eigen::Vector3d& const_position_ref,
+                                 const Eigen::Matrix3d& const_rotation_ref) 
+  : TaskSpace6DCost(robot, frame_name) {
+  set_const_ref(const_position_ref, const_rotation_ref);
+}
+
+
 TaskSpace6DCost::TaskSpace6DCost()
   : CostFunctionComponentBase(),
     frame_id_(0),

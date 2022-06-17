@@ -21,6 +21,36 @@ TaskSpace3DCost::TaskSpace3DCost(const Robot& robot,
 }
 
 
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id,
+                                 const std::shared_ptr<TaskSpace3DRefBase>& ref)
+  : TaskSpace3DCost(robot, frame_id) {
+  set_ref(ref);
+}
+
+
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id,
+                                 const Eigen::Vector3d& const_ref)
+  : TaskSpace3DCost(robot, frame_id) {
+  set_const_ref(const_ref);
+}
+
+
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, 
+                                 const std::string& frame_name,
+                                 const std::shared_ptr<TaskSpace3DRefBase>& ref)
+  : TaskSpace3DCost(robot, frame_name) {
+  set_ref(ref);
+}
+
+
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, 
+                                 const std::string& frame_name,
+                                 const Eigen::Vector3d& const_ref)
+  : TaskSpace3DCost(robot, frame_name) {
+  set_const_ref(const_ref);
+}
+
+
 TaskSpace3DCost::TaskSpace3DCost()
   : CostFunctionComponentBase(),
     frame_id_(0),

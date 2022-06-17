@@ -14,6 +14,18 @@ CoMCost::CoMCost(const Robot& robot)
 }
 
 
+CoMCost::CoMCost(const Robot& robot, const std::shared_ptr<CoMRefBase>& ref)
+  : CoMCost(robot) {
+  set_ref(ref);
+}
+
+
+CoMCost::CoMCost(const Robot& robot, const Eigen::Vector3d& const_ref)
+  : CoMCost(robot) {
+  set_const_ref(const_ref);
+}
+
+
 CoMCost::CoMCost()
   : CostFunctionComponentBase(),
     const_ref_(Eigen::Vector3d::Zero()),
@@ -122,7 +134,6 @@ void CoMCost::evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data,
                                           const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual) const {
   if (isCostActive(grid_info)) {
-    data.diff_3d = robot.CoM() - const_ref_;
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 

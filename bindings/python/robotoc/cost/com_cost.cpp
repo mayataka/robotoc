@@ -15,6 +15,10 @@ PYBIND11_MODULE(com_cost, m) {
              std::shared_ptr<CoMCost>>(m, "CoMCost")
     .def(py::init<const Robot&>(),
           py::arg("robot"))
+    .def(py::init<const Robot&, const std::shared_ptr<CoMRefBase>&>(),
+          py::arg("robot"), py::arg("ref"))
+    .def(py::init<const Robot&, const Eigen::Vector3d&>(),
+          py::arg("robot"), py::arg("const_ref"))
     .def(py::init<>())
     .def("set_ref", &CoMCost::set_ref,
           py::arg("ref"))

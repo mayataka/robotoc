@@ -17,6 +17,14 @@ PYBIND11_MODULE(task_space_3d_cost, m) {
           py::arg("robot"), py::arg("frame_id"))
     .def(py::init<const Robot&, const std::string&>(),
           py::arg("robot"), py::arg("frame_name"))
+    .def(py::init<const Robot&, const int, const std::shared_ptr<TaskSpace3DRefBase>&>(),
+          py::arg("robot"), py::arg("frame_id"), py::arg("ref"))
+    .def(py::init<const Robot&, const int, const Eigen::Vector3d&>(),
+          py::arg("robot"), py::arg("frame_id"), py::arg("const_ref"))
+    .def(py::init<const Robot&, const std::string&, const std::shared_ptr<TaskSpace3DRefBase>&>(),
+          py::arg("robot"), py::arg("frame_name"), py::arg("ref"))
+    .def(py::init<const Robot&, const std::string&, const Eigen::Vector3d&>(),
+          py::arg("robot"), py::arg("frame_name"), py::arg("const_ref"))
     .def(py::init<>())
     .def("set_ref", &TaskSpace3DCost::set_ref,
           py::arg("ref"))
