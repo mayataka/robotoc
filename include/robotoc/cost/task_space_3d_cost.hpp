@@ -16,6 +16,7 @@
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/cost/task_space_3d_ref_base.hpp"
 
 
 namespace robotoc {
@@ -71,30 +72,104 @@ public:
   TaskSpace3DCost& operator=(TaskSpace3DCost&&) noexcept = default;
 
   ///
+  /// @brief Sets the reference task-space position. 
+  /// @param[in] ref Reference task-space position.
+  ///
+  void set_ref(const std::shared_ptr<TaskSpace3DRefBase>& ref);
+
+  ///
+  /// @brief Sets the const reference task-space position. 
+  /// @param[in] const_ref Const reference task-space position.
+  ///
+  void set_const_ref(const Eigen::Vector3d& const_ref);
+
+  ///
+  /// @brief Sets the weight vector. 
+  /// @param[in] weight Weight vector on the task-space position error. 
+  ///
+  void set_weight(const Eigen::Vector3d& weight);
+
+  ///
+  /// @brief Sets the weight vector for the terminal stage. 
+  /// @param[in] weight_terminal Weight vector on the task-space position error 
+  /// at the terminal stage. 
+  ///
+  void set_weight_terminal(const Eigen::Vector3d& weight_terminal);
+
+  ///
+  /// @brief Sets the weight vector for the impulse stage. 
+  /// @param[in] weight_impulse Weight vector on the task-space position error 
+  /// at the impulse stage. 
+  ///
+  void set_weight_impulse(const Eigen::Vector3d& weight_impulse);
+
+  ///
+  /// @brief Evaluate if the cost is active for given grid_info. 
+  /// @param[in] grid_info Grid info.
+  /// @return Cost status (if the cost is active or not).
+  ///
+  bool isCostActive(const GridInfo& grid_info) const {
+    if (use_nonconst_ref_) {
+      return ref_->isActive(grid_info);
+    }
+    else {
+      return true;
+    }
+  }
+
+  ///
+  /// @brief Evaluate the difference between the robot's task-space position 
+  /// status and reference. 
+  /// @param[in] robot Robot model.
+  /// @param[in, out] data Cost funciton data.
+  /// @param[in] grid_info Grid info
+  ///
+  void evalDiff(const Robot& robot, CostFunctionData& data, 
+                const GridInfo& grid_info) const {
+    if (use_nonconst_ref_) {
+      if (ref_->isActive(grid_info)) {
+        ref_->updateRef(grid_info, data.x3d_ref);
+        data.diff_3d = robot.framePosition(frame_id_) - data.x3d_ref;
+      }
+    }
+    else {
+      data.diff_3d = robot.framePosition(frame_id_) - const_ref_;
+    }
+  }
+
+  ///
   /// @brief Sets the reference position. 
   /// @param[in] x3d_ref Reference position.
   ///
-  void set_x3d_ref(const Eigen::Vector3d& x3d_ref);
+  void set_x3d_ref(const Eigen::Vector3d& x3d_ref) {
+    set_const_ref(x3d_ref);
+  }
 
   ///
   /// @brief Sets the weight vector. 
   /// @param[in] x3d_weight Weight vector on the position error. 
   ///
-  void set_x3d_weight(const Eigen::Vector3d& x3d_weight);
+  void set_x3d_weight(const Eigen::Vector3d& x3d_weight) {
+    set_weight(x3d_weight);
+  }
 
   ///
   /// @brief Sets the weight vector at the terminal stage. 
   /// @param[in] x3df_weight Weight vector on the position error at the
   /// terminal stage. 
   ///
-  void set_x3df_weight(const Eigen::Vector3d& x3df_weight);
+  void set_x3df_weight(const Eigen::Vector3d& x3df_weight) {
+    set_weight_terminal(x3df_weight);
+  }
 
   ///
   /// @brief Sets the weight vector at the impulse stage. 
   /// @param[in] x3di_weight Weight vector on the position error at the 
   /// impulse stage. 
   ///
-  void set_x3di_weight(const Eigen::Vector3d& x3di_weight);
+  void set_x3di_weight(const Eigen::Vector3d& x3di_weight) {
+    set_weight_impulse(x3di_weight);
+  }
 
   bool useKinematics() const override;
 
@@ -144,7 +219,9 @@ public:
 
 private:
   int frame_id_;
-  Eigen::Vector3d x3d_ref_, x3d_weight_, x3df_weight_, x3di_weight_;
+  Eigen::Vector3d const_ref_, weight_, weight_terminal_, weight_impulse_;
+  std::shared_ptr<TaskSpace3DRefBase> ref_;
+  bool use_nonconst_ref_;
 
 };
 

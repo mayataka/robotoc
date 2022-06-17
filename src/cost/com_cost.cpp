@@ -5,19 +5,23 @@ namespace robotoc {
 
 CoMCost::CoMCost(const Robot& robot)
   : CostFunctionComponentBase(),
-    com_ref_(Eigen::Vector3d::Zero()),
-    com_weight_(Eigen::Vector3d::Zero()),
-    comf_weight_(Eigen::Vector3d::Zero()),
-    comi_weight_(Eigen::Vector3d::Zero()) {
+    const_ref_(Eigen::Vector3d::Zero()),
+    weight_(Eigen::Vector3d::Zero()),
+    weight_terminal_(Eigen::Vector3d::Zero()),
+    weight_impulse_(Eigen::Vector3d::Zero()),
+    ref_(),
+    use_nonconst_ref_(false) {
 }
 
 
 CoMCost::CoMCost()
   : CostFunctionComponentBase(),
-    com_ref_(),
-    com_weight_(),
-    comf_weight_(),
-    comi_weight_() {
+    const_ref_(Eigen::Vector3d::Zero()),
+    weight_(Eigen::Vector3d::Zero()),
+    weight_terminal_(Eigen::Vector3d::Zero()),
+    weight_impulse_(Eigen::Vector3d::Zero()),
+    ref_(),
+    use_nonconst_ref_(false) {
 }
 
 
@@ -25,23 +29,30 @@ CoMCost::~CoMCost() {
 }
 
 
-void CoMCost::set_com_ref(const Eigen::Vector3d& com_ref) {
-  com_ref_ = com_ref;
+void CoMCost::set_ref(const std::shared_ptr<CoMRefBase>& ref) {
+  ref_ = ref;
+  use_nonconst_ref_ = true;
 }
 
 
-void CoMCost::set_com_weight(const Eigen::Vector3d& com_weight) {
-  com_weight_ = com_weight;
+void CoMCost::set_const_ref(const Eigen::Vector3d& const_ref) {
+  const_ref_ = const_ref;
+  use_nonconst_ref_ = false;
 }
 
 
-void CoMCost::set_comf_weight(const Eigen::Vector3d& comf_weight) {
-  comf_weight_ = comf_weight;
+void CoMCost::set_weight(const Eigen::Vector3d& weight) {
+  weight_ = weight;
 }
 
 
-void CoMCost::set_comi_weight(const Eigen::Vector3d& comi_weight) {
-  comi_weight_ = comi_weight;
+void CoMCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal) {
+  weight_terminal_ = weight_terminal;
+}
+
+
+void CoMCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
+  weight_impulse_ = weight_impulse;
 }
 
 
@@ -53,10 +64,14 @@ bool CoMCost::useKinematics() const {
 double CoMCost::evalStageCost(Robot& robot, const ContactStatus& contact_status, 
                               CostFunctionData& data, const GridInfo& grid_info, 
                               const SplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.CoM() - com_ref_;
-  l += (com_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * grid_info.dt * l;
+  if (isCostActive(grid_info)) {
+    evalDiff(robot, data, grid_info);
+    const double l = (weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    return 0.5 * grid_info.dt * l;
+  }
+  else {
+    return 0.0;
+  }
 }
 
 
@@ -66,10 +81,12 @@ void CoMCost::evalStageCostDerivatives(Robot& robot,
                                        const GridInfo& grid_info,
                                        const SplitSolution& s,
                                        SplitKKTResidual& kkt_residual) const {
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_residual.lq().noalias() 
-      += grid_info.dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.diff_3d;
+  if (isCostActive(grid_info)) {
+    data.J_3d.setZero();
+    robot.getCoMJacobian(data.J_3d);
+    kkt_residual.lq().noalias() 
+        += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.diff_3d;
+  }
 }
 
 
@@ -79,18 +96,24 @@ void CoMCost::evalStageCostHessian(Robot& robot,
                                    const GridInfo& grid_info,
                                    const SplitSolution& s, 
                                    SplitKKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qqq().noalias()
-      += grid_info.dt * data.J_3d.transpose() * com_weight_.asDiagonal() * data.J_3d;
+  if (isCostActive(grid_info)) {
+    kkt_matrix.Qqq().noalias()
+        += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.J_3d;
+  }
 }
 
 
 double CoMCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
                                  const GridInfo& grid_info,
                                  const SplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.CoM() - com_ref_;
-  l += (comf_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
+  if (isCostActive(grid_info)) {
+    evalDiff(robot, data, grid_info);
+    const double l = (weight_terminal_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    return 0.5 * l;
+  }
+  else {
+    return 0.0;
+  }
 }
 
 
@@ -98,11 +121,13 @@ void CoMCost::evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data,
                                           const GridInfo& grid_info,
                                           const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual) const {
-  data.diff_3d = robot.CoM() - com_ref_;
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_residual.lq().noalias() 
-      += data.J_3d.transpose() * comf_weight_.asDiagonal() * data.diff_3d;
+  if (isCostActive(grid_info)) {
+    data.diff_3d = robot.CoM() - const_ref_;
+    data.J_3d.setZero();
+    robot.getCoMJacobian(data.J_3d);
+    kkt_residual.lq().noalias() 
+        += data.J_3d.transpose() * weight_terminal_.asDiagonal() * data.diff_3d;
+  }
 }
 
 
@@ -110,10 +135,12 @@ void CoMCost::evalTerminalCostHessian(Robot& robot, CostFunctionData& data,
                                       const GridInfo& grid_info,
                                       const SplitSolution& s, 
                                       SplitKKTMatrix& kkt_matrix) const {
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_matrix.Qqq().noalias()
-      += data.J_3d.transpose() * comf_weight_.asDiagonal() * data.J_3d;
+  if (isCostActive(grid_info)) {
+    data.J_3d.setZero();
+    robot.getCoMJacobian(data.J_3d);
+    kkt_matrix.Qqq().noalias()
+        += data.J_3d.transpose() * weight_terminal_.asDiagonal() * data.J_3d;
+  }
 }
 
 
@@ -121,10 +148,14 @@ double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_statu
                                 CostFunctionData& data, 
                                 const GridInfo& grid_info,
                                 const ImpulseSplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.CoM() - com_ref_;
-  l += (comi_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
+  if (isCostActive(grid_info)) {
+    evalDiff(robot, data, grid_info);
+    const double l = (weight_impulse_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    return 0.5 * l;
+  }
+  else {
+    return 0.0;
+  }
 }
 
 
@@ -132,10 +163,12 @@ void CoMCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_residual.lq().noalias() 
-      += data.J_3d.transpose() * comi_weight_.asDiagonal() * data.diff_3d;
+  if (isCostActive(grid_info)) {
+    data.J_3d.setZero();
+    robot.getCoMJacobian(data.J_3d);
+    kkt_residual.lq().noalias() 
+        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.diff_3d;
+  }
 }
 
 
@@ -145,8 +178,10 @@ void CoMCost::evalImpulseCostHessian(Robot& robot,
                                      const GridInfo& grid_info,
                                      const ImpulseSplitSolution& s, 
                                      ImpulseSplitKKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qqq().noalias()
-      += data.J_3d.transpose() * comi_weight_.asDiagonal() * data.J_3d;
+  if (isCostActive(grid_info)) {
+    kkt_matrix.Qqq().noalias()
+        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;
+  }
 }
 
 } // namespace robotoc

@@ -17,6 +17,7 @@
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/cost/task_space_6d_ref_base.hpp"
 
 
 namespace robotoc {
@@ -74,12 +75,99 @@ public:
   TaskSpace6DCost& operator=(TaskSpace6DCost&&) noexcept = default;
 
   ///
+  /// @brief Sets the reference task-space placement. 
+  /// @param[in] ref Reference task-space placement.
+  ///
+  void set_ref(const std::shared_ptr<TaskSpace6DRefBase>& ref);
+
+  ///
+  /// @brief Sets the const reference task-space placement. 
+  /// @param[in] const_ref Const reference task-space placement.
+  ///
+  void set_const_ref(const SE3& const_ref);
+
+  ///
+  /// @brief Sets the const reference task-space placement. 
+  /// @param[in] const_position_ref Const reference task-space position.
+  /// @param[in] const_rotation_ref Const reference task-space rotation.
+  ///
+  void set_const_ref(const Eigen::Vector3d& const_position_ref,
+                     const Eigen::Matrix3d& const_rotation_ref);
+
+  ///
+  /// @brief Sets the weight vector. 
+  /// @param[in] weight_position Weight vector on the task-space position error. 
+  /// @param[in] weight_rotation Weight vector on the task-space rotation error. 
+  ///
+  void set_weight(const Eigen::Vector3d& weight_position,
+                  const Eigen::Vector3d& weight_rotation);
+
+  ///
+  /// @brief Sets the weight vector at the terminal stage. 
+  /// @param[in] weight_position_terminal Weight vector on the task-space 
+  /// position error at the terminal stage. 
+  /// @param[in] weight_rotation_terminal Weight vector on the task-space 
+  /// rotation error at the terminal stage. 
+  ///
+  void set_weight_terminal(const Eigen::Vector3d& weight_position_terminal,
+                           const Eigen::Vector3d& weight_rotation_terminal);
+
+  ///
+  /// @brief Sets the weight vector at the impulse stage. 
+  /// @param[in] weight_position_impulse Weight vector on the task-space 
+  /// position error at the impulse stage. 
+  /// @param[in] weight_rotation_impulse Weight vector on the task-space 
+  /// rotation error at the impulse stage. 
+  ///
+  void set_weight_impulse(const Eigen::Vector3d& weight_position_impulse,
+                          const Eigen::Vector3d& weight_rotation_impulse);
+
+  ///
+  /// @brief Evaluate if the cost is active for given grid_info. 
+  /// @param[in] grid_info Grid info.
+  /// @return Cost status (if the cost is active or not).
+  ///
+  bool isCostActive(const GridInfo& grid_info) const {
+    if (use_nonconst_ref_) {
+      return ref_->isActive(grid_info);
+    }
+    else {
+      return true;
+    }
+  }
+
+  ///
+  /// @brief Evaluate the difference between the robot's task-space position 
+  /// status and reference. 
+  /// @param[in] robot Robot model.
+  /// @param[in, out] data Cost funciton data.
+  /// @param[in] grid_info Grid info
+  ///
+  void evalDiff(const Robot& robot, CostFunctionData& data, 
+                const GridInfo& grid_info) const {
+    if (use_nonconst_ref_) {
+      if (ref_->isActive(grid_info)) {
+        ref_->updateRef(grid_info, data.x6d_ref);
+        data.x6d_ref_inv = data.x6d_ref.inverse();
+        data.diff_x6d = data.x6d_ref_inv * robot.framePlacement(frame_id_);
+        data.diff_6d = Log6Map(data.diff_x6d);
+      }
+    }
+    else {
+      data.diff_x6d = const_ref_inv_ * robot.framePlacement(frame_id_);
+      data.diff_6d = Log6Map(data.diff_x6d);
+    }
+  }
+
+  ///
   /// @brief Sets the reference pose. 
   /// @param[in] trans_ref Reference translation.
   /// @param[in] rot_ref Reference rotation matrix.
   ///
   void set_x6d_ref(const Eigen::Vector3d& trans_ref, 
-                   const Eigen::Matrix3d& rot_ref);
+                   const Eigen::Matrix3d& rot_ref) {
+    set_const_ref(SE3(rot_ref, trans_ref));
+  }
 
   ///
   /// @brief Sets the weight vectors. 
@@ -87,7 +175,9 @@ public:
   /// @param[in] rot_weight Weight vector on the rotation error. 
   ///
   void set_x6d_weight(const Eigen::Vector3d& trans_weight, 
-                      const Eigen::Vector3d& rot_weight);
+                      const Eigen::Vector3d& rot_weight) {
+    set_weight(trans_weight, rot_weight);
+  }
 
   ///
   /// @brief Sets the weight vectors at the terminal stage. 
@@ -97,7 +187,9 @@ public:
   /// terminal stage.
   ///
   void set_x6df_weight(const Eigen::Vector3d& trans_weight, 
-                       const Eigen::Vector3d& rot_weight);
+                       const Eigen::Vector3d& rot_weight) {
+    set_weight_terminal(trans_weight, rot_weight);
+ }
 
   ///
   /// @brief Sets the weight vectors at the impulse stages. 
@@ -107,7 +199,9 @@ public:
   /// impulse stages.
   ///
   void set_x6di_weight(const Eigen::Vector3d& trans_weight, 
-                       const Eigen::Vector3d& rot_weight);
+                       const Eigen::Vector3d& rot_weight) {
+    set_weight_impulse(trans_weight, rot_weight);
+ }
 
   bool useKinematics() const override;
 
@@ -157,9 +251,10 @@ public:
 
 private:
   int frame_id_;
-  SE3 x6d_ref_, x6d_ref_inv_;
-  Eigen::VectorXd x6d_weight_, x6df_weight_, x6di_weight_;
-
+  SE3 const_ref_, const_ref_inv_;
+  Eigen::VectorXd weight_, weight_terminal_, weight_impulse_;
+  std::shared_ptr<TaskSpace6DRefBase> ref_;
+  bool use_nonconst_ref_;
 };
 
 } // namespace robotoc
