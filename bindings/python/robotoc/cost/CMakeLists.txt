@@ -1,6 +1,7 @@
 pybind11_add_robotoc_module(cost_function)
 pybind11_add_robotoc_module(cost_function_component_base)
 pybind11_add_robotoc_module(cost_function_data)
+pybind11_add_robotoc_module(configuration_space_ref_base)
 pybind11_add_robotoc_module(configuration_space_cost)
 pybind11_add_robotoc_module(task_space_3d_ref_base)
 pybind11_add_robotoc_module(task_space_3d_cost)

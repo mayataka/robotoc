@@ -14,6 +14,7 @@
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/cost/configuration_space_ref_base.hpp"
 
 
 namespace robotoc {
@@ -63,19 +64,25 @@ public:
   ConfigurationSpaceCost& operator=(ConfigurationSpaceCost&&) noexcept = default;
 
   ///
-  /// @brief Sets the reference configuration q. 
+  /// @brief Sets the reference configuration. 
+  /// @param[in] ref Reference configuraton.
+  ///
+  void set_ref(const std::shared_ptr<ConfigurationSpaceRefBase>& ref);
+
+  ///
+  /// @brief Sets the const reference configuration q. 
   /// @param[in] q_ref Reference configuration q. Size must be Robot::dimq().
   ///
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   ///
-  /// @brief Sets the reference velocity v. 
+  /// @brief Sets the const reference velocity v. 
   /// @param[in] v_ref Reference velocity v. Size must be Robot::dimv().
   ///
   void set_v_ref(const Eigen::VectorXd& v_ref);
 
   ///
-  /// @brief Sets the reference control input torques u. 
+  /// @brief Sets the const reference control input torques u. 
   /// @param[in] u_ref Reference control input torques u. Size must be 
   /// Robot::dimu().
   ///
@@ -111,39 +118,60 @@ public:
 
   ///
   /// @brief Sets the weight vector on the configuration q at the terminal stage. 
-  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// @param[in] q_weight_terminal Weight vector on the configuration q at the terminal 
   /// stage. Size must be Robot::dimv().
   ///
-  void set_qf_weight(const Eigen::VectorXd& qf_weight);
+  void set_q_weight_terminal(const Eigen::VectorXd& q_weight_terminal);
 
   ///
   /// @brief Sets the weight vector on the velocity v at the terminal stage. 
-  /// @param[in] vf_weight Weight vector on the velocity v at the terminal 
+  /// @param[in] v_weight_terminal Weight vector on the velocity v at the terminal 
   /// stage. Size must be Robot::dimv().
   ///
-  void set_vf_weight(const Eigen::VectorXd& vf_weight);
+  void set_v_weight_terminal(const Eigen::VectorXd& v_weight_terminal);
 
   ///
   /// @brief Sets the weight vector on the configuration q at impulse stages. 
-  /// @param[in] qi_weight Weight vector on the configuration q at impulse  
+  /// @param[in] q_weight_impulse Weight vector on the configuration q at impulse  
   /// stages. Size must be Robot::dimv().
   ///
-  void set_qi_weight(const Eigen::VectorXd& qi_weight);
+  void set_q_weight_impulse(const Eigen::VectorXd& q_weight_impulse);
 
   ///
   /// @brief Sets the weight vector on the velocity v at the impulse stages. 
-  /// @param[in] vi_weight Weight vector on the velocity v at the impulse  
+  /// @param[in] v_weight_impulse Weight vector on the velocity v at the impulse  
   /// stages. Size must be Robot::dimv().
   ///
-  void set_vi_weight(const Eigen::VectorXd& vi_weight);
+  void set_v_weight_impulse(const Eigen::VectorXd& v_weight_impulse);
 
   ///
   /// @brief Sets the weight vector on the impulse change in the velocity dv at 
   /// the impulse stages. 
-  /// @param[in] dvi_weight Weight vector on the impulse change in the velocity
+  /// @param[in] dv_weight_impulse Weight vector on the impulse change in the velocity
   /// the impulse stages. Size must be Robot::dimv().
   ///
-  void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
+  void set_dv_weight_impulse(const Eigen::VectorXd& dv_weight_impulse);
+
+  ///
+  /// @brief Evaluate the difference between the configuration and the reference
+  /// configuration. 
+  /// @param[in] robot Robot model.
+  /// @param[in, out] data Cost funciton data.
+  /// @param[in] grid_info Grid info
+  /// @param[in] q Current configuration 
+  ///
+  void evalDiff(const Robot& robot, CostFunctionData& data, 
+                const GridInfo& grid_info, const Eigen::VectorXd& q) const {
+    if (use_nonconst_ref_) {
+      if (ref_->isActive(grid_info)) {
+        ref_->updateRef(robot, grid_info, data.q_ref);
+        robot.subtractConfiguration(q, data.q_ref, data.qdiff);
+      }
+    }
+    else {
+      robot.subtractConfiguration(q, q_ref_, data.qdiff);
+    }
+  }
 
   bool useKinematics() const override;
 
@@ -188,9 +216,15 @@ public:
 
 private:
   int dimq_, dimv_, dimu_;
-  Eigen::VectorXd q_ref_, v_ref_, u_ref_, q_weight_, v_weight_, a_weight_, 
-                  u_weight_, qf_weight_, vf_weight_, qi_weight_, vi_weight_, 
-                  dvi_weight_;
+  Eigen::VectorXd q_ref_, v_ref_, u_ref_, 
+                  q_weight_, v_weight_, a_weight_, u_weight_,
+                  q_weight_terminal_, v_weight_terminal_, 
+                  q_weight_impulse_, v_weight_impulse_, dv_weight_impulse_;
+  std::shared_ptr<ConfigurationSpaceRefBase> ref_;
+  bool use_nonconst_ref_, 
+       enable_q_cost_, enable_v_cost_, enable_a_cost_, enable_u_cost_,
+       enable_q_cost_terminal_, enable_v_cost_terminal_,
+       enable_q_cost_impulse_, enable_v_cost_impulse_, enable_dv_cost_impulse_;
 };
 
 } // namespace robotoc

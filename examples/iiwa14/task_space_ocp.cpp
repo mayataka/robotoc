@@ -69,9 +69,9 @@ int main(int argc, char *argv[]) {
   auto cost = std::make_shared<robotoc::CostFunction>();
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_q_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
+  config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
   auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();

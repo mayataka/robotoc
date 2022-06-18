@@ -56,9 +56,9 @@ int main () {
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_q_ref(q_standing);
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  config_cost->set_q_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   cost->push_back(config_cost);
   auto local_contact_force_cost = std::make_shared<robotoc::LocalContactForceCost>(robot);

@@ -137,10 +137,10 @@ int main(int argc, char *argv[]) {
 
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_v_weight(v_weight);
-  config_cost->set_vf_weight(v_weight);
-  config_cost->set_vi_weight(v_weight);
+  config_cost->set_v_weight_terminal(v_weight);
+  config_cost->set_v_weight_impulse(v_weight);
   config_cost->set_a_weight(a_weight);
-  config_cost->set_dvi_weight(a_weight);
+  config_cost->set_dv_weight_impulse(a_weight);
   cost->push_back(config_cost);
 
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
@@ -160,8 +160,8 @@ int main(int argc, char *argv[]) {
                                                                   q_standing, v_ref);
   auto time_varying_config_cost = std::make_shared<robotoc::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
-  time_varying_config_cost->set_qf_weight(q_weight);
-  time_varying_config_cost->set_qi_weight(q_weight);
+  time_varying_config_cost->set_q_weight_terminal(q_weight);
+  time_varying_config_cost->set_q_weight_impulse(q_weight);
   cost->push_back(time_varying_config_cost);
 
   // Create the constraints

@@ -20,10 +20,10 @@ PYBIND11_MODULE(time_varying_configuration_space_cost, m) {
           py::arg("q_ref"))
     .def("set_q_weight", &TimeVaryingConfigurationSpaceCost::set_q_weight,
           py::arg("q_weight"))
-    .def("set_qf_weight", &TimeVaryingConfigurationSpaceCost::set_qf_weight,
-          py::arg("qf_weight"))
-    .def("set_qi_weight", &TimeVaryingConfigurationSpaceCost::set_qi_weight,
-          py::arg("qi_weight"));
+    .def("set_q_weight_terminal", &TimeVaryingConfigurationSpaceCost::set_q_weight_terminal,
+          py::arg("q_weight_terminal"))
+    .def("set_q_weight_impulse", &TimeVaryingConfigurationSpaceCost::set_q_weight_impulse,
+          py::arg("q_weight_impulse"));
 }
 
 } // namespace python

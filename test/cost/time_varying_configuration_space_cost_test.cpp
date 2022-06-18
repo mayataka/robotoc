@@ -157,14 +157,14 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd q_weight_terminal = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   auto ref = std::make_shared<TimeVaryingConfigurationRef>(q0_ref, v_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, ref);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
-  cost->set_qf_weight(qf_weight);
+  cost->set_q_weight_terminal(q_weight_terminal);
 
   const auto s = SplitSolution::Random(robot);
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info0, s), 0);
@@ -182,25 +182,25 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   robot.integrateConfiguration(q0_ref, v_ref, (t-t0), q_ref);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
-  const double cost_ref = 0.5 * (qf_weight.array()*q_diff.array()*q_diff.array()).sum();
+  const double cost_ref = 0.5 * (q_weight_terminal.array()*q_diff.array()*q_diff.array()).sum();
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), cost_ref);
 
   cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
-    kkt_res_ref.lq() += Jq_diff.transpose() * qf_weight.asDiagonal() * q_diff;
+    kkt_res_ref.lq() += Jq_diff.transpose() * q_weight_terminal.asDiagonal() * q_diff;
   }
   else {
-    kkt_res_ref.lq() += qf_weight.asDiagonal() * (s.q-q_ref);
+    kkt_res_ref.lq() += q_weight_terminal.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
   if (robot.hasFloatingBase()) {
-    kkt_mat_ref.Qqq() += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
+    kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight_terminal.asDiagonal() * Jq_diff;
   }
   else {
-    kkt_mat_ref.Qqq() += qf_weight.asDiagonal();
+    kkt_mat_ref.Qqq() += q_weight_terminal.asDiagonal();
   }
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -218,14 +218,14 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
   auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   auto ref = std::make_shared<TimeVaryingConfigurationRef>(q0_ref, v_ref, t0, tf);
   auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, ref);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
-  cost->set_qi_weight(qi_weight);
+  cost->set_q_weight_impulse(q_weight_impulse);
 
   const auto s = ImpulseSplitSolution::Random(robot);
   const auto impulse_status = robot.createImpulseStatus();
@@ -244,25 +244,25 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
   robot.integrateConfiguration(q0_ref, v_ref, (t-t0), q_ref);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
-  const double cost_ref = 0.5 * (qi_weight.array()*q_diff.array()*q_diff.array()).sum();
+  const double cost_ref = 0.5 * (q_weight_impulse.array()*q_diff.array()*q_diff.array()).sum();
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), cost_ref);
 
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
-    kkt_res_ref.lq() += Jq_diff.transpose() * qi_weight.asDiagonal() * q_diff;
+    kkt_res_ref.lq() += Jq_diff.transpose() * q_weight_impulse.asDiagonal() * q_diff;
   }
   else {
-    kkt_res_ref.lq() += qi_weight.asDiagonal() * (s.q-q_ref);
+    kkt_res_ref.lq() += q_weight_impulse.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
   if (robot.hasFloatingBase()) {
-    kkt_mat_ref.Qqq() += Jq_diff.transpose() * qi_weight.asDiagonal() * Jq_diff;
+    kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight_impulse.asDiagonal() * Jq_diff;
   }
   else {
-    kkt_mat_ref.Qqq() += qi_weight.asDiagonal();
+    kkt_mat_ref.Qqq() += q_weight_impulse.asDiagonal();
   }
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

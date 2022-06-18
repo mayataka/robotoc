@@ -229,78 +229,78 @@ void MultiModeConfigurationSpaceCost::set_u_weight(
 }
 
 
-void MultiModeConfigurationSpaceCost::set_qf_weight(const Eigen::VectorXd& qf_weight) {
+void MultiModeConfigurationSpaceCost::set_q_weight_terminal(const Eigen::VectorXd& q_weight_terminal) {
   try {
-    if (qf_weight.size() != dimv_) {
+    if (q_weight_terminal.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: qf_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: q_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  qf_weight_ = qf_weight;
+  qf_weight_ = q_weight_terminal;
 }
 
 
-void MultiModeConfigurationSpaceCost::set_vf_weight(const Eigen::VectorXd& vf_weight) {
+void MultiModeConfigurationSpaceCost::set_v_weight_terminal(const Eigen::VectorXd& v_weight_terminal) {
   try {
-    if (vf_weight.size() != dimv_) {
+    if (v_weight_terminal.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: vf_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: v_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  vf_weight_ = vf_weight;
+  vf_weight_ = v_weight_terminal;
 }
 
 
-void MultiModeConfigurationSpaceCost::set_qi_weight(const Eigen::VectorXd& qi_weight) {
+void MultiModeConfigurationSpaceCost::set_q_weight_impulse(const Eigen::VectorXd& q_weight_impulse) {
   try {
-    if (qi_weight.size() != dimv_) {
+    if (q_weight_impulse.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: qi_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: q_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  qi_weight_ = qi_weight;
+  qi_weight_ = q_weight_impulse;
 }
 
 
-void MultiModeConfigurationSpaceCost::set_vi_weight(const Eigen::VectorXd& vi_weight) {
+void MultiModeConfigurationSpaceCost::set_v_weight_impulse(const Eigen::VectorXd& v_weight_impulse) {
   try {
-    if (vi_weight.size() != dimv_) {
+    if (v_weight_impulse.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: vi_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: v_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  vi_weight_ = vi_weight;
+  vi_weight_ = v_weight_impulse;
 }
 
 
-void MultiModeConfigurationSpaceCost::set_dvi_weight(const Eigen::VectorXd& dvi_weight) {
+void MultiModeConfigurationSpaceCost::set_dv_weight_impulse(const Eigen::VectorXd& dv_weight_impulse) {
   try {
-    if (dvi_weight.size() != dimv_) {
+    if (dv_weight_impulse.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: dvi_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: dv_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  dvi_weight_ = dvi_weight;
+  dvi_weight_ = dv_weight_impulse;
 }
 
 

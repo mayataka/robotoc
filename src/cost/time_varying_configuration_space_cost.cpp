@@ -54,35 +54,35 @@ void TimeVaryingConfigurationSpaceCost::set_q_weight(
 }
 
 
-void TimeVaryingConfigurationSpaceCost::set_qf_weight(
-    const Eigen::VectorXd& qf_weight) {
+void TimeVaryingConfigurationSpaceCost::set_q_weight_terminal(
+    const Eigen::VectorXd& q_weight_terminal) {
   try {
-    if (qf_weight.size() != dimv_) {
+    if (q_weight_terminal.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: qf_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: q_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  qf_weight_ = qf_weight;
+  qf_weight_ = q_weight_terminal;
 }
 
 
-void TimeVaryingConfigurationSpaceCost::set_qi_weight(
-    const Eigen::VectorXd& qi_weight) {
+void TimeVaryingConfigurationSpaceCost::set_q_weight_impulse(
+    const Eigen::VectorXd& q_weight_impulse) {
   try {
-    if (qi_weight.size() != dimv_) {
+    if (q_weight_impulse.size() != dimv_) {
       throw std::invalid_argument(
-          "invalid size: qi_weight.size() must be " + std::to_string(dimv_) + "!");
+          "invalid size: q_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  qi_weight_ = qi_weight;
+  qi_weight_ = q_weight_impulse;
 }
 
 

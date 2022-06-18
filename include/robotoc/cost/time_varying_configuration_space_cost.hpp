@@ -141,17 +141,17 @@ public:
 
   ///
   /// @brief Sets the weight vector on the configuration q at the terminal stage. 
-  /// @param[in] qf_weight Weight vector on the configuration q at the terminal 
+  /// @param[in] q_weight_terminal Weight vector on the configuration q at the terminal 
   /// stage. Size must be Robot::dimv().
   ///
-  void set_qf_weight(const Eigen::VectorXd& qf_weight);
+  void set_q_weight_terminal(const Eigen::VectorXd& q_weight_terminal);
 
   ///
   /// @brief Sets the weight vector on the configuration q at the impulse stages. 
-  /// @param[in] qi_weight Weight vector on the configuration q at the impulse 
+  /// @param[in] q_weight_impulse Weight vector on the configuration q at the impulse 
   /// stages. Size must be Robot::dimv().
   ///
-  void set_qi_weight(const Eigen::VectorXd& qi_weight);
+  void set_q_weight_impulse(const Eigen::VectorXd& q_weight_impulse);
 
   bool useKinematics() const override;
 

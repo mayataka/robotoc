@@ -58,16 +58,16 @@ PYBIND11_MODULE(multi_mode_configuration_space_cost, m) {
     .def("set_u_weight", 
           static_cast<void (MultiModeConfigurationSpaceCost::*)(const Eigen::VectorXd&, const std::vector<int>&)>(&MultiModeConfigurationSpaceCost::set_u_weight),
           py::arg("set_u_weight"), py::arg("contact_mode_ids"))
-    .def("set_qf_weight", &MultiModeConfigurationSpaceCost::set_qf_weight,
-          py::arg("qf_weight"))
-    .def("set_vf_weight", &MultiModeConfigurationSpaceCost::set_vf_weight,
-          py::arg("vf_weight"))
-    .def("set_qi_weight", &MultiModeConfigurationSpaceCost::set_qi_weight,
-          py::arg("qi_weight"))
-    .def("set_vi_weight", &MultiModeConfigurationSpaceCost::set_vi_weight,
-          py::arg("vi_weight"))
-    .def("set_dvi_weight", &MultiModeConfigurationSpaceCost::set_dvi_weight,
-          py::arg("dvi_weight"));
+    .def("set_q_weight_terminal", &MultiModeConfigurationSpaceCost::set_q_weight_terminal,
+          py::arg("q_weight_terminal"))
+    .def("set_v_weight_terminal", &MultiModeConfigurationSpaceCost::set_v_weight_terminal,
+          py::arg("v_weight_terminal"))
+    .def("set_q_weight_impulse", &MultiModeConfigurationSpaceCost::set_q_weight_impulse,
+          py::arg("q_weight_impulse"))
+    .def("set_v_weight_impulse", &MultiModeConfigurationSpaceCost::set_v_weight_impulse,
+          py::arg("v_weight_impulse"))
+    .def("set_dv_weight_impulse", &MultiModeConfigurationSpaceCost::set_dv_weight_impulse,
+          py::arg("dv_weight_impulse"));
 }
 
 } // namespace python

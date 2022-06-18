@@ -49,22 +49,22 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.001);
   q_weight.template head<6>().setZero();
-  Eigen::VectorXd qi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
-  qi_weight.template head<6>().setZero();
+  Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1);
+  q_weight_impulse.template head<6>().setZero();
   config_cost_->set_q_weight(q_weight);
-  config_cost_->set_qf_weight(q_weight);
-  config_cost_->set_qi_weight(qi_weight);
+  config_cost_->set_q_weight_terminal(q_weight);
+  config_cost_->set_q_weight_impulse(q_weight_impulse);
   config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
-  config_cost_->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
-  config_cost_->set_vi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
-  config_cost_->set_dvi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   base_rot_cost_ = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, base_rot_ref_);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
   base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
   base_rot_cost_->set_q_weight(base_rot_weight);
-  base_rot_cost_->set_qf_weight(base_rot_weight);
-  base_rot_cost_->set_qi_weight(base_rot_weight);
+  base_rot_cost_->set_q_weight_terminal(base_rot_weight);
+  base_rot_cost_->set_q_weight_impulse(base_rot_weight);
   LF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
                                                                robot.contactFrames()[0],
                                                                LF_foot_ref_);
