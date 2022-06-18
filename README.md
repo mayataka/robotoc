@@ -134,7 +134,7 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
 - `OCPSolver` can solve the switching time optimization (STO) problem, which optimizes the trajectory and the contact timings simultaneously.
 - The following videos display the solution trajectory of the STO problems (`anymal/python/jumping_sto.py` and `icub/python/jumping_sto.py`).
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/jumping_sto.gif" width="240"> &nbsp;
 <img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub.gif" width="230">
 
 ### Whole-body MPC examples
@@ -147,15 +147,17 @@ Further explanations are found at https://mayataka.github.io/robotoc/page_exampl
   - `MPCBipedWalk` : MPC with `OCPSolver` for the walking motion of bipedal robots.
 - You can find the simulations of these MPC at `a1/mpc`, `anymal/mpc`, and `icub/mpc`.
 - You need [PyBullet](https://pybullet.org/wordpress/) for the MPC simulations. (easy to install, e.g., by `pip install pybullet`)
-- The following videos display the simulation results of quadrupedal walking on rough terrain (`a1/mpc/trot_terrain.py` and `a1/mpc/crawl_terrain.py`) and bipedal walking (`icub/mpc/walk.py`).
+- The following videos display the simulation results of quadrupedal walking on rough terrain (`a1/mpc/trot_terrain.py`) and bipedal walking (`icub/mpc/walk.py`).
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/a1_trot_terrain.gif" width="250"> &nbsp;
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/a1_crawl_terrain.gif" width="250">  
-<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub_walking.gif" width="250">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/a1_trot_terrain.gif" width="270"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/robotoc/images/icub_walk.gif" width="250">
 
 
 ## Documentation
 More detailed documentation is available at https://mayataka.github.io/robotoc/.
+
+## Tutorial
+Our tutorials on robotoc is available at [robotoc_tutorial](https://github.com/mayataka/robotoc_tutorial).
 
 ## Citing robotoc
 - Citing the STO algorithm of `OCPSolver`:
@@ -186,12 +188,13 @@ More detailed documentation is available at https://mayataka.github.io/robotoc/.
   title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   booktitle={{IEEE International Conference on Robotics and Automation (ICRA)}},
+  pages={2070--2076},
   year={2021}}
 ```
 
 ## Related publications
 - S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021
 - S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
-- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, American Control Conference (ACC) (accepted), https://arxiv.org/abs/2102.09731, 2022
-- S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021
+- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, American Control Conference (ACC), pp. 3579-3586, 2022
+- S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), pp.2070-2076, 2021
 - H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019
