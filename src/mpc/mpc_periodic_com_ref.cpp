@@ -89,7 +89,7 @@ void MPCPeriodicCoMRef::setCoMRef(
     has_inactive_contacts_.push_back(
         num_active_contacts < contact_status.maxNumContacts());
   }
-  com_ = foot_step_planner->com();
+  com_ = foot_step_planner->CoM();
 }
 
 

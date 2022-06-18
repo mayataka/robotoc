@@ -228,32 +228,32 @@ bool FlyingTrotFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& FlyingTrotFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& FlyingTrotFootStepPlanner::contactPlacements(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& FlyingTrotFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& FlyingTrotFootStepPlanner::contactPlacements() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& FlyingTrotFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& FlyingTrotFootStepPlanner::contactPositions() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& FlyingTrotFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& FlyingTrotFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::CoM() const {
   return com_ref_;
 }
 

@@ -79,14 +79,14 @@ public:
   /// @return const reference to the contact placements of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const aligned_vector<SE3>& contactPlacement(const int step) const = 0;
+  virtual const aligned_vector<SE3>& contactPlacements(const int step) const = 0;
 
   ///
   /// @brief Gets the contact placements. 
   /// @return const reference to the contact placements. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const aligned_vector<aligned_vector<SE3>>& contactPlacement() const = 0;
+  virtual const aligned_vector<aligned_vector<SE3>>& contactPlacements() const = 0;
 
   ///
   /// @brief Gets the contact positions of a specified step. 
@@ -94,14 +94,14 @@ public:
   /// @return const reference to the contact positions of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const std::vector<Eigen::Vector3d>& contactPosition(const int step) const = 0;
+  virtual const std::vector<Eigen::Vector3d>& contactPositions(const int step) const = 0;
 
   ///
   /// @brief Gets the contact positions. 
   /// @return const reference to the contact positions.
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const = 0;
+  virtual const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const = 0;
 
   ///
   /// @brief Gets the CoM position of a specified step. 
@@ -109,14 +109,14 @@ public:
   /// @return const reference to CoM position of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const Eigen::Vector3d& com(const int step) const = 0;
+  virtual const Eigen::Vector3d& CoM(const int step) const = 0;
 
   ///
   /// @brief Gets the CoM positions. 
   /// @return const reference to the CoM positions.
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const std::vector<Eigen::Vector3d>& com() const = 0;
+  virtual const std::vector<Eigen::Vector3d>& CoM() const = 0;
 
   ///
   /// @brief Gets the rotation matrix of the base at a specified step. 

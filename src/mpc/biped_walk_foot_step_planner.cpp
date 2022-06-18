@@ -282,32 +282,32 @@ bool BipedWalkFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& BipedWalkFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& BipedWalkFootStepPlanner::contactPlacements(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& BipedWalkFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& BipedWalkFootStepPlanner::contactPlacements() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& BipedWalkFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& BipedWalkFootStepPlanner::contactPositions() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& BipedWalkFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& BipedWalkFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
 
 
-const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::CoM() const {
   return com_ref_;
 }
 

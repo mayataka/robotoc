@@ -90,7 +90,7 @@ void MPCPeriodicSwingFootRef::setSwingFootRef(
     is_contact_active_.push_back(contact_status.isContactActive(contact_index_));
   }
   contact_position_.clear();
-  for (const auto& e : foot_step_planner->contactPosition()) {
+  for (const auto& e : foot_step_planner->contactPositions()) {
     contact_position_.push_back(e[contact_index_]);
   }
 }

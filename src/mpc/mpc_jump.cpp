@@ -139,8 +139,8 @@ void MPCJump::init(const double t, const Eigen::VectorXd& q,
   resetMinimumDwellTimes(t, dtm_);
   foot_step_planner_->init(q);
   Eigen::VectorXd q_ref = q;
-  q_ref.template head<3>().noalias() += (foot_step_planner_->com(2) 
-                                          - foot_step_planner_->com(0));
+  q_ref.template head<3>().noalias() += (foot_step_planner_->CoM(2) 
+                                          - foot_step_planner_->CoM(0));
   q_ref.template segment<4>(3) = Eigen::Quaterniond(foot_step_planner_->R(2)).coeffs();
   config_cost_->set_q_ref(q_ref);
   resetContactPlacements(t, q, v);
@@ -168,8 +168,8 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
   resetMinimumDwellTimes(t, dtm_);
   foot_step_planner_->init(q);
   Eigen::VectorXd q_ref = q;
-  q_ref.template head<3>().noalias() += (foot_step_planner_->com(2) 
-                                          - foot_step_planner_->com(0));
+  q_ref.template head<3>().noalias() += (foot_step_planner_->CoM(2) 
+                                          - foot_step_planner_->CoM(0));
   q_ref.template segment<4>(3) = Eigen::Quaterniond(foot_step_planner_->R(2)).coeffs();
   config_cost_->set_q_ref(q_ref);
   resetContactPlacements(t, q, v);
@@ -297,16 +297,16 @@ void MPCJump::resetContactPlacements(const double t, const Eigen::VectorXd& q,
   const bool success = foot_step_planner_->plan(t, q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   if (current_step_ == 0) {
-    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
-    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacement(2));
-    contact_sequence_->setContactPlacements(2, foot_step_planner_->contactPlacement(2));
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacements(1));
+    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacements(2));
+    contact_sequence_->setContactPlacements(2, foot_step_planner_->contactPlacements(2));
   }
   else if (current_step_ == 1) {
-    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
-    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacement(1));
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacements(1));
+    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacements(1));
   }
   else {
-    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacements(1));
   }
 }
 

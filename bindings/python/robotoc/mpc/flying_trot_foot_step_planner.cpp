@@ -25,16 +25,16 @@ PYBIND11_MODULE(flying_trot_foot_step_planner, m) {
           py::arg("q"))
     .def("plan", &FlyingTrotFootStepPlanner::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_position", 
-          static_cast<const std::vector<Eigen::Vector3d>& (FlyingTrotFootStepPlanner::*)(const int) const>(&FlyingTrotFootStepPlanner::contactPosition),
+    .def("contact_positions", 
+          static_cast<const std::vector<Eigen::Vector3d>& (FlyingTrotFootStepPlanner::*)(const int) const>(&FlyingTrotFootStepPlanner::contactPositions),
           py::arg("step"))
-    .def("contact_position", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (FlyingTrotFootStepPlanner::*)() const>(&FlyingTrotFootStepPlanner::contactPosition))
+    .def("contact_positions", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (FlyingTrotFootStepPlanner::*)() const>(&FlyingTrotFootStepPlanner::contactPositions))
     .def("com", 
-          static_cast<const Eigen::Vector3d& (FlyingTrotFootStepPlanner::*)(const int) const>(&FlyingTrotFootStepPlanner::com),
+          static_cast<const Eigen::Vector3d& (FlyingTrotFootStepPlanner::*)(const int) const>(&FlyingTrotFootStepPlanner::CoM),
           py::arg("step"))
     .def("com", 
-          static_cast<const std::vector<Eigen::Vector3d>& (FlyingTrotFootStepPlanner::*)() const>(&FlyingTrotFootStepPlanner::com))
+          static_cast<const std::vector<Eigen::Vector3d>& (FlyingTrotFootStepPlanner::*)() const>(&FlyingTrotFootStepPlanner::CoM))
     .def("R", 
           static_cast<const Eigen::Matrix3d& (FlyingTrotFootStepPlanner::*)(const int) const>(&FlyingTrotFootStepPlanner::R),
           py::arg("step"))
