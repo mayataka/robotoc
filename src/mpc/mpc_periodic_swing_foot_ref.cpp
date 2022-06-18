@@ -13,7 +13,7 @@ MPCPeriodicSwingFootRef::MPCPeriodicSwingFootRef(const int contact_index,
                                                  const double period_swing, 
                                                  const double period_stance,
                                                  const int num_phases_in_period)
-  : TimeVaryingTaskSpace3DRefBase(),
+  : TaskSpace3DRefBase(),
     contact_index_(contact_index),
     is_contact_active_(),
     swing_height_(swing_height),
@@ -90,13 +90,13 @@ void MPCPeriodicSwingFootRef::setSwingFootRef(
     is_contact_active_.push_back(contact_status.isContactActive(contact_index_));
   }
   contact_position_.clear();
-  for (const auto& e : foot_step_planner->contactPosition()) {
+  for (const auto& e : foot_step_planner->contactPositions()) {
     contact_position_.push_back(e[contact_index_]);
   }
 }
 
 
-void MPCPeriodicSwingFootRef::update_x3d_ref(const GridInfo& grid_info,
+void MPCPeriodicSwingFootRef::updateRef(const GridInfo& grid_info,
                                              Eigen::VectorXd& x3d_ref) const {
   if (isActive(grid_info)) {
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);

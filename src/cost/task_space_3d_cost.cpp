@@ -6,10 +6,12 @@ namespace robotoc {
 TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id)
   : CostFunctionComponentBase(),
     frame_id_(frame_id),
-    x3d_ref_(Eigen::Vector3d::Zero()),
-    x3d_weight_(Eigen::Vector3d::Zero()),
-    x3df_weight_(Eigen::Vector3d::Zero()),
-    x3di_weight_(Eigen::Vector3d::Zero()) {
+    const_ref_(Eigen::Vector3d::Zero()),
+    weight_(Eigen::Vector3d::Zero()),
+    weight_terminal_(Eigen::Vector3d::Zero()),
+    weight_impulse_(Eigen::Vector3d::Zero()),
+    ref_(),
+    use_nonconst_ref_(false) {
 }
 
 
@@ -19,13 +21,45 @@ TaskSpace3DCost::TaskSpace3DCost(const Robot& robot,
 }
 
 
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id,
+                                 const std::shared_ptr<TaskSpace3DRefBase>& ref)
+  : TaskSpace3DCost(robot, frame_id) {
+  set_ref(ref);
+}
+
+
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id,
+                                 const Eigen::Vector3d& const_ref)
+  : TaskSpace3DCost(robot, frame_id) {
+  set_const_ref(const_ref);
+}
+
+
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, 
+                                 const std::string& frame_name,
+                                 const std::shared_ptr<TaskSpace3DRefBase>& ref)
+  : TaskSpace3DCost(robot, frame_name) {
+  set_ref(ref);
+}
+
+
+TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, 
+                                 const std::string& frame_name,
+                                 const Eigen::Vector3d& const_ref)
+  : TaskSpace3DCost(robot, frame_name) {
+  set_const_ref(const_ref);
+}
+
+
 TaskSpace3DCost::TaskSpace3DCost()
   : CostFunctionComponentBase(),
-    frame_id_(),
-    x3d_ref_(),
-    x3d_weight_(),
-    x3df_weight_(),
-    x3di_weight_() {
+    frame_id_(0),
+    const_ref_(Eigen::Vector3d::Zero()),
+    weight_(Eigen::Vector3d::Zero()),
+    weight_terminal_(Eigen::Vector3d::Zero()),
+    weight_impulse_(Eigen::Vector3d::Zero()),
+    ref_(),
+    use_nonconst_ref_(false) {
 }
 
 
@@ -33,23 +67,30 @@ TaskSpace3DCost::~TaskSpace3DCost() {
 }
 
 
-void TaskSpace3DCost::set_x3d_ref(const Eigen::Vector3d& x3d_ref) {
-  x3d_ref_ = x3d_ref;
+void TaskSpace3DCost::set_ref(const std::shared_ptr<TaskSpace3DRefBase>& ref) {
+  ref_ = ref;
+  use_nonconst_ref_ = true;
 }
 
 
-void TaskSpace3DCost::set_x3d_weight(const Eigen::Vector3d& x3d_weight) {
-  x3d_weight_ = x3d_weight;
+void TaskSpace3DCost::set_const_ref(const Eigen::Vector3d& const_ref) {
+  const_ref_ = const_ref;
+  use_nonconst_ref_ = false;
 }
 
 
-void TaskSpace3DCost::set_x3df_weight(const Eigen::Vector3d& x3df_weight) {
-  x3df_weight_ = x3df_weight;
+void TaskSpace3DCost::set_weight(const Eigen::Vector3d& weight) {
+  weight_ = weight;
 }
 
 
-void TaskSpace3DCost::set_x3di_weight(const Eigen::Vector3d& x3di_weight) {
-  x3di_weight_ = x3di_weight;
+void TaskSpace3DCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal) {
+  weight_terminal_ = weight_terminal;
+}
+
+
+void TaskSpace3DCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
+  weight_impulse_ = weight_impulse;
 }
 
 
@@ -63,10 +104,14 @@ double TaskSpace3DCost::evalStageCost(Robot& robot,
                                       CostFunctionData& data, 
                                       const GridInfo& grid_info, 
                                       const SplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.framePosition(frame_id_) - x3d_ref_;
-  l += (x3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * grid_info.dt * l;
+  if (isCostActive(grid_info)) {
+    evalDiff(robot, data, grid_info);
+    const double l = (weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    return 0.5 * grid_info.dt * l;
+  }
+  else {
+    return 0.0;
+  }
 }
 
 
@@ -74,12 +119,14 @@ void TaskSpace3DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_3d.noalias() 
-      = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
-  kkt_residual.lq().noalias() 
-      += grid_info.dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.diff_3d;
+  if (isCostActive(grid_info)) {
+    data.J_6d.setZero();
+    robot.getFrameJacobian(frame_id_, data.J_6d);
+    data.J_3d.noalias() 
+        = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
+    kkt_residual.lq().noalias() 
+        += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.diff_3d;
+  }
 }
 
 
@@ -89,38 +136,48 @@ void TaskSpace3DCost::evalStageCostHessian(Robot& robot,
                                            const GridInfo& grid_info, 
                                            const SplitSolution& s, 
                                            SplitKKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qqq().noalias()
-      += grid_info.dt * data.J_3d.transpose() * x3d_weight_.asDiagonal() * data.J_3d;
+  if (isCostActive(grid_info)) {
+    kkt_matrix.Qqq().noalias()
+        += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.J_3d;
+  }
 }
 
 
 double TaskSpace3DCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
                                          const GridInfo& grid_info, 
                                          const SplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.framePosition(frame_id_) - x3d_ref_;
-  l += (x3df_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
+  if (isCostActive(grid_info)) {
+    evalDiff(robot, data, grid_info);
+    const double l = (weight_terminal_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    return 0.5 * l;
+  }
+  else {
+    return 0.0;
+  }
 }
 
 
 void TaskSpace3DCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_3d.noalias() 
-      = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
-  kkt_residual.lq().noalias() 
-      += data.J_3d.transpose() * x3df_weight_.asDiagonal() * data.diff_3d;
+  if (isCostActive(grid_info)) {
+    data.J_6d.setZero();
+    robot.getFrameJacobian(frame_id_, data.J_6d);
+    data.J_3d.noalias() 
+        = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
+    kkt_residual.lq().noalias() 
+        += data.J_3d.transpose() * weight_terminal_.asDiagonal() * data.diff_3d;
+  }
 }
 
 
 void TaskSpace3DCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qqq().noalias()
-      += data.J_3d.transpose() * x3df_weight_.asDiagonal() * data.J_3d;
+  if (isCostActive(grid_info)) {
+    kkt_matrix.Qqq().noalias()
+        += data.J_3d.transpose() * weight_terminal_.asDiagonal() * data.J_3d;
+  }
 }
 
 
@@ -129,10 +186,14 @@ double TaskSpace3DCost::evalImpulseCost(Robot& robot,
                                         CostFunctionData& data, 
                                         const GridInfo& grid_info, 
                                         const ImpulseSplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.framePosition(frame_id_) - x3d_ref_;
-  l += (x3di_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
+  if (isCostActive(grid_info)) {
+    evalDiff(robot, data, grid_info);
+    const double l = (weight_impulse_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    return 0.5 * l;
+  }
+  else {
+    return 0.0;
+  }
 }
 
 
@@ -140,12 +201,14 @@ void TaskSpace3DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_3d.noalias() 
-      = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
-  kkt_residual.lq().noalias() 
-      += data.J_3d.transpose() * x3di_weight_.asDiagonal() * data.diff_3d;
+  if (isCostActive(grid_info)) {
+    data.J_6d.setZero();
+    robot.getFrameJacobian(frame_id_, data.J_6d);
+    data.J_3d.noalias() 
+        = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
+    kkt_residual.lq().noalias() 
+        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.diff_3d;
+  }
 }
 
 
@@ -153,8 +216,10 @@ void TaskSpace3DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qqq().noalias()
-      += data.J_3d.transpose() * x3di_weight_.asDiagonal() * data.J_3d;
+  if (isCostActive(grid_info)) {
+    kkt_matrix.Qqq().noalias()
+        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;
+  }
 }
 
 } // namespace robotoc

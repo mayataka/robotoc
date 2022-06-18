@@ -88,20 +88,20 @@ public:
   ///
   /// @brief This is invalid in FlyingTrotFootStepPlanner. 
   ///
-  const aligned_vector<SE3>& contactPlacement(const int step) const override;
+  const aligned_vector<SE3>& contactPlacements(const int step) const override;
 
   ///
   /// @brief This is invalid in CrawlFootStepPlanner. 
   ///
-  const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override;
+  const aligned_vector<aligned_vector<SE3>>& contactPlacements() const override;
 
-  const std::vector<Eigen::Vector3d>& contactPosition(const int step) const override;
+  const std::vector<Eigen::Vector3d>& contactPositions(const int step) const override;
 
-  const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const override;
+  const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const override;
 
-  const Eigen::Vector3d& com(const int step) const override;
+  const Eigen::Vector3d& CoM(const int step) const override;
 
-  const std::vector<Eigen::Vector3d>& com() const override;
+  const std::vector<Eigen::Vector3d>& CoM() const override;
 
   const Eigen::Matrix3d& R(const int step) const override;
 

@@ -50,40 +50,36 @@ MPCFlyingTrot::MPCFlyingTrot(const Robot& robot, const double T,
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.001);
   q_weight.template head<6>().setZero();
-  Eigen::VectorXd qi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
-  qi_weight.template head<6>().setZero();
+  Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1);
+  q_weight_impulse.template head<6>().setZero();
   config_cost_->set_q_weight(q_weight);
-  config_cost_->set_qf_weight(q_weight);
-  config_cost_->set_qi_weight(qi_weight);
+  config_cost_->set_q_weight_terminal(q_weight);
+  config_cost_->set_q_weight_impulse(q_weight_impulse);
   config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
-  config_cost_->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
-  config_cost_->set_vi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
-  config_cost_->set_dvi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  base_rot_cost_ = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, base_rot_ref_);
+  config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  base_rot_cost_ = std::make_shared<ConfigurationSpaceCost>(robot, base_rot_ref_);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
   base_rot_weight.template head<6>() << 0, 0, 0, 1.0e04, 1.0e04, 1.0e04;
   base_rot_cost_->set_q_weight(base_rot_weight);
-  base_rot_cost_->set_qf_weight(base_rot_weight);
-  base_rot_cost_->set_qi_weight(base_rot_weight);
-  LF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[0],
-                                                               LF_foot_ref_);
-  LH_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[1],
-                                                               LH_foot_ref_);
-  RF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[2],
-                                                               RF_foot_ref_);
-  RH_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[3],
-                                                               RH_foot_ref_);
-  LF_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  LH_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  RF_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  RH_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  com_cost_ = std::make_shared<TimeVaryingCoMCost>(robot, com_ref_);
-  com_cost_->set_com_weight(Eigen::Vector3d::Constant(1.0e05));
+  base_rot_cost_->set_q_weight_terminal(base_rot_weight);
+  base_rot_cost_->set_q_weight_impulse(base_rot_weight);
+  LF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[0],
+                                                    LF_foot_ref_);
+  LH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[1],
+                                                    LH_foot_ref_);
+  RF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[2],
+                                                    RF_foot_ref_);
+  RH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[3],
+                                                    RH_foot_ref_);
+  LF_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  LH_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  RF_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  RH_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  com_cost_ = std::make_shared<CoMCost>(robot, com_ref_);
+  com_cost_->set_weight(Eigen::Vector3d::Constant(1.0e05));
   cost_->push_back(config_cost_);
   cost_->push_back(base_rot_cost_);
   cost_->push_back(LF_foot_cost_);
@@ -168,14 +164,14 @@ void MPCFlyingTrot::setGaitPattern(
                                                            swing_start_time_+stance_time_, 
                                                            2.*flying_time_+stance_time_, 
                                                            stance_time_, num_phases_in_period);
-  LF_foot_cost_->set_x3d_ref(LF_foot_ref_);
-  LH_foot_cost_->set_x3d_ref(LH_foot_ref_);
-  RF_foot_cost_->set_x3d_ref(RF_foot_ref_);
-  RH_foot_cost_->set_x3d_ref(RH_foot_ref_);
+  LF_foot_cost_->set_ref(LF_foot_ref_);
+  LH_foot_cost_->set_ref(LH_foot_ref_);
+  RF_foot_cost_->set_ref(RF_foot_ref_);
+  RH_foot_cost_->set_ref(RH_foot_ref_);
   com_ref_ = std::make_shared<MPCPeriodicCoMRef>(swing_start_time_, 
                                                  flying_time_+stance_time_, 0.0,
                                                  num_phases_in_period);
-  com_cost_->set_com_ref(com_ref_);
+  com_cost_->set_ref(com_ref_);
 }
 
 
@@ -205,7 +201,7 @@ void MPCFlyingTrot::init(const double t, const Eigen::VectorXd& q,
   base_rot_ref_ = std::make_shared<MPCPeriodicConfigurationRef>(q, swing_start_time_, 
                                                                 flying_time_+stance_time_, 0.0,
                                                                 num_phases_in_period);
-  base_rot_cost_->set_q_ref(base_rot_ref_);
+  base_rot_cost_->set_ref(base_rot_ref_);
   resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -289,19 +285,19 @@ std::shared_ptr<ConfigurationSpaceCost> MPCFlyingTrot::getConfigCostHandle() {
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCFlyingTrot::getBaseRotationCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCFlyingTrot::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCFlyingTrot::getSwingFootCostHandle() {
-  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
+std::vector<std::shared_ptr<TaskSpace3DCost>> MPCFlyingTrot::getSwingFootCostHandle() {
+  std::vector<std::shared_ptr<TaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {LF_foot_cost_, LH_foot_cost_, RF_foot_cost_, RH_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCFlyingTrot::getCoMCostHandle() {
+std::shared_ptr<CoMCost> MPCFlyingTrot::getCoMCostHandle() {
   return com_cost_;
 }
 
@@ -371,7 +367,7 @@ void MPCFlyingTrot::resetContactPlacements(const double t,
                                                 contact_sequence_->numContactPhases()+1);
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 
-                                            foot_step_planner_->contactPosition(phase+1));
+                                            foot_step_planner_->contactPositions(phase+1));
   }
   base_rot_ref_->setConfigurationRef(contact_sequence_, foot_step_planner_);
   LF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);

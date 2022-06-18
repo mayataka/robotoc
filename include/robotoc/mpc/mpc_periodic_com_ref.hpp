@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/com_ref_base.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 
@@ -18,7 +18,7 @@ namespace robotoc {
 /// @class MPCPeriodicCoMRef
 /// @brief Periodic reference positions of the center of mass. 
 ///
-class MPCPeriodicCoMRef final : public TimeVaryingCoMRefBase {
+class MPCPeriodicCoMRef final : public CoMRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -59,7 +59,7 @@ public:
   void setCoMRef(const std::shared_ptr<ContactSequence>& contact_sequence,
                  const std::shared_ptr<ContactPlannerBase>& foot_step_planner);
 
-  void update_com_ref(const GridInfo& grid_info, 
+  void updateRef(const GridInfo& grid_info, 
                       Eigen::VectorXd& com_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;

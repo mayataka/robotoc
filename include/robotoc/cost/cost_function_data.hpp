@@ -62,15 +62,15 @@ public:
 
   ///
   /// @brief Vector used for computing the time-varying reference configuration 
-  /// in TimeVaryingConfigurationCost. 
+  /// in ConfigurationCost. 
   /// The size is Robot::dimq().
   ///
   Eigen::VectorXd q_ref;
 
   ///
   /// @brief Vector used for set the reference position of the end-effector in 
-  /// TimeVaryingTaskSpace3DCost. 
-  /// Be allocated only when CostFunction has TimeVaryingTaskSpace3DCost. Then 
+  /// TaskSpace3DCost. 
+  /// Be allocated only when CostFunction has TaskSpace3DCost. Then 
   /// the size is 3.
   ///
   Eigen::VectorXd x3d_ref;
@@ -93,13 +93,13 @@ public:
 
   ///
   /// @brief Vector used for computing the reference SE3 of the end-effector in 
-  /// TimeVaryingTaskSpace6DCost. 
+  /// TaskSpace6DCost. 
   ///
   SE3 x6d_ref;
 
   ///
   /// @brief Vector used for computing the inverse of the reference SE3 of the 
-  /// end-effector in TimeVaryingTaskSpace6DCost. 
+  /// end-effector in TaskSpace6DCost. 
   ///
   SE3 x6d_ref_inv;
 

@@ -27,34 +27,34 @@ public:
                            t, q, v, contact_status, planning_steps);
   }
 
-  const aligned_vector<SE3>& contactPlacement(const int step) const override {
+  const aligned_vector<SE3>& contactPlacements(const int step) const override {
     PYBIND11_OVERRIDE_PURE(const aligned_vector<SE3>&, ContactPlannerBase, 
-                           contactPlacement, step);
+                           contactPlacements, step);
   }
 
-  const aligned_vector<aligned_vector<SE3>>& contactPlacement() const override {
+  const aligned_vector<aligned_vector<SE3>>& contactPlacements() const override {
     PYBIND11_OVERRIDE_PURE(const aligned_vector<aligned_vector<SE3>>&, ContactPlannerBase, 
-                           contactPlacement, );
+                           contactPlacements, );
   }
 
-  const std::vector<Eigen::Vector3d>& contactPosition(const int step) const override {
+  const std::vector<Eigen::Vector3d>& contactPositions(const int step) const override {
     PYBIND11_OVERRIDE_PURE(const std::vector<Eigen::Vector3d>&, ContactPlannerBase, 
-                           contactPosition, step);
+                           contactPositions, step);
   }
 
-  const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const override {
+  const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const override {
     PYBIND11_OVERRIDE_PURE(const std::vector<std::vector<Eigen::Vector3d>>&, ContactPlannerBase, 
-                           contactPosition, );
+                           contactPositions, );
   }
 
-  const Eigen::Vector3d& com(const int step) const override {
+  const Eigen::Vector3d& CoM(const int step) const override {
     PYBIND11_OVERRIDE_PURE(const Eigen::Vector3d&, ContactPlannerBase, 
-                           com, step);
+                           CoM, step);
   }
 
-  const std::vector<Eigen::Vector3d>& com() const override {
+  const std::vector<Eigen::Vector3d>& CoM() const override {
     PYBIND11_OVERRIDE_PURE(const std::vector<Eigen::Vector3d>&, ContactPlannerBase, 
-                           com, );
+                           CoM, );
   }
 
   const Eigen::Matrix3d& R(const int step) const override {
@@ -79,21 +79,21 @@ PYBIND11_MODULE(contact_planner_base, m) {
     .def("plan", &ContactPlannerBase::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), 
           py::arg("planning_steps"))
-    .def("contactPlacement", 
-          static_cast<const aligned_vector<SE3>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactPlacement),
+    .def("contactPlacements", 
+          static_cast<const aligned_vector<SE3>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactPlacements),
           py::arg("step"))
-    .def("contactPlacement", 
-          static_cast<const aligned_vector<aligned_vector<SE3>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPlacement))
-    .def("contactPosition", 
-          static_cast<const std::vector<Eigen::Vector3d>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactPosition),
+    .def("contactPlacements", 
+          static_cast<const aligned_vector<aligned_vector<SE3>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPlacements))
+    .def("contactPositions", 
+          static_cast<const std::vector<Eigen::Vector3d>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactPositions),
           py::arg("step"))
-    .def("contactPosition", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPosition))
+    .def("contactPositions", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPositions))
     .def("com", 
-          static_cast<const Eigen::Vector3d& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::com),
+          static_cast<const Eigen::Vector3d& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::CoM),
           py::arg("step"))
     .def("com", 
-          static_cast<const std::vector<Eigen::Vector3d>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::com))
+          static_cast<const std::vector<Eigen::Vector3d>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::CoM))
     .def("R", 
           static_cast<const Eigen::Matrix3d& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::R),
           py::arg("step"))

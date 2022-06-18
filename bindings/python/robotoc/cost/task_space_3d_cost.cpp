@@ -17,14 +17,25 @@ PYBIND11_MODULE(task_space_3d_cost, m) {
           py::arg("robot"), py::arg("frame_id"))
     .def(py::init<const Robot&, const std::string&>(),
           py::arg("robot"), py::arg("frame_name"))
-    .def("set_x3d_ref", &TaskSpace3DCost::set_x3d_ref,
-          py::arg("x3d_ref"))
-    .def("set_x3d_weight", &TaskSpace3DCost::set_x3d_weight, 
-          py::arg("x3d_weight"))
-    .def("set_x3df_weight", &TaskSpace3DCost::set_x3df_weight, 
-          py::arg("x3df_weight"))
-    .def("set_x3di_weight", &TaskSpace3DCost::set_x3di_weight, 
-          py::arg("x3di_weight"));
+    .def(py::init<const Robot&, const int, const std::shared_ptr<TaskSpace3DRefBase>&>(),
+          py::arg("robot"), py::arg("frame_id"), py::arg("ref"))
+    .def(py::init<const Robot&, const int, const Eigen::Vector3d&>(),
+          py::arg("robot"), py::arg("frame_id"), py::arg("const_ref"))
+    .def(py::init<const Robot&, const std::string&, const std::shared_ptr<TaskSpace3DRefBase>&>(),
+          py::arg("robot"), py::arg("frame_name"), py::arg("ref"))
+    .def(py::init<const Robot&, const std::string&, const Eigen::Vector3d&>(),
+          py::arg("robot"), py::arg("frame_name"), py::arg("const_ref"))
+    .def(py::init<>())
+    .def("set_ref", &TaskSpace3DCost::set_ref,
+          py::arg("ref"))
+    .def("set_const_ref", &TaskSpace3DCost::set_const_ref,
+          py::arg("const_ref"))
+    .def("set_weight", &TaskSpace3DCost::set_weight,
+          py::arg("weight"))
+    .def("set_weight_terminal", &TaskSpace3DCost::set_weight_terminal,
+          py::arg("weight_terminal"))
+    .def("set_weight_impulse", &TaskSpace3DCost::set_weight_impulse,
+          py::arg("weight_impulse"));
 }
 
 } // namespace python

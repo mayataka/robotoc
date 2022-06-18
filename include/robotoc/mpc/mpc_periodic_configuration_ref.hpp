@@ -8,7 +8,7 @@
 #include "Eigen/Geometry"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
+#include "robotoc/cost/configuration_space_ref_base.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
@@ -19,7 +19,7 @@ namespace robotoc {
 /// @class MPCPeriodicConfigurationRef
 /// @brief Periodic reference configuration for MPC of legged robots. 
 ///
-class MPCPeriodicConfigurationRef final : public TimeVaryingConfigurationRefBase {
+class MPCPeriodicConfigurationRef final : public ConfigurationSpaceRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -62,7 +62,7 @@ public:
   void setConfigurationRef(const std::shared_ptr<ContactSequence>& contact_sequence,
                            const std::shared_ptr<ContactPlannerBase>& foot_step_planner);
 
-  void update_q_ref(const Robot& robot, const GridInfo& grid_info,
+  void updateRef(const Robot& robot, const GridInfo& grid_info,
                     Eigen::VectorXd& q_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;

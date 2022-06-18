@@ -37,20 +37,20 @@ v_weight = np.array([100, 100, 100, 100, 100, 100,
                      1, 1, 1,
                      1, 1, 1])
 u_weight = np.full(robot.dimu(), 1.0e-01)
-qi_weight = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+q_weight_impulse = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
                       100, 100, 100, 
                       100, 100, 100,
                       100, 100, 100,
                       100, 100, 100])
-vi_weight = np.full(robot.dimv(), 100)
+v_weight_impulse = np.full(robot.dimv(), 100)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
-config_cost.set_qf_weight(q_weight)
-config_cost.set_qi_weight(qi_weight)
+config_cost.set_q_weight_terminal(q_weight)
+config_cost.set_q_weight_impulse(q_weight_impulse)
 config_cost.set_v_weight(v_weight)
-config_cost.set_vf_weight(v_weight)
-config_cost.set_vi_weight(vi_weight)
+config_cost.set_v_weight_terminal(v_weight)
+config_cost.set_v_weight_impulse(v_weight_impulse)
 config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
@@ -63,27 +63,27 @@ LF_t0 = t0 + stance_time
 LH_t0 = t0 - flying_time
 RF_t0 = t0 - flying_time
 RH_t0 = t0 + stance_time
-LF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LF, step_length, step_height, 
+LF_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_LF, step_length, step_height, 
                                            LF_t0, stance_time+2*flying_time, 
                                            stance_time, False)
-LH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LH, step_length, step_height, 
+LH_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_LH, step_length, step_height, 
                                            LH_t0, stance_time+2*flying_time, 
                                            stance_time, True)
-RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RF, step_length, step_height, 
+RF_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_RF, step_length, step_height, 
                                            RF_t0, stance_time+2*flying_time, 
                                            stance_time, True)
-RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RH, step_length, step_height, 
+RH_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_RH, step_length, step_height, 
                                            RH_t0, stance_time+2*flying_time, 
                                            stance_time, False)
-LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'LF_FOOT', LF_foot_ref)
-LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'LH_FOOT', LH_foot_ref)
-RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'RF_FOOT', RF_foot_ref)
-RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'RH_FOOT', RH_foot_ref)
+LF_cost = robotoc.TaskSpace3DCost(robot, 'LF_FOOT', LF_foot_ref)
+LH_cost = robotoc.TaskSpace3DCost(robot, 'LH_FOOT', LH_foot_ref)
+RF_cost = robotoc.TaskSpace3DCost(robot, 'RF_FOOT', RF_foot_ref)
+RH_cost = robotoc.TaskSpace3DCost(robot, 'RH_FOOT', RH_foot_ref)
 foot_track_weight = np.full(3, 1.0e06)
-LF_cost.set_x3d_weight(foot_track_weight)
-LH_cost.set_x3d_weight(foot_track_weight)
-RF_cost.set_x3d_weight(foot_track_weight)
-RH_cost.set_x3d_weight(foot_track_weight)
+LF_cost.set_weight(foot_track_weight)
+LH_cost.set_weight(foot_track_weight)
+RF_cost.set_weight(foot_track_weight)
+RH_cost.set_weight(foot_track_weight)
 cost.push_back(LF_cost)
 cost.push_back(LH_cost)
 cost.push_back(RF_cost)
@@ -93,8 +93,8 @@ com_ref0 = robot.com()
 vcom_ref = 0.5 * step_length / (stance_time+flying_time)
 com_ref = robotoc.PeriodicCoMRef(com_ref0, vcom_ref, t0, stance_time+flying_time, 
                                  0, True)
-com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e06))
+com_cost = robotoc.CoMCost(robot, com_ref)
+com_cost.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
 # Create the constraints

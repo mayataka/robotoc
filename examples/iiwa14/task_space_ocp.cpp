@@ -9,7 +9,7 @@
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_6d_cost.hpp"
+#include "robotoc/cost/task_space_6d_cost.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
 #include "robotoc/constraints/joint_position_upper_limit.hpp"
@@ -24,10 +24,10 @@
 #endif 
 
 
-class TimeVaryingTaskSpace6DRef final : public robotoc::TimeVaryingTaskSpace6DRefBase {
+class TaskSpace6DRef final : public robotoc::TaskSpace6DRefBase {
 public:
-  TimeVaryingTaskSpace6DRef() 
-    : TimeVaryingTaskSpace6DRefBase() {
+  TaskSpace6DRef() 
+    : TaskSpace6DRefBase() {
     rotm_  <<  0, 0, 1, 
                0, 1, 0,
               -1, 0, 0;
@@ -35,13 +35,13 @@ public:
     radius_ = 0.05;
   }
 
-  ~TimeVaryingTaskSpace6DRef() {}
+  ~TaskSpace6DRef() {}
 
-  void update_x6d_ref(const robotoc::GridInfo& grid_info, robotoc::SE3& x6d_ref) const override {
+  void updateRef(const robotoc::GridInfo& grid_info, robotoc::SE3& ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*grid_info.t);
     pos.coeffRef(2) += radius_ * cos(M_PI*grid_info.t);
-    x6d_ref = robotoc::SE3(rotm_, pos);
+    ref = robotoc::SE3(rotm_, pos);
   }
 
   bool isActive(const robotoc::GridInfo& grid_info) const override {
@@ -69,15 +69,15 @@ int main(int argc, char *argv[]) {
   auto cost = std::make_shared<robotoc::CostFunction>();
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_q_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
+  config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
-  auto x6d_ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
-  auto task_cost = std::make_shared<robotoc::TimeVaryingTaskSpace6DCost>(robot, ee_frame, x6d_ref);
-  task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  task_cost->set_x6df_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  auto x6d_ref = std::make_shared<TaskSpace6DRef>();
+  auto task_cost = std::make_shared<robotoc::TaskSpace6DCost>(robot, ee_frame, x6d_ref);
+  task_cost->set_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_weight_terminal(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);
 
   // Create joint constraints.

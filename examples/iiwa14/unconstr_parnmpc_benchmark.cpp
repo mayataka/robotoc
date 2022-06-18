@@ -30,9 +30,9 @@ int main() {
   config_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), -5));
   config_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), -9));
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  config_cost->set_q_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   cost->push_back(config_cost);

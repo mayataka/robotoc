@@ -11,7 +11,7 @@ MPCPeriodicCoMRef::MPCPeriodicCoMRef(const double swing_start_time,
                                      const double period_active, 
                                      const double period_inactive,
                                      const int num_phases_in_period)
-  : TimeVaryingCoMRefBase(),
+  : CoMRefBase(),
     com_(), 
     has_inactive_contacts_(),
     swing_start_time_(swing_start_time), 
@@ -89,11 +89,11 @@ void MPCPeriodicCoMRef::setCoMRef(
     has_inactive_contacts_.push_back(
         num_active_contacts < contact_status.maxNumContacts());
   }
-  com_ = foot_step_planner->com();
+  com_ = foot_step_planner->CoM();
 }
 
 
-void MPCPeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
+void MPCPeriodicCoMRef::updateRef(const GridInfo& grid_info,
                                        Eigen::VectorXd& com_ref) const {
   // if (isActive(grid_info)) { 
   if ((grid_info.t > swing_start_time_) 

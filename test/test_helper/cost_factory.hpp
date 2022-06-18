@@ -4,32 +4,29 @@
 #include <memory>
 
 #include "robotoc/cost/cost_function.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
+#include "robotoc/cost/configuration_space_ref_base.hpp"
 
 
 namespace robotoc {
 namespace testhelper {
-class TimeVaryingConfigurationRef : public TimeVaryingConfigurationRefBase {
+class ConfigurationSpaceRef : public ConfigurationSpaceRefBase {
 public:
-  TimeVaryingConfigurationRef(const Eigen::VectorXd& q0_ref, 
-                              const Eigen::VectorXd& v_ref);
+  ConfigurationSpaceRef(const Eigen::VectorXd& q0_ref, 
+                        const Eigen::VectorXd& v_ref);
 
-  TimeVaryingConfigurationRef() {}
+  ConfigurationSpaceRef() {}
 
-  ~TimeVaryingConfigurationRef() {}
+  ~ConfigurationSpaceRef() {}
 
-  TimeVaryingConfigurationRef(const TimeVaryingConfigurationRef&) = default;
+  ConfigurationSpaceRef(const ConfigurationSpaceRef&) = default;
 
-  TimeVaryingConfigurationRef& operator=( 
-      const TimeVaryingConfigurationRef&) = default;
+  ConfigurationSpaceRef& operator=(const ConfigurationSpaceRef&) = default;
 
-  TimeVaryingConfigurationRef(
-      TimeVaryingConfigurationRef&&) noexcept = default;
+  ConfigurationSpaceRef(ConfigurationSpaceRef&&) noexcept = default;
 
-  TimeVaryingConfigurationRef& operator=(
-      TimeVaryingConfigurationRef&&) noexcept = default;
+  ConfigurationSpaceRef& operator=(ConfigurationSpaceRef&&) noexcept = default;
 
-  void update_q_ref(const Robot& robot, const GridInfo& grid_info, 
+  void updateRef(const Robot& robot, const GridInfo& grid_info, 
                     Eigen::VectorXd& q_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;

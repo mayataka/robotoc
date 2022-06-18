@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/com_ref_base.hpp"
 
 
 namespace robotoc {
@@ -13,7 +13,7 @@ namespace robotoc {
 /// @class PeriodicCoMRef
 /// @brief Periodic reference of the center of mass. 
 ///
-class PeriodicCoMRef : public TimeVaryingCoMRefBase {
+class PeriodicCoMRef : public CoMRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -48,7 +48,7 @@ public:
                  const double t0, const double period_active, 
                  const double period_inactive, const bool is_first_move_half);
 
-  void update_com_ref(const GridInfo& grid_info, Eigen::VectorXd& com_ref) const override;
+  void updateRef(const GridInfo& grid_info, Eigen::VectorXd& com_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;
 

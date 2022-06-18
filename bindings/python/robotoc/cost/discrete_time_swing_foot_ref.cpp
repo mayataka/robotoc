@@ -11,7 +11,7 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(discrete_time_swing_foot_ref, m) {
-  py::class_<DiscreteTimeSwingFootRef, TimeVaryingTaskSpace3DRefBase,
+  py::class_<DiscreteTimeSwingFootRef, TaskSpace3DRefBase,
              std::shared_ptr<DiscreteTimeSwingFootRef>>(m, "DiscreteTimeSwingFootRef")
     .def(py::init<const int, const double>(), 
           py::arg("contact_index"), py::arg("swing_height"))
@@ -24,7 +24,7 @@ PYBIND11_MODULE(discrete_time_swing_foot_ref, m) {
                                                          const double, const double)>(&DiscreteTimeSwingFootRef::setSwingFootRef),
           py::arg("contact_sequence"), py::arg("first_contact_position"), py::arg("last_contact_position"),
           py::arg("first_rate")=0, py::arg("last_com_ref")=0)
-    .def("update_x3d_ref", &DiscreteTimeSwingFootRef::update_x3d_ref,
+    .def("updateRef", &DiscreteTimeSwingFootRef::updateRef,
           py::arg("grid_info"), py::arg("x3d_ref"))
     .def("is_active", &DiscreteTimeSwingFootRef::isActive,
           py::arg("grid_info"));

@@ -44,7 +44,7 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_true) {
   EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
   grid_info.t = t2;
-  preiodic_com_ref->update_com_ref(grid_info, com);
+  preiodic_com_ref->updateRef(grid_info, com);
   if (t2 < t0+period_active) {
     com_ref = com_ref0 + 0.5 * (t2-t0) * vcom_ref;
     EXPECT_TRUE(com_ref.isApprox(com));
@@ -80,7 +80,7 @@ TEST_F(PeriodicCoMRefTest, first_mode_half_false) {
   EXPECT_FALSE(preiodic_com_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
   grid_info.t = t2;
-  preiodic_com_ref->update_com_ref(grid_info, com);
+  preiodic_com_ref->updateRef(grid_info, com);
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;
   if (tau < period_active) {

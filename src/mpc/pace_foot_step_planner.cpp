@@ -271,32 +271,32 @@ bool PaceFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& PaceFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& PaceFootStepPlanner::contactPlacements(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& PaceFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& PaceFootStepPlanner::contactPlacements() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& PaceFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& PaceFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& PaceFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& PaceFootStepPlanner::contactPositions() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& PaceFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& PaceFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& PaceFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& PaceFootStepPlanner::CoM() const {
   return com_ref_;
 }
 

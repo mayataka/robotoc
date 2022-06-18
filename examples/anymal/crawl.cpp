@@ -9,9 +9,9 @@
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
@@ -71,21 +71,21 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1e-01);
-  Eigen::VectorXd qi_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  qi_weight << 1, 1, 1, 1, 1, 1,  
+  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impulse << 1, 1, 1, 1, 1, 1,  
                100, 100, 100, 
                100, 100, 100,
                100, 100, 100,
                100, 100, 100;
-  Eigen::VectorXd vi_weight = Eigen::VectorXd::Constant(robot.dimv(), 100);
+  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 100);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
-  config_cost->set_qf_weight(q_weight);
-  config_cost->set_qi_weight(qi_weight);
+  config_cost->set_q_weight_terminal(q_weight);
+  config_cost->set_q_weight_impulse(q_weight_impulse);
   config_cost->set_v_weight(v_weight);
-  config_cost->set_vf_weight(v_weight);
-  config_cost->set_vi_weight(vi_weight);
+  config_cost->set_v_weight_terminal(v_weight);
+  config_cost->set_v_weight_impulse(v_weight_impulse);
   config_cost->set_u_weight(u_weight);
   cost->push_back(config_cost);
 
@@ -98,27 +98,27 @@ int main(int argc, char *argv[]) {
   const double LH_t0 = t0 + 2 * swing_time + double_support_time;
   const double RF_t0 = t0 + swing_time;
   const double RH_t0 = t0;
-  auto LF_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_LF, step_length, step_height, 
+  auto LF_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_LF, step_length, step_height, 
                                                                      LF_t0, swing_time, 
                                                                      3*swing_time+2*double_support_time, false);
-  auto LH_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_LH, step_length, step_height, 
+  auto LH_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_LH, step_length, step_height, 
                                                                      LH_t0, swing_time, 
                                                                      3*swing_time+2*double_support_time, false);
-  auto RF_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_RF, step_length, step_height, 
+  auto RF_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_RF, step_length, step_height, 
                                                                      RF_t0, swing_time, 
                                                                      3*swing_time+2*double_support_time, true);
-  auto RH_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_RH, step_length, step_height, 
+  auto RH_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_RH, step_length, step_height, 
                                                                      RH_t0, swing_time, 
                                                                      3*swing_time+2*double_support_time, true);
-  auto LF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "LF_FOOT", LF_foot_ref);
-  auto LH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "LH_FOOT", LH_foot_ref);
-  auto RF_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "RF_FOOT", RF_foot_ref);
-  auto RH_cost = std::make_shared<robotoc::TimeVaryingTaskSpace3DCost>(robot, "RH_FOOT", RH_foot_ref);
+  auto LF_cost = std::make_shared<robotoc::TaskSpace3DCost>(robot, "LF_FOOT", LF_foot_ref);
+  auto LH_cost = std::make_shared<robotoc::TaskSpace3DCost>(robot, "LH_FOOT", LH_foot_ref);
+  auto RF_cost = std::make_shared<robotoc::TaskSpace3DCost>(robot, "RF_FOOT", RF_foot_ref);
+  auto RH_cost = std::make_shared<robotoc::TaskSpace3DCost>(robot, "RH_FOOT", RH_foot_ref);
   const Eigen::Vector3d foot_track_weight = Eigen::Vector3d::Constant(1.0e06);
-  LF_cost->set_x3d_weight(foot_track_weight);
-  LH_cost->set_x3d_weight(foot_track_weight);
-  RF_cost->set_x3d_weight(foot_track_weight);
-  RH_cost->set_x3d_weight(foot_track_weight);
+  LF_cost->set_weight(foot_track_weight);
+  LH_cost->set_weight(foot_track_weight);
+  RF_cost->set_weight(foot_track_weight);
+  RH_cost->set_weight(foot_track_weight);
   cost->push_back(LF_cost);
   cost->push_back(LH_cost);
   cost->push_back(RF_cost);
@@ -128,8 +128,8 @@ int main(int argc, char *argv[]) {
   const Eigen::Vector3d vcom_ref = 0.25 * step_length / swing_time;
   auto com_ref = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0, vcom_ref, t0, 2*swing_time, 
                                                            double_support_time, true);
-  auto com_cost = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref);
-  com_cost->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
+  auto com_cost = std::make_shared<robotoc::CoMCost>(robot, com_ref);
+  com_cost->set_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost);
 
   // Create the constraints
