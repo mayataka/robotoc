@@ -142,7 +142,9 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   sc_jacobian.Phix().setRandom();
   sc_jacobian.Phia().setRandom();
   sc_jacobian.Phiu().setRandom();
+  sc_jacobian.Phit().setRandom();
   sc_residual.P().setRandom();
+
   RiccatiFactorizer factorizer(robot);
   LQRPolicy lqr_policy(robot), lqr_policy_ref(robot);
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
@@ -155,6 +157,7 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
                                       sc_jacobian, sc_residual, 
                                       riccati, c_riccati, lqr_policy, sto, has_next_sto_phase);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref, kkt_residual_ref);
+
   Eigen::MatrixXd GDtD = Eigen::MatrixXd::Zero(dimu+dimi, dimu+dimi);
   GDtD.topLeftCorner(dimu, dimu) = kkt_matrix.Quu;
   GDtD.topRightCorner(dimu, dimi) = sc_jacobian.Phiu().transpose();
@@ -187,38 +190,39 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   const Eigen::VectorXd Wmt_next = - GDtDinv * phict;
   lqr_policy_ref.T = Tmt.head(dimu);
   lqr_policy_ref.W = Wmt_next.head(dimu);
-  const Eigen::MatrixXd M = KM.bottomRows(dimi);
-  const Eigen::VectorXd m = km.tail(dimi);
+  const Eigen::MatrixXd M_ref = KM.bottomRows(dimi);
+  const Eigen::VectorXd m_ref = km.tail(dimi);
   const Eigen::VectorXd mt_ref = Tmt.tail(dimi);
   const Eigen::VectorXd mt_next_ref = Wmt_next.tail(dimi);
+
+  EXPECT_TRUE(c_riccati.M().isApprox(M_ref));
+  EXPECT_TRUE(c_riccati.m().isApprox(m_ref));
+  EXPECT_TRUE(c_riccati.mt().isApprox(mt_ref));
+  EXPECT_TRUE(c_riccati.mt_next().isApprox(mt_next_ref));
+
   backward_recursion_ref.factorizeSTOFactorization(riccati_next, kkt_matrix, 
                                                    kkt_residual, lqr_policy_ref, 
                                                    riccati_ref, has_next_sto_phase);
-  riccati.Psi += M.transpose() * psict.tail(dimi);
-  riccati.xi  += mt_ref.dot(psict.tail(dimi));
-  riccati.chi += mt_next_ref.dot(phict.tail(dimi));
-  riccati.eta += m.dot(psict.tail(dimi));
+  riccati_ref.Psi += M_ref.transpose() * sc_jacobian.Phit();
+  riccati_ref.xi += mt_ref.dot(sc_jacobian.Phit());
+  if (has_next_sto_phase) {
+    riccati_ref.chi += mt_next_ref.dot(sc_jacobian.Phit());
+  }
+  else {
+    riccati_ref.chi = 0.0;
+  }
+  riccati_ref.eta += m_ref.dot(sc_jacobian.Phit());
 
-  EXPECT_TRUE(c_riccati.DtM.isApprox((sc_jacobian.Phiu().transpose()*KM.bottomRows(dimi))));
-  EXPECT_TRUE(c_riccati.KtDtM.isApprox((KM.topRows(dimu).transpose()*sc_jacobian.Phiu().transpose()*KM.bottomRows(dimi))));
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
-  EXPECT_TRUE(riccati.P.isApprox(riccati.P.transpose()));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
   EXPECT_TRUE(kkt_matrix.Quu.isApprox(kkt_matrix.Quu.transpose()));
-  EXPECT_TRUE(c_riccati.M().isApprox(KM.bottomRows(dimi)));
-  EXPECT_TRUE(c_riccati.m().isApprox(km.tail(dimi)));
-  EXPECT_TRUE(c_riccati.mt().isApprox(Tmt.tail(dimi)));
-  EXPECT_TRUE(c_riccati.mt_next().isApprox(Wmt_next.tail(dimi)));
-  EXPECT_TRUE(lqr_policy_ref.isApprox(lqr_policy)); // This sometimes fails because the Schur complement can lack accuracy
   EXPECT_TRUE(lqr_policy_ref.K.isApprox(lqr_policy.K));
   EXPECT_TRUE(lqr_policy_ref.k.isApprox(lqr_policy.k));
   EXPECT_TRUE(lqr_policy_ref.T.isApprox(lqr_policy.T));
   EXPECT_TRUE(lqr_policy_ref.W.isApprox(lqr_policy.W));
   std::cout << "impulse_status: " << impulse_status << std::endl;
-  std::cout << (lqr_policy_ref.k - lqr_policy.k).transpose() << std::endl;
-  std::cout << (lqr_policy_ref.T - lqr_policy.T).transpose() << std::endl;
-  std::cout << (lqr_policy_ref.W - lqr_policy.W).transpose() << std::endl;
 
+  // Tests when has_next_sto_phase = false
   has_next_sto_phase = false;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
                                       sc_jacobian, sc_residual, 
