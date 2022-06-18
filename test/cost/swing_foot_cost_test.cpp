@@ -57,8 +57,8 @@ TEST_F(SwingFootCostTest, testStageCost) {
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x3d_weight(x3d_weight);
-  cost->set_x3d_ref(ref);
+  cost->set_weight(x3d_weight);
+  cost->set_ref(ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   auto contact_status = robot.createContactStatus();
@@ -125,7 +125,7 @@ TEST_F(SwingFootCostTest, testTerminalCost) {
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x3d_weight(x3d_weight);
+  cost->set_weight(x3d_weight);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const double l_ref = 0;
@@ -159,7 +159,7 @@ TEST_F(SwingFootCostTest, testImpulseCost) {
   auto cost = std::make_shared<SwingFootCost>(robot, contact_index, ref);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_x3d_weight(x3d_weight);
+  cost->set_weight(x3d_weight);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const double l_ref = 0.0;

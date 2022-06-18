@@ -36,41 +36,41 @@ MultiModeTaskSpace3DCost::~MultiModeTaskSpace3DCost() {
 }
 
 
-void MultiModeTaskSpace3DCost::set_x3d_ref(const Eigen::Vector3d& x3d_ref,
+void MultiModeTaskSpace3DCost::set_ref(const Eigen::Vector3d& x3d_ref,
                                            const int contact_mode_id) {
   x3d_ref_[contact_mode_id] = x3d_ref;
 }
 
 
-void MultiModeTaskSpace3DCost::set_x3d_ref(
+void MultiModeTaskSpace3DCost::set_ref(
     const Eigen::Vector3d& x3d_ref, const std::vector<int>& contact_mode_ids) {
   for (const int e : contact_mode_ids) {
-    set_x3d_ref(x3d_ref, e);
+    set_ref(x3d_ref, e);
   }
 }
 
 
-void MultiModeTaskSpace3DCost::set_x3d_weight(const Eigen::Vector3d& x3d_weight,
+void MultiModeTaskSpace3DCost::set_weight(const Eigen::Vector3d& x3d_weight,
                                               const int contact_mode_id) {
   x3d_weight_[contact_mode_id] = x3d_weight;
 }
 
 
-void MultiModeTaskSpace3DCost::set_x3d_weight(
+void MultiModeTaskSpace3DCost::set_weight(
     const Eigen::Vector3d& x3d_weight, 
     const std::vector<int>& contact_mode_ids) {
   for (const int e : contact_mode_ids) {
-    set_x3d_weight(x3d_weight, e);
+    set_weight(x3d_weight, e);
   }
 }
 
 
-void MultiModeTaskSpace3DCost::set_x3df_weight(const Eigen::Vector3d& x3df_weight) {
+void MultiModeTaskSpace3DCost::set_weight_terminal(const Eigen::Vector3d& x3df_weight) {
   x3df_weight_ = x3df_weight;
 }
 
 
-void MultiModeTaskSpace3DCost::set_x3di_weight(const Eigen::Vector3d& x3di_weight) {
+void MultiModeTaskSpace3DCost::set_weight_impulse(const Eigen::Vector3d& x3di_weight) {
   x3di_weight_ = x3di_weight;
 }
 

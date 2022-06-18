@@ -13,10 +13,10 @@ public:
   // Inherit the constructors
   using SwingFootRefBase::SwingFootRefBase;
 
-  void update_x3d_ref(const ContactStatus& contact_status, 
+  void updateRef(const ContactStatus& contact_status, 
                       Eigen::VectorXd& x3d_ref) const override {
     PYBIND11_OVERRIDE_PURE(void, SwingFootRefBase, 
-                           update_x3d_ref, 
+                           updateRef, 
                            contact_status, x3d_ref);
   }
 };
@@ -27,7 +27,7 @@ PYBIND11_MODULE(swing_foot_ref_base, m) {
   py::class_<SwingFootRefBase, PySwingFootRefBase,
              std::shared_ptr<SwingFootRefBase>>(m, "SwingFootRefBase")
     .def(py::init<>())
-    .def("update_x3d_ref", &SwingFootRefBase::update_x3d_ref,
+    .def("updateRef", &SwingFootRefBase::updateRef,
           py::arg("contact_status"), py::arg("x3d_ref"));
 }
 

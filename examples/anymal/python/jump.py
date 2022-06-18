@@ -65,8 +65,8 @@ vcom_ref_flying_up = 0.5*jump_length/flying_up_time + np.array([0, 0, (jump_heig
 com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, vcom_ref_flying_up, 
                                            t0+ground_time, flying_up_time, 
                                            flying_down_time+2*ground_time, False)
-com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
-com_cost_flying_up.set_com_weight(np.full(3, 1.0e06))
+com_cost_flying_up = robotoc.CoMCost(robot, com_ref_flying_up)
+com_cost_flying_up.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_flying_up)
 
 com_ref0_landed = robot.com()
@@ -75,8 +75,8 @@ vcom_ref_landed = np.zeros(3)
 com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, vcom_ref_landed, 
                                         t0+ground_time+flying_time, ground_time, 
                                         ground_time+flying_time, False)
-com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
-com_cost_landed.set_com_weight(np.full(3, 1.0e06))
+com_cost_landed = robotoc.CoMCost(robot, com_ref_landed)
+com_cost_landed.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_landed)
 
 # Create the constraints

@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 
 
@@ -17,7 +17,7 @@ namespace robotoc {
 /// @class DiscreteTimeSwingFootRef
 /// @brief Discrete-time reference of the positions of swinging contact frames. 
 ///
-class DiscreteTimeSwingFootRef : public TimeVaryingTaskSpace3DRefBase {
+class DiscreteTimeSwingFootRef : public TaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -58,7 +58,7 @@ public:
                        const Eigen::Vector3d& last_contact_position, 
                        const double first_rate=0, const double last_rate=0);
 
-  void update_x3d_ref(const GridInfo& grid_info, 
+  void updateRef(const GridInfo& grid_info, 
                       Eigen::VectorXd& x3d_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;

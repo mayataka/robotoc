@@ -61,30 +61,26 @@ MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N,
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
   config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  base_rot_cost_ = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, base_rot_ref_);
+  base_rot_cost_ = std::make_shared<ConfigurationSpaceCost>(robot, base_rot_ref_);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
   base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
   base_rot_cost_->set_q_weight(base_rot_weight);
   base_rot_cost_->set_q_weight_terminal(base_rot_weight);
   base_rot_cost_->set_q_weight_impulse(base_rot_weight);
-  LF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[0],
-                                                               LF_foot_ref_);
-  LH_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[1],
-                                                               LH_foot_ref_);
-  RF_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[2],
-                                                               RF_foot_ref_);
-  RH_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                               robot.contactFrames()[3],
-                                                               RH_foot_ref_);
-  LF_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  LH_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  RF_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  RH_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  com_cost_ = std::make_shared<TimeVaryingCoMCost>(robot, com_ref_);
-  com_cost_->set_com_weight(Eigen::Vector3d::Constant(1.0e03));
+  LF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[0],
+                                                    LF_foot_ref_);
+  LH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[1],
+                                                    LH_foot_ref_);
+  RF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[2],
+                                                    RF_foot_ref_);
+  RH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[3],
+                                                    RH_foot_ref_);
+  LF_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  LH_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  RF_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  RH_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  com_cost_ = std::make_shared<CoMCost>(robot, com_ref_);
+  com_cost_->set_weight(Eigen::Vector3d::Constant(1.0e03));
   cost_->push_back(config_cost_);
   cost_->push_back(base_rot_cost_);
   cost_->push_back(LF_foot_cost_);
@@ -163,13 +159,13 @@ void MPCCrawl::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_st
   RH_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(3, swing_height, 
                                                            swing_start_time_, 
                                                            swing_time_, 3*swing_time_+4*stance_time_);
-  LF_foot_cost_->set_x3d_ref(LF_foot_ref_);
-  LH_foot_cost_->set_x3d_ref(LH_foot_ref_);
-  RF_foot_cost_->set_x3d_ref(RF_foot_ref_);
-  RH_foot_cost_->set_x3d_ref(RH_foot_ref_);
+  LF_foot_cost_->set_ref(LF_foot_ref_);
+  LH_foot_cost_->set_ref(LH_foot_ref_);
+  RF_foot_cost_->set_ref(RF_foot_ref_);
+  RH_foot_cost_->set_ref(RH_foot_ref_);
   com_ref_ = std::make_shared<MPCPeriodicCoMRef>(swing_start_time_, 
                                                  swing_time_, stance_time_);
-  com_cost_->set_com_ref(com_ref_);
+  com_cost_->set_ref(com_ref_);
 }
 
 
@@ -197,7 +193,7 @@ void MPCCrawl::init(const double t, const Eigen::VectorXd& q,
   config_cost_->set_q_ref(q);
   base_rot_ref_ = std::make_shared<MPCPeriodicConfigurationRef>(q, swing_start_time_, 
                                                                 swing_time_, stance_time_);
-  base_rot_cost_->set_q_ref(base_rot_ref_);
+  base_rot_cost_->set_ref(base_rot_ref_);
   resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -282,19 +278,19 @@ std::shared_ptr<ConfigurationSpaceCost> MPCCrawl::getConfigCostHandle() {
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCCrawl::getBaseRotationCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCCrawl::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCCrawl::getSwingFootCostHandle() {
-  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
+std::vector<std::shared_ptr<TaskSpace3DCost>> MPCCrawl::getSwingFootCostHandle() {
+  std::vector<std::shared_ptr<TaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {LF_foot_cost_, LH_foot_cost_, RF_foot_cost_, RH_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCCrawl::getCoMCostHandle() {
+std::shared_ptr<CoMCost> MPCCrawl::getCoMCostHandle() {
   return com_cost_;
 }
 

@@ -35,7 +35,7 @@ TrotSwingFootRef::~TrotSwingFootRef() {
 }
 
 
-void TrotSwingFootRef::update_x3d_ref(const ContactStatus& contact_status, 
+void TrotSwingFootRef::updateRef(const ContactStatus& contact_status, 
                                       Eigen::VectorXd& x3d_ref) const {
   constexpr double eps = std::numeric_limits<double>::epsilon();
   const double xdiff = contact_status.contactPosition(contact_index_).coeff(0) 

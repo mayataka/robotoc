@@ -12,7 +12,7 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_periodic_swing_foot_ref, m) {
-  py::class_<MPCPeriodicSwingFootRef, TimeVaryingTaskSpace3DRefBase,
+  py::class_<MPCPeriodicSwingFootRef, TaskSpace3DRefBase,
              std::shared_ptr<MPCPeriodicSwingFootRef>>(m, "MPCPeriodicSwingFootRef")
     .def(py::init<const int, const double, const double, const double, 
                   const double, const int>(),
@@ -24,7 +24,7 @@ PYBIND11_MODULE(mpc_periodic_swing_foot_ref, m) {
           py::arg("period_inactive"), py::arg("num_phases_in_period")=1)
     .def("set_swing_foot_ref", &MPCPeriodicSwingFootRef::setSwingFootRef,
           py::arg("contact_sequence"), py::arg("foot_step_planner"))
-    .def("update_x3d_ref", &MPCPeriodicSwingFootRef::update_x3d_ref,
+    .def("updateRef", &MPCPeriodicSwingFootRef::updateRef,
           py::arg("grid_info"), py::arg("x3d_ref"))
     .def("is_active", &MPCPeriodicSwingFootRef::isActive,
           py::arg("grid_info"));

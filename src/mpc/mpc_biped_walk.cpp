@@ -59,22 +59,20 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
   config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-02));
-  base_rot_cost_ = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, base_rot_ref_);
+  base_rot_cost_ = std::make_shared<ConfigurationSpaceCost>(robot, base_rot_ref_);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
   base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
   base_rot_cost_->set_q_weight(base_rot_weight);
   base_rot_cost_->set_q_weight_terminal(base_rot_weight);
   base_rot_cost_->set_q_weight_impulse(base_rot_weight);
-  L_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                              robot.contactFrames()[0],
-                                                              L_foot_ref_);
-  R_foot_cost_ = std::make_shared<TimeVaryingTaskSpace3DCost>(robot, 
-                                                              robot.contactFrames()[1],
-                                                              R_foot_ref_);
-  L_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  R_foot_cost_->set_x3d_weight(Eigen::Vector3d::Constant(1.0e04));
-  com_cost_ = std::make_shared<TimeVaryingCoMCost>(robot, com_ref_);
-  com_cost_->set_com_weight(Eigen::Vector3d::Constant(1.0e03));
+  L_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[0],
+                                                   L_foot_ref_);
+  R_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[1],
+                                                   R_foot_ref_);
+  L_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  R_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
+  com_cost_ = std::make_shared<CoMCost>(robot, com_ref_);
+  com_cost_->set_weight(Eigen::Vector3d::Constant(1.0e03));
   cost_->push_back(config_cost_);
   cost_->push_back(base_rot_cost_);
   cost_->push_back(L_foot_cost_);
@@ -147,11 +145,11 @@ void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foo
   R_foot_ref_ = std::make_shared<MPCPeriodicSwingFootRef>(1, swing_height, 
                                                           swing_start_time_, 
                                                           swing_time_, swing_time_+2*double_support_time_);
-  L_foot_cost_->set_x3d_ref(L_foot_ref_);
-  R_foot_cost_->set_x3d_ref(R_foot_ref_);
+  L_foot_cost_->set_ref(L_foot_ref_);
+  R_foot_cost_->set_ref(R_foot_ref_);
   com_ref_ = std::make_shared<MPCPeriodicCoMRef>(swing_start_time_, 
                                                  swing_time_, double_support_time_);
-  com_cost_->set_com_ref(com_ref_);
+  com_cost_->set_ref(com_ref_);
 }
 
 
@@ -179,7 +177,7 @@ void MPCBipedWalk::init(const double t, const Eigen::VectorXd& q,
   config_cost_->set_q_ref(q);
   base_rot_ref_ = std::make_shared<MPCPeriodicConfigurationRef>(q, swing_start_time_, 
                                                                 swing_time_, double_support_time_);
-  base_rot_cost_->set_q_ref(base_rot_ref_);
+  base_rot_cost_->set_ref(base_rot_ref_);
   resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -263,19 +261,19 @@ std::shared_ptr<ConfigurationSpaceCost> MPCBipedWalk::getConfigCostHandle() {
 }
 
 
-std::shared_ptr<TimeVaryingConfigurationSpaceCost> MPCBipedWalk::getBaseRotationCostHandle() {
+std::shared_ptr<ConfigurationSpaceCost> MPCBipedWalk::getBaseRotationCostHandle() {
   return base_rot_cost_;
 }
 
 
-std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> MPCBipedWalk::getSwingFootCostHandle() {
-  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> swing_foot_cost;
+std::vector<std::shared_ptr<TaskSpace3DCost>> MPCBipedWalk::getSwingFootCostHandle() {
+  std::vector<std::shared_ptr<TaskSpace3DCost>> swing_foot_cost;
   swing_foot_cost = {L_foot_cost_, R_foot_cost_};
   return swing_foot_cost;
 }
 
 
-std::shared_ptr<TimeVaryingCoMCost> MPCBipedWalk::getCoMCostHandle() {
+std::shared_ptr<CoMCost> MPCBipedWalk::getCoMCostHandle() {
   return com_cost_;
 }
 

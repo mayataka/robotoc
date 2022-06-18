@@ -35,13 +35,13 @@ SwingFootCost::~SwingFootCost() {
 }
 
 
-void SwingFootCost::set_x3d_ref(
+void SwingFootCost::set_ref(
     const std::shared_ptr<SwingFootRefBase>& x3d_ref) {
   x3d_ref_ = x3d_ref;
 }
 
 
-void SwingFootCost::set_x3d_weight(const Eigen::Vector3d& x3d_weight) {
+void SwingFootCost::set_weight(const Eigen::Vector3d& x3d_weight) {
   x3d_weight_ = x3d_weight;
 }
 
@@ -58,7 +58,7 @@ double SwingFootCost::evalStageCost(Robot& robot,
                                     const SplitSolution& s) const {
   if (!contact_status.isContactActive(contact_index_)) {
     double l = 0;
-    x3d_ref_->update_x3d_ref(contact_status, data.x3d_ref);
+    x3d_ref_->updateRef(contact_status, data.x3d_ref);
     data.diff_3d = robot.framePosition(contact_frame_id_) - data.x3d_ref;
     l += (x3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * grid_info.dt * l;

@@ -12,7 +12,7 @@ MPCPeriodicConfigurationRef::MPCPeriodicConfigurationRef(const Eigen::VectorXd& 
                                                          const double period_active, 
                                                          const double period_inactive,
                                                          const int num_phases_in_period)
-  : TimeVaryingConfigurationRefBase(),
+  : ConfigurationSpaceRefBase(),
     q_(q), 
     quat_(), 
     has_inactive_contacts_(),
@@ -98,7 +98,7 @@ void MPCPeriodicConfigurationRef::setConfigurationRef(
 }
 
 
-void MPCPeriodicConfigurationRef::update_q_ref(const Robot& robot, 
+void MPCPeriodicConfigurationRef::updateRef(const Robot& robot, 
                                                const GridInfo& grid_info,
                                                Eigen::VectorXd& q_ref) const {
   // if (isActive(grid_info)) { 

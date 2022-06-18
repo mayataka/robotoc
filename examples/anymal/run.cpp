@@ -9,7 +9,6 @@
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
 #include "robotoc/constraints/joint_position_upper_limit.hpp"
@@ -28,16 +27,16 @@
 #endif 
 
  
-class TimeVaryingConfigurationRef final : public robotoc::TimeVaryingConfigurationRefBase {
+class ConfigurationSpaceRef final : public robotoc::ConfigurationSpaceRefBase {
 public:
-  TimeVaryingConfigurationRef(const double t0, 
-                              const double period_init1, 
-                              const double period_init2, 
-                              const double period,
-                              const double period_final, 
-                              const int steps,
-                              const Eigen::VectorXd& q0, const double v_ref) 
-    : TimeVaryingConfigurationRefBase(),
+  ConfigurationSpaceRef(const double t0, 
+                        const double period_init1, 
+                        const double period_init2, 
+                        const double period,
+                        const double period_final, 
+                        const int steps,
+                        const Eigen::VectorXd& q0, const double v_ref) 
+    : ConfigurationSpaceRefBase(),
       t0_(t0),
       period_init1_(period_init1),
       period_init2_(period_init2),
@@ -57,11 +56,11 @@ public:
     qf_.coeffRef(0) += period_final * v_ref_final_;
   }
 
-  ~TimeVaryingConfigurationRef() {}
+  ~ConfigurationSpaceRef() {}
 
-  void update_q_ref(const robotoc::Robot& robot, 
-                    const robotoc::GridInfo& grid_info, 
-                    Eigen::VectorXd& q_ref) const override {
+  void updateRef(const robotoc::Robot& robot, 
+                 const robotoc::GridInfo& grid_info, 
+                 Eigen::VectorXd& q_ref) const override {
     if (grid_info.t < t0_) {
       q_ref = q0_;
     }
@@ -156,9 +155,9 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   const double v_ref = stride / t_period;
-  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.5, steps,
+  auto config_ref = std::make_shared<ConfigurationSpaceRef>(t_start, 0.255, 0.34, t_period, 0.5, steps,
                                                                   q_standing, v_ref);
-  auto time_varying_config_cost = std::make_shared<robotoc::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
+  auto time_varying_config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight);
   time_varying_config_cost->set_q_weight_impulse(q_weight);

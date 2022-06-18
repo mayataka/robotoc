@@ -21,7 +21,7 @@ PYBIND11_MODULE(trot_swing_foot_ref, m) {
           py::arg("robot"), py::arg("contact_frame_name"), 
           py::arg("x_ref_foot_contact_index"), py::arg("y_ref_foot_contact_index"),
           py::arg("step_length"), py::arg("step_height"))
-    .def("update_x3d_ref", &TrotSwingFootRef::update_x3d_ref,
+    .def("updateRef", &TrotSwingFootRef::updateRef,
           py::arg("contact_status"), py::arg("q_3d_ref"));
 }
 

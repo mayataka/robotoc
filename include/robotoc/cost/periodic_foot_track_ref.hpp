@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
 
 
 namespace robotoc {
@@ -13,7 +13,7 @@ namespace robotoc {
 /// @class PeriodicFootTrackRef
 /// @brief Periodic reference of the foot position. 
 ///
-class PeriodicFootTrackRef : public TimeVaryingTaskSpace3DRefBase {
+class PeriodicFootTrackRef : public TaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -54,7 +54,7 @@ public:
                        const double period_swing, const double period_stance, 
                        const bool is_first_step_half=false);
 
-  void update_x3d_ref(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override;
+  void updateRef(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;
 

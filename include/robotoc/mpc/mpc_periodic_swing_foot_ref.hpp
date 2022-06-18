@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 
@@ -15,7 +15,7 @@ namespace robotoc {
 /// @class MPCPeriodicSwingFootRef
 /// @brief Periodic reference of the foot position. 
 ///
-class MPCPeriodicSwingFootRef final : public TimeVaryingTaskSpace3DRefBase {
+class MPCPeriodicSwingFootRef final : public TaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -58,7 +58,7 @@ public:
   void setSwingFootRef(const std::shared_ptr<ContactSequence>& contact_sequence,
                        const std::shared_ptr<ContactPlannerBase>& foot_step_planner);
 
-  void update_x3d_ref(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override;
+  void updateRef(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;
 

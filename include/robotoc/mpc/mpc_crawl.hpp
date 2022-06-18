@@ -15,9 +15,8 @@
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
 #include "robotoc/mpc/mpc_periodic_swing_foot_ref.hpp"
 #include "robotoc/mpc/mpc_periodic_com_ref.hpp"
 #include "robotoc/mpc/mpc_periodic_configuration_ref.hpp"
@@ -188,19 +187,19 @@ public:
   /// @brief Gets the base rotation cost handle.  
   /// @return Shared ptr to the base rotation cost.
   ///
-  std::shared_ptr<TimeVaryingConfigurationSpaceCost> getBaseRotationCostHandle();
+  std::shared_ptr<ConfigurationSpaceCost> getBaseRotationCostHandle();
 
   ///
   /// @brief Gets the swing foot task space costs (LF, LH, RF, RH feet) handle.  
   /// @return Shared ptr to the task space cost (LF, LH, RF, RH feet).
   ///
-  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> getSwingFootCostHandle();
+  std::vector<std::shared_ptr<TaskSpace3DCost>> getSwingFootCostHandle();
 
   ///
   /// @brief Gets the com cost handle.  
   /// @return Shared ptr to the com cost.
   ///
-  std::shared_ptr<TimeVaryingCoMCost> getCoMCostHandle();
+  std::shared_ptr<CoMCost> getCoMCostHandle();
 
   ///
   /// @brief Gets the constraints handle.  
@@ -245,10 +244,10 @@ private:
   bool enable_stance_phase_;
 
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;
-  std::shared_ptr<TimeVaryingConfigurationSpaceCost> base_rot_cost_;
-  std::shared_ptr<TimeVaryingTaskSpace3DCost> LF_foot_cost_, LH_foot_cost_,
+  std::shared_ptr<ConfigurationSpaceCost> base_rot_cost_;
+  std::shared_ptr<TaskSpace3DCost> LF_foot_cost_, LH_foot_cost_,
                                               RF_foot_cost_, RH_foot_cost_;
-  std::shared_ptr<TimeVaryingCoMCost> com_cost_;
+  std::shared_ptr<CoMCost> com_cost_;
   std::shared_ptr<MPCPeriodicConfigurationRef> base_rot_ref_;
   std::shared_ptr<MPCPeriodicSwingFootRef> LF_foot_ref_, LH_foot_ref_,
                                            RF_foot_ref_, RH_foot_ref_;

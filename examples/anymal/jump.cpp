@@ -9,8 +9,8 @@
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
 #include "robotoc/cost/periodic_foot_track_ref.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
 #include "robotoc/constraints/constraints.hpp"
@@ -101,8 +101,8 @@ int main(int argc, char *argv[]) {
   auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_flying_up, vcom_ref_flying_up, 
                                                                      t0+ground_time, flying_up_time, 
                                                                      flying_down_time+2*ground_time, false);
-  auto com_cost_flying_up = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_flying_up);
-  com_cost_flying_up->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
+  auto com_cost_flying_up = std::make_shared<robotoc::CoMCost>(robot, com_ref_flying_up);
+  com_cost_flying_up->set_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_flying_up);
 
   const Eigen::Vector3d com_ref0_landed = robot.CoM() + jump_length;
@@ -110,8 +110,8 @@ int main(int argc, char *argv[]) {
   auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_landed, vcom_ref_landed, 
                                                                   t0+ground_time+flying_time, ground_time, 
                                                                   ground_time+flying_time, false);
-  auto com_cost_landed = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_landed);
-  com_cost_landed->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
+  auto com_cost_landed = std::make_shared<robotoc::CoMCost>(robot, com_ref_landed);
+  com_cost_landed->set_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_landed);
 
   // Create the constraints

@@ -53,7 +53,7 @@ public:
   ///
   ~TrotSwingFootRef();
 
-  void update_x3d_ref(const ContactStatus& contact_status, 
+  void updateRef(const ContactStatus& contact_status, 
                       Eigen::VectorXd& x3d_ref) const override;
 
 private:

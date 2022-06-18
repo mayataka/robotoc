@@ -18,21 +18,21 @@ PYBIND11_MODULE(multi_mode_task_space_3d_cost, m) {
           py::arg("robot"), py::arg("frame_id"))
     .def(py::init<const Robot&, const std::string&>(),
           py::arg("robot"), py::arg("frame_name"))
-    .def("set_x3d_ref", 
-          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const int)>(&MultiModeTaskSpace3DCost::set_x3d_ref),
+    .def("set_ref", 
+          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const int)>(&MultiModeTaskSpace3DCost::set_ref),
           py::arg("x3d_ref"), py::arg("contact_mode_id")=0)
-    .def("set_x3d_ref", 
-          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const std::vector<int>&)>(&MultiModeTaskSpace3DCost::set_x3d_ref),
+    .def("set_ref", 
+          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const std::vector<int>&)>(&MultiModeTaskSpace3DCost::set_ref),
           py::arg("x3d_ref"), py::arg("contact_mode_ids"))
-    .def("set_x3d_weight", 
-          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const int)>(&MultiModeTaskSpace3DCost::set_x3d_weight),
+    .def("set_weight", 
+          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const int)>(&MultiModeTaskSpace3DCost::set_weight),
           py::arg("x3d_weight"), py::arg("contact_mode_id")=0)
-    .def("set_x3d_weight", 
-          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const std::vector<int>&)>(&MultiModeTaskSpace3DCost::set_x3d_weight),
+    .def("set_weight", 
+          static_cast<void (MultiModeTaskSpace3DCost::*)(const Eigen::Vector3d&, const std::vector<int>&)>(&MultiModeTaskSpace3DCost::set_weight),
           py::arg("x3d_weight"), py::arg("contact_mode_ids"))
-    .def("set_x3df_weight", &MultiModeTaskSpace3DCost::set_x3df_weight, 
+    .def("set_weight_terminal", &MultiModeTaskSpace3DCost::set_weight_terminal, 
           py::arg("x3df_weight"))
-    .def("set_x3di_weight", &MultiModeTaskSpace3DCost::set_x3di_weight, 
+    .def("set_weight_impulse", &MultiModeTaskSpace3DCost::set_weight_impulse, 
           py::arg("x3di_weight"));
 }
 

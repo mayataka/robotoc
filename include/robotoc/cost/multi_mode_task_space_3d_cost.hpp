@@ -77,14 +77,14 @@ public:
   /// @param[in] x3d_ref Reference position.
   /// @param[in] contact_mode_id Contact mode id. Default is 0.
   ///
-  void set_x3d_ref(const Eigen::Vector3d& x3d_ref, const int contact_mode_id=0);
+  void set_ref(const Eigen::Vector3d& x3d_ref, const int contact_mode_id=0);
 
   ///
   /// @brief Sets the reference position. 
   /// @param[in] x3d_ref Reference position.
   /// @param[in] contact_mode_ids Contact mode ids. 
   ///
-  void set_x3d_ref(const Eigen::Vector3d& x3d_ref, 
+  void set_ref(const Eigen::Vector3d& x3d_ref, 
                    const std::vector<int>& contact_mode_ids);
 
   ///
@@ -92,7 +92,7 @@ public:
   /// @param[in] x3d_weight Weight vector on the position error. 
   /// @param[in] contact_mode_id Contact mode id. Default is 0.
   ///
-  void set_x3d_weight(const Eigen::Vector3d& x3d_weight, 
+  void set_weight(const Eigen::Vector3d& x3d_weight, 
                       const int contact_mode_id=0);
 
   ///
@@ -100,7 +100,7 @@ public:
   /// @param[in] x3d_weight Weight vector on the position error. 
   /// @param[in] contact_mode_ids Contact mode ids. 
   ///
-  void set_x3d_weight(const Eigen::Vector3d& x3d_weight, 
+  void set_weight(const Eigen::Vector3d& x3d_weight, 
                       const std::vector<int>& contact_mode_ids);
 
   ///
@@ -108,14 +108,14 @@ public:
   /// @param[in] x3df_weight Weight vector on the position error at the
   /// terminal stage. 
   ///
-  void set_x3df_weight(const Eigen::Vector3d& x3df_weight);
+  void set_weight_terminal(const Eigen::Vector3d& x3df_weight);
 
   ///
   /// @brief Sets the weight vector at the impulse stage. 
   /// @param[in] x3di_weight Weight vector on the position error at the 
   /// impulse stage. 
   ///
-  void set_x3di_weight(const Eigen::Vector3d& x3di_weight);
+  void set_weight_impulse(const Eigen::Vector3d& x3di_weight);
 
   bool useKinematics() const override;
 

@@ -10,7 +10,7 @@ PeriodicFootTrackRef::PeriodicFootTrackRef(const Eigen::Vector3d& x3d0,
                                            const double period_swing, 
                                            const double period_stance, 
                                            const bool is_first_step_half)
-  : TimeVaryingTaskSpace3DRefBase(),
+  : TaskSpace3DRefBase(),
     x3d0_(x3d0),
     step_length_(step_length),
     step_height_(step_height),
@@ -44,7 +44,7 @@ void PeriodicFootTrackRef::setFootTrackRef(const Eigen::Vector3d& x3d0,
 }
 
 
-void PeriodicFootTrackRef::update_x3d_ref(const GridInfo& grid_info,
+void PeriodicFootTrackRef::updateRef(const GridInfo& grid_info,
                                           Eigen::VectorXd& x3d_ref) const {
   if (grid_info.t < t0_+period_swing_) {
     const double rate = (grid_info.t-t0_) / period_swing_;

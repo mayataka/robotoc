@@ -11,7 +11,7 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(trot_com_ref, m) {
-  py::class_<TrotCoMRef, TimeVaryingCoMRefBase,
+  py::class_<TrotCoMRef, CoMRefBase,
              std::shared_ptr<TrotCoMRef>>(m, "TrotCoMRef")
     .def(py::init<const Eigen::Vector3d&, const double, const int>(),
           py::arg("com0"), py::arg("step_length"), py::arg("max_steps")=100)
@@ -19,7 +19,7 @@ PYBIND11_MODULE(trot_com_ref, m) {
     .def("set_contact_sequence", &TrotCoMRef::setContactSequence)
     .def("set_initial_phase_rate", &TrotCoMRef::setInitialPhaseRate)
     .def("set_last_phase_rate", &TrotCoMRef::setLastPhaseRate)
-    .def("update_com_ref", &TrotCoMRef::update_com_ref)
+    .def("updateRef", &TrotCoMRef::updateRef)
     .def("is_active", &TrotCoMRef::isActive);
 }
 
