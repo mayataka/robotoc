@@ -34,6 +34,14 @@ public:
   ConfigurationSpaceCost(const Robot& robot);
 
   ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] ref Reference configuraton.
+  ///
+  ConfigurationSpaceCost(const Robot& robot, 
+                         const std::shared_ptr<ConfigurationSpaceRefBase>& ref);
+
+  ///
   /// @brief Default constructor. 
   ///
   ConfigurationSpaceCost();
@@ -153,6 +161,21 @@ public:
   void set_dv_weight_impulse(const Eigen::VectorXd& dv_weight_impulse);
 
   ///
+  /// @brief Evaluate if the cost on the configuration q is active for given 
+  /// grid_info. 
+  /// @param[in] grid_info Grid info.
+  /// @return Cost status (if the cost is active or not).
+  ///
+  bool isCostConfigActive(const GridInfo& grid_info) const {
+    if (use_nonconst_ref_) {
+      return ref_->isActive(grid_info);
+    }
+    else {
+      return true;
+    }
+  }
+
+  ///
   /// @brief Evaluate the difference between the configuration and the reference
   /// configuration. 
   /// @param[in] robot Robot model.
@@ -160,8 +183,9 @@ public:
   /// @param[in] grid_info Grid info
   /// @param[in] q Current configuration 
   ///
-  void evalDiff(const Robot& robot, CostFunctionData& data, 
-                const GridInfo& grid_info, const Eigen::VectorXd& q) const {
+  void evalConfigDiff(const Robot& robot, CostFunctionData& data, 
+                      const GridInfo& grid_info, 
+                      const Eigen::VectorXd& q) const {
     if (use_nonconst_ref_) {
       if (ref_->isActive(grid_info)) {
         ref_->updateRef(robot, grid_info, data.q_ref);
@@ -170,6 +194,27 @@ public:
     }
     else {
       robot.subtractConfiguration(q, q_ref_, data.qdiff);
+    }
+  }
+
+  ///
+  /// @brief Evaluate the Jacobian of the difference between the configuration 
+  /// and the reference configuration. 
+  /// @param[in] robot Robot model.
+  /// @param[in, out] data Cost funciton data.
+  /// @param[in] grid_info Grid info
+  /// @param[in] q Current configuration 
+  ///
+  void evalConfigDiffJac(const Robot& robot, CostFunctionData& data, 
+                         const GridInfo& grid_info, 
+                         const Eigen::VectorXd& q) const {
+    if (use_nonconst_ref_) {
+      if (ref_->isActive(grid_info)) {
+        robot.dSubtractConfiguration_dqf(q, data.q_ref, data.J_qdiff);
+      }
+    }
+    else {
+      robot.dSubtractConfiguration_dqf(q, q_ref_, data.J_qdiff);
     }
   }
 

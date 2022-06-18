@@ -40,6 +40,13 @@ ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
 }
 
 
+ConfigurationSpaceCost::ConfigurationSpaceCost(
+    const Robot& robot, const std::shared_ptr<ConfigurationSpaceRefBase>& ref) 
+  : ConfigurationSpaceCost(robot) {
+  set_ref(ref);
+}
+
+
 ConfigurationSpaceCost::ConfigurationSpaceCost()
   : CostFunctionComponentBase(),
     dimq_(0),
@@ -136,7 +143,7 @@ void ConfigurationSpaceCost::set_q_weight(const Eigen::VectorXd& q_weight) {
     }
     if (q_weight.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of q_weight must be non-negative!");
+          "invalid argument: elements of q_weight must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -156,7 +163,7 @@ void ConfigurationSpaceCost::set_v_weight(const Eigen::VectorXd& v_weight) {
     }
     if (v_weight.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of v_weight must be non-negative!");
+          "invalid argument: elements of v_weight must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -176,7 +183,7 @@ void ConfigurationSpaceCost::set_a_weight(const Eigen::VectorXd& a_weight) {
     }
     if (a_weight.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of a_weight must be non-negative!");
+          "invalid argument: elements of a_weight must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -196,7 +203,7 @@ void ConfigurationSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
     }
     if (u_weight.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of u_weight must be non-negative!");
+          "invalid argument: elements of u_weight must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -217,7 +224,7 @@ void ConfigurationSpaceCost::set_q_weight_terminal(
     }
     if (q_weight_terminal.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of q_weight_terminal must be non-negative!");
+          "invalid argument: elements of q_weight_terminal must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -238,7 +245,7 @@ void ConfigurationSpaceCost::set_v_weight_terminal(
     }
     if (v_weight_terminal.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of v_weight_terminal must be non-negative!");
+          "invalid argument: elements of v_weight_terminal must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -259,7 +266,7 @@ void ConfigurationSpaceCost::set_q_weight_impulse(
     }
     if (q_weight_impulse.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of q_weight_impulse must be non-negative!");
+          "invalid argument: elements of q_weight_impulse must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -280,7 +287,7 @@ void ConfigurationSpaceCost::set_v_weight_impulse(
     }
     if (v_weight_impulse.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of v_weight_impulse must be non-negative!");
+          "invalid argument: elements of v_weight_impulse must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -301,7 +308,7 @@ void ConfigurationSpaceCost::set_dv_weight_impulse(
     }
     if (dv_weight_impulse.minCoeff() < 0.0) {
       throw std::invalid_argument(
-          "invalid size: elements of dv_weight_impulse must be non-negative!");
+          "invalid argument: elements of dv_weight_impulse must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -324,8 +331,8 @@ double ConfigurationSpaceCost::evalStageCost(Robot& robot,
                                              const GridInfo& grid_info,
                                              const SplitSolution& s) const {
   double l = 0;
-  if (enable_q_cost_) {
-    evalDiff(robot, data, grid_info, s.q);
+  if (enable_q_cost_ && isCostConfigActive(grid_info)) {
+    evalConfigDiff(robot, data, grid_info, s.q);
     l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   if (enable_v_cost_) {
@@ -345,9 +352,9 @@ void ConfigurationSpaceCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (enable_q_cost_) {
+  if (enable_q_cost_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
-      robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
+      evalConfigDiffJac(robot, data, grid_info, s.q);
       kkt_residual.lq().noalias()
           += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
     }
@@ -373,7 +380,7 @@ void ConfigurationSpaceCost::evalStageCostHessian(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
-  if (enable_q_cost_) {
+  if (enable_q_cost_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
@@ -399,8 +406,8 @@ double ConfigurationSpaceCost::evalTerminalCost(Robot& robot,
                                                 const GridInfo& grid_info, 
                                                 const SplitSolution& s) const {
   double l = 0;
-  if (enable_q_cost_terminal_) {
-    evalDiff(robot, data, grid_info, s.q);
+  if (enable_q_cost_terminal_ && isCostConfigActive(grid_info)) {
+    evalConfigDiff(robot, data, grid_info, s.q);
     l += (q_weight_terminal_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   if (enable_v_cost_terminal_) {
@@ -413,9 +420,9 @@ double ConfigurationSpaceCost::evalTerminalCost(Robot& robot,
 void ConfigurationSpaceCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (enable_q_cost_terminal_) {
+  if (enable_q_cost_terminal_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
-      robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
+      evalConfigDiffJac(robot, data, grid_info, s.q);
       kkt_residual.lq().noalias()
           += data.J_qdiff.transpose() * q_weight_terminal_.asDiagonal() * data.qdiff;
     }
@@ -433,7 +440,7 @@ void ConfigurationSpaceCost::evalTerminalCostDerivatives(
 void ConfigurationSpaceCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info,
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (enable_q_cost_terminal_) {
+  if (enable_q_cost_terminal_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += data.J_qdiff.transpose() * q_weight_terminal_.asDiagonal() * data.J_qdiff;
@@ -452,8 +459,8 @@ double ConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
   double l = 0;
-  if (enable_q_cost_impulse_) {
-    evalDiff(robot, data, grid_info, s.q);
+  if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
+    evalConfigDiff(robot, data, grid_info, s.q);
     l += (q_weight_impulse_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   if (enable_v_cost_impulse_) {
@@ -470,9 +477,9 @@ void ConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (enable_q_cost_impulse_) {
+  if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
-      robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
+      evalConfigDiffJac(robot, data, grid_info, s.q);
       kkt_residual.lq().noalias()
           += data.J_qdiff.transpose() * q_weight_impulse_.asDiagonal() * data.qdiff;
     }
@@ -494,7 +501,7 @@ void ConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (enable_q_cost_impulse_) {
+  if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
           += data.J_qdiff.transpose() * q_weight_impulse_.asDiagonal() * data.J_qdiff;
