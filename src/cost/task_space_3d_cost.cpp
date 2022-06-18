@@ -11,7 +11,10 @@ TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id)
     weight_terminal_(Eigen::Vector3d::Zero()),
     weight_impulse_(Eigen::Vector3d::Zero()),
     ref_(),
-    use_nonconst_ref_(false) {
+    use_nonconst_ref_(false),
+    enable_cost_(false), 
+    enable_cost_terminal_(false), 
+    enable_cost_impulse_(false) {
 }
 
 
@@ -59,7 +62,10 @@ TaskSpace3DCost::TaskSpace3DCost()
     weight_terminal_(Eigen::Vector3d::Zero()),
     weight_impulse_(Eigen::Vector3d::Zero()),
     ref_(),
-    use_nonconst_ref_(false) {
+    use_nonconst_ref_(false),
+    enable_cost_(false), 
+    enable_cost_terminal_(false), 
+    enable_cost_impulse_(false) {
 }
 
 
@@ -80,17 +86,50 @@ void TaskSpace3DCost::set_const_ref(const Eigen::Vector3d& const_ref) {
 
 
 void TaskSpace3DCost::set_weight(const Eigen::Vector3d& weight) {
+  try {
+    if (weight.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   weight_ = weight;
+  enable_cost_ = (!weight.isZero());
 }
 
 
 void TaskSpace3DCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal) {
+  try {
+    if (weight_terminal.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   weight_terminal_ = weight_terminal;
+  enable_cost_terminal_ = (!weight_terminal.isZero());
 }
 
 
 void TaskSpace3DCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
+  try {
+    if (weight_impulse.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   weight_impulse_ = weight_impulse;
+  enable_cost_impulse_ = (!weight_impulse.isZero());
 }
 
 
@@ -104,7 +143,7 @@ double TaskSpace3DCost::evalStageCost(Robot& robot,
                                       CostFunctionData& data, 
                                       const GridInfo& grid_info, 
                                       const SplitSolution& s) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * grid_info.dt * l;
@@ -119,7 +158,7 @@ void TaskSpace3DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.J_3d.noalias() 
@@ -136,7 +175,7 @@ void TaskSpace3DCost::evalStageCostHessian(Robot& robot,
                                            const GridInfo& grid_info, 
                                            const SplitSolution& s, 
                                            SplitKKTMatrix& kkt_matrix) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.J_3d;
   }
@@ -146,7 +185,7 @@ void TaskSpace3DCost::evalStageCostHessian(Robot& robot,
 double TaskSpace3DCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
                                          const GridInfo& grid_info, 
                                          const SplitSolution& s) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_terminal_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_terminal_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * l;
@@ -160,7 +199,7 @@ double TaskSpace3DCost::evalTerminalCost(Robot& robot, CostFunctionData& data,
 void TaskSpace3DCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_terminal_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.J_3d.noalias() 
@@ -174,7 +213,7 @@ void TaskSpace3DCost::evalTerminalCostDerivatives(
 void TaskSpace3DCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_terminal_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * weight_terminal_.asDiagonal() * data.J_3d;
   }
@@ -186,7 +225,7 @@ double TaskSpace3DCost::evalImpulseCost(Robot& robot,
                                         CostFunctionData& data, 
                                         const GridInfo& grid_info, 
                                         const ImpulseSplitSolution& s) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_impulse_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_impulse_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * l;
@@ -201,7 +240,7 @@ void TaskSpace3DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.J_3d.noalias() 
@@ -216,7 +255,7 @@ void TaskSpace3DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;
   }

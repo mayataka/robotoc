@@ -12,7 +12,10 @@ TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id)
     weight_terminal_(Eigen::VectorXd::Zero(6)), 
     weight_impulse_(Eigen::VectorXd::Zero(6)),
     ref_(),
-    use_nonconst_ref_(false) {
+    use_nonconst_ref_(false),
+    enable_cost_(false), 
+    enable_cost_terminal_(false), 
+    enable_cost_impulse_(false) {
 }
 
 
@@ -78,7 +81,10 @@ TaskSpace6DCost::TaskSpace6DCost()
     weight_terminal_(Eigen::VectorXd::Zero(6)), 
     weight_impulse_(Eigen::VectorXd::Zero(6)),
     ref_(),
-    use_nonconst_ref_(false) {
+    use_nonconst_ref_(false),
+    enable_cost_(false), 
+    enable_cost_terminal_(false), 
+    enable_cost_impulse_(false) {
 }
 
 
@@ -107,24 +113,69 @@ void TaskSpace6DCost::set_const_ref(const Eigen::Vector3d& const_position_ref,
 
 void TaskSpace6DCost::set_weight(const Eigen::Vector3d& weight_position,
                                  const Eigen::Vector3d& weight_rotation) {
+  try {
+    if (weight_position.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight_position must be non-negative!");
+    }
+    if (weight_rotation.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight_rotation must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   weight_.template head<3>() = weight_rotation;
   weight_.template tail<3>() = weight_position;
+  enable_cost_ = (!weight_.isZero());
 }
 
 
 void TaskSpace6DCost::set_weight_terminal(
     const Eigen::Vector3d& weight_position_terminal, 
     const Eigen::Vector3d& weight_rotation_terminal) {
+  try {
+    if (weight_position_terminal.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight_position_terminal must be non-negative!");
+    }
+    if (weight_rotation_terminal.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight_rotation_terminal must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   weight_terminal_.template head<3>() = weight_rotation_terminal;
   weight_terminal_.template tail<3>() = weight_position_terminal;
+  enable_cost_terminal_ = (!weight_terminal_.isZero());
 }
 
 
 void TaskSpace6DCost::set_weight_impulse(
     const Eigen::Vector3d& weight_position_impulse, 
     const Eigen::Vector3d& weight_rotation_impulse) {
+  try {
+    if (weight_position_impulse.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight_position_impulse must be non-negative!");
+    }
+    if (weight_rotation_impulse.minCoeff() < 0.0) {
+      throw std::invalid_argument(
+          "invalid argument: elements of weight_rotation_impulse must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   weight_impulse_.template head<3>() = weight_rotation_impulse;
   weight_impulse_.template tail<3>() = weight_position_impulse;
+  enable_cost_impulse_ = (!weight_impulse_.isZero());
 }
 
 
@@ -138,7 +189,7 @@ double TaskSpace6DCost::evalStageCost(Robot& robot,
                                       CostFunctionData& data, 
                                       const GridInfo& grid_info, 
                                       const SplitSolution& s) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
     return 0.5 * grid_info.dt * l;
@@ -153,7 +204,7 @@ void TaskSpace6DCost::evalStageCostDerivatives(
     Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_ && isCostActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
@@ -171,7 +222,7 @@ void TaskSpace6DCost::evalStageCostHessian(Robot& robot,
                                            const GridInfo& grid_info, 
                                            const SplitSolution& s, 
                                            SplitKKTMatrix& kkt_matrix) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += grid_info.dt * data.JJ_6d.transpose() * weight_.asDiagonal() * data.JJ_6d;
   }
@@ -181,7 +232,7 @@ void TaskSpace6DCost::evalStageCostHessian(Robot& robot,
 double TaskSpace6DCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
                                          const GridInfo& grid_info, 
                                          const SplitSolution& s) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_terminal_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_terminal_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
     return 0.5 * l;
@@ -195,7 +246,7 @@ double TaskSpace6DCost::evalTerminalCost(Robot& robot, CostFunctionData& data,
 void TaskSpace6DCost::evalTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_terminal_ && isCostActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
@@ -210,7 +261,7 @@ void TaskSpace6DCost::evalTerminalCostDerivatives(
 void TaskSpace6DCost::evalTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_terminal_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.JJ_6d.transpose() * weight_terminal_.asDiagonal() * data.JJ_6d;
   }
@@ -222,7 +273,7 @@ double TaskSpace6DCost::evalImpulseCost(Robot& robot,
                                         CostFunctionData& data, 
                                         const GridInfo& grid_info, 
                                         const ImpulseSplitSolution& s) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_impulse_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_impulse_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
     return 0.5 * l;
@@ -237,7 +288,7 @@ void TaskSpace6DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
@@ -253,7 +304,7 @@ void TaskSpace6DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (isCostActive(grid_info)) {
+  if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.JJ_6d.transpose() * weight_impulse_.asDiagonal() * data.JJ_6d;
   }

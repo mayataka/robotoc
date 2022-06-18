@@ -267,7 +267,7 @@ private:
   SE3 const_ref_, const_ref_inv_;
   Eigen::VectorXd weight_, weight_terminal_, weight_impulse_;
   std::shared_ptr<TaskSpace6DRefBase> ref_;
-  bool use_nonconst_ref_;
+  bool use_nonconst_ref_, enable_cost_, enable_cost_terminal_, enable_cost_impulse_;
 };
 
 } // namespace robotoc

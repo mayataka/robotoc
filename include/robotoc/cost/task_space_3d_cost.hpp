@@ -223,8 +223,7 @@ private:
   int frame_id_;
   Eigen::Vector3d const_ref_, weight_, weight_terminal_, weight_impulse_;
   std::shared_ptr<TaskSpace3DRefBase> ref_;
-  bool use_nonconst_ref_;
-
+  bool use_nonconst_ref_, enable_cost_, enable_cost_terminal_, enable_cost_impulse_;
 };
 
 } // namespace robotoc
