@@ -62,16 +62,16 @@ LF_t0 = t0 + stance_time
 LH_t0 = t0 - flying_time
 RF_t0 = t0 - flying_time
 RH_t0 = t0 + stance_time
-LF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LF, step_length, step_height, 
+LF_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_LF, step_length, step_height, 
                                            LF_t0, stance_time+2.*flying_time, 
                                            stance_time, False)
-LH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_LH, step_length, step_height, 
+LH_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_LH, step_length, step_height, 
                                            LH_t0, stance_time+2.*flying_time, 
                                            stance_time, True)
-RF_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RF, step_length, step_height, 
+RF_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_RF, step_length, step_height, 
                                            RF_t0, stance_time+2.*flying_time, 
                                            stance_time, True)
-RH_foot_ref = robotoc.PeriodicFootTrackRef(x3d0_RH, step_length, step_height, 
+RH_foot_ref = robotoc.PeriodicSwingFootRef(x3d0_RH, step_length, step_height, 
                                            RH_t0, stance_time+2.*flying_time, 
                                            stance_time, False)
 LF_cost = robotoc.TaskSpace3DCost(robot, 'FL_foot', LF_foot_ref)

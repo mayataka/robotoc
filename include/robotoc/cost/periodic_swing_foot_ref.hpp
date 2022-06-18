@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_PERIODIC_FOOT_TRACK_REF_HPP_
-#define ROBOTOC_PERIODIC_FOOT_TRACK_REF_HPP_
+#ifndef ROBOTOC_PERIODIC_SWING_FOOT_REF_HPP_
+#define ROBOTOC_PERIODIC_SWING_FOOT_REF_HPP_
 
 #include "Eigen/Core"
 
@@ -10,10 +10,10 @@
 namespace robotoc {
 
 ///
-/// @class PeriodicFootTrackRef
-/// @brief Periodic reference of the foot position. 
+/// @class PeriodicSwingFootRef
+/// @brief Periodic reference of the swing foot position. 
 ///
-class PeriodicFootTrackRef : public TaskSpace3DRefBase {
+class PeriodicSwingFootRef : public TaskSpace3DRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -26,7 +26,7 @@ public:
   /// @param[in] is_first_step_half If true, the length ofh te first reference 
   /// foot step is half. 
   ///
-  PeriodicFootTrackRef(const Eigen::Vector3d& x3d0, 
+  PeriodicSwingFootRef(const Eigen::Vector3d& x3d0, 
                        const Eigen::Vector3d& step_length, 
                        const double step_height, const double t0, 
                        const double period_swing, const double period_stance, 
@@ -35,7 +35,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~PeriodicFootTrackRef();
+  ~PeriodicSwingFootRef();
 
   ///
   /// @brief Sets parameters. 
@@ -67,4 +67,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_PERIODIC_FOOT_TRACK_REF_HPP_ 
+#endif // ROBOTOC_PERIODIC_SWING_FOOT_REF_HPP_

@@ -11,7 +11,7 @@
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/task_space_3d_cost.hpp"
 #include "robotoc/cost/com_cost.hpp"
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"

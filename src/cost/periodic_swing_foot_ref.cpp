@@ -1,9 +1,9 @@
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 
 
 namespace robotoc {
 
-PeriodicFootTrackRef::PeriodicFootTrackRef(const Eigen::Vector3d& x3d0, 
+PeriodicSwingFootRef::PeriodicSwingFootRef(const Eigen::Vector3d& x3d0, 
                                            const Eigen::Vector3d& step_length, 
                                            const double step_height, 
                                            const double t0, 
@@ -22,11 +22,11 @@ PeriodicFootTrackRef::PeriodicFootTrackRef(const Eigen::Vector3d& x3d0,
 }
 
 
-PeriodicFootTrackRef::~PeriodicFootTrackRef() {
+PeriodicSwingFootRef::~PeriodicSwingFootRef() {
 }
 
 
-void PeriodicFootTrackRef::setFootTrackRef(const Eigen::Vector3d& x3d0, 
+void PeriodicSwingFootRef::setFootTrackRef(const Eigen::Vector3d& x3d0, 
                                            const Eigen::Vector3d& step_length, 
                                            const double step_height, 
                                            const double t0, 
@@ -44,7 +44,7 @@ void PeriodicFootTrackRef::setFootTrackRef(const Eigen::Vector3d& x3d0,
 }
 
 
-void PeriodicFootTrackRef::updateRef(const GridInfo& grid_info,
+void PeriodicSwingFootRef::updateRef(const GridInfo& grid_info,
                                           Eigen::VectorXd& x3d_ref) const {
   if (grid_info.t < t0_+period_swing_) {
     const double rate = (grid_info.t-t0_) / period_swing_;
@@ -86,7 +86,7 @@ void PeriodicFootTrackRef::updateRef(const GridInfo& grid_info,
 }
 
 
-bool PeriodicFootTrackRef::isActive(const GridInfo& grid_info) const {
+bool PeriodicSwingFootRef::isActive(const GridInfo& grid_info) const {
   for (int i=0; ; ++i) {
     if (grid_info.t < t0_+i*period_) {
       return false;

@@ -11,7 +11,7 @@
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/task_space_3d_cost.hpp"
 #include "robotoc/cost/com_cost.hpp"
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
@@ -97,16 +97,16 @@ int main(int argc, char *argv[]) {
   const double LH_t0 = t0 + swing_time + double_support_time;
   const double RF_t0 = t0;
   const double RH_t0 = t0;
-  auto LF_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_LF, step_length, step_height, 
+  auto LF_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_LF, step_length, step_height, 
                                                                      LF_t0, swing_time, 
                                                                      swing_time+2*double_support_time, false);
-  auto LH_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_LH, step_length, step_height, 
+  auto LH_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_LH, step_length, step_height, 
                                                                      LH_t0, swing_time, 
                                                                      swing_time+2*double_support_time, false);
-  auto RF_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_RF, step_length, step_height, 
+  auto RF_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_RF, step_length, step_height, 
                                                                      RF_t0, swing_time, 
                                                                      swing_time+2*double_support_time, true);
-  auto RH_foot_ref = std::make_shared<robotoc::PeriodicFootTrackRef>(x3d0_RH, step_length, step_height, 
+  auto RH_foot_ref = std::make_shared<robotoc::PeriodicSwingFootRef>(x3d0_RH, step_length, step_height, 
                                                                      RH_t0, swing_time, 
                                                                      swing_time+2*double_support_time, true);
   auto LF_cost = std::make_shared<robotoc::TaskSpace3DCost>(robot, "LF_FOOT", LF_foot_ref);
