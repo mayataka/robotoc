@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
               1, 1, 1;
   const double v_ref = stride / t_period;
   auto config_ref = std::make_shared<ConfigurationSpaceRef>(t_start, 0.255, 0.34, t_period, 0.5, steps,
-                                                                  q_standing, v_ref);
+                                                            q_standing, v_ref);
   auto time_varying_config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight);

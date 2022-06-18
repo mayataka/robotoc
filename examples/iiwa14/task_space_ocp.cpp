@@ -37,11 +37,11 @@ public:
 
   ~TaskSpace6DRef() {}
 
-  void updateRef(const robotoc::GridInfo& grid_info, robotoc::SE3& x6d_ref) const override {
+  void updateRef(const robotoc::GridInfo& grid_info, robotoc::SE3& ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*grid_info.t);
     pos.coeffRef(2) += radius_ * cos(M_PI*grid_info.t);
-    x6d_ref = robotoc::SE3(rotm_, pos);
+    ref = robotoc::SE3(rotm_, pos);
   }
 
   bool isActive(const robotoc::GridInfo& grid_info) const override {
@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
   auto x6d_ref = std::make_shared<TaskSpace6DRef>();
   auto task_cost = std::make_shared<robotoc::TaskSpace6DCost>(robot, ee_frame, x6d_ref);
-  task_cost->set_x6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  task_cost->set_x6df_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_weight_terminal(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);
 
   // Create joint constraints.
