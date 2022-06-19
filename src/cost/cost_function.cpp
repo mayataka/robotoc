@@ -3,14 +3,15 @@
 #include <cassert>
 #include <stdexcept>
 #include <iostream>
-#include <cmath>
 
 
 namespace robotoc {
 
-CostFunction::CostFunction(const double discount_factor)
+CostFunction::CostFunction(const double discount_factor, 
+                           const double discount_time_step)
   : costs_(),
     discount_factor_(discount_factor),
+    discount_time_step_(discount_time_step),
     discounted_cost_(true) {
   try {
     if (discount_factor <= 0.0) {
@@ -18,6 +19,9 @@ CostFunction::CostFunction(const double discount_factor)
     }
     if (discount_factor >= 1.0) {
       throw std::out_of_range("invalid argument: discount_factor must be smaller than 1.0!");
+    }
+    if (discount_time_step <= 0.0) {
+      throw std::out_of_range("invalid argument: discount_time_step must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -30,6 +34,7 @@ CostFunction::CostFunction(const double discount_factor)
 CostFunction::CostFunction()
   : costs_(),
     discount_factor_(1.0),
+    discount_time_step_(0.0),
     discounted_cost_(false) {
 }
 
@@ -38,13 +43,16 @@ CostFunction::~CostFunction() {
 }
 
 
-void CostFunction::setDiscountFactor(const double discount_factor) {
-  if (discount_factor > 0 && discount_factor < 1.0) {
+void CostFunction::setDiscountFactor(const double discount_factor, 
+                                     const double discount_time_step) {
+  if (discount_factor > 0 && discount_factor < 1.0 && discount_time_step > 0) {
     discount_factor_ = discount_factor;
+    discount_time_step_ = discount_time_step;
     discounted_cost_ = true;
   }
   else {
     discount_factor_ = 1.0;
+    discount_time_step_ = 0.0;
     discounted_cost_ = false;
   }
 }
@@ -56,6 +64,16 @@ double CostFunction::discountFactor() const {
   }
   else {
     return 1.0;
+  }
+}
+
+
+double CostFunction::discountTimeStep() const {
+  if (discounted_cost_) {
+    return discount_time_step_;
+  }
+  else {
+    return 0.0;
   }
 }
 
@@ -118,7 +136,7 @@ double CostFunction::linearizeStageCost(Robot& robot,
                                 kkt_residual);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_residual.lu.array() *= f;
@@ -148,7 +166,7 @@ double CostFunction::quadratizeStageCost(Robot& robot,
                             kkt_matrix);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_residual.lu.array() *= f;
@@ -175,7 +193,7 @@ double CostFunction::evalTerminalCost(Robot& robot, CostFunctionData& data,
     l += e->evalTerminalCost(robot, data, grid_info, s);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
   }
   return l;
@@ -192,7 +210,7 @@ double CostFunction::linearizeTerminalCost(Robot& robot, CostFunctionData& data,
     e->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_residual);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
     kkt_residual.lx.array() *= f;
   }
@@ -213,7 +231,7 @@ double CostFunction::quadratizeTerminalCost(Robot& robot,
     e->evalTerminalCostHessian(robot, data, grid_info, s, kkt_matrix);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_matrix.Qxx.array() *= f;
@@ -232,7 +250,7 @@ double CostFunction::evalImpulseCost(Robot& robot,
     l += e->evalImpulseCost(robot, impulse_status, data, grid_info, s);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
   }
   return l;
@@ -252,7 +270,7 @@ double CostFunction::linearizeImpulseCost(Robot& robot,
                                   kkt_residual);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_residual.ldv.array() *= f;
@@ -280,7 +298,7 @@ double CostFunction::quadratizeImpulseCost(Robot& robot,
                               kkt_matrix);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = discount(grid_info.t0, grid_info.t);
     l *= f;
     kkt_residual.lx.array() *= f;
     kkt_residual.ldv.array() *= f;

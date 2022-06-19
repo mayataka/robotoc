@@ -19,6 +19,13 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.camera_target_pos = [0., 0., 0.]
         self.print_items = []
         self.terrain_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
+        self.log_dir = None
+        self.q_log = None
+        self.v_log = None
+        self.u_log = None
+        self.t_log = None
+        self.kkt_log = None
+        self.sim_name = None
 
     def set_sim_settings(self, time_step, start_time, end_time):
         self.time_step  = time_step
@@ -44,7 +51,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         return baseVel, baseAngVel
 
     @abc.abstractmethod
-    def get_state_from_pybullet(self, pybullet_robot, q, v):
+    def get_state_from_pybullet(self, pybullet_robot):
         return NotImplementedError()
 
     @abc.abstractmethod
@@ -69,9 +76,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
     def add_print_item(self, item):
         self.print_items.append(item)
 
-    def run_simulation(self, mpc, q0, v0, feedback_delay=False, 
-                       terrain=False, verbose=False, 
-                       record=False, record_name='mpc_sim.mp4'):
+    def run_simulation(self, mpc, q0, v0, feedback_delay=False, terrain=False, 
+                       verbose=False, log=False, record=False, 
+                       sim_name='mpc_sim'):
         pybullet.connect(pybullet.GUI)
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
@@ -93,6 +100,16 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         sim_time = self.end_time - self.start_time
         sim_steps = math.floor(sim_time/self.time_step)
 
+        if log:
+            log_dir = os.path.join(os.getcwd(), sim_name+"_log")
+            self.log_dir = log_dir
+            os.makedirs(log_dir, exist_ok=True)
+            q_log = open(os.path.join(log_dir, "q.log"), mode='w')
+            v_log = open(os.path.join(log_dir, "v.log"), mode='w')
+            u_log = open(os.path.join(log_dir, "u.log"), mode='w')
+            t_log = open(os.path.join(log_dir, "t.log"), mode='w')
+            kkt_log = open(os.path.join(log_dir, "kkt.log"), mode='w')
+
         if self.calib_camera:
             pybullet.resetDebugVisualizerCamera(self.camera_distance,
                                                 self.camera_yaw,
@@ -102,17 +119,20 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
 
         if record:
             pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, 
-                                       record_name)
+                                       sim_name+".mp4")
 
         for i in range(sim_steps):
-            self.get_state_from_pybullet(robot, q, v)
+            q, v = self.get_state_from_pybullet(robot)
+            assert q.shape[0] == q0.shape[0]
+            assert v.shape[0] == v0.shape[0]
             if verbose:
                 print('t = {:.6g}:'.format(t))
             if feedback_delay:
                 u = mpc.get_initial_control_input().copy()
             mpc.update_solution(t, self.time_step, q, v)
+            kkt_error = mpc.KKT_error(t, q, v) 
             if verbose:
-                print('KKT error = {:.6g}'.format(mpc.KKT_error(t, q, v)))
+                print('KKT error = {:.6g}'.format(kkt_error))
                 print('')
                 if self.print_items:
                     for e in self.print_items:
@@ -122,5 +142,30 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
             self.apply_control_input_to_pybullet(robot, u)
             pybullet.stepSimulation()
             time.sleep(self.time_step)
+            if log:
+                np.savetxt(q_log, [q])
+                np.savetxt(v_log, [v])
+                np.savetxt(u_log, [u])
+                np.savetxt(t_log, np.array([t]))
+                np.savetxt(kkt_log, np.array([kkt_error]))
             t = t + self.time_step
+
+        if log:
+            q_log.close()
+            v_log.close()
+            u_log.close()
+            t_log.close()
+            kkt_log.close()
+            self.q_log = os.path.abspath(os.path.join(log_dir, "q.log"))
+            self.v_log = os.path.abspath(os.path.join(log_dir, "v.log"))
+            self.u_log = os.path.abspath(os.path.join(log_dir, "u.log"))
+            self.t_log = os.path.abspath(os.path.join(log_dir, "t.log"))
+            self.kkt_log = os.path.abspath(os.path.join(log_dir, "kkt.log"))
+            self.log_dir = os.path.abspath(log_dir)
+            print('Logs are saved at ' + self.log_dir)
+        
+        self.sim_name = sim_name
+
+
+    def disconnect(self):
         pybullet.disconnect()

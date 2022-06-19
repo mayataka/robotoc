@@ -76,7 +76,7 @@ void DiscreteTimeCoMRef::setCoMRef(
 }
 
 
-void DiscreteTimeCoMRef::update_com_ref(const GridInfo& grid_info,
+void DiscreteTimeCoMRef::updateRef(const GridInfo& grid_info,
                                         Eigen::VectorXd& com_ref) const {
   if (has_inactive_contacts_[grid_info.contact_phase]) {
     double rate = static_cast<double>(grid_info.grid_count_in_phase) 

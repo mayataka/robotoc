@@ -14,6 +14,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(grid_info, m) {
   py::class_<GridInfo>(m, "GridInfo")
     .def(py::init<>())
+    .def_readwrite("t0", &GridInfo::t0)
     .def_readwrite("t", &GridInfo::t)
     .def_readwrite("dt", &GridInfo::dt)
     .def_readwrite("contact_phase", &GridInfo::contact_phase)

@@ -192,6 +192,33 @@ inline void Robot::updateKinematics(
 }
 
 
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2>
+inline void Robot::updateFrameKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& v, 
+    const Eigen::MatrixBase<TangentVectorType2>& a) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v, a);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::centerOfMass(model_, data_, q, v, a, false);
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void Robot::updateFrameKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& v) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::centerOfMass(model_, data_, q, v, false);
+}
+
+
 template <typename ConfigVectorType>
 inline void Robot::updateFrameKinematics(
     const Eigen::MatrixBase<ConfigVectorType>& q) {
@@ -235,6 +262,50 @@ inline const SE3& Robot::framePlacement(const std::string& frame_name) const {
 
 inline const Eigen::Vector3d& Robot::CoM() const {
   return data_.com[0];
+}
+
+
+inline Eigen::Vector3d Robot::frameLinearVelocity(
+    const int frame_id, const pinocchio::ReferenceFrame reference_frame) const {
+  return pinocchio::getFrameVelocity(model_, data_, frame_id, reference_frame).linear();
+}
+
+
+inline Eigen::Vector3d Robot::frameLinearVelocity(
+    const std::string& frame_name, 
+    const pinocchio::ReferenceFrame reference_frame) const {
+  return frameLinearVelocity(frameId(frame_name), reference_frame);
+}
+
+
+inline Eigen::Vector3d Robot::frameAngularVelocity(
+    const int frame_id, const pinocchio::ReferenceFrame reference_frame) const {
+  return pinocchio::getFrameVelocity(model_, data_, frame_id, reference_frame).angular();
+}
+
+
+inline Eigen::Vector3d Robot::frameAngularVelocity(
+    const std::string& frame_name, 
+    const pinocchio::ReferenceFrame reference_frame) const {
+  return frameAngularVelocity(frameId(frame_name), reference_frame);
+}
+
+
+inline Robot::Vector6d Robot::frameSpatialVelocity(
+    const int frame_id, const pinocchio::ReferenceFrame reference_frame) const {
+  return pinocchio::getFrameVelocity(model_, data_, frame_id, reference_frame).toVector();
+}
+
+
+inline Robot::Vector6d Robot::frameSpatialVelocity(
+    const std::string& frame_name, 
+    const pinocchio::ReferenceFrame reference_frame) const {
+  return frameSpatialVelocity(frameId(frame_name), reference_frame);
+}
+
+
+inline const Eigen::Vector3d& Robot::CoMVelocity() const {
+  return data_.vcom[0];
 }
 
 

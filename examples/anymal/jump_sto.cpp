@@ -9,9 +9,9 @@
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
@@ -69,23 +69,23 @@ int main(int argc, char *argv[]) {
               0.001, 0.001, 0.001;
   Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
   Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
-  Eigen::VectorXd qi_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  qi_weight << 0, 0, 0, 100.0, 100.0, 100.0,  
+  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impulse << 0, 0, 0, 100.0, 100.0, 100.0,  
                0.1, 0.1, 0.1, 
                0.1, 0.1, 0.1,
                0.1, 0.1, 0.1,
                0.1, 0.1, 0.1;
-  Eigen::VectorXd vi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
-  Eigen::VectorXd dvi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
+  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
+  Eigen::VectorXd dv_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_ref);
   config_cost->set_q_weight(q_weight);
-  config_cost->set_qf_weight(q_weight);
-  config_cost->set_qi_weight(qi_weight);
+  config_cost->set_q_weight_terminal(q_weight);
+  config_cost->set_q_weight_impulse(q_weight_impulse);
   config_cost->set_v_weight(v_weight);
-  config_cost->set_vf_weight(v_weight);
-  config_cost->set_vi_weight(vi_weight);
-  config_cost->set_dvi_weight(dvi_weight);
+  config_cost->set_v_weight_terminal(v_weight);
+  config_cost->set_v_weight_impulse(v_weight_impulse);
+  config_cost->set_dv_weight_impulse(dv_weight_impulse);
   config_cost->set_a_weight(a_weight);
   cost->push_back(config_cost);
 

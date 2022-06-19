@@ -9,9 +9,9 @@
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 #include "robotoc/cost/periodic_com_ref.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
@@ -71,21 +71,21 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1e-01);
-  Eigen::VectorXd qi_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  qi_weight << 1, 1, 1, 1, 1, 1,  
+  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impulse << 1, 1, 1, 1, 1, 1,  
                100, 100, 100, 
                100, 100, 100,
                100, 100, 100,
                100, 100, 100;
-  Eigen::VectorXd vi_weight = Eigen::VectorXd::Constant(robot.dimv(), 100);
+  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 100);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
-  config_cost->set_qf_weight(q_weight);
-  config_cost->set_qi_weight(qi_weight);
+  config_cost->set_q_weight_terminal(q_weight);
+  config_cost->set_q_weight_impulse(q_weight_impulse);
   config_cost->set_v_weight(v_weight);
-  config_cost->set_vf_weight(v_weight);
-  config_cost->set_vi_weight(vi_weight);
+  config_cost->set_v_weight_terminal(v_weight);
+  config_cost->set_v_weight_impulse(v_weight_impulse);
   config_cost->set_u_weight(u_weight);
   cost->push_back(config_cost);
 
@@ -101,8 +101,8 @@ int main(int argc, char *argv[]) {
   auto com_ref_flying_up = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_flying_up, vcom_ref_flying_up, 
                                                                      t0+ground_time, flying_up_time, 
                                                                      flying_down_time+2*ground_time, false);
-  auto com_cost_flying_up = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_flying_up);
-  com_cost_flying_up->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
+  auto com_cost_flying_up = std::make_shared<robotoc::CoMCost>(robot, com_ref_flying_up);
+  com_cost_flying_up->set_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_flying_up);
 
   const Eigen::Vector3d com_ref0_landed = robot.CoM() + jump_length;
@@ -110,8 +110,8 @@ int main(int argc, char *argv[]) {
   auto com_ref_landed = std::make_shared<robotoc::PeriodicCoMRef>(com_ref0_landed, vcom_ref_landed, 
                                                                   t0+ground_time+flying_time, ground_time, 
                                                                   ground_time+flying_time, false);
-  auto com_cost_landed = std::make_shared<robotoc::TimeVaryingCoMCost>(robot, com_ref_landed);
-  com_cost_landed->set_com_weight(Eigen::Vector3d::Constant(1.0e06));
+  auto com_cost_landed = std::make_shared<robotoc::CoMCost>(robot, com_ref_landed);
+  com_cost_landed->set_weight(Eigen::Vector3d::Constant(1.0e06));
   cost->push_back(com_cost_landed);
 
   // Create the constraints

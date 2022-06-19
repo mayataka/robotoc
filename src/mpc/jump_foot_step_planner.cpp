@@ -1,4 +1,5 @@
 #include "robotoc/mpc/jump_foot_step_planner.hpp"
+#include "robotoc/utils/rotation.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -44,17 +45,17 @@ JumpFootStepPlanner::~JumpFootStepPlanner() {
 
 
 void JumpFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length, 
-                                         const double yaw_step) {
+                                         const double step_yaw) {
   jump_length_ = jump_length;
-  R_yaw_ << std::cos(yaw_step), -std::sin(yaw_step), 0, 
-            std::sin(yaw_step), std::cos(yaw_step),  0,
+  R_yaw_ << std::cos(step_yaw), -std::sin(step_yaw), 0, 
+            std::sin(step_yaw), std::cos(step_yaw),  0,
             0, 0, 1;
 }
 
 
 void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
-  const Eigen::Matrix3d R 
-      = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
+  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
+  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;
   for (const auto frame : robot_.contactFrames()) {
@@ -103,7 +104,7 @@ void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool JumpFootStepPlanner::plan(const Eigen::VectorXd& q,
+bool JumpFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v,
                                const ContactStatus& contact_status,
                                const int planning_steps) {
@@ -140,32 +141,32 @@ bool JumpFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& JumpFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& JumpFootStepPlanner::contactPlacements(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& JumpFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& JumpFootStepPlanner::contactPlacements() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& JumpFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& JumpFootStepPlanner::contactPositions() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& JumpFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& JumpFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
 
 
-const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::CoM() const {
   return com_ref_;
 }
 

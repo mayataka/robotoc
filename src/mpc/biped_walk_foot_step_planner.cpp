@@ -1,4 +1,5 @@
 #include "robotoc/mpc/biped_walk_foot_step_planner.hpp"
+#include "robotoc/utils/rotation.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -11,6 +12,7 @@ BipedWalkFootStepPlanner::BipedWalkFootStepPlanner(const Robot& biped_robot)
   : ContactPlannerBase(),
     robot_(biped_robot),
     raibert_heuristic_(),
+    vcom_moving_window_filter_(),
     enable_raibert_heuristic_(false),
     L_foot_id_(biped_robot.surfaceContactFrames()[0]),
     R_foot_id_(biped_robot.surfaceContactFrames()[1]),
@@ -20,9 +22,11 @@ BipedWalkFootStepPlanner::BipedWalkFootStepPlanner(const Robot& biped_robot)
     contact_placement_ref_(),
     com_ref_(),
     R_(),
-    v_com_cmd_(Eigen::Vector3d::Zero()),
+    vcom_(Eigen::Vector3d::Zero()),
+    vcom_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
+    R_current_(Eigen::Matrix3d::Identity()),
     yaw_rate_cmd_(0),
     enable_double_support_phase_(false) {
   try {
@@ -47,8 +51,8 @@ BipedWalkFootStepPlanner::~BipedWalkFootStepPlanner() {
 
 
 void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length, 
-                                            const double step_yaw, 
-                                            const bool enable_double_support_phase) {
+                                              const double step_yaw, 
+                                              const bool enable_double_support_phase) {
   step_length_ = step_length;
   R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
            std::sin(step_yaw), std::cos(step_yaw),  0,
@@ -58,15 +62,17 @@ void BipedWalkFootStepPlanner::setGaitPattern(const Eigen::Vector3d& step_length
 }
 
 
-void BipedWalkFootStepPlanner::setGaitPattern(
-    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
-    const double t_swing, const double t_stance, const double gain) {
+void BipedWalkFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom_cmd, 
+                                                     const double yaw_rate_cmd, 
+                                                     const double swing_time, 
+                                                     const double double_support_time, 
+                                                     const double gain) {
   try {
-    if (t_stance <= 0.0) {
-      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    if (swing_time <= 0) {
+      throw std::out_of_range("invalid value: swing_time must be positive!");
     }
-    if (t_swing <= 0.0) {
-      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    if (double_support_time < 0) {
+      throw std::out_of_range("invalid value: double_support_time must be non-negative!");
     }
     if (gain <= 0.0) {
       throw std::out_of_range("invalid argument: gain must be positive!");
@@ -76,25 +82,23 @@ void BipedWalkFootStepPlanner::setGaitPattern(
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raibert_heuristic_.setParameters(t_stance, gain);
-  v_com_cmd_ = v_com_cmd;
-  const double yaw_cmd = yaw_rate_cmd * t_swing;
-  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
-           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
+  const double period = 2.0 * (swing_time + double_support_time);
+  raibert_heuristic_.setParameters(period, gain);
+  vcom_moving_window_filter_.setParameters(period, 0.1*period);
+  vcom_cmd_ = vcom_cmd;
+  const double step_yaw = yaw_rate_cmd * (swing_time + double_support_time);
+  R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
+           std::sin(step_yaw),  std::cos(step_yaw), 0,
            0, 0, 1;
   yaw_rate_cmd_ = yaw_rate_cmd;
-  enable_double_support_phase_ = (t_stance > t_swing);
+  enable_double_support_phase_ = (double_support_time > 0.0);
   enable_raibert_heuristic_ = true;
 }
 
 
 void BipedWalkFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
-  R.coeffRef(0, 0) = 1.0;
-  R.coeffRef(0, 1) = 0.0;
-  R.coeffRef(0, 2) = 0.0;
-  R.coeffRef(1, 0) = 0.0;
-  R.coeffRef(2, 0) = 0.0;
+  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
+  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position_local 
       = { R.transpose() * (robot_.framePosition(L_foot_id_)-q.template head<3>()),
@@ -108,18 +112,22 @@ void BipedWalkFootStepPlanner::init(const Eigen::VectorXd& q) {
   com_ref_.clear(),
   R_.clear();
   R_.push_back(R);
+  vcom_moving_window_filter_.clear();
   current_step_ = 0;
 }
 
 
-bool BipedWalkFootStepPlanner::plan(const Eigen::VectorXd& q,
-                                  const Eigen::VectorXd& v,
-                                  const ContactStatus& contact_status,
-                                  const int planning_steps) {
+bool BipedWalkFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
+                                    const Eigen::VectorXd& v,
+                                    const ContactStatus& contact_status,
+                                    const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    raibert_heuristic_.planStepLength(v.template head<2>(), 
-                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    vcom_ = v.template head<3>();
+    vcom_moving_window_filter_.push_back(t, vcom_.template head<2>());
+    const Eigen::Vector2d& vcom_avg = vcom_moving_window_filter_.average();
+    raibert_heuristic_.planStepLength(vcom_avg, vcom_cmd_.template head<2>(), 
+                                      yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
   }
   robot_.updateFrameKinematics(q);
@@ -274,32 +282,32 @@ bool BipedWalkFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& BipedWalkFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& BipedWalkFootStepPlanner::contactPlacements(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& BipedWalkFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& BipedWalkFootStepPlanner::contactPlacements() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& BipedWalkFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& BipedWalkFootStepPlanner::contactPositions() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& BipedWalkFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& BipedWalkFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
 
 
-const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& BipedWalkFootStepPlanner::CoM() const {
   return com_ref_;
 }
 

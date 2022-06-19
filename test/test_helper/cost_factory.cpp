@@ -1,28 +1,27 @@
 #include "cost_factory.hpp"
 
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
 #include "robotoc/cost/local_contact_force_cost.hpp"
 
 
 namespace robotoc {
 namespace testhelper {
 
-TimeVaryingConfigurationRef::TimeVaryingConfigurationRef(
+ConfigurationSpaceRef::ConfigurationSpaceRef(
     const Eigen::VectorXd& q0_ref, const Eigen::VectorXd& v_ref)
   : q0_ref_(q0_ref),
     v_ref_(v_ref) {
 }
 
 
-void TimeVaryingConfigurationRef::update_q_ref(const Robot& robot, 
-                                               const GridInfo& grid_info,
-                                               Eigen::VectorXd& q_ref) const {
+void ConfigurationSpaceRef::updateRef(const Robot& robot, 
+                                      const GridInfo& grid_info,
+                                      Eigen::VectorXd& q_ref) const {
   robot.integrateConfiguration(q0_ref_, v_ref_, grid_info.t, q_ref);
 }
 
 
-bool TimeVaryingConfigurationRef::isActive(const GridInfo& grid_info) const {
+bool ConfigurationSpaceRef::isActive(const GridInfo& grid_info) const {
   return true;
 }
 
@@ -39,11 +38,11 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(robot.dimu()).array().abs();
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimu());
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd vi_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd dvi_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd q_weight_terminal = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd v_weight_terminal = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd dv_weight_impulse = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_ref(q_ref);
   config_cost->set_v_weight(v_weight);
@@ -51,11 +50,11 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   config_cost->set_a_weight(a_weight);
   config_cost->set_u_weight(u_weight);
   config_cost->set_u_ref(u_ref);
-  config_cost->set_qf_weight(qf_weight);
-  config_cost->set_vf_weight(vf_weight);
-  config_cost->set_qi_weight(qi_weight);
-  config_cost->set_vi_weight(vi_weight);
-  config_cost->set_dvi_weight(dvi_weight);
+  config_cost->set_q_weight_terminal(q_weight_terminal);
+  config_cost->set_v_weight_terminal(v_weight_terminal);
+  config_cost->set_q_weight_impulse(q_weight_impulse);
+  config_cost->set_v_weight_impulse(v_weight_impulse);
+  config_cost->set_dv_weight_impulse(dv_weight_impulse);
   cost->push_back(config_cost);
 
   if (robot.maxNumContacts() > 0) {
@@ -72,12 +71,12 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
 
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v0_ref = Eigen::VectorXd::Random(robot.dimv());
-  auto time_varying_config_ref = std::make_shared<TimeVaryingConfigurationRef>(q0_ref, v0_ref);
+  auto time_varying_config_ref = std::make_shared<ConfigurationSpaceRef>(q0_ref, v0_ref);
   auto time_varying_config_cost 
-      = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot, time_varying_config_ref);
+      = std::make_shared<ConfigurationSpaceCost>(robot, time_varying_config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
-  time_varying_config_cost->set_qf_weight(qf_weight);
-  time_varying_config_cost->set_qi_weight(qi_weight);
+  time_varying_config_cost->set_q_weight_terminal(q_weight_terminal);
+  time_varying_config_cost->set_q_weight_impulse(q_weight_impulse);
   cost->push_back(time_varying_config_cost);
 
   return cost;

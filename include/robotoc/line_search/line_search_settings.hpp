@@ -76,34 +76,34 @@ public:
   /// a search scheme. If set to LineSearchMethod::MeritBacktracking, 
   /// backtracking line search is used.
   ///
-  LineSearchMethod line_search_method;
+  LineSearchMethod line_search_method = LineSearchMethod::Filter;
 
   ///
   /// @brief Reduction rate of the step size.
   ///
-  double step_size_reduction_rate;
+  double step_size_reduction_rate = 0.75;
 
   ///
   /// @brief Minimum step size.
   ///
-  double min_step_size;
+  double min_step_size = 0.05;
 
   ///
   /// @brief Control rate in Armijo condition. This value 
   /// sets the slope of the linear approximation in the Armijo condition.
   ///
-  double armijo_control_rate;
+  double armijo_control_rate = 0.001;
 
   ///
   /// @brief Margin rate to determine penalty parameter in
   /// the merit function.
   ///
-  double margin_rate;
+  double margin_rate = 0.05;
 
   ///
   /// @brief A small positive value. Used to calculate directional derivative.
   ///
-  double eps;
+  double eps = 1.0e-08;
 
   ///
   /// @brief Returns settings with default parameters.

@@ -62,7 +62,7 @@ public:
   /// @param[in] contact_status Contact status.
   /// @param[in] x3d_ref Reference position. Size is 3.
   ///
-  virtual void update_x3d_ref(const ContactStatus& contact_status, 
+  virtual void updateRef(const ContactStatus& contact_status, 
                                Eigen::VectorXd& x3d_ref) const = 0;
 
 };
@@ -126,13 +126,13 @@ public:
   /// @brief Sets the reference position. 
   /// @param[in] x3d_ref Reference position.
   ///
-  void set_x3d_ref(const std::shared_ptr<SwingFootRefBase>& x3d_ref);
+  void set_ref(const std::shared_ptr<SwingFootRefBase>& x3d_ref);
 
   ///
   /// @brief Sets the weight vector. 
   /// @param[in] x3d_weight Weight vector on the position error. 
   ///
-  void set_x3d_weight(const Eigen::Vector3d& x3d_weight);
+  void set_weight(const Eigen::Vector3d& x3d_weight);
 
   bool useKinematics() const override;
 

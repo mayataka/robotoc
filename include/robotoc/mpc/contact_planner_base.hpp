@@ -56,16 +56,20 @@ public:
   virtual void init(const Eigen::VectorXd& q) = 0;
 
   ///
-  /// @brief Plans the foot steps. 
+  /// @brief Plans the foot steps in the MPC (receding-horizon) fashion. 
+  /// @param[in] t Initial time.
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] contact_status Initial contact status.
   /// @param[in] planning_steps Number of planning steps. Must be non-negative.
   /// @return True if the planning is succeeded. False if not.
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   /// @remark The implementation must follow: step=0: previous step, 
   /// step=1: initial step (specified as q and contact_status).
   ///
-  virtual bool plan(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+  virtual bool plan(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, 
                     const ContactStatus& contact_status,
                     const int planning_steps) = 0;
 
@@ -75,14 +79,14 @@ public:
   /// @return const reference to the contact placements of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const aligned_vector<SE3>& contactPlacement(const int step) const = 0;
+  virtual const aligned_vector<SE3>& contactPlacements(const int step) const = 0;
 
   ///
   /// @brief Gets the contact placements. 
   /// @return const reference to the contact placements. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const aligned_vector<aligned_vector<SE3>>& contactPlacement() const = 0;
+  virtual const aligned_vector<aligned_vector<SE3>>& contactPlacements() const = 0;
 
   ///
   /// @brief Gets the contact positions of a specified step. 
@@ -90,14 +94,14 @@ public:
   /// @return const reference to the contact positions of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const std::vector<Eigen::Vector3d>& contactPosition(const int step) const = 0;
+  virtual const std::vector<Eigen::Vector3d>& contactPositions(const int step) const = 0;
 
   ///
   /// @brief Gets the contact positions. 
   /// @return const reference to the contact positions.
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const std::vector<std::vector<Eigen::Vector3d>>& contactPosition() const = 0;
+  virtual const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const = 0;
 
   ///
   /// @brief Gets the CoM position of a specified step. 
@@ -105,14 +109,14 @@ public:
   /// @return const reference to CoM position of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const Eigen::Vector3d& com(const int step) const = 0;
+  virtual const Eigen::Vector3d& CoM(const int step) const = 0;
 
   ///
   /// @brief Gets the CoM positions. 
   /// @return const reference to the CoM positions.
   /// @remark step=0: previous step, step=1: initial step.
   ///
-  virtual const std::vector<Eigen::Vector3d>& com() const = 0;
+  virtual const std::vector<Eigen::Vector3d>& CoM() const = 0;
 
   ///
   /// @brief Gets the rotation matrix of the base at a specified step. 

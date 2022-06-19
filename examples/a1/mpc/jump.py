@@ -72,5 +72,31 @@ elif jump_type == 'back':
 elif jump_type == 'rotational':
     sim.set_camera(2.0, 45, -10, q[0:3]+np.array([-0.1, 0.5, 0.]))
 
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
-# sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, record=True, record_name=jump_type+'.mp4')
+log = False
+record = False
+
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=True, 
+                   record=record, log=log, sim_name='a1_jump_'+jump_type)
+
+if record:
+    sim.disconnect()
+    robotoc.utils.adjust_video_duration(sim.sim_name+'.mp4', 
+                                        desired_duration_sec=(sim_end_time-sim_start_time))
+
+if log:
+    q_log = np.genfromtxt(sim.q_log)
+    v_log = np.genfromtxt(sim.v_log)
+    t_log = np.genfromtxt(sim.t_log)
+    sim_steps = t_log.shape[0]
+
+    from scipy.spatial.transform import Rotation
+    vcom_log = []
+    wcom_log = []
+    for i in range(sim_steps):
+        R = Rotation.from_quat(q_log[i][3:7]).as_matrix()
+        robot.forward_kinematics(q_log[i], v_log[i])
+        vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
+        wcom_log.append(v_log[i][3:6])
+
+    plot_mpc = robotoc.utils.PlotCoMVelocity()
+    plot_mpc.plot(t_log, vcom_log, wcom_log,  fig_name=sim.sim_name+'_com_vel')

@@ -15,9 +15,8 @@
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_configuration_space_cost.hpp"
-#include "robotoc/cost/time_varying_task_space_3d_cost.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/task_space_3d_cost.hpp"
+#include "robotoc/cost/com_cost.hpp"
 #include "robotoc/mpc/mpc_periodic_swing_foot_ref.hpp"
 #include "robotoc/mpc/mpc_periodic_com_ref.hpp"
 #include "robotoc/mpc/mpc_periodic_configuration_ref.hpp"
@@ -99,6 +98,8 @@ public:
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] solver_options Solver options for the initialization. 
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const SolverOptions& solver_options);
@@ -112,6 +113,8 @@ public:
   ///
   /// @brief Resets the optimal control problem solover via the solution 
   /// computed by init(), q, and v.
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void reset(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
@@ -127,6 +130,8 @@ public:
   /// @param[in] dt Sampling time of MPC. Must be positive.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   void updateSolution(const double t, const double dt, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);
@@ -154,6 +159,8 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
   ///
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);
@@ -181,19 +188,19 @@ public:
   /// @brief Gets the base rotation cost handle.  
   /// @return Shared ptr to the base rotation cost.
   ///
-  std::shared_ptr<TimeVaryingConfigurationSpaceCost> getBaseRotationCostHandle();
+  std::shared_ptr<ConfigurationSpaceCost> getBaseRotationCostHandle();
 
   ///
   /// @brief Gets the swing foot task space costs (LF, LH, RF, RH feet) handle.  
   /// @return Shared ptr to the task space cost (LF, LH, RF, RH feet).
   ///
-  std::vector<std::shared_ptr<TimeVaryingTaskSpace3DCost>> getSwingFootCostHandle();
+  std::vector<std::shared_ptr<TaskSpace3DCost>> getSwingFootCostHandle();
 
   ///
   /// @brief Gets the com cost handle.  
   /// @return Shared ptr to the com cost.
   ///
-  std::shared_ptr<TimeVaryingCoMCost> getCoMCostHandle();
+  std::shared_ptr<CoMCost> getCoMCostHandle();
 
   ///
   /// @brief Gets the constraints handle.  
@@ -244,9 +251,9 @@ private:
   bool enable_double_support_phase_;
 
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;
-  std::shared_ptr<TimeVaryingConfigurationSpaceCost> base_rot_cost_;
-  std::shared_ptr<TimeVaryingTaskSpace3DCost> L_foot_cost_, R_foot_cost_;
-  std::shared_ptr<TimeVaryingCoMCost> com_cost_;
+  std::shared_ptr<ConfigurationSpaceCost> base_rot_cost_;
+  std::shared_ptr<TaskSpace3DCost> L_foot_cost_, R_foot_cost_;
+  std::shared_ptr<CoMCost> com_cost_;
   std::shared_ptr<MPCPeriodicConfigurationRef> base_rot_ref_;
   std::shared_ptr<MPCPeriodicSwingFootRef> L_foot_ref_, R_foot_ref_;
   std::shared_ptr<MPCPeriodicCoMRef> com_ref_;
@@ -255,7 +262,8 @@ private:
 
   bool addStep(const double t);
 
-  void resetContactPlacements(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+  void resetContactPlacements(const double t, const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v);
 
 };
 

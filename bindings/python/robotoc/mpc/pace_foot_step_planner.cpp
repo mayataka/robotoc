@@ -16,27 +16,25 @@ PYBIND11_MODULE(pace_foot_step_planner, m) {
              std::shared_ptr<PaceFootStepPlanner>>(m, "PaceFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))
-    .def("set_gait_pattern", 
-          static_cast<void (PaceFootStepPlanner::*)(const Eigen::Vector3d&, const double, const bool)>(&PaceFootStepPlanner::setGaitPattern),
+    .def("set_gait_pattern", &PaceFootStepPlanner::setGaitPattern,
           py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_stance_phase")) 
-    .def("set_gait_pattern", 
-          static_cast<void (PaceFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&PaceFootStepPlanner::setGaitPattern),
-          py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
-          py::arg("t_swing"), py::arg("t_stance"), py::arg("gain")) 
+    .def("set_raibert_gait_pattern", &PaceFootStepPlanner::setRaibertGaitPattern,
+          py::arg("vcom_cmd"), py::arg("yaw_rate_cmd"), 
+          py::arg("swing_time"), py::arg("stance_time"), py::arg("gain")) 
     .def("init", &PaceFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &PaceFootStepPlanner::plan,
-          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_position", 
-          static_cast<const std::vector<Eigen::Vector3d>& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::contactPosition),
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+    .def("contact_positions", 
+          static_cast<const std::vector<Eigen::Vector3d>& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::contactPositions),
           py::arg("step"))
-    .def("contact_position", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (PaceFootStepPlanner::*)() const>(&PaceFootStepPlanner::contactPosition))
+    .def("contact_positions", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (PaceFootStepPlanner::*)() const>(&PaceFootStepPlanner::contactPositions))
     .def("com", 
-          static_cast<const Eigen::Vector3d& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::com),
+          static_cast<const Eigen::Vector3d& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::CoM),
           py::arg("step"))
     .def("com", 
-          static_cast<const std::vector<Eigen::Vector3d>& (PaceFootStepPlanner::*)() const>(&PaceFootStepPlanner::com))
+          static_cast<const std::vector<Eigen::Vector3d>& (PaceFootStepPlanner::*)() const>(&PaceFootStepPlanner::CoM))
     .def("R", 
           static_cast<const Eigen::Matrix3d& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::R),
           py::arg("step"))

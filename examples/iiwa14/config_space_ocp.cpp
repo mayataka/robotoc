@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
   q_ref << 0, M_PI_2, 0, M_PI_2, 0, M_PI_2, 0;
   config_cost->set_q_ref(q_ref);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  config_cost->set_q_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   cost->push_back(config_cost);
 

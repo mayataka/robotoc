@@ -1,5 +1,6 @@
 import robotoc_sim
 import pybullet
+import numpy as np
 
 
 class iCubSimulator(robotoc_sim.LeggedSimulator):
@@ -7,7 +8,8 @@ class iCubSimulator(robotoc_sim.LeggedSimulator):
         super().__init__(path_to_urdf, time_step, start_time, end_time)
 
     @classmethod
-    def get_state_from_pybullet(self, pybullet_robot, q, v):
+    def get_state_from_pybullet(self, pybullet_robot):
+        q = np.zeros(19)
         # Base
         basePos, baseOrn = pybullet.getBasePositionAndOrientation(pybullet_robot)
         q[0:3] = basePos
@@ -27,6 +29,7 @@ class iCubSimulator(robotoc_sim.LeggedSimulator):
         q[17] = pybullet.getJointState(pybullet_robot, 17)[0]
         q[18] = pybullet.getJointState(pybullet_robot, 18)[0]
 
+        v = np.zeros(18)
         # Base
         baseVel, baseAngVel = self.get_body_local_velocity(pybullet_robot)
         v[0:3] = baseVel
@@ -46,6 +49,9 @@ class iCubSimulator(robotoc_sim.LeggedSimulator):
         v[16] = pybullet.getJointState(pybullet_robot, 17)[1]
         v[17] = pybullet.getJointState(pybullet_robot, 18)[1]
 
+        return q, v
+
+
     @classmethod
     def apply_control_input_to_pybullet(self, pybullet_robot, u):
         mode = pybullet.TORQUE_CONTROL
@@ -63,6 +69,7 @@ class iCubSimulator(robotoc_sim.LeggedSimulator):
         pybullet.setJointMotorControl2(pybullet_robot, 16, controlMode=mode, force=u[9])
         pybullet.setJointMotorControl2(pybullet_robot, 17, controlMode=mode, force=u[10])
         pybullet.setJointMotorControl2(pybullet_robot, 18, controlMode=mode, force=u[11])
+
 
     @classmethod
     def init_pybullet_robot(self, pybullet_robot, q):

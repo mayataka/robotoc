@@ -24,10 +24,11 @@ class RaibertHeuristic {
 public:
   ///
   /// @brief Constructs the planner.
-  /// @param[in] t_stance Stance time. 
-  /// @param[in] gain Feedback gain of the velocity. 
+  /// @param[in] period Period of a foot step. 
+  /// @param[in] gain Feedback gain of the velocity. Must be positive and less 
+  /// than 1.0.
   ///
-  RaibertHeuristic(const double t_stance, const double gain);
+  RaibertHeuristic(const double period, const double gain);
 
   ///
   /// @brief Default constructor. 
@@ -61,19 +62,20 @@ public:
 
   ///
   /// @brief Set parameters.
-  /// @param[in] t_stance Stance time. 
-  /// @param[in] gain Feedback gain of the velocity. 
+  /// @param[in] period Period of a foot step. 
+  /// @param[in] gain Feedback gain of the velocity. Must be positive and less 
+  /// than 1.0.
   ///
-  void setParameters(const double t_stance, const double gain);
+  void setParameters(const double period, const double gain);
 
   ///
   /// @brief Plans the step length.
-  /// @param[in] v_com Current planar velocity of the COM. 
-  /// @param[in] v_com_cmd Commanded planar velocity of the COM. 
+  /// @param[in] vcom Current planar velocity of the COM. 
+  /// @param[in] vcom_cmd Commanded planar velocity of the COM. 
   /// @param[in] yaw_rate_cmd Commanded yaw-rate of the COM. 
   ///
-  void planStepLength(const Eigen::Vector2d& v_com,
-                      const Eigen::Vector2d& v_com_cmd, 
+  void planStepLength(const Eigen::Vector2d& vcom,
+                      const Eigen::Vector2d& vcom_cmd, 
                       const double yaw_rate_cmd);
 
   ///
@@ -84,7 +86,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  double t_stance_, gain_;
+  double period_, gain_;
   Eigen::Vector3d step_length_;
 
 };

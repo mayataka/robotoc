@@ -35,20 +35,20 @@ v_weight = np.array([100, 100, 100, 100, 100, 100,
                      1, 1, 1,
                      1, 1, 1])
 u_weight = np.full(robot.dimu(), 1.0e-01)
-qi_weight = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+q_weight_impulse = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
                       100, 100, 100, 
                       100, 100, 100,
                       100, 100, 100,
                       100, 100, 100])
-vi_weight = np.full(robot.dimv(), 100)
+v_weight_impulse = np.full(robot.dimv(), 100)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
-config_cost.set_qf_weight(q_weight)
-config_cost.set_qi_weight(qi_weight)
+config_cost.set_q_weight_terminal(q_weight)
+config_cost.set_q_weight_impulse(q_weight_impulse)
 config_cost.set_v_weight(v_weight)
-config_cost.set_vf_weight(v_weight)
-config_cost.set_vi_weight(vi_weight)
+config_cost.set_v_weight_terminal(v_weight)
+config_cost.set_v_weight_impulse(v_weight_impulse)
 config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
@@ -61,15 +61,15 @@ LF_foot_ref = robotoc.DiscreteTimeSwingFootRef(contact_index=0, swing_height=ste
 LH_foot_ref = robotoc.DiscreteTimeSwingFootRef(contact_index=1, swing_height=step_height)
 RF_foot_ref = robotoc.DiscreteTimeSwingFootRef(contact_index=2, swing_height=step_height)
 RH_foot_ref = robotoc.DiscreteTimeSwingFootRef(contact_index=3, swing_height=step_height)
-LF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'LF_FOOT', LF_foot_ref)
-LH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'LH_FOOT', LH_foot_ref)
-RF_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'RF_FOOT', RF_foot_ref)
-RH_cost = robotoc.TimeVaryingTaskSpace3DCost(robot, 'RH_FOOT', RH_foot_ref)
+LF_cost = robotoc.TaskSpace3DCost(robot, 'LF_FOOT', LF_foot_ref)
+LH_cost = robotoc.TaskSpace3DCost(robot, 'LH_FOOT', LH_foot_ref)
+RF_cost = robotoc.TaskSpace3DCost(robot, 'RF_FOOT', RF_foot_ref)
+RH_cost = robotoc.TaskSpace3DCost(robot, 'RH_FOOT', RH_foot_ref)
 foot_track_weight = np.full(3, 1.0e06)
-LF_cost.set_x3d_weight(foot_track_weight)
-LH_cost.set_x3d_weight(foot_track_weight)
-RF_cost.set_x3d_weight(foot_track_weight)
-RH_cost.set_x3d_weight(foot_track_weight)
+LF_cost.set_weight(foot_track_weight)
+LH_cost.set_weight(foot_track_weight)
+RF_cost.set_weight(foot_track_weight)
+RH_cost.set_weight(foot_track_weight)
 cost.push_back(LF_cost)
 cost.push_back(LH_cost)
 cost.push_back(RF_cost)
@@ -85,8 +85,8 @@ com_pos_to_fee_pos = [com_pos_to_LF_foot_pos,
                       com_pos_to_RF_foot_pos, 
                       com_pos_to_RH_foot_pos]
 com_ref = robotoc.DiscreteTimeCoMRef(com_pos_to_fee_pos)
-com_cost = robotoc.TimeVaryingCoMCost(robot, com_ref)
-com_cost.set_com_weight(np.full(3, 1.0e06))
+com_cost = robotoc.CoMCost(robot, com_ref)
+com_cost.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
 # Create the constraints
@@ -157,7 +157,7 @@ LF_foot_ref.set_swing_foot_ref(contact_sequence)
 LH_foot_ref.set_swing_foot_ref(contact_sequence)
 RF_foot_ref.set_swing_foot_ref(contact_sequence)
 RH_foot_ref.set_swing_foot_ref(contact_sequence)
-com_ref.set_com_ref(contact_sequence)
+com_ref.set_ref(contact_sequence)
 
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()

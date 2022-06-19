@@ -49,16 +49,16 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   q_weight.template head<6>() << 0, 100, 100, 100, 100, 100;
-  Eigen::VectorXd qi_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  qi_weight.template head<6>() << 0, 1000, 1000, 1000, 1000, 1000;
+  Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 10);
+  q_weight_impulse.template head<6>() << 0, 1000, 1000, 1000, 1000, 1000;
   config_cost_->set_q_weight(q_weight);
-  config_cost_->set_qf_weight(q_weight);
-  config_cost_->set_qi_weight(qi_weight);
+  config_cost_->set_q_weight_terminal(q_weight);
+  config_cost_->set_q_weight_impulse(q_weight_impulse);
   config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
-  config_cost_->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  config_cost_->set_vi_weight(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
-  config_cost_->set_dvi_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
+  config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   cost_->push_back(config_cost_);
   // create constraints 
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
@@ -139,11 +139,11 @@ void MPCJump::init(const double t, const Eigen::VectorXd& q,
   resetMinimumDwellTimes(t, dtm_);
   foot_step_planner_->init(q);
   Eigen::VectorXd q_ref = q;
-  q_ref.template head<3>().noalias() += (foot_step_planner_->com(2) 
-                                          - foot_step_planner_->com(0));
+  q_ref.template head<3>().noalias() += (foot_step_planner_->CoM(2) 
+                                          - foot_step_planner_->CoM(0));
   q_ref.template segment<4>(3) = Eigen::Quaterniond(foot_step_planner_->R(2)).coeffs();
   config_cost_->set_q_ref(q_ref);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
@@ -168,11 +168,11 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
   resetMinimumDwellTimes(t, dtm_);
   foot_step_planner_->init(q);
   Eigen::VectorXd q_ref = q;
-  q_ref.template head<3>().noalias() += (foot_step_planner_->com(2) 
-                                          - foot_step_planner_->com(0));
+  q_ref.template head<3>().noalias() += (foot_step_planner_->CoM(2) 
+                                          - foot_step_planner_->CoM(0));
   q_ref.template segment<4>(3) = Eigen::Quaterniond(foot_step_planner_->R(2)).coeffs();
   config_cost_->set_q_ref(q_ref);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.setSolution(s_);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
@@ -219,7 +219,7 @@ void MPCJump::updateSolution(const double t, const double dt,
     }
   }
   resetMinimumDwellTimes(t, dt);
-  resetContactPlacements(q, v);
+  resetContactPlacements(t, q, v);
   ocp_solver_.solve(t, q, v, true);
 }
 
@@ -292,21 +292,21 @@ void MPCJump::resetMinimumDwellTimes(const double t, const double min_dt) {
 }
 
 
-void MPCJump::resetContactPlacements(const Eigen::VectorXd& q,
+void MPCJump::resetContactPlacements(const double t, const Eigen::VectorXd& q,
                                      const Eigen::VectorXd& v) {
-  const bool success = foot_step_planner_->plan(q, v, contact_sequence_->contactStatus(0),
+  const bool success = foot_step_planner_->plan(t, q, v, contact_sequence_->contactStatus(0),
                                                 contact_sequence_->numContactPhases());
   if (current_step_ == 0) {
-    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
-    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacement(2));
-    contact_sequence_->setContactPlacements(2, foot_step_planner_->contactPlacement(2));
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacements(1));
+    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacements(2));
+    contact_sequence_->setContactPlacements(2, foot_step_planner_->contactPlacements(2));
   }
   else if (current_step_ == 1) {
-    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
-    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacement(1));
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacements(1));
+    contact_sequence_->setContactPlacements(1, foot_step_planner_->contactPlacements(1));
   }
   else {
-    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacement(1));
+    contact_sequence_->setContactPlacements(0, foot_step_planner_->contactPlacements(1));
   }
 }
 

@@ -1,4 +1,5 @@
 #include "robotoc/mpc/flying_trot_foot_step_planner.hpp"
+#include "robotoc/utils/rotation.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -11,6 +12,7 @@ FlyingTrotFootStepPlanner::FlyingTrotFootStepPlanner(const Robot& quadruped_robo
   : ContactPlannerBase(),
     robot_(quadruped_robot),
     raibert_heuristic_(),
+    vcom_moving_window_filter_(),
     enable_raibert_heuristic_(false),
     LF_foot_id_(quadruped_robot.pointContactFrames()[0]),
     LH_foot_id_(quadruped_robot.pointContactFrames()[1]),
@@ -21,9 +23,11 @@ FlyingTrotFootStepPlanner::FlyingTrotFootStepPlanner(const Robot& quadruped_robo
     com_ref_(),
     R_(),
     com_to_contact_position_local_(),
-    v_com_cmd_(Eigen::Vector3d::Zero()),
+    vcom_(Eigen::Vector3d::Zero()),
+    vcom_cmd_(Eigen::Vector3d::Zero()),
     step_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
+    R_current_(Eigen::Matrix3d::Identity()),
     yaw_rate_cmd_(0) {
   try {
     if (quadruped_robot.maxNumPointContacts() < 4) {
@@ -56,15 +60,15 @@ void FlyingTrotFootStepPlanner::setGaitPattern(
 }
 
 
-void FlyingTrotFootStepPlanner::setGaitPattern(
-    const Eigen::Vector3d& v_com_cmd, const double yaw_rate_cmd, 
-    const double t_swing, const double t_stance, const double gain) {
+void FlyingTrotFootStepPlanner::setRaibertGaitPattern( 
+    const Eigen::Vector3d& vcom_cmd, const double yaw_rate_cmd, 
+    const double flying_time, const double stance_time, const double gain) {
   try {
-    if (t_stance <= 0.0) {
-      throw std::out_of_range("invalid argument: t_stance must be positive!");
+    if (flying_time <= 0.0) {
+      throw std::out_of_range("invalid argument: flying_time must be positive!");
     }
-    if (t_swing <= 0.0) {
-      throw std::out_of_range("invalid argument: t_swing must be positive!");
+    if (stance_time <= 0.0) {
+      throw std::out_of_range("invalid argument: stance_time must be positive!");
     }
     if (gain <= 0.0) {
       throw std::out_of_range("invalid argument: gain must be positive!");
@@ -74,11 +78,13 @@ void FlyingTrotFootStepPlanner::setGaitPattern(
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raibert_heuristic_.setParameters(t_stance, gain);
-  v_com_cmd_ = v_com_cmd;
-  const double yaw_cmd = yaw_rate_cmd * t_swing;
-  R_yaw_<< std::cos(yaw_cmd), -std::sin(yaw_cmd), 0, 
-           std::sin(yaw_cmd),  std::cos(yaw_cmd), 0,
+  const double period = 2.0 * (flying_time + stance_time);
+  raibert_heuristic_.setParameters(period, gain);
+  vcom_moving_window_filter_.setParameters(period, 0.1*period);
+  vcom_cmd_ = vcom_cmd;
+  const double step_yaw = yaw_rate_cmd * (flying_time + stance_time);
+  R_yaw_<< std::cos(step_yaw), -std::sin(step_yaw), 0, 
+           std::sin(step_yaw),  std::cos(step_yaw), 0,
            0, 0, 1;
   yaw_rate_cmd_ = yaw_rate_cmd;
   enable_raibert_heuristic_ = true;
@@ -86,12 +92,8 @@ void FlyingTrotFootStepPlanner::setGaitPattern(
 
 
 void FlyingTrotFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = Eigen::Quaterniond(q.coeff(6), q.coeff(3), q.coeff(4), q.coeff(5)).toRotationMatrix();
-  R.coeffRef(0, 0) = 1.0;
-  R.coeffRef(0, 1) = 0.0;
-  R.coeffRef(0, 2) = 0.0;
-  R.coeffRef(1, 0) = 0.0;
-  R.coeffRef(2, 0) = 0.0;
+  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
+  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   com_to_contact_position_local_ = { R.transpose() * (robot_.framePosition(LF_foot_id_)-robot_.CoM()), 
                                      R.transpose() * (robot_.framePosition(LH_foot_id_)-robot_.CoM()),
@@ -106,14 +108,17 @@ void FlyingTrotFootStepPlanner::init(const Eigen::VectorXd& q) {
 }
 
 
-bool FlyingTrotFootStepPlanner::plan(const Eigen::VectorXd& q,
-                                         const Eigen::VectorXd& v,
-                                         const ContactStatus& contact_status,
-                                         const int planning_steps) {
+bool FlyingTrotFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
+                                     const Eigen::VectorXd& v,
+                                     const ContactStatus& contact_status,
+                                     const int planning_steps) {
   assert(planning_steps >= 0);
   if (enable_raibert_heuristic_) {
-    raibert_heuristic_.planStepLength(v.template head<2>(), 
-                                      v_com_cmd_.template head<2>(), yaw_rate_cmd_);
+    vcom_ = v.template head<3>();
+    vcom_moving_window_filter_.push_back(t, vcom_.template head<2>());
+    const Eigen::Vector2d& vcom_avg = vcom_moving_window_filter_.average();
+    raibert_heuristic_.planStepLength(vcom_avg, vcom_cmd_.template head<2>(), 
+                                      yaw_rate_cmd_);
     step_length_ = raibert_heuristic_.stepLength();
   }
   robot_.updateFrameKinematics(q);
@@ -223,32 +228,32 @@ bool FlyingTrotFootStepPlanner::plan(const Eigen::VectorXd& q,
 }
 
 
-const aligned_vector<SE3>& FlyingTrotFootStepPlanner::contactPlacement(const int step) const {
+const aligned_vector<SE3>& FlyingTrotFootStepPlanner::contactPlacements(const int step) const {
   return contact_placement_ref_[step];
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& FlyingTrotFootStepPlanner::contactPlacement() const {
+const aligned_vector<aligned_vector<SE3>>& FlyingTrotFootStepPlanner::contactPlacements() const {
   return contact_placement_ref_;
 }
 
 
-const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::contactPosition(const int step) const {
+const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& FlyingTrotFootStepPlanner::contactPosition() const {
+const std::vector<std::vector<Eigen::Vector3d>>& FlyingTrotFootStepPlanner::contactPositions() const {
   return contact_position_ref_;
 }
 
 
-const Eigen::Vector3d& FlyingTrotFootStepPlanner::com(const int step) const {
+const Eigen::Vector3d& FlyingTrotFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::com() const {
+const std::vector<Eigen::Vector3d>& FlyingTrotFootStepPlanner::CoM() const {
   return com_ref_;
 }
 

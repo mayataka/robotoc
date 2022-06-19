@@ -82,6 +82,7 @@ Please see @ref page_installation.
   title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   booktitle={{IEEE International Conference on Robotics and Automation (ICRA)}},
+  pages={2070--2076},
   year={2021}}
 ```
 
@@ -93,6 +94,7 @@ For example,
   title={Efficient {R}iccati recursion for optimal control problems with pure-state equality constraints},
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
   booktitle={{American Control Conference (ACC)}},
+  pages={3579--3586},
   year={2022}}
 ```
 - `robotoc::UnconstrParNMPCSolver` uses the highly parallelizable Newton-type method 

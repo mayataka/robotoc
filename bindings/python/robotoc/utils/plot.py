@@ -17,7 +17,6 @@ class PlotConvergence:
                           (0, (3, 1, 1, 1, 1, 1)),
                           (0, (3, 1, 1, 1, 1))]
 
-
     def plot(self, kkt_data, ts_data=None, fig_name=None, save_dir='./'):
         import matplotlib.pyplot as plt
         import seaborn 
@@ -70,12 +69,13 @@ class PlotConvergence:
 
         os.makedirs(os.path.abspath(save_dir), exist_ok=True)
         if fig_name is not None:
-            plt.subplots_adjust(wspace=self.wspace, hspace=0.)
+            plt.subplots_adjust(wspace=self.wspace, hspace=self.hspace)
             plt.savefig(
                 os.path.join(save_dir, fig_name+'.pdf'),
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+            print('Figure is saved at ' + os.path.abspath(os.path.join(save_dir, fig_name+'.pdf')))
         else:
             plt.show()
 
@@ -294,5 +294,100 @@ class PlotContactForce:
                 bbox_inches="tight", 
                 pad_inches=0.1
             )
+            print('Figure is saved at ' + os.path.abspath(os.path.join(save_dir, fig_name+'.pdf')))
+        else:
+            plt.show()
+
+
+class PlotCoMVelocity:
+    def __init__(self):
+        self.wspace = 0.45
+        self.hspace = 0.1
+        self.figsize = 6, 4
+        self.legend_bbox_to_anchor = (0.5, 1.0)
+        self.legend_ncols = 2
+        self.ylim = None
+        self.xlim = None
+
+    def plot(self, t_data, vcom_data, wcom_data, 
+             vcom_command=None, yaw_rate_command=None, 
+             fig_name=None, save_dir='./'):
+        import matplotlib.pyplot as plt
+        import seaborn 
+        seaborn.set()
+        seaborn.set_style("whitegrid")
+        seaborn.set_style("ticks")
+        seaborn.set_palette("deep")
+        seaborn.set_context("paper")
+        plt.rc('mathtext', 
+            **{'rm':'serif', 
+            'it':'serif:itelic', 
+            'bf':'serif:bold', 
+            'fontset':'cm'}
+        )
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+        plt.rcParams['pdf.fonttype'] = 42
+        plt.rcParams['ps.fonttype'] = 42
+        # Set the width of lines and axes.
+        plt.rcParams['lines.linewidth'] = 1.5
+        plt.rcParams['axes.linewidth'] = 0.5
+
+        plt.rcParams['figure.figsize'] = self.figsize
+        plt.rcParams['xtick.labelsize'] = 8
+        plt.rcParams['ytick.labelsize'] = 8
+
+        cmap = plt.get_cmap("tab10")
+        fig = plt.figure()
+        ax_v = fig.add_subplot(2, 1, 1)
+        ax_w = fig.add_subplot(2, 1, 2)
+        ax_v.plot(t_data, np.array(vcom_data).T[0], label=r"$v_x {\rm [m/s]}$", 
+                  linestyle='-', color=cmap(0))
+        ax_v.plot(t_data, np.array(vcom_data).T[1], label=r"$v_y {\rm [m/s]}$", 
+                  linestyle='-', color=cmap(1))
+        ax_v.plot(t_data, np.array(vcom_data).T[2], label=r"$v_z {\rm [m/s]}$", 
+                  linestyle='-', color=cmap(2))
+        if vcom_command is not None:
+            ax_v.plot(t_data, np.array(vcom_command).T[0], 
+                      label=r"$v_{x, {\rm cmd}} {\rm [m/s]}$", 
+                      linestyle='--', color=cmap(3))
+            ax_v.plot(t_data, np.array(vcom_command).T[1], 
+                      label=r"$v_{y, {\rm cmd}} {\rm [m/s]}$", 
+                      linestyle='--', color=cmap(4))
+        ax_w.plot(t_data, wcom_data)
+        ax_w.plot(t_data, np.array(wcom_data).T[0], label=r"$w_x {\rm [rad/s]}$", 
+                  linestyle='-', color=cmap(0))
+        ax_w.plot(t_data, np.array(wcom_data).T[1], label=r"$w_y {\rm [rad/s]}$", 
+                  linestyle='-', color=cmap(1))
+        ax_w.plot(t_data, np.array(wcom_data).T[2], label=r"$w_z {\rm [rad/s]}$", 
+                  linestyle='-', color=cmap(2))
+        if yaw_rate_command is not None:
+            ax_w.plot(t_data, yaw_rate_command, 
+                      label=r"$w_{z, {\rm cmd}} {\rm [rad/s]}$", 
+                      linestyle='--', color=cmap(5))
+        ax_v.set_xticklabels([])
+        ax_v.set_ylabel("Linear CoM velocity")
+        ax_w.set_ylabel("Angular CoM velocity")
+        ax_w.set_xlabel(r"${\rm Time \; [s]}$")
+        ax_v.legend(
+            edgecolor='black', loc='upper left', 
+            bbox_to_anchor=self.legend_bbox_to_anchor, 
+            ncol=self.legend_ncols
+        )
+        ax_w.legend(
+            edgecolor='black', loc='upper left', 
+            bbox_to_anchor=self.legend_bbox_to_anchor, 
+            ncol=self.legend_ncols
+        )
+
+        os.makedirs(os.path.abspath(save_dir), exist_ok=True)
+        if fig_name is not None:
+            plt.subplots_adjust(wspace=self.wspace, hspace=self.hspace)
+            plt.savefig(
+                os.path.join(save_dir, fig_name+'.pdf'),
+                bbox_inches="tight", 
+                pad_inches=0.1
+            )
+            print('Figure is saved at ' + os.path.abspath(os.path.join(save_dir, fig_name+'.pdf')))
         else:
             plt.show()

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <cmath>
 
 #include "Eigen/Core"
 
@@ -36,8 +37,10 @@ public:
   /// @brief Constructor with discount factor. 
   /// @param[in] discount_factor Discount factor. Must be positive and smaller 
   /// than 1.0.
+  /// @param[in] discount_time_step The cost is reduced by discount_factor as 
+  /// the time proceeds to this value. Must be positive.
   ///
-  CostFunction(const double discount_factor);
+  CostFunction(const double discount_factor, const double discount_time_step);
 
   ///
   /// @brief Default constructor. 
@@ -73,14 +76,24 @@ public:
   /// @brief Sets the discount facor. 
   /// @param[in] discount_factor Discount factor. Must be positive and smaller 
   /// than 1.0. Otherwise, the discounted cost is disabled.
+  /// @param[in] discount_time_step The cost is reduced by discount_factor as 
+  /// the time proceeds to this value. Must be positive. Otherwise, the discounted
+  /// cost is disabled.
   ///
-  void setDiscountFactor(const double discount_factor);
+  void setDiscountFactor(const double discount_factor, 
+                         const double discount_time_step);
 
   ///
   /// @brief Gets the discount facor. 
   /// @return The discount facor. 
   ///
   double discountFactor() const;
+
+  ///
+  /// @brief Gets the discount time step. 
+  /// @return The discount time step. 
+  ///
+  double discountTimeStep() const;
 
   ///
   /// @brief Append a cost function component to the cost function.
@@ -254,7 +267,13 @@ public:
 
 private:
   std::vector<CostFunctionComponentBasePtr> costs_;
-  double discount_factor_;
+
+  double discount(const double t0, const double t) const {
+    assert(t >= t0);
+    return std::pow(discount_factor_, ((t-t0)/discount_time_step_));
+  }
+
+  double discount_factor_, discount_time_step_;
   bool discounted_cost_;
 };
 

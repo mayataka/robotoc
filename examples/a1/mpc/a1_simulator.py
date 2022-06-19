@@ -1,5 +1,6 @@
 import robotoc_sim
 import pybullet
+import numpy as np
 
 
 class A1Simulator(robotoc_sim.LeggedSimulator):
@@ -7,7 +8,8 @@ class A1Simulator(robotoc_sim.LeggedSimulator):
         super().__init__(path_to_urdf, time_step, start_time, end_time)
 
     @classmethod
-    def get_state_from_pybullet(self, pybullet_robot, q, v):
+    def get_state_from_pybullet(self, pybullet_robot):
+        q = np.zeros(19)
         # Base
         basePos, baseOrn = pybullet.getBasePositionAndOrientation(pybullet_robot)
         q[0:3] = basePos
@@ -29,6 +31,7 @@ class A1Simulator(robotoc_sim.LeggedSimulator):
         q[17] = pybullet.getJointState(pybullet_robot, 14)[0]
         q[18] = pybullet.getJointState(pybullet_robot, 15)[0]
 
+        v = np.zeros(18)
         # Base
         baseVel, baseAngVel = self.get_body_local_velocity(pybullet_robot)
         v[0:3] = baseVel
@@ -50,6 +53,9 @@ class A1Simulator(robotoc_sim.LeggedSimulator):
         v[16] = pybullet.getJointState(pybullet_robot, 14)[1]
         v[17] = pybullet.getJointState(pybullet_robot, 15)[1]
 
+        return q, v
+
+
     @classmethod
     def apply_control_input_to_pybullet(self, pybullet_robot, u):
         mode = pybullet.TORQUE_CONTROL
@@ -70,9 +76,6 @@ class A1Simulator(robotoc_sim.LeggedSimulator):
         pybullet.setJointMotorControl2(pybullet_robot, 14, controlMode=mode, force=u[10])
         pybullet.setJointMotorControl2(pybullet_robot, 15, controlMode=mode, force=u[11])
 
-
-# pin: FL_hip, FL_thigh, FL_calf, FR_hip, FR_thigh, FR_calf (6, 7, 8, 9, 10, 11)
-# pin: RL_hip, RL_thigh, RL_calf, RR_hip, RR_thigh, RR_calf (12, 13, 14, 15, 16, 17)
 
     @classmethod
     def init_pybullet_robot(self, pybullet_robot, q):

@@ -4,13 +4,13 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/periodic_foot_track_ref.hpp"
+#include "robotoc/cost/periodic_swing_foot_ref.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 
 namespace robotoc {
 
-class PeriodicFootTrackRefTest : public ::testing::Test {
+class PeriodicSwingFootRefTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -32,8 +32,8 @@ protected:
 };
 
 
-TEST_F(PeriodicFootTrackRefTest, first_mode_half_true) {
-  auto preiodic_foot_ref = std::make_shared<PeriodicFootTrackRef>(p0, step_length,
+TEST_F(PeriodicSwingFootRefTest, first_mode_half_true) {
+  auto preiodic_foot_ref = std::make_shared<PeriodicSwingFootRef>(p0, step_length,
                                                                   step_height, t0, 
                                                                   period_swing,
                                                                   period_stance, true);
@@ -44,7 +44,7 @@ TEST_F(PeriodicFootTrackRefTest, first_mode_half_true) {
   EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
   grid_info.t = t2;
-  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  preiodic_foot_ref->updateRef(grid_info, p);
   if (t2 < t0+period_swing) {
     p_ref = p0;
     p_ref += 0.5 * ((t2-t0)/period_swing) * step_length;
@@ -86,8 +86,8 @@ TEST_F(PeriodicFootTrackRefTest, first_mode_half_true) {
 }
 
 
-TEST_F(PeriodicFootTrackRefTest, first_mode_half_false) {
-  auto preiodic_foot_ref = std::make_shared<PeriodicFootTrackRef>(p0, step_length,
+TEST_F(PeriodicSwingFootRefTest, first_mode_half_false) {
+  auto preiodic_foot_ref = std::make_shared<PeriodicSwingFootRef>(p0, step_length,
                                                                   step_height, t0, 
                                                                   period_swing,
                                                                   period_stance, false);
@@ -98,7 +98,7 @@ TEST_F(PeriodicFootTrackRefTest, first_mode_half_false) {
   EXPECT_FALSE(preiodic_foot_ref->isActive(grid_info));
   const double t2 = t0 + std::abs(Eigen::VectorXd::Random(1)[0]);
   grid_info.t = t2;
-  preiodic_foot_ref->update_x3d_ref(grid_info, p);
+  preiodic_foot_ref->updateRef(grid_info, p);
   const int steps = std::floor((t2-t0)/period);
   const double tau = t2 - t0 - steps*period;
   if (tau < period_swing) {

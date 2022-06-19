@@ -16,27 +16,25 @@ PYBIND11_MODULE(crawl_foot_step_planner, m) {
              std::shared_ptr<CrawlFootStepPlanner>>(m, "CrawlFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))
-    .def("set_gait_pattern", 
-          static_cast<void (CrawlFootStepPlanner::*)(const Eigen::Vector3d&, const double, const bool)>(&CrawlFootStepPlanner::setGaitPattern),
+    .def("set_gait_pattern", &CrawlFootStepPlanner::setGaitPattern,
           py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_stance_phase")) 
-    .def("set_gait_pattern", 
-          static_cast<void (CrawlFootStepPlanner::*)(const Eigen::Vector3d&, const double, const double, const double, const double)>(&CrawlFootStepPlanner::setGaitPattern),
-          py::arg("v_com_cmd"), py::arg("yaw_rate_cmd"), 
-          py::arg("t_swing"), py::arg("t_stance"), py::arg("gain")) 
+    .def("set_raibert_gait_pattern", &CrawlFootStepPlanner::setRaibertGaitPattern,
+          py::arg("vcom_cmd"), py::arg("yaw_rate_cmd"), 
+          py::arg("swing_time"), py::arg("stance_time"), py::arg("gain")) 
     .def("init", &CrawlFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &CrawlFootStepPlanner::plan,
-          py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_position", 
-          static_cast<const std::vector<Eigen::Vector3d>& (CrawlFootStepPlanner::*)(const int) const>(&CrawlFootStepPlanner::contactPosition),
+          py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
+    .def("contact_positions", 
+          static_cast<const std::vector<Eigen::Vector3d>& (CrawlFootStepPlanner::*)(const int) const>(&CrawlFootStepPlanner::contactPositions),
           py::arg("step"))
-    .def("contact_position", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (CrawlFootStepPlanner::*)() const>(&CrawlFootStepPlanner::contactPosition))
+    .def("contact_positions", 
+          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (CrawlFootStepPlanner::*)() const>(&CrawlFootStepPlanner::contactPositions))
     .def("com", 
-          static_cast<const Eigen::Vector3d& (CrawlFootStepPlanner::*)(const int) const>(&CrawlFootStepPlanner::com),
+          static_cast<const Eigen::Vector3d& (CrawlFootStepPlanner::*)(const int) const>(&CrawlFootStepPlanner::CoM),
           py::arg("step"))
     .def("com", 
-          static_cast<const std::vector<Eigen::Vector3d>& (CrawlFootStepPlanner::*)() const>(&CrawlFootStepPlanner::com))
+          static_cast<const std::vector<Eigen::Vector3d>& (CrawlFootStepPlanner::*)() const>(&CrawlFootStepPlanner::CoM))
     .def("R", 
           static_cast<const Eigen::Matrix3d& (CrawlFootStepPlanner::*)(const int) const>(&CrawlFootStepPlanner::R),
           py::arg("step"))

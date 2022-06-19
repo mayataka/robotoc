@@ -8,7 +8,7 @@ PeriodicCoMRef::PeriodicCoMRef(const Eigen::Vector3d com_ref0,
                                const double period_active, 
                                const double period_inactive, 
                                const bool is_first_move_half)
-  : TimeVaryingCoMRefBase(),
+  : CoMRefBase(),
     com_ref0_(com_ref0),
     vcom_ref_(vcom_ref),
     t0_(t0),
@@ -38,7 +38,7 @@ void PeriodicCoMRef::setCoMRef(const Eigen::Vector3d com_ref0,
 }
 
 
-void PeriodicCoMRef::update_com_ref(const GridInfo& grid_info,
+void PeriodicCoMRef::updateRef(const GridInfo& grid_info,
                                     Eigen::VectorXd& com_ref) const {
   if (grid_info.t < t0_+period_active_) {
     if (is_first_move_half_) {

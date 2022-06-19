@@ -90,6 +90,7 @@ inline void TimeDiscretization::discretize(
   countTimeStages();
   countContactPhase();
   countSTOEvents();
+  setInitialTime(t);
   assert(isFormulationTractable());
   assert(isSwitchingTimeConsistent());
 }
@@ -103,6 +104,7 @@ inline void TimeDiscretization::meshRefinement(
     countTimeStages();
     countContactPhase();
     countSTOEvents();
+    setInitialTime(t);
     assert(isFormulationTractable());
     assert(isSwitchingTimeConsistent());
   }
@@ -783,6 +785,19 @@ inline void TimeDiscretization::countSTOEvents() {
   }
   for (int i=N_lift()+N_impulse(); i<sto_event_.size(); ++i) {
     sto_event_[i] = false;
+  }
+}
+
+
+inline void TimeDiscretization::setInitialTime(const double t) {
+  for (auto& e : grid_) {
+    e.t0 = t;
+  }
+  for (auto& e : grid_impulse_) {
+    e.t0 = t;
+  }
+  for (auto& e : grid_lift_) {
+    e.t0 = t;
   }
 }
 

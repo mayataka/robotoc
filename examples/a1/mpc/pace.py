@@ -14,7 +14,7 @@ step_length = np.array([0.15, 0, 0])
 # step_length = np.array([-0.1, 0, 0]) 
 # step_length = np.array([0, 0.1, 0]) 
 # step_length = np.array([0.1, -0.1, 0]) 
-yaw_cmd = 0.0
+step_yaw = 0.0
 
 step_height = 0.1
 swing_time = 0.25
@@ -22,8 +22,8 @@ stance_time = 0
 # stance_time = 0.05
 swing_start_time = 0.5
 
-vcom_cmd = step_length / swing_time
-yaw_rate_cmd = yaw_cmd / swing_time
+vcom_cmd = 0.5 * step_length / (swing_time+stance_time)
+yaw_rate_cmd = step_yaw / swing_time
 
 T = 0.5
 N = 18
@@ -32,9 +32,8 @@ nthreads = 4
 mpc = robotoc.MPCPace(robot, T, N, max_steps, nthreads)
 
 planner = robotoc.PaceFootStepPlanner(robot)
-planner.set_gait_pattern(step_length, yaw_cmd, (stance_time > 0.))
-# raibert_gain = 0.2
-# planner.set_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, swing_time+stance_time, raibert_gain)
+# planner.set_gait_pattern(step_length, step_yaw, (stance_time > 0.))
+planner.set_raibert_gait_pattern(vcom_cmd, yaw_rate_cmd, swing_time, stance_time, gain=0.7)
 mpc.set_gait_pattern(planner, step_height, swing_time, stance_time, swing_start_time)
 
 q = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
@@ -55,9 +54,39 @@ mpc.set_solver_options(option_mpc)
 sim_time_step = 0.0025 # 400 Hz MPC
 sim_start_time = 0.0
 sim_end_time = 5.0
-sim_end_time = 50.0
 sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
 
+log = False
+record = False
+
 sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, record=False)
-# sim.run_simulation(mpc, q, v, verbose=False, record=True, record_name='a1_trot.mp4')
+sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, 
+                   record=record, log=log, sim_name='a1_pace')
+
+if record:
+    sim.disconnect()
+    robotoc.utils.adjust_video_duration(sim.sim_name+'.mp4', 
+                                        desired_duration_sec=(sim_end_time-sim_start_time))
+
+if log:
+    q_log = np.genfromtxt(sim.q_log)
+    v_log = np.genfromtxt(sim.v_log)
+    t_log = np.genfromtxt(sim.t_log)
+    sim_steps = t_log.shape[0]
+
+    from scipy.spatial.transform import Rotation
+    vcom_log = []
+    wcom_log = []
+    vcom_cmd_log = []
+    yaw_rate_cmd_log = []
+    for i in range(sim_steps):
+        R = Rotation.from_quat(q_log[i][3:7]).as_matrix()
+        robot.forward_kinematics(q_log[i], v_log[i])
+        vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
+        wcom_log.append(v_log[i][3:6])
+        vcom_cmd_log.append(vcom_cmd)
+        yaw_rate_cmd_log.append(yaw_rate_cmd)
+
+    plot_mpc = robotoc.utils.PlotCoMVelocity()
+    plot_mpc.plot(t_log, vcom_log, wcom_log, vcom_cmd_log, yaw_rate_cmd_log, 
+                  fig_name=sim.sim_name+'_com_vel')

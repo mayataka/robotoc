@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/cost/time_varying_com_cost.hpp"
+#include "robotoc/cost/com_ref_base.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 
 
@@ -17,7 +17,7 @@ namespace robotoc {
 /// @class DiscreteTimeCoMRef
 /// @brief Discrete-time reference of the center of mass. 
 ///
-class DiscreteTimeCoMRef : public TimeVaryingCoMRefBase {
+class DiscreteTimeCoMRef : public CoMRefBase {
 public:
   ///
   /// @brief Constructor. 
@@ -56,7 +56,7 @@ public:
                  const Eigen::Vector3d& last_com_ref, 
                  const double first_rate=0, const double last_rate=0);
 
-  void update_com_ref(const GridInfo& grid_info, 
+  void updateRef(const GridInfo& grid_info, 
                       Eigen::VectorXd& com_ref) const override;
 
   bool isActive(const GridInfo& grid_info) const override;

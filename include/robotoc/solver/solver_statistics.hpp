@@ -80,6 +80,11 @@ public:
   std::vector<int> mesh_refinement_iter;
 
   ///
+  /// @brief CPU time is stored if SolverOptions::enable_benchmark is true.
+  ///
+  double cpu_time;
+
+  ///
   /// @brief Clear the all elements.
   ///
   void clear();

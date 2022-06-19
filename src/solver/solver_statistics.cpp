@@ -13,7 +13,8 @@ SolverStatistics::SolverStatistics()
     primal_step_size(),
     dual_step_size(),
     ts(),
-    mesh_refinement_iter() {
+    mesh_refinement_iter(),
+    cpu_time(0.0) {
 }
 
 
@@ -29,6 +30,7 @@ void SolverStatistics::clear() {
   dual_step_size.clear();
   ts.clear();
   mesh_refinement_iter.clear();
+  cpu_time = 0.0;
 }
 
 
@@ -36,6 +38,7 @@ void SolverStatistics::disp(std::ostream& os) const {
   os << "Solver statistics:" << std::endl;
   os << "  convergence: " << std::boolalpha << convergence << std::endl;
   os << "  total no. of iteration: " << iter << std::endl;
+  os << "  CPU time (positive if benchmark is enabled): " << cpu_time << std::endl;
   os << "  ------------------------------------------------------------------------------------ " << std::endl;
   os << "   iteration |      KKT error | primal step size |   dual step size |        ts        " << std::endl;
   os << "  ------------------------------------------------------------------------------------ " << std::endl;

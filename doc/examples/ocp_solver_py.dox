@@ -60,20 +60,20 @@ v_weight = np.array([100, 100, 100, 100, 100, 100,
                      1, 1, 1,
                      1, 1, 1])
 u_weight = np.full(robot.dimu(), 1.0e-01)
-qi_weight = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+q_weight_impulse = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
                       100, 100, 100, 
                       100, 100, 100,
                       100, 100, 100,
                       100, 100, 100])
-vi_weight = np.full(robot.dimv(), 100)
+v_weight_impulse = np.full(robot.dimv(), 100)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
-config_cost.set_qf_weight(q_weight)
-config_cost.set_qi_weight(qi_weight)
+config_cost.set_q_weight_terminal(q_weight)
+config_cost.set_q_weight_impulse(q_weight_impulse)
 config_cost.set_v_weight(v_weight)
-config_cost.set_vf_weight(v_weight)
-config_cost.set_vi_weight(vi_weight)
+config_cost.set_v_weight_terminal(v_weight)
+config_cost.set_v_weight_impulse(v_weight_impulse)
 config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
@@ -88,8 +88,8 @@ vcom_ref_flying_up = 0.5*jump_length/flying_up_time + np.array([0, 0, (jump_heig
 com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, vcom_ref_flying_up, 
                                            t0+ground_time, flying_up_time, 
                                            flying_down_time+2*ground_time, False)
-com_cost_flying_up = robotoc.TimeVaryingCoMCost(robot, com_ref_flying_up)
-com_cost_flying_up.set_com_weight(np.full(3, 1.0e06))
+com_cost_flying_up = robotoc.CoMCost(robot, com_ref_flying_up)
+com_cost_flying_up.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_flying_up)
 
 com_ref0_landed = robot.com()
@@ -98,8 +98,8 @@ vcom_ref_landed = np.zeros(3)
 com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, vcom_ref_landed, 
                                         t0+ground_time+flying_time, ground_time, 
                                         ground_time+flying_time, False)
-com_cost_landed = robotoc.TimeVaryingCoMCost(robot, com_ref_landed)
-com_cost_landed.set_com_weight(np.full(3, 1.0e06))
+com_cost_landed = robotoc.CoMCost(robot, com_ref_landed)
+com_cost_landed.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost_landed)
 ```
 
