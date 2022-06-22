@@ -92,8 +92,8 @@ void FlyingTrotFootStepPlanner::setRaibertGaitPattern(
 
 
 void FlyingTrotFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = rotation::toRotationMatrix(q.template segment<4>(3));
-  rotation::projectRotationMatrix(R, rotation::ProjectionAxis::Z);
+  Eigen::Matrix3d R = rotation::RotationMatrix(q.template segment<4>(3));
+  rotation::ProjectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   com_to_contact_position_local_ = { R.transpose() * (robot_.framePosition(LF_foot_id_)-robot_.CoM()), 
                                      R.transpose() * (robot_.framePosition(LH_foot_id_)-robot_.CoM()),

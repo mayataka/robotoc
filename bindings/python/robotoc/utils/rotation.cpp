@@ -8,13 +8,28 @@
 
 
 namespace robotoc {
+namespace rotation {
 namespace python {
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(rotation, m) {
-  m.def("omp_get_thread_num", &omp_get_thread_num);
+  py::enum_<ProjectionAxis>(m, "ProjectionAxis", py::arithmetic())
+    .value("X", ProjectionAxis::X)
+    .value("Y", ProjectionAxis::Y)
+    .value("Z", ProjectionAxis::Z)
+    .export_values();
+
+  m.def("rotation_matrix", [](const Eigen::Vector4d& quat_xyzw) {
+      return rotation::RotationMatrix(quat_xyzw);
+    },  py::arg("quat_xyzw"));
+  m.def("project_rotation_matrix", [](const Eigen::Matrix3d& R, const ProjectionAxis axis) {
+      Eigen::Matrix3d ret = R;
+      rotation::ProjectRotationMatrix(ret, axis);
+      return ret;
+    },  py::arg("R"), py::arg("axis"));
 }
 
 } // namespace python
+} // namespace rotation
 } // namespace robotoc
