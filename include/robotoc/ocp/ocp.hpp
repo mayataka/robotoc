@@ -35,17 +35,17 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] sto_cost Shared ptr to the STO cost function.
   /// @param[in] sto_constraints Shared ptr to the STO constraints.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] T Length of the horzion. Must be positive.
   /// @param[in] N Number of the discretization grids of the horizon except for 
   /// the discrete events. Must be positive.
-  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
-  /// each discrete events on the horizon. Must be non-negative. Default is 0.
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints, 
       const std::shared_ptr<STOCostFunction>& sto_cost, 
       const std::shared_ptr<STOConstraints>& sto_constraints, 
-      const double T, const int N, const int max_num_each_discrete_events=0);
+      const std::shared_ptr<ContactSequence>& contact_sequence, 
+      const double T, const int N);
 
   ///
   /// @brief Construct the optiaml control problem. The switching time 
@@ -53,15 +53,15 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] T Length of the horzion. Must be positive.
   /// @param[in] N Number of the discretization grids of the horizon except for 
   /// the discrete events. Must be positive.
-  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
-  /// each discrete events on the horizon. Must be non-negative. Default is 0.
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints, 
-      const double T, const int N, const int max_num_each_discrete_events=0);
+      const std::shared_ptr<Constraints>& constraints,  
+      const std::shared_ptr<ContactSequence>& contact_sequence,
+      const double T, const int N);
 
   ///
   /// @brief Default Constructor.
@@ -104,22 +104,18 @@ public:
   ///
   /// @brief Discretizes the optimal control problem according to the 
   /// input current contact sequence and intial time of the horizon.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] t Initial time of the horizon. 
   ///
-  void discretize(const std::shared_ptr<ContactSequence>& contact_sequence,
-                  const double t);
+  void discretize(const double t);
 
   ///
   /// @brief Performs mesh-refimenent while keeping the total number of the 
   /// discretization grids over the horizon. This function does it only when
   /// the discretization method is set to DiscretizationMethod::PhaseBased.
   /// Otherwise, does nothing.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] t Initial time of the horizon. 
   ///
-  void meshRefinement(const std::shared_ptr<ContactSequence>& contact_sequence,
-                      const double t);
+  void meshRefinement(const double t);
 
   ///
   /// @brief Returns the discrete-time formulation, that is, the discretization 
@@ -152,6 +148,11 @@ public:
   /// @return const reference to the STO constraints. 
   ///
   const std::shared_ptr<STOConstraints>& sto_constraints() const;
+
+  ///
+  /// @return const reference to the STO constraints. 
+  ///
+  const std::shared_ptr<ContactSequence>& contact_sequence() const;
 
   ///
   /// @return Length of the horizon. 
@@ -235,6 +236,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
+  std::shared_ptr<ContactSequence> contact_sequence_;
   TimeDiscretization discretization_;
   double T_;
   int N_, max_num_each_discrete_events_;

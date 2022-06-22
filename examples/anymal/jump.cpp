@@ -138,8 +138,10 @@ int main(int argc, char *argv[]) {
   const int max_num_each_discrete_events = 1;
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
 
-  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
-      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions = {{"LF_FOOT", x3d0_LF}, 
+                                                                        {"LH_FOOT", x3d0_LH}, 
+                                                                        {"RF_FOOT", x3d0_RF}, 
+                                                                        {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
@@ -162,10 +164,10 @@ int main(int argc, char *argv[]) {
   // Create the OCP solver.
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = T / dt;
-  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
+  robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;

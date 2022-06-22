@@ -288,10 +288,10 @@ int main(int argc, char *argv[]) {
   // Create the OCP solver.
   const double T = 7; 
   const int N = 240;
-  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
+  robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;

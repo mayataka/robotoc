@@ -7,7 +7,7 @@ cmd_type = 'forward'
 # cmd_type = 'backward'
 # cmd_type = 'side'
 # cmd_type = 'curve'
-# cmd_type = 'rotation'
+cmd_type = 'rotation'
 
 if cmd_type == 'forward':
     step_length = np.array([0.2, 0.0, 0.0]) 

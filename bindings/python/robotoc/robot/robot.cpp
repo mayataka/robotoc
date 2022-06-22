@@ -19,12 +19,6 @@ PYBIND11_MODULE(robot, m) {
     .value("FloatingBase", BaseJointType::FloatingBase)
     .export_values();
 
-  py::enum_<pinocchio::ReferenceFrame>(m, "ReferenceFrame", py::arithmetic())
-    .value("LOCAL", pinocchio::ReferenceFrame::LOCAL)
-    .value("WORLD", pinocchio::ReferenceFrame::WORLD)
-    .value("LOCAL_WORLD_ALIGNED", pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED)
-    .export_values();
-
   py::class_<Robot>(m, "Robot")
     .def(py::init<const std::string&, const BaseJointType&>(), 
           py::arg("path_to_urdf"),

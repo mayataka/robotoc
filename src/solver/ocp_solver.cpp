@@ -8,10 +8,9 @@
 namespace robotoc {
 
 OCPSolver::OCPSolver(const OCP& ocp, 
-                     const std::shared_ptr<ContactSequence>& contact_sequence, 
                      const SolverOptions& solver_options, const int nthreads)
   : robots_(nthreads, ocp.robot()),
-    contact_sequence_(contact_sequence),
+    contact_sequence_(ocp.contact_sequence()),
     dms_(nthreads),
     sto_(ocp),
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
@@ -55,7 +54,7 @@ void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
 
 
 void OCPSolver::meshRefinement(const double t) {
-  ocp_.meshRefinement(contact_sequence_, t);
+  ocp_.meshRefinement(t);
   if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
     discretizeSolution();
     dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
@@ -65,7 +64,7 @@ void OCPSolver::meshRefinement(const double t) {
 
 
 void OCPSolver::initConstraints(const double t) {
-  ocp_.discretize(contact_sequence_, t);
+  ocp_.discretize(t);
   discretizeSolution();
   dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
   sto_.initConstraints(ocp_);
@@ -76,7 +75,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_.discretize(contact_sequence_, t);
+  ocp_.discretize(t);
   discretizeSolution();
   dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
                         kkt_matrix_, kkt_residual_);
@@ -455,7 +454,7 @@ void OCPSolver::setSolution(const std::string& name,
 void OCPSolver::extrapolateSolutionLastPhase(const double t) {
   const int num_discrete_events = contact_sequence_->numDiscreteEvents();
   if (num_discrete_events > 0) {
-    ocp_.discretize(contact_sequence_, t);
+    ocp_.discretize(t);
     int time_stage_after_last_event;
     if (contact_sequence_->eventType(num_discrete_events-1) 
           == DiscreteEventType::Impulse) {
@@ -478,7 +477,7 @@ void OCPSolver::extrapolateSolutionLastPhase(const double t) {
 void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
   const int num_discrete_events = contact_sequence_->numDiscreteEvents();
   if (num_discrete_events > 0) {
-    ocp_.discretize(contact_sequence_, t);
+    ocp_.discretize(t);
     int time_stage_before_initial_event;
     if (contact_sequence_->eventType(0) == DiscreteEventType::Impulse) {
       time_stage_before_initial_event 
@@ -499,7 +498,7 @@ void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
 
 double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q, 
                            const Eigen::VectorXd& v) {
-  ocp_.discretize(contact_sequence_, t);
+  ocp_.discretize(t);
   discretizeSolution();
   dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
                           kkt_matrix_, kkt_residual_);

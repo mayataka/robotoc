@@ -172,10 +172,9 @@ for i in range(cycle-1):
 T = t0 + cycle*(2*double_support_time+2*swing_time)
 N = math.floor(T/dt) 
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
+                  contact_sequence=contact_sequence, T=T, N=N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
-                               solver_options=solver_options, nthreads=4)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
 t = 0.
