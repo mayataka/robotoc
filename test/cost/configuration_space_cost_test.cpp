@@ -494,6 +494,13 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
 }
 
 
+TEST_F(ConfigurationSpaceCostTest, defaultConstructor) {
+  EXPECT_NO_THROW(
+    auto cost = std::make_shared<ConfigurationSpaceCost>();
+  );
+}
+
+
 TEST_F(ConfigurationSpaceCostTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCostConstRef(robot);

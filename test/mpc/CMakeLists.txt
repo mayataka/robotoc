@@ -1,2 +1,8 @@
 add_robotoc_test(moving_window_filter_test)
 add_robotoc_test(raibert_heuristic_test)
+add_robotoc_test(biped_walk_foot_step_planner_test)
+add_robotoc_test(trot_foot_step_planner_test)
+add_robotoc_test(crawl_foot_step_planner_test)
+add_robotoc_test(pace_foot_step_planner_test)
+add_robotoc_test(flying_trot_foot_step_planner_test)
+add_robotoc_test(jump_foot_step_planner_test)

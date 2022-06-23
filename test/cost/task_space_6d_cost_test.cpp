@@ -92,6 +92,13 @@ protected:
 };
 
 
+TEST_F(TaskSpace6DCostTest, defaultConstructor) {
+  EXPECT_NO_THROW(
+    auto cost = std::make_shared<TaskSpace6DCost>();
+  );
+}
+
+
 void TaskSpace6DCostTest::testStageCostConstRef(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
