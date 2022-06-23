@@ -39,6 +39,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -qqy robotpkg-py310-pinocchio
+          sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer
           sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer-corba
       - name: Install pinocchio-gepetto-viewer
         run: |
