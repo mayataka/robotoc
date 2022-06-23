@@ -11,7 +11,8 @@ SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp)
     sto_reg_(0),
     kkt_error_(0),
     cost_val_(0),
-    h_phase_(Eigen::VectorXd::Zero(2*ocp.maxNumEachDiscreteEvents()+1)),
+    h_phase_(Eigen::VectorXd::Zero(2*ocp.reservedNumDiscreteEvents()+1)),
+    reserved_num_switches_(2*ocp.reservedNumDiscreteEvents()),
     is_sto_enabled_(ocp.isSTOEnabled()) {
 }
 
@@ -23,7 +24,17 @@ SwitchingTimeOptimization::SwitchingTimeOptimization()
     kkt_error_(0),
     cost_val_(0),
     h_phase_(),
+    reserved_num_switches_(0),
     is_sto_enabled_(false) {
+}
+
+
+void SwitchingTimeOptimization::reserve(const OCP& ocp) {
+  if (reserved_num_switches_ < 2*ocp.reservedNumDiscreteEvents()) {
+    h_phase_.resize(2*ocp.reservedNumDiscreteEvents()+1);
+    h_phase_.setZero();
+    reserved_num_switches_ = 2*ocp.reservedNumDiscreteEvents();
+  }
 }
 
 
@@ -32,8 +43,9 @@ void SwitchingTimeOptimization::setRegularization(const double sto_reg) {
 }
 
 
-void SwitchingTimeOptimization::initConstraints(const OCP& ocp) const {
+void SwitchingTimeOptimization::initConstraints(const OCP& ocp) {
   if (is_sto_enabled_) {
+    reserve(ocp);
     sto_constraints_->setSlack(ocp.discrete());
   }
 }
@@ -42,6 +54,7 @@ void SwitchingTimeOptimization::initConstraints(const OCP& ocp) const {
 void SwitchingTimeOptimization::computeKKTResidual(
     const OCP& ocp, KKTResidual& kkt_residual) {
   if (is_sto_enabled_) {
+    reserve(ocp);
     cost_val_ = sto_cost_->linearizeCost(ocp.discrete(), kkt_residual); 
     sto_constraints_->linearizeConstraints(ocp.discrete(), kkt_residual);
     kkt_error_ = KKTError(ocp, kkt_residual);
@@ -52,6 +65,7 @@ void SwitchingTimeOptimization::computeKKTResidual(
 void SwitchingTimeOptimization::computeKKTSystem(
     const OCP& ocp, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   if (is_sto_enabled_) {
+    reserve(ocp);
     cost_val_ = sto_cost_->quadratizeCost(ocp.discrete(), kkt_matrix, 
                                           kkt_residual); 
     sto_constraints_->linearizeConstraints(ocp.discrete(), kkt_residual);
@@ -112,6 +126,7 @@ double SwitchingTimeOptimization::KKTError(const OCP& ocp,
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
   const int N_all = N + 1 + 3*N_impulse + N_lift;
+  reserve(ocp);
   h_phase_.setZero();
   for (int stage=0; stage<N; ++stage) {
     h_phase_.coeffRef(ocp.discrete().contactPhase(stage))

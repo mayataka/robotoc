@@ -13,15 +13,15 @@ LineSearch::LineSearch(const OCP& ocp, const int nthreads,
     settings_(line_search_settings),
     nthreads_(nthreads),
     costs_(Eigen::VectorXd::Zero(ocp.N()+1)), 
-    costs_impulse_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
-    costs_aux_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
-    costs_lift_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
+    costs_impulse_(Eigen::VectorXd::Zero(ocp.reservedNumDiscreteEvents())), 
+    costs_aux_(Eigen::VectorXd::Zero(ocp.reservedNumDiscreteEvents())), 
+    costs_lift_(Eigen::VectorXd::Zero(ocp.reservedNumDiscreteEvents())), 
     violations_(Eigen::VectorXd::Zero(ocp.N())), 
-    violations_impulse_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
-    violations_aux_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())), 
-    violations_lift_(Eigen::VectorXd::Zero(ocp.maxNumEachDiscreteEvents())),
-    s_trial_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()), 
-    kkt_residual_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()) {
+    violations_impulse_(Eigen::VectorXd::Zero(ocp.reservedNumDiscreteEvents())), 
+    violations_aux_(Eigen::VectorXd::Zero(ocp.reservedNumDiscreteEvents())), 
+    violations_lift_(Eigen::VectorXd::Zero(ocp.reservedNumDiscreteEvents())),
+    s_trial_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()), 
+    kkt_residual_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()) {
 }
 
 
@@ -54,6 +54,7 @@ double LineSearch::computeStepSize(
   assert(max_primal_step_size > 0);
   assert(max_primal_step_size <= 1);
   double primal_step_size = max_primal_step_size;
+  reserve(ocp);
   if (settings_.line_search_method == LineSearchMethod::Filter) {
     primal_step_size = lineSearchFilterMethod(ocp, robots, contact_sequence, 
                                                 q, v, s, d, primal_step_size);
@@ -335,6 +336,24 @@ double LineSearch::merit(const double penalty_param) const {
 
 void LineSearch::set(const LineSearchSettings& settings) {
   settings_ = settings;
+}
+
+
+void LineSearch::reserve(const OCP& ocp) {
+  costs_impulse_.resize(ocp.reservedNumDiscreteEvents());
+  costs_impulse_.setZero();
+  costs_aux_.resize(ocp.reservedNumDiscreteEvents());
+  costs_aux_.setZero();
+  costs_lift_.resize(ocp.reservedNumDiscreteEvents());
+  costs_lift_.setZero();
+  violations_impulse_.resize(ocp.reservedNumDiscreteEvents());
+  violations_impulse_.setZero();
+  violations_aux_.resize(ocp.reservedNumDiscreteEvents());
+  violations_aux_.setZero();
+  violations_lift_.resize(ocp.reservedNumDiscreteEvents());
+  violations_lift_.setZero();
+  s_trial_.reserve(ocp.robot(), ocp.reservedNumDiscreteEvents());
+  kkt_residual_.reserve(ocp.robot(), ocp.reservedNumDiscreteEvents());
 }
 
 } // namespace robotoc

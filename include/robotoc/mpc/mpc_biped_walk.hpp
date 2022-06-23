@@ -43,11 +43,10 @@ public:
   /// @param[in] biped_robot Biped robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] max_steps Maximum number of steps over the horizon.
   /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
   MPCBipedWalk(const Robot& biped_robot, const double T, const int N, 
-             const int max_steps, const int nthreads);
+               const int nthreads);
 
   ///
   /// @brief Default constructor. 

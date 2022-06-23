@@ -109,14 +109,13 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_each_discrete_events = 2*cycle
-contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
+contact_sequence = robotoc.ContactSequence(robot)
 
 contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.init_contact_sequence(contact_status_standing)
+contact_sequence.init(contact_status_standing)
 
 contact_status_lhrf_swing = robot.create_contact_status()
 contact_status_lhrf_swing.activate_contacts(['LF_FOOT', 'RH_FOOT'])
@@ -174,8 +173,7 @@ com_ref.set_ref(contact_sequence)
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 min_dt = [0.02] + cycle * [0.2, 0.02, 0.2, 0.02]
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
-                                         min_dt=min_dt,
+sto_constraints = robotoc.STOConstraints(min_dt=min_dt,
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 

@@ -98,8 +98,7 @@ TEST_F(OCPSolverTest, test) {
   constraints->push_back(friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = 4;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
@@ -109,7 +108,7 @@ TEST_F(OCPSolverTest, test) {
                                                        robot.framePosition(RF_foot_id),
                                                        robot.framePosition(RH_foot_id)};
   contact_status_standing.setContactPlacements(contact_positions);
-  contact_sequence->initContactSequence(contact_status_standing);
+  contact_sequence->init(contact_status_standing);
 
   // Create OCPSolver
   const double T = 0.5;
@@ -129,6 +128,9 @@ TEST_F(OCPSolverTest, test) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
+
+  auto contact_status_flying = robot.createContactStatus();
+  contact_sequence->push_back(contact_status_flying, 0.2);
 
   ocp_solver.initConstraints(t);
   ocp_solver.solve(t, q, v);

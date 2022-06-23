@@ -7,58 +7,28 @@
 
 namespace robotoc {
 
-STOConstraints::STOConstraints(const int _max_num_switches, const double _min_dt, 
+STOConstraints::STOConstraints(const int _reserved_num_switches, 
+                               const double _min_dt, 
                                const double _barrier, 
                                const double _fraction_to_boundary_rule) 
-  : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
-                                                   _fraction_to_boundary_rule)),
-    min_dt_(_max_num_switches+1, _min_dt), 
-    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
-    barrier_(_barrier), 
-    fraction_to_boundary_rule_(_fraction_to_boundary_rule),
-    max_num_switches_(_max_num_switches),
-    num_switches_(0),
-    primal_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)), 
-    dual_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)) {
-  try {
-    if (_min_dt < 0) {
-      throw std::out_of_range(
-          "Invalid argment: min_dt must be non-negative!");
-    }
-    if (_barrier <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: barrirer must be positive!");
-    }
-    if (_fraction_to_boundary_rule <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be positive!");
-    }
-    if (_fraction_to_boundary_rule >= 1) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
+  : STOConstraints(std::vector<double>(_reserved_num_switches+1, _min_dt), 
+                   _barrier, _fraction_to_boundary_rule) {
 }
 
 
-STOConstraints::STOConstraints(const int _max_num_switches, 
-                               const std::vector<double>& _min_dt, 
+STOConstraints::STOConstraints(const std::vector<double>& _min_dt, 
                                const double _barrier, 
                                const double _fraction_to_boundary_rule) 
-  : dtlb_(_max_num_switches+1, DwellTimeLowerBound(_barrier, 
-                                                   _fraction_to_boundary_rule)),
+  : dtlb_(_min_dt.size(), DwellTimeLowerBound(_barrier, 
+                                              _fraction_to_boundary_rule)),
     min_dt_(_min_dt), 
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     barrier_(_barrier), 
     fraction_to_boundary_rule_(_fraction_to_boundary_rule),
-    max_num_switches_(_max_num_switches),
+    reserved_num_switches_(_min_dt.size()-1),
     num_switches_(0),
-    primal_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)), 
-    dual_step_size_(Eigen::VectorXd::Zero(_max_num_switches+1)) {
+    primal_step_size_(Eigen::VectorXd::Zero(_min_dt.size())), 
+    dual_step_size_(Eigen::VectorXd::Zero(_min_dt.size())) {
   try {
     for (const auto e : _min_dt) {
       if (e < 0.) {
@@ -83,9 +53,6 @@ STOConstraints::STOConstraints(const int _max_num_switches,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  while (min_dt_.size() < (_max_num_switches+1)) {
-    min_dt_.push_back(eps_);
-  }
 }
 
 
@@ -104,6 +71,7 @@ STOConstraints::~STOConstraints() {
 
 void STOConstraints::setSlack(const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  reserve(num_events);
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -162,6 +130,7 @@ void STOConstraints::setSlack(const TimeDiscretization& discretization) {
 
 void STOConstraints::evalConstraint(const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  reserve(num_events);
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -235,6 +204,7 @@ void STOConstraints::evalConstraint(const TimeDiscretization& discretization) {
 void STOConstraints::linearizeConstraints(
     const TimeDiscretization& discretization, KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  reserve(num_events);
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -322,6 +292,7 @@ void STOConstraints::condenseSlackAndDual(
     const TimeDiscretization& discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  reserve(num_events);
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -391,6 +362,7 @@ void STOConstraints::condenseSlackAndDual(
 void STOConstraints::expandSlackAndDual(
     const TimeDiscretization& discretization, const Direction& d) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
+  reserve(num_events);
   num_switches_ = num_events;
   assert(num_events+1 <= dtlb_.size());
   if (num_events <= 0) {
@@ -520,9 +492,10 @@ void STOConstraints::setMinimumDwellTimes(const double min_dt) {
 void STOConstraints::setMinimumDwellTimes(
     const std::vector<double>& min_dt) {
   min_dt_ = min_dt;
-  while (min_dt_.size() < (max_num_switches_+1)) {
+  while (min_dt_.size() < (reserved_num_switches_+1)) {
     min_dt_.push_back(eps_);
   }
+  reserve(min_dt_.size()-1);
 }
 
 
@@ -558,6 +531,30 @@ double STOConstraints::barrier() const {
 
 double STOConstraints::fractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
+}
+
+
+void STOConstraints::reserve(const int reserved_num_switches) { 
+  if (reserved_num_switches_ < reserved_num_switches) {
+    while (dtlb_.size() < (reserved_num_switches+1)) {
+      dtlb_.emplace_back(barrier_, fraction_to_boundary_rule_);
+    }
+    while (min_dt_.size() < (reserved_num_switches+1)) {
+      min_dt_.push_back(eps_);
+    }
+    if (primal_step_size_.size() < reserved_num_switches+1) {
+      primal_step_size_.conservativeResize(reserved_num_switches+1);
+    }
+    if (dual_step_size_.size() < reserved_num_switches+1) {
+      dual_step_size_.conservativeResize(reserved_num_switches+1);
+    }
+    reserved_num_switches_ = reserved_num_switches;
+  }
+}
+
+
+int STOConstraints::reservedNumSwitches() const {
+  return reserved_num_switches_;
 }
 
 } // namespace robotoc

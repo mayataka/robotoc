@@ -97,13 +97,11 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 ```
 
-Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible each discrete events as 
+Next, we construct the contact sequence `robotoc::ContactSequence` as 
 ```
-max_num_each_discrete_events = 1
-contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
+contact_sequence = robotoc.ContactSequence(robot)
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
-`robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
 
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
@@ -118,7 +116,7 @@ contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF,
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.init_contact_sequence(contact_status_standing)
+contact_sequence.init(contact_status_standing)
 ```
 
 Next, we set the contact status when the robot is flying. 
@@ -151,8 +149,7 @@ sto_cost = robotoc.STOCostFunction()
 ```
 and the minimum dwell-time constraints for the STO problem
 ```
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
-                                         min_dt=[0.15, 0.15, 0.65],
+sto_constraints = robotoc.STOConstraints(min_dt=[0.15, 0.15, 0.65],
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 ```
@@ -168,8 +165,7 @@ solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
-ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
-                               solver_options=solver_options, nthreads=4)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 ```
 @note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
 Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
@@ -241,7 +237,7 @@ viewer.display(ocp_solver.get_time_discretization().time_steps(),
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-discretization = robotoc.TimeDiscretization(T, N, max_num_each_discrete_events*2)
+discretization = robotoc.TimeDiscretization(T, N)
 discretization.discretize(contact_sequence, t)
 print(discretization)
 ```

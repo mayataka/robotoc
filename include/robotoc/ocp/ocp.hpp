@@ -89,13 +89,6 @@ public:
   OCP& operator=(OCP&&) noexcept = default;
 
   ///
-  /// @brief Resize the internal data without reallocating all the data. 
-  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
-  /// each discrete events on the horizon. Must be non-negative. Default is 0.
-  ///
-  void resize(const int max_num_each_discrete_events);
-
-  ///
   /// @brief Sets the discretization method of the optimal contro problem. 
   /// @param[in] discretization_method The discretization method.
   ///
@@ -166,9 +159,9 @@ public:
   int N() const;
 
   ///
-  /// @return Maximum possible number of the each discrete events on the horizon. 
+  /// @return Reserved size of the discrete-event data. 
   ///
-  int maxNumEachDiscreteEvents() const;
+  int reservedNumDiscreteEvents() const;
 
   ///
   /// @return true if the switching time optimization (STO) algorithm is enalbed. 
@@ -239,8 +232,10 @@ private:
   std::shared_ptr<ContactSequence> contact_sequence_;
   TimeDiscretization discretization_;
   double T_;
-  int N_, max_num_each_discrete_events_;
+  int N_, reserved_num_discrete_events_;
   bool is_sto_enabled_;
+
+  void reserve();
 
 };
 

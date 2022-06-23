@@ -40,7 +40,7 @@ PYBIND11_MODULE(ocp, m) {
     .def("contact_sequence", &OCP::contact_sequence)
     .def("T", &OCP::T)
     .def("N", &OCP::N)
-    .def("max_num_each_discrete_events", &OCP::maxNumEachDiscreteEvents)
+    .def("reserved_num_discrete_events", &OCP::reservedNumDiscreteEvents)
     .def("is_sto_enabled", &OCP::isSTOEnabled)
     .def("__str__", [](const OCP& self) {
         std::stringstream ss;

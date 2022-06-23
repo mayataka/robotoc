@@ -3,6 +3,8 @@
 
 #include "robotoc/hybrid/time_discretization.hpp"
 
+#include <stdexcept>
+#include <cassert>
 #include <cassert>
 #include <numeric>
 
@@ -10,7 +12,7 @@
 namespace robotoc {
 
 inline TimeDiscretization::TimeDiscretization(const double T, const int N, 
-                                              const int max_num_each_discrete_events) 
+                                              const int reserved_num_discrete_events) 
   : T_(T),
     dt_ideal_(T/N), 
     max_dt_(dt_ideal_-std::sqrt(std::numeric_limits<double>::epsilon())),
@@ -19,23 +21,38 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
     N_ideal_(N),
     N_impulse_(0),
     N_lift_(0),
-    max_num_each_discrete_events_(max_num_each_discrete_events),
-    N_phase_(2*max_num_each_discrete_events+1, 1),
+    reserved_num_discrete_events_(reserved_num_discrete_events),
+    N_phase_(2*reserved_num_discrete_events+1, 1),
     contact_phase_from_time_stage_(N+1, 0), 
     impulse_index_after_time_stage_(N+1, -1), 
     lift_index_after_time_stage_(N+1, -1), 
-    time_stage_before_impulse_(max_num_each_discrete_events+1, -1), 
-    time_stage_before_lift_(max_num_each_discrete_events+1, -1),
+    time_stage_before_impulse_(reserved_num_discrete_events+1, -1), 
+    time_stage_before_lift_(reserved_num_discrete_events+1, -1),
     is_time_stage_before_impulse_(N+1, false),
     is_time_stage_before_lift_(N+1, false),
     grid_(N+1, GridInfo()), 
-    grid_impulse_(max_num_each_discrete_events+1, GridInfo()), 
-    grid_lift_(max_num_each_discrete_events+1, GridInfo()),
-    event_types_(2*max_num_each_discrete_events+1, DiscreteEventType::None),
-    sto_impulse_(max_num_each_discrete_events), 
-    sto_lift_(max_num_each_discrete_events),
-    sto_event_(2*max_num_each_discrete_events+1),
+    grid_impulse_(reserved_num_discrete_events+1, GridInfo()), 
+    grid_lift_(reserved_num_discrete_events+1, GridInfo()),
+    event_types_(2*reserved_num_discrete_events+1, DiscreteEventType::None),
+    sto_impulse_(reserved_num_discrete_events), 
+    sto_lift_(reserved_num_discrete_events),
+    sto_event_(2*reserved_num_discrete_events+1),
     discretization_method_(DiscretizationMethod::GridBased) {
+  try {
+    if (T <= 0) {
+      throw std::out_of_range("invalid value: T must be positive!");
+    }
+    if (N <= 0) {
+      throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (reserved_num_discrete_events < 0) {
+      throw std::out_of_range("invalid value: reserved_num_discrete_events must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -47,7 +64,7 @@ inline TimeDiscretization::TimeDiscretization()
     N_ideal_(0),
     N_impulse_(0),
     N_lift_(0),
-    max_num_each_discrete_events_(0),
+    reserved_num_discrete_events_(0),
     N_phase_(),
     contact_phase_from_time_stage_(), 
     impulse_index_after_time_stage_(), 
@@ -79,6 +96,7 @@ inline void TimeDiscretization::setDiscretizationMethod(
 
 inline void TimeDiscretization::discretize(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
+  reserve(contact_sequence->reservedNumDiscreteEvents());
   if (discretization_method_ == DiscretizationMethod::GridBased) {
     countDiscreteEvents(contact_sequence, t, true);
     countTimeStepsGridBased(t);
@@ -99,6 +117,7 @@ inline void TimeDiscretization::discretize(
 inline void TimeDiscretization::meshRefinement(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
   if (discretization_method_ == DiscretizationMethod::PhaseBased) {
+    reserve(contact_sequence->reservedNumDiscreteEvents());
     countDiscreteEvents(contact_sequence, t, true);
     countTimeStepsPhaseBased(t);
     countTimeStages();
@@ -392,8 +411,42 @@ inline DiscretizationMethod TimeDiscretization::discretizationMethod() const {
 }
 
 
-inline int TimeDiscretization::maxNumEachDiscreteEvents() const {
-  return max_num_each_discrete_events_;
+inline void TimeDiscretization::reserve(const int reserved_num_discrete_events) {
+  if (reserved_num_discrete_events_ < reserved_num_discrete_events) {
+    while (N_phase_.size() < 2*reserved_num_discrete_events+1) {
+      N_phase_.push_back(0);
+    }
+    while (time_stage_before_impulse_.size() < reserved_num_discrete_events+1) {
+      time_stage_before_impulse_.push_back(-1);
+    }
+    while (time_stage_before_lift_.size() < reserved_num_discrete_events+1) {
+      time_stage_before_lift_.push_back(-1);
+    }
+    while (grid_impulse_.size() < reserved_num_discrete_events+1) {
+      grid_impulse_.push_back(GridInfo());
+    }
+    while (grid_lift_.size() < reserved_num_discrete_events+1) {
+      grid_lift_.push_back(GridInfo());
+    }
+    while (event_types_.size() < 2*reserved_num_discrete_events+1) {
+      event_types_.push_back(DiscreteEventType::None);
+    }
+    while (sto_impulse_.size() < reserved_num_discrete_events+1) {
+      sto_impulse_.push_back(false);
+    }
+    while (sto_lift_.size() < reserved_num_discrete_events+1) {
+      sto_lift_.push_back(false);
+    }
+    while (sto_event_.size() < reserved_num_discrete_events+1) {
+      sto_event_.push_back(false);
+    }
+    reserved_num_discrete_events_ = reserved_num_discrete_events;
+  }
+}
+
+
+inline int TimeDiscretization::reservedNumDiscreteEvents() const {
+  return reserved_num_discrete_events_;
 }
 
 
@@ -464,12 +517,12 @@ inline bool TimeDiscretization::isSwitchingTimeConsistent() const {
 inline void TimeDiscretization::countDiscreteEvents(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t,
     const bool refine_grids) {
-  const int max_num_impulse_events = contact_sequence->numImpulseEvents();
-  assert(max_num_impulse_events <= max_num_each_discrete_events_);
+  const int num_impulse_events = contact_sequence->numImpulseEvents();
+  assert(num_impulse_events <= reserved_num_discrete_events_);
   const bool is_phase_based 
     = (discretization_method_ == DiscretizationMethod::PhaseBased);
   N_impulse_ = 0;
-  for (int impulse_index=0; impulse_index<max_num_impulse_events; ++impulse_index) {
+  for (int impulse_index=0; impulse_index<num_impulse_events; ++impulse_index) {
     const double t_impulse = contact_sequence->impulseTime(impulse_index);
     if (t_impulse >= t+T_-eps_) {
       break;
@@ -482,10 +535,10 @@ inline void TimeDiscretization::countDiscreteEvents(
         = (is_phase_based && contact_sequence->isSTOEnabledImpulse(impulse_index));
     ++N_impulse_;
   }
-  const int max_num_lift_events = contact_sequence->numLiftEvents();
-  assert(max_num_lift_events <= max_num_each_discrete_events_);
+  const int num_lift_events = contact_sequence->numLiftEvents();
+  assert(num_lift_events <= reserved_num_discrete_events_);
   N_lift_ = 0;
-  for (int lift_index=0; lift_index<max_num_lift_events; ++lift_index) {
+  for (int lift_index=0; lift_index<num_lift_events; ++lift_index) {
     const double t_lift = contact_sequence->liftTime(lift_index);
     if (t_lift >= t+T_-eps_) {
       break;

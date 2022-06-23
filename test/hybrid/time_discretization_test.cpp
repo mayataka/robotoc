@@ -42,7 +42,7 @@ std::shared_ptr<ContactSequence> TimeDiscretizationTest::createContactSequence(c
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
   auto contact_sequence = std::make_shared<ContactSequence>(robot, max_num_events);
-  contact_sequence->initContactSequence(pre_contact_status);
+  contact_sequence->init(pre_contact_status);
   ContactStatus post_contact_status = pre_contact_status;
   const double event_period = 3 * dt;
   for (int i=0; i<max_num_events; ++i) {
@@ -65,7 +65,7 @@ std::shared_ptr<ContactSequence> TimeDiscretizationTest::createContactSequenceOn
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
   auto contact_sequence = std::make_shared<ContactSequence>(robot, max_num_events);
-  contact_sequence->initContactSequence(pre_contact_status);
+  contact_sequence->init(pre_contact_status);
   ContactStatus post_contact_status = pre_contact_status;
   const double event_period = 3 * dt;
   for (int i=0; i<max_num_events; ++i) {

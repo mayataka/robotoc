@@ -10,11 +10,10 @@
 
 namespace robotoc {
 
-MPCFlyingTrot::MPCFlyingTrot(const Robot& robot, const double T, 
-                             const int N, const int max_steps, 
+MPCFlyingTrot::MPCFlyingTrot(const Robot& robot, const double T, const int N, 
                              const int nthreads)
   : foot_step_planner_(),
-    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
     ocp_solver_(OCP(robot, cost_, constraints_, contact_sequence_, T, N), 
@@ -190,7 +189,8 @@ void MPCFlyingTrot::init(const double t, const Eigen::VectorXd& q,
   }
   current_step_ = 0;
   predict_step_ = 0;
-  contact_sequence_->initContactSequence(cs_standing_);
+  contact_sequence_->reserve(std::floor(T_/(flying_time_+stance_time_)));
+  contact_sequence_->init(cs_standing_);
   bool add_step = addStep(t);
   while (add_step) {
     add_step = addStep(t);
