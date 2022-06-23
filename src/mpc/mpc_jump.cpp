@@ -122,7 +122,7 @@ void MPCJump::init(const double t, const Eigen::VectorXd& q,
                    const Eigen::VectorXd& v, 
                    const SolverOptions& solver_options, const bool sto) {
   current_step_ = 0;
-  contact_sequence_->initContactSequence(cs_ground_);
+  contact_sequence_->init(cs_ground_);
   const double t_lift_off   = t + T_ - ground_time_ - flying_time_;
   const double t_touch_down = t + T_ - ground_time_;
   contact_sequence_->reserve(1);
@@ -152,7 +152,7 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
                     const Eigen::VectorXd& v, 
                     const SolverOptions& solver_options, const bool sto) {
   current_step_ = 0;
-  contact_sequence_->initContactSequence(cs_ground_);
+  contact_sequence_->init(cs_ground_);
   const double t_lift_off   = t + T_ - ground_time_ - flying_time_;
   const double t_touch_down = t + T_ - ground_time_;
   contact_sequence_->push_back(cs_flying_, t_lift_off, sto);

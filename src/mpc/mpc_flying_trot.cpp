@@ -190,7 +190,7 @@ void MPCFlyingTrot::init(const double t, const Eigen::VectorXd& q,
   current_step_ = 0;
   predict_step_ = 0;
   contact_sequence_->reserve(std::floor(T_/(flying_time_+stance_time_)));
-  contact_sequence_->initContactSequence(cs_standing_);
+  contact_sequence_->init(cs_standing_);
   bool add_step = addStep(t);
   while (add_step) {
     add_step = addStep(t);

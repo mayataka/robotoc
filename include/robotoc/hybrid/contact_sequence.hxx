@@ -58,7 +58,7 @@ inline ContactSequence::~ContactSequence() {
 }
 
 
-inline void ContactSequence::initContactSequence(
+inline void ContactSequence::init(
     const ContactStatus& contact_status) {
   clear_all();
   contact_statuses_.push_back(contact_status);
@@ -71,7 +71,7 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
   try {
     if (numContactPhases() == 0) {
       throw std::runtime_error(
-          "Call initContactSequence() before calling push_back()!");
+          "Call init() before calling push_back()!");
     }
     if (!discrete_event.existDiscreteEvent()) {
       throw std::runtime_error(

@@ -78,7 +78,7 @@ contact_placements = {'l_sole': x3d0_L, 'r_sole': x3d0_R}
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['l_sole', 'r_sole'])
 contact_status_standing.set_contact_placements(contact_placements)
-contact_sequence.init_contact_sequence(contact_status_standing)
+contact_sequence.init(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time, sto=True)

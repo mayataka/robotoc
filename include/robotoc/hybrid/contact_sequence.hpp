@@ -65,7 +65,7 @@ public:
   /// disable discrete events over all of the time stages.
   /// @param[in] contact_status Contact status.
   ///
-  void initContactSequence(const ContactStatus& contact_status);
+  void init(const ContactStatus& contact_status);
 
   ///
   /// @brief Push back the discrete event. Contact status after discrete event 

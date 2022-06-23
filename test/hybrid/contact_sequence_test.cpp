@@ -101,7 +101,7 @@ void ContactSequenceTest::test_setContactStatus(const Robot& robot) const {
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  contact_sequence.initContactSequence(contact_status);
+  contact_sequence.init(contact_status);
   EXPECT_TRUE(contact_sequence.contactStatus(0) == contact_status);
   EXPECT_FALSE(contact_sequence.contactStatus(0) == default_contact_status);
   EXPECT_EQ(contact_sequence.numImpulseEvents(), 0);
@@ -115,7 +115,7 @@ void ContactSequenceTest::test_setContactStatus(const Robot& robot) const {
   EXPECT_EQ(contact_sequence.numLiftEvents(), 0);
   EXPECT_EQ(contact_sequence.numDiscreteEvents(), 0);
   EXPECT_EQ(contact_sequence.numContactPhases(), 1);
-  contact_sequence.initContactSequence(contact_status);
+  contact_sequence.init(contact_status);
   EXPECT_TRUE(contact_sequence.contactStatus(0) == contact_status);
   EXPECT_FALSE(contact_sequence.contactStatus(0) == default_contact_status);
   EXPECT_EQ(contact_sequence.numImpulseEvents(), 0);
@@ -136,7 +136,7 @@ void ContactSequenceTest::test_push_back(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_each_events);
   auto pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  contact_sequence.initContactSequence(pre_contact_status);
+  contact_sequence.init(pre_contact_status);
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int j=0; j<5; ++j) {
@@ -178,7 +178,7 @@ void ContactSequenceTest::test_pop_back(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_each_events);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  contact_sequence.initContactSequence(pre_contact_status);
+  contact_sequence.init(pre_contact_status);
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
@@ -225,7 +225,7 @@ void ContactSequenceTest::test_pop_front(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_each_events);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  contact_sequence.initContactSequence(pre_contact_status);
+  contact_sequence.init(pre_contact_status);
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
@@ -271,7 +271,7 @@ void ContactSequenceTest::test_setContactPlacements(const Robot& robot) const {
   ContactSequence contact_sequence(robot, max_num_each_events);
   auto pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  contact_sequence.initContactSequence(pre_contact_status);
+  contact_sequence.init(pre_contact_status);
   std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   std::vector<int> impulse_indices;

@@ -151,7 +151,7 @@ In the beginning, the robot is standing, so all the contacts are active.
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
-  contact_sequence->initContactSequence(contact_status_standing);
+  contact_sequence->init(contact_status_standing);
 ```
 
 Next, we set the contact status when the robot is flying. 

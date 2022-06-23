@@ -108,7 +108,7 @@ TEST_F(OCPSolverTest, test) {
                                                        robot.framePosition(RF_foot_id),
                                                        robot.framePosition(RH_foot_id)};
   contact_status_standing.setContactPlacements(contact_positions);
-  contact_sequence->initContactSequence(contact_status_standing);
+  contact_sequence->init(contact_status_standing);
 
   // Create OCPSolver
   const double T = 0.5;

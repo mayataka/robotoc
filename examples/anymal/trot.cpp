@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
-  contact_sequence->initContactSequence(contact_status_standing);
+  contact_sequence->init(contact_status_standing);
 
   auto contact_status_lhrf_swing = robot.createContactStatus();
   contact_status_lhrf_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "RH_FOOT"}));

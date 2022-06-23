@@ -121,7 +121,7 @@ contact_positions = {'FL_foot': x3d0_LF, 'RL_foot': x3d0_LH, 'FR_foot': x3d0_RF,
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'])
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.init_contact_sequence(contact_status_standing)
+contact_sequence.init(contact_status_standing)
 
 contact_status_rfrh_swing = robot.create_contact_status()
 contact_status_rfrh_swing.activate_contacts(['FL_foot', 'RL_foot'])
