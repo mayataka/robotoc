@@ -11,23 +11,22 @@
 namespace robotoc {
 
 inline ContactSequence::ContactSequence(const Robot& robot, 
-                                        const int max_num_each_events)
-  : max_num_each_events_(max_num_each_events),
-    max_num_events_(2*max_num_each_events),
+                                        const int reserved_num_discrete_events)
+  : reserved_num_discrete_events_(reserved_num_discrete_events),
     default_contact_status_(robot.createContactStatus()),
-    contact_statuses_(2*max_num_each_events+1),
-    impulse_events_(max_num_each_events),
-    event_index_impulse_(max_num_each_events), 
-    event_index_lift_(max_num_each_events),
-    event_time_(2*max_num_each_events),
-    impulse_time_(max_num_each_events),
-    lift_time_(max_num_each_events),
-    is_impulse_event_(2*max_num_each_events),
-    sto_impulse_(max_num_each_events), 
-    sto_lift_(max_num_each_events) {
+    contact_statuses_(2*reserved_num_discrete_events+1),
+    impulse_events_(reserved_num_discrete_events),
+    event_index_impulse_(reserved_num_discrete_events), 
+    event_index_lift_(reserved_num_discrete_events),
+    event_time_(2*reserved_num_discrete_events),
+    impulse_time_(reserved_num_discrete_events),
+    lift_time_(reserved_num_discrete_events),
+    is_impulse_event_(2*reserved_num_discrete_events),
+    sto_impulse_(reserved_num_discrete_events), 
+    sto_lift_(reserved_num_discrete_events) {
   try {
-    if (max_num_each_events < 0) {
-      throw std::out_of_range("invalid argument: max_num_each_events must be non-negative!");
+    if (reserved_num_discrete_events < 0) {
+      throw std::out_of_range("invalid argument: reserved_num_discrete_events must be non-negative!");
     }
   }
   catch(const std::exception& e) {
@@ -40,8 +39,7 @@ inline ContactSequence::ContactSequence(const Robot& robot,
 
 
 inline ContactSequence::ContactSequence()
-  : max_num_each_events_(0),
-    max_num_events_(0),
+  : reserved_num_discrete_events_(0),
     default_contact_status_(),
     contact_statuses_(),
     impulse_events_(),
@@ -83,12 +81,6 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
       throw std::runtime_error(
           "discrete_event.preContactStatus() is not consistent with the last contact status!");
     }
-    if (numDiscreteEvents()+1 > max_num_events_) {
-      throw std::runtime_error(
-          "Number of discrete events " + std::to_string(numDiscreteEvents()+1)  
-          + " exceeds predefined max_num_events=" 
-          + std::to_string(max_num_events_) + "!");
-    }
     if (numImpulseEvents() > 0 || numLiftEvents() > 0) {
       if (event_time <= event_time_.back()) {
         throw std::runtime_error(
@@ -118,6 +110,9 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
     lift_time_.push_back(event_time);
     is_impulse_event_.push_back(false);
     sto_lift_.push_back(sto);
+  }
+  if (reserved_num_discrete_events_ < numDiscreteEvents()) {
+    reserved_num_discrete_events_ = numDiscreteEvents();
   }
 }
 
@@ -432,13 +427,25 @@ inline const std::deque<double>& ContactSequence::eventTimes() const {
 }
 
 
-inline int ContactSequence::maxNumEachEvents() const {
-  return max_num_each_events_;
+inline void ContactSequence::reserve(const int reserved_num_discrete_events) {
+  if (reserved_num_discrete_events_ < reserved_num_discrete_events) {
+    reserveDeque(contact_statuses_, 2*reserved_num_discrete_events+1);
+    reserveDeque(impulse_events_, reserved_num_discrete_events);
+    reserveDeque(event_index_impulse_, reserved_num_discrete_events);
+    reserveDeque(event_index_lift_, reserved_num_discrete_events);
+    reserveDeque(event_time_, 2*reserved_num_discrete_events);
+    reserveDeque(impulse_time_, reserved_num_discrete_events);
+    reserveDeque(lift_time_, reserved_num_discrete_events);
+    reserveDeque(is_impulse_event_, 2*reserved_num_discrete_events);
+    reserveDeque(sto_impulse_, reserved_num_discrete_events);
+    reserveDeque(sto_lift_, reserved_num_discrete_events);
+    reserved_num_discrete_events_ = reserved_num_discrete_events;
+  }
 }
 
 
-inline int ContactSequence::maxNumEvents() const {
-  return max_num_events_;
+inline int ContactSequence::reservedNumDiscreteEvents() const {
+  return reserved_num_discrete_events_;
 }
 
 

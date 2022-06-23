@@ -24,10 +24,11 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model. 
-  /// @param[in] max_num_each_events Maximum number of each discrete events 
-  /// (impulse and lift). Default is 0 (assumes that there are no discrete events).
+  /// @param[in] reserved_num_discrete_events Reserved number of each discrete 
+  /// events (impulse and lift) to avoid dynamic memory allocation. Must be 
+  /// non-negative. Default is 0.
   ///
-  ContactSequence(const Robot& robot, const int max_num_each_events=0);
+  ContactSequence(const Robot& robot, const int reserved_num_discrete_events=0);
 
   ///
   /// @brief Default constructor. 
@@ -245,16 +246,16 @@ public:
   const std::deque<double>& eventTimes() const;
 
   ///
-  /// @brief Returns maximum number of each discrete events 
-  /// (impulse and lift). 
+  /// @brief Reserves each discrete events (impulse and lift) to avoid dynamic 
+  /// memory allocation.
+  /// @param[in] reserved_num_discrete_events The reserved size.
   ///
-  int maxNumEachEvents() const;
+  void reserve(const int reserved_num_discrete_events);
 
   ///
-  /// @brief Returns maximum number of discrete events (sum of the maximum 
-  /// numbers of impulse events and lift events).
+  /// @brief Returns reserved size of container of each discrete events.
   ///
-  int maxNumEvents() const;
+  int reservedNumDiscreteEvents() const;
 
   ///
   /// @brief Displays the contact sequence onto a ostream.
@@ -269,7 +270,7 @@ public:
       const std::shared_ptr<ContactSequence>& contact_sequence);
 
 private:
-  int max_num_each_events_, max_num_events_;
+  int reserved_num_discrete_events_;
   ContactStatus default_contact_status_;
   std::deque<ContactStatus> contact_statuses_;
   std::deque<DiscreteEvent> impulse_events_;
@@ -278,6 +279,19 @@ private:
   std::deque<bool> is_impulse_event_, sto_impulse_, sto_lift_;
 
   void clear_all();
+
+  template <typename T> 
+  static void reserveDeque(std::deque<T>& deq, const int size) {
+    const int current_size = deq.size();
+    if (current_size < size) {
+      while (deq.size() < size) {
+        deq.push_back(T());
+      }
+      while (deq.size() > current_size) {
+        deq.pop_back();
+      }
+    }
+  }
 
 };
  

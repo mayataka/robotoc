@@ -77,10 +77,10 @@ public:
   void setRegularization(const double max_dts0);
 
   ///
-  /// @brief Resizes the internal data. 
+  /// @brief Reserve the internal data. 
   /// @param[in] ocp Optimal control problem.
   ///
-  void resize(const OCP& ocp);
+  void reserve(const OCP& ocp);
 
   ///
   /// @brief Performs the backward Riccati recursion. 

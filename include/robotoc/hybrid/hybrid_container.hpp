@@ -56,18 +56,18 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] N Number of the discretization grids of the horizon except for 
   /// the discrete events. Must be positive.
-  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
-  /// each discrete events on the horizon. OCP data for impulse and lift events 
-  /// are constructed according to this value. Default is 0. 
-  /// Must be non-negative.
+  /// @param[in] reserved_num_discrete_events Reserved number of discrete events  
+  /// on the horizon. OCP data for impulse and lift events are constructed 
+  /// according to this value. Default is 1. Must be positive.
   ///
   hybrid_container(const Robot& robot, const int N, 
-                   const int max_num_each_discrete_events=0) 
+                   const int reserved_num_discrete_events=1) 
     : data(N+1, Type(robot)), 
-      aux(max_num_each_discrete_events, Type(robot)), 
-      lift(max_num_each_discrete_events, Type(robot)),
-      impulse(max_num_each_discrete_events, ImpulseType(robot)),
-      switching(max_num_each_discrete_events, SwitchingType(robot)) {
+      aux(reserved_num_discrete_events, Type(robot)), 
+      lift(reserved_num_discrete_events, Type(robot)),
+      impulse(reserved_num_discrete_events, ImpulseType(robot)),
+      switching(reserved_num_discrete_events, SwitchingType(robot)),
+      reserved_num_discrete_events_(reserved_num_discrete_events) {
   }
 
   ///
@@ -102,26 +102,38 @@ public:
   hybrid_container& operator=(hybrid_container&&) noexcept = default;
 
   ///
-  /// @brief Resize the data without reallocating all the data. 
+  /// @brief Reserve the discrete-event data. 
   /// @param[in] robot Robot model.
-  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
-  /// each discrete events on the horizon. OCP data for impulse and lift events 
-  /// are constructed according to this value. Must be non-negative.
-  /// @remark robot model must be the same as one in the argument of the 
-  /// constructor.
+  /// @param[in] reserved_num_discrete_events Reserved number of discrete events  
+  /// on the horizon. OCP data for impulse and lift events are constructed 
+  /// according to this value. Must be non-negative.
   ///
-  void resize(const Robot& robot, const int max_num_each_discrete_events) {
-    assert(max_num_each_discrete_events >= 0);
-    assert(impulse.size() == aux.size());
-    assert(impulse.size() == switching.size());
-    while (max_num_each_discrete_events > impulse.size()) {
+  void reserve(const Robot& robot, const int reserved_num_discrete_events) {
+    assert(impulse.size() == reserved_num_discrete_events_);
+    assert(aux.size() == reserved_num_discrete_events_);
+    assert(switching.size() == reserved_num_discrete_events_);
+    assert(lift.size() == reserved_num_discrete_events_);
+    assert(reserved_num_discrete_events >= 0);
+    while (reserved_num_discrete_events > impulse.size()) {
       impulse.emplace_back(robot);
+    }
+    while (reserved_num_discrete_events > aux.size()) {
       aux.emplace_back(robot);
+    }
+    while (reserved_num_discrete_events > switching.size()) {
       switching.emplace_back(robot);
     }
-    while (max_num_each_discrete_events > lift.size()) {
+    while (reserved_num_discrete_events > lift.size()) {
       lift.emplace_back(robot);
     }
+    reserved_num_discrete_events_ = reserved_num_discrete_events;
+  }
+
+  ///
+  /// @return Reserved size of the discrete-event data. 
+  ///
+  int reservedNumDiscreteEvents() const {
+    return reserved_num_discrete_events_;
   }
 
   ///
@@ -200,6 +212,8 @@ public:
     }
   }
 
+private:
+  int reserved_num_discrete_events_;
 };
 
 } // namespace robotoc

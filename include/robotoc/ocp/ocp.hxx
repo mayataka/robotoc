@@ -16,9 +16,9 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                 const std::shared_ptr<ContactSequence>& contact_sequence,
                 const double T, const int N) 
   : data(N, SplitOCP(robot, cost, constraints)), 
-    aux(contact_sequence->maxNumEachEvents(), SplitOCP(robot, cost, constraints)),
-    lift(contact_sequence->maxNumEachEvents(), SplitOCP(robot, cost, constraints)),
-    impulse(contact_sequence->maxNumEachEvents(), ImpulseSplitOCP(robot, cost, constraints)),
+    aux(contact_sequence->reservedNumDiscreteEvents(), SplitOCP(robot, cost, constraints)),
+    lift(contact_sequence->reservedNumDiscreteEvents(), SplitOCP(robot, cost, constraints)),
+    impulse(contact_sequence->reservedNumDiscreteEvents(), ImpulseSplitOCP(robot, cost, constraints)),
     terminal(TerminalOCP(robot, cost, constraints)),
     robot_(robot),
     cost_(cost),
@@ -26,10 +26,10 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     sto_cost_(sto_cost),
     sto_constraints_(sto_constraints),
     contact_sequence_(contact_sequence),
-    discretization_(T, N, contact_sequence->maxNumEachEvents()),
+    discretization_(T, N, contact_sequence->reservedNumDiscreteEvents()),
     T_(T),
     N_(N),
-    max_num_each_discrete_events_(contact_sequence->maxNumEachEvents()),
+    reserved_num_discrete_events_(contact_sequence->reservedNumDiscreteEvents()),
     is_sto_enabled_(true) {
   try {
     if (T <= 0) {
@@ -61,9 +61,9 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                 const std::shared_ptr<ContactSequence>& contact_sequence,
                 const double T, const int N) 
   : data(N, SplitOCP(robot, cost, constraints)), 
-    aux(contact_sequence->maxNumEachEvents(), SplitOCP(robot, cost, constraints)),
-    lift(contact_sequence->maxNumEachEvents(), SplitOCP(robot, cost, constraints)),
-    impulse(contact_sequence->maxNumEachEvents(), ImpulseSplitOCP(robot, cost, constraints)),
+    aux(contact_sequence->reservedNumDiscreteEvents(), SplitOCP(robot, cost, constraints)),
+    lift(contact_sequence->reservedNumDiscreteEvents(), SplitOCP(robot, cost, constraints)),
+    impulse(contact_sequence->reservedNumDiscreteEvents(), ImpulseSplitOCP(robot, cost, constraints)),
     terminal(TerminalOCP(robot, cost, constraints)),
     robot_(robot),
     cost_(cost),
@@ -71,10 +71,10 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     sto_cost_(),
     sto_constraints_(),
     contact_sequence_(contact_sequence),
-    discretization_(T, N, contact_sequence->maxNumEachEvents()),
+    discretization_(T, N, contact_sequence->reservedNumDiscreteEvents()),
     T_(T),
     N_(N),
-    max_num_each_discrete_events_(contact_sequence->maxNumEachEvents()),
+    reserved_num_discrete_events_(contact_sequence->reservedNumDiscreteEvents()),
     is_sto_enabled_(false) {
   try {
     if (T <= 0) {
@@ -106,27 +106,28 @@ inline OCP::OCP()
     discretization_(),
     T_(0),
     N_(0),
+    reserved_num_discrete_events_(0),
     is_sto_enabled_(false) {
 }
 
 
-inline void OCP::resize(const int max_num_each_discrete_events) {
-  assert(max_num_each_discrete_events >= 0);
-  assert(impulse.size() == discretization_.maxNumEachDiscreteEvents());
-  assert(aux.size() == discretization_.maxNumEachDiscreteEvents());
-  assert(lift.size() == discretization_.maxNumEachDiscreteEvents());
-  if (max_num_each_discrete_events > max_num_each_discrete_events_) {
-    const auto discretization_method = discretization_.discretizationMethod();
-    discretization_ = TimeDiscretization(T_, N_, max_num_each_discrete_events);
-    discretization_.setDiscretizationMethod(discretization_method);
-    while (max_num_each_discrete_events > impulse.size()) {
+inline void OCP::reserve() {
+  assert(impulse.size() == reserved_num_discrete_events_);
+  assert(aux.size() == reserved_num_discrete_events_);
+  assert(lift.size() == reserved_num_discrete_events_);
+  const int new_reserved_num_discrete_events 
+      = discretization_.reservedNumDiscreteEvents();
+  if (new_reserved_num_discrete_events > reserved_num_discrete_events_) {
+    while (new_reserved_num_discrete_events > impulse.size()) {
       impulse.emplace_back(robot_, cost_, constraints_);
+    }
+    while (new_reserved_num_discrete_events > impulse.size()) {
       aux.emplace_back(robot_, cost_, constraints_);
     }
-    while (max_num_each_discrete_events > lift.size()) {
+    while (new_reserved_num_discrete_events > lift.size()) {
       lift.emplace_back(robot_, cost_, constraints_);
     }
-    max_num_each_discrete_events_ = max_num_each_discrete_events;
+    reserved_num_discrete_events_ = new_reserved_num_discrete_events;
   }
 }
 
@@ -143,11 +144,13 @@ inline void OCP::setDiscretizationMethod(
 
 inline void OCP::discretize(const double t) {
   discretization_.discretize(contact_sequence_, t);
+  reserve();
 }
 
 
 inline void OCP::meshRefinement(const double t) {
   discretization_.meshRefinement(contact_sequence_, t);
+  reserve();
 }
 
 
@@ -196,8 +199,8 @@ inline int OCP::N() const {
 }
 
 
-inline int OCP::maxNumEachDiscreteEvents() const {
-  return max_num_each_discrete_events_;
+inline int OCP::reservedNumDiscreteEvents() const {
+  return reserved_num_discrete_events_;
 }
 
 
@@ -210,7 +213,7 @@ inline void OCP::disp(std::ostream& os) const {
   os << "OCP: " << std::endl;
   os << "T: " << T_ << std::endl;
   os << "N: " << N_ << std::endl;
-  os << "max_num_each_discrete_events: " << max_num_each_discrete_events_ << std::endl;
+  os << "reserved_num_discrete_events: " << reserved_num_discrete_events_ << std::endl;
   os << robot_ << std::endl;
   os << discretization_ << std::endl;
 }

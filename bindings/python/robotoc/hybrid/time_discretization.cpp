@@ -96,7 +96,9 @@ PYBIND11_MODULE(time_discretization, m) {
     .def("event_type", &TimeDiscretization::eventType,
           py::arg("event_index"))
     .def("discretization_method", &TimeDiscretization::discretizationMethod)
-    .def("max_num_each_discrete_events", &TimeDiscretization::maxNumEachDiscreteEvents)
+    .def("reserve", &TimeDiscretization::reserve,
+          py::arg("reserved_num_discrete_events"))
+    .def("reserved_num_discrete_events", &TimeDiscretization::reservedNumDiscreteEvents)
     .def("time_steps", &TimeDiscretization::timeSteps)
     .def("time_points", &TimeDiscretization::timePoints)
     .def("is_formulation_tractable", &TimeDiscretization::isFormulationTractable)

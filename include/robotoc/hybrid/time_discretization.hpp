@@ -25,11 +25,12 @@ public:
   /// @param[in] T Length of the horizon.
   /// @param[in] N Number of the discretization grids of the horizon except for 
   /// the discrete events. Must be positive.
-  /// @param[in] max_num_each_discrete_events Maximum possible number of the 
-  /// each discrete events on the horizon. Must be non-negative.
+  /// @param[in] reserved_num_discrete_events Reserved size of each discrete 
+  /// events (impulse and lift) to avoid dynamic memory allocation. Must be 
+  /// non-negative. 
   ///
   TimeDiscretization(const double T, const int N, 
-                     const int max_num_each_discrete_events);
+                     const int reserved_num_discrete_events);
 
   ///
   /// @brief Default constructor. 
@@ -360,12 +361,16 @@ public:
   DiscretizationMethod discretizationMethod() const;
 
   ///
-  /// @brief Returns the maximum possible number of the each discrete events on 
-  // the horizon. 
-  /// @return Maximum possible number of the each discrete events on 
-  // the horizon. 
+  /// @brief Reserve the discrete-event data. 
+  /// @param[in] reserved_num_discrete_events Reserved size of discrete events  
+  /// on the horizon. Must be non-negative.
   ///
-  int maxNumEachDiscreteEvents() const;
+  void reserve(const int reserved_num_discrete_events);
+
+  ///
+  /// @return Reserved size of the discrete-event data. 
+  ///
+  int reservedNumDiscreteEvents() const;
 
   ///
   /// @brief Returns the time steps of the discretization grids over the horzion. 
@@ -402,7 +407,7 @@ public:
 
 private:
   double T_, dt_ideal_, max_dt_, eps_;
-  int N_, N_ideal_, N_impulse_, N_lift_, max_num_each_discrete_events_;
+  int N_, N_ideal_, N_impulse_, N_lift_, reserved_num_discrete_events_;
   std::vector<int> N_phase_, contact_phase_from_time_stage_, 
                    impulse_index_after_time_stage_, 
                    lift_index_after_time_stage_, time_stage_before_impulse_, 

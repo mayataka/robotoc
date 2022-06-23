@@ -80,8 +80,7 @@ void ContactSequenceTest::test_constructor(const Robot& robot) const {
   EXPECT_EQ(contact_sequence.numLiftEvents(), 0);
   EXPECT_EQ(contact_sequence.numDiscreteEvents(), 0);
   EXPECT_EQ(contact_sequence.numContactPhases(), 1);
-  EXPECT_EQ(contact_sequence.maxNumEachEvents(), max_num_each_events);
-  EXPECT_EQ(contact_sequence.maxNumEvents(), 2*max_num_each_events);
+  EXPECT_EQ(contact_sequence.reservedNumDiscreteEvents(), max_num_each_events);
   EXPECT_TRUE(contact_sequence.contactStatus(0) == contact_status);
   contact_sequence.pop_back();
   contact_sequence.pop_front();
@@ -89,8 +88,7 @@ void ContactSequenceTest::test_constructor(const Robot& robot) const {
   EXPECT_EQ(contact_sequence.numLiftEvents(), 0);
   EXPECT_EQ(contact_sequence.numDiscreteEvents(), 0);
   EXPECT_EQ(contact_sequence.numContactPhases(), 1);
-  EXPECT_EQ(contact_sequence.maxNumEachEvents(), max_num_each_events);
-  EXPECT_EQ(contact_sequence.maxNumEvents(), 2*max_num_each_events);
+  EXPECT_EQ(contact_sequence.reservedNumDiscreteEvents(), max_num_each_events);
   EXPECT_TRUE(contact_sequence.contactStatus(0) == contact_status);
 }
 

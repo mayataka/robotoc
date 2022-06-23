@@ -99,6 +99,12 @@ public:
   ///
   void set(const LineSearchSettings& settings);
 
+  ///
+  /// @brief Reserve the internal data. 
+  /// @param[in] ocp Optimal control problem.
+  ///
+  void reserve(const OCP& ocp);
+
 private:
   LineSearchFilter filter_;
   LineSearchSettings settings_;
