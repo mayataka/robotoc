@@ -196,13 +196,13 @@ Finally, we can construct the optimal control solver!
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
   robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
-                   T, N, max_num_each_discrete_events);
+                   contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;
   solver_options.max_iter = 200;
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 ```
 @note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
 Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
@@ -238,7 +238,7 @@ Let's run the solver!
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-robotoc::TimeDiscretization discretization(T, N, max_num_each_discrete_events*2);
+robotoc::TimeDiscretization discretization(T, N);
 discretization.discretize(contact_sequence, t);
 std::cout << discretization << std::endl;
 ```

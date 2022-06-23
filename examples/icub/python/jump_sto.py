@@ -68,7 +68,6 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_each_discrete_events = 2
 contact_sequence = robotoc.ContactSequence(robot)
 
 robot.forward_kinematics(q_standing)
