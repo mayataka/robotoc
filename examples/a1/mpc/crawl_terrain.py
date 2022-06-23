@@ -23,9 +23,8 @@ yaw_rate_cmd = step_yaw / (swing_time+stance_time)
 
 T = 0.5
 N = 18
-max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCCrawl(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCCrawl(robot, T, N, nthreads)
 
 planner = robotoc.CrawlFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, step_yaw, (stance_time > 0.))

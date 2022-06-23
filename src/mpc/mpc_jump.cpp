@@ -11,13 +11,13 @@
 namespace robotoc {
 
 MPCJump::MPCJump(const Robot& robot, const double T, const int N, 
-                 const int max_steps, const int nthreads)
+                 const int nthreads)
   : foot_step_planner_(),
-    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, max_steps)),
+    contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, 1)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
     sto_cost_(std::make_shared<STOCostFunction>()),
-    sto_constraints_(std::make_shared<STOConstraints>(2*max_steps)),
+    sto_constraints_(std::make_shared<STOConstraints>(2)),
     ocp_solver_(OCP(robot, cost_, constraints_, sto_cost_, sto_constraints_, 
                     contact_sequence_, T, N), 
                 SolverOptions::defaultOptions(), nthreads), 
@@ -36,15 +36,6 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(N),
     current_step_(0) {
-  try {
-    if (max_steps < 1) {
-      throw std::out_of_range("invalid value: max_steps must be larger than 1!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
@@ -134,6 +125,7 @@ void MPCJump::init(const double t, const Eigen::VectorXd& q,
   contact_sequence_->initContactSequence(cs_ground_);
   const double t_lift_off   = t + T_ - ground_time_ - flying_time_;
   const double t_touch_down = t + T_ - ground_time_;
+  contact_sequence_->reserve(1);
   contact_sequence_->push_back(cs_flying_, t_lift_off, sto);
   contact_sequence_->push_back(cs_ground_, t_touch_down, sto);
   resetMinimumDwellTimes(t, dtm_);

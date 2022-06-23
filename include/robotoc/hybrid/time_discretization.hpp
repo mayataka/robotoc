@@ -22,15 +22,15 @@ class TimeDiscretization {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] T Length of the horizon.
+  /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of the discretization grids of the horizon except for 
   /// the discrete events. Must be positive.
   /// @param[in] reserved_num_discrete_events Reserved size of each discrete 
   /// events (impulse and lift) to avoid dynamic memory allocation. Must be 
-  /// non-negative. 
+  /// non-negative. Default is 0.
   ///
   TimeDiscretization(const double T, const int N, 
-                     const int reserved_num_discrete_events);
+                     const int reserved_num_discrete_events=0);
 
   ///
   /// @brief Default constructor. 

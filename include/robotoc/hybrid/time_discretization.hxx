@@ -3,6 +3,8 @@
 
 #include "robotoc/hybrid/time_discretization.hpp"
 
+#include <stdexcept>
+#include <cassert>
 #include <cassert>
 #include <numeric>
 
@@ -36,6 +38,21 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
     sto_lift_(reserved_num_discrete_events),
     sto_event_(2*reserved_num_discrete_events+1),
     discretization_method_(DiscretizationMethod::GridBased) {
+  try {
+    if (T <= 0) {
+      throw std::out_of_range("invalid value: T must be positive!");
+    }
+    if (N <= 0) {
+      throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (reserved_num_discrete_events < 0) {
+      throw std::out_of_range("invalid value: reserved_num_discrete_events must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 

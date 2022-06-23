@@ -22,7 +22,7 @@ PYBIND11_MODULE(time_discretization, m) {
 
   py::class_<TimeDiscretization>(m, "TimeDiscretization")
     .def(py::init<const double, const int, const int>(), 
-          py::arg("T"), py::arg("N"), py::arg("reserved_num_discrete_events"))
+          py::arg("T"), py::arg("N"), py::arg("reserved_num_discrete_events")=0)
     .def("set_discretization_method", &TimeDiscretization::setDiscretizationMethod,
           py::arg("discretization_method"))
     .def("discretize", &TimeDiscretization::discretize,

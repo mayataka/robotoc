@@ -31,9 +31,8 @@ robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase,
 
 T = 0.8
 N = 18
-max_steps = 1
 nthreads = 4
-mpc = robotoc.MPCJump(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCJump(robot, T, N, nthreads)
 
 planner = robotoc.JumpFootStepPlanner(robot)
 planner.set_jump_pattern(jump_length, jump_yaw)

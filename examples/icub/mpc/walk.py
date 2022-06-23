@@ -25,9 +25,8 @@ yaw_rate_cmd = step_yaw / swing_time
 
 T = 0.7
 N = 20
-max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCBipedWalk(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCBipedWalk(robot, T, N, nthreads)
 
 planner = robotoc.BipedWalkFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, step_yaw, (double_support_time > 0.))

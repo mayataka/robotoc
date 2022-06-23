@@ -13,9 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_biped_walk, m) {
   py::class_<MPCBipedWalk>(m, "MPCBipedWalk")
-    .def(py::init<const Robot&, const double, const int, const int,  const int>(),
-         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"), 
-         py::arg("max_steps"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int,  const int>(),
+         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
     .def("set_gait_pattern", &MPCBipedWalk::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("double_support_time"), py::arg("swing_start_time"))

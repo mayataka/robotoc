@@ -40,9 +40,8 @@ swing_start_time = 0.5
 
 T = 0.5
 N = 20
-max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCFlyingTrot(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCFlyingTrot(robot, T, N, nthreads)
 
 
 vcom_cmd = 0.5 * step_length / (flying_time+stance_time)
