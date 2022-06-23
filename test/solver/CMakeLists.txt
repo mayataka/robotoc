@@ -1,2 +1,5 @@
 add_robotoc_test(solver_options_test)
 add_robotoc_test(solver_statistics_test)
+add_robotoc_test(unconstr_ocp_solver_test)
+add_robotoc_test(unconstr_parnmpc_solver_test)
+add_robotoc_test(ocp_solver_test)
