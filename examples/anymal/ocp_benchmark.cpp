@@ -94,8 +94,7 @@ int main () {
   constraints->push_back(friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = 4;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});

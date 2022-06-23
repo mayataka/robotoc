@@ -129,13 +129,11 @@ Next, we construct the constraints.
   constraints->push_back(friction_cone);
 ```
 
-Next, we construct the contact sequence `robotoc::ContactSequence` with setting the maximum number of possible each discrete events as 
+Next, we construct the contact sequence `robotoc::ContactSequence` as
 ```
-const int max_num_each_discrete_events = 1;
-auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
-`robotoc::ContactSequence` will throw an exception and the program terminates if we set more discrete events.
 
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
@@ -146,8 +144,10 @@ In the beginning, the robot is standing, so all the contacts are active.
   const Eigen::Vector3d x3d0_RF = robot.framePosition("RF_FOOT");
   const Eigen::Vector3d x3d0_RH = robot.framePosition("RH_FOOT");
 
-  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
-      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions = {{"LF_FOOT", x3d0_LF}, 
+                                                                        {"LH_FOOT", x3d0_LH}, 
+                                                                        {"RF_FOOT", x3d0_RF}, 
+                                                                        {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
@@ -185,10 +185,8 @@ We further construct cost function for the switching time optimization (STO) pro
 ```
 and the minimum dwell-time constraints for the STO problem
 ```
-  const int max_num_switches = 2*max_num_each_discrete_events;
   const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
-                                                                   min_dwell_times,
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(min_dwell_times,
                                                                    barrier, 
                                                                    fraction_to_boundary_rule);
 ```

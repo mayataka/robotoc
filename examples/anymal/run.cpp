@@ -186,8 +186,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(impulse_friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = (steps+3)*2;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   robot.updateFrameKinematics(q_standing);
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions 

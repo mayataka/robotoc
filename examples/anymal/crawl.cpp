@@ -153,8 +153,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = cycle * 4;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions = {{"LF_FOOT", x3d0_LF}, 
                                                                         {"LH_FOOT", x3d0_LH}, 

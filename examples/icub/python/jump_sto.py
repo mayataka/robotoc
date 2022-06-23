@@ -69,7 +69,7 @@ constraints.push_back(friction_cone)
 
 # Create the contact sequence
 max_num_each_discrete_events = 2
-contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
+contact_sequence = robotoc.ContactSequence(robot)
 
 robot.forward_kinematics(q_standing)
 x3d0_L = robot.frame_placement('l_sole')
@@ -99,8 +99,7 @@ contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_ti
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
-                                         min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
+sto_constraints = robotoc.STOConstraints(min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 

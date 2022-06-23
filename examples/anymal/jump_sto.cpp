@@ -110,8 +110,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = 1;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   robot.updateFrameKinematics(q_standing);
   const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
@@ -142,10 +141,8 @@ int main(int argc, char *argv[]) {
   // Create the STO cost function
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
-  const int max_num_switches = 2*max_num_each_discrete_events;
   const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
-                                                                   min_dwell_times,
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(min_dwell_times,
                                                                    barrier, 
                                                                    fraction_to_boundary_rule);
 
