@@ -228,6 +228,17 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
     EXPECT_EQ(robot_contact.contactFrameNames()[i], contact_status.contactFrameNames()[i]);
     EXPECT_EQ(robot_contact.contactFrameNames()[i], contact_status.contactFrameName(i));
   }
+
+  auto cloned = robot.clone();
+  EXPECT_EQ(robot.dimq(), cloned.dimq());
+  EXPECT_EQ(robot.dimv(), cloned.dimv());
+  EXPECT_EQ(robot.dimu(), cloned.dimu());
+  EXPECT_EQ(robot.max_dimf(), cloned.max_dimf());
+  EXPECT_EQ(robot.dim_passive(), cloned.dim_passive());
+  EXPECT_EQ(robot.hasFloatingBase(), cloned.hasFloatingBase());
+  EXPECT_EQ(robot.maxNumContacts(), cloned.maxNumContacts());
+  EXPECT_EQ(robot.maxNumPointContacts(), cloned.maxNumPointContacts());
+  EXPECT_EQ(robot.maxNumSurfaceContacts(), cloned.maxNumSurfaceContacts());
 }
 
 

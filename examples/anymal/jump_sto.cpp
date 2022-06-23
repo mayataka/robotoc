@@ -110,8 +110,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = 1;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   robot.updateFrameKinematics(q_standing);
   const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
@@ -119,12 +118,14 @@ int main(int argc, char *argv[]) {
   const Eigen::Vector3d x3d0_RF = robot.framePosition("RF_FOOT");
   const Eigen::Vector3d x3d0_RH = robot.framePosition("RH_FOOT");
 
-  std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
-      = {{"LF_FOOT", x3d0_LF}, {"LH_FOOT", x3d0_LH}, {"RF_FOOT", x3d0_RF}, {"RH_FOOT", x3d0_RH}};
+  std::unordered_map<std::string, Eigen::Vector3d> contact_positions = {{"LF_FOOT", x3d0_LF}, 
+                                                                        {"LH_FOOT", x3d0_LH}, 
+                                                                        {"RF_FOOT", x3d0_RF}, 
+                                                                        {"RH_FOOT", x3d0_RH}};
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
-  contact_sequence->initContactSequence(contact_status_standing);
+  contact_sequence->init(contact_status_standing);
 
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time-0.3, true);
@@ -140,10 +141,8 @@ int main(int argc, char *argv[]) {
   // Create the STO cost function
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
-  const int max_num_switches = 2*max_num_each_discrete_events;
   const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(max_num_switches, 
-                                                                   min_dwell_times,
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(min_dwell_times,
                                                                    barrier, 
                                                                    fraction_to_boundary_rule);
 
@@ -153,13 +152,13 @@ int main(int argc, char *argv[]) {
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = std::floor(T / dt);
   robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
-                   T, N, max_num_each_discrete_events);
+                   contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;
   solver_options.max_iter = 200;
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;

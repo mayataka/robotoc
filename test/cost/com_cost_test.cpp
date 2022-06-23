@@ -349,6 +349,12 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
 }
 
 
+TEST_F(CoMCostTest, defaultConstructor) {
+  EXPECT_NO_THROW(
+    auto cost = std::make_shared<CoMCost>();
+  );
+}
+
 
 TEST_F(CoMCostTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);

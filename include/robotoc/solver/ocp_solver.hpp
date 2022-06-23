@@ -41,7 +41,6 @@ public:
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] solver_options Solver options. Default is SolverOptions::defaultOptions().
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
@@ -49,7 +48,6 @@ public:
   /// please use the other constructor.
   ///
   OCPSolver(const OCP& ocp, 
-            const std::shared_ptr<ContactSequence>& contact_sequence, 
             const SolverOptions& solver_options=SolverOptions::defaultOptions(), 
             const int nthreads=1);
 
@@ -272,6 +270,7 @@ private:
   SolverStatistics solver_statistics_;
   Timer timer_;
 
+  void reserveData();
   void discretizeSolution();
 
 };

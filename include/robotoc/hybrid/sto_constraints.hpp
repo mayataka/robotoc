@@ -24,7 +24,7 @@ class STOConstraints {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] max_num_switches Maximum number of switches on the horizon. 
+  /// @param[in] reserved_num_switches The reserved number of switches.
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
   /// minimum dwell times are set to this value. Default is 
   /// std::numeric_limits<double>::epsilon().
@@ -34,14 +34,13 @@ public:
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  STOConstraints(const int max_num_switches, 
+  STOConstraints(const int reserved_num_switches, 
                  const double min_dt=std::numeric_limits<double>::epsilon(),
                  const double barrier=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Constructor. 
-  /// @param[in] max_num_switches Maximum number of switches on the horizon. 
   /// @param[in] min_dt Minimum dwell times. Each component must be 
   /// non-negative. 
   /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
@@ -50,7 +49,7 @@ public:
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  STOConstraints(const int max_num_switches, const std::vector<double>& min_dt,
+  STOConstraints(const std::vector<double>& min_dt,
                  const double barrier=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
@@ -82,8 +81,7 @@ public:
   ///
   /// @brief Default move assign operator. 
   ///
-  STOConstraints& operator=(
-      STOConstraints&&) noexcept = default;
+  STOConstraints& operator=(STOConstraints&&) noexcept = default;
 
   ///
   /// @brief Sets the slack variables. 
@@ -214,11 +212,22 @@ public:
   ///
   double fractionToBoundaryRule() const;
 
+  ///
+  /// @brief Reserves the number of switches to avoid dynamic memory allocation.
+  /// @param[in] reserved_num_switches The reserved size.
+  ///
+  void reserve(const int reserved_num_switches);
+
+  ///
+  /// @brief Returns reserved size of container of each discrete events.
+  ///
+  int reservedNumSwitches() const;
+
 private:
   std::vector<DwellTimeLowerBound> dtlb_;
   std::vector<double> min_dt_;
   double barrier_, fraction_to_boundary_rule_, eps_;
-  int max_num_switches_, num_switches_;
+  int reserved_num_switches_, num_switches_;
   Eigen::VectorXd primal_step_size_, dual_step_size_;
 
 };

@@ -13,8 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_jump, m) {
   py::class_<MPCJump>(m, "MPCJump")
-    .def(py::init<const Robot&, const double, const int, const int,  const int>(),
-         py::arg("robot"), py::arg("T"), py::arg("N"), py::arg("max_steps"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int, const int>(),
+         py::arg("robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
     .def("set_jump_pattern", &MPCJump::setJumpPattern,
          py::arg("foot_step_planner"), py::arg("flying_time"), py::arg("min_flying_time"), 
          py::arg("ground_time"), py::arg("min_ground_time"))

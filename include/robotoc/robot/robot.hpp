@@ -179,6 +179,13 @@ public:
   Robot& operator=(Robot&&) noexcept = default;
 
   ///
+  /// @brief Clones the same robot model. The kinematics informations are not 
+  /// preserved to the copied model. Utilized in pybind11.
+  /// @return The cloned robot model.
+  ///
+  Robot clone() const;
+
+  ///
   /// @brief Integrates the generalized velocity, that is, performs
   /// q <- q + integration_length * v like computation on the configuration 
   /// manifolds.
@@ -978,6 +985,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+  std::string path_to_urdf_;
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
@@ -988,6 +996,7 @@ private:
   aligned_vector<SurfaceContact> surface_contacts_;
   int dimq_, dimv_, dimu_, dim_passive_, max_dimf_, max_num_contacts_;
   double contact_inv_damping_;
+  std::pair<double, double> baumgarte_weights_;
   bool has_floating_base_;
   Eigen::MatrixXd dimpulse_dv_; 
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,

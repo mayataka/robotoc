@@ -186,8 +186,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(impulse_friction_cone);
 
   // Create the contact sequence
-  const int max_num_each_discrete_events = (steps+3)*2;
-  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot, max_num_each_discrete_events);
+  auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 
   robot.updateFrameKinematics(q_standing);
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
@@ -204,7 +203,7 @@ int main(int argc, char *argv[]) {
   auto contact_status_front_hip_swing = robot.createContactStatus();
 
   contact_status_standing.setContactPlacements(contact_positions);
-  contact_sequence->initContactSequence(contact_status_standing);
+  contact_sequence->init(contact_status_standing);
 
   const double t_initial_front_swing = 0.125;
   const double t_initial_front_hip_swing = 0.05;
@@ -288,10 +287,10 @@ int main(int argc, char *argv[]) {
   // Create the OCP solver.
   const double T = 7; 
   const int N = 240;
-  robotoc::OCP ocp(robot, cost, constraints, T, N, max_num_each_discrete_events);
+  robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions::defaultOptions();
   const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, contact_sequence, solver_options, nthreads);
+  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;

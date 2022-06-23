@@ -7,7 +7,8 @@ namespace robotoc {
 
 Robot::Robot(const std::string& path_to_urdf, 
              const BaseJointType& base_joint_type)
-  : model_(),
+  : path_to_urdf_(path_to_urdf),
+    model_(),
     impulse_model_(),
     data_(),
     impulse_data_(),
@@ -24,6 +25,7 @@ Robot::Robot(const std::string& path_to_urdf,
     max_dimf_(0),
     max_num_contacts_(0),
     contact_inv_damping_(0),
+    baumgarte_weights_({0, 0}),
     has_floating_base_(false),
     dimpulse_dv_(),
     joint_effort_limit_(),
@@ -76,6 +78,7 @@ Robot::Robot(const std::string& path_to_urdf,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
+  baumgarte_weights_ = baumgarte_weights;
   impulse_model_ = model_;
   impulse_model_.gravity.linear().setZero();
   impulse_data_ = pinocchio::Data(impulse_model_);
@@ -140,6 +143,7 @@ Robot::Robot(const std::string& path_to_urdf,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
+  baumgarte_weights_ = baumgarte_weights;
   impulse_model_ = model_;
   impulse_model_.gravity.linear().setZero();
   impulse_data_ = pinocchio::Data(impulse_model_);
@@ -212,7 +216,8 @@ Robot::Robot(const std::string& path_to_urdf,
 
 
 Robot::Robot()
-  : model_(),
+  : path_to_urdf_(),
+    model_(),
     impulse_model_(),
     data_(),
     impulse_data_(),
@@ -227,6 +232,7 @@ Robot::Robot()
     dimu_(0),
     dim_passive_(0),
     contact_inv_damping_(0),
+    baumgarte_weights_({0, 0}),
     max_dimf_(0),
     max_num_contacts_(0),
     has_floating_base_(false),
@@ -239,6 +245,19 @@ Robot::Robot()
 
 
 Robot::~Robot() {
+}
+
+
+Robot Robot::clone() const {
+  BaseJointType base_joint_type;
+  if (hasFloatingBase()) {
+    base_joint_type = BaseJointType::FloatingBase;
+  }
+  else {
+    base_joint_type = BaseJointType::FixedBase;
+  }
+  return Robot(path_to_urdf_, base_joint_type, contact_frame_names_, contact_types_,
+               baumgarte_weights_, contact_inv_damping_);
 }
 
 

@@ -3,11 +3,11 @@ import numpy as np
 from a1_simulator import A1Simulator
 
 
-cmd_type = 'forward'
+# cmd_type = 'forward'
 # cmd_type = 'backward'
 # cmd_type = 'side'
 # cmd_type = 'curve'
-# cmd_type = 'rotation'
+cmd_type = 'rotation'
 
 if cmd_type == 'forward':
     step_length = np.array([0.2, 0.0, 0.0]) 
@@ -40,9 +40,8 @@ swing_start_time = 0.5
 
 T = 0.5
 N = 20
-max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCFlyingTrot(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCFlyingTrot(robot, T, N, nthreads)
 
 
 vcom_cmd = 0.5 * step_length / (flying_time+stance_time)
@@ -91,13 +90,12 @@ if log:
     t_log = np.genfromtxt(sim.t_log)
     sim_steps = t_log.shape[0]
 
-    from scipy.spatial.transform import Rotation
     vcom_log = []
     wcom_log = []
     vcom_cmd_log = []
     yaw_rate_cmd_log = []
     for i in range(sim_steps):
-        R = Rotation.from_quat(q_log[i][3:7]).as_matrix()
+        R = robotoc.utils.rotation_matrix(q_log[i][3:7])
         robot.forward_kinematics(q_log[i], v_log[i])
         vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
         wcom_log.append(v_log[i][3:6])

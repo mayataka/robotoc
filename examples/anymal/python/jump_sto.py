@@ -73,8 +73,7 @@ constraints.push_back(friction_cone)
 
 
 # Create the contact sequence
-max_num_each_discrete_events = 1
-contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
+contact_sequence = robotoc.ContactSequence(robot)
 
 robot.forward_kinematics(q_standing)
 x3d0_LF = robot.frame_position('LF_FOOT')
@@ -86,7 +85,7 @@ contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF,
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.init_contact_sequence(contact_status_standing)
+contact_sequence.init(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
@@ -104,8 +103,7 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(max_num_switches=2*max_num_each_discrete_events, 
-                                         min_dt=[0.15, 0.15, 0.65],
+sto_constraints = robotoc.STOConstraints(min_dt=[0.15, 0.15, 0.65],
                                          barrier=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
@@ -114,14 +112,13 @@ N = math.floor(T/dt)
 # Create the OCP with the STO problem
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   sto_cost=sto_cost, sto_constraints=sto_constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
+                  contact_sequence=contact_sequence, T=T, N=N)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
-ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
-                               solver_options=solver_options, nthreads=4)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
 t = 0.

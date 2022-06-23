@@ -25,7 +25,7 @@ PYBIND11_MODULE(lqr_policy, m) {
 
   py::class_<hybrid_container<LQRPolicy>>(m, "LQRPolicies")
     .def(py::init<const Robot&, const int, const int>(),
-          py::arg("robot"), py::arg("N"), py::arg("max_num_each_discrete_events"))
+          py::arg("robot"), py::arg("N"), py::arg("reserved_num_discrete_eventsbve"))
     .def(py::init<>())
     .def("__getitem__", [](const hybrid_container<LQRPolicy>& self, const int i) {
         return self.data[i];

@@ -24,9 +24,8 @@ yaw_rate_cmd = step_yaw / (swing_time+stance_time)
 
 T = 0.5
 N = 18
-max_steps = 3
 nthreads = 4
-mpc = robotoc.MPCCrawl(robot, T, N, max_steps, nthreads)
+mpc = robotoc.MPCCrawl(robot, T, N, nthreads)
 
 planner = robotoc.CrawlFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, (step_yaw*swing_time), (stance_time > 0.))
@@ -70,13 +69,12 @@ if log:
     t_log = np.genfromtxt(sim.t_log)
     sim_steps = t_log.shape[0]
 
-    from scipy.spatial.transform import Rotation
     vcom_log = []
     wcom_log = []
     vcom_cmd_log = []
     yaw_rate_cmd_log = []
     for i in range(sim_steps):
-        R = Rotation.from_quat(q_log[i][3:7]).as_matrix()
+        R = robotoc.utils.rotation_matrix(q_log[i][3:7])
         robot.forward_kinematics(q_log[i], v_log[i])
         vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
         wcom_log.append(v_log[i][3:6])

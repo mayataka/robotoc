@@ -265,6 +265,13 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
 }
 
 
+TEST_F(LocalContactForceCostTest, defaultConstructor) {
+  EXPECT_NO_THROW(
+    auto cost = std::make_shared<LocalContactForceCost>();
+  );
+}
+
+
 TEST_F(LocalContactForceCostTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCost(robot);

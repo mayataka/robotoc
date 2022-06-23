@@ -8,20 +8,19 @@
 namespace robotoc {
 
 OCPSolver::OCPSolver(const OCP& ocp, 
-                     const std::shared_ptr<ContactSequence>& contact_sequence, 
                      const SolverOptions& solver_options, const int nthreads)
   : robots_(nthreads, ocp.robot()),
-    contact_sequence_(contact_sequence),
+    contact_sequence_(ocp.contact_sequence()),
     dms_(nthreads),
     sto_(ocp),
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
     line_search_(ocp, nthreads),
     ocp_(ocp),
-    riccati_factorization_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
-    kkt_matrix_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
-    kkt_residual_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
-    s_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
-    d_(ocp.robot(), ocp.N(), ocp.maxNumEachDiscreteEvents()),
+    riccati_factorization_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    kkt_matrix_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    kkt_residual_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    s_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    d_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
     solver_options_(solver_options),
     solver_statistics_() {
   try {
@@ -55,8 +54,9 @@ void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
 
 
 void OCPSolver::meshRefinement(const double t) {
-  ocp_.meshRefinement(contact_sequence_, t);
+  ocp_.meshRefinement(t);
   if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
+    reserveData();
     discretizeSolution();
     dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
     sto_.initConstraints(ocp_);
@@ -65,7 +65,8 @@ void OCPSolver::meshRefinement(const double t) {
 
 
 void OCPSolver::initConstraints(const double t) {
-  ocp_.discretize(contact_sequence_, t);
+  ocp_.discretize(t);
+  reserveData();
   discretizeSolution();
   dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
   sto_.initConstraints(ocp_);
@@ -76,7 +77,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_.discretize(contact_sequence_, t);
+  ocp_.discretize(t);
+  reserveData();
   discretizeSolution();
   dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
                         kkt_matrix_, kkt_residual_);
@@ -455,7 +457,7 @@ void OCPSolver::setSolution(const std::string& name,
 void OCPSolver::extrapolateSolutionLastPhase(const double t) {
   const int num_discrete_events = contact_sequence_->numDiscreteEvents();
   if (num_discrete_events > 0) {
-    ocp_.discretize(contact_sequence_, t);
+    ocp_.discretize(t);
     int time_stage_after_last_event;
     if (contact_sequence_->eventType(num_discrete_events-1) 
           == DiscreteEventType::Impulse) {
@@ -478,7 +480,7 @@ void OCPSolver::extrapolateSolutionLastPhase(const double t) {
 void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
   const int num_discrete_events = contact_sequence_->numDiscreteEvents();
   if (num_discrete_events > 0) {
-    ocp_.discretize(contact_sequence_, t);
+    ocp_.discretize(t);
     int time_stage_before_initial_event;
     if (contact_sequence_->eventType(0) == DiscreteEventType::Impulse) {
       time_stage_before_initial_event 
@@ -499,7 +501,8 @@ void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
 
 double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q, 
                            const Eigen::VectorXd& v) {
-  ocp_.discretize(contact_sequence_, t);
+  ocp_.discretize(t);
+  reserveData();
   discretizeSolution();
   dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
                           kkt_matrix_, kkt_residual_);
@@ -520,6 +523,7 @@ double OCPSolver::cost(const bool include_cost_barrier) const {
 
 bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
   // ocp_.discretize(t);
+  // reserveData();
   // discretizeSolution();
   return dms_.isFeasible(ocp_, robots_, contact_sequence_, s_);
 }
@@ -527,6 +531,17 @@ bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
 
 const TimeDiscretization& OCPSolver::getTimeDiscretization() const {
   return ocp_.discrete();
+}
+
+
+void OCPSolver::reserveData() {
+  kkt_matrix_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
+  kkt_residual_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
+  s_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
+  d_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
+  riccati_factorization_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
+  riccati_recursion_.reserve(ocp_);
+  line_search_.reserve(ocp_);
 }
 
 

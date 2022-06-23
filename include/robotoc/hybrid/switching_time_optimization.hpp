@@ -54,6 +54,12 @@ public:
   SwitchingTimeOptimization& operator=(SwitchingTimeOptimization&&) noexcept = default;
 
   ///
+  /// @brief Reserve the memory for STO problem. 
+  /// @param[in] ocp Optimal control problem. 
+  ///
+  void reserve(const OCP& ocp);
+
+  ///
   /// @brief Sets the regularization paremeter on the STO problem. 
   /// @param[in] sto_reg The regularization paremeter. Must be non-negative.
   ///
@@ -64,7 +70,7 @@ public:
   /// constraints. 
   /// @param[in] ocp Optimal control problem.
   ///
-  void initConstraints(const OCP& ocp) const;
+  void initConstraints(const OCP& ocp);
 
   ///
   /// @brief Computes the KKT residual of switching time otpimization problem. 
@@ -147,6 +153,7 @@ private:
   std::shared_ptr<STOConstraints> sto_constraints_;
   double sto_reg_, kkt_error_, cost_val_;
   Eigen::VectorXd h_phase_;
+  int reserved_num_switches_;
   bool is_sto_enabled_;
 };
 

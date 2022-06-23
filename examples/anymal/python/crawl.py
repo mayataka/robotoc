@@ -115,14 +115,13 @@ constraints.push_back(joint_torques_upper)
 constraints.push_back(friction_cone)
 
 # Create the contact sequence
-max_num_each_discrete_events = 4*cycle
-contact_sequence = robotoc.ContactSequence(robot, max_num_each_discrete_events)
+contact_sequence = robotoc.ContactSequence(robot)
 
 contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.init_contact_sequence(contact_status_standing)
+contact_sequence.init(contact_status_standing)
 
 contact_status_rh_swing = robot.create_contact_status()
 contact_status_rh_swing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT'])
@@ -190,10 +189,9 @@ for i in range (cycle-1):
 T = t0 + cycle*(2*double_support_time+4*swing_time)
 N = math.floor(T/dt) 
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
-                  T=T, N=N, max_num_each_discrete_events=max_num_each_discrete_events)
+                  contact_sequence=contact_sequence, T=T, N=N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.OCPSolver(ocp=ocp, contact_sequence=contact_sequence, 
-                               solver_options=solver_options, nthreads=4)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
 t = 0.

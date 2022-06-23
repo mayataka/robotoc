@@ -9,7 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
+        # os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-18.04, ubuntu-20.04]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -38,7 +39,10 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt update
+          sudo apt install libudev1 -y 
+          sudo apt --fix-broken install
           sudo apt install -qqy robotpkg-py310-pinocchio
+          sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer
           sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer-corba
       - name: Install pinocchio-gepetto-viewer
         run: |
