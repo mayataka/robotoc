@@ -282,13 +282,18 @@ private:
 
   template <typename T> 
   static void reserveDeque(std::deque<T>& deq, const int size) {
-    const int current_size = deq.size();
-    if (current_size < size) {
-      while (deq.size() < size) {
-        deq.push_back(T());
-      }
-      while (deq.size() > current_size) {
-        deq.pop_back();
+    if (deq.empty()) {
+      deq.resize(size);
+    }
+    else {
+      const int current_size = deq.size();
+      if (current_size < size) {
+        while (deq.size() < size) {
+          deq.push_back(deq.back());
+        }
+        while (deq.size() > current_size) {
+          deq.pop_back();
+        }
       }
     }
   }

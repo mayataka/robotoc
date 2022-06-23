@@ -118,13 +118,13 @@ inline void OCP::reserve() {
   const int new_reserved_num_discrete_events 
       = discretization_.reservedNumDiscreteEvents();
   if (new_reserved_num_discrete_events > reserved_num_discrete_events_) {
-    while (new_reserved_num_discrete_events > impulse.size()) {
+    while (impulse.size() < new_reserved_num_discrete_events) {
       impulse.emplace_back(robot_, cost_, constraints_);
     }
-    while (new_reserved_num_discrete_events > impulse.size()) {
+    while (aux.size() < new_reserved_num_discrete_events) {
       aux.emplace_back(robot_, cost_, constraints_);
     }
-    while (new_reserved_num_discrete_events > lift.size()) {
+    while (lift.size() < new_reserved_num_discrete_events) {
       lift.emplace_back(robot_, cost_, constraints_);
     }
     reserved_num_discrete_events_ = new_reserved_num_discrete_events;
