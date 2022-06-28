@@ -14,6 +14,8 @@ JumpFootStepPlanner::JumpFootStepPlanner(const Robot& robot)
     contact_frames_(robot.contactFrames()),
     current_step_(0),
     contact_placement_ref_(),
+    contact_position_ref_(),
+    contact_surface_ref_(),
     com_ref_(),
     com_to_contact_position_local_(),
     R_(),
@@ -50,6 +52,22 @@ void JumpFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length,
   R_yaw_ << std::cos(step_yaw), -std::sin(step_yaw), 0, 
             std::sin(step_yaw), std::cos(step_yaw),  0,
             0, 0, 1;
+}
+
+
+void JumpFootStepPlanner::setContactSurfaces(
+    const std::vector<Eigen::Matrix3d>& contact_surfaces) {
+  contact_surface_ref_.clear();
+  contact_surface_ref_.push_back(contact_surfaces);
+}
+
+
+void JumpFootStepPlanner::setContactSurfaces(
+    const std::vector<std::vector<Eigen::Matrix3d>>& contact_surfaces) {
+  contact_surface_ref_.clear();
+  for (const auto& e : contact_surfaces) {
+    contact_surface_ref_.push_back(e);
+  }
 }
 
 
@@ -90,6 +108,14 @@ void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
         ee.rotation().setIdentity();
       }
     }
+  }
+  contact_position_ref_.clear();
+  contact_surface_ref_.clear();
+  for (const auto& e : contact_placement_ref_) {
+    contact_position_ref_.push_back(
+        std::vector<Eigen::Vector3d>({e[0].translation(), e[1].translation()}));
+    contact_surface_ref_.push_back(
+        std::vector<Eigen::Matrix3d>({e[0].rotation(), e[1].rotation()}));
   }
   robot_.updateFrameKinematics(q);
   com_ref_.push_back(robot_.CoM());
@@ -137,6 +163,14 @@ bool JumpFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
       R_.pop_back();
     }
   }
+  contact_position_ref_.clear();
+  contact_surface_ref_.clear();
+  for (const auto& e : contact_placement_ref_) {
+    contact_position_ref_.push_back(
+        std::vector<Eigen::Vector3d>({e[0].translation(), e[1].translation()}));
+    contact_surface_ref_.push_back(
+        std::vector<Eigen::Matrix3d>({e[0].rotation(), e[1].rotation()}));
+  }
   return true;
 }
 
@@ -161,6 +195,16 @@ const std::vector<std::vector<Eigen::Vector3d>>& JumpFootStepPlanner::contactPos
 }
 
 
+const std::vector<Eigen::Matrix3d>& JumpFootStepPlanner::contactSurfaces(const int step) const {
+  return contact_surface_ref_[step];
+}
+
+
+const std::vector<std::vector<Eigen::Matrix3d>>& JumpFootStepPlanner::contactSurfaces() const {
+  return contact_surface_ref_;
+}
+
+
 const Eigen::Vector3d& JumpFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
@@ -178,20 +222,6 @@ const Eigen::Matrix3d& JumpFootStepPlanner::R(const int step) const {
 
 const std::vector<Eigen::Matrix3d>& JumpFootStepPlanner::R() const {
   return R_;
-}
-
-
-void JumpFootStepPlanner::disp(std::ostream& os) const {
-  std::cout << "Jump foot step planner:" << std::endl;
-  std::cout << "current_step:" << current_step_ << std::endl;
-  const int planning_steps = contact_placement_ref_.size();
-  for (int i=0; i<planning_steps; ++i) {
-    std::cout << "contact placement[" << i << "]: ["  
-              << contact_placement_ref_[i][0] << "], [" 
-              << contact_placement_ref_[i][1] << "]" << std::endl;
-    std::cout << "CoM position[" << i << "]: ["   << com_ref_[i].transpose() << "]" << std::endl;
-    std::cout << "R[" << i << "]: ["   << R_[i] << "]" << std::endl;
-  }
 }
 
 

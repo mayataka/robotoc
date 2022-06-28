@@ -25,11 +25,11 @@ PYBIND11_MODULE(biped_walk_foot_step_planner, m) {
           py::arg("q"))
     .def("plan", &BipedWalkFootStepPlanner::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_positions", 
-          static_cast<const std::vector<Eigen::Vector3d>& (BipedWalkFootStepPlanner::*)(const int) const>(&BipedWalkFootStepPlanner::contactPositions),
+    .def("contact_placements", 
+          static_cast<const aligned_vector<SE3>& (BipedWalkFootStepPlanner::*)(const int) const>(&BipedWalkFootStepPlanner::contactPlacements),
           py::arg("step"))
-    .def("contact_positions", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (BipedWalkFootStepPlanner::*)() const>(&BipedWalkFootStepPlanner::contactPositions))
+    .def("contact_placements", 
+          static_cast<const aligned_vector<aligned_vector<SE3>>& (BipedWalkFootStepPlanner::*)() const>(&BipedWalkFootStepPlanner::contactPlacements))
     .def("com", 
           static_cast<const Eigen::Vector3d& (BipedWalkFootStepPlanner::*)(const int) const>(&BipedWalkFootStepPlanner::CoM),
           py::arg("step"))

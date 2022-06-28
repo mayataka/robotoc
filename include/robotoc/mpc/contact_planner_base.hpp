@@ -2,6 +2,7 @@
 #define ROBOTOC_CONTACT_PLANNER_BASE_HPP_
 
 #include <vector>
+#include <memory>
 
 #include "Eigen/Core"
 
@@ -104,6 +105,21 @@ public:
   virtual const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const = 0;
 
   ///
+  /// @brief Gets the contact surfaces of a specified step. 
+  /// @param[in] step Step of interest.
+  /// @return const reference to the contact surfaces of a specified step. 
+  /// @remark step=0: previous step, step=1: initial step.
+  ///
+  virtual const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const = 0;
+
+  ///
+  /// @brief Gets the contact surfaces. 
+  /// @return const reference to the contact surfaces.
+  /// @remark step=0: previous step, step=1: initial step.
+  ///
+  virtual const std::vector<std::vector<Eigen::Matrix3d>>& contactSurfaces() const = 0;
+
+  ///
   /// @brief Gets the CoM position of a specified step. 
   /// @param[in] step Step of interest.
   /// @return const reference to CoM position of a specified step. 
@@ -132,6 +148,8 @@ public:
   /// @remark step=0: previous step, step=1: initial step.
   ///
   virtual const std::vector<Eigen::Matrix3d>& R() const = 0;
+
+  void disp(std::ostream& os) const;
 
 };
 

@@ -92,9 +92,25 @@ public:
 
   const aligned_vector<aligned_vector<SE3>>& contactPlacements() const override;
 
+  ///
+  /// @brief This is invalid in BipedWalkFootStepPlanner. 
+  ///
   const std::vector<Eigen::Vector3d>& contactPositions(const int step) const override;
 
+  ///
+  /// @brief This is invalid in BipedWalkFootStepPlanner. 
+  ///
   const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const override;
+
+  ///
+  /// @brief This is invalid in BipedWalkFootStepPlanner. 
+  ///
+  const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const override;
+
+  ///
+  /// @brief This is invalid in BipedWalkFootStepPlanner. 
+  ///
+  const std::vector<std::vector<Eigen::Matrix3d>>& contactSurfaces() const override;
 
   const Eigen::Vector3d& CoM(const int step) const override;
 
@@ -103,8 +119,6 @@ public:
   const Eigen::Matrix3d& R(const int step) const override;
 
   const std::vector<Eigen::Matrix3d>& R() const override;
-
-  void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
                                   const BipedWalkFootStepPlanner& planner);
@@ -123,6 +137,7 @@ private:
   double left_to_right_leg_distance_, foot_height_to_com_height_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
+  std::vector<std::vector<Eigen::Matrix3d>> contact_surface_ref_;
   std::vector<Eigen::Vector3d> com_ref_;
   std::vector<Eigen::Matrix3d> R_;
   Eigen::Vector3d vcom_, vcom_cmd_, step_length_;

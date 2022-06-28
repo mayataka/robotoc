@@ -18,15 +18,21 @@ PYBIND11_MODULE(jump_foot_step_planner, m) {
          py::arg("robot"))
     .def("set_jump_pattern", &JumpFootStepPlanner::setJumpPattern,
          py::arg("jump_length"), py::arg("jump_yaw"))
+    .def("set_contact_surfaces", 
+          static_cast<void (JumpFootStepPlanner::*)(const std::vector<Eigen::Matrix3d>& contact_surfaces)>(&JumpFootStepPlanner::setContactSurfaces),
+          py::arg("contact_surfaces"))
+    .def("set_contact_surfaces", 
+          static_cast<void (JumpFootStepPlanner::*)(const std::vector<std::vector<Eigen::Matrix3d>>& contact_surfaces)>(&JumpFootStepPlanner::setContactSurfaces),
+          py::arg("contact_surfaces"))
     .def("init", &JumpFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &JumpFootStepPlanner::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_positions", 
-          static_cast<const std::vector<Eigen::Vector3d>& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::contactPositions),
+    .def("contact_placements", 
+          static_cast<const aligned_vector<SE3>& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::contactPlacements),
           py::arg("step"))
-    .def("contact_positions", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (JumpFootStepPlanner::*)() const>(&JumpFootStepPlanner::contactPositions))
+    .def("contact_placements", 
+          static_cast<const aligned_vector<aligned_vector<SE3>>& (JumpFootStepPlanner::*)() const>(&JumpFootStepPlanner::contactPlacements))
     .def("com", 
           static_cast<const Eigen::Vector3d& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::CoM),
           py::arg("step"))

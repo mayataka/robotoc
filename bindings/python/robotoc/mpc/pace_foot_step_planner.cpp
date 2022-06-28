@@ -21,6 +21,12 @@ PYBIND11_MODULE(pace_foot_step_planner, m) {
     .def("set_raibert_gait_pattern", &PaceFootStepPlanner::setRaibertGaitPattern,
           py::arg("vcom_cmd"), py::arg("yaw_rate_cmd"), 
           py::arg("swing_time"), py::arg("stance_time"), py::arg("gain")) 
+    .def("set_contact_surfaces", 
+          static_cast<void (PaceFootStepPlanner::*)(const std::vector<Eigen::Matrix3d>& contact_surfaces)>(&PaceFootStepPlanner::setContactSurfaces),
+          py::arg("contact_surfaces"))
+    .def("set_contact_surfaces", 
+          static_cast<void (PaceFootStepPlanner::*)(const std::vector<std::vector<Eigen::Matrix3d>>& contact_surfaces)>(&PaceFootStepPlanner::setContactSurfaces),
+          py::arg("contact_surfaces"))
     .def("init", &PaceFootStepPlanner::init,
           py::arg("q"))
     .def("plan", &PaceFootStepPlanner::plan,
@@ -30,6 +36,11 @@ PYBIND11_MODULE(pace_foot_step_planner, m) {
           py::arg("step"))
     .def("contact_positions", 
           static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (PaceFootStepPlanner::*)() const>(&PaceFootStepPlanner::contactPositions))
+    .def("contact_sufaces", 
+          static_cast<const std::vector<Eigen::Matrix3d>& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::contactSurfaces),
+          py::arg("step"))
+    .def("contact_sufaces", 
+          static_cast<const std::vector<std::vector<Eigen::Matrix3d>>& (PaceFootStepPlanner::*)() const>(&PaceFootStepPlanner::contactSurfaces))
     .def("com", 
           static_cast<const Eigen::Vector3d& (PaceFootStepPlanner::*)(const int) const>(&PaceFootStepPlanner::CoM),
           py::arg("step"))

@@ -81,6 +81,19 @@ public:
                              const double yaw_rate_cmd, const double swing_time,
                              const double stance_time, const double gain);
 
+  ///
+  /// @brief Sets the rotation of the contact surfaces. 
+  /// @param[in] contact_surfaces Rotation of the contact surfaces. 
+  ///
+  void setContactSurfaces(const std::vector<Eigen::Matrix3d>& contact_surfaces);
+
+  ///
+  /// @brief Sets the rotation of the contact surfaces over the mutiple steps. 
+  /// @param[in] contact_surfaces Rotation of the contact surfaces. 
+  ///
+  void setContactSurfaces(
+      const std::vector<std::vector<Eigen::Matrix3d>>& contact_surfaces);
+
   void init(const Eigen::VectorXd& q) override;
 
   bool plan(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -101,6 +114,10 @@ public:
 
   const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const override;
 
+  const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const override;
+
+  const std::vector<std::vector<Eigen::Matrix3d>>& contactSurfaces() const override;
+
   const Eigen::Vector3d& CoM(const int step) const override;
 
   const std::vector<Eigen::Vector3d>& CoM() const override;
@@ -108,8 +125,6 @@ public:
   const Eigen::Matrix3d& R(const int step) const override;
 
   const std::vector<Eigen::Matrix3d>& R() const override;
-
-  void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
                                   const TrotFootStepPlanner& planner);
@@ -127,6 +142,7 @@ private:
   int LF_foot_id_, LH_foot_id_, RF_foot_id_, RH_foot_id_, current_step_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
+  std::vector<std::vector<Eigen::Matrix3d>> contact_surface_ref_;
   std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
   std::vector<Eigen::Matrix3d> R_;
   Eigen::Vector3d vcom_, vcom_cmd_, step_length_;

@@ -47,6 +47,16 @@ public:
                            contactPositions, );
   }
 
+  const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const override {
+    PYBIND11_OVERRIDE_PURE(const std::vector<Eigen::Matrix3d>&, ContactPlannerBase, 
+                           contactSurfaces, step);
+  }
+
+  const std::vector<std::vector<Eigen::Matrix3d>>& contactSurfaces() const override {
+    PYBIND11_OVERRIDE_PURE(const std::vector<std::vector<Eigen::Matrix3d>>&, ContactPlannerBase, 
+                           contactSurfaces, );
+  }
+
   const Eigen::Vector3d& CoM(const int step) const override {
     PYBIND11_OVERRIDE_PURE(const Eigen::Vector3d&, ContactPlannerBase, 
                            CoM, step);
@@ -89,6 +99,11 @@ PYBIND11_MODULE(contact_planner_base, m) {
           py::arg("step"))
     .def("contactPositions", 
           static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactPositions))
+    .def("contactSurfaces", 
+          static_cast<const std::vector<Eigen::Matrix3d>& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::contactSurfaces),
+          py::arg("step"))
+    .def("contactSurfaces", 
+          static_cast<const std::vector<std::vector<Eigen::Matrix3d>>& (ContactPlannerBase::*)() const>(&ContactPlannerBase::contactSurfaces))
     .def("com", 
           static_cast<const Eigen::Vector3d& (ContactPlannerBase::*)(const int) const>(&ContactPlannerBase::CoM),
           py::arg("step"))
