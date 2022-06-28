@@ -99,7 +99,7 @@ void BipedWalkFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom
 
 
 void BipedWalkFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = rotation::RotationMatrix(q.template segment<4>(3));
+  Eigen::Matrix3d R = rotation::RotationMatrixFromQuaternion(q.template segment<4>(3));
   rotation::ProjectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   std::vector<Eigen::Vector3d> contact_position_local 

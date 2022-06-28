@@ -20,9 +20,12 @@ PYBIND11_MODULE(rotation, m) {
     .value("Z", ProjectionAxis::Z)
     .export_values();
 
-  m.def("rotation_matrix", [](const Eigen::Vector4d& quat_xyzw) {
-      return rotation::RotationMatrix(quat_xyzw);
+  m.def("rotation_matrix_from_quaternion", [](const Eigen::Vector4d& quat_xyzw) {
+      return rotation::RotationMatrixFromQuaternion(quat_xyzw);
     },  py::arg("quat_xyzw"));
+  m.def("rotation_matrix_from_normal", [](const Eigen::Vector3d& normal) {
+      return rotation::RotationMatrixFromNormal(normal);
+    },  py::arg("normal"));
   m.def("project_rotation_matrix", [](const Eigen::Matrix3d& R, const ProjectionAxis axis) {
       Eigen::Matrix3d ret = R;
       rotation::ProjectRotationMatrix(ret, axis);

@@ -72,7 +72,7 @@ void JumpFootStepPlanner::setContactSurfaces(
 
 
 void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = rotation::RotationMatrix(q.template segment<4>(3));
+  Eigen::Matrix3d R = rotation::RotationMatrixFromQuaternion(q.template segment<4>(3));
   rotation::ProjectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;
