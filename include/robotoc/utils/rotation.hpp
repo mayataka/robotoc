@@ -28,7 +28,7 @@ inline Eigen::Matrix3d RotationMatrixFromQuaternion(
 template <typename VectorType>
 inline Eigen::Matrix3d RotationMatrixFromNormal(
     const Eigen::MatrixBase<VectorType>& normal) {
-  assert(normal_vector.size() == 3);
+  assert(normal.size() == 3);
   Eigen::Matrix3d R;
   const double nx = normal.coeff(0);
   const double ny = normal.coeff(1);
