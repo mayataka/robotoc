@@ -94,9 +94,9 @@ TODO
 [4] C. Rao, S. J. Wright, and J. B. Rawlings, "Application of interior-point methods to model predictive control," <i>Journal of Optimization Theory and Applications</i>, vol. 99, no. 3, pp. 723–757, 1998. <br>
 [5] H. Deng and T. Ohtsuka, "A parallel Newton-type method for nonlinear model predictive control," <i>Automatica</i>, Vol. 109, pp. 108560, 2019. <br>
 [6] J. Carpentier and N. Mansard, "Analytical derivatives of rigid body dynamics algorithms," Robotics: Science and Systems, 2018. <br>
-[7] S. Katayama and T. Ohtsuka, "Lifted contact dynamics for efficient optimal control of rigid body systems with contacts," https://arxiv.org/abs/2108.01781, 2021 <br>
+[7] S. Katayama and T. Ohtsuka, "Lifted contact dynamics for efficient optimal control of rigid body systems with contacts," 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) (to appear), https://arxiv.org/abs/2108.01781, 2022 <br>
 [8] S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021. <br>
-[9] S. Katayama and T. Ohtsuka, "Efficient Riccati recursion for optimal control problems with pure-state equality constraints," American Control Conference (ACC), pp. 3579-3586, 2022 <br>
-[10] S. Katayama and T. Ohtsuka, "Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems," IEEE International Conference on Robotics and Automation (ICRA), pp.2070-2076, 2021. <br>
+[9] S. Katayama and T. Ohtsuka, "Efficient Riccati recursion for optimal control problems with pure-state equality constraints," 2022 American Control Conference (ACC), pp. 3579-3586, 2022 <br>
+[10] S. Katayama and T. Ohtsuka, "Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems," 2021 IEEE International Conference on Robotics and Automation (ICRA), pp.2070-2076, 2021. <br>
 
 */
