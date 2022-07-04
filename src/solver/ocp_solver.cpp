@@ -534,6 +534,13 @@ const TimeDiscretization& OCPSolver::getTimeDiscretization() const {
 }
 
 
+void OCPSolver::setRobotProperties(const RobotProperties& properties) {
+  for (auto& e : robots_) {
+    e.setRobotProperties(properties);
+  }
+}
+
+
 void OCPSolver::reserveData() {
   kkt_matrix_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
   kkt_residual_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());

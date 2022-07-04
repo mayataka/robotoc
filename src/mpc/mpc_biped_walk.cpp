@@ -294,6 +294,11 @@ std::shared_ptr<ImpulseWrenchFrictionCone> MPCBipedWalk::getImpulseWrenchConeHan
 }
 
 
+void MPCBipedWalk::setRobotProperties(const RobotProperties& properties) {
+  ocp_solver_.setRobotProperties(properties);
+}
+
+
 bool MPCBipedWalk::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {

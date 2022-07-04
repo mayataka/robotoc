@@ -44,7 +44,8 @@ PYBIND11_MODULE(mpc_pace, m) {
     .def("get_constraints_handle", &MPCPace::getConstraintsHandle)
     .def("get_friction_cone_handle", &MPCPace::getFrictionConeHandle)
     .def("get_solver", &MPCPace::getSolver)
-    .def("get_contact_sequence", &MPCPace::getContactSequence);
+    .def("get_contact_sequence", &MPCPace::getContactSequence)
+    .def("set_robot_properties", &MPCPace::setRobotProperties);
 }
 
 } // namespace python

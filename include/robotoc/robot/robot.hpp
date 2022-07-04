@@ -17,6 +17,7 @@
 #include "robotoc/robot/surface_contact.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/robot_properties.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 
 
@@ -986,6 +987,19 @@ public:
   ///
   void setUpperJointPositionLimit(
       const Eigen::VectorXd& upper_joint_position_limit);
+
+  ///
+  /// @brief Creates a collection of the properties for this robot model. 
+  /// @return A collection of the properties for this robot model.
+  /// 
+  RobotProperties createRobotProperties() const;
+
+  ///
+  ///
+  /// @brief Sets a collection of the properties for this robot model. 
+  /// @param[in] properties A collection of the properties for this robot model.
+  ///
+  void setRobotProperties(const RobotProperties& properties);
 
   ///
   /// @brief Displays the robot model onto a ostream.

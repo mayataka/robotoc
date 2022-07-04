@@ -286,4 +286,11 @@ bool UnconstrOCPSolver::isCurrentSolutionFeasible() {
   return true;
 }
 
+
+void UnconstrOCPSolver::setRobotProperties(const RobotProperties& properties) {
+  for (auto& e : robots_) {
+    e.setRobotProperties(properties);
+  }
+}
+
 } // namespace robotoc

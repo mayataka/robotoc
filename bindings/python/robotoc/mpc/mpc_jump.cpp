@@ -46,7 +46,8 @@ PYBIND11_MODULE(mpc_jump, m) {
     .def("get_constraints_handle", &MPCJump::getConstraintsHandle)
     .def("get_friction_cone_handle", &MPCJump::getFrictionConeHandle)
     .def("get_solver", &MPCJump::getSolver)
-    .def("get_contact_sequence", &MPCJump::getContactSequence);
+    .def("get_contact_sequence", &MPCJump::getContactSequence)
+    .def("set_robot_properties", &MPCJump::setRobotProperties);
 }
 
 } // namespace python

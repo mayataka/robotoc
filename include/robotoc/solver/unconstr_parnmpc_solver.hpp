@@ -177,6 +177,13 @@ public:
   ///
   bool isCurrentSolutionFeasible();
 
+  ///
+  ///
+  /// @brief Sets a collection of the properties for robot model in this solver. 
+  /// @param[in] properties A collection of the properties for the robot model.
+  ///
+  void setRobotProperties(const RobotProperties& properties);
+
 private:
   aligned_vector<Robot> robots_;
   UnconstrParNMPC parnmpc_;

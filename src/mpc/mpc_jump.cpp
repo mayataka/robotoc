@@ -262,6 +262,11 @@ std::shared_ptr<FrictionCone> MPCJump::getFrictionConeHandle() {
 }
 
 
+void MPCJump::setRobotProperties(const RobotProperties& properties) {
+  ocp_solver_.setRobotProperties(properties);
+}
+
+
 void MPCJump::resetMinimumDwellTimes(const double t, const double min_dt) {
   const int num_switches = contact_sequence_->numDiscreteEvents();
   if (num_switches > 0) {

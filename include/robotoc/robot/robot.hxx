@@ -1033,6 +1033,19 @@ inline const Eigen::VectorXd& Robot::generalizedMomentumBias() const {
   return generalized_momentum_bias_;
 }
 
+
+inline RobotProperties Robot::createRobotProperties() const {
+  RobotProperties properties;
+  properties.generalized_momentum_bias.resize(dimv());
+  properties.generalized_momentum_bias = generalizedMomentumBias();
+  return properties;
+}
+
+
+inline void Robot::setRobotProperties(const RobotProperties& properties) {
+  setGeneralizedMomentumBias(properties.generalized_momentum_bias);
+}
+
 } // namespace robotoc
 
 #endif // ROBOTOC_ROBOT_HXX_ 

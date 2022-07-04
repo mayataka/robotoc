@@ -166,6 +166,9 @@ PYBIND11_MODULE(robot, m) {
           py::arg("lower_joint_position_limit"))
     .def("set_upper_joint_position_limit", &Robot::setUpperJointPositionLimit,
           py::arg("upper_joint_position_limit"))
+    .def("createRobotProperties", &Robot::createRobotProperties)
+    .def("set_robot_properties", &Robot::setRobotProperties,
+          py::arg("properties"))
     .def("__str__", [](const Robot& self) {
         std::stringstream ss;
         ss << self;

@@ -38,7 +38,9 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (UnconstrParNMPCSolver::*)() const>(&UnconstrParNMPCSolver::KKTError))
-    .def("cost", &UnconstrParNMPCSolver::cost);
+    .def("cost", &UnconstrParNMPCSolver::cost)
+    .def("set_robot_properties", &UnconstrParNMPCSolver::setRobotProperties,
+          py::arg("properties")); 
 }
 
 } // namespace python
