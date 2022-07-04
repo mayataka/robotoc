@@ -19,6 +19,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         self.camera_target_pos = [0., 0., 0.]
         self.print_items = []
         self.terrain_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
+        self.height_range = None
+        self.num_heightfield_rows = None
+        self.num_heightfield_columns = None
         self.log_dir = None
         self.q_log = None
         self.v_log = None
@@ -83,7 +86,23 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         pybullet.setGravity(0, 0, -9.81)
         pybullet.setTimeStep(self.time_step)
         if terrain:
-            terrain = pybullet.loadURDF(fileName=self.terrain_urdf)
+            if self.height_range is not None \
+                and self.num_heightfield_rows is not None \
+                and self.num_heightfield_columns is not None:
+
+                terrain_shape = self._create_random_terrain_shape(self.height_range, 
+                                                                  self.num_heightfield_rows, 
+                                                                  self.num_heightfield_columns)
+                terrain = pybullet.createMultiBody(0, terrain_shape)
+                pybullet.changeVisualShape(terrain, -1, rgbaColor=[1.0, 1.0, 1.0, 1.0])
+                pybullet.resetBasePositionAndOrientation(terrain, [0., 0., 0.], [0., 0., 0., 1.])
+                ray_test = pybullet.rayTest([q0[0], q0[1], self.height_range], 
+                                            [q0[0], q0[1], -self.height_range])
+                ray_hit_position = ray_test[0][3]
+                pybullet.resetBasePositionAndOrientation(terrain, [0., 0., -ray_hit_position[2]], [0., 0., 0., 1.])
+                pybullet.changeDynamics(terrain, -1, lateralFriction=1.0)
+            else:
+                terrain = pybullet.loadURDF(fileName=self.terrain_urdf)
         else:
             import pybullet_data
             pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -169,3 +188,43 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
 
     def disconnect(self):
         pybullet.disconnect()
+
+
+    def set_terrain_shape(self, height_range=1.0, 
+                          num_heightfield_rows=100,
+                          num_heightfield_columns=100):
+        self.height_range = height_range
+        self.num_heightfield_rows = num_heightfield_rows
+        self.num_heightfield_columns = num_heightfield_columns
+
+
+    def _create_random_terrain_shape(self, height_range, 
+                                     num_heightfield_rows, 
+                                     num_heightfield_columns):
+        heightfield_data = np.zeros(shape=[num_heightfield_columns, num_heightfield_rows], dtype=np.float)
+        for i in range(int(num_heightfield_columns/2)):
+            for j in range(int(num_heightfield_rows)):
+                n1 = 0
+                n2 = 0
+                if j > 0:
+                    n1 = heightfield_data[i, j-1]
+                if i > 0:
+                    n2 = heightfield_data[i-1, j]
+                else:
+                    n2 = n1
+                noise = np.random.uniform(-1.0, 1.0)
+                heightfield_data[i, j] = (n1+n2)/2 + noise
+        max = np.max(heightfield_data)
+        min = np.min(heightfield_data)
+        if max - min > 0:
+            heightfield_data = (2.0 * height_range / (max-min)) * heightfield_data 
+        heightfield_data_inv = heightfield_data[::-1,:]
+        heightfield_data_2 = np.concatenate((heightfield_data_inv, heightfield_data))
+        col, row = heightfield_data_2.shape
+        heightfield_data_2 = heightfield_data_2.reshape(-1)
+        terrain_shape = pybullet.createCollisionShape(shapeType=pybullet.GEOM_HEIGHTFIELD, 
+                                                      heightfieldData=heightfield_data_2, 
+                                                      meshScale=[0.5, 0.5, 1.0], 
+                                                      numHeightfieldRows=row, 
+                                                      numHeightfieldColumns=col)
+        return terrain_shape

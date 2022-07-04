@@ -2,7 +2,9 @@
 <robot name="terrain">
   <link name="terrainLink">
   <contact>
-      <lateral_friction value="0.7"/>
+      <!-- In PyBullet, the friction coefficients are computed by the multiplication of two lateral_friction values. -->
+      <!-- Therefore, by setting lateral_friction=1.0 in the terrain, the friction value of the robot is directly used. -->
+      <lateral_friction value="1.0"/> 
   </contact>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
