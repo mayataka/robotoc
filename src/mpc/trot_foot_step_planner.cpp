@@ -291,6 +291,7 @@ bool TrotFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
   for (int i=contact_surface_size; i<contact_position_ref_.size(); ++i) {
     contact_surface_ref_.push_back(contact_surface_ref_.back());
   }
+  planning_size_ = com_ref_.size();
   return true;
 }
 
@@ -301,19 +302,8 @@ const aligned_vector<SE3>& TrotFootStepPlanner::contactPlacements(const int step
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& TrotFootStepPlanner::contactPlacements() const {
-  throw std::runtime_error("runtime error: contactPlacements() is not implemented!");
-  return contact_placement_ref_;
-}
-
-
 const std::vector<Eigen::Vector3d>& TrotFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
-}
-
-
-const std::vector<std::vector<Eigen::Vector3d>>& TrotFootStepPlanner::contactPositions() const {
-  return contact_position_ref_;
 }
 
 
@@ -322,30 +312,15 @@ const std::vector<Eigen::Matrix3d>& TrotFootStepPlanner::contactSurfaces(const i
 }
 
 
-const std::vector<std::vector<Eigen::Matrix3d>>& TrotFootStepPlanner::contactSurfaces() const {
-  return contact_surface_ref_;
-}
-
-
 const Eigen::Vector3d& TrotFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& TrotFootStepPlanner::CoM() const {
-  return com_ref_;
-}
-
-
 const Eigen::Matrix3d& TrotFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
-
-const std::vector<Eigen::Matrix3d>& TrotFootStepPlanner::R() const {
-  return R_;
-}
-
 
 std::ostream& operator<<(std::ostream& os, 
                          const TrotFootStepPlanner& planner) {

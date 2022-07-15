@@ -83,26 +83,12 @@ public:
   virtual const aligned_vector<SE3>& contactPlacements(const int step) const = 0;
 
   ///
-  /// @brief Gets the contact placements. 
-  /// @return const reference to the contact placements. 
-  /// @remark step=0: previous step, step=1: initial step.
-  ///
-  virtual const aligned_vector<aligned_vector<SE3>>& contactPlacements() const = 0;
-
-  ///
   /// @brief Gets the contact positions of a specified step. 
   /// @param[in] step Step of interest.
   /// @return const reference to the contact positions of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
   virtual const std::vector<Eigen::Vector3d>& contactPositions(const int step) const = 0;
-
-  ///
-  /// @brief Gets the contact positions. 
-  /// @return const reference to the contact positions.
-  /// @remark step=0: previous step, step=1: initial step.
-  ///
-  virtual const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const = 0;
 
   ///
   /// @brief Gets the contact surfaces of a specified step. 
@@ -113,26 +99,12 @@ public:
   virtual const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const = 0;
 
   ///
-  /// @brief Gets the contact surfaces. 
-  /// @return const reference to the contact surfaces.
-  /// @remark step=0: previous step, step=1: initial step.
-  ///
-  virtual const std::vector<std::vector<Eigen::Matrix3d>>& contactSurfaces() const = 0;
-
-  ///
   /// @brief Gets the CoM position of a specified step. 
   /// @param[in] step Step of interest.
   /// @return const reference to CoM position of a specified step. 
   /// @remark step=0: previous step, step=1: initial step.
   ///
   virtual const Eigen::Vector3d& CoM(const int step) const = 0;
-
-  ///
-  /// @brief Gets the CoM positions. 
-  /// @return const reference to the CoM positions.
-  /// @remark step=0: previous step, step=1: initial step.
-  ///
-  virtual const std::vector<Eigen::Vector3d>& CoM() const = 0;
 
   ///
   /// @brief Gets the rotation matrix of the base at a specified step. 
@@ -143,11 +115,10 @@ public:
   virtual const Eigen::Matrix3d& R(const int step) const = 0;
 
   ///
-  /// @brief Gets the rotation matrix of the base.
-  /// @return const reference to the rotation matrix of the base.
-  /// @remark step=0: previous step, step=1: initial step.
+  /// @brief Gets the size of each planned quantities. 
+  /// @return Size of planning.
   ///
-  virtual const std::vector<Eigen::Matrix3d>& R() const = 0;
+  virtual int size() const = 0;
 
   void disp(std::ostream& os) const;
 

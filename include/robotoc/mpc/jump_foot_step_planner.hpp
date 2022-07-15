@@ -86,35 +86,15 @@ public:
 
   const aligned_vector<SE3>& contactPlacements(const int step) const override;
 
-  const aligned_vector<aligned_vector<SE3>>& contactPlacements() const override;
-
-  ///
-  /// @brief This is invalid in JumpFootStepPlanner. 
-  ///
   const std::vector<Eigen::Vector3d>& contactPositions(const int step) const override;
 
-  ///
-  /// @brief This is invalid in JumpFootStepPlanner. 
-  ///
-  const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const override;
-
-  ///
-  /// @brief This is invalid in JumpFootStepPlanner. 
-  ///
   const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const override;
-
-  ///
-  /// @brief This is invalid in JumpFootStepPlanner. 
-  ///
-  const std::vector<std::vector<Eigen::Matrix3d>>& contactSurfaces() const override;
 
   const Eigen::Vector3d& CoM(const int step) const override;
 
-  const std::vector<Eigen::Vector3d>& CoM() const override;
-
   const Eigen::Matrix3d& R(const int step) const override;
 
-  const std::vector<Eigen::Matrix3d>& R() const override;
+  int size() const override { return planning_size_; }
 
   friend std::ostream& operator<<(std::ostream& os, 
                                   const JumpFootStepPlanner& planner);
@@ -127,7 +107,7 @@ public:
 private:
   Robot robot_;
   std::vector<int> contact_frames_;
-  int current_step_;
+  int current_step_, planning_size_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
   std::vector<std::vector<Eigen::Matrix3d>> contact_surface_ref_;

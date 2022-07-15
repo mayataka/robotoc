@@ -290,6 +290,7 @@ bool PaceFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
   for (int i=contact_surface_size; i<contact_position_ref_.size(); ++i) {
     contact_surface_ref_.push_back(contact_surface_ref_.back());
   }
+  planning_size_ = com_ref_.size();
   return true;
 }
 
@@ -300,19 +301,8 @@ const aligned_vector<SE3>& PaceFootStepPlanner::contactPlacements(const int step
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& PaceFootStepPlanner::contactPlacements() const {
-  throw std::runtime_error("runtime error: contactPlacements() is not implemented!");
-  return contact_placement_ref_;
-}
-
-
 const std::vector<Eigen::Vector3d>& PaceFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
-}
-
-
-const std::vector<std::vector<Eigen::Vector3d>>& PaceFootStepPlanner::contactPositions() const {
-  return contact_position_ref_;
 }
 
 
@@ -321,30 +311,15 @@ const std::vector<Eigen::Matrix3d>& PaceFootStepPlanner::contactSurfaces(const i
 }
 
 
-const std::vector<std::vector<Eigen::Matrix3d>>& PaceFootStepPlanner::contactSurfaces() const {
-  return contact_surface_ref_;
-}
-
-
 const Eigen::Vector3d& PaceFootStepPlanner::CoM(const int step) const {
   return com_ref_[step];
 }
   
 
-const std::vector<Eigen::Vector3d>& PaceFootStepPlanner::CoM() const {
-  return com_ref_;
-}
-
-
 const Eigen::Matrix3d& PaceFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
-
-const std::vector<Eigen::Matrix3d>& PaceFootStepPlanner::R() const {
-  return R_;
-}
-
 
 std::ostream& operator<<(std::ostream& os, 
                          const PaceFootStepPlanner& planner) {

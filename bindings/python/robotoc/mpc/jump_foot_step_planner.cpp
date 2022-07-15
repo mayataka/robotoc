@@ -28,21 +28,17 @@ PYBIND11_MODULE(jump_foot_step_planner, m) {
           py::arg("q"))
     .def("plan", &JumpFootStepPlanner::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_placements", 
-          static_cast<const aligned_vector<SE3>& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::contactPlacements),
+    .def("contact_placements", &JumpFootStepPlanner::contactPlacements,
           py::arg("step"))
-    .def("contact_placements", 
-          static_cast<const aligned_vector<aligned_vector<SE3>>& (JumpFootStepPlanner::*)() const>(&JumpFootStepPlanner::contactPlacements))
-    .def("com", 
-          static_cast<const Eigen::Vector3d& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::CoM),
+    .def("contact_positions", &JumpFootStepPlanner::contactPositions,
           py::arg("step"))
-    .def("com", 
-          static_cast<const std::vector<Eigen::Vector3d>& (JumpFootStepPlanner::*)() const>(&JumpFootStepPlanner::CoM))
-    .def("R", 
-          static_cast<const Eigen::Matrix3d& (JumpFootStepPlanner::*)(const int) const>(&JumpFootStepPlanner::R),
+    .def("contact_surfaces", &JumpFootStepPlanner::contactSurfaces,
           py::arg("step"))
-    .def("R", 
-          static_cast<const std::vector<Eigen::Matrix3d>& (JumpFootStepPlanner::*)() const>(&JumpFootStepPlanner::R))
+    .def("com", &JumpFootStepPlanner::CoM,
+          py::arg("step"))
+    .def("R", &JumpFootStepPlanner::R,
+          py::arg("step"))
+    .def("size", &JumpFootStepPlanner::size)
     .def("__str__", [](const JumpFootStepPlanner& self) {
         std::stringstream ss;
         ss << self;

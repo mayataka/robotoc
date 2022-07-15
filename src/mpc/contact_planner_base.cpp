@@ -9,7 +9,7 @@ namespace robotoc {
 
 void ContactPlannerBase::disp(std::ostream& os) const {
   Eigen::IOFormat fmt(4, 0, ", ", "\n", "", "");
-  const int planning_steps = contactPositions().size();
+  const int planning_steps = size();
   os << "Contact planner:" << std::endl;
   for (int i=0; i<planning_steps; ++i) {
     os << "  contact positions[" << i << "]: [";

@@ -31,26 +31,17 @@ PYBIND11_MODULE(trot_foot_step_planner, m) {
           py::arg("q"))
     .def("plan", &TrotFootStepPlanner::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), py::arg("planning_steps"))
-    .def("contact_positions", 
-          static_cast<const std::vector<Eigen::Vector3d>& (TrotFootStepPlanner::*)(const int) const>(&TrotFootStepPlanner::contactPositions),
+    .def("contact_placements", &TrotFootStepPlanner::contactPlacements,
           py::arg("step"))
-    .def("contact_positions", 
-          static_cast<const std::vector<std::vector<Eigen::Vector3d>>& (TrotFootStepPlanner::*)() const>(&TrotFootStepPlanner::contactPositions))
-    .def("contact_sufaces", 
-          static_cast<const std::vector<Eigen::Matrix3d>& (TrotFootStepPlanner::*)(const int) const>(&TrotFootStepPlanner::contactSurfaces),
+    .def("contact_positions", &TrotFootStepPlanner::contactPositions,
           py::arg("step"))
-    .def("contact_sufaces", 
-          static_cast<const std::vector<std::vector<Eigen::Matrix3d>>& (TrotFootStepPlanner::*)() const>(&TrotFootStepPlanner::contactSurfaces))
-    .def("com", 
-          static_cast<const Eigen::Vector3d& (TrotFootStepPlanner::*)(const int) const>(&TrotFootStepPlanner::CoM),
+    .def("contact_surfaces", &TrotFootStepPlanner::contactSurfaces,
           py::arg("step"))
-    .def("com", 
-          static_cast<const std::vector<Eigen::Vector3d>& (TrotFootStepPlanner::*)() const>(&TrotFootStepPlanner::CoM))
-    .def("R", 
-          static_cast<const Eigen::Matrix3d& (TrotFootStepPlanner::*)(const int) const>(&TrotFootStepPlanner::R),
+    .def("com", &TrotFootStepPlanner::CoM,
           py::arg("step"))
-    .def("R", 
-          static_cast<const std::vector<Eigen::Matrix3d>& (TrotFootStepPlanner::*)() const>(&TrotFootStepPlanner::R))
+    .def("R", &TrotFootStepPlanner::R,
+          py::arg("step"))
+    .def("size", &TrotFootStepPlanner::size)
     .def("__str__", [](const TrotFootStepPlanner& self) {
         std::stringstream ss;
         ss << self;
