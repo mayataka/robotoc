@@ -15,6 +15,10 @@ PYBIND11_MODULE(impulse_split_solution, m) {
   py::class_<ImpulseSplitSolution>(m, "ImpulseSplitSolution")
     .def(py::init<const Robot&>())
     .def(py::init<>())
+    .def("clone", [](const ImpulseSplitSolution& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_impulse_status", 
           static_cast<void (ImpulseSplitSolution::*)(const ImpulseStatus&)>(&ImpulseSplitSolution::setImpulseStatus),
           py::arg("impulse_status"))

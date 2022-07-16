@@ -14,6 +14,10 @@ namespace py = pybind11;
 PYBIND11_MODULE(grid_info, m) {
   py::class_<GridInfo>(m, "GridInfo")
     .def(py::init<>())
+    .def("clone", [](const GridInfo& self) {
+       auto other = self;
+       return other;
+     })
     .def_readwrite("t0", &GridInfo::t0)
     .def_readwrite("t", &GridInfo::t)
     .def_readwrite("dt", &GridInfo::dt)

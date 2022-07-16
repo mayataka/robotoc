@@ -23,6 +23,10 @@ PYBIND11_MODULE(contact_status, m) {
     .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const int>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
           py::arg("contact_mode_id")=0)
+    .def("clone", [](const ContactStatus& self) {
+       auto other = self;
+       return other;
+     })
     .def("max_num_contacts", &ContactStatus::maxNumContacts)
     .def("is_contact_active", 
           static_cast<bool (ContactStatus::*)(const int) const>(&ContactStatus::isContactActive),

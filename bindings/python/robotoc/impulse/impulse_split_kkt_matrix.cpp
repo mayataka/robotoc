@@ -15,6 +15,10 @@ PYBIND11_MODULE(impulse_split_kkt_matrix, m) {
   py::class_<ImpulseSplitKKTMatrix>(m, "ImpulseSplitKKTMatrix")
     .def(py::init<const Robot&>())
     .def(py::init<>())
+    .def("clone", [](const ImpulseSplitKKTMatrix& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_impulse_status", &ImpulseSplitKKTMatrix::setImpulseStatus,
           py::arg("impulse_status"))
     .def("is_dimension_consistent", &ImpulseSplitKKTMatrix::isDimensionConsistent)

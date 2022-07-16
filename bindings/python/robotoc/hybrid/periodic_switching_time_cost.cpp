@@ -12,6 +12,10 @@ PYBIND11_MODULE(periodic_switching_time_cost, m) {
   py::class_<PeriodicSwitchingTimeCost, STOCostFunctionComponentBase,
              std::shared_ptr<PeriodicSwitchingTimeCost>>(m, "PeriodicSwitchingTimeCost")
     .def(py::init<const double, const double>())
+    .def("clone", [](const PeriodicSwitchingTimeCost& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_period", &PeriodicSwitchingTimeCost::set_period)
     .def("set_weight", &PeriodicSwitchingTimeCost::set_weight);
 }

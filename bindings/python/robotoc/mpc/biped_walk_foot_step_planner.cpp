@@ -16,6 +16,10 @@ PYBIND11_MODULE(biped_walk_foot_step_planner, m) {
              std::shared_ptr<BipedWalkFootStepPlanner>>(m, "BipedWalkFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("biped_robot"))
+    .def("clone", [](const BipedWalkFootStepPlanner& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_gait_pattern", &BipedWalkFootStepPlanner::setGaitPattern,
           py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_double_support_phase")) 
     .def("set_raibert_gait_pattern", &BipedWalkFootStepPlanner::setRaibertGaitPattern,

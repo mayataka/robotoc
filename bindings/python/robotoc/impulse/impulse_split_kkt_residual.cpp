@@ -15,6 +15,10 @@ PYBIND11_MODULE(impulse_split_kkt_residual, m) {
   py::class_<ImpulseSplitKKTResidual>(m, "ImpulseSplitKKTResidual")
     .def(py::init<const Robot&>())
     .def(py::init<>())
+    .def("clone", [](const ImpulseSplitKKTResidual& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_impulse_status", &ImpulseSplitKKTResidual::setImpulseStatus,
           py::arg("impulse_status"))
     .def("is_dimension_consistent", &ImpulseSplitKKTResidual::isDimensionConsistent)

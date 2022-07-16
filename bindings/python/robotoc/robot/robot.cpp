@@ -47,7 +47,10 @@ PYBIND11_MODULE(robot, m) {
           py::arg("path_to_urdf"), py::arg("base_joint_type"),
           py::arg("contact_frame_names"), py::arg("contact_types"), 
           py::arg("baumgarte_time_step"), py::arg("contact_inv_damping")=0.)
-    .def("clone", &Robot::clone)
+    .def("clone", [](const Robot& self) {
+       auto other = self;
+       return other;
+     })
     .def("integrate_configuration", [](const Robot& self, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, const double dt) {
         Eigen::VectorXd q_ret = Eigen::VectorXd::Zero(self.dimq());

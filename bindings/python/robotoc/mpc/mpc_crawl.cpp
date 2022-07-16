@@ -15,6 +15,10 @@ PYBIND11_MODULE(mpc_crawl, m) {
   py::class_<MPCCrawl>(m, "MPCCrawl")
     .def(py::init<const Robot&, const double, const int, const int>(),
          py::arg("robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
+    .def("clone", [](const MPCCrawl& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_gait_pattern", &MPCCrawl::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("stance_time"), py::arg("swing_start_time"))

@@ -16,6 +16,10 @@ PYBIND11_MODULE(unconstr_ocp, m) {
           py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
           py::arg("T"), py::arg("N"))
     .def(py::init<>())
+    .def("clone", [](const UnconstrOCP& self) {
+       auto other = self;
+       return other;
+     })
     .def("robot", &UnconstrOCP::robot)
     .def("cost", &UnconstrOCP::cost)
     .def("constraints", &UnconstrOCP::constraints)

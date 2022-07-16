@@ -25,6 +25,10 @@ PYBIND11_MODULE(discrete_event, m) {
           py::arg("contact_types"))
     .def(py::init<const ContactStatus&, const ContactStatus&>(),
           py::arg("pre_contact_status"), py::arg("post_contact_status"))
+    .def("clone", [](const DiscreteEvent& self) {
+       auto other = self;
+       return other;
+     })
     .def("exist_discrete_event", &DiscreteEvent::existDiscreteEvent)
     .def("exist_impulse", &DiscreteEvent::existImpulse)
     .def("exist_lift", &DiscreteEvent::existLift)

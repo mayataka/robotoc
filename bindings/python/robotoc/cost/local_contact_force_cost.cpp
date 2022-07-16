@@ -16,6 +16,10 @@ PYBIND11_MODULE(local_contact_force_cost, m) {
              std::shared_ptr<LocalContactForceCost>>(m, "LocalContactForceCost")
     .def(py::init<const Robot&>(),
           py::arg("robot"))
+    .def("clone", [](const LocalContactForceCost& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_f_ref", &LocalContactForceCost::set_f_ref,
           py::arg("f_ref"))
     .def("set_fi_ref", &LocalContactForceCost::set_fi_ref,

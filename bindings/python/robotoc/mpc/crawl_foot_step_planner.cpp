@@ -16,6 +16,10 @@ PYBIND11_MODULE(crawl_foot_step_planner, m) {
              std::shared_ptr<CrawlFootStepPlanner>>(m, "CrawlFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("quadruped_robot"))
+    .def("clone", [](const CrawlFootStepPlanner& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_gait_pattern", &CrawlFootStepPlanner::setGaitPattern,
           py::arg("step_length"), py::arg("step_yaw"), py::arg("enable_stance_phase")) 
     .def("set_raibert_gait_pattern", &CrawlFootStepPlanner::setRaibertGaitPattern,

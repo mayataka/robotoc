@@ -17,6 +17,10 @@ PYBIND11_MODULE(configuration_space_cost, m) {
           py::arg("robot"))
     .def(py::init<const Robot&, const std::shared_ptr<ConfigurationSpaceRefBase>&>(),
           py::arg("robot"), py::arg("ref"))
+    .def("clone", [](const ConfigurationSpaceCost& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_ref", &ConfigurationSpaceCost::set_ref,
           py::arg("ref"))
     .def("set_q_ref", &ConfigurationSpaceCost::set_q_ref,

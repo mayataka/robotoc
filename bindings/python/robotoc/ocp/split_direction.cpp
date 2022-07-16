@@ -15,6 +15,10 @@ PYBIND11_MODULE(split_direction, m) {
   py::class_<SplitDirection>(m, "SplitDirection")
     .def(py::init<const Robot&>())
     .def(py::init<>())
+    .def("clone", [](const SplitDirection& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_contact_status", &SplitDirection::setContactStatus,
           py::arg("contact_status"))
     .def("set_impulse_status", &SplitDirection::setImpulseStatus,

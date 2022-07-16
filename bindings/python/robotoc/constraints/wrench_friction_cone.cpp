@@ -13,6 +13,10 @@ PYBIND11_MODULE(wrench_friction_cone, m) {
              std::shared_ptr<WrenchFrictionCone>>(m, "WrenchFrictionCone")
     .def(py::init<const Robot&, const double, const double, const double>(),
           py::arg("robot"), py::arg("mu"), py::arg("X"), py::arg("Y"))
+    .def("clone", [](const WrenchFrictionCone& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_friction_coefficient", &WrenchFrictionCone::setFrictionCoefficient,
           py::arg("mu"))
     .def("set_rectangular", &WrenchFrictionCone::setRectangular,

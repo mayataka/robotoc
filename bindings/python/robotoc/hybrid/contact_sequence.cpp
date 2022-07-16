@@ -15,6 +15,10 @@ PYBIND11_MODULE(contact_sequence, m) {
   py::class_<ContactSequence, std::shared_ptr<ContactSequence>>(m, "ContactSequence")
     .def(py::init<const Robot&, const int>(),
          py::arg("robot"), py::arg("reserved_num_discrete_events")=0)
+    .def("clone", [](const ContactSequence& self) {
+       auto other = self;
+       return other;
+     })
     .def("init", &ContactSequence::init,
            py::arg("contact_status"))
     .def("push_back", static_cast<void (ContactSequence::*)(const DiscreteEvent&, const double, const bool)>(&ContactSequence::push_back),

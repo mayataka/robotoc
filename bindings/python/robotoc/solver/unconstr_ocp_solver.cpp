@@ -17,6 +17,10 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
           py::arg("ocp"), 
           py::arg("solver_options")=SolverOptions::defaultOptions(), 
           py::arg("nthreads")=1)
+    .def("clone", [](const UnconstrOCPSolver& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_solver_options", &UnconstrOCPSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("init_constraints", &UnconstrOCPSolver::initConstraints)

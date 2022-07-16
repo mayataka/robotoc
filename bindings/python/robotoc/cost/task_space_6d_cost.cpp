@@ -30,6 +30,10 @@ PYBIND11_MODULE(task_space_6d_cost, m) {
           py::arg("robot"), py::arg("frame_name"), py::arg("const_position_ref"), 
           py::arg("const_rotation_ref"))
     .def(py::init<>())
+    .def("clone", [](const TaskSpace6DCost& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_ref", &TaskSpace6DCost::set_ref,
           py::arg("ref"))
     .def("set_const_ref", static_cast<void (TaskSpace6DCost::*)(const SE3&)>(&TaskSpace6DCost::set_const_ref),

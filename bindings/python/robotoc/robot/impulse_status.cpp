@@ -18,6 +18,10 @@ PYBIND11_MODULE(impulse_status, m) {
     .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const int>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
           py::arg("contact_mode_id")=0)
+    .def("clone", [](const ImpulseStatus& self) {
+       auto other = self;
+       return other;
+     })
     .def("max_num_contacts", &ImpulseStatus::maxNumContacts)
     .def("is_impulse_active", 
           static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),

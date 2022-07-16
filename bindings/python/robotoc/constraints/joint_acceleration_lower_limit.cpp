@@ -14,7 +14,11 @@ PYBIND11_MODULE(joint_acceleration_lower_limit, m) {
   py::class_<JointAccelerationLowerLimit, ConstraintComponentBase, 
              std::shared_ptr<JointAccelerationLowerLimit>>(m, "JointAccelerationLowerLimit")
     .def(py::init<const Robot&, const Eigen::VectorXd&>(),
-         py::arg("robot"), py::arg("amin"));
+         py::arg("robot"), py::arg("amin"))
+    .def("clone", [](const JointAccelerationLowerLimit& self) {
+       auto other = self;
+       return other;
+     });
 }
 
 } // namespace python

@@ -14,6 +14,10 @@ PYBIND11_MODULE(split_riccati_factorization, m) {
   py::class_<SplitRiccatiFactorization>(m, "SplitRiccatiFactorization")
     .def(py::init<const Robot&>(),
           py::arg("robot"))
+    .def("clone", [](const SplitRiccatiFactorization& self) {
+       auto other = self;
+       return other;
+     })
     .def_readwrite("P", &SplitRiccatiFactorization::P)
     .def_readwrite("s", &SplitRiccatiFactorization::s)
     .def_readwrite("psi_x", &SplitRiccatiFactorization::psi_x)

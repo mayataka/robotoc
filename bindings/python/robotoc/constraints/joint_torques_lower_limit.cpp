@@ -14,7 +14,11 @@ PYBIND11_MODULE(joint_torques_lower_limit, m) {
   py::class_<JointTorquesLowerLimit, ConstraintComponentBase, 
              std::shared_ptr<JointTorquesLowerLimit>>(m, "JointTorquesLowerLimit")
     .def(py::init<const Robot&>(),
-         py::arg("robot"));
+         py::arg("robot"))
+    .def("clone", [](const JointTorquesLowerLimit& self) {
+       auto other = self;
+       return other;
+     });
 }
 
 } // namespace python

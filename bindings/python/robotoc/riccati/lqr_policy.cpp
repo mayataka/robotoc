@@ -16,6 +16,10 @@ PYBIND11_MODULE(lqr_policy, m) {
   py::class_<LQRPolicy>(m, "LQRPolicy")
     .def(py::init<const Robot&>(),
           py::arg("robot"))
+    .def("clone", [](const LQRPolicy& self) {
+       auto other = self;
+       return other;
+     })
     .def_readwrite("K", &LQRPolicy::K)
     .def_readwrite("k", &LQRPolicy::k)
     .def_readwrite("T", &LQRPolicy::T)
@@ -27,6 +31,10 @@ PYBIND11_MODULE(lqr_policy, m) {
     .def(py::init<const Robot&, const int, const int>(),
           py::arg("robot"), py::arg("N"), py::arg("reserved_num_discrete_eventsbve"))
     .def(py::init<>())
+    .def("clone", [](const hybrid_container<LQRPolicy>& self) {
+       auto other = self;
+       return other;
+     })
     .def("__getitem__", [](const hybrid_container<LQRPolicy>& self, const int i) {
         return self.data[i];
       })

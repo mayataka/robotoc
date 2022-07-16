@@ -26,6 +26,10 @@ PYBIND11_MODULE(se3, m) {
     .def(py::init<const Eigen::Matrix4d&>(),
           py::arg("T"))
     .def(py::init<>())
+    .def("clone", [](const SE3& self) {
+       auto other = self;
+       return other;
+     })
     .def_property("R", [](const SE3& self) { return self.rotation(); },
                   [](SE3& self, const Eigen::Matrix3d& R) { self.rotation() = R; },
                   py::return_value_policy::copy)

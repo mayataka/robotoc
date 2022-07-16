@@ -14,6 +14,10 @@ PYBIND11_MODULE(split_constrained_riccati_factorization, m) {
   py::class_<SplitConstrainedRiccatiFactorization>(m, "SplitConstrainedRiccatiFactorization")
     .def(py::init<const Robot&>(),
           py::arg("robot"))
+    .def("clone", [](const SplitConstrainedRiccatiFactorization& self) {
+       auto other = self;
+       return other;
+     })
     .def("__str__", [](const SplitConstrainedRiccatiFactorization& self) {
         std::stringstream ss;
         ss << self;

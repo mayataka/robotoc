@@ -14,7 +14,11 @@ PYBIND11_MODULE(joint_velocity_lower_limit, m) {
   py::class_<JointVelocityLowerLimit, ConstraintComponentBase, 
              std::shared_ptr<JointVelocityLowerLimit>>(m, "JointVelocityLowerLimit")
     .def(py::init<const Robot&>(),
-         py::arg("robot"));
+         py::arg("robot"))
+    .def("clone", [](const JointVelocityLowerLimit& self) {
+       auto other = self;
+       return other;
+     });
 }
 
 } // namespace python

@@ -16,6 +16,10 @@ PYBIND11_MODULE(solution, m) {
     .def(py::init<const Robot&, const int, const int>(),
          py::arg("robot"), py::arg("N"), py::arg("reserved_num_discrete_eventsbve"))
     .def(py::init<>())
+    .def("clone", [](const Solution& self) {
+       auto other = self;
+       return other;
+     })
     .def("__getitem__", [](const Solution& self, const int i) {
         return self.data[i];
       })

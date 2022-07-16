@@ -17,6 +17,10 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
           py::arg("parnmpc"), 
           py::arg("solver_options")=SolverOptions::defaultOptions(), 
           py::arg("nthreads")=1)
+    .def("clone", [](const UnconstrParNMPCSolver& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_solver_options", &UnconstrParNMPCSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("init_constraints", &UnconstrParNMPCSolver::initConstraints)

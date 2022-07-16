@@ -15,6 +15,10 @@ PYBIND11_MODULE(split_solution, m) {
   py::class_<SplitSolution>(m, "SplitSolution")
     .def(py::init<const Robot&>())
     .def(py::init<>())
+    .def("clone", [](const SplitSolution& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_contact_status", 
           static_cast<void (SplitSolution::*)(const ContactStatus&)>(&SplitSolution::setContactStatus),
           py::arg("contact_status"))

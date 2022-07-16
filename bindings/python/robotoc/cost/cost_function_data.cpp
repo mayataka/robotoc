@@ -15,6 +15,10 @@ PYBIND11_MODULE(cost_function_data, m) {
     .def(py::init<Robot>(),
           py::arg("robot"))
     .def(py::init<>())
+    .def("clone", [](const CostFunctionData& self) {
+       auto other = self;
+       return other;
+     })
     .def_readwrite("qdiff", &CostFunctionData::qdiff)
     .def_readwrite("q_ref", &CostFunctionData::q_ref)
     .def_readwrite("x3d_ref", &CostFunctionData::x3d_ref)

@@ -16,6 +16,10 @@ namespace py = pybind11;
 PYBIND11_MODULE(solver_statistics, m) {
   py::class_<SolverStatistics>(m, "SolverStatistics")
     .def(py::init<>())
+    .def("clone", [](const SolverStatistics& self) {
+       auto other = self;
+       return other;
+     })
     .def_readonly("convergence", &SolverStatistics::convergence)
     .def_readonly("iter", &SolverStatistics::iter)
     .def_readonly("kkt_error", &SolverStatistics::kkt_error)

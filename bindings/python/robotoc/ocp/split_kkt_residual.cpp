@@ -15,6 +15,10 @@ PYBIND11_MODULE(split_kkt_residual, m) {
   py::class_<SplitKKTResidual>(m, "SplitKKTResidual")
     .def(py::init<const Robot&>())
     .def(py::init<>())
+    .def("clone", [](const SplitKKTResidual& self) {
+       auto other = self;
+       return other;
+     })
     .def("set_contact_status", &SplitKKTResidual::setContactStatus,
           py::arg("contact_status"))
     .def("is_dimension_consistent", &SplitKKTResidual::isDimensionConsistent)

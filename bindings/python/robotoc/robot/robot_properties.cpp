@@ -16,6 +16,10 @@ namespace py = pybind11;
 PYBIND11_MODULE(robot_properties, m) {
   py::class_<RobotProperties>(m, "RobotProperties")
     .def(py::init<>())
+    .def("clone", [](const RobotProperties& self) {
+       auto other = self;
+       return other;
+     })
     .def_readwrite("generalized_momentum_bias", &RobotProperties::generalized_momentum_bias);
 }
 
