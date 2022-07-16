@@ -31,6 +31,14 @@ public:
   FrictionCone(const Robot& robot, const double mu);
 
   ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] mu Friction coefficient. Size must be the same as 
+  /// Robot::maxNumContacts(). Each element must be positive.
+  ///
+  FrictionCone(const Robot& robot, const std::vector<double>& mu);
+
+  ///
   /// @brief Default constructor. 
   ///
   FrictionCone();
@@ -65,6 +73,13 @@ public:
   /// @param[in] mu Friction coefficient. Must be positive.
   ///
   void setFrictionCoefficient(const double mu);
+
+  ///
+  /// @brief Sets the friction coefficient. 
+  /// @param[in] mu Friction coefficient. Size must be the same as 
+  /// Robot::maxNumContacts(). Each element must be positive.
+  ///
+  void setFrictionCoefficient(const std::vector<double>& mu);
 
   bool useKinematics() const override;
 
@@ -134,8 +149,8 @@ private:
   int dimv_, dimc_, max_num_contacts_;
   std::vector<int> contact_frame_;
   std::vector<ContactType> contact_types_;
-  double mu_;
-  Eigen::MatrixXd cone_;
+  std::vector<double> mu_;
+  std::vector<Eigen::MatrixXd> cone_;
 
   static Eigen::VectorXd& fW(ConstraintComponentData& data, 
                              const int contact_idx) {

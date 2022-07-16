@@ -233,6 +233,13 @@ public:
     return contact_sequence_; 
   }
 
+  ///
+  ///
+  /// @brief Sets a collection of the properties for robot model in this MPC. 
+  /// @param[in] properties A collection of the properties for the robot model.
+  ///
+  void setRobotProperties(const RobotProperties& properties);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

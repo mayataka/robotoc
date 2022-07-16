@@ -8,6 +8,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/robot_properties.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -244,6 +245,13 @@ public:
   /// @return Returns const reference to the internal OCP discretization. 
   ///
   const TimeDiscretization& getTimeDiscretization() const;
+
+  ///
+  ///
+  /// @brief Sets a collection of the properties for robot model in this solver. 
+  /// @param[in] properties A collection of the properties for the robot model.
+  ///
+  void setRobotProperties(const RobotProperties& properties);
 
   ///
   /// @brief Displays the optimal control problem solver onto a ostream.

@@ -44,7 +44,8 @@ PYBIND11_MODULE(mpc_trot, m) {
     .def("get_constraints_handle", &MPCTrot::getConstraintsHandle)
     .def("get_friction_cone_handle", &MPCTrot::getFrictionConeHandle)
     .def("get_solver", &MPCTrot::getSolver)
-    .def("get_contact_sequence", &MPCTrot::getContactSequence);
+    .def("get_contact_sequence", &MPCTrot::getContactSequence)
+    .def("set_robot_properties", &MPCTrot::setRobotProperties);
 }
 
 } // namespace python

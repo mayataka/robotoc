@@ -317,6 +317,11 @@ std::shared_ptr<ContactSequence> MPCFlyingTrot::getContactSequenceHandle() {
 }
 
 
+void MPCFlyingTrot::setRobotProperties(const RobotProperties& properties) {
+  ocp_solver_.setRobotProperties(properties);
+}
+
+
 bool MPCFlyingTrot::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {
@@ -367,7 +372,8 @@ void MPCFlyingTrot::resetContactPlacements(const double t,
                                                 contact_sequence_->numContactPhases()+1);
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 
-                                            foot_step_planner_->contactPositions(phase+1));
+                                            foot_step_planner_->contactPositions(phase+1),
+                                            foot_step_planner_->contactSurfaces(phase+1));
   }
   base_rot_ref_->setConfigurationRef(contact_sequence_, foot_step_planner_);
   LF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);

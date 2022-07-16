@@ -689,6 +689,10 @@ inline void Robot::RNEA(const Eigen::MatrixBase<ConfigVectorType>& q,
     const_cast<Eigen::MatrixBase<TangentVectorType3>&>(tau)
         = pinocchio::rnea(model_, data_, q, v, a);
   }
+  if (has_generalized_momentum_bias_) {
+    const_cast<Eigen::MatrixBase<TangentVectorType3>&>(tau).noalias()
+        -= generalized_momentum_bias_;
+  }
 }
 
 
@@ -1014,6 +1018,32 @@ inline ContactStatus Robot::createContactStatus() const {
 
 inline ImpulseStatus Robot::createImpulseStatus() const {
   return ImpulseStatus(contact_types_, contact_frame_names_);
+}
+
+
+inline void Robot::setGeneralizedMomentumBias(
+    const Eigen::VectorXd& generalized_momentum_bias) {
+  assert(generalized_momentum_bias.size() == dimv_);
+  generalized_momentum_bias_ = generalized_momentum_bias;
+  has_generalized_momentum_bias_ = !generalized_momentum_bias.isZero();
+}
+
+
+inline const Eigen::VectorXd& Robot::generalizedMomentumBias() const {
+  return generalized_momentum_bias_;
+}
+
+
+inline RobotProperties Robot::createRobotProperties() const {
+  RobotProperties properties;
+  properties.generalized_momentum_bias.resize(dimv());
+  properties.generalized_momentum_bias = generalizedMomentumBias();
+  return properties;
+}
+
+
+inline void Robot::setRobotProperties(const RobotProperties& properties) {
+  setGeneralizedMomentumBias(properties.generalized_momentum_bias);
 }
 
 } // namespace robotoc

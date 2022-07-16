@@ -73,7 +73,6 @@ elif jump_type == 'rotational':
 
 log = False
 record = False
-log = True
 
 sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, 
                    record=record, log=log, sim_name='a1_jump_'+jump_type)

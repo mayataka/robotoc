@@ -303,6 +303,11 @@ std::shared_ptr<FrictionCone> MPCPace::getFrictionConeHandle() {
 }
 
 
+void MPCPace::setRobotProperties(const RobotProperties& properties) {
+  ocp_solver_.setRobotProperties(properties);
+}
+
+
 bool MPCPace::addStep(const double t) {
   if (predict_step_ == 0) {
     if (swing_start_time_ < t+T_-dtm_) {
@@ -371,7 +376,8 @@ void MPCPace::resetContactPlacements(const double t, const Eigen::VectorXd& q,
                                                 contact_sequence_->numContactPhases());
   for (int phase=0; phase<contact_sequence_->numContactPhases(); ++phase) {
     contact_sequence_->setContactPlacements(phase, 
-                                            foot_step_planner_->contactPositions(phase+1));
+                                            foot_step_planner_->contactPositions(phase+1),
+                                            foot_step_planner_->contactSurfaces(phase+1));
   }
   base_rot_ref_->setConfigurationRef(contact_sequence_, foot_step_planner_);
   LF_foot_ref_->setSwingFootRef(contact_sequence_, foot_step_planner_);

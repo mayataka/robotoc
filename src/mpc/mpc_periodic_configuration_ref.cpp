@@ -91,9 +91,12 @@ void MPCPeriodicConfigurationRef::setConfigurationRef(
     has_inactive_contacts_.push_back(
         num_active_contacts < contact_status.maxNumContacts());
   }
-  quat_.clear();
-  for (const auto& e : foot_step_planner->R()) {
-    quat_.push_back(Eigen::Quaterniond(e));
+  const int size = foot_step_planner->size();
+  if (quat_.size() < size) {
+    quat_.resize(size);
+  }
+  for (int i=0; i<size; ++i) {
+    quat_[i] = Eigen::Quaterniond(foot_step_planner->R(i));
   }
 }
 

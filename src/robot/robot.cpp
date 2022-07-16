@@ -27,7 +27,9 @@ Robot::Robot(const std::string& path_to_urdf,
     contact_inv_damping_(0),
     baumgarte_weights_({0, 0}),
     has_floating_base_(false),
+    has_generalized_momentum_bias_(false),
     dimpulse_dv_(),
+    generalized_momentum_bias_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
@@ -49,6 +51,7 @@ Robot::Robot(const std::string& path_to_urdf,
   dimq_ = model_.nq;
   dimv_ = model_.nv;
   dimu_ = model_.nv - dim_passive_;
+  generalized_momentum_bias_ = Eigen::VectorXd::Zero(dimv_);
   initializeJointLimits();
 }
 
@@ -236,7 +239,9 @@ Robot::Robot()
     max_dimf_(0),
     max_num_contacts_(0),
     has_floating_base_(false),
+    has_generalized_momentum_bias_(false),
     dimpulse_dv_(),
+    generalized_momentum_bias_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
@@ -256,8 +261,15 @@ Robot Robot::clone() const {
   else {
     base_joint_type = BaseJointType::FixedBase;
   }
-  return Robot(path_to_urdf_, base_joint_type, contact_frame_names_, contact_types_,
-               baumgarte_weights_, contact_inv_damping_);
+  auto robot = Robot(path_to_urdf_, base_joint_type, 
+                     contact_frame_names_, contact_types_, 
+                     baumgarte_weights_, contact_inv_damping_);
+  robot.setGeneralizedMomentumBias(generalizedMomentumBias());
+  robot.setJointEffortLimit(jointEffortLimit());
+  robot.setJointVelocityLimit(jointVelocityLimit());
+  robot.setLowerJointPositionLimit(lowerJointPositionLimit());
+  robot.setUpperJointPositionLimit(upperJointPositionLimit());
+  return robot;
 }
 
 

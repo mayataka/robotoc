@@ -173,13 +173,11 @@ Our tutorials on robotoc is available at [robotoc_tutorial](https://github.com/m
 
 - Citing `OCPSolver` without the switching time optimization (STO):
 ```
-@misc{katayama2021liftedcd,
+@inproceedings{katayama2022lifted,
   title={Lifted contact dynamics for efficient optimal control of rigid body systems with contacts}, 
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
-  url={arXiv:2108.01781},
-  eprint={2108.01781},
-  archivePrefix={arXiv}
-  year={2021}}
+  booktitle={{2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS 2022) (to appear)}},
+  year={2022}}
 ```
 
 - Citing `UnconstrOCPSolver` and `UnconstrParNMPCSolver` (the repository name was `idocp` in this paper (https://github.com/mayataka/idocp)):
@@ -187,14 +185,15 @@ Our tutorials on robotoc is available at [robotoc_tutorial](https://github.com/m
 @inproceedings{katayama2021idocp,
   title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},
   author={Sotaro Katayama and Toshiyuki Ohtsuka},
-  booktitle={{IEEE International Conference on Robotics and Automation (ICRA)}},
+  booktitle={{2021 IEEE International Conference on Robotics and Automation (ICRA)}},
   pages={2070--2076},
   year={2021}}
 ```
 
 ## Related publications
+- S. Katayama and T. Ohtsuka, "Whole-body model predictive control with rigid contacts via online switching time optimization," 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS 2022) (to appear), https://arxiv.org/abs/2203.00997, 2022
 - S. Katayama and T. Ohtsuka, "Structure-exploiting Newton-type method for optimal control of switched systems," https://arxiv.org/abs/2112.07232, 2021
-- S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient optimal control of rigid body systems with contacts, https://arxiv.org/abs/2108.01781, 2021
-- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, American Control Conference (ACC), pp. 3579-3586, 2022
-- S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), pp.2070-2076, 2021
+- S. Katayama and T. Ohtsuka, Lifted contact dynamics for efficient optimal control of rigid body systems with contacts, 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) (to appear), https://arxiv.org/abs/2108.01781, 2022
+- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, 2022 American Control Conference (ACC), pp. 3579-3586, 2022
+- S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, 2021 IEEE International Conference on Robotics and Automation (ICRA), pp.2070-2076, 2021
 - H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019

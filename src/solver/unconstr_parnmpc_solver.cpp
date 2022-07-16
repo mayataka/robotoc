@@ -270,4 +270,11 @@ bool UnconstrParNMPCSolver::isCurrentSolutionFeasible() {
   return true;
 }
 
+
+void UnconstrParNMPCSolver::setRobotProperties(const RobotProperties& properties) {
+  for (auto& e : robots_) {
+    e.setRobotProperties(properties);
+  }
+}
+
 } // namespace robotoc

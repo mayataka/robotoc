@@ -89,7 +89,13 @@ void MPCPeriodicCoMRef::setCoMRef(
     has_inactive_contacts_.push_back(
         num_active_contacts < contact_status.maxNumContacts());
   }
-  com_ = foot_step_planner->CoM();
+  const int size = foot_step_planner->size();
+  if (com_.size() < size) {
+    com_.resize(size);
+  }
+  for (int i=0; i<size; ++i) {
+    com_[i] = foot_step_planner->CoM(i);
+  }
 }
 
 

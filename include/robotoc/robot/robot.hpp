@@ -17,6 +17,7 @@
 #include "robotoc/robot/surface_contact.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/robot_properties.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 
 
@@ -941,6 +942,18 @@ public:
   ImpulseStatus createImpulseStatus() const;
 
   ///
+  /// @brief Sets the generalized momemtum (GM) bias.
+  /// @param[in] generalized_momentum_bias The generalized momemtum (GM) bias.
+  /// 
+  void setGeneralizedMomentumBias(const Eigen::VectorXd& generalized_momentum_bias);
+
+  ///
+  /// @brief Gets the generalized momemtum (GM) bias.
+  /// @return const reference to the generalized momemtum (GM) bias. 
+  /// 
+  const Eigen::VectorXd& generalizedMomentumBias() const;
+
+  ///
   /// @brief Initializes the results of jointEffortLimit(), jointVelocityLimit(), 
   /// lowerJointPositionLimit(), and upperJointPositionLimit() by the URDF.
   /// 
@@ -976,6 +989,19 @@ public:
       const Eigen::VectorXd& upper_joint_position_limit);
 
   ///
+  /// @brief Creates a collection of the properties for this robot model. 
+  /// @return A collection of the properties for this robot model.
+  /// 
+  RobotProperties createRobotProperties() const;
+
+  ///
+  ///
+  /// @brief Sets a collection of the properties for this robot model. 
+  /// @param[in] properties A collection of the properties for this robot model.
+  ///
+  void setRobotProperties(const RobotProperties& properties);
+
+  ///
   /// @brief Displays the robot model onto a ostream.
   ///
   void disp(std::ostream& os) const;
@@ -997,9 +1023,10 @@ private:
   int dimq_, dimv_, dimu_, dim_passive_, max_dimf_, max_num_contacts_;
   double contact_inv_damping_;
   std::pair<double, double> baumgarte_weights_;
-  bool has_floating_base_;
+  bool has_floating_base_, has_generalized_momentum_bias_;
   Eigen::MatrixXd dimpulse_dv_; 
-  Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
+  Eigen::VectorXd generalized_momentum_bias_, 
+                  joint_effort_limit_, joint_velocity_limit_, 
                   lower_joint_position_limit_, upper_joint_position_limit_;
 };
 

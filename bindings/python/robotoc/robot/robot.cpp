@@ -151,6 +151,9 @@ PYBIND11_MODULE(robot, m) {
     .def("point_contact_frame_names", &Robot::pointContactFrameNames)
     .def("surface_contact_frames", &Robot::surfaceContactFrames)
     .def("surface_contact_frame_names", &Robot::surfaceContactFrameNames)
+    .def("generalized_momentum_bias", &Robot::generalizedMomentumBias)
+    .def("set_generalized_momentum_bias", &Robot::setGeneralizedMomentumBias,
+          py::arg("generalized_momentum_bias"))
     .def("joint_effort_limit", &Robot::jointEffortLimit)
     .def("joint_velocity_limit", &Robot::jointVelocityLimit)
     .def("lower_joint_position_limit", &Robot::lowerJointPositionLimit)
@@ -163,6 +166,9 @@ PYBIND11_MODULE(robot, m) {
           py::arg("lower_joint_position_limit"))
     .def("set_upper_joint_position_limit", &Robot::setUpperJointPositionLimit,
           py::arg("upper_joint_position_limit"))
+    .def("createRobotProperties", &Robot::createRobotProperties)
+    .def("set_robot_properties", &Robot::setRobotProperties,
+          py::arg("properties"))
     .def("__str__", [](const Robot& self) {
         std::stringstream ss;
         ss << self;

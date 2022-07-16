@@ -13,9 +13,31 @@ namespace rotation {
 /// @return Rotation matrix.
 ///
 template <typename VectorType>
-inline Eigen::Matrix3d RotationMatrix(const Eigen::MatrixBase<VectorType>& quat_xyzw) {
+inline Eigen::Matrix3d RotationMatrixFromQuaternion(
+    const Eigen::MatrixBase<VectorType>& quat_xyzw) {
   assert(quat_xyzw.size() == 4);
   return Eigen::Quaterniond(quat_xyzw).toRotationMatrix();
+}
+
+
+///
+/// @brief Convert a normal vector to its surface Rotation matrix.
+/// @param[in] normal Normal vector.
+/// @return Rotation matrixo of the surface.
+///
+template <typename VectorType>
+inline Eigen::Matrix3d RotationMatrixFromNormal(
+    const Eigen::MatrixBase<VectorType>& normal) {
+  assert(normal.size() == 3);
+  Eigen::Matrix3d R;
+  const double nx = normal.coeff(0);
+  const double ny = normal.coeff(1);
+  const double nz = normal.coeff(2);
+  const double nxny_norm = std::sqrt(nx*nx + ny*ny);
+  R <<    ny/nxny_norm,   -nx/nxny_norm,         0.,
+       nx*nz/nxny_norm, ny*nz/nxny_norm, -nxny_norm,
+                    nx,              ny,         nz;
+  return R;
 }
 
 

@@ -57,6 +57,8 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
           py::arg("verbose")=false)
     .def("get_time_discretization", &OCPSolver::getTimeDiscretization)
+    .def("set_robot_properties", &OCPSolver::setRobotProperties,
+          py::arg("properties"))
     .def("__str__", [](const OCPSolver& self) {
         std::stringstream ss;
         ss << self;

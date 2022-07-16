@@ -65,6 +65,19 @@ public:
   ///
   void setJumpPattern(const Eigen::Vector3d& jump_length, const double jump_yaw);
 
+  ///
+  /// @brief Sets the rotation of the contact surfaces. 
+  /// @param[in] contact_surfaces Rotation of the contact surfaces. 
+  ///
+  void setContactSurfaces(const std::vector<Eigen::Matrix3d>& contact_surfaces);
+
+  ///
+  /// @brief Sets the rotation of the contact surfaces over the mutiple steps. 
+  /// @param[in] contact_surfaces Rotation of the contact surfaces. 
+  ///
+  void setContactSurfaces(
+      const std::vector<std::vector<Eigen::Matrix3d>>& contact_surfaces);
+
   void init(const Eigen::VectorXd& q) override;
 
   bool plan(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -73,27 +86,15 @@ public:
 
   const aligned_vector<SE3>& contactPlacements(const int step) const override;
 
-  const aligned_vector<aligned_vector<SE3>>& contactPlacements() const override;
-
-  ///
-  /// @brief This is invalid in JumpFootStepPlanner. 
-  ///
   const std::vector<Eigen::Vector3d>& contactPositions(const int step) const override;
 
-  ///
-  /// @brief This is invalid in JumpFootStepPlanner. 
-  ///
-  const std::vector<std::vector<Eigen::Vector3d>>& contactPositions() const override;
+  const std::vector<Eigen::Matrix3d>& contactSurfaces(const int step) const override;
 
   const Eigen::Vector3d& CoM(const int step) const override;
 
-  const std::vector<Eigen::Vector3d>& CoM() const override;
-
   const Eigen::Matrix3d& R(const int step) const override;
 
-  const std::vector<Eigen::Matrix3d>& R() const override;
-
-  void disp(std::ostream& os) const;
+  int size() const override { return planning_size_; }
 
   friend std::ostream& operator<<(std::ostream& os, 
                                   const JumpFootStepPlanner& planner);
@@ -106,9 +107,10 @@ public:
 private:
   Robot robot_;
   std::vector<int> contact_frames_;
-  int current_step_;
+  int current_step_, planning_size_;
   aligned_vector<aligned_vector<SE3>> contact_placement_ref_;
   std::vector<std::vector<Eigen::Vector3d>> contact_position_ref_;
+  std::vector<std::vector<Eigen::Matrix3d>> contact_surface_ref_;
   std::vector<Eigen::Vector3d> com_ref_, com_to_contact_position_local_;
   std::vector<Eigen::Matrix3d> R_;
   Eigen::Vector3d jump_length_;

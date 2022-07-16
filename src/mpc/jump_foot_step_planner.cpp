@@ -14,6 +14,8 @@ JumpFootStepPlanner::JumpFootStepPlanner(const Robot& robot)
     contact_frames_(robot.contactFrames()),
     current_step_(0),
     contact_placement_ref_(),
+    contact_position_ref_(),
+    contact_surface_ref_(),
     com_ref_(),
     com_to_contact_position_local_(),
     R_(),
@@ -53,8 +55,24 @@ void JumpFootStepPlanner::setJumpPattern(const Eigen::Vector3d& jump_length,
 }
 
 
+void JumpFootStepPlanner::setContactSurfaces(
+    const std::vector<Eigen::Matrix3d>& contact_surfaces) {
+  contact_surface_ref_.clear();
+  contact_surface_ref_.push_back(contact_surfaces);
+}
+
+
+void JumpFootStepPlanner::setContactSurfaces(
+    const std::vector<std::vector<Eigen::Matrix3d>>& contact_surfaces) {
+  contact_surface_ref_.clear();
+  for (const auto& e : contact_surfaces) {
+    contact_surface_ref_.push_back(e);
+  }
+}
+
+
 void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
-  Eigen::Matrix3d R = rotation::RotationMatrix(q.template segment<4>(3));
+  Eigen::Matrix3d R = rotation::RotationMatrixFromQuaternion(q.template segment<4>(3));
   rotation::ProjectRotationMatrix(R, rotation::ProjectionAxis::Z);
   robot_.updateFrameKinematics(q);
   aligned_vector<SE3> contact_placement;
@@ -90,6 +108,14 @@ void JumpFootStepPlanner::init(const Eigen::VectorXd& q) {
         ee.rotation().setIdentity();
       }
     }
+  }
+  contact_position_ref_.clear();
+  contact_surface_ref_.clear();
+  for (const auto& e : contact_placement_ref_) {
+    contact_position_ref_.push_back(
+        std::vector<Eigen::Vector3d>({e[0].translation(), e[1].translation()}));
+    contact_surface_ref_.push_back(
+        std::vector<Eigen::Matrix3d>({e[0].rotation(), e[1].rotation()}));
   }
   robot_.updateFrameKinematics(q);
   com_ref_.push_back(robot_.CoM());
@@ -137,6 +163,15 @@ bool JumpFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
       R_.pop_back();
     }
   }
+  contact_position_ref_.clear();
+  contact_surface_ref_.clear();
+  for (const auto& e : contact_placement_ref_) {
+    contact_position_ref_.push_back(
+        std::vector<Eigen::Vector3d>({e[0].translation(), e[1].translation()}));
+    contact_surface_ref_.push_back(
+        std::vector<Eigen::Matrix3d>({e[0].rotation(), e[1].rotation()}));
+  }
+  planning_size_ = com_ref_.size();
   return true;
 }
 
@@ -146,18 +181,13 @@ const aligned_vector<SE3>& JumpFootStepPlanner::contactPlacements(const int step
 }
 
 
-const aligned_vector<aligned_vector<SE3>>& JumpFootStepPlanner::contactPlacements() const {
-  return contact_placement_ref_;
-}
-
-
 const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::contactPositions(const int step) const {
   return contact_position_ref_[step];
 }
 
 
-const std::vector<std::vector<Eigen::Vector3d>>& JumpFootStepPlanner::contactPositions() const {
-  return contact_position_ref_;
+const std::vector<Eigen::Matrix3d>& JumpFootStepPlanner::contactSurfaces(const int step) const {
+  return contact_surface_ref_[step];
 }
 
 
@@ -166,34 +196,10 @@ const Eigen::Vector3d& JumpFootStepPlanner::CoM(const int step) const {
 }
 
 
-const std::vector<Eigen::Vector3d>& JumpFootStepPlanner::CoM() const {
-  return com_ref_;
-}
-
-
 const Eigen::Matrix3d& JumpFootStepPlanner::R(const int step) const {
   return R_[step];
 }
   
-
-const std::vector<Eigen::Matrix3d>& JumpFootStepPlanner::R() const {
-  return R_;
-}
-
-
-void JumpFootStepPlanner::disp(std::ostream& os) const {
-  std::cout << "Jump foot step planner:" << std::endl;
-  std::cout << "current_step:" << current_step_ << std::endl;
-  const int planning_steps = contact_placement_ref_.size();
-  for (int i=0; i<planning_steps; ++i) {
-    std::cout << "contact placement[" << i << "]: ["  
-              << contact_placement_ref_[i][0] << "], [" 
-              << contact_placement_ref_[i][1] << "]" << std::endl;
-    std::cout << "CoM position[" << i << "]: ["   << com_ref_[i].transpose() << "]" << std::endl;
-    std::cout << "R[" << i << "]: ["   << R_[i] << "]" << std::endl;
-  }
-}
-
 
 std::ostream& operator<<(std::ostream& os, 
                          const JumpFootStepPlanner& planner) {
