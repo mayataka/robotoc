@@ -16,10 +16,7 @@ PYBIND11_MODULE(unconstr_parnmpc, m) {
           py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
           py::arg("T"), py::arg("N"))
     .def(py::init<>())
-    .def("clone", [](const UnconstrParNMPC& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &UnconstrParNMPC::clone) 
     .def("robot", &UnconstrParNMPC::robot)
     .def("cost", &UnconstrParNMPC::cost)
     .def("constraints", &UnconstrParNMPC::constraints)

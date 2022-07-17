@@ -15,10 +15,7 @@ PYBIND11_MODULE(mpc_jump, m) {
   py::class_<MPCJump>(m, "MPCJump")
     .def(py::init<const Robot&, const double, const int, const int>(),
          py::arg("robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
-    .def("clone", [](const MPCJump& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &MPCJump::clone)
     .def("set_jump_pattern", &MPCJump::setJumpPattern,
          py::arg("foot_step_planner"), py::arg("flying_time"), py::arg("min_flying_time"), 
          py::arg("ground_time"), py::arg("min_ground_time"))

@@ -15,10 +15,7 @@ PYBIND11_MODULE(mpc_pace, m) {
   py::class_<MPCPace>(m, "MPCPace")
     .def(py::init<const Robot&, const double, const int, const int>(),
          py::arg("quadruped_robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
-    .def("clone", [](const MPCPace& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &MPCPace::clone)
     .def("set_gait_pattern", &MPCPace::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("stance_time"), py::arg("swing_start_time"))

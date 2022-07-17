@@ -16,10 +16,7 @@ PYBIND11_MODULE(jump_foot_step_planner, m) {
              std::shared_ptr<JumpFootStepPlanner>>(m, "JumpFootStepPlanner")
     .def(py::init<const Robot&>(),
          py::arg("robot"))
-    .def("clone", [](const JumpFootStepPlanner& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &JumpFootStepPlanner::clone)
     .def("set_jump_pattern", &JumpFootStepPlanner::setJumpPattern,
          py::arg("jump_length"), py::arg("jump_yaw"))
     .def("set_contact_surfaces", 

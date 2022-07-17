@@ -16,10 +16,7 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def(py::init<const OCP&, const SolverOptions&, const int>(),
           py::arg("ocp"), py::arg("solver_options")=SolverOptions::defaultOptions(), 
           py::arg("nthreads")=1)
-    .def("clone", [](const OCPSolver& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &OCPSolver::clone)
     .def("set_solver_options", &OCPSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("mesh_refinement", &OCPSolver::meshRefinement,

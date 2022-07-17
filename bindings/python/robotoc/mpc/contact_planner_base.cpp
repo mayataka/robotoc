@@ -14,6 +14,11 @@ public:
   // Inherit the constructors
   using ContactPlannerBase::ContactPlannerBase;
 
+  std::shared_ptr<ContactPlannerBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<ContactPlannerBase>, ContactPlannerBase, 
+                           clone, );
+  }
+
   void init(const Eigen::VectorXd& q) override {
     PYBIND11_OVERRIDE_PURE(void, ContactPlannerBase, 
                            init, q);
@@ -66,6 +71,7 @@ PYBIND11_MODULE(contact_planner_base, m) {
              PyContactPlannerBase, 
              std::shared_ptr<ContactPlannerBase>>(m, "ContactPlannerBase")
     .def(py::init<>()) 
+    .def("clone", &ContactPlannerBase::clone)
     .def("plan", &ContactPlannerBase::plan,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("contact_status"), 
           py::arg("planning_steps"))
