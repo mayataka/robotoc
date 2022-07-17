@@ -362,7 +362,7 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
   ocp[0].computeInitialStateDirection(robots[0], q, v, s[0], d0_ref);
   EXPECT_TRUE(d[0].isApprox(d0_ref));
   riccati_solver.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
-  riccati_solver.computeDirection(ocp, contact_sequence, riccati_factorization, d);
+  riccati_solver.computeDirection(ocp, riccati_factorization, d);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
   ASSERT_TRUE(primal_step_size > 0);
