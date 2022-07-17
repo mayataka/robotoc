@@ -109,6 +109,19 @@ public:
   UnconstrParNMPC& operator=(UnconstrParNMPC&&) noexcept = default;
 
   ///
+  /// @brief Clones this object. Cost and constraints are also cloned.
+  ///
+  UnconstrParNMPC clone() const {
+    auto parnmpc = UnconstrParNMPC(robot_, 
+                                   std::make_shared<CostFunction>(*cost_.get()),
+                                   std::make_shared<Constraints>(*constraints_.get()),
+                                   T_, N_);  
+    parnmpc.data = data;
+    parnmpc.terminal = terminal;
+    return parnmpc;
+  }
+
+  ///
   /// @return const reference to the Robot model. 
   ///
   const Robot& robot() const {

@@ -109,6 +109,19 @@ public:
   UnconstrOCP& operator=(UnconstrOCP&&) noexcept = default;
 
   ///
+  /// @brief Clones this object. Cost and constraints are also cloned.
+  ///
+  UnconstrOCP clone() const {
+    auto ocp = UnconstrOCP(robot_, 
+                           std::make_shared<CostFunction>(*cost_.get()),
+                           std::make_shared<Constraints>(*constraints_.get()),
+                           T_, N_);  
+    ocp.data = data;
+    ocp.terminal = terminal;
+    return ocp;
+  }
+
+  ///
   /// @return const reference to the Robot model. 
   ///
   const Robot& robot() const {
