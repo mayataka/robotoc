@@ -26,10 +26,7 @@ PYBIND11_MODULE(task_space_3d_cost, m) {
     .def(py::init<const Robot&, const std::string&, const Eigen::Vector3d&>(),
           py::arg("robot"), py::arg("frame_name"), py::arg("const_ref"))
     .def(py::init<>())
-    .def("clone", [](const TaskSpace3DCost& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &TaskSpace3DCost::clone)
     .def("set_ref", &TaskSpace3DCost::set_ref,
           py::arg("ref"))
     .def("set_const_ref", &TaskSpace3DCost::set_const_ref,

@@ -20,10 +20,7 @@ PYBIND11_MODULE(com_cost, m) {
     .def(py::init<const Robot&, const Eigen::Vector3d&>(),
           py::arg("robot"), py::arg("const_ref"))
     .def(py::init<>())
-    .def("clone", [](const CoMCost& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &CoMCost::clone)
     .def("set_ref", &CoMCost::set_ref,
           py::arg("ref"))
     .def("set_const_ref", &CoMCost::set_const_ref,

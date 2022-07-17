@@ -73,6 +73,11 @@ public:
   CostFunction& operator=(CostFunction&&) noexcept = default;
 
   ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  std::shared_ptr<CostFunction> clone() const;
+
+  ///
   /// @brief Sets the discount facor. 
   /// @param[in] discount_factor Discount factor. Must be positive and smaller 
   /// than 1.0. Otherwise, the discounted cost is disabled.

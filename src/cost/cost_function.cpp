@@ -43,6 +43,15 @@ CostFunction::~CostFunction() {
 }
 
 
+std::shared_ptr<CostFunction> CostFunction::clone() const {
+  auto cost = std::make_shared<CostFunction>();
+  for (const auto& e : costs_) {
+    cost->push_back(e->clone());
+  }
+  return cost;
+}
+
+
 void CostFunction::setDiscountFactor(const double discount_factor, 
                                      const double discount_time_step) {
   if (discount_factor > 0 && discount_factor < 1.0 && discount_time_step > 0) {

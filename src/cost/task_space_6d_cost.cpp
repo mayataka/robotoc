@@ -92,6 +92,16 @@ TaskSpace6DCost::~TaskSpace6DCost() {
 }
 
 
+std::shared_ptr<CostFunctionComponentBase> TaskSpace6DCost::clone() const {
+  auto cost = std::make_shared<TaskSpace6DCost>(*this);
+  if (use_nonconst_ref_) {
+    auto ref = ref_->clone();
+    cost->set_ref(ref);
+  }
+  return cost;
+}
+
+
 void TaskSpace6DCost::set_ref(const std::shared_ptr<TaskSpace6DRefBase>& ref) {
   ref_ = ref;
   use_nonconst_ref_ = true;

@@ -38,6 +38,8 @@ public:
 
   TestCoMRef& operator=(TestCoMRef&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_COM_REF(TestCoMRef)
+
   void updateRef(const GridInfo& grid_info, 
                  Eigen::VectorXd& ref) const override {
     ref = com0_ref_ + (grid_info.t-t0_) * vcom_ref_;

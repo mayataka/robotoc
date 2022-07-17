@@ -37,6 +37,8 @@ public:
   ///
   ~MPCPeriodicSwingFootRef();
 
+  DEFINE_DEFAULT_CLONE_TASK_SPACE_3D_REF(MPCPeriodicSwingFootRef)
+
   ///
   /// @brief Set period. 
   /// @param[in] swing_start_time Start time of the reference tracking.

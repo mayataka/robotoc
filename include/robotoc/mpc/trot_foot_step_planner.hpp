@@ -60,7 +60,7 @@ public:
   ///
   TrotFootStepPlanner& operator=(TrotFootStepPlanner&&) noexcept = default;
 
-  DEFINE_CLONE_CONTACT_PLANNER(TrotFootStepPlanner)
+  DEFINE_DEFAULT_CLONE_CONTACT_PLANNER(TrotFootStepPlanner)
 
   ///
   /// @brief Sets the gait pattern by step length and yaw step command. 

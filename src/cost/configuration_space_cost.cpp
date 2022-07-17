@@ -82,6 +82,16 @@ ConfigurationSpaceCost::~ConfigurationSpaceCost() {
 }
 
 
+std::shared_ptr<CostFunctionComponentBase> ConfigurationSpaceCost::clone() const {
+  auto cost = std::make_shared<ConfigurationSpaceCost>(*this);
+  if (use_nonconst_ref_) {
+    auto ref = ref_->clone();
+    cost->set_ref(ref);
+  }
+  return cost;
+}
+
+
 void ConfigurationSpaceCost::set_ref(
     const std::shared_ptr<ConfigurationSpaceRefBase>& ref) {
   ref_ = ref;

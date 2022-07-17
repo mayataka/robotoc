@@ -13,6 +13,11 @@ public:
   // Inherit the constructors
   using ConfigurationSpaceRefBase::ConfigurationSpaceRefBase;
 
+  std::shared_ptr<ConfigurationSpaceRefBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<ConfigurationSpaceRefBase>, ConfigurationSpaceRefBase, 
+                           clone, );
+  }
+
   void updateRef(const Robot& robot, const GridInfo& grid_info,
                  Eigen::VectorXd& q_ref) const override {
     PYBIND11_OVERRIDE_PURE(void, ConfigurationSpaceRefBase, 
@@ -34,6 +39,7 @@ PYBIND11_MODULE(configuration_space_ref_base, m) {
              PyConfigurationSpaceRefBase,
              std::shared_ptr<ConfigurationSpaceRefBase>>(m, "ConfigurationSpaceRefBase")
     .def(py::init<>())
+    .def("clone", &ConfigurationSpaceRefBase::clone)
     .def("updateRef", &ConfigurationSpaceRefBase::updateRef,
           py::arg("robot"), py::arg("grid_info"), py::arg("q_ref"))
     .def("isActive", &ConfigurationSpaceRefBase::isActive,

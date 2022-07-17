@@ -16,10 +16,7 @@ PYBIND11_MODULE(discrete_time_com_ref, m) {
              std::shared_ptr<DiscreteTimeCoMRef>>(m, "DiscreteTimeCoMRef")
     .def(py::init<const std::vector<Eigen::Vector3d>&>(), 
           py::arg("com_position_to_contact_position"))
-    .def("clone", [](const DiscreteTimeCoMRef& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &DiscreteTimeCoMRef::clone)
     .def("set_ref", 
           static_cast<void (DiscreteTimeCoMRef::*)(const std::shared_ptr<ContactSequence>&)>(&DiscreteTimeCoMRef::setCoMRef),
           py::arg("contact_sequence"))

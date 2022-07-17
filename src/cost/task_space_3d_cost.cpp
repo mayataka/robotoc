@@ -73,6 +73,16 @@ TaskSpace3DCost::~TaskSpace3DCost() {
 }
 
 
+std::shared_ptr<CostFunctionComponentBase> TaskSpace3DCost::clone() const {
+  auto cost = std::make_shared<TaskSpace3DCost>(*this);
+  if (use_nonconst_ref_) {
+    auto ref = ref_->clone();
+    cost->set_ref(ref);
+  }
+  return cost;
+}
+
+
 void TaskSpace3DCost::set_ref(const std::shared_ptr<TaskSpace3DRefBase>& ref) {
   ref_ = ref;
   use_nonconst_ref_ = true;

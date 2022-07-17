@@ -131,6 +131,8 @@ public:
   ///
   TaskSpace6DCost& operator=(TaskSpace6DCost&&) noexcept = default;
 
+  std::shared_ptr<CostFunctionComponentBase> clone() const override;
+
   ///
   /// @brief Sets the reference task-space placement. 
   /// @param[in] ref Reference task-space placement.

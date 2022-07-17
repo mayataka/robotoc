@@ -46,6 +46,8 @@ public:
   TestConfigurationSpaceRef& operator=(
       TestConfigurationSpaceRef&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONFIGURATION_SPACE_REF(TestConfigurationSpaceRef)
+
   void updateRef(const Robot& robot, const GridInfo& grid_info,
                  Eigen::VectorXd& q_ref) const override {
     robot.integrateConfiguration(q0_ref_, v_ref_, (grid_info.t-t0_), q_ref);

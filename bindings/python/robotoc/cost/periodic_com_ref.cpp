@@ -18,10 +18,7 @@ PYBIND11_MODULE(periodic_com_ref, m) {
           py::arg("com_ref0"), py::arg("vcom_ref"), py::arg("t0"),
           py::arg("period_active"), py::arg("period_inactive"), 
           py::arg("is_first_move_half"))
-    .def("clone", [](const PeriodicCoMRef& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &PeriodicCoMRef::clone)
     .def("set_ref", &PeriodicCoMRef::setCoMRef,
           py::arg("com_ref0"), py::arg("vcom_ref"), py::arg("t0"),
           py::arg("period_active"), py::arg("period_inactive"), 

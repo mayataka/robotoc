@@ -15,10 +15,7 @@ PYBIND11_MODULE(discrete_time_swing_foot_ref, m) {
              std::shared_ptr<DiscreteTimeSwingFootRef>>(m, "DiscreteTimeSwingFootRef")
     .def(py::init<const int, const double>(), 
           py::arg("contact_index"), py::arg("swing_height"))
-    .def("clone", [](const DiscreteTimeSwingFootRef& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &DiscreteTimeSwingFootRef::clone)
     .def("set_swing_foot_ref", 
           static_cast<void (DiscreteTimeSwingFootRef::*)(const std::shared_ptr<ContactSequence>&)>(&DiscreteTimeSwingFootRef::setSwingFootRef),
           py::arg("contact_sequence"))

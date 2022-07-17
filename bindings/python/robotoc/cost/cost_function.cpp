@@ -13,10 +13,7 @@ PYBIND11_MODULE(cost_function, m) {
     .def(py::init<const double, const double>(),
           py::arg("discount_factor"), py::arg("discount_time_step"))
     .def(py::init<>())
-    .def("clone", [](const CostFunction& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &CostFunction::clone)
     .def("set_discount_factor", &CostFunction::setDiscountFactor,
           py::arg("discount_factor"), py::arg("discount_time_step"))
     .def("discount_factor", &CostFunction::discountFactor)

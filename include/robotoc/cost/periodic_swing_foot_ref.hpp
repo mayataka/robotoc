@@ -37,6 +37,8 @@ public:
   ///
   ~PeriodicSwingFootRef();
 
+  DEFINE_DEFAULT_CLONE_TASK_SPACE_3D_REF(PeriodicSwingFootRef)
+
   ///
   /// @brief Sets parameters. 
   /// @param[in] x3d0 Initial foot position reference.

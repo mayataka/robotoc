@@ -37,6 +37,8 @@ public:
   ///
   ~MPCPeriodicCoMRef();
 
+  DEFINE_DEFAULT_CLONE_COM_REF(MPCPeriodicCoMRef)
+
   ///
   /// @brief Set period. 
   /// @param[in] swing_start_time Start time of the reference tracking.

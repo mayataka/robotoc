@@ -75,6 +75,8 @@ public:
   ///
   CoMCost& operator=(CoMCost&&) noexcept = default;
 
+  std::shared_ptr<CostFunctionComponentBase> clone() const override;
+
   ///
   /// @brief Sets the reference CoM position. 
   /// @param[in] ref Reference CoM position.

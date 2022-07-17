@@ -11,6 +11,11 @@ public:
   // Inherit the constructors
   using CostFunctionComponentBase::CostFunctionComponentBase;
 
+  std::shared_ptr<CostFunctionComponentBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<CostFunctionComponentBase>, CostFunctionComponentBase, 
+                           clone, );
+  }
+
   bool useKinematics() const override {
     PYBIND11_OVERRIDE_PURE(bool, CostFunctionComponentBase, 
                            useKinematics, );

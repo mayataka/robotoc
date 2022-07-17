@@ -62,6 +62,8 @@ public:
   ///
   LocalContactForceCost& operator=(LocalContactForceCost&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_COST_FUNCTION_COMPONENT(LocalContactForceCost)
+
   ///
   /// @brief Sets the reference contact forces expressed in the local frames. 
   /// @param[in] f_ref Reference contact forces expressed in the local frames. 

@@ -34,6 +34,8 @@ public:
   ///
   ~PeriodicCoMRef();
 
+  DEFINE_DEFAULT_CLONE_COM_REF(PeriodicCoMRef)
+
   ///
   /// @brief Sets parameters. 
   /// @param[in] com_ref0 Initial CoM position reference.

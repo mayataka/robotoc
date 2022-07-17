@@ -15,6 +15,11 @@ public:
   // Inherit the constructors
   using TaskSpace3DRefBase::TaskSpace3DRefBase;
 
+  std::shared_ptr<TaskSpace3DRefBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<TaskSpace3DRefBase>, TaskSpace3DRefBase, 
+                           clone, );
+  }
+
   void updateRef(const GridInfo& grid_info, 
                  Eigen::VectorXd& ref) const override {
     PYBIND11_OVERRIDE_PURE(void, TaskSpace3DRefBase, 
@@ -34,6 +39,7 @@ PYBIND11_MODULE(task_space_3d_ref_base, m) {
              PyTaskSpace3DRefBase, 
              std::shared_ptr<TaskSpace3DRefBase>>(m, "TaskSpace3DRefBase")
     .def(py::init<>())
+    .def("clone", &TaskSpace3DRefBase::clone)
     .def("updateRef", &TaskSpace3DRefBase::updateRef,
           py::arg("grid_info"), py::arg("ref"))
     .def("isActive", &TaskSpace3DRefBase::isActive,

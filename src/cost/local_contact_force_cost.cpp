@@ -34,6 +34,12 @@ LocalContactForceCost::~LocalContactForceCost() {
 }
 
 
+// std::shared_ptr<LocalContactForceCost> LocalContactForceCost::clone() const {
+//   auto cost = std::make_shared<LocalContactForceCost>(*this);
+//   return cost;
+// }
+
+
 void LocalContactForceCost::set_f_ref(
     const std::vector<Eigen::Vector3d>& f_ref) {
   try {

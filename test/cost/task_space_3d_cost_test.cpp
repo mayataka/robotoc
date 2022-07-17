@@ -39,6 +39,8 @@ public:
 
   TestTaskSpace3DRef& operator=(TestTaskSpace3DRef&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_TASK_SPACE_3D_REF(TestTaskSpace3DRef)
+
   void updateRef(const GridInfo& grid_info, Eigen::VectorXd& x3d_ref) const override {
     x3d_ref = x3d0_ref_ + (grid_info.t-t0_) * vx3d0_ref_;
   }

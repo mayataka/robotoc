@@ -47,6 +47,16 @@ CoMCost::~CoMCost() {
 }
 
 
+std::shared_ptr<CostFunctionComponentBase> CoMCost::clone() const {
+  auto cost = std::make_shared<CoMCost>(*this);
+  if (use_nonconst_ref_) {
+    auto ref = ref_->clone();
+    cost->set_ref(ref);
+  }
+  return cost;
+}
+
+
 void CoMCost::set_ref(const std::shared_ptr<CoMRefBase>& ref) {
   ref_ = ref;
   use_nonconst_ref_ = true;

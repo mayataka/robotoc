@@ -31,6 +31,8 @@ public:
   ///
   ~DiscreteTimeCoMRef();
 
+  DEFINE_DEFAULT_CLONE_COM_REF(DiscreteTimeCoMRef)
+
   ///
   /// @brief Set the reference positions of CoM from the contact positions of 
   /// the contact sequence. The first and last contact phases must have active 

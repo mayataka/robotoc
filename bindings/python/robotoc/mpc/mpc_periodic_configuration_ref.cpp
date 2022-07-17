@@ -18,10 +18,7 @@ PYBIND11_MODULE(mpc_periodic_configuration_ref, m) {
                   const double, const int>(),
           py::arg("q"), py::arg("swing_start_time"), py::arg("period_active"), 
           py::arg("period_inactive"), py::arg("num_phases_in_period")=1)
-    .def("clone", [](const MPCPeriodicConfigurationRef& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &MPCPeriodicConfigurationRef::clone)
     .def("set_period", &MPCPeriodicConfigurationRef::setPeriod,
           py::arg("swing_start_time"), py::arg("period_active"), 
           py::arg("period_inactive"), py::arg("num_phases_in_period")=1)

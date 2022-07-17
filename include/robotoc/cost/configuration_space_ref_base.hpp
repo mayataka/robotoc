@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_CONFIGURATION_SPACE_REF_HPP_
 #define ROBOTOC_CONFIGURATION_SPACE_REF_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -18,6 +20,9 @@
 
 
 namespace robotoc {
+
+#define DEFINE_DEFAULT_CLONE_CONFIGURATION_SPACE_REF(Derived) \
+  std::shared_ptr<ConfigurationSpaceRefBase> clone() const override { return std::make_shared<Derived>(*this); } 
 
 ///
 /// @class ConfigurationSpaceRefBase 
@@ -54,6 +59,11 @@ public:
   /// @brief Default move assign operator. 
   ///
   ConfigurationSpaceRefBase& operator=(ConfigurationSpaceRefBase&&) noexcept = default;
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<ConfigurationSpaceRefBase> clone() const = 0;
 
   ///
   /// @brief Computes the reference configuration. 

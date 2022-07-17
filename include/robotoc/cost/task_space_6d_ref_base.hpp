@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_TASK_SPACE_6D_REF_BASE_HPP_
 #define ROBOTOC_TASK_SPACE_6D_REF_BASE_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/hybrid/grid_info.hpp"
@@ -8,6 +10,9 @@
 
 
 namespace robotoc {
+
+#define DEFINE_DEFAULT_CLONE_TASK_SPACE_6D_REF(Derived) \
+  std::shared_ptr<TaskSpace6DRefBase> clone() const override { return std::make_shared<Derived>(*this); } 
 
 ///
 /// @class TaskSpace6DRefBase
@@ -24,6 +29,11 @@ public:
   /// @brief Destructor. 
   ///
   virtual ~TaskSpace6DRefBase() {}
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<TaskSpace6DRefBase> clone() const = 0;
 
   ///
   /// @brief Default copy constructor. 

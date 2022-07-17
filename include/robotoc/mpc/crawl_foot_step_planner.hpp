@@ -60,7 +60,7 @@ public:
   ///
   CrawlFootStepPlanner& operator=(CrawlFootStepPlanner&&) noexcept = default;
 
-  DEFINE_CLONE_CONTACT_PLANNER(CrawlFootStepPlanner);
+  DEFINE_DEFAULT_CLONE_CONTACT_PLANNER(CrawlFootStepPlanner);
 
   ///
   /// @brief Sets the gait pattern by step length and yaw step command. 

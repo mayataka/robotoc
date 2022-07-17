@@ -16,6 +16,11 @@ public:
   // Inherit the constructors
   using TaskSpace6DRefBase::TaskSpace6DRefBase;
 
+  std::shared_ptr<TaskSpace6DRefBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<TaskSpace6DRefBase>, TaskSpace6DRefBase, 
+                           clone, );
+  }
+
   void updateRef(const GridInfo& grid_info, 
                  SE3& ref) const override {
     PYBIND11_OVERRIDE_PURE(void, TaskSpace6DRefBase, 
@@ -35,6 +40,7 @@ PYBIND11_MODULE(task_space_6d_ref_base, m) {
              PyTaskSpace6DRefBase, 
              std::shared_ptr<TaskSpace6DRefBase>>(m, "TaskSpace6DRefBase")
     .def(py::init<>())
+    .def("clone", &TaskSpace6DRefBase::clone)
     .def("updateRef", &TaskSpace6DRefBase::updateRef,
           py::arg("grid_info"), py::arg("ref"))
     .def("isActive", &TaskSpace6DRefBase::isActive,

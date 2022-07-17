@@ -71,6 +71,8 @@ public:
   ///
   ConfigurationSpaceCost& operator=(ConfigurationSpaceCost&&) noexcept = default;
 
+  std::shared_ptr<CostFunctionComponentBase> clone() const override;
+
   ///
   /// @brief Sets the reference configuration. 
   /// @param[in] ref Reference configuraton.

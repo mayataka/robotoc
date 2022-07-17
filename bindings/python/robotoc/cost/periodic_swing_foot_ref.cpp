@@ -18,10 +18,7 @@ PYBIND11_MODULE(periodic_swing_foot_ref, m) {
           py::arg("x3d0"), py::arg("step_length"), py::arg("step_height"),
           py::arg("t0"), py::arg("period_swing"), py::arg("period_stance"),
           py::arg("is_first_step_half"))
-    .def("clone", [](const PeriodicSwingFootRef& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &PeriodicSwingFootRef::clone)
     .def("set_foot_track_ref", &PeriodicSwingFootRef::setFootTrackRef,
           py::arg("x3d0"), py::arg("step_length"), py::arg("step_height"),
           py::arg("t0"), py::arg("period_swing"), py::arg("period_stance"),

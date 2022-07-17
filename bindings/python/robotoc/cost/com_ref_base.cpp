@@ -22,6 +22,11 @@ public:
                            grid_info, ref);
   }
 
+  std::shared_ptr<CoMRefBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<CoMRefBase>, CoMRefBase, 
+                           clone, );
+  }
+
   bool isActive(const GridInfo& grid_info) const override {
     PYBIND11_OVERRIDE_PURE(bool, CoMRefBase, 
                            isActive, 
@@ -34,6 +39,7 @@ PYBIND11_MODULE(com_ref_base, m) {
              PyCoMRefBase, 
              std::shared_ptr<CoMRefBase>>(m, "CoMRefBase")
     .def(py::init<>())
+    .def("clone", &CoMRefBase::clone)
     .def("updateRef", &CoMRefBase::updateRef,
           py::arg("grid_info"), py::arg("ref"))
     .def("isActive", &CoMRefBase::isActive,

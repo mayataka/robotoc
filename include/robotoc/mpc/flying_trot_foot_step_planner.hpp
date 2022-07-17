@@ -60,7 +60,7 @@ public:
   ///
   FlyingTrotFootStepPlanner& operator=(FlyingTrotFootStepPlanner&&) noexcept = default;
 
-  DEFINE_CLONE_CONTACT_PLANNER(FlyingTrotFootStepPlanner);
+  DEFINE_DEFAULT_CLONE_CONTACT_PLANNER(FlyingTrotFootStepPlanner);
 
   ///
   /// @brief Sets the gait pattern by step length and yaw step command. 

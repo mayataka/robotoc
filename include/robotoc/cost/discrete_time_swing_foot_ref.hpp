@@ -31,6 +31,8 @@ public:
   ///
   ~DiscreteTimeSwingFootRef();
 
+  DEFINE_DEFAULT_CLONE_TASK_SPACE_3D_REF(DiscreteTimeSwingFootRef)
+
   ///
   /// @brief Set the reference contact positions from the contact sequence. 
   /// The first and last contact phases must have active contacts.

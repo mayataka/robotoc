@@ -19,10 +19,7 @@ PYBIND11_MODULE(mpc_periodic_swing_foot_ref, m) {
           py::arg("contact_index"), py::arg("swing_height"), 
           py::arg("swing_start_time"), py::arg("period_active"), 
           py::arg("period_inactive"), py::arg("num_phases_in_period")=1)
-    .def("clone", [](const MPCPeriodicSwingFootRef& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &MPCPeriodicSwingFootRef::clone)
     .def("set_period", &MPCPeriodicSwingFootRef::setPeriod,
           py::arg("swing_start_time"), py::arg("period_active"), 
           py::arg("period_inactive"), py::arg("num_phases_in_period")=1)

@@ -41,6 +41,8 @@ public:
   ///
   ~MPCPeriodicConfigurationRef();
 
+  DEFINE_DEFAULT_CLONE_CONFIGURATION_SPACE_REF(MPCPeriodicConfigurationRef)
+
   ///
   /// @brief Set period. 
   /// @param[in] swing_start_time Start time of the reference tracking.

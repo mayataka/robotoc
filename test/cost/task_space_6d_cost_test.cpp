@@ -42,6 +42,8 @@ public:
 
   TestTaskSpace6DRef& operator=(TestTaskSpace6DRef&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_TASK_SPACE_6D_REF(TestTaskSpace6DRef)
+
   void updateRef(const GridInfo& grid_info, SE3& x6d_ref) const override {
     x6d_ref = SE3(rotm_, (x6d0_ref_+(grid_info.t-t0_)*vx6d_ref_));
   }

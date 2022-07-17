@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_COST_FUNCTION_COMPONENT_BASE_HPP_
 #define ROBOTOC_COST_FUNCTION_COMPONENT_BASE_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -17,6 +19,9 @@
 
 
 namespace robotoc {
+
+#define DEFINE_DEFAULT_CLONE_COST_FUNCTION_COMPONENT(Derived) \
+  std::shared_ptr<CostFunctionComponentBase> clone() const override { return std::make_shared<Derived>(*this); } 
 
 ///
 /// @class CostFunctionComponentBase
@@ -55,6 +60,11 @@ public:
   ///
   CostFunctionComponentBase& operator=(CostFunctionComponentBase&&) noexcept 
       = default;
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<CostFunctionComponentBase> clone() const = 0;
 
   ///
   /// @brief Check if the cost function component requres kinematics
