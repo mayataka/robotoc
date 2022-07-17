@@ -58,6 +58,8 @@ public:
   JointPositionLowerLimit& operator=(
       JointPositionLowerLimit&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointPositionLowerLimit)
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

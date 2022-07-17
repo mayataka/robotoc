@@ -60,6 +60,8 @@ public:
   JointAccelerationLowerLimit& operator=(
       JointAccelerationLowerLimit&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointAccelerationLowerLimit)
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

@@ -11,6 +11,11 @@ public:
   // Inherit the constructors
   using ImpulseConstraintComponentBase::ImpulseConstraintComponentBase;
 
+  std::shared_ptr<ImpulseConstraintComponentBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<ImpulseConstraintComponentBase>, 
+                           ImpulseConstraintComponentBase, clone, );
+  }
+
   KinematicsLevel kinematicsLevel() const override {
     PYBIND11_OVERRIDE_PURE(KinematicsLevel, ImpulseConstraintComponentBase, 
                            kinematicsLevel, );
@@ -86,6 +91,7 @@ PYBIND11_MODULE(impulse_constraint_component_base, m) {
              std::shared_ptr<ImpulseConstraintComponentBase>>(m, "ImpulseConstraintComponentBase")
     .def(py::init<const double, const double>(),
           py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
+    .def("clone", &ImpulseConstraintComponentBase::clone)
     .def("kinematicsLevel", &ImpulseConstraintComponentBase::kinematicsLevel)
     .def("allocateExtraData", &ImpulseConstraintComponentBase::allocateExtraData,
           py::arg("data"))

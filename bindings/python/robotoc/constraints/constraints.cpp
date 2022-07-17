@@ -15,10 +15,7 @@ PYBIND11_MODULE(constraints, m) {
   py::class_<Constraints, std::shared_ptr<Constraints>>(m, "Constraints")
     .def(py::init<const double, const double>(),
           py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
-    .def("clone", [](const Constraints& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &Constraints::clone)
     .def("push_back", static_cast<void (Constraints::*)(ConstraintComponentBasePtr)>(&Constraints::push_back),
           py::arg("constraint_component"))
     .def("push_back", static_cast<void (Constraints::*)(ImpulseConstraintComponentBasePtr)>(&Constraints::push_back),

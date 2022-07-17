@@ -40,6 +40,25 @@ Constraints::~Constraints() {
 }
 
 
+std::shared_ptr<Constraints> Constraints::clone() const {
+  auto constraints = std::make_shared<Constraints>(barrier_,  
+                                                   fraction_to_boundary_rule_);
+  for (const auto& e : position_level_constraints_) {
+    constraints->push_back(e->clone());
+  }
+  for (const auto& e : velocity_level_constraints_) {
+    constraints->push_back(e->clone());
+  }
+  for (const auto& e : acceleration_level_constraints_) {
+    constraints->push_back(e->clone());
+  }
+  for (const auto& e : impulse_level_constraints_) {
+    constraints->push_back(e->clone());
+  }
+  return constraints; 
+}
+
+
 void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
   constraint_component->setBarrier(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);

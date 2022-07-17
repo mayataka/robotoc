@@ -58,6 +58,8 @@ public:
   JointTorquesUpperLimit& operator=(
       JointTorquesUpperLimit&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointTorquesUpperLimit)
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

@@ -61,6 +61,8 @@ public:
   ///
   ImpulseWrenchFrictionCone& operator=(ImpulseWrenchFrictionCone&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_IMPULSE_CONSTRAINT_COMPONENT(ImpulseWrenchFrictionCone)
+
   ///
   /// @brief Sets the friction coefficient. 
   /// @param[in] mu Friction coefficient. Must be positive.

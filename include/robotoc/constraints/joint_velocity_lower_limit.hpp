@@ -58,6 +58,8 @@ public:
   JointVelocityLowerLimit& operator=(
       JointVelocityLowerLimit&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointVelocityLowerLimit)
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

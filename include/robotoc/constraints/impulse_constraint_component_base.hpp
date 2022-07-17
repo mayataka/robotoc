@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
 #define ROBOTOC_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -14,6 +16,9 @@
 
 
 namespace robotoc {
+
+#define DEFINE_DEFAULT_CLONE_IMPULSE_CONSTRAINT_COMPONENT(Derived) \
+  std::shared_ptr<ImpulseConstraintComponentBase> clone() const override { return std::make_shared<Derived>(*this); } 
 
 ///
 /// @class ImpulseConstraintComponentBase
@@ -60,6 +65,11 @@ public:
   ///
   ImpulseConstraintComponentBase& operator=(
       ImpulseConstraintComponentBase&&) noexcept = default;
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<ImpulseConstraintComponentBase> clone() const = 0;
 
   ///
   /// @brief Checks the kinematics level of the constraint component.

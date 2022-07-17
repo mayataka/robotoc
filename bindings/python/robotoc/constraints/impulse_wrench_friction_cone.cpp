@@ -17,6 +17,7 @@ PYBIND11_MODULE(impulse_wrench_friction_cone, m) {
        auto other = self;
        return other;
      })
+    .def("clone", &ImpulseWrenchFrictionCone::clone)
     .def("set_friction_coefficient", &ImpulseWrenchFrictionCone::setFrictionCoefficient,
           py::arg("mu"))
     .def("set_rectangular", &ImpulseWrenchFrictionCone::setRectangular,

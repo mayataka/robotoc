@@ -58,6 +58,8 @@ public:
   JointTorquesLowerLimit& operator=(
       JointTorquesLowerLimit&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointTorquesLowerLimit)
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

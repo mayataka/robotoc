@@ -68,6 +68,8 @@ public:
   ///
   FrictionCone& operator=(FrictionCone&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(FrictionCone)
+
   ///
   /// @brief Sets the friction coefficient. 
   /// @param[in] mu Friction coefficient. Must be positive.

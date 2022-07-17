@@ -11,6 +11,11 @@ public:
   // Inherit the constructors
   using ConstraintComponentBase::ConstraintComponentBase;
 
+  std::shared_ptr<ConstraintComponentBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<ConstraintComponentBase>, 
+                           ConstraintComponentBase, clone, );
+  }
+
   bool useKinematics() const override {
     PYBIND11_OVERRIDE_PURE(bool, ConstraintComponentBase, useKinematics, );
   }
@@ -96,6 +101,7 @@ PYBIND11_MODULE(constraint_component_base, m) {
              std::shared_ptr<ConstraintComponentBase>>(m, "ConstraintComponentBase")
     .def(py::init<const double, const double>(),
           py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
+    .def("clone", &ConstraintComponentBase::clone)
     .def("useKinematics", &ConstraintComponentBase::useKinematics)
     .def("kinematicsLevel", &ConstraintComponentBase::kinematicsLevel)
     .def("allocateExtraData", &ConstraintComponentBase::allocateExtraData,

@@ -15,10 +15,7 @@ PYBIND11_MODULE(joint_position_upper_limit, m) {
              std::shared_ptr<JointPositionUpperLimit>>(m, "JointPositionUpperLimit")
     .def(py::init<const Robot&>(),
          py::arg("robot"))
-    .def("clone", [](const JointPositionUpperLimit& self) {
-       auto other = self;
-       return other;
-     });
+    .def("clone", &JointPositionUpperLimit::clone);
 }
 
 } // namespace python

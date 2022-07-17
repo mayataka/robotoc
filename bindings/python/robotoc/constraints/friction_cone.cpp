@@ -16,10 +16,7 @@ PYBIND11_MODULE(friction_cone, m) {
           py::arg("robot"), py::arg("mu"))
     .def(py::init<const Robot&, const double>(),
           py::arg("robot"), py::arg("mu"))
-    .def("clone", [](const FrictionCone& self) {
-       auto other = self;
-       return other;
-     })
+    .def("clone", &FrictionCone::clone)
     .def("set_friction_coefficient", static_cast<void (FrictionCone::*)(const std::vector<double>&)>(&FrictionCone::setFrictionCoefficient),
           py::arg("mu"))
     .def("set_friction_coefficient", static_cast<void (FrictionCone::*)(const double)>(&FrictionCone::setFrictionCoefficient),

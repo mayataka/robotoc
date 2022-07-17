@@ -15,10 +15,7 @@ PYBIND11_MODULE(joint_velocity_upper_limit, m) {
              std::shared_ptr<JointVelocityUpperLimit>>(m, "JointVelocityUpperLimit")
     .def(py::init<const Robot&>(),
          py::arg("robot"))
-    .def("clone", [](const JointVelocityUpperLimit& self) {
-       auto other = self;
-       return other;
-     });
+    .def("clone", &JointVelocityUpperLimit::clone);
 }
 
 } // namespace python

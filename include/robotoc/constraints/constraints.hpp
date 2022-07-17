@@ -71,6 +71,11 @@ public:
   Constraints& operator=(Constraints&&) noexcept = default;
 
   ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  std::shared_ptr<Constraints> clone() const;
+
+  ///
   /// @brief Appends a constraint component to the cost function.
   /// @param[in, out] constraint_component Shared pointer to the constraint 
   /// component appended to the constraints. The internal barrier parameter and 

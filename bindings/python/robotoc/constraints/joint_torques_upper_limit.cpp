@@ -15,10 +15,7 @@ PYBIND11_MODULE(joint_torques_upper_limit, m) {
              std::shared_ptr<JointTorquesUpperLimit>>(m, "JointTorquesUpperLimit")
     .def(py::init<const Robot&>(),
          py::arg("robot"))
-    .def("clone", [](const JointTorquesUpperLimit& self) {
-       auto other = self;
-       return other;
-     });
+    .def("clone", &JointTorquesUpperLimit::clone);
 }
 
 } // namespace python

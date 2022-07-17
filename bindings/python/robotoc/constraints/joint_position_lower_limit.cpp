@@ -15,10 +15,7 @@ PYBIND11_MODULE(joint_position_lower_limit, m) {
              std::shared_ptr<JointPositionLowerLimit>>(m, "JointPositionLowerLimit")
     .def(py::init<const Robot&>(),
          py::arg("robot"))
-    .def("clone", [](const JointPositionLowerLimit& self) {
-       auto other = self;
-       return other;
-     });
+    .def("clone", &JointPositionLowerLimit::clone);
 }
 
 } // namespace python

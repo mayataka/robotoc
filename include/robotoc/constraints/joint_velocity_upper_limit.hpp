@@ -58,6 +58,8 @@ public:
   JointVelocityUpperLimit& operator=(
       JointVelocityUpperLimit&&) noexcept = default;
 
+  DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointVelocityUpperLimit)
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

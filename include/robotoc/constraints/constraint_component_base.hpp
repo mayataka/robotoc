@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_CONSTRAINT_COMPONENT_BASE_HPP_
 #define ROBOTOC_CONSTRAINT_COMPONENT_BASE_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -24,6 +26,9 @@ enum class KinematicsLevel {
   VelocityLevel,
   AccelerationLevel
 };
+
+#define DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(Derived) \
+  std::shared_ptr<ConstraintComponentBase> clone() const override { return std::make_shared<Derived>(*this); } 
 
 ///
 /// @class ConstraintComponentBase
@@ -67,6 +72,11 @@ public:
   ///
   ConstraintComponentBase& operator=(ConstraintComponentBase&&) noexcept 
       = default;
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<ConstraintComponentBase> clone() const = 0;
 
   ///
   /// @brief Checks if the constraint component requres kinematics of robot 

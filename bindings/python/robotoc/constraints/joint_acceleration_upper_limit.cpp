@@ -15,10 +15,7 @@ PYBIND11_MODULE(joint_acceleration_upper_limit, m) {
              std::shared_ptr<JointAccelerationUpperLimit>>(m, "JointAccelerationUpperLimit")
     .def(py::init<const Robot&, const Eigen::VectorXd&>(),
          py::arg("robot"), py::arg("amax"))
-    .def("clone", [](const JointAccelerationUpperLimit& self) {
-       auto other = self;
-       return other;
-     });
+    .def("clone", &JointAccelerationUpperLimit::clone);
 }
 
 } // namespace python
