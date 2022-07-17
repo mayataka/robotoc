@@ -58,6 +58,8 @@ public:
 
   ~ConfigurationSpaceRef() {}
 
+  DEFINE_DEFAULT_CLONE_CONFIGURATION_SPACE_REF(ConfigurationSpaceRef)
+
   void updateRef(const robotoc::Robot& robot, 
                  const robotoc::GridInfo& grid_info, 
                  Eigen::VectorXd& q_ref) const override {

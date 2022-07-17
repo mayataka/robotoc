@@ -37,6 +37,8 @@ public:
 
   ~TaskSpace6DRef() {}
 
+  DEFINE_DEFAULT_CLONE_TASK_SPACE_6D_REF(TaskSpace6DRef)
+
   void updateRef(const robotoc::GridInfo& grid_info, robotoc::SE3& ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*grid_info.t);
