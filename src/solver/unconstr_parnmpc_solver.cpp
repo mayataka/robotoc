@@ -46,6 +46,11 @@ UnconstrParNMPCSolver::~UnconstrParNMPCSolver() {
 }
 
 
+UnconstrParNMPCSolver UnconstrParNMPCSolver::clone() const {
+  return UnconstrOCPSolver(ocp_.clone(), solver_options_, robots_.size());
+}
+
+
 void UnconstrParNMPCSolver::setSolverOptions(const SolverOptions& solver_options) {
   solver_options_ = solver_options;
 }

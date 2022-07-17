@@ -76,6 +76,11 @@ public:
   UnconstrParNMPCSolver& operator=(UnconstrParNMPCSolver&&) noexcept = default;
 
   ///
+  /// @brief Clones this object. Cost and constraints are also cloned.
+  ///
+  UnconstrParNMPCSolver clone() const;
+
+  ///
   /// @brief Sets the solver option. 
   /// @param[in] solver_options Solver options.  
   ///

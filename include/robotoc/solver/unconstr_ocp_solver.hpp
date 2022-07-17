@@ -75,6 +75,11 @@ public:
   UnconstrOCPSolver& operator=(UnconstrOCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Clones this object. Cost and constraints are also cloned.
+  ///
+  UnconstrOCPSolver clone() const;
+
+  ///
   /// @brief Sets the solver option. 
   /// @param[in] solver_options Solver options.  
   ///
