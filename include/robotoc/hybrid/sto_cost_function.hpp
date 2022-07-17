@@ -56,6 +56,11 @@ public:
   STOCostFunction& operator=(STOCostFunction&&) noexcept = default;
 
   ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  std::shared_ptr<STOCostFunction> clone() const;
+
+  ///
   /// @brief Append a cost function component to the cost function.
   /// @param[in] cost shared pointer to the switching tmie cost function  
   /// component appended to the cost.

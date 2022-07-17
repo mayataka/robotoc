@@ -48,6 +48,9 @@ std::shared_ptr<CostFunction> CostFunction::clone() const {
   for (const auto& e : costs_) {
     cost->push_back(e->clone());
   }
+  if (discounted_cost_) {
+    cost->setDiscountFactor(discount_factor_, discount_time_step_);
+  }
   return cost;
 }
 

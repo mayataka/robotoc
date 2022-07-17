@@ -14,6 +14,11 @@ public:
   // Inherit the constructors
   using STOCostFunctionComponentBase::STOCostFunctionComponentBase;
 
+  std::shared_ptr<STOCostFunctionComponentBase> clone() const override {
+    PYBIND11_OVERRIDE_PURE(std::shared_ptr<STOCostFunctionComponentBase>, STOCostFunctionComponentBase, 
+                           clone, );
+  }
+
   double evalCost(const TimeDiscretization& discretization) const override {
     PYBIND11_OVERRIDE_PURE(double, STOCostFunctionComponentBase, 
                            evalCost, 
@@ -42,7 +47,8 @@ PYBIND11_MODULE(sto_cost_function_component_base, m) {
   py::class_<STOCostFunctionComponentBase, 
              PySTOCostFunctionComponentBase, 
              std::shared_ptr<STOCostFunctionComponentBase>>(m, "STOCostFunctionComponentBase")
-    .def(py::init<>());
+    .def(py::init<>())
+    .def("clone", &STOCostFunctionComponentBase::clone);
 
 }
 

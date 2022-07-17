@@ -112,10 +112,7 @@ public:
   /// @brief Clones this object. Cost and constraints are also cloned.
   ///
   UnconstrOCP clone() const {
-    auto ocp = UnconstrOCP(robot_, 
-                           std::make_shared<CostFunction>(*cost_.get()),
-                           std::make_shared<Constraints>(*constraints_.get()),
-                           T_, N_);  
+    auto ocp = UnconstrOCP(robot_, cost_->clone(), constraints_->clone(), T_, N_);  
     ocp.data = data;
     ocp.terminal = terminal;
     return ocp;

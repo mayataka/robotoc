@@ -106,6 +106,7 @@ PYBIND11_MODULE(cost_function_component_base, m) {
              PyCostFunctionComponentBase, 
              std::shared_ptr<CostFunctionComponentBase>>(m, "CostFunctionComponentBase")
     .def(py::init<>())
+    .def("clone", &CostFunctionComponentBase::clone)
     .def("useKinematics", &CostFunctionComponentBase::useKinematics)
     .def("evalStageCost", &CostFunctionComponentBase::evalStageCost,
           py::arg("robot"), py::arg("contact_status"), py::arg("data"), 

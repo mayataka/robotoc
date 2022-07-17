@@ -69,6 +69,11 @@ STOConstraints::~STOConstraints() {
 }
 
 
+std::shared_ptr<STOConstraints> STOConstraints::clone() const {
+  return std::make_shared<STOConstraints>(*this); 
+} 
+
+
 void STOConstraints::setSlack(const TimeDiscretization& discretization) {
   const int num_events = discretization.N_impulse() + discretization.N_lift();
   reserve(num_events);

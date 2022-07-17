@@ -58,6 +58,11 @@ inline ContactSequence::~ContactSequence() {
 }
 
 
+inline std::shared_ptr<ContactSequence> ContactSequence::clone() const {
+  return std::make_shared<ContactSequence>(*this); 
+} 
+
+
 inline void ContactSequence::init(
     const ContactStatus& contact_status) {
   clear_all();

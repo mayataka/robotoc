@@ -112,13 +112,9 @@ inline OCP::OCP()
 
 
 inline OCP OCP::clone() const {
-  auto ocp = OCP(robot_, 
-                 std::make_shared<CostFunction>(*cost_.get()),
-                 std::make_shared<Constraints>(*constraints_.get()),
-                 std::make_shared<STOCostFunction>(*sto_cost_.get()),
-                 std::make_shared<STOConstraints>(*sto_constraints_.get()),
-                 std::make_shared<ContactSequence>(*contact_sequence_.get()), 
-                 T_, N_);  
+  auto ocp = OCP(robot_, cost_->clone(), constraints_->clone(),
+                 sto_cost_->clone(), sto_constraints_->clone(),
+                 contact_sequence_->clone(), T_, N_);  
   ocp.setDiscretizationMethod(discretization_.discretizationMethod());
   ocp.meshRefinement(discretization_.t0());
   ocp.discretize(discretization_.t0());

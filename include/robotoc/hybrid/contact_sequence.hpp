@@ -61,6 +61,11 @@ public:
   ContactSequence& operator=(ContactSequence&&) noexcept = default;
 
   ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  std::shared_ptr<ContactSequence> clone() const;
+
+  ///
   /// @brief Sets the contact status over all of the time stages uniformly. Also, 
   /// disable discrete events over all of the time stages.
   /// @param[in] contact_status Contact status.

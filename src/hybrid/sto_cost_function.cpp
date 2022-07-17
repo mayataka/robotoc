@@ -14,6 +14,15 @@ STOCostFunction::~STOCostFunction() {
 }
 
 
+std::shared_ptr<STOCostFunction> STOCostFunction::clone() const {
+  auto cost = std::make_shared<STOCostFunction>();
+  for (const auto& e : costs_) {
+    cost->push_back(e->clone());
+  }
+  return cost;
+}
+
+
 void STOCostFunction::push_back(const STOCostFunctionComponentBasePtr& cost) {
   costs_.push_back(cost);
 }

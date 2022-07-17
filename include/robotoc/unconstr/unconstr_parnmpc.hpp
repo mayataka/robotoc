@@ -112,10 +112,7 @@ public:
   /// @brief Clones this object. Cost and constraints are also cloned.
   ///
   UnconstrParNMPC clone() const {
-    auto parnmpc = UnconstrParNMPC(robot_, 
-                                   std::make_shared<CostFunction>(*cost_.get()),
-                                   std::make_shared<Constraints>(*constraints_.get()),
-                                   T_, N_);  
+    auto parnmpc = UnconstrParNMPC(robot_, cost_->clone(), constraints_->clone(), T_, N_);  
     parnmpc.data = data;
     parnmpc.terminal = terminal;
     return parnmpc;

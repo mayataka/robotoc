@@ -8,6 +8,9 @@
 
 namespace robotoc {
 
+#define DEFINE_DEFAULT_CLONE_STO_COST_FUNCTION_COMPONENT(Derived) \
+  std::shared_ptr<STOCostFunctionComponentBase> clone() const override { return std::make_shared<Derived>(*this); } 
+
 ///
 /// @class STOCostFunctionComponentBase
 /// @brief Base class of components of the cost function of the switching time
@@ -47,6 +50,11 @@ public:
   ///
   STOCostFunctionComponentBase& operator=(
       STOCostFunctionComponentBase&&) noexcept = default;
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<STOCostFunctionComponentBase> clone() const = 0;
 
   ///
   /// @brief Computes the cost on the switching times. 

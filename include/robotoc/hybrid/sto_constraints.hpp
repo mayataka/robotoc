@@ -84,6 +84,11 @@ public:
   STOConstraints& operator=(STOConstraints&&) noexcept = default;
 
   ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  std::shared_ptr<STOConstraints> clone() const;
+
+  ///
   /// @brief Sets the slack variables. 
   /// @param[in] discretization Time discretization of the hybrid optimal 
   /// control problem.
