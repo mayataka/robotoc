@@ -14,6 +14,9 @@
 
 namespace robotoc {
 
+#define DEFINE_CLONE_CONTACT_PLANNER(Derived) \
+  virtual std::shared_ptr<ContactPlannerBase> clone() const override { return std::make_shared<Derived>(*this); } 
+
 ///
 /// @class ContactPlannerBase
 /// @brief Base interface of contact planners.
@@ -49,6 +52,11 @@ public:
   /// @brief Default move assign operator. 
   ///
   ContactPlannerBase& operator=(ContactPlannerBase&&) noexcept = default;
+
+  ///
+  /// @brief Clones this to a shared ptr. 
+  ///
+  virtual std::shared_ptr<ContactPlannerBase> clone() const = 0;
 
   ///
   /// @brief Initializes the planner. 
@@ -121,6 +129,8 @@ public:
   virtual int size() const = 0;
 
   void disp(std::ostream& os) const;
+
+private:
 
 };
 

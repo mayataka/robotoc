@@ -18,6 +18,7 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
     sto_cost_(std::make_shared<STOCostFunction>()),
     sto_constraints_(std::make_shared<STOConstraints>(2)),
+    robot_(robot),
     ocp_solver_(OCP(robot, cost_, constraints_, sto_cost_, sto_constraints_, 
                     contact_sequence_, T, N), 
                 SolverOptions::defaultOptions(), nthreads), 
@@ -35,7 +36,8 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
     t_mpc_start_(0),
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     N_(N),
-    current_step_(0) {
+    current_step_(0),
+    nthreads_(nthreads) {
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
@@ -79,6 +81,16 @@ MPCJump::MPCJump() {
 
 
 MPCJump::~MPCJump() {
+}
+
+
+MPCJump MPCJump::clone() const {
+  auto mpc = MPCJump(robot_, T_, N_, nthreads_);
+  auto contact_planner = foot_step_planner_->clone();
+  mpc.setJumpPattern(contact_planner, flying_time_, min_flying_time_, 
+                     ground_time_, min_ground_time_);
+  mpc.setSolverOptions(solver_options_);
+  return mpc;
 }
 
 

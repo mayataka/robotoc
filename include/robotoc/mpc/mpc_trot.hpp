@@ -79,6 +79,11 @@ public:
   MPCTrot& operator=(MPCTrot&&) noexcept = default;
 
   ///
+  /// @brief Clone this object while disconnecting shared ptrs. 
+  ///
+  MPCTrot clone() const;
+
+  ///
   /// @brief Sets the gait pattern. 
   /// @param[in] foot_step_planner Foot step planner of the gait. 
   /// @param[in] swing_height Swing height of the gait. 
@@ -238,13 +243,14 @@ private:
   std::shared_ptr<ContactSequence> contact_sequence_;
   std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<Constraints> constraints_;
+  Robot robot_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_standing_, cs_lfrh_, cs_rflh_;
   robotoc::Solution s_;
   double swing_height_, swing_time_, stance_time_, swing_start_time_, 
          T_, dt_, dtm_, ts_last_, eps_;
-  int N_, current_step_, predict_step_;
+  int N_, current_step_, predict_step_, nthreads_;
   bool enable_stance_phase_;
 
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;

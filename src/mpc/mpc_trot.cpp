@@ -16,6 +16,7 @@ MPCTrot::MPCTrot(const Robot& robot, const double T, const int N,
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
+    robot_(robot),
     ocp_solver_(OCP(robot, cost_, constraints_, contact_sequence_, T, N), 
                 SolverOptions::defaultOptions(), nthreads), 
     solver_options_(SolverOptions::defaultOptions()),
@@ -34,6 +35,7 @@ MPCTrot::MPCTrot(const Robot& robot, const double T, const int N,
     N_(N),
     current_step_(0),
     predict_step_(0),
+    nthreads_(nthreads),
     enable_stance_phase_(false) {
   try {
     if (robot.maxNumPointContacts() < 4) {
@@ -119,6 +121,16 @@ MPCTrot::~MPCTrot() {
 }
 
 
+MPCTrot MPCTrot::clone() const {
+  auto mpc = MPCTrot(robot_, T_, N_, nthreads_);
+  auto contact_planner = foot_step_planner_->clone();
+  mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, stance_time_, 
+                     swing_start_time_);
+  mpc.setSolverOptions(solver_options_);
+  return mpc;
+}
+
+
 void MPCTrot::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                              const double swing_height, const double swing_time,
                              const double stance_time, const double swing_start_time) {
@@ -141,6 +153,7 @@ void MPCTrot::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_ste
     std::exit(EXIT_FAILURE);
   }
   foot_step_planner_ = foot_step_planner;
+  swing_height_ = swing_height;
   swing_time_ = swing_time;
   stance_time_ = stance_time;
   swing_start_time_ = swing_start_time;

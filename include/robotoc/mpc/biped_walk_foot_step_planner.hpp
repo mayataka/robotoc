@@ -60,6 +60,8 @@ public:
   ///
   BipedWalkFootStepPlanner& operator=(BipedWalkFootStepPlanner&&) noexcept = default;
 
+  DEFINE_CLONE_CONTACT_PLANNER(BipedWalkFootStepPlanner);
+
   ///
   /// @brief Sets the gait pattern by step length and yaw step command. 
   /// @param[in] step_length Step length of the gait. 

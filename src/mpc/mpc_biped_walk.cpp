@@ -16,13 +16,14 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
+    robot_(robot),
     ocp_solver_(OCP(robot, cost_, constraints_, contact_sequence_, T, N), 
                 SolverOptions::defaultOptions(), nthreads), 
     solver_options_(SolverOptions::defaultOptions()),
     cs_standing_(robot.createContactStatus()),
     cs_right_swing_(robot.createContactStatus()),
     cs_left_swing_(robot.createContactStatus()),
-    step_height_(0),
+    swing_height_(0),
     swing_time_(0),
     double_support_time_(0),
     swing_start_time_(0),
@@ -34,6 +35,7 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
     N_(N),
     current_step_(0),
     predict_step_(0),
+    nthreads_(nthreads),
     enable_double_support_phase_(false) {
   try {
     if (robot.maxNumSurfaceContacts() < 2) {
@@ -113,6 +115,16 @@ MPCBipedWalk::~MPCBipedWalk() {
 }
 
 
+MPCBipedWalk MPCBipedWalk::clone() const {
+  auto mpc = MPCBipedWalk(robot_, T_, N_, nthreads_);
+  auto contact_planner = foot_step_planner_->clone();
+  mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, 
+                     double_support_time_, swing_start_time_);
+  mpc.setSolverOptions(solver_options_);
+  return mpc;
+}
+
+
 void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                                   const double swing_height, const double swing_time,
                                   const double double_support_time,
@@ -136,6 +148,7 @@ void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foo
     std::exit(EXIT_FAILURE);
   }
   foot_step_planner_ = foot_step_planner;
+  swing_height_ = swing_height;
   swing_time_ = swing_time;
   double_support_time_ = double_support_time;
   swing_start_time_ = swing_start_time;

@@ -58,6 +58,8 @@ public:
   ///
   JumpFootStepPlanner& operator=(JumpFootStepPlanner&&) noexcept = default;
 
+  DEFINE_CLONE_CONTACT_PLANNER(JumpFootStepPlanner);
+
   ///
   /// @brief Sets the gait pattern. 
   /// @param[in] jump_length Jump length. 

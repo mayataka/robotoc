@@ -74,6 +74,11 @@ public:
   MPCJump& operator=(MPCJump&&) noexcept = default;
 
   ///
+  /// @brief Clone this object while disconnecting shared ptrs. 
+  ///
+  MPCJump clone() const;
+
+  ///
   /// @brief Sets the gait pattern. 
   /// @param[in] foot_step_planner Foot step planner of the jump. 
   /// @param[in] flying_time If STO is enabled, this is initial guess of the 
@@ -233,13 +238,14 @@ private:
   std::shared_ptr<Constraints> constraints_;
   std::shared_ptr<robotoc::STOCostFunction> sto_cost_;
   std::shared_ptr<robotoc::STOConstraints> sto_constraints_;
+  Robot robot_;
   OCPSolver ocp_solver_;
   SolverOptions solver_options_;
   ContactStatus cs_ground_, cs_flying_;
   robotoc::Solution s_;
   double flying_time_, min_flying_time_, ground_time_, min_ground_time_,
          T_, dt_, dtm_, t_mpc_start_, eps_;
-  int N_, current_step_;
+  int N_, current_step_, nthreads_;
 
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;
   std::shared_ptr<FrictionCone> friction_cone_;
