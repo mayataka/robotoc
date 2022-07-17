@@ -111,6 +111,26 @@ inline OCP::OCP()
 }
 
 
+inline OCP OCP::clone() const {
+  auto ocp = OCP(robot_, 
+                 std::make_shared<CostFunction>(*cost_.get()),
+                 std::make_shared<Constraints>(*constraints_.get()),
+                 std::make_shared<STOCostFunction>(*sto_cost_.get()),
+                 std::make_shared<STOConstraints>(*sto_constraints_.get()),
+                 std::make_shared<ContactSequence>(*contact_sequence_.get()), 
+                 T_, N_);  
+  ocp.setDiscretizationMethod(discretization_.discretizationMethod());
+  ocp.meshRefinement(discretization_.t0());
+  ocp.discretize(discretization_.t0());
+  ocp.data = data;
+  ocp.aux = aux;
+  ocp.lift = lift;
+  ocp.impulse = impulse;
+  ocp.terminal = terminal;
+  return ocp;
+}
+
+
 inline void OCP::reserve() {
   assert(impulse.size() == reserved_num_discrete_events_);
   assert(aux.size() == reserved_num_discrete_events_);

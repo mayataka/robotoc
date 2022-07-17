@@ -89,6 +89,12 @@ public:
   OCP& operator=(OCP&&) noexcept = default;
 
   ///
+  /// @brief Clones this object. Cost, constraints, and contact sequence are 
+  /// also cloned.
+  ///
+  OCP clone() const;
+
+  ///
   /// @brief Sets the discretization method of the optimal contro problem. 
   /// @param[in] discretization_method The discretization method.
   ///
