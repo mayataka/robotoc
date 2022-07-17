@@ -83,6 +83,12 @@ public:
   OCPSolver& operator=(OCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Clones this object. Cost, constraints, and contact sequence are 
+  /// also cloned.
+  ///
+  OCPSolver clone() const;
+
+  ///
   /// @brief Sets the solver option. 
   /// @param[in] solver_options Solver options.  
   ///
@@ -263,7 +269,6 @@ public:
 
 private:
   aligned_vector<Robot> robots_;
-  std::shared_ptr<ContactSequence> contact_sequence_;
   DirectMultipleShooting dms_;
   SwitchingTimeOptimization sto_;
   RiccatiRecursion riccati_recursion_;

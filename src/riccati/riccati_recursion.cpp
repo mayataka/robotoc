@@ -252,9 +252,10 @@ void RiccatiRecursion::forwardRiccatiRecursion(
 }
 
 
-void RiccatiRecursion::computeDirection(
-    OCP& ocp, const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const RiccatiFactorization& factorization, Direction& d) {
+void RiccatiRecursion::computeDirection(OCP& ocp, 
+                                        const RiccatiFactorization& factorization, 
+                                        Direction& d) {
+  const auto& contact_sequence = ocp.contact_sequence();
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();

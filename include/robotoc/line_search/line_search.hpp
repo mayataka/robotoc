@@ -70,7 +70,6 @@ public:
   /// @brief Compute primal step size by fliter line search method. 
   /// @param[in, out] ocp optimal control problem.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
@@ -79,7 +78,6 @@ public:
   ///
   double computeStepSize(
       OCP& ocp, aligned_vector<Robot>& robots,
-      const std::shared_ptr<ContactSequence>& contact_sequence, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
       const Direction& d, const double max_primal_step_size);
 
@@ -116,7 +114,6 @@ private:
 
   void computeCostAndViolation(
       OCP& ocp, aligned_vector<Robot>& robots, 
-      const std::shared_ptr<ContactSequence>& contact_sequence, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s);
 
   void computeSolutionTrial(const OCP& ocp, const aligned_vector<Robot>& robots, 
@@ -177,13 +174,11 @@ private:
 
   double lineSearchFilterMethod(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     const Direction& d, const double initial_primal_step_size);
 
   double meritBacktrackingLineSearch(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     const Direction& d, const double initial_primal_step_size);
 

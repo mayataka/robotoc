@@ -108,12 +108,12 @@ namespace robotoc {
 template <typename Algorithm>
 inline void DirectMultipleShooting::runParallel(
     OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
+  const auto& contact_sequence = ocp.contact_sequence();
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();

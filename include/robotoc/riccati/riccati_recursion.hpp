@@ -110,13 +110,11 @@ public:
   /// RiccatiRecursion::backwardRiccatiRecursion() and 
   /// RiccatiRecursion::forwardRiccatiRecursion().
   /// @param[in] ocp Optimal control problem.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] factorization Riccati factorization. 
   /// @param[in, out] d Direction. 
   ///
-  void computeDirection(OCP& ocp, 
-                        const std::shared_ptr<ContactSequence>& contact_sequence, 
-                        const RiccatiFactorization& factorization, Direction& d);
+  void computeDirection(OCP& ocp, const RiccatiFactorization& factorization, 
+                        Direction& d);
 
   ///
   /// @brief Returns max primal step size.

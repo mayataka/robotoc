@@ -77,8 +77,8 @@ TEST_P(DirectMultipleShootingTest, computeKKTResidual) {
   auto ocp = OCP(robot, cost, constraints, contact_sequence, T, N);
   ocp.discretize(t);
   auto ocp_ref = ocp;
-  dms.initConstraints(ocp, robots, contact_sequence, s);
-  dms.computeKKTResidual(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, s);
+  dms.computeKKTResidual(ocp, robots, q, v, s, kkt_matrix, kkt_residual);
   const double kkt_error = dms.KKTError(ocp, kkt_residual);
   const double total_cost = dms.totalCost(ocp);
   auto robot_ref = robot;
@@ -227,8 +227,8 @@ TEST_P(DirectMultipleShootingTest, computeKKTSystem) {
   auto ocp = OCP(robot, cost, constraints, contact_sequence, T, N);
   ocp.discretize(t);
   auto ocp_ref = ocp;
-  dms.initConstraints(ocp, robots, contact_sequence, s);
-  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, s);
+  dms.computeKKTSystem(ocp, robots, q, v, s, kkt_matrix, kkt_residual);
   auto robot_ref = robot;
   for (int i=0; i<ocp_ref.discrete().N(); ++i) {
     Eigen::VectorXd q_prev;
@@ -351,8 +351,8 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, contact_sequence, T, N);
   ocp.discretize(t);
-  dms.initConstraints(ocp, robots, contact_sequence, s);
-  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, s);
+  dms.computeKKTSystem(ocp, robots, q, v, s, kkt_matrix, kkt_residual);
   Direction d(robot, N, max_num_impulse);
   RiccatiRecursion riccati_solver(ocp, nthreads);
   RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);

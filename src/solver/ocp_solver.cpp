@@ -10,7 +10,6 @@ namespace robotoc {
 OCPSolver::OCPSolver(const OCP& ocp, 
                      const SolverOptions& solver_options, const int nthreads)
   : robots_(nthreads, ocp.robot()),
-    contact_sequence_(ocp.contact_sequence()),
     dms_(nthreads),
     sto_(ocp),
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
@@ -47,6 +46,11 @@ OCPSolver::~OCPSolver() {
 }
 
 
+OCPSolver OCPSolver::clone() const {
+  return OCPSolver(ocp_.clone(), solver_options_, robots_.size());
+}
+
+
 void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
   solver_options_ = solver_options;
   riccati_recursion_.setRegularization(solver_options.max_dts_riccati);
@@ -58,7 +62,7 @@ void OCPSolver::meshRefinement(const double t) {
   if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
     reserveData();
     discretizeSolution();
-    dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+    dms_.initConstraints(ocp_, robots_, s_);
     sto_.initConstraints(ocp_);
   }
 }
@@ -68,7 +72,7 @@ void OCPSolver::initConstraints(const double t) {
   ocp_.discretize(t);
   reserveData();
   discretizeSolution();
-  dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+  dms_.initConstraints(ocp_, robots_, s_);
   sto_.initConstraints(ocp_);
 }
 
@@ -80,16 +84,14 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   ocp_.discretize(t);
   reserveData();
   discretizeSolution();
-  dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
-                        kkt_matrix_, kkt_residual_);
+  dms_.computeKKTSystem(ocp_, robots_, q, v, s_, kkt_matrix_, kkt_residual_);
   sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
   sto_.applyRegularization(ocp_, kkt_matrix_);
   riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
   dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
   riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
-  riccati_recursion_.computeDirection(ocp_, contact_sequence_, 
-                                      riccati_factorization_, d_);
+  riccati_recursion_.computeDirection(ocp_, riccati_factorization_, d_);
   sto_.computeDirection(ocp_, d_);
   double primal_step_size = std::min(riccati_recursion_.maxPrimalStepSize(), 
                                      sto_.maxPrimalStepSize());
@@ -98,7 +100,6 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   if (solver_options_.enable_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
-                                                    contact_sequence_, 
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
@@ -106,8 +107,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   solver_statistics_.dual_step_size.push_back(dual_step_size);
   dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
                          kkt_matrix_, d_, s_);
-  sto_.integrateSolution(ocp_, contact_sequence_, primal_step_size, 
-                         dual_step_size, d_);
+  sto_.integrateSolution(ocp_, primal_step_size, dual_step_size, d_);
 } 
 
 
@@ -131,7 +131,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
       else {
         sto_.setRegularization(0);
       }
-      solver_statistics_.ts.emplace_back(contact_sequence_->eventTimes());
+      solver_statistics_.ts.emplace_back(ocp_.contact_sequence()->eventTimes());
     } 
     updateSolution(t, q, v);
     const double kkt_error = KKTError();
@@ -318,11 +318,11 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     Eigen::VectorXd ts(num_events);
     for (int event_index=0; event_index<num_events; ++event_index) {
       if (ocp_.discrete().eventType(event_index) == DiscreteEventType::Impulse) {
-        ts.coeffRef(event_index) = contact_sequence_->impulseTime(impulse_index);
+        ts.coeffRef(event_index) = ocp_.contact_sequence()->impulseTime(impulse_index);
         ++impulse_index;
       }
       else {
-        ts.coeffRef(event_index) = contact_sequence_->liftTime(lift_index);
+        ts.coeffRef(event_index) = ocp_.contact_sequence()->liftTime(lift_index);
         ++lift_index;
       }
     }
@@ -455,11 +455,11 @@ void OCPSolver::setSolution(const std::string& name,
 
 
 void OCPSolver::extrapolateSolutionLastPhase(const double t) {
-  const int num_discrete_events = contact_sequence_->numDiscreteEvents();
+  const int num_discrete_events = ocp_.contact_sequence()->numDiscreteEvents();
   if (num_discrete_events > 0) {
     ocp_.discretize(t);
     int time_stage_after_last_event;
-    if (contact_sequence_->eventType(num_discrete_events-1) 
+    if (ocp_.contact_sequence()->eventType(num_discrete_events-1) 
           == DiscreteEventType::Impulse) {
       time_stage_after_last_event 
           = ocp_.discrete().timeStageAfterImpulse(ocp_.discrete().N_impulse()-1);
@@ -478,11 +478,11 @@ void OCPSolver::extrapolateSolutionLastPhase(const double t) {
 
 
 void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
-  const int num_discrete_events = contact_sequence_->numDiscreteEvents();
+  const int num_discrete_events = ocp_.contact_sequence()->numDiscreteEvents();
   if (num_discrete_events > 0) {
     ocp_.discretize(t);
     int time_stage_before_initial_event;
-    if (contact_sequence_->eventType(0) == DiscreteEventType::Impulse) {
+    if (ocp_.contact_sequence()->eventType(0) == DiscreteEventType::Impulse) {
       time_stage_before_initial_event 
           = ocp_.discrete().timeStageBeforeImpulse(0);
     }
@@ -504,8 +504,7 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
   ocp_.discretize(t);
   reserveData();
   discretizeSolution();
-  dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
-                          kkt_matrix_, kkt_residual_);
+  dms_.computeKKTResidual(ocp_, robots_, q, v, s_, kkt_matrix_, kkt_residual_);
   sto_.computeKKTResidual(ocp_, kkt_residual_);
   return KKTError();
 }
@@ -525,7 +524,7 @@ bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
   // ocp_.discretize(t);
   // reserveData();
   // discretizeSolution();
-  return dms_.isFeasible(ocp_, robots_, contact_sequence_, s_);
+  return dms_.isFeasible(ocp_, robots_, s_);
 }
 
 
@@ -553,31 +552,30 @@ void OCPSolver::reserveData() {
 
 
 void OCPSolver::discretizeSolution() {
-  for (int i=0; i<=ocp_.discrete().N(); ++i) {
+  const auto& contact_sequence = ocp_.contact_sequence();
+  const auto& discretization = ocp_.discrete();
+  for (int i=0; i<=discretization.N(); ++i) {
     s_[i].setContactStatus(
-        contact_sequence_->contactStatus(ocp_.discrete().contactPhase(i)));
+        contact_sequence->contactStatus(discretization.contactPhase(i)));
     s_[i].set_f_stack();
     s_[i].setImpulseStatus();
   }
-  for (int i=0; i<ocp_.discrete().N_lift(); ++i) {
+  for (int i=0; i<discretization.N_lift(); ++i) {
     s_.lift[i].setContactStatus(
-        contact_sequence_->contactStatus(
-            ocp_.discrete().contactPhaseAfterLift(i)));
+        contact_sequence->contactStatus(discretization.contactPhaseAfterLift(i)));
     s_.lift[i].set_f_stack();
     s_.lift[i].setImpulseStatus();
   }
-  for (int i=0; i<ocp_.discrete().N_impulse(); ++i) {
-    s_.impulse[i].setImpulseStatus(contact_sequence_->impulseStatus(i));
+  for (int i=0; i<discretization.N_impulse(); ++i) {
+    s_.impulse[i].setImpulseStatus(contact_sequence->impulseStatus(i));
     s_.impulse[i].set_f_stack();
     s_.aux[i].setContactStatus(
-        contact_sequence_->contactStatus(
-            ocp_.discrete().contactPhaseAfterImpulse(i)));
+        contact_sequence->contactStatus(discretization.contactPhaseAfterImpulse(i)));
     s_.aux[i].set_f_stack();
-    const int time_stage_before_impulse 
-        = ocp_.discrete().timeStageBeforeImpulse(i);
+    const int time_stage_before_impulse = discretization.timeStageBeforeImpulse(i);
     if (time_stage_before_impulse-1 >= 0) {
       s_[time_stage_before_impulse-1].setImpulseStatus(
-          contact_sequence_->impulseStatus(i));
+          contact_sequence->impulseStatus(i));
     }
   }
 }

@@ -53,10 +53,11 @@ void SwitchingTimeOptimization::initConstraints(const OCP& ocp) {
 
 void SwitchingTimeOptimization::computeKKTResidual(
     const OCP& ocp, KKTResidual& kkt_residual) {
+  const auto& discretization = ocp.discrete();
   if (is_sto_enabled_) {
     reserve(ocp);
-    cost_val_ = sto_cost_->linearizeCost(ocp.discrete(), kkt_residual); 
-    sto_constraints_->linearizeConstraints(ocp.discrete(), kkt_residual);
+    cost_val_ = sto_cost_->linearizeCost(discretization, kkt_residual); 
+    sto_constraints_->linearizeConstraints(discretization, kkt_residual);
     kkt_error_ = KKTError(ocp, kkt_residual);
   }
 }
@@ -64,13 +65,14 @@ void SwitchingTimeOptimization::computeKKTResidual(
 
 void SwitchingTimeOptimization::computeKKTSystem(
     const OCP& ocp, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+  const auto& discretization = ocp.discrete();
   if (is_sto_enabled_) {
     reserve(ocp);
-    cost_val_ = sto_cost_->quadratizeCost(ocp.discrete(), kkt_matrix, 
+    cost_val_ = sto_cost_->quadratizeCost(discretization, kkt_matrix, 
                                           kkt_residual); 
-    sto_constraints_->linearizeConstraints(ocp.discrete(), kkt_residual);
+    sto_constraints_->linearizeConstraints(discretization, kkt_residual);
     kkt_error_ = KKTError(ocp, kkt_residual);
-    sto_constraints_->condenseSlackAndDual(ocp.discrete(), kkt_matrix, 
+    sto_constraints_->condenseSlackAndDual(discretization, kkt_matrix, 
                                            kkt_residual);
   }
 }
@@ -78,10 +80,11 @@ void SwitchingTimeOptimization::computeKKTSystem(
 
 void SwitchingTimeOptimization::applyRegularization(
     const OCP& ocp, KKTMatrix& kkt_matrix) const {
-  for (int i=0; i<ocp.discrete().N_impulse(); ++i) {
+  const auto& discretization = ocp.discrete();
+  for (int i=0; i<discretization.N_impulse(); ++i) {
     kkt_matrix.aux[i].Qtt += sto_reg_;
   }
-  for (int i=0; i<ocp.discrete().N_lift(); ++i) {
+  for (int i=0; i<discretization.N_lift(); ++i) {
     kkt_matrix.lift[i].Qtt += sto_reg_;
   }
 }
@@ -122,30 +125,31 @@ double SwitchingTimeOptimization::KKTError() const {
 
 double SwitchingTimeOptimization::KKTError(const OCP& ocp, 
                                            const KKTResidual& kkt_residual) {
-  const int N = ocp.discrete().N();
-  const int N_impulse = ocp.discrete().N_impulse();
-  const int N_lift = ocp.discrete().N_lift();
+  const auto& discretization = ocp.discrete();
+  const int N = discretization.N();
+  const int N_impulse = discretization.N_impulse();
+  const int N_lift = discretization.N_lift();
   const int N_all = N + 1 + 3*N_impulse + N_lift;
   reserve(ocp);
   h_phase_.setZero();
   for (int stage=0; stage<N; ++stage) {
-    h_phase_.coeffRef(ocp.discrete().contactPhase(stage))
+    h_phase_.coeffRef(discretization.contactPhase(stage))
         += kkt_residual[stage].h;
   }
   for (int impulse_index=0; impulse_index<N_impulse; ++impulse_index) {
-    h_phase_.coeffRef(ocp.discrete().contactPhaseAfterImpulse(impulse_index))
+    h_phase_.coeffRef(discretization.contactPhaseAfterImpulse(impulse_index))
         += kkt_residual.aux[impulse_index].h;
   }
   for (int lift_index=0; lift_index<N_lift; ++lift_index) {
-    h_phase_.coeffRef(ocp.discrete().contactPhaseAfterLift(lift_index))
+    h_phase_.coeffRef(discretization.contactPhaseAfterLift(lift_index))
         += kkt_residual.lift[lift_index].h;
   }
   double kkt_error = 0;
   int impulse_index = 0;
   int lift_index = 0;
   for (int event_index=0; event_index<N_impulse+N_lift; ++event_index) {
-    if (ocp.discrete().eventType(event_index) == DiscreteEventType::Impulse) {
-      if (ocp.discrete().isSTOEnabledImpulse(impulse_index)) {
+    if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      if (discretization.isSTOEnabledImpulse(impulse_index)) {
         const double hdiff = h_phase_.coeff(event_index) 
                               - h_phase_.coeff(event_index+1);
         kkt_error += hdiff * hdiff;
@@ -153,8 +157,8 @@ double SwitchingTimeOptimization::KKTError(const OCP& ocp,
       ++impulse_index;
     }
     else {
-      assert(ocp.discrete().eventType(event_index) == DiscreteEventType::Lift);
-      if (ocp.discrete().isSTOEnabledLift(lift_index)) {
+      assert(discretization.eventType(event_index) == DiscreteEventType::Lift);
+      if (discretization.isSTOEnabledLift(lift_index)) {
         const double hdiff = h_phase_.coeff(event_index) 
                               - h_phase_.coeff(event_index+1);
         kkt_error += hdiff * hdiff;
@@ -172,22 +176,24 @@ double SwitchingTimeOptimization::totalCost() const {
 }
 
 
-void SwitchingTimeOptimization::integrateSolution(
-    const OCP& ocp, std::shared_ptr<ContactSequence>& contact_sequence,
-    const double primal_step_size, const double dual_step_size, 
-    const Direction& d) const {
+void SwitchingTimeOptimization::integrateSolution(OCP& ocp, 
+                                                  const double primal_step_size,
+                                                  const double dual_step_size, 
+                                                  const Direction& d) const {
+  auto& contact_sequence = ocp.contact_sequence_nonconst();
+  const auto& discretization = ocp.discrete();
   if (is_sto_enabled_) {
-    const int N_impulse = ocp.discrete().N_impulse();
+    const int N_impulse = discretization.N_impulse();
     for (int impulse_index=0; impulse_index<N_impulse; ++impulse_index) {
-      if (ocp.discrete().isSTOEnabledImpulse(impulse_index)) {
+      if (discretization.isSTOEnabledImpulse(impulse_index)) {
         const double ts = contact_sequence->impulseTime(impulse_index);
         const double ts_new = ts + primal_step_size * d.aux[impulse_index].dts;
         contact_sequence->setImpulseTime(impulse_index, ts_new);
       }
     }
-    const int N_lift = ocp.discrete().N_lift();
+    const int N_lift = discretization.N_lift();
     for (int lift_index=0; lift_index<N_lift; ++lift_index) {
-      if (ocp.discrete().isSTOEnabledLift(lift_index)) {
+      if (discretization.isSTOEnabledLift(lift_index)) {
         const double ts = contact_sequence->liftTime(lift_index);
         const double ts_new = ts + primal_step_size * d.lift[lift_index].dts;
         contact_sequence->setLiftTime(lift_index, ts_new);

@@ -137,16 +137,12 @@ public:
   /// switching times of contact_sequence are updated. The slack and dual
   /// variables in STO constraints are also updated.
   /// @param[in] ocp Optimal control problem.
-  /// @param[in, out] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
   /// @param[in, out] d Direction. 
   ///
-  void integrateSolution(const OCP& ocp, 
-                         std::shared_ptr<ContactSequence>& contact_sequence,
-                         const double primal_step_size,
-                         const double dual_step_size,
-                         const Direction& d) const;
+  void integrateSolution(OCP& ocp, const double primal_step_size,
+                         const double dual_step_size, const Direction& d) const;
 
 private:
   std::shared_ptr<STOCostFunction> sto_cost_;

@@ -209,6 +209,11 @@ inline const std::shared_ptr<ContactSequence>& OCP::contact_sequence() const {
 }
 
 
+inline std::shared_ptr<ContactSequence>& OCP::contact_sequence_nonconst() {
+  return contact_sequence_;
+}
+
+
 inline double OCP::T() const {
   return T_;
 }

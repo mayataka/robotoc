@@ -68,11 +68,9 @@ public:
   /// @brief Checks whether the solution is feasible under inequality constraints.
   /// @param[in, out] ocp Optimal control problem.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] s Solution. 
   ///
   bool isFeasible(OCP& ocp, aligned_vector<Robot>& robots,
-                  const std::shared_ptr<ContactSequence>& contact_sequence, 
                   const Solution& s) const;
 
   ///
@@ -80,18 +78,15 @@ public:
   /// constraints. 
   /// @param[in, out] ocp Optimal control problem.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] s Solution. 
   ///
   void initConstraints(OCP& ocp, aligned_vector<Robot>& robots,
-                       const std::shared_ptr<ContactSequence>& contact_sequence, 
                        const Solution& s) const;
 
   ///
   /// @brief Computes the KKT residual of optimal control problem in parallel. 
   /// @param[in, out] ocp Optimal control problem.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
@@ -99,7 +94,6 @@ public:
   /// @param[in, out] kkt_residual KKT residual. 
   ///
   void computeKKTResidual(OCP& ocp, aligned_vector<Robot>& robots, 
-                          const std::shared_ptr<ContactSequence>& contact_sequence, 
                           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                           const Solution& s, KKTMatrix& kkt_matrix, 
                           KKTResidual& kkt_residual) const;
@@ -109,7 +103,6 @@ public:
   /// residual for Newton's method. 
   /// @param[in, out] ocp Optimal control problem.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
@@ -117,7 +110,6 @@ public:
   /// @param[in, out] kkt_residual KKT residual. 
   ///
   void computeKKTSystem(OCP& ocp, aligned_vector<Robot>& robots,
-                        const std::shared_ptr<ContactSequence>& contact_sequence, 
                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                         const Solution& s, KKTMatrix& kkt_matrix, 
                         KKTResidual& kkt_residual) const;
@@ -180,7 +172,6 @@ public:
 private:
   template <typename Algorithm>
   void runParallel(OCP& ocp, aligned_vector<Robot>& robots,
-                   const std::shared_ptr<ContactSequence>& contact_sequence, 
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                    const Solution& s, KKTMatrix& kkt_matrix, 
                    KKTResidual& kkt_residual) const;

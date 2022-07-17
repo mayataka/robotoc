@@ -47,7 +47,7 @@ UnconstrParNMPCSolver::~UnconstrParNMPCSolver() {
 
 
 UnconstrParNMPCSolver UnconstrParNMPCSolver::clone() const {
-  return UnconstrOCPSolver(ocp_.clone(), solver_options_, robots_.size());
+  return UnconstrParNMPCSolver(parnmpc_.clone(), solver_options_, robots_.size());
 }
 
 

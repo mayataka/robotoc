@@ -98,8 +98,8 @@ TEST_P(RiccatiRecursionTest, riccatiRecursion) {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto s = testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
-  dms.initConstraints(ocp, robots, contact_sequence, s);
-  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, s);
+  dms.computeKKTSystem(ocp, robots, q, v, s, kkt_matrix, kkt_residual);
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   RiccatiFactorization factorization(robot, N, max_num_impulse);
@@ -246,8 +246,8 @@ TEST_P(RiccatiRecursionTest, computeDirection) {
   ocp.discretize(t);
   DirectMultipleShooting dms(nthreads);
   aligned_vector<Robot> robots(nthreads, robot);
-  dms.initConstraints(ocp, robots, contact_sequence, s);
-  dms.computeKKTSystem(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  dms.initConstraints(ocp, robots, s);
+  dms.computeKKTSystem(ocp, robots, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(ocp, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, factorization);
@@ -262,7 +262,7 @@ TEST_P(RiccatiRecursionTest, computeDirection) {
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   d_ref = d;
   auto ocp_ref = ocp;
-  riccati_recursion.computeDirection(ocp, contact_sequence, factorization, d);
+  riccati_recursion.computeDirection(ocp, factorization, d);
   const double primal_step_size = riccati_recursion.maxPrimalStepSize();
   const double dual_step_size = riccati_recursion.maxDualStepSize();
   const Eigen::VectorXd dx0 = d_ref[0].dx;

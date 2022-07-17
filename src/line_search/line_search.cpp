@@ -46,22 +46,20 @@ LineSearch::~LineSearch() {
 }
 
 
-double LineSearch::computeStepSize(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Direction& d, const double max_primal_step_size) {
+double LineSearch::computeStepSize(OCP& ocp, aligned_vector<Robot>& robots, 
+                                   const Eigen::VectorXd& q, 
+                                   const Eigen::VectorXd& v, 
+                                   const Solution& s, const Direction& d, 
+                                   const double max_primal_step_size) {
   assert(max_primal_step_size > 0);
   assert(max_primal_step_size <= 1);
   double primal_step_size = max_primal_step_size;
   reserve(ocp);
   if (settings_.line_search_method == LineSearchMethod::Filter) {
-    primal_step_size = lineSearchFilterMethod(ocp, robots, contact_sequence, 
-                                                q, v, s, d, primal_step_size);
+    primal_step_size = lineSearchFilterMethod(ocp, robots, q, v, s, d, primal_step_size);
   }
 	else if (settings_.line_search_method == LineSearchMethod::MeritBacktracking) {
-    primal_step_size = meritBacktrackingLineSearch(ocp, robots, contact_sequence, 
-                                                     q, v, s, d, primal_step_size);
+    primal_step_size = meritBacktrackingLineSearch(ocp, robots, q, v, s, d, primal_step_size);
   }
   if (primal_step_size > settings_.min_step_size) {
     return primal_step_size;
@@ -81,13 +79,14 @@ bool LineSearch::isFilterEmpty() const {
   return filter_.isEmpty();
 }
 
-void LineSearch::computeCostAndViolation(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s) {
+void LineSearch::computeCostAndViolation(OCP& ocp, aligned_vector<Robot>& robots, 
+                                         const Eigen::VectorXd& q, 
+                                         const Eigen::VectorXd& v, 
+                                         const Solution& s) {
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
+  const auto& contact_sequence = ocp.contact_sequence(); 
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -203,6 +202,7 @@ void LineSearch::computeSolutionTrial(const OCP& ocp,
   assert(robots.size() == nthreads_);
   assert(step_size > 0);
   assert(step_size <= 1);
+  const auto& contact_sequence = ocp.contact_sequence(); 
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
@@ -236,19 +236,19 @@ void LineSearch::computeSolutionTrial(const OCP& ocp,
 }
 
 
-double LineSearch::lineSearchFilterMethod(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Direction& d, const double initial_primal_step_size) {
+double LineSearch::lineSearchFilterMethod(OCP& ocp, aligned_vector<Robot>& robots, 
+                                          const Eigen::VectorXd& q, 
+                                          const Eigen::VectorXd& v, 
+                                          const Solution& s, const Direction& d, 
+                                          const double initial_primal_step_size) {
   if (filter_.isEmpty()) {
-    computeCostAndViolation(ocp, robots, contact_sequence, q, v, s);
+    computeCostAndViolation(ocp, robots, q, v, s);
     filter_.augment(totalCosts(), totalViolations());
   }
   double primal_step_size = initial_primal_step_size;
   while (primal_step_size > settings_.min_step_size) {
     computeSolutionTrial(ocp, robots, s, d, primal_step_size);
-    computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_trial_);
+    computeCostAndViolation(ocp, robots, q, v, s_trial_);
     const double total_costs = totalCosts();
     const double total_violations = totalViolations();
     if (filter_.isAccepted(total_costs, total_violations)) {
@@ -261,22 +261,22 @@ double LineSearch::lineSearchFilterMethod(
 }
 
 
-double LineSearch::meritBacktrackingLineSearch(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Direction& d, const double initial_primal_step_size) {
-  computeCostAndViolation(ocp, robots, contact_sequence, q, v, s);
+double LineSearch::meritBacktrackingLineSearch(OCP& ocp, aligned_vector<Robot>& robots, 
+                                               const Eigen::VectorXd& q, 
+                                               const Eigen::VectorXd& v, 
+                                               const Solution& s, const Direction& d, 
+                                               const double initial_primal_step_size) {
+  computeCostAndViolation(ocp, robots, q, v, s);
   const double penalty_param = penaltyParam(ocp, s);
   const double merit_now = merit(penalty_param);
   computeSolutionTrial(ocp, robots, s, d, settings_.eps);
-  computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_trial_);
+  computeCostAndViolation(ocp, robots, q, v, s_trial_);
   const double merit_eps = merit(penalty_param);
   const double directional_derivative =  (1.0 / settings_.eps) * (merit_eps - merit_now);
   double primal_step_size = initial_primal_step_size;
   while (primal_step_size > settings_.min_step_size) {
     computeSolutionTrial(ocp, robots, s, d, primal_step_size);
-    computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_trial_);
+    computeCostAndViolation(ocp, robots, q, v, s_trial_);
     const double merit_next = merit(penalty_param);
     const bool armijoHolds = armijoCond(merit_now, merit_next, directional_derivative, 
                                         primal_step_size, settings_.armijo_control_rate);

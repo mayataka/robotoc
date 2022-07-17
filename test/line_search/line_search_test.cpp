@@ -96,18 +96,18 @@ void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings
   auto ocp = OCP(robot, cost, constraints, contact_sequence, T, N);
   ocp.discretize(t);
   DirectMultipleShooting dms(nthreads);
-  dms.initConstraints(ocp, robots, contact_sequence, s);
+  dms.initConstraints(ocp, robots, s);
   LineSearch line_search(ocp, nthreads, settings);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
-  const double step_size = line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, max_primal_step_size);
+  const double step_size = line_search.computeStepSize(ocp, robots, q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
   if (settings.line_search_method == LineSearchMethod::Filter) {
     EXPECT_FALSE(line_search.isFilterEmpty());
   }
   const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
-  EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, very_small_max_primal_step_size),
+  EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, q, v, s, d, very_small_max_primal_step_size),
                    min_step_size);
   EXPECT_NO_THROW(
     std::cout << settings << std::endl;

@@ -154,6 +154,11 @@ public:
   const std::shared_ptr<ContactSequence>& contact_sequence() const;
 
   ///
+  /// @return non-const reference to the STO constraints. 
+  ///
+  std::shared_ptr<ContactSequence>& contact_sequence_nonconst();
+
+  ///
   /// @return Length of the horizon. 
   ///
   double T() const;
