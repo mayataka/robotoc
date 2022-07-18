@@ -9,7 +9,7 @@ CoMCost::CoMCost(const Robot& robot)
     weight_(Eigen::Vector3d::Zero()),
     weight_terminal_(Eigen::Vector3d::Zero()),
     weight_impulse_(Eigen::Vector3d::Zero()),
-    ref_(),
+    ref_(nullptr),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
@@ -35,7 +35,7 @@ CoMCost::CoMCost()
     weight_(Eigen::Vector3d::Zero()),
     weight_terminal_(Eigen::Vector3d::Zero()),
     weight_impulse_(Eigen::Vector3d::Zero()),
-    ref_(),
+    ref_(nullptr),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
@@ -49,7 +49,7 @@ CoMCost::~CoMCost() {
 
 std::shared_ptr<CostFunctionComponentBase> CoMCost::clone() const {
   auto cost = std::make_shared<CoMCost>(*this);
-  if (use_nonconst_ref_) {
+  if (use_nonconst_ref_ && ref_) {
     auto ref = ref_->clone();
     cost->set_ref(ref);
   }
@@ -120,8 +120,7 @@ void CoMCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
 void CoMCost::set_from_other(const std::shared_ptr<CoMCost>& other) {
   set_const_ref(other->get_const_ref());
   if (other->use_nonconst_ref()) {
-    const auto ref = other->get_ref();
-    set_ref(ref->clone());
+    set_ref(other->get_ref()->clone());
   }
   set_weight(other->get_weight());
   set_weight_terminal(other->get_weight_terminal());

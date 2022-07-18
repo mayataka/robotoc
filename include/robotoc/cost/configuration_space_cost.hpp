@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_CONFIGURATION_SPACE_COST_HPP_
 #define ROBOTOC_CONFIGURATION_SPACE_COST_HPP_
 
+#include <stdexcept>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -88,7 +90,12 @@ public:
   ///
   /// @brief Gets the reference configuration. 
   ///
-  const std::shared_ptr<ConfigurationSpaceRefBase>& get_ref() const { return ref_; }
+  const std::shared_ptr<ConfigurationSpaceRefBase>& get_ref() const { 
+    if (!ref_) {
+      throw std::runtime_error("ConfigurationSpaceRefBase is nullptr!");
+    }
+    return ref_; 
+  }
 
   ///
   /// @brief Sets the const reference configuration q. 

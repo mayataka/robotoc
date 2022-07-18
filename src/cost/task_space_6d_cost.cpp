@@ -11,7 +11,7 @@ TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id)
     weight_(Vector6d::Zero()), 
     weight_terminal_(Vector6d::Zero()), 
     weight_impulse_(Vector6d::Zero()),
-    ref_(),
+    ref_(nullptr),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
@@ -80,7 +80,7 @@ TaskSpace6DCost::TaskSpace6DCost()
     weight_(Vector6d::Zero()), 
     weight_terminal_(Vector6d::Zero()), 
     weight_impulse_(Vector6d::Zero()),
-    ref_(),
+    ref_(nullptr),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
@@ -94,7 +94,7 @@ TaskSpace6DCost::~TaskSpace6DCost() {
 
 std::shared_ptr<CostFunctionComponentBase> TaskSpace6DCost::clone() const {
   auto cost = std::make_shared<TaskSpace6DCost>(*this);
-  if (use_nonconst_ref_) {
+  if (use_nonconst_ref_ && ref_) {
     auto ref = ref_->clone();
     cost->set_ref(ref);
   }
@@ -193,8 +193,7 @@ void TaskSpace6DCost::set_from_other(
     const std::shared_ptr<TaskSpace6DCost>& other) {
   set_const_ref(other->get_const_ref());
   if (other->use_nonconst_ref()) {
-    const auto ref = other->get_ref();
-    set_ref(ref->clone());
+    set_ref(other->get_ref()->clone());
   }
   set_weight(other->get_weight().template tail<3>(),
              other->get_weight().template head<3>());

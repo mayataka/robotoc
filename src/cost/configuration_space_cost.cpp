@@ -23,7 +23,7 @@ ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
     q_weight_impulse_(Eigen::VectorXd::Zero(robot.dimv())),
     v_weight_impulse_(Eigen::VectorXd::Zero(robot.dimv())),
     dv_weight_impulse_(Eigen::VectorXd::Zero(robot.dimv())),
-    ref_(),
+    ref_(nullptr),
     use_nonconst_ref_(false),
     enable_q_cost_(false), 
     enable_v_cost_(false), 
@@ -64,7 +64,7 @@ ConfigurationSpaceCost::ConfigurationSpaceCost()
     q_weight_impulse_(),
     v_weight_impulse_(),
     dv_weight_impulse_(),
-    ref_(),
+    ref_(nullptr),
     use_nonconst_ref_(false),
     enable_q_cost_(false), 
     enable_v_cost_(false), 
@@ -84,7 +84,7 @@ ConfigurationSpaceCost::~ConfigurationSpaceCost() {
 
 std::shared_ptr<CostFunctionComponentBase> ConfigurationSpaceCost::clone() const {
   auto cost = std::make_shared<ConfigurationSpaceCost>(*this);
-  if (use_nonconst_ref_) {
+  if (use_nonconst_ref_ && ref_) {
     auto ref = ref_->clone();
     cost->set_ref(ref);
   }
@@ -334,7 +334,6 @@ void ConfigurationSpaceCost::set_from_other(
     const std::shared_ptr<ConfigurationSpaceCost>& other) {
   set_q_ref(other->get_q_ref());
   if (other->use_nonconst_ref()) {
-    std::cout << "use_nonconst_ref" << std::endl;
     set_ref(other->get_ref()->clone());
   }
   set_v_ref(other->get_v_ref());

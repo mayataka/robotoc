@@ -2,6 +2,7 @@
 #define ROBOTOC_TASK_SPACE_6D_COST_HPP_
 
 #include <string>
+#include <stdexcept>
 
 #include "Eigen/Core"
 
@@ -148,7 +149,12 @@ public:
   ///
   /// @brief Gets the reference task-space placement. 
   ///
-  const std::shared_ptr<TaskSpace6DRefBase>& get_ref() const { return ref_; }
+  const std::shared_ptr<TaskSpace6DRefBase>& get_ref() const { 
+    if (!ref_) {
+      throw std::runtime_error("TaskSpace6DRefBase is nullptr!");
+    }
+    return ref_; 
+  }
 
   ///
   /// @brief Sets the const reference task-space placement. 

@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_COM_COST_HPP_
 #define ROBOTOC_COM_COST_HPP_
 
+#include <stdexcept>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -92,7 +94,12 @@ public:
   ///
   /// @brief Gets the reference CoM position.
   ///
-  const std::shared_ptr<CoMRefBase>& get_ref() const { return ref_; }
+  const std::shared_ptr<CoMRefBase>& get_ref() const { 
+    if (!ref_) {
+      throw std::runtime_error("CoMRefBase is nullptr!");
+    }
+    return ref_; 
+  }
 
   ///
   /// @brief Sets the const reference CoM position. 

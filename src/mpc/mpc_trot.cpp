@@ -125,7 +125,10 @@ MPCTrot MPCTrot::clone() const {
                        swing_start_time_);
   }
   mpc.setSolverOptions(solver_options_);
-  // TODO: copy cost parameters
+  // copy cost parameters
+  mpc.getConfigCostHandle()->set_from_other(config_cost_);
+  mpc.getBaseRotationCostHandle()->set_from_other(base_rot_cost_);
+  mpc.getCoMCostHandle()->set_from_other(com_cost_);
   // copy constraints parameters
   mpc.getConstraintsHandle()->setBarrier(constraints_->barrier());
   mpc.getConstraintsHandle()->setFractionToBoundaryRule(constraints_->fractionToBoundaryRule());
