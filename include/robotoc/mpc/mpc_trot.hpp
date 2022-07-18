@@ -256,7 +256,7 @@ private:
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;
   std::shared_ptr<ConfigurationSpaceCost> base_rot_cost_;
   std::shared_ptr<TaskSpace3DCost> LF_foot_cost_, LH_foot_cost_,
-                                              RF_foot_cost_, RH_foot_cost_;
+                                   RF_foot_cost_, RH_foot_cost_;
   std::shared_ptr<CoMCost> com_cost_;
   std::shared_ptr<MPCPeriodicConfigurationRef> base_rot_ref_;
   std::shared_ptr<MPCPeriodicSwingFootRef> LF_foot_ref_, LH_foot_ref_,

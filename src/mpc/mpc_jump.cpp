@@ -12,7 +12,7 @@ namespace robotoc {
 
 MPCJump::MPCJump(const Robot& robot, const double T, const int N, 
                  const int nthreads)
-  : foot_step_planner_(),
+  : foot_step_planner_(nullptr),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, 1)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
@@ -86,10 +86,17 @@ MPCJump::~MPCJump() {
 
 MPCJump MPCJump::clone() const {
   auto mpc = MPCJump(robot_, T_, N_, nthreads_);
-  auto contact_planner = foot_step_planner_->clone();
-  mpc.setJumpPattern(contact_planner, flying_time_, min_flying_time_, 
-                     ground_time_, min_ground_time_);
+  if (foot_step_planner_) {
+    auto contact_planner = foot_step_planner_->clone();
+    mpc.setJumpPattern(contact_planner, flying_time_, min_flying_time_, 
+                      ground_time_, min_ground_time_);
+  }
   mpc.setSolverOptions(solver_options_);
+  // TODO: copy cost parameters
+  // copy constraints parameters
+  mpc.getConstraintsHandle()->setBarrier(constraints_->barrier());
+  mpc.getConstraintsHandle()->setFractionToBoundaryRule(constraints_->fractionToBoundaryRule());
+  mpc.getFrictionConeHandle()->setFrictionCoefficient(friction_cone_->frictionCoefficient());
   return mpc;
 }
 

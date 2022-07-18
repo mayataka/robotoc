@@ -12,7 +12,7 @@ namespace robotoc {
 
 MPCTrot::MPCTrot(const Robot& robot, const double T, const int N, 
                  const int nthreads)
-  : foot_step_planner_(),
+  : foot_step_planner_(nullptr),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
@@ -61,25 +61,21 @@ MPCTrot::MPCTrot(const Robot& robot, const double T, const int N,
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
   config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  base_rot_cost_ = std::make_shared<ConfigurationSpaceCost>(robot, base_rot_ref_);
+  base_rot_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
   base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
   base_rot_cost_->set_q_weight(base_rot_weight);
   base_rot_cost_->set_q_weight_terminal(base_rot_weight);
   base_rot_cost_->set_q_weight_impulse(base_rot_weight);
-  LF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[0],
-                                                    LF_foot_ref_);
-  LH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[1],
-                                                    LH_foot_ref_);
-  RF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[2],
-                                                    RF_foot_ref_);
-  RH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[3],
-                                                    RH_foot_ref_);
+  LF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[0]);
+  LH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[1]);
+  RF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[2]);
+  RH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[3]);
   LF_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
   LH_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
   RF_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
   RH_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
-  com_cost_ = std::make_shared<CoMCost>(robot, com_ref_);
+  com_cost_ = std::make_shared<CoMCost>(robot);
   com_cost_->set_weight(Eigen::Vector3d::Constant(1.0e03));
   cost_->push_back(config_cost_);
   cost_->push_back(base_rot_cost_);
@@ -123,10 +119,17 @@ MPCTrot::~MPCTrot() {
 
 MPCTrot MPCTrot::clone() const {
   auto mpc = MPCTrot(robot_, T_, N_, nthreads_);
-  auto contact_planner = foot_step_planner_->clone();
-  mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, stance_time_, 
-                     swing_start_time_);
+  if (foot_step_planner_) {
+    auto contact_planner = foot_step_planner_->clone();
+    mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, stance_time_, 
+                       swing_start_time_);
+  }
   mpc.setSolverOptions(solver_options_);
+  // TODO: copy cost parameters
+  // copy constraints parameters
+  mpc.getConstraintsHandle()->setBarrier(constraints_->barrier());
+  mpc.getConstraintsHandle()->setFractionToBoundaryRule(constraints_->fractionToBoundaryRule());
+  mpc.getFrictionConeHandle()->setFrictionCoefficient(friction_cone_->frictionCoefficient());
   return mpc;
 }
 

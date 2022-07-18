@@ -12,7 +12,7 @@ namespace robotoc {
 
 MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N, 
                            const int nthreads)
-  : foot_step_planner_(),
+  : foot_step_planner_(nullptr),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
@@ -117,10 +117,22 @@ MPCBipedWalk::~MPCBipedWalk() {
 
 MPCBipedWalk MPCBipedWalk::clone() const {
   auto mpc = MPCBipedWalk(robot_, T_, N_, nthreads_);
-  auto contact_planner = foot_step_planner_->clone();
-  mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, 
-                     double_support_time_, swing_start_time_);
+  if (foot_step_planner_) {
+    auto contact_planner = foot_step_planner_->clone();
+    mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, 
+                      double_support_time_, swing_start_time_);
+  }
   mpc.setSolverOptions(solver_options_);
+  // TODO: copy cost parameters
+  // copy constraints parameters
+  mpc.getConstraintsHandle()->setBarrier(constraints_->barrier());
+  mpc.getConstraintsHandle()->setFractionToBoundaryRule(constraints_->fractionToBoundaryRule());
+  mpc.getWrenchConeHandle()->setFrictionCoefficient(wrench_cone_->frictionCoefficient());
+  mpc.getWrenchConeHandle()->setRectangular(wrench_cone_->recutangular()[0], 
+                                            wrench_cone_->recutangular()[1]);
+  mpc.getImpulseWrenchConeHandle()->setFrictionCoefficient(impulse_wrench_cone_->frictionCoefficient());
+  mpc.getImpulseWrenchConeHandle()->setRectangular(impulse_wrench_cone_->recutangular()[0], 
+                                                   impulse_wrench_cone_->recutangular()[1]);
   return mpc;
 }
 

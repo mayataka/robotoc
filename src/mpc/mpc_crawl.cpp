@@ -12,7 +12,7 @@ namespace robotoc {
 
 MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N, 
                    const int nthreads)
-  : foot_step_planner_(),
+  : foot_step_planner_(nullptr),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
@@ -125,10 +125,17 @@ MPCCrawl::~MPCCrawl() {
 
 MPCCrawl MPCCrawl::clone() const {
   auto mpc = MPCCrawl(robot_, T_, N_, nthreads_);
-  auto contact_planner = foot_step_planner_->clone();
-  mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, stance_time_, 
-                     swing_start_time_);
+  if (foot_step_planner_) {
+    auto contact_planner = foot_step_planner_->clone();
+    mpc.setGaitPattern(contact_planner, swing_height_, swing_time_, stance_time_, 
+                      swing_start_time_);
+  }
   mpc.setSolverOptions(solver_options_);
+  // TODO: copy cost parameters
+  // copy constraints parameters
+  mpc.getConstraintsHandle()->setBarrier(constraints_->barrier());
+  mpc.getConstraintsHandle()->setFractionToBoundaryRule(constraints_->fractionToBoundaryRule());
+  mpc.getFrictionConeHandle()->setFrictionCoefficient(friction_cone_->frictionCoefficient());
   return mpc;
 }
 
