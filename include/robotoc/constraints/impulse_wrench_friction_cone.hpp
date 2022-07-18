@@ -75,6 +75,20 @@ public:
   ///
   void setRectangular(const double X, const double Y);
 
+  ///
+  /// @brief Gets the friction coefficient. 
+  ///
+  double frictionCoefficient() const {
+    return mu_;
+  }
+
+  ///
+  /// @brief Gets the recutangular size. 
+  ///
+  Eigen::Vector2d recutangular() const {
+    return Eigen::Vector2d(X_, Y_);
+  }
+
   KinematicsLevel kinematicsLevel() const override;
 
   void allocateExtraData(ConstraintComponentData& data) const override;

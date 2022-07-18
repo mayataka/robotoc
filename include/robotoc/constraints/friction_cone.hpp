@@ -83,6 +83,13 @@ public:
   ///
   void setFrictionCoefficient(const std::vector<double>& mu);
 
+  ///
+  /// @brief Gets the friction coefficient. 
+  ///
+  const std::vector<double>& frictionCoefficient() const {
+    return mu_;
+  }
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

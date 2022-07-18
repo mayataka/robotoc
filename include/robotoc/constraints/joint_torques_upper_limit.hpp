@@ -60,6 +60,8 @@ public:
 
   DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointTorquesUpperLimit)
 
+  const Eigen::VectorXd& umax() const { return umax_; }
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;

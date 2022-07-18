@@ -60,6 +60,8 @@ public:
 
   DEFINE_DEFAULT_CLONE_CONSTRAINT_COMPONENT(JointVelocityLowerLimit)
 
+  const Eigen::VectorXd& vmin() const { return vmin_; }
+
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;
