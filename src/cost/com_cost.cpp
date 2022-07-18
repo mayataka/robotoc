@@ -117,6 +117,18 @@ void CoMCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
 }
 
 
+void CoMCost::set_from_other(const std::shared_ptr<CoMCost>& other) {
+  set_const_ref(other->get_const_ref());
+  if (other->use_nonconst_ref()) {
+    const auto ref = other->get_ref();
+    set_ref(ref->clone());
+  }
+  set_weight(other->get_weight());
+  set_weight_terminal(other->get_weight_terminal());
+  set_weight_impulse(other->get_weight_impulse());
+}
+
+
 bool CoMCost::useKinematics() const {
   return true;
 }

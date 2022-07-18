@@ -110,10 +110,21 @@ public:
   std::shared_ptr<CostFunctionComponentBase> clone() const override;
 
   ///
+  /// @brief Checks if this use the non-const reference 
+  /// (TaskSpace3DRefBase) or not. 
+  ///
+  bool use_nonconst_ref() const { return use_nonconst_ref_; }
+
+  ///
   /// @brief Sets the reference task-space position. 
   /// @param[in] ref Reference task-space position.
   ///
   void set_ref(const std::shared_ptr<TaskSpace3DRefBase>& ref);
+
+  ///
+  /// @brief Gets the reference task-space position. 
+  ///
+  const std::shared_ptr<TaskSpace3DRefBase>& get_ref() const { return ref_; }
 
   ///
   /// @brief Sets the const reference task-space position. 
@@ -122,10 +133,20 @@ public:
   void set_const_ref(const Eigen::Vector3d& const_ref);
 
   ///
+  /// @brief Gets the const reference task-space position. 
+  ///
+  const Eigen::Vector3d& get_const_ref() const { return const_ref_; } 
+
+  ///
   /// @brief Sets the weight vector. 
   /// @param[in] weight Weight vector on the task-space position error. 
   ///
   void set_weight(const Eigen::Vector3d& weight);
+
+  ///
+  /// @brief Gets the weight vector. 
+  ///
+  const Eigen::Vector3d& get_weight() const { return weight_; } 
 
   ///
   /// @brief Sets the weight vector for the terminal stage. 
@@ -135,11 +156,27 @@ public:
   void set_weight_terminal(const Eigen::Vector3d& weight_terminal);
 
   ///
+  /// @brief Gets the weight vector for the terminal stage. 
+  ///
+  const Eigen::Vector3d& get_weight_terminal() const { return weight_terminal_; } 
+
+  ///
   /// @brief Sets the weight vector for the impulse stage. 
   /// @param[in] weight_impulse Weight vector on the task-space position error 
   /// at the impulse stage. 
   ///
   void set_weight_impulse(const Eigen::Vector3d& weight_impulse);
+
+  ///
+  /// @brief Gets the weight vector for the impulse stage. 
+  ///
+  const Eigen::Vector3d& get_weight_impulse() const { return weight_impulse_; } 
+
+  ///
+  /// @brief Sets (clones) reference and weight parameters from other. 
+  /// @param[in] other other task-space 3D cost. 
+  ///
+  void set_from_other(const std::shared_ptr<TaskSpace3DCost>& other);
 
   ///
   /// @brief Evaluate if the cost is active for given grid_info. 

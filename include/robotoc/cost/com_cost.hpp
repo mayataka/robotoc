@@ -78,10 +78,21 @@ public:
   std::shared_ptr<CostFunctionComponentBase> clone() const override;
 
   ///
+  /// @brief Checks if this use the non-const reference 
+  /// (CoMRefBase) or not. 
+  ///
+  bool use_nonconst_ref() const { return use_nonconst_ref_; }
+
+  ///
   /// @brief Sets the reference CoM position. 
   /// @param[in] ref Reference CoM position.
   ///
   void set_ref(const std::shared_ptr<CoMRefBase>& ref);
+
+  ///
+  /// @brief Gets the reference CoM position.
+  ///
+  const std::shared_ptr<CoMRefBase>& get_ref() const { return ref_; }
 
   ///
   /// @brief Sets the const reference CoM position. 
@@ -90,10 +101,20 @@ public:
   void set_const_ref(const Eigen::Vector3d& const_ref);
 
   ///
+  /// @brief Gets the const reference CoM position. 
+  ///
+  const Eigen::Vector3d& get_const_ref() const { return const_ref_; } 
+
+  ///
   /// @brief Sets the weight vector. 
   /// @param[in] weight Weight vector on the CoM position error. 
   ///
   void set_weight(const Eigen::Vector3d& weight);
+
+  ///
+  /// @brief Gets the weight vector. 
+  ///
+  const Eigen::Vector3d& get_weight() const { return weight_; } 
 
   ///
   /// @brief Sets the weight vector for the terminal stage. 
@@ -103,11 +124,27 @@ public:
   void set_weight_terminal(const Eigen::Vector3d& weight_terminal);
 
   ///
+  /// @brief Gets the weight vector for the terminal stage. 
+  ///
+  const Eigen::Vector3d& get_weight_terminal() const { return weight_terminal_; } 
+
+  ///
   /// @brief Sets the weight vector for the impulse stage. 
   /// @param[in] weight_impulse Weight vector on the CoM position error 
   /// at the impulse stage. 
   ///
   void set_weight_impulse(const Eigen::Vector3d& weight_impulse);
+
+  ///
+  /// @brief Gets the weight vector for the impulse stage. 
+  ///
+  const Eigen::Vector3d& get_weight_impulse() const { return weight_impulse_; } 
+
+  ///
+  /// @brief Sets (clones) reference and weight parameters from other. 
+  /// @param[in] other other CoM cost. 
+  ///
+  void set_from_other(const std::shared_ptr<CoMCost>& other);
 
   ///
   /// @brief Evaluate if the cost is active for given grid_info. 

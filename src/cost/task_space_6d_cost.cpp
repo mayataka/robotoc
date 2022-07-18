@@ -8,9 +8,9 @@ TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id)
     frame_id_(frame_id),
     const_ref_(SE3(Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero())),
     const_ref_inv_(const_ref_.inverse()),
-    weight_(Eigen::VectorXd::Zero(6)), 
-    weight_terminal_(Eigen::VectorXd::Zero(6)), 
-    weight_impulse_(Eigen::VectorXd::Zero(6)),
+    weight_(Vector6d::Zero()), 
+    weight_terminal_(Vector6d::Zero()), 
+    weight_impulse_(Vector6d::Zero()),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
@@ -77,9 +77,9 @@ TaskSpace6DCost::TaskSpace6DCost()
     frame_id_(0),
     const_ref_(SE3(Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero())),
     const_ref_inv_(const_ref_.inverse()),
-    weight_(Eigen::VectorXd::Zero(6)), 
-    weight_terminal_(Eigen::VectorXd::Zero(6)), 
-    weight_impulse_(Eigen::VectorXd::Zero(6)),
+    weight_(Vector6d::Zero()), 
+    weight_terminal_(Vector6d::Zero()), 
+    weight_impulse_(Vector6d::Zero()),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
@@ -186,6 +186,22 @@ void TaskSpace6DCost::set_weight_impulse(
   weight_impulse_.template head<3>() = weight_rotation_impulse;
   weight_impulse_.template tail<3>() = weight_position_impulse;
   enable_cost_impulse_ = (!weight_impulse_.isZero());
+}
+
+
+void TaskSpace6DCost::set_from_other(
+    const std::shared_ptr<TaskSpace6DCost>& other) {
+  set_const_ref(other->get_const_ref());
+  if (other->use_nonconst_ref()) {
+    const auto ref = other->get_ref();
+    set_ref(ref->clone());
+  }
+  set_weight(other->get_weight().template tail<3>(),
+             other->get_weight().template head<3>());
+  set_weight_terminal(other->get_weight_terminal().template tail<3>(),
+                      other->get_weight_terminal().template head<3>());
+  set_weight_impulse(other->get_weight_impulse().template tail<3>(),
+                     other->get_weight_impulse().template head<3>());
 }
 
 

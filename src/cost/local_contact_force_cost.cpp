@@ -113,6 +113,15 @@ bool LocalContactForceCost::useKinematics() const {
 }
 
 
+void LocalContactForceCost::set_from_other(
+    const std::shared_ptr<LocalContactForceCost>& other) { 
+  set_f_ref(other->get_f_ref());
+  set_f_weight(other->get_f_weight());
+  set_fi_ref(other->get_fi_ref());
+  set_fi_weight(other->get_fi_weight());
+}
+
+
 double LocalContactForceCost::evalStageCost(Robot& robot, 
                                             const ContactStatus& contact_status, 
                                             CostFunctionData& data, 

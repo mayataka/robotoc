@@ -330,6 +330,27 @@ void ConfigurationSpaceCost::set_dv_weight_impulse(
 }
 
 
+void ConfigurationSpaceCost::set_from_other(
+    const std::shared_ptr<ConfigurationSpaceCost>& other) {
+  set_q_ref(other->get_q_ref());
+  if (other->use_nonconst_ref()) {
+    std::cout << "use_nonconst_ref" << std::endl;
+    set_ref(other->get_ref()->clone());
+  }
+  set_v_ref(other->get_v_ref());
+  set_u_ref(other->get_u_ref());
+  set_q_weight(other->get_q_weight());
+  set_v_weight(other->get_v_weight());
+  set_a_weight(other->get_a_weight());
+  set_u_weight(other->get_u_weight());
+  set_q_weight_terminal(other->get_q_weight_terminal());
+  set_v_weight_terminal(other->get_v_weight_terminal());
+  set_q_weight_impulse(other->get_q_weight_impulse());
+  set_v_weight_impulse(other->get_v_weight_impulse());
+  set_dv_weight_impulse(other->get_dv_weight_impulse());
+}
+
+
 bool ConfigurationSpaceCost::useKinematics() const {
   return false;
 }

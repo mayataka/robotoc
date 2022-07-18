@@ -74,10 +74,21 @@ public:
   std::shared_ptr<CostFunctionComponentBase> clone() const override;
 
   ///
+  /// @brief Checks if this use the non-const reference 
+  /// (ConfigurationSpaceRefBase) or not. 
+  ///
+  bool use_nonconst_ref() const { return use_nonconst_ref_; }
+
+  ///
   /// @brief Sets the reference configuration. 
   /// @param[in] ref Reference configuraton.
   ///
   void set_ref(const std::shared_ptr<ConfigurationSpaceRefBase>& ref);
+
+  ///
+  /// @brief Gets the reference configuration. 
+  ///
+  const std::shared_ptr<ConfigurationSpaceRefBase>& get_ref() const { return ref_; }
 
   ///
   /// @brief Sets the const reference configuration q. 
@@ -86,10 +97,20 @@ public:
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   ///
+  /// @brief Gets the const reference configuration q. 
+  ///
+  const Eigen::VectorXd& get_q_ref() const { return q_ref_; }
+
+  ///
   /// @brief Sets the const reference velocity v. 
   /// @param[in] v_ref Reference velocity v. Size must be Robot::dimv().
   ///
   void set_v_ref(const Eigen::VectorXd& v_ref);
+
+  ///
+  /// @brief Gets the const reference velocity v. 
+  ///
+  const Eigen::VectorXd& get_v_ref() const { return v_ref_; }
 
   ///
   /// @brief Sets the const reference control input torques u. 
@@ -99,11 +120,21 @@ public:
   void set_u_ref(const Eigen::VectorXd& u_ref);
 
   ///
+  /// @brief Gets the const reference control input torques u. 
+  ///
+  const Eigen::VectorXd& get_u_ref() const { return u_ref_; }
+
+  ///
   /// @brief Sets the weight vector on the configuration q. 
   /// @param[in] q_weight Weight vector on the configuration q. 
   /// Size must be Robot::dimv().
   ///
   void set_q_weight(const Eigen::VectorXd& q_weight);
+
+  ///
+  /// @brief Gets the weight vector on the configuration q. 
+  ///
+  const Eigen::VectorXd& get_q_weight() const { return q_weight_; }
 
   ///
   /// @brief Sets the weight on the velocity v. 
@@ -113,11 +144,21 @@ public:
   void set_v_weight(const Eigen::VectorXd& v_weight);
 
   ///
+  /// @brief Gets the weight on the velocity v. 
+  ///
+  const Eigen::VectorXd& get_v_weight() const { return v_weight_; }
+
+  ///
   /// @brief Sets the weight on the acceleration a. 
   /// @param[in] a_weight Weight vector on the acceleration a. 
   /// Size must be Robot::dimv().
   ///
   void set_a_weight(const Eigen::VectorXd& a_weight);
+
+  ///
+  /// @brief Gets the weight on the acceleration a. 
+  ///
+  const Eigen::VectorXd& get_a_weight() const { return a_weight_; }
 
   ///
   /// @brief Sets the weight on the control input torques u. 
@@ -127,11 +168,21 @@ public:
   void set_u_weight(const Eigen::VectorXd& u_weight);
 
   ///
+  /// @brief Gets the weight on the control input torques u. 
+  ///
+  const Eigen::VectorXd& get_u_weight() const { return u_weight_; }
+
+  ///
   /// @brief Sets the weight vector on the configuration q at the terminal stage. 
   /// @param[in] q_weight_terminal Weight vector on the configuration q at the terminal 
   /// stage. Size must be Robot::dimv().
   ///
   void set_q_weight_terminal(const Eigen::VectorXd& q_weight_terminal);
+
+  ///
+  /// @brief Gets the weight vector on the configuration q at the terminal stage. 
+  ///
+  const Eigen::VectorXd& get_q_weight_terminal() const { return q_weight_terminal_; }
 
   ///
   /// @brief Sets the weight vector on the velocity v at the terminal stage. 
@@ -141,11 +192,21 @@ public:
   void set_v_weight_terminal(const Eigen::VectorXd& v_weight_terminal);
 
   ///
+  /// @brief Gets the weight vector on the velocity v at the terminal stage. 
+  ///
+  const Eigen::VectorXd& get_v_weight_terminal() const { return v_weight_terminal_; }
+
+  ///
   /// @brief Sets the weight vector on the configuration q at impulse stages. 
   /// @param[in] q_weight_impulse Weight vector on the configuration q at impulse  
   /// stages. Size must be Robot::dimv().
   ///
   void set_q_weight_impulse(const Eigen::VectorXd& q_weight_impulse);
+
+  ///
+  /// @brief Gets the weight vector on the configuration q at impulse stages. 
+  ///
+  const Eigen::VectorXd& get_q_weight_impulse() const { return q_weight_impulse_; }
 
   ///
   /// @brief Sets the weight vector on the velocity v at the impulse stages. 
@@ -155,12 +216,29 @@ public:
   void set_v_weight_impulse(const Eigen::VectorXd& v_weight_impulse);
 
   ///
+  /// @brief Gets the weight vector on the velocity v at the impulse stages. 
+  ///
+  const Eigen::VectorXd& get_v_weight_impulse() const { return v_weight_impulse_; }
+
+  ///
   /// @brief Sets the weight vector on the impulse change in the velocity dv at 
   /// the impulse stages. 
   /// @param[in] dv_weight_impulse Weight vector on the impulse change in the velocity
   /// the impulse stages. Size must be Robot::dimv().
   ///
   void set_dv_weight_impulse(const Eigen::VectorXd& dv_weight_impulse);
+
+  ///
+  /// @brief Gets the weight vector on the impulse change in the velocity dv at 
+  /// the impulse stages. 
+  ///
+  const Eigen::VectorXd& get_dv_weight_impulse() const { return dv_weight_impulse_; }
+
+  ///
+  /// @brief Sets (clones) reference and weight parameters from other. 
+  /// @param[in] other other config cost. 
+  ///
+  void set_from_other(const std::shared_ptr<ConfigurationSpaceCost>& other);
 
   ///
   /// @brief Evaluate if the cost on the configuration q is active for given 

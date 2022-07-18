@@ -72,11 +72,21 @@ public:
   void set_f_ref(const std::vector<Eigen::Vector3d>& f_ref);
 
   ///
+  /// @brief Gets the reference contact forces expressed in the local frames. 
+  ///
+  const std::vector<Eigen::Vector3d>& get_f_ref() const { return f_ref_; } 
+
+  ///
   /// @brief Sets the weight vectors on the contact forces. 
   /// @param[in] f_weight Weight vectors on the contact forces. 
   /// Size must be Robot::maxNumContacts().
   ///
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
+
+  ///
+  /// @brief Gets the weight vectors on the contact forces. 
+  ///
+  const std::vector<Eigen::Vector3d>& get_f_weight() const { return f_weight_; } 
 
   ///
   /// @brief Sets the reference impulse forces expressed in the local frames. 
@@ -86,11 +96,23 @@ public:
   void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);
 
   ///
+  /// @brief Gets the reference impulse forces expressed in the local frames. 
+  ///
+  const std::vector<Eigen::Vector3d>& get_fi_ref() const { return fi_ref_; } 
+
+  ///
   /// @brief Sets the weight vectors on the impulse forces. 
   /// @param[in] fi_weight Weight vectors on the impulse forces. 
   /// Size must be Robot::maxNumContacts().
   ///
   void set_fi_weight(const std::vector<Eigen::Vector3d>& fi_weight);
+
+  ///
+  /// @brief Gets the weight vectors on the impulse forces. 
+  ///
+  const std::vector<Eigen::Vector3d>& get_fi_weight() const { return fi_weight_; } 
+
+  void set_from_other(const std::shared_ptr<LocalContactForceCost>& other);
 
   bool useKinematics() const override;
 

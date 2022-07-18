@@ -134,16 +134,32 @@ public:
   std::shared_ptr<CostFunctionComponentBase> clone() const override;
 
   ///
+  /// @brief Checks if this use the non-const reference 
+  /// (TaskSpace6DRefBase) or not. 
+  ///
+  bool use_nonconst_ref() const { return use_nonconst_ref_; }
+
+  ///
   /// @brief Sets the reference task-space placement. 
   /// @param[in] ref Reference task-space placement.
   ///
   void set_ref(const std::shared_ptr<TaskSpace6DRefBase>& ref);
 
   ///
+  /// @brief Gets the reference task-space placement. 
+  ///
+  const std::shared_ptr<TaskSpace6DRefBase>& get_ref() const { return ref_; }
+
+  ///
   /// @brief Sets the const reference task-space placement. 
   /// @param[in] const_ref Const reference task-space placement.
   ///
   void set_const_ref(const SE3& const_ref);
+
+  ///
+  /// @brief Gets the const reference task-space placement. 
+  ///
+  const SE3& get_const_ref() const { return const_ref_; } 
 
   ///
   /// @brief Sets the const reference task-space placement. 
@@ -162,6 +178,11 @@ public:
                   const Eigen::Vector3d& weight_rotation);
 
   ///
+  /// @brief Gets the weight vector. 
+  ///
+  const Vector6d& get_weight() const { return weight_; } 
+
+  ///
   /// @brief Sets the weight vector at the terminal stage. 
   /// @param[in] weight_position_terminal Weight vector on the task-space 
   /// position error at the terminal stage. 
@@ -172,6 +193,11 @@ public:
                            const Eigen::Vector3d& weight_rotation_terminal);
 
   ///
+  /// @brief Gets the weight vector at the terminal stage. 
+  ///
+  const Vector6d& get_weight_terminal() const { return weight_terminal_; } 
+
+  ///
   /// @brief Sets the weight vector at the impulse stage. 
   /// @param[in] weight_position_impulse Weight vector on the task-space 
   /// position error at the impulse stage. 
@@ -180,6 +206,17 @@ public:
   ///
   void set_weight_impulse(const Eigen::Vector3d& weight_position_impulse,
                           const Eigen::Vector3d& weight_rotation_impulse);
+
+  ///
+  /// @brief Gets the weight vector at the impulse stage. 
+  ///
+  const Vector6d& get_weight_impulse() const { return weight_impulse_; } 
+
+  ///
+  /// @brief Sets (clones) reference and weight parameters from other. 
+  /// @param[in] other other task-space 3D cost. 
+  ///
+  void set_from_other(const std::shared_ptr<TaskSpace6DCost>& other);
 
   ///
   /// @brief Evaluate if the cost is active for given grid_info. 
@@ -267,7 +304,7 @@ public:
 private:
   int frame_id_;
   SE3 const_ref_, const_ref_inv_;
-  Eigen::VectorXd weight_, weight_terminal_, weight_impulse_;
+  Vector6d weight_, weight_terminal_, weight_impulse_;
   std::shared_ptr<TaskSpace6DRefBase> ref_;
   bool use_nonconst_ref_, enable_cost_, enable_cost_terminal_, enable_cost_impulse_;
 };
