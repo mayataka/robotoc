@@ -22,15 +22,9 @@ JumpFootStepPlanner::JumpFootStepPlanner(const Robot& robot)
     jump_length_(Eigen::Vector3d::Zero()),
     R_yaw_(Eigen::Matrix3d::Identity()),
     is_biped_(false) {
-  try {
-    if (robot.maxNumPointContacts() < 4 && robot.maxNumSurfaceContacts() < 2) {
-      throw std::out_of_range(
-          "invalid argument: robot is not a quadrupedal robot or a bipedal robot!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (robot.maxNumPointContacts() < 4 && robot.maxNumSurfaceContacts() < 2) {
+    throw std::out_of_range(
+        "[JumpFootStepPlanner] invalid argument: robot is not a quadrupedal robot or a bipedal robot!");
   }
   if (robot.maxNumPointContacts() < 4 && robot.maxNumSurfaceContacts() >= 2) {
     is_biped_ = true;

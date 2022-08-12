@@ -26,17 +26,11 @@ inline ContactStatus::ContactStatus(
     max_num_contacts_(contact_types.size()),
     contact_mode_id_(contact_mode_id),
     has_active_contacts_(false) {
-  try {
-    if (!contact_frame_names.empty()) {
-      if (contact_types.size() != contact_frame_names.size()) {
-        throw std::invalid_argument(
-            "Invalid argument: non-empty contact_frame_names.size() must be the same as contact_types.size()!");
-      }
+  if (!contact_frame_names.empty()) {
+    if (contact_types.size() != contact_frame_names.size()) {
+      throw std::invalid_argument(
+          "[ContactStatus] invalid argument: non-empty contact_frame_names.size() must be the same as contact_types.size()!");
     }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
   }
 }
 
@@ -95,14 +89,9 @@ inline const std::string& ContactStatus::contactFrameName(
     const int contact_index) const {
   assert(contact_index >= 0);
   assert(contact_index < max_num_contacts_);
-  try {
-    if (contact_frame_names_.empty()) {
-      throw std::runtime_error("Invalid argument: contact_frame_names_ is empty!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (contact_frame_names_.empty()) {
+    throw std::runtime_error(
+        "[ContactStatus] invalid argument: contact_frame_names_ is empty!");
   }
   return contact_frame_names_[contact_index];
 }
@@ -397,27 +386,17 @@ ContactStatus::contactRotations() const {
 
 inline int ContactStatus::findContactIndex(
     const std::string& contact_frame_name) const {
-  try {
-    if (contact_frame_names_.empty()) {
-      throw std::runtime_error("Invalid argument: contact_frame_names_ is empty!");
+  if (contact_frame_names_.empty()) {
+    throw std::runtime_error(
+        "[ContactStatus] invalid argument: contact_frame_names_ is empty!");
+  }
+  for (int i=0; i<contact_frame_names_.size(); ++i) {
+    if (contact_frame_names_[i] == contact_frame_name) {
+      return i;
     }
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  try {
-    for (int i=0; i<contact_frame_names_.size(); ++i) {
-      if (contact_frame_names_[i] == contact_frame_name) {
-        return i;
-      }
-    }
-    throw std::runtime_error("Cannot find the input contact_frame_name: " + contact_frame_name);
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
+  throw std::runtime_error(
+      "[ContactStatus] cannot find the input contact_frame_name: " + contact_frame_name);
 }
 
 

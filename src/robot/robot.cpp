@@ -63,23 +63,17 @@ Robot::Robot(const std::string& path_to_urdf,
              const std::pair<double, double>& baumgarte_weights,
              const double contact_inv_damping)
   : Robot(path_to_urdf, base_joint_type) {
-  try {
-    if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
-      throw std::out_of_range(
-          "Invalid argument: baumgarte_weights must be non-negative!");
-    }
-    if (contact_frames.size() != contact_types.size()) {
-      throw std::out_of_range(
-          "Invalid argument: contact_frames.size() and contact_types.size() must be the same!");
-    }
-    if (contact_inv_damping < 0) {
-      throw std::out_of_range(
-          "Invalid argument: contact_inv_damping must be non-negative!");
-    }
+  if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
+    throw std::out_of_range(
+        "[Robot] invalid argument: baumgarte_weights must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (contact_frames.size() != contact_types.size()) {
+    throw std::out_of_range(
+        "[Robot] invalid argument: contact_frames.size() and contact_types.size() must be the same!");
+  }
+  if (contact_inv_damping < 0) {
+    throw std::out_of_range(
+        "[Robot] invalid argument: contact_inv_damping must be non-negative!");
   }
   baumgarte_weights_ = baumgarte_weights;
   impulse_model_ = model_;
@@ -128,23 +122,17 @@ Robot::Robot(const std::string& path_to_urdf,
              const std::pair<double, double>& baumgarte_weights,
              const double contact_inv_damping)
   : Robot(path_to_urdf, base_joint_type) {
-  try {
-    if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
-      throw std::out_of_range(
-          "Invalid argument: baumgarte_weights must be non-negative!");
-    }
-    if (contact_frame_names.size() != contact_types.size()) {
-      throw std::out_of_range(
-          "Invalid argument: contact_frame_names.size() and contact_types.size() must be the same!");
-    }
-    if (contact_inv_damping < 0) {
-      throw std::out_of_range(
-          "Invalid argument: contact_inv_damping must be non-negative!");
-    }
+  if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
+    throw std::out_of_range(
+        "[Robot] invalid argument: baumgarte_weights must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (contact_frame_names.size() != contact_types.size()) {
+    throw std::out_of_range(
+        "[Robot] invalid argument: contact_frame_names.size() and contact_types.size() must be the same!");
+  }
+  if (contact_inv_damping < 0) {
+    throw std::out_of_range(
+        "[Robot] invalid argument: contact_inv_damping must be non-negative!");
   }
   baumgarte_weights_ = baumgarte_weights;
   impulse_model_ = model_;
@@ -155,15 +143,8 @@ Robot::Robot(const std::string& path_to_urdf,
   max_num_contacts_ = contact_frame_names.size();
   contact_frames_.clear();
   for (const auto& e : contact_frame_names) {
-    try {
-      if (!model_.existFrame(e)) {
-        throw std::invalid_argument(
-            "Invalid argument: frame " + e + " does not exit!");
-      }
-    }
-    catch(const std::exception& e) {
-      std::cerr << e.what() << '\n';
-      std::exit(EXIT_FAILURE);
+    if (!model_.existFrame(e)) {
+      throw std::invalid_argument("[Robot] invalid argument: frame " + e + " does not exit!");
     }
     contact_frames_.push_back(model_.getFrameId(e));
   }
@@ -287,32 +268,20 @@ void Robot::initializeJointLimits() {
 
 
 void Robot::setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit) {
-  try {
-    if (joint_effort_limit_.size() != joint_effort_limit.size()) {
-      throw std::invalid_argument(
-          "Invalid argument: joint_effort_limit.size() must be " 
-          + std::to_string(joint_effort_limit_.size()));
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (joint_effort_limit_.size() != joint_effort_limit.size()) {
+    throw std::invalid_argument(
+        "[Robot] invalid argument: joint_effort_limit.size() must be " 
+        + std::to_string(joint_effort_limit_.size()));
   }
   joint_effort_limit_ = joint_effort_limit;
 }
 
 
 void Robot::setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit) {
-  try {
-    if (joint_velocity_limit_.size() != joint_velocity_limit.size()) {
-      throw std::invalid_argument(
-          "Invalid argument: joint_velocity_limit.size() must be " 
-          + std::to_string(joint_velocity_limit_.size()));
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (joint_velocity_limit_.size() != joint_velocity_limit.size()) {
+    throw std::invalid_argument(
+        "[Robot] invalid argument: joint_velocity_limit.size() must be " 
+        + std::to_string(joint_velocity_limit_.size()));
   }
   joint_velocity_limit_ = joint_velocity_limit;
 }
@@ -320,16 +289,10 @@ void Robot::setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit) {
 
 void Robot::setLowerJointPositionLimit(
     const Eigen::VectorXd& lower_joint_position_limit) {
-  try {
-    if (lower_joint_position_limit_.size() != lower_joint_position_limit.size()) {
-      throw std::invalid_argument(
-          "Invalid argument: lower_joint_position_limit.size() must be " 
-          + std::to_string(lower_joint_position_limit_.size()));
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (lower_joint_position_limit_.size() != lower_joint_position_limit.size()) {
+    throw std::invalid_argument(
+        "[Robot] invalid argument: lower_joint_position_limit.size() must be " 
+        + std::to_string(lower_joint_position_limit_.size()));
   }
   lower_joint_position_limit_ = lower_joint_position_limit;
 }
@@ -337,16 +300,10 @@ void Robot::setLowerJointPositionLimit(
 
 void Robot::setUpperJointPositionLimit(
     const Eigen::VectorXd& upper_joint_position_limit) {
-  try {
-    if (upper_joint_position_limit_.size() != upper_joint_position_limit.size()) {
-      throw std::invalid_argument(
-          "Invalid argument: upper_joint_position_limit.size() must be " 
-          + std::to_string(upper_joint_position_limit_.size()));
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (upper_joint_position_limit_.size() != upper_joint_position_limit.size()) {
+    throw std::invalid_argument(
+        "[Robot] invalid argument: upper_joint_position_limit.size() must be " 
+        + std::to_string(upper_joint_position_limit_.size()));
   }
   upper_joint_position_limit_ = upper_joint_position_limit;
 }

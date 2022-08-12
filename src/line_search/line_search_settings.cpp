@@ -19,23 +19,21 @@ LineSearchSettings::LineSearchSettings(const LineSearchMethod _line_search_metho
     armijo_control_rate(_armijo_control_rate),
     margin_rate(_margin_rate),
     eps(_eps) {
-  try {
-    if (step_size_reduction_rate <= 0) {
-      throw std::out_of_range("invalid value: step_size_reduction_rate must be positive!");
-    }
-    if (min_step_size <= 0) {
-      throw std::out_of_range("invalid value: min_step_size must be positive!");
-    }
-    if (armijo_control_rate <= 0) {
-      throw std::out_of_range("invalid value: min_step_size must be positive!");
-    }
-    if (margin_rate <= 0) {
-      throw std::out_of_range("invalid value: margin_rate must be positive!");
-    }
+  if (step_size_reduction_rate <= 0) {
+    throw std::out_of_range(
+        "[LineSearchSettings] invalid argument: step_size_reduction_rate must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (min_step_size <= 0) {
+    throw std::out_of_range(
+        "[LineSearchSettings] invalid argument: min_step_size must be positive!");
+  }
+  if (armijo_control_rate <= 0) {
+    throw std::out_of_range(
+        "[LineSearchSettings] invalid argument: min_step_size must be positive!");
+  }
+  if (margin_rate <= 0) {
+    throw std::out_of_range(
+        "[LineSearchSettings] invalid argument: margin_rate must be positive!");
   }
 }
 

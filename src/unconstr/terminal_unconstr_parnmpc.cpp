@@ -21,19 +21,13 @@ TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
-  try {
-    if (robot.hasFloatingBase()) {
-      throw std::logic_error(
-          "robot has floating base: robot should have no constraints!");
-    }
-    if (robot.maxNumContacts() > 0) {
-      throw std::logic_error(
-          "robot can have contacts: robot should have no constraints!");
-    }
+  if (robot.hasFloatingBase()) {
+    throw std::logic_error(
+        "[TerminalUnconstrParNMPC] robot has floating base: robot should have no constraints!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (robot.maxNumContacts() > 0) {
+    throw std::logic_error(
+        "[TerminalUnconstrParNMPC] robot can have contacts: robot should have no constraints!");
   }
 }
 

@@ -105,29 +105,23 @@ void MPCJump::setJumpPattern(
     const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
     const double flying_time, const double min_flying_time, 
     const double ground_time, const double min_ground_time) {
-  try {
-    if (flying_time <= 0) {
-      throw std::out_of_range("invalid value: flying_time must be positive!");
-    }
-    if (min_flying_time <= 0) {
-      throw std::out_of_range("invalid value: min_flying_time must be positive!");
-    }
-    if (ground_time <= 0) {
-      throw std::out_of_range("invalid value: ground_time must be positive!");
-    }
-    if (min_ground_time <= 0) {
-      throw std::out_of_range("invalid value: min_ground_time must be positive!");
-    }
-    if (flying_time+ground_time > T_) {
-      throw std::out_of_range("invalid value: flying_time+ground_time must be less than T!");
-    }
-    if (min_flying_time+min_ground_time > T_) {
-      throw std::out_of_range("invalid value: min_flying_time+min_ground_time must be less than T!");
-    }
+  if (flying_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: flying_time must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (min_flying_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: min_flying_time must be positive!");
+  }
+  if (ground_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: ground_time must be positive!");
+  }
+  if (min_ground_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: min_ground_time must be positive!");
+  }
+  if (flying_time+ground_time > T_) {
+    throw std::out_of_range("[MPCJump] invalid argument: flying_time+ground_time must be less than T!");
+  }
+  if (min_flying_time+min_ground_time > T_) {
+    throw std::out_of_range("[MPCJump] invalid argument: min_flying_time+min_ground_time must be less than T!");
   }
   foot_step_planner_ = foot_step_planner;
   flying_time_ = flying_time;

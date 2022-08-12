@@ -12,17 +12,13 @@ LineSearchFilter::LineSearchFilter(const double cost_reduction_rate,
   : filter_(),
     cost_reduction_rate_(cost_reduction_rate),
     constraints_reduction_rate_(constraints_reduction_rate) {
-  try {
-    if (cost_reduction_rate_ <= 0) {
-      throw std::out_of_range("invalid value: cost_reduction_rate must be positive!");
-    }
-    if (constraints_reduction_rate_ <= 0) {
-      throw std::out_of_range("invalid value: constraints_reduction_rate must be positive!");
-    }
+  if (cost_reduction_rate_ <= 0) {
+    throw std::out_of_range(
+        "[LineSearchFilter] invalid argument: cost_reduction_rate must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (constraints_reduction_rate_ <= 0) {
+    throw std::out_of_range(
+        "[LineSearchFilter] invalid argument: constraints_reduction_rate must be positive!");
   }
 }
 

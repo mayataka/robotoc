@@ -20,14 +20,8 @@ RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads,
         Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.reservedNumDiscreteEvents())), 
     max_dual_step_sizes_(
         Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.reservedNumDiscreteEvents())) {
-  try {
-    if (nthreads <= 0) {
-      throw std::out_of_range("invalid value: nthreads must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (nthreads <= 0) {
+    throw std::out_of_range("[RiccatiRecursion] invalid argument: nthreads must be positive!");
   }
 }
 
