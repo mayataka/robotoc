@@ -44,7 +44,7 @@ void LocalContactForceCost::set_f_ref(
     const std::vector<Eigen::Vector3d>& f_ref) {
   if (f_ref.size() != max_num_contacts_) {
     throw std::invalid_argument(
-        "invalid size: f_ref.size() must be " 
+        "[LocalContactForceCost] invalid argument: f_ref.size() must be " 
         + std::to_string(max_num_contacts_) + "!");
   }
   f_ref_ = f_ref;
@@ -55,7 +55,7 @@ void LocalContactForceCost::set_f_weight(
     const std::vector<Eigen::Vector3d>& f_weight) {
   if (f_weight.size() != max_num_contacts_) {
     throw std::invalid_argument(
-        "invalid size: f_weight.size() must be " 
+        "[LocalContactForceCost] invalid argument: f_weight.size() must be " 
         + std::to_string(max_num_contacts_) + "!");
   }
   f_weight_ = f_weight;
@@ -66,7 +66,7 @@ void LocalContactForceCost::set_fi_ref(
     const std::vector<Eigen::Vector3d>& fi_ref) {
   if (fi_ref.size() != max_num_contacts_) {
     throw std::invalid_argument(
-        "invalid size: f_ref.size() must be " 
+        "[LocalContactForceCost] invalid argument: f_ref.size() must be " 
         + std::to_string(max_num_contacts_) + "!");
   }
   fi_ref_ = fi_ref;
@@ -77,7 +77,7 @@ void LocalContactForceCost::set_fi_weight(
     const std::vector<Eigen::Vector3d>& fi_weight) {
   if (fi_weight.size() != max_num_contacts_) {
     throw std::invalid_argument(
-        "invalid size: f_weight.size() must be " 
+        "[LocalContactForceCost] invalid argument: f_weight.size() must be " 
         + std::to_string(max_num_contacts_) + "!");
   }
   fi_weight_ = fi_weight;

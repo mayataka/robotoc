@@ -14,15 +14,16 @@ inline ConstraintComponentBase::ConstraintComponentBase(
   : barrier_(_barrier),
     fraction_to_boundary_rule_(_fraction_to_boundary_rule) {
   if (_barrier <= 0) {
-    throw std::out_of_range("Invalid argment: barrirer must be positive!");
+    throw std::out_of_range(
+        "[ConstraintComponentBase] invalid argment: barrirer must be positive!");
   }
   if (_fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be positive!");
+        "[ConstraintComponentBase] invalid argment: fraction_to_boundary_rule must be positive!");
   }
   if (_fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+        "[ConstraintComponentBase] invalid argment: fraction_to_boundary_rule must be less than 1!");
   }
 }
 

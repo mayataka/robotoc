@@ -49,7 +49,7 @@ void DiscreteTimeSwingFootRef::setSwingFootRef(
 
 
 void DiscreteTimeSwingFootRef::updateRef(const GridInfo& grid_info,
-                                              Eigen::VectorXd& x3d_ref) const {
+                                         Eigen::VectorXd& x3d_ref) const {
   if (!is_contact_active_[grid_info.contact_phase]) {
     double rate = static_cast<double>(grid_info.grid_count_in_phase) 
                     / static_cast<double>(grid_info.N_phase);

@@ -18,13 +18,13 @@ ImpulseWrenchFrictionCone::ImpulseWrenchFrictionCone(
     Y_(Y),
     cone_(Eigen::MatrixXd::Zero(17, 6)) {
   if (mu <= 0) {
-    throw std::out_of_range("Invalid argument: mu must be positive!");
+    throw std::out_of_range("[ImpulseWrenchFrictionCone] invalid argument: mu must be positive!");
   }
   if (X <= 0) {
-    throw std::out_of_range("Invalid argument: X must be positive!");
+    throw std::out_of_range("[ImpulseWrenchFrictionCone] invalid argument: X must be positive!");
   }
   if (Y <= 0) {
-    throw std::out_of_range("Invalid argument: Y must be positive!");
+    throw std::out_of_range("[ImpulseWrenchFrictionCone] invalid argument: Y must be positive!");
   }
   setCone(mu, X, Y);
 }
@@ -50,7 +50,7 @@ ImpulseWrenchFrictionCone::~ImpulseWrenchFrictionCone() {
 
 void ImpulseWrenchFrictionCone::setFrictionCoefficient(const double mu) {
   if (mu <= 0) {
-    throw std::out_of_range("Invalid argument: mu must be positive!");
+    throw std::out_of_range("[ImpulseWrenchFrictionCone] invalid argument: mu must be positive!");
   }
   mu_ = mu;
   cone_ <<  0,  0, -1, 
@@ -63,10 +63,10 @@ void ImpulseWrenchFrictionCone::setFrictionCoefficient(const double mu) {
 
 void ImpulseWrenchFrictionCone::setRectangular(const double X, const double Y) {
   if (X <= 0) {
-    throw std::out_of_range("Invalid argument: X must be positive!");
+    throw std::out_of_range("[ImpulseWrenchFrictionCone] invalid argument: X must be positive!");
   }
   if (Y <= 0) {
-    throw std::out_of_range("Invalid argument: Y must be positive!");
+    throw std::out_of_range("[ImpulseWrenchFrictionCone] invalid argument: Y must be positive!");
   }
   X_ = X;
   Y_ = Y;
