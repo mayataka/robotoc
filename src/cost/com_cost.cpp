@@ -70,15 +70,9 @@ void CoMCost::set_const_ref(const Eigen::Vector3d& const_ref) {
 
 
 void CoMCost::set_weight(const Eigen::Vector3d& weight) {
-  try {
-    if (weight.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight must be non-negative!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (weight.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "invalid argument: elements of weight must be non-negative!");
   }
   weight_ = weight;
   enable_cost_ = (!weight.isZero());
@@ -86,15 +80,9 @@ void CoMCost::set_weight(const Eigen::Vector3d& weight) {
 
 
 void CoMCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal) {
-  try {
-    if (weight_terminal.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight must be non-negative!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (weight_terminal.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "invalid argument: elements of weight must be non-negative!");
   }
   weight_terminal_ = weight_terminal;
   enable_cost_terminal_ = (!weight_terminal.isZero());
@@ -102,15 +90,9 @@ void CoMCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal) {
 
 
 void CoMCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
-  try {
-    if (weight_impulse.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight must be non-negative!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (weight_impulse.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "invalid argument: elements of weight must be non-negative!");
   }
   weight_impulse_ = weight_impulse;
   enable_cost_impulse_ = (!weight_impulse.isZero());
