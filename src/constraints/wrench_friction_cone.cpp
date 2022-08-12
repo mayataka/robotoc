@@ -18,27 +18,14 @@ WrenchFrictionCone::WrenchFrictionCone(const Robot& robot, const double mu,
     X_(X),
     Y_(Y),
     cone_(Eigen::MatrixXd::Zero(17, 6)) {
-  try {
-    if (robot.maxNumContacts() == 0) {
-      throw std::out_of_range(
-          "Invalid argument: robot.maxNumContacts() must be positive!");
-    }
-    if (mu <= 0) {
-      throw std::out_of_range(
-          "Invalid argument: mu must be positive!");
-    }
-    if (X <= 0) {
-      throw std::out_of_range(
-          "Invalid argument: X must be positive!");
-    }
-    if (Y <= 0) {
-      throw std::out_of_range(
-          "Invalid argument: Y must be positive!");
-    }
+  if (mu <= 0) {
+    throw std::out_of_range("Invalid argument: mu must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (X <= 0) {
+    throw std::out_of_range("Invalid argument: X must be positive!");
+  }
+  if (Y <= 0) {
+    throw std::out_of_range("Invalid argument: Y must be positive!");
   }
   setCone(mu, X, Y);
 }
@@ -63,14 +50,8 @@ WrenchFrictionCone::~WrenchFrictionCone() {
 
 
 void WrenchFrictionCone::setFrictionCoefficient(const double mu) {
-  try {
-    if (mu <= 0) {
-      throw std::out_of_range("Invalid argument: mu must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (mu <= 0) {
+    throw std::out_of_range("Invalid argument: mu must be positive!");
   }
   mu_ = mu;
   setCone(mu_, X_, Y_);
@@ -78,19 +59,11 @@ void WrenchFrictionCone::setFrictionCoefficient(const double mu) {
 
 
 void WrenchFrictionCone::setRectangular(const double X, const double Y) {
-  try {
-    if (X <= 0) {
-      throw std::out_of_range(
-          "Invalid argument: X must be positive!");
-    }
-    if (Y <= 0) {
-      throw std::out_of_range(
-          "Invalid argument: Y must be positive!");
-    }
+  if (X <= 0) {
+    throw std::out_of_range("Invalid argument: X must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (Y <= 0) {
+    throw std::out_of_range("Invalid argument: Y must be positive!");
   }
   X_ = X;
   Y_ = Y;

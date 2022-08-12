@@ -23,19 +23,13 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
     r(),
     J(),
     dimc_(dimc) {
-  try {
-    if (dimc <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: dimc must be positive!");
-    }
-    if (barrier <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: barrirer must be positive!");
-    }
+  if (dimc <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: dimc must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (barrier <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: barrirer must be positive!");
   }
 }
 
