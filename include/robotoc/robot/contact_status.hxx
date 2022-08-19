@@ -28,12 +28,10 @@ inline ContactStatus::ContactStatus(
     max_num_contacts_(contact_types.size()),
     contact_mode_id_(contact_mode_id),
     has_active_contacts_(false) {
-  // if (!contact_frame_names.empty()) {
   if (contact_types.size() != contact_frame_names.size()) {
     throw std::invalid_argument(
         "[ContactStatus] invalid argument: contact_frame_names.size() must be the same as contact_types.size()!");
   }
-  // }
   if (default_friction_coefficients <= 0.0) {
     throw std::invalid_argument("[ContactStatus] invalid argument: 'default_friction_coefficients' must be positive!");
   }
