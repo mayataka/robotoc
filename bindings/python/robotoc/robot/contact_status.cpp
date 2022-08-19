@@ -20,9 +20,9 @@ PYBIND11_MODULE(contact_status, m) {
     .export_values();
 
   py::class_<ContactStatus>(m, "ContactStatus")
-    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const int>(),
+    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double, const int>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
-          py::arg("contact_mode_id")=0)
+          py::arg("default_friction_coefficient")=0.7, py::arg("contact_mode_id")=0)
     .def("max_num_contacts", &ContactStatus::maxNumContacts)
     .def("is_contact_active", 
           static_cast<bool (ContactStatus::*)(const int) const>(&ContactStatus::isContactActive),
@@ -114,6 +114,25 @@ PYBIND11_MODULE(contact_status, m) {
           static_cast<const Eigen::Matrix3d& (ContactStatus::*)(const std::string&) const>(&ContactStatus::contactRotation),
           py::arg("contact_frame_name"))
     .def("contact_rotations", &ContactStatus::contactRotations)
+    .def("set_friction_coefficient", 
+          static_cast<void (ContactStatus::*)(const int, const double)>(&ContactStatus::setFrictionCoefficient),
+          py::arg("contact_index"), py::arg("friction_coefficient"))
+    .def("set_friction_coefficient", 
+          static_cast<void (ContactStatus::*)(const std::string&, const double)>(&ContactStatus::setFrictionCoefficient),
+          py::arg("contact_frame_name"), py::arg("friction_coefficient"))
+    .def("set_friction_coefficients", 
+          static_cast<void (ContactStatus::*)(const std::vector<double>&)>(&ContactStatus::setFrictionCoefficients),
+          py::arg("friction_coefficients"))
+    .def("set_friction_coefficients", 
+          static_cast<void (ContactStatus::*)(const std::unordered_map<std::string, double>&)>(&ContactStatus::setFrictionCoefficients),
+          py::arg("friction_coefficients"))
+    .def("friction_coefficient", 
+          static_cast<double (ContactStatus::*)(const int) const>(&ContactStatus::frictionCoefficient),
+          py::arg("contact_index"))
+    .def("friction_coefficient", 
+          static_cast<double (ContactStatus::*)(const std::string&) const>(&ContactStatus::frictionCoefficient),
+          py::arg("contact_frame_name"))
+    .def("friction_coefficients", &ContactStatus::frictionCoefficients)
     .def("find_contact_index", &ContactStatus::findContactIndex,
           py::arg("contact_frame_name"))
     .def("set_contact_mode_id", &ContactStatus::setContactModeId,

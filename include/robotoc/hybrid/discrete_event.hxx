@@ -8,23 +8,14 @@
 
 namespace robotoc {
 
-inline DiscreteEvent::DiscreteEvent(
-    const std::vector<ContactType>& contact_types)
-  : pre_contact_status_(contact_types),
-    post_contact_status_(contact_types),
-    impulse_status_(contact_types),
-    max_num_contacts_(contact_types.size()),
-    event_type_(DiscreteEventType::None),
-    exist_impulse_(false), 
-    exist_lift_(false) {
-}
-
-
 inline DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status, 
                                     const ContactStatus& post_contact_status)
-  : pre_contact_status_(pre_contact_status.contactTypes()),
-    post_contact_status_(pre_contact_status.contactTypes()),
-    impulse_status_(pre_contact_status.contactTypes()),
+  : pre_contact_status_(pre_contact_status.contactTypes(), 
+                        pre_contact_status.contactFrameNames()),
+    post_contact_status_(pre_contact_status.contactTypes(), 
+                         pre_contact_status.contactFrameNames()),
+    impulse_status_(pre_contact_status.contactTypes(), 
+                    pre_contact_status.contactFrameNames()),
     max_num_contacts_(pre_contact_status.maxNumContacts()),
     event_type_(DiscreteEventType::None),
     exist_impulse_(false), 
@@ -102,6 +93,7 @@ inline void DiscreteEvent::setDiscreteEvent(
       }
     }
   }
+  impulse_status_.setFrictionCoefficients(pre_contact_status.frictionCoefficients());
   impulse_status_.setImpulseModeId(pre_contact_status.contactModeId());
   setContactPlacements(post_contact_status.contactPositions(),
                        post_contact_status.contactRotations());

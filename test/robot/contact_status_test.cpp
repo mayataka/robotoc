@@ -53,6 +53,10 @@ TEST_F(ContactStatusTest, constructor) {
     EXPECT_TRUE(contact_status.contactPosition(i).isZero());
     EXPECT_TRUE(contact_status.contactRotation(i).isIdentity());
   }
+  EXPECT_EQ(contact_status.frictionCoefficients().size(), max_num_contacts);
+  for (int i=0; i<contact_status.maxNumContacts(); ++i) {
+    EXPECT_DOUBLE_EQ(contact_status.frictionCoefficient(i), 0.7);
+  }
 }
 
 

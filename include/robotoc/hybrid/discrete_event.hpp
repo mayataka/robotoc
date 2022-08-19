@@ -26,13 +26,7 @@ enum class DiscreteEventType {
 class DiscreteEvent {
 public:
   ///
-  /// @brief Constructor. 
-  /// @param[in] contact_types Types of contacts. 
-  ///
-  DiscreteEvent(const std::vector<ContactType>& contact_types);
-
-  ///
-  /// @brief Set the contact status from two sequential contact status.
+  /// @brief Constructs discrete event from two sequential contact status.
   /// The impulse mode id of this event is set to contactModeId() of 
   /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 

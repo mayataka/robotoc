@@ -15,6 +15,10 @@ protected:
     std::random_device rnd;
     max_num_contacts = 10;
     contact_types = std::vector<ContactType>(max_num_contacts, ContactType::PointContact);
+    contact_frame_names.clear();
+    for (int i=0; i<max_num_contacts; ++i) {
+      contact_frame_names.push_back(std::to_string(i));
+    }
   }
 
   virtual void TearDown() {
@@ -22,12 +26,13 @@ protected:
 
   int max_num_contacts;
   std::vector<ContactType> contact_types;
+  std::vector<std::string> contact_frame_names;
 };
 
 
 TEST_F(ImpulseStatusTest, constructor) {
-  ImpulseStatus impulse_status(contact_types);
-  ContactStatus contact_status(contact_types);
+  ImpulseStatus impulse_status(contact_types, contact_frame_names);
+  ContactStatus contact_status(contact_types, contact_frame_names);
   EXPECT_EQ(contact_status.maxNumContacts(), impulse_status.maxNumContacts());
   EXPECT_FALSE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(impulse_status.dimi(), 0);
@@ -46,8 +51,8 @@ TEST_F(ImpulseStatusTest, constructor) {
 
 
 TEST_F(ImpulseStatusTest, comparison) {
-  ImpulseStatus impulse_status1(contact_types);
-  ImpulseStatus impulse_status2(contact_types);
+  ImpulseStatus impulse_status1(contact_types, contact_frame_names);
+  ImpulseStatus impulse_status2(contact_types, contact_frame_names);
   impulse_status1.activateImpulses({5, 6, 7});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
   impulse_status2.activateImpulses({1, 2, 3});
@@ -60,8 +65,8 @@ TEST_F(ImpulseStatusTest, comparison) {
 
 
 TEST_F(ImpulseStatusTest, activate) {
-  ImpulseStatus impulse_status(contact_types);
-  ContactStatus contact_status(contact_types);
+  ImpulseStatus impulse_status(contact_types, contact_frame_names);
+  ContactStatus contact_status(contact_types, contact_frame_names);
   contact_status.activateContact(3);
   impulse_status.activateImpulse(3);
   EXPECT_TRUE(contact_status.hasActiveContacts());
@@ -107,8 +112,8 @@ TEST_F(ImpulseStatusTest, activate) {
 
 
 TEST_F(ImpulseStatusTest, deactivate) {
-  ImpulseStatus impulse_status(contact_types);
-  ContactStatus contact_status(contact_types);
+  ImpulseStatus impulse_status(contact_types, contact_frame_names);
+  ContactStatus contact_status(contact_types, contact_frame_names);
   for (int i=0; i<contact_types.size(); ++i) {
     contact_status.activateContact(i);
     impulse_status.activateImpulse(i);

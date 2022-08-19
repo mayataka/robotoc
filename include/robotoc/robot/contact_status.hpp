@@ -34,12 +34,15 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] contact_types Types of contacts. 
-  /// @param[in] contact_frame_names Names of contact frames. Default is empty.
+  /// @param[in] contact_frame_names Names of contact frames. 
+  /// @param[in] default_friction_coefficient Default friction coefficitn. 
+  /// Must be positive. Default is 0.7.
   /// @param[in] contact_mode_id Identifier number of the contact mode. Can be  
   /// used only in user-defined cost and constraints. Default is 0.
   ///
   ContactStatus(const std::vector<ContactType>& contact_types, 
-                const std::vector<std::string>& contact_frame_names={},
+                const std::vector<std::string>& contact_frame_names,
+                const double default_friction_coefficient=0.7,
                 const int contact_mode_id=0);
 
   ///
@@ -392,6 +395,57 @@ public:
   const std::vector<Eigen::Matrix3d>& contactRotations() const;
 
   ///
+  /// @brief Gets the friction coefficint.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
+  ///
+  void setFrictionCoefficient(const int contact_index, 
+                              const double friction_coefficient);
+
+  ///
+  /// @brief Gets the friction coefficint.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
+  ///
+  void setFrictionCoefficient(const std::string& contact_frame_name, 
+                              const double friction_coefficient);
+
+  ///
+  /// @brief Sets the friction coefficints.
+  /// @param[in] friction_coefficients Friction coefficients. 
+  /// Size must be ContactStatus::maxNumContacts() and each element must be positive.
+  ///
+  void setFrictionCoefficients(const std::vector<double>& friction_coefficients);
+
+  ///
+  /// @brief Sets the friction coefficints.
+  /// @param[in] friction_coefficients Friction coefficients. 
+  /// Size must be ContactStatus::maxNumContacts() and each element must be positive.
+  ///
+  void setFrictionCoefficients(
+      const std::unordered_map<std::string, double>& friction_coefficients);
+
+  ///
+  /// @brief Gets the friction coefficint. Default value is 0.7.
+  /// @param[in] contact_index Index of the contact.
+  /// @return Friction coefficient of the contact. 
+  ///
+  double frictionCoefficient(const int contact_index) const;
+
+  ///
+  /// @brief Gets the friction coefficint. Default value is 0.7.
+  /// @param[in] contact_frame_name Name of the contact frame.
+  /// @return Friction coefficient of the contact. 
+  ///
+  double frictionCoefficient(const std::string& contact_frame_name) const;
+
+  ///
+  /// @brief Gets the friction coefficints. Default value is 0.7.
+  /// @return Friction coefficients of the contacts. 
+  ///
+  const std::vector<double>& frictionCoefficients() const;
+
+  ///
   /// @brief Finds the contact index correspoinding to the input contact frame name.
   /// @param[in] contact_frame_name Name of the contact frame.
   /// @return Contact index. 
@@ -434,6 +488,7 @@ private:
   aligned_vector<SE3> contact_placements_;
   std::vector<Eigen::Vector3d> contact_positions_;
   std::vector<Eigen::Matrix3d> contact_rotations_;
+  std::vector<double> friction_coefficients_;
   int dimf_, max_contacts_, max_num_contacts_, contact_mode_id_;
   bool has_active_contacts_;
 
