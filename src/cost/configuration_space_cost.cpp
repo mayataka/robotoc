@@ -248,11 +248,6 @@ void ConfigurationSpaceCost::set_dv_weight_impulse(
 }
 
 
-bool ConfigurationSpaceCost::useKinematics() const {
-  return false;
-}
-
-
 double ConfigurationSpaceCost::evalStageCost(Robot& robot, 
                                              const ContactStatus& contact_status, 
                                              CostFunctionData& data, 

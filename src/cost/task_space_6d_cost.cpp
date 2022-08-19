@@ -161,11 +161,6 @@ void TaskSpace6DCost::set_weight_impulse(
 }
 
 
-bool TaskSpace6DCost::useKinematics() const {
-  return true;
-}
-
-
 double TaskSpace6DCost::evalStageCost(Robot& robot, 
                                       const ContactStatus& contact_status, 
                                       CostFunctionData& data, 

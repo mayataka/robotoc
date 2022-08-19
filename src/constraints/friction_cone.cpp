@@ -87,11 +87,6 @@ void FrictionCone::setFrictionCoefficient(const std::vector<double>& mu) {
 }
 
 
-bool FrictionCone::useKinematics() const {
-  return true;
-}
-
-
 KinematicsLevel FrictionCone::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }

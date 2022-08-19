@@ -71,20 +71,6 @@ void Constraints::clear() {
 }
 
 
-bool Constraints::useKinematics() const {
-  if (constraintsimpl::useKinematics(position_level_constraints_)) {
-    return true;
-  }
-  if (constraintsimpl::useKinematics(velocity_level_constraints_)) {
-    return true;
-  }
-  if (constraintsimpl::useKinematics(acceleration_level_constraints_)) {
-    return true;
-  }
-  return false;
-}
-
-
 ConstraintsData Constraints::createConstraintsData(const Robot& robot, 
                                                    const int time_stage) const {
   ConstraintsData data(time_stage);

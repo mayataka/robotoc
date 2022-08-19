@@ -92,14 +92,6 @@ public:
   void clear();
 
   ///
-  /// @brief Checks if the constraints component requres kinematics of robot 
-  /// model.
-  /// @return true if the constraints component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  bool useKinematics() const;
-
-  ///
   /// @brief Creates ConstraintsData according to robot model and constraint 
   /// components. 
   /// @param[in] robot Robot model.

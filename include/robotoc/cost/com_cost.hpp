@@ -141,8 +141,6 @@ public:
     }
   }
 
-  bool useKinematics() const override;
-
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
                        CostFunctionData& data, const GridInfo& grid_info, 
                        const SplitSolution& s) const override;

@@ -58,8 +58,6 @@ public:
   JointVelocityUpperLimit& operator=(
       JointVelocityUpperLimit&&) noexcept = default;
 
-  bool useKinematics() const override;
-
   KinematicsLevel kinematicsLevel() const override;
 
   void allocateExtraData(ConstraintComponentData& data) const override {}

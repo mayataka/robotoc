@@ -22,11 +22,6 @@ JointAccelerationUpperLimit::~JointAccelerationUpperLimit() {
 }
 
 
-bool JointAccelerationUpperLimit::useKinematics() const {
-  return false;
-}
-
-
 KinematicsLevel JointAccelerationUpperLimit::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }

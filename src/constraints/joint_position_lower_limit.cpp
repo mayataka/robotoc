@@ -21,11 +21,6 @@ JointPositionLowerLimit::~JointPositionLowerLimit() {
 }
 
 
-bool JointPositionLowerLimit::useKinematics() const {
-  return false;
-}
-
-
 KinematicsLevel JointPositionLowerLimit::kinematicsLevel() const {
   return KinematicsLevel::PositionLevel;
 }

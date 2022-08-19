@@ -40,7 +40,6 @@ protected:
 
 void JointVelocityUpperLimitTest::test_kinematics(Robot& robot) const {
   JointVelocityUpperLimit constr(robot); 
-  EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::VelocityLevel);
 }
 

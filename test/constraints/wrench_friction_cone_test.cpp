@@ -67,7 +67,6 @@ protected:
 void WrenchFrictionConeTest::test_kinematics(Robot& robot, 
                                              const ContactStatus& contact_status) const {
   WrenchFrictionCone constr(robot, mu, X, Y); 
-  EXPECT_TRUE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 

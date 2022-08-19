@@ -116,7 +116,6 @@ void ConfigurationSpaceCostTest::testStageCostConstRef(Robot& robot) const {
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimu);
   auto cost = std::make_shared<ConfigurationSpaceCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight(q_weight);
   cost->set_v_weight(v_weight);
   cost->set_a_weight(a_weight);
@@ -190,7 +189,6 @@ void ConfigurationSpaceCostTest::testTerminalCostConstRef(Robot& robot) const {
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   auto cost = std::make_shared<ConfigurationSpaceCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight_terminal(q_weight_terminal);
   cost->set_v_weight_terminal(v_weight_terminal);
   cost->set_q_ref(q_ref);
@@ -256,7 +254,6 @@ void ConfigurationSpaceCostTest::testImpulseCostConstRef(Robot& robot) const {
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   auto cost = std::make_shared<ConfigurationSpaceCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight_impulse(q_weight_impulse);
   cost->set_v_weight_impulse(v_weight_impulse);
   cost->set_dv_weight_impulse(dv_weight_impulse);
@@ -322,7 +319,6 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   auto ref = std::make_shared<TestConfigurationSpaceRef>(q0_ref, v_ref, t0, tf);
   auto cost = std::make_shared<ConfigurationSpaceCost>(robot, ref);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight(q_weight);
 
   const auto s = SplitSolution::Random(robot);
@@ -384,7 +380,6 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   auto ref = std::make_shared<TestConfigurationSpaceRef>(q0_ref, v_ref, t0, tf);
   auto cost = std::make_shared<ConfigurationSpaceCost>(robot, ref);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight_terminal(q_weight_terminal);
 
   const auto s = SplitSolution::Random(robot);
@@ -445,7 +440,6 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   auto ref = std::make_shared<TestConfigurationSpaceRef>(q0_ref, v_ref, t0, tf);
   auto cost = std::make_shared<ConfigurationSpaceCost>(robot, ref);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight_impulse(q_weight_impulse);
 
   const auto s = ImpulseSplitSolution::Random(robot);

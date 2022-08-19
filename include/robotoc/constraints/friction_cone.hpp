@@ -81,8 +81,6 @@ public:
   ///
   void setFrictionCoefficient(const std::vector<double>& mu);
 
-  bool useKinematics() const override;
-
   KinematicsLevel kinematicsLevel() const override;
 
   void allocateExtraData(ConstraintComponentData& data) const override;

@@ -81,11 +81,6 @@ void WrenchFrictionCone::setRectangular(const double X, const double Y) {
 }
 
 
-bool WrenchFrictionCone::useKinematics() const {
-  return true;
-}
-
-
 KinematicsLevel WrenchFrictionCone::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }

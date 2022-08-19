@@ -40,7 +40,6 @@ protected:
 
 void JointPositionLowerLimitTest::test_kinematics(Robot& robot) const {
   JointPositionLowerLimit constr(robot); 
-  EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::PositionLevel);
 }
 

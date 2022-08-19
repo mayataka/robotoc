@@ -98,7 +98,6 @@ void CoMCostTest::testStageCostConstRef(Robot& robot) const {
   const Eigen::Vector3d const_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<CoMCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -134,7 +133,6 @@ void CoMCostTest::testTerminalCostConstRef(Robot& robot) const {
   const Eigen::Vector3d const_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<CoMCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -169,7 +167,6 @@ void CoMCostTest::testImpulseCostConstRef(Robot& robot) const {
   const Eigen::Vector3d const_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<CoMCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -209,7 +206,6 @@ void CoMCostTest::testStageCost(Robot& robot) const {
   auto cost = std::make_shared<CoMCost>(robot, ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -261,7 +257,6 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
   auto cost = std::make_shared<CoMCost>(robot, ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -313,7 +308,6 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
   cost->set_ref(ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);

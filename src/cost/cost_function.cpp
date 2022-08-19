@@ -82,16 +82,6 @@ void CostFunction::clear() {
 }
 
 
-bool CostFunction::useKinematics() const {
-  for (const auto cost : costs_) {
-    if (cost->useKinematics()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
 CostFunctionData CostFunction::createCostFunctionData(const Robot& robot) const {
   auto data = CostFunctionData(robot);
   return data;

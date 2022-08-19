@@ -16,18 +16,6 @@ inline void clear(std::vector<ConstraintComponentBaseTypePtr>& constraints) {
 
 
 template <typename ConstraintComponentBaseTypePtr>
-inline bool useKinematics(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints) {
-  for (const auto& constraint : constraints) {
-    if (constraint->useKinematics()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-template <typename ConstraintComponentBaseTypePtr>
 inline void createConstraintsData(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     std::vector<ConstraintComponentData>& data) {

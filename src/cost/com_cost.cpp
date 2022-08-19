@@ -89,11 +89,6 @@ void CoMCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
 }
 
 
-bool CoMCost::useKinematics() const {
-  return true;
-}
-
-
 double CoMCost::evalStageCost(Robot& robot, const ContactStatus& contact_status, 
                               CostFunctionData& data, const GridInfo& grid_info, 
                               const SplitSolution& s) const {

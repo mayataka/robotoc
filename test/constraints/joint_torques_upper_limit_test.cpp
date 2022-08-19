@@ -41,7 +41,6 @@ protected:
 
 void JointTorquesUpperLimitTest::test_kinematics(Robot& robot) const {
   JointTorquesUpperLimit constr(robot); 
-  EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 

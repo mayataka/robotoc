@@ -78,11 +78,6 @@ void LocalContactForceCost::set_fi_weight(
 }
 
 
-bool LocalContactForceCost::useKinematics() const {
-  return false;
-}
-
-
 double LocalContactForceCost::evalStageCost(Robot& robot, 
                                             const ContactStatus& contact_status, 
                                             CostFunctionData& data, 

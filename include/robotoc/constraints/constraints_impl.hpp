@@ -19,15 +19,6 @@ template <typename ConstraintComponentBaseTypePtr>
 void clear(std::vector<ConstraintComponentBaseTypePtr>& constraints);
 
 ///
-/// @brief Checks whether the constrainst use kinematics or not. 
-/// @param[in] constraints Vector of the constraints. 
-/// @return true if the constraints requre kinematics of Robot model. false if not.
-///
-template <typename ConstraintComponentBaseTypePtr>
-bool useKinematics(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints);
-
-///
 /// @brief Creates constraints data.
 /// @param[in] constraints Vector of the constraints. 
 /// @param[out] data Vector of the constraints data. 

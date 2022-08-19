@@ -115,11 +115,6 @@ void TaskSpace3DCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) 
 }
 
 
-bool TaskSpace3DCost::useKinematics() const {
-  return true;
-}
-
-
 double TaskSpace3DCost::evalStageCost(Robot& robot, 
                                       const ContactStatus& contact_status, 
                                       CostFunctionData& data, 

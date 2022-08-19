@@ -40,7 +40,6 @@ protected:
 
 void JointAccelerationLowerLimitTest::test_kinematics(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit constr(robot, amin); 
-  EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 

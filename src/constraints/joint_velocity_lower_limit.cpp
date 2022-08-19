@@ -21,11 +21,6 @@ JointVelocityLowerLimit::~JointVelocityLowerLimit() {
 }
 
 
-bool JointVelocityLowerLimit::useKinematics() const {
-  return false;
-}
-
-
 KinematicsLevel JointVelocityLowerLimit::kinematicsLevel() const {
   return KinematicsLevel::VelocityLevel;
 }

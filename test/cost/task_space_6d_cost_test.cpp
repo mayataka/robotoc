@@ -113,7 +113,6 @@ void TaskSpace6DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   const Eigen::Matrix3d rotation_ref = x6d_ref.rotation();
   auto cost = std::make_shared<TaskSpace6DCost>(robot, robot.frameName(frame_id));
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
@@ -157,7 +156,6 @@ void TaskSpace6DCostTest::testTerminalCostConstRef(Robot& robot, const int frame
   const Eigen::Matrix3d rotation_ref = x6d_ref.rotation();
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
@@ -200,7 +198,6 @@ void TaskSpace6DCostTest::testImpulseCostConstRef(Robot& robot, const int frame_
   const Eigen::Matrix3d rotation_ref = x6d_ref.rotation();
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
@@ -245,7 +242,6 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   auto cost = std::make_shared<TaskSpace6DCost>(robot, robot.frameName(frame_id), ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
@@ -303,7 +299,6 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
@@ -360,7 +355,6 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));

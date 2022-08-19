@@ -108,14 +108,6 @@ public:
   void clear();
 
   ///
-  /// @brief Check if the cost function component requires kinematics 
-  /// (forward kinematics and its Jacobians) of robot model.
-  /// @return true if the cost function component requires kinematics of 
-  /// Robot model. false if not.
-  ///
-  bool useKinematics() const;
-
-  ///
   /// @brief Creates CostFunctionData according to robot model and cost 
   /// function components. 
   /// @param[in] robot robot model.

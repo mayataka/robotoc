@@ -69,14 +69,6 @@ public:
       = default;
 
   ///
-  /// @brief Checks if the constraint component requres kinematics of robot 
-  /// model.
-  /// @return true if the constraint component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  virtual bool useKinematics() const = 0;
-
-  ///
   /// @brief Checks the kinematics level of the constraint component.
   /// @return Kinematics level of the constraint component.
   ///
