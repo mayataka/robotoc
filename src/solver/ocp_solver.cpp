@@ -23,14 +23,8 @@ OCPSolver::OCPSolver(const OCP& ocp,
     d_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
     solver_options_(solver_options),
     solver_statistics_() {
-  try {
-    if (nthreads <= 0) {
-      throw std::out_of_range("invalid value: nthreads must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (nthreads <= 0) {
+    throw std::out_of_range("invalid value: nthreads must be positive!");
   }
   for (auto& e : s_.data)    { ocp.robot().normalizeConfiguration(e.q); }
   for (auto& e : s_.impulse) { ocp.robot().normalizeConfiguration(e.q); }
@@ -353,103 +347,97 @@ void OCPSolver::setSolution(const Solution& s) {
 
 void OCPSolver::setSolution(const std::string& name, 
                             const Eigen::VectorXd& value) {
-  try {
-    if (name == "q") {
-      if (value.size() != robots_[0].dimq()) {
-        throw std::out_of_range(
-            "invalid value: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
-      }
-      for (auto& e : s_.data)    { e.q = value; }
-      for (auto& e : s_.impulse) { e.q = value; }
-      for (auto& e : s_.aux)     { e.q = value; }
-      for (auto& e : s_.lift)    { e.q = value; }
+  if (name == "q") {
+    if (value.size() != robots_[0].dimq()) {
+      throw std::out_of_range(
+          "invalid value: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
     }
-    else if (name == "v") {
-      if (value.size() != robots_[0].dimv()) {
-        throw std::out_of_range(
-            "invalid value: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
-      }
-      for (auto& e : s_.data)    { e.v = value; }
-      for (auto& e : s_.impulse) { e.v = value; }
-      for (auto& e : s_.aux)     { e.v = value; }
-      for (auto& e : s_.lift)    { e.v = value; }
+    for (auto& e : s_.data)    { e.q = value; }
+    for (auto& e : s_.impulse) { e.q = value; }
+    for (auto& e : s_.aux)     { e.q = value; }
+    for (auto& e : s_.lift)    { e.q = value; }
+  }
+  else if (name == "v") {
+    if (value.size() != robots_[0].dimv()) {
+      throw std::out_of_range(
+          "invalid value: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
-    else if (name == "a") {
-      if (value.size() != robots_[0].dimv()) {
-        throw std::out_of_range(
-            "invalid value: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
-      }
-      for (auto& e : s_.data)    { e.a  = value; }
-      for (auto& e : s_.impulse) { e.dv = value; }
-      for (auto& e : s_.aux)     { e.a  = value; }
-      for (auto& e : s_.lift)    { e.a  = value; }
+    for (auto& e : s_.data)    { e.v = value; }
+    for (auto& e : s_.impulse) { e.v = value; }
+    for (auto& e : s_.aux)     { e.v = value; }
+    for (auto& e : s_.lift)    { e.v = value; }
+  }
+  else if (name == "a") {
+    if (value.size() != robots_[0].dimv()) {
+      throw std::out_of_range(
+          "invalid value: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
-    else if (name == "f") {
-      if (value.size() == 6) {
-        for (auto& e : s_.data) { 
-          for (auto& ef : e.f) { ef = value.template head<6>(); } 
-          e.set_f_stack(); 
-        }
-        for (auto& e : s_.aux) { 
-          for (auto& ef : e.f) { ef = value.template head<6>(); } 
-          e.set_f_stack(); 
-        }
-        for (auto& e : s_.lift) { 
-          for (auto& ef : e.f) { ef = value.template head<6>(); } 
-          e.set_f_stack(); 
-        }
+    for (auto& e : s_.data)    { e.a  = value; }
+    for (auto& e : s_.impulse) { e.dv = value; }
+    for (auto& e : s_.aux)     { e.a  = value; }
+    for (auto& e : s_.lift)    { e.a  = value; }
+  }
+  else if (name == "f") {
+    if (value.size() == 6) {
+      for (auto& e : s_.data) { 
+        for (auto& ef : e.f) { ef = value.template head<6>(); } 
+        e.set_f_stack(); 
       }
-      else if (value.size() == 3) {
-        for (auto& e : s_.data) { 
-          for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-          e.set_f_stack(); 
-        }
-        for (auto& e : s_.aux) { 
-          for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-          e.set_f_stack(); 
-        }
-        for (auto& e : s_.lift) { 
-          for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-          e.set_f_stack(); 
-        }
+      for (auto& e : s_.aux) { 
+        for (auto& ef : e.f) { ef = value.template head<6>(); } 
+        e.set_f_stack(); 
       }
-      else {
-        throw std::out_of_range("invalid value: f.size() must be 3 or 6!");
+      for (auto& e : s_.lift) { 
+        for (auto& ef : e.f) { ef = value.template head<6>(); } 
+        e.set_f_stack(); 
       }
     }
-    else if (name == "lmd") {
-      if (value.size() != 6) {
-        for (auto& e : s_.impulse) { 
-          for (auto& ef : e.f) { ef = value.template head<6>(); } 
-          e.set_f_stack(); 
-        }
+    else if (value.size() == 3) {
+      for (auto& e : s_.data) { 
+        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
+        e.set_f_stack(); 
       }
-      else if (value.size() != 3) {
-        for (auto& e : s_.impulse) { 
-          for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-          e.set_f_stack(); 
-        }
+      for (auto& e : s_.aux) { 
+        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
+        e.set_f_stack(); 
       }
-      else {
-        throw std::out_of_range("invalid value: f.size() must be 3 or 6!");
+      for (auto& e : s_.lift) { 
+        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
+        e.set_f_stack(); 
       }
-    }
-    else if (name == "u") {
-      if (value.size() != robots_[0].dimu()) {
-        throw std::out_of_range(
-            "invalid value: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
-      }
-      for (auto& e : s_.data)    { e.u = value; }
-      for (auto& e : s_.aux)     { e.u = value; }
-      for (auto& e : s_.lift)    { e.u = value; }
     }
     else {
-      throw std::invalid_argument("invalid arugment: name must be q, v, a, f, or u!");
+      throw std::out_of_range("invalid value: f.size() must be 3 or 6!");
     }
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  else if (name == "lmd") {
+    if (value.size() != 6) {
+      for (auto& e : s_.impulse) { 
+        for (auto& ef : e.f) { ef = value.template head<6>(); } 
+        e.set_f_stack(); 
+      }
+    }
+    else if (value.size() != 3) {
+      for (auto& e : s_.impulse) { 
+        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
+        e.set_f_stack(); 
+      }
+    }
+    else {
+      throw std::out_of_range("invalid value: f.size() must be 3 or 6!");
+    }
+  }
+  else if (name == "u") {
+    if (value.size() != robots_[0].dimu()) {
+      throw std::out_of_range(
+          "invalid value: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
+    }
+    for (auto& e : s_.data)    { e.u = value; }
+    for (auto& e : s_.aux)     { e.u = value; }
+    for (auto& e : s_.lift)    { e.u = value; }
+  }
+  else {
+    throw std::invalid_argument("invalid arugment: name must be q, v, a, f, or u!");
   }
 }
 

@@ -31,26 +31,20 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     N_(N),
     reserved_num_discrete_events_(contact_sequence->reservedNumDiscreteEvents()),
     is_sto_enabled_(true) {
-  try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
-    const auto& min_dt = sto_constraints->minimumDwellTimes();
-    double sum_min_dt = 0;
-    for (const auto e : min_dt) {
-      sum_min_dt += e;
-    }
-    if (T <= sum_min_dt) {
-      throw std::out_of_range(
-          "invalid argument: sum of the minimum dwell-times must be smaller than T!");
-    }
+  if (T <= 0) {
+    throw std::out_of_range("invalid value: T must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (N <= 0) {
+    throw std::out_of_range("invalid value: N must be positive!");
+  }
+  const auto& min_dt = sto_constraints->minimumDwellTimes();
+  double sum_min_dt = 0;
+  for (const auto e : min_dt) {
+    sum_min_dt += e;
+  }
+  if (T <= sum_min_dt) {
+    throw std::out_of_range(
+        "invalid argument: sum of the minimum dwell-times must be smaller than T!");
   }
   discretization_.setDiscretizationMethod(DiscretizationMethod::PhaseBased);
 }
@@ -76,17 +70,11 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     N_(N),
     reserved_num_discrete_events_(contact_sequence->reservedNumDiscreteEvents()),
     is_sto_enabled_(false) {
-  try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
-    }
+  if (T <= 0) {
+    throw std::out_of_range("invalid value: T must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (N <= 0) {
+    throw std::out_of_range("invalid value: N must be positive!");
   }
 }
 

@@ -15,23 +15,17 @@ Constraints::Constraints(const double barrier,
     impulse_level_constraints_(),
     barrier_(barrier), 
     fraction_to_boundary_rule_(fraction_to_boundary_rule) {
-  try {
-    if (barrier <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: barrirer must be positive!");
-    }
-    if (fraction_to_boundary_rule <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be positive!");
-    }
-    if (fraction_to_boundary_rule >= 1) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
-    }
+  if (barrier <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: barrirer must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: fraction_to_boundary_rule must be positive!");
+  }
+  if (fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
   }
 }
 

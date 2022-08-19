@@ -29,29 +29,23 @@ STOConstraints::STOConstraints(const std::vector<double>& _min_dt,
     num_switches_(0),
     primal_step_size_(Eigen::VectorXd::Zero(_min_dt.size())), 
     dual_step_size_(Eigen::VectorXd::Zero(_min_dt.size())) {
-  try {
-    for (const auto e : _min_dt) {
-      if (e < 0.) {
-        throw std::out_of_range(
-            "Invalid argment: min_dt must be non-negative!");
-      }
-    }
-    if (_barrier <= 0) {
+  for (const auto e : _min_dt) {
+    if (e < 0.) {
       throw std::out_of_range(
-          "Invalid argment: barrirer must be positive!");
-    }
-    if (_fraction_to_boundary_rule <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be positive!");
-    }
-    if (_fraction_to_boundary_rule >= 1) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+          "Invalid argment: min_dt must be non-negative!");
     }
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (_barrier <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: barrirer must be positive!");
+  }
+  if (_fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: fraction_to_boundary_rule must be positive!");
+  }
+  if (_fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
   }
 }
 
@@ -473,15 +467,9 @@ double STOConstraints::KKTError() const {
 
 
 void STOConstraints::setMinimumDwellTimes(const double min_dt) {
-  try {
-    if (min_dt < 0) {
-      throw std::out_of_range(
-          "Invalid argment: min_dt must be non-negative!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (min_dt < 0) {
+    throw std::out_of_range(
+        "Invalid argment: min_dt must be non-negative!");
   }
   for (auto& e : min_dt_) {
     e = min_dt;

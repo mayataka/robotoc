@@ -35,15 +35,9 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
     current_step_(0),
     predict_step_(0),
     enable_stance_phase_(false) {
-  try {
-    if (robot.maxNumPointContacts() < 4) {
-      throw std::out_of_range(
-          "invalid argument: input robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (robot.maxNumPointContacts() < 4) {
+    throw std::out_of_range(
+        "invalid argument: input robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
   }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
@@ -122,23 +116,17 @@ MPCPace::~MPCPace() {
 void MPCPace::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                              const double swing_height, const double swing_time,
                              const double stance_time, const double swing_start_time) {
-  try {
-    if (swing_height <= 0) {
-      throw std::out_of_range("invalid value: swing_height must be positive!");
-    }
-    if (swing_time <= 0) {
-      throw std::out_of_range("invalid value: swing_time must be positive!");
-    }
-    if (stance_time < 0) {
-      throw std::out_of_range("invalid value: stance_time must be non-negative!");
-    }
-    if (swing_start_time <= 0) {
-      throw std::out_of_range("invalid value: swing_start_time must be positive!");
-    }
+  if (swing_height <= 0) {
+    throw std::out_of_range("invalid value: swing_height must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (swing_time <= 0) {
+    throw std::out_of_range("invalid value: swing_time must be positive!");
+  }
+  if (stance_time < 0) {
+    throw std::out_of_range("invalid value: stance_time must be non-negative!");
+  }
+  if (swing_start_time <= 0) {
+    throw std::out_of_range("invalid value: swing_start_time must be positive!");
   }
   foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
@@ -170,15 +158,9 @@ void MPCPace::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_ste
 void MPCPace::init(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, 
                    const SolverOptions& solver_options) {
-  try {
-    if (t >= swing_start_time_) {
-      throw std::out_of_range(
-          "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (t >= swing_start_time_) {
+    throw std::out_of_range(
+        "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
   }
   current_step_ = 0;
   predict_step_ = 0;

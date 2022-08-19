@@ -23,23 +23,17 @@ inline DwellTimeLowerBound::DwellTimeLowerBound(
     dslack_(0), 
     ddual_(0), 
     log_barrier_(0) {
-  try {
-    if (_barrier <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: barrirer must be positive!");
-    }
-    if (_fraction_to_boundary_rule <= 0) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be positive!");
-    }
-    if (_fraction_to_boundary_rule >= 1) {
-      throw std::out_of_range(
-          "Invalid argment: fraction_to_boundary_rule must be less than 1!");
-    }
+  if (_barrier <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: barrirer must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (_fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "Invalid argment: fraction_to_boundary_rule must be positive!");
+  }
+  if (_fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
   }
 }
 
