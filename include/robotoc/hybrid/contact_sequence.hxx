@@ -295,6 +295,29 @@ inline void ContactSequence::setContactPlacements(
 }
 
 
+inline void ContactSequence::setFrictionCoefficients(
+    const int contact_phase, const std::vector<double>& friction_coefficient) {
+  if (contact_phase >= numContactPhases()) {
+    throw std::runtime_error(
+        "[ContactSequence] input 'contact_phase' (" + std::to_string(contact_phase) 
+        + ") must be smaller than numContactPhases() (" 
+        + std::to_string(numContactPhases()) + ") !");
+  }
+  contact_statuses_[contact_phase].setFrictionCoefficients(friction_coefficient);
+  if (contact_phase > 0) {
+    if (is_impulse_event_[contact_phase-1]) {
+      for (int impulse_index=0; ; ++impulse_index) {
+        assert(impulse_index < numImpulseEvents());
+        if (event_index_impulse_[impulse_index] == contact_phase-1) {
+          impulse_events_[impulse_index].setFrictionCoefficients(friction_coefficient);
+          break;
+        }
+      }
+    }
+  }
+}
+
+
 inline int ContactSequence::numImpulseEvents() const {
   return impulse_events_.size();
 }

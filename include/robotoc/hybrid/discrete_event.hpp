@@ -168,6 +168,22 @@ public:
   ///
   void setContactPlacements(const aligned_vector<SE3>& contact_placements);
 
+
+  ///
+  /// @brief Gets the friction coefficint.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
+  ///
+  void setFrictionCoefficient(const int contact_index, 
+                              const double friction_coefficient);
+
+  ///
+  /// @brief Sets the friction coefficints.
+  /// @param[in] friction_coefficients Friction coefficients. 
+  /// Size must be ContactStatus::maxNumContacts() and each element must be positive.
+  ///
+  void setFrictionCoefficients(const std::vector<double>& friction_coefficients);
+
   ///
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts. 

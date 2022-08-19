@@ -136,6 +136,18 @@ inline void DiscreteEvent::setContactPlacements(
 }
 
 
+inline void DiscreteEvent::setFrictionCoefficient(
+    const int contact_index, const double friction_coefficient) {
+  impulse_status_.setFrictionCoefficient(contact_index, friction_coefficient);
+}
+
+
+inline void DiscreteEvent::setFrictionCoefficients(
+    const std::vector<double>& friction_coefficients) {
+  impulse_status_.setFrictionCoefficients(friction_coefficients);
+}
+
+
 inline void DiscreteEvent::setContactPlacements(
     const aligned_vector<SE3>& contact_placements) {
   impulse_status_.setContactPlacements(contact_placements);

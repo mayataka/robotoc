@@ -181,6 +181,15 @@ public:
                             const aligned_vector<SE3>& contact_placements);
 
   ///
+  /// @brief Sets the friction coefficients. Also sets the friction coefficients 
+  /// of the discrete event just before the contact phase.
+  /// @param[in] contact_phase Contact phase.
+  /// @param[in] friction_coefficients Friction coefficients.
+  ///
+  void setFrictionCoefficients(const int contact_phase, 
+                               const std::vector<double>& friction_coefficients);
+
+  ///
   /// @brief Returns number of impulse events. 
   /// @return Number of impulse events.
   ///

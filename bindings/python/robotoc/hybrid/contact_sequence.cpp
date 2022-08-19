@@ -39,6 +39,8 @@ PYBIND11_MODULE(contact_sequence, m) {
           static_cast<void (ContactSequence::*)(const int, const std::vector<Eigen::Vector3d>&, const std::vector<Eigen::Matrix3d>&)>(&ContactSequence::setContactPlacements),
           py::arg("contact_phase"), py::arg("contact_positions"), 
           py::arg("contact_rotations"))
+    .def("set_friction_coefficients", &ContactSequence::setFrictionCoefficients,
+          py::arg("contact_phase"), py::arg("friction_coefficients"))
     .def("num_impulse_events", &ContactSequence::numImpulseEvents)
     .def("num_lift_events", &ContactSequence::numLiftEvents)
     .def("num_discrete_events", &ContactSequence::numDiscreteEvents)
