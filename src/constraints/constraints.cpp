@@ -17,15 +17,15 @@ Constraints::Constraints(const double barrier,
     fraction_to_boundary_rule_(fraction_to_boundary_rule) {
   if (barrier <= 0) {
     throw std::out_of_range(
-        "Invalid argment: barrirer must be positive!");
+        "[Constraints] invalid argment: 'barrier' must be positive!");
   }
   if (fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be positive!");
+        "[Constraints] invalid argment: 'fraction_to_boundary_rule' must be positive!");
   }
   if (fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+        "[Constraints] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
 }
 

@@ -22,15 +22,15 @@ PointContact::PointContact(const pinocchio::Model& model,
     frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
   if (contact_frame_id_ < 0) {
     throw std::out_of_range(
-        "Invalid argument: contact_frame_id must be non-negative!");
+        "[PointContact] invalid argument: contact_frame_id must be non-negative!");
   }
   if (baumgarte_weight_on_velocity < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+        "[PointContact] invalid argument: baumgarte_weight_on_velocity must be non-negative!");
   }
   if (baumgarte_weight_on_position < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_position must be non-negative!");
+        "[PointContact] invalid argument: baumgarte_weight_on_position must be non-negative!");
   }
   v_frame_.setZero();
   v_linear_skew_.setZero();
@@ -65,11 +65,11 @@ void PointContact::setBaumgarteWeights(
     const double baumgarte_weight_on_position) {
   if (baumgarte_weight_on_velocity < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+        "[PointContact] invalid argument: baumgarte_weight_on_velocity must be non-negative!");
   }
   if (baumgarte_weight_on_position < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_position must be non-negative!");
+        "[PointContact] invalid argument: baumgarte_weight_on_position must be non-negative!");
   }
   baumgarte_weight_on_velocity_ = baumgarte_weight_on_velocity;
   baumgarte_weight_on_position_ = baumgarte_weight_on_position;

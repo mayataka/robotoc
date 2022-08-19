@@ -24,19 +24,19 @@ MPCPeriodicSwingFootRef::MPCPeriodicSwingFootRef(const int contact_index,
     num_phases_in_period_(num_phases_in_period) {
   if (swing_height < 0.0) {
     throw std::out_of_range(
-        "invalid argument: swing_height must be non-negative!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'swing_height' must be non-negative!");
   }
   if (period_swing <= 0.0) {
     throw std::out_of_range(
-        "invalid argument: period_swing must be positive!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'period_swing' must be positive!");
   }
   if (period_stance <= 0.0) {
     throw std::out_of_range(
-        "invalid argument: period_stance must be positive!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'period_stance' must be positive!");
   }
   if (num_phases_in_period < 1) {
     throw std::out_of_range(
-        "invalid argument: num_phases_in_period must be positive!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'num_phases_in_period' must be positive!");
   }
 }
 
@@ -51,15 +51,15 @@ void MPCPeriodicSwingFootRef::setPeriod(const double swing_start_time,
                                         const int num_phases_in_period) {
   if (period_swing <= 0.0) {
     throw std::out_of_range(
-        "invalid argument: period_swing must be positive!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'period_swing' must be positive!");
   }
   if (period_stance <= 0.0) {
     throw std::out_of_range(
-        "invalid argument: period_stance must be positive!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'period_stance' must be positive!");
   }
   if (num_phases_in_period < 1) {
     throw std::out_of_range(
-        "invalid argument: num_phases_in_period must be positive!");
+        "[MPCPeriodicSwingFootRef] invalid argument: 'num_phases_in_period' must be positive!");
   }
   swing_start_time_ = swing_start_time;
   period_swing_ = period_swing;

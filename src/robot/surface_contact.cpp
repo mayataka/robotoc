@@ -24,15 +24,15 @@ SurfaceContact::SurfaceContact(const pinocchio::Model& model,
     Jlog6_(Matrix66d::Zero()) {
   if (contact_frame_id_ < 0) {
     throw std::out_of_range(
-        "Invalid argument: contact_frame_id must be non-negative!");
+        "[SurfaceContact] invalid argument: contact_frame_id must be non-negative!");
   }
   if (baumgarte_weight_on_velocity < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+        "[SurfaceContact] invalid argument: baumgarte_weight_on_velocity must be non-negative!");
   }
   if (baumgarte_weight_on_position < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_position must be non-negative!");
+        "[SurfaceContact] invalid argument: baumgarte_weight_on_position must be non-negative!");
   }
 }
 
@@ -63,11 +63,11 @@ void SurfaceContact::setBaumgarteWeights(
     const double baumgarte_weight_on_position) {
   if (baumgarte_weight_on_velocity < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+        "[SurfaceContact] invalid argument: baumgarte_weight_on_velocity must be non-negative!");
   }
   if (baumgarte_weight_on_position < 0) {
     throw std::out_of_range(
-        "Invalid argument: baumgarte_weight_on_position must be non-negative!");
+        "[SurfaceContact] invalid argument: baumgarte_weight_on_position must be non-negative!");
   }
   baumgarte_weight_on_velocity_ = baumgarte_weight_on_velocity;
   baumgarte_weight_on_position_ = baumgarte_weight_on_position;

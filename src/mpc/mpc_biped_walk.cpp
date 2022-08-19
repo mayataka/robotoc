@@ -37,7 +37,7 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
     enable_double_support_phase_(false) {
   if (robot.maxNumSurfaceContacts() < 2) {
     throw std::out_of_range(
-        "invalid argument: robot is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
+        "[MPCBipedWalk] invalid argument: 'robot' is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
   }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
@@ -112,16 +112,16 @@ void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foo
                                   const double double_support_time,
                                   const double swing_start_time) {
   if (swing_height <= 0) {
-    throw std::out_of_range("invalid value: swing_height must be positive!");
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'swing_height' must be positive!");
   }
   if (swing_time <= 0) {
-    throw std::out_of_range("invalid value: swing_time must be positive!");
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'swing_time' must be positive!");
   }
   if (double_support_time < 0) {
-    throw std::out_of_range("invalid value: double_support_time must be non-negative!");
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'double_support_time' must be non-negative!");
   }
   if (swing_start_time <= 0) {
-    throw std::out_of_range("invalid value: swing_start_time must be positive!");
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'swing_start_time' must be positive!");
   }
   foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
@@ -146,7 +146,7 @@ void MPCBipedWalk::init(const double t, const Eigen::VectorXd& q,
                         const SolverOptions& solver_options) {
   if (t >= swing_start_time_) {
     throw std::out_of_range(
-        "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
+        "[MPCBipedWalk] invalid argument: 't' must be less than " + std::to_string(swing_start_time_) + "!");
   }
   current_step_ = 0;
   predict_step_ = 0;

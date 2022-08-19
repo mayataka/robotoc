@@ -24,7 +24,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
     solver_options_(solver_options),
     solver_statistics_() {
   if (nthreads <= 0) {
-    throw std::out_of_range("invalid value: nthreads must be positive!");
+    throw std::out_of_range("[OCPSolver] invalid argument: nthreads must be positive!");
   }
   for (auto& e : s_.data)    { ocp.robot().normalizeConfiguration(e.q); }
   for (auto& e : s_.impulse) { ocp.robot().normalizeConfiguration(e.q); }
@@ -350,7 +350,7 @@ void OCPSolver::setSolution(const std::string& name,
   if (name == "q") {
     if (value.size() != robots_[0].dimq()) {
       throw std::out_of_range(
-          "invalid value: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
+          "[OCPSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
     }
     for (auto& e : s_.data)    { e.q = value; }
     for (auto& e : s_.impulse) { e.q = value; }
@@ -360,7 +360,7 @@ void OCPSolver::setSolution(const std::string& name,
   else if (name == "v") {
     if (value.size() != robots_[0].dimv()) {
       throw std::out_of_range(
-          "invalid value: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+          "[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
     for (auto& e : s_.data)    { e.v = value; }
     for (auto& e : s_.impulse) { e.v = value; }
@@ -370,7 +370,7 @@ void OCPSolver::setSolution(const std::string& name,
   else if (name == "a") {
     if (value.size() != robots_[0].dimv()) {
       throw std::out_of_range(
-          "invalid value: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+          "[OCPSolver] invalid argument: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
     for (auto& e : s_.data)    { e.a  = value; }
     for (auto& e : s_.impulse) { e.dv = value; }
@@ -407,7 +407,7 @@ void OCPSolver::setSolution(const std::string& name,
       }
     }
     else {
-      throw std::out_of_range("invalid value: f.size() must be 3 or 6!");
+      throw std::out_of_range("[OCPSolver] invalid argument: f.size() must be 3 or 6!");
     }
   }
   else if (name == "lmd") {
@@ -424,20 +424,20 @@ void OCPSolver::setSolution(const std::string& name,
       }
     }
     else {
-      throw std::out_of_range("invalid value: f.size() must be 3 or 6!");
+      throw std::out_of_range("[OCPSolver] invalid argument: f.size() must be 3 or 6!");
     }
   }
   else if (name == "u") {
     if (value.size() != robots_[0].dimu()) {
       throw std::out_of_range(
-          "invalid value: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
+          "[OCPSolver] invalid argument: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
     }
     for (auto& e : s_.data)    { e.u = value; }
     for (auto& e : s_.aux)     { e.u = value; }
     for (auto& e : s_.lift)    { e.u = value; }
   }
   else {
-    throw std::invalid_argument("invalid arugment: name must be q, v, a, f, or u!");
+    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, f, or u!");
   }
 }
 

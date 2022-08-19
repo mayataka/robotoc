@@ -22,16 +22,16 @@ FrictionCone::FrictionCone(const Robot& robot, const std::vector<double>& mu)
     cone_(robot.maxNumContacts(), Eigen::MatrixXd::Zero(5, 3)) {
   if (robot.maxNumContacts() == 0) {
     throw std::out_of_range(
-        "Invalid argument: robot.maxNumContacts() must be positive!");
+        "[FrictionCone] invalid argument: robot.maxNumContacts() must be positive!");
   }
   if (mu.size() != robot.maxNumContacts()) {
     throw std::out_of_range(
-        "Invalid argument: mu.size() must be" + std::to_string(robot.maxNumContacts()) + "!");
+        "[FrictionCone] invalid argument: mu.size() must be" + std::to_string(robot.maxNumContacts()) + "!");
   }
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (mu[i] <= 0) {
       throw std::out_of_range(
-          "Invalid argument: mu[" + std::to_string(i) + "] must be positive!");
+          "[FrictionCone] invalid argument: mu[" + std::to_string(i) + "] must be positive!");
     }
   }
   for (int i=0; i<robot.maxNumContacts(); ++i) {
@@ -68,12 +68,12 @@ void FrictionCone::setFrictionCoefficient(const double mu) {
 void FrictionCone::setFrictionCoefficient(const std::vector<double>& mu) {
   if (mu.size() != max_num_contacts_) {
     throw std::out_of_range(
-        "Invalid argument: mu.size() must be" + std::to_string(max_num_contacts_) + "!");
+        "[FrictionCone] invalid argument: mu.size() must be" + std::to_string(max_num_contacts_) + "!");
   }
   for (int i=0; i<max_num_contacts_; ++i) {
     if (mu[i] <= 0) {
       throw std::out_of_range(
-          "Invalid argument: mu[" + std::to_string(i) + "] must be positive!");
+          "[FrictionCone] invalid argument: mu[" + std::to_string(i) + "] must be positive!");
     }
   }
   for (int i=0; i<max_num_contacts_; ++i) {

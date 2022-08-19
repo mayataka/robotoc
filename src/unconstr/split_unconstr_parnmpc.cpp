@@ -21,14 +21,6 @@ SplitUnconstrParNMPC::SplitUnconstrParNMPC(
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
-  if (robot.hasFloatingBase()) {
-    throw std::logic_error(
-        "robot has floating base: robot should have no constraints!");
-  }
-  if (robot.maxNumContacts() > 0) {
-    throw std::logic_error(
-        "robot can have contacts: robot should have no constraints!");
-  }
 }
 
 

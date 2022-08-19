@@ -66,13 +66,13 @@ void PaceFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom_cmd,
                                                 const double stance_time,
                                                 const double gain) {
   if (swing_time <= 0.0) {
-    throw std::out_of_range("invalid argument: swing_time must be positive!");
+    throw std::out_of_range("invalid argument: 'swing_time' must be positive!");
   }
   if (stance_time < 0.0) {
-    throw std::out_of_range("invalid argument: stance_time must be non-negative!");
+    throw std::out_of_range("invalid argument: 'stance_time' must be non-negative!");
   }
   if (gain <= 0.0) {
-    throw std::out_of_range("invalid argument: gain must be positive!");
+    throw std::out_of_range("invalid argument: 'gain' must be positive!");
   }
   const double period = 2.0 * (swing_time + stance_time);
   raibert_heuristic_.setParameters(period, gain);
@@ -284,7 +284,7 @@ bool PaceFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
 
 
 const aligned_vector<SE3>& PaceFootStepPlanner::contactPlacements(const int step) const {
-  throw std::runtime_error("runtime error: contactPlacements() is not implemented!");
+  throw std::runtime_error("[PaceFootStepPlanner] runtime error: contactPlacements() is not implemented!");
   return contact_placement_ref_[step];
 }
 

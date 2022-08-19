@@ -33,10 +33,10 @@ public:
       data_(),
       average_(Vector::Zero()) {
     if (time_length <= 0.0) {
-      throw std::out_of_range("invalid argument: time_length must be positive!");
+      throw std::out_of_range("[MovingWindowFilter] invalid argument: 'time_length' must be positive!");
     }
     if (min_sampling_period < 0) {
-      throw std::out_of_range("invalid argument: min_sampling_period must be non-negative!");
+      throw std::out_of_range("[MovingWindowFilter] invalid argument: 'min_sampling_period' must be non-negative!");
     }
   }
 
@@ -86,10 +86,10 @@ public:
   void setParameters(const double time_length, 
                      const double min_sampling_period=0.0) {
     if (time_length <= 0.0) {
-      throw std::out_of_range("invalid argument: time_length must be positive!");
+      throw std::out_of_range("[MovingWindowFilter] invalid argument: 'time_length' must be positive!");
     }
     if (min_sampling_period < 0) {
-      throw std::out_of_range("invalid argument: min_sampling_period must be non-negative!");
+      throw std::out_of_range("[MovingWindowFilter] invalid argument: 'min_sampling_period' must be non-negative!");
     }
     time_length_ = time_length;
     min_sampling_period_ = min_sampling_period;

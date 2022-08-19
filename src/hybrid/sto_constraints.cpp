@@ -32,20 +32,20 @@ STOConstraints::STOConstraints(const std::vector<double>& _min_dt,
   for (const auto e : _min_dt) {
     if (e < 0.) {
       throw std::out_of_range(
-          "Invalid argment: min_dt must be non-negative!");
+          "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
     }
   }
   if (_barrier <= 0) {
     throw std::out_of_range(
-        "Invalid argment: barrirer must be positive!");
+        "[STOConstraints] invalid argment: 'barrier' must be positive!");
   }
   if (_fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be positive!");
+        "[STOConstraints] invalid argment: 'fraction_to_boundary_rule' must be positive!");
   }
   if (_fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+        "[STOConstraints] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
 }
 
@@ -469,7 +469,7 @@ double STOConstraints::KKTError() const {
 void STOConstraints::setMinimumDwellTimes(const double min_dt) {
   if (min_dt < 0) {
     throw std::out_of_range(
-        "Invalid argment: min_dt must be non-negative!");
+        "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
   }
   for (auto& e : min_dt_) {
     e = min_dt;
@@ -479,6 +479,12 @@ void STOConstraints::setMinimumDwellTimes(const double min_dt) {
 
 void STOConstraints::setMinimumDwellTimes(
     const std::vector<double>& min_dt) {
+  for (const auto e : min_dt) {
+    if (e < 0) {
+      throw std::out_of_range(
+          "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
+    }
+  }
   min_dt_ = min_dt;
   while (min_dt_.size() < (reserved_num_switches_+1)) {
     min_dt_.push_back(eps_);

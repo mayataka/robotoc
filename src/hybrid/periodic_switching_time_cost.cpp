@@ -14,7 +14,7 @@ PeriodicSwitchingTimeCost::PeriodicSwitchingTimeCost(const double period,
     weight_(0) {
   if (period <= 0) {
     throw std::out_of_range(
-        "Invalid argment: period must be positive!");
+        "[PeriodicSwitchingTimeCost] invalid argment: 'period' must be positive!");
   }
 }
 
@@ -34,7 +34,7 @@ void PeriodicSwitchingTimeCost::set_period(const double period,
                                            const double t_start) {
   if (period <= 0) {
     throw std::out_of_range(
-        "Invalid argment: period must be positive!");
+        "[PeriodicSwitchingTimeCost] invalid argment: 'period' must be positive!");
   }
   period_ = period;
   t_start_ = t_start;
@@ -44,7 +44,7 @@ void PeriodicSwitchingTimeCost::set_period(const double period,
 void PeriodicSwitchingTimeCost::set_weight(const double weight) {
   if (weight < 0) {
     throw std::out_of_range(
-        "Invalid argment: weight must be non-negative!");
+        "[PeriodicSwitchingTimeCost] invalid argment: 'weight' must be positive!");
   }
   weight_ = weight;
 }

@@ -21,7 +21,7 @@ UnconstrBackwardCorrection::UnconstrBackwardCorrection(
     primal_step_sizes_(Eigen::VectorXd::Zero(parnmpc.N())),
     dual_step_sizes_(Eigen::VectorXd::Zero(parnmpc.N())) {
   if (nthreads <= 0) {
-    throw std::out_of_range("invalid value: nthreads must be positive!");
+    throw std::out_of_range("[UnconstrBackwardCorrection] invalid argument: 'nthreads' must be positive!");
   }
 }
 

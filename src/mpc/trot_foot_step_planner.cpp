@@ -33,7 +33,7 @@ TrotFootStepPlanner::TrotFootStepPlanner(const Robot& quadruped_robot)
     enable_stance_phase_(false) {
   if (quadruped_robot.maxNumPointContacts() < 4) {
     throw std::out_of_range(
-        "invalid argument: robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
+        "[TrotFootStepPlanner] invalid argument: 'robot' is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
   }
   contact_surface_ref_.push_back(
       std::vector<Eigen::Matrix3d>(4, Eigen::Matrix3d::Identity()));
@@ -66,13 +66,13 @@ void TrotFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom_cmd,
                                                 const double stance_time,
                                                 const double gain) {
   if (swing_time <= 0.0) {
-    throw std::out_of_range("invalid argument: swing_time must be positive!");
+    throw std::out_of_range("[TrotFootStepPlanner] invalid argument: 'swing_time' must be positive!");
   }
   if (stance_time < 0.0) {
-    throw std::out_of_range("invalid argument: stance_time must be non-negative!");
+    throw std::out_of_range("[TrotFootStepPlanner] invalid argument: 'stance_time' must be non-negative!");
   }
   if (gain <= 0.0) {
-    throw std::out_of_range("invalid argument: gain must be positive!");
+    throw std::out_of_range("[TrotFootStepPlanner] invalid argument: 'gain' must be positive!");
   }
   const double period = 2.0 * (swing_time + stance_time);
   raibert_heuristic_.setParameters(period, gain);
@@ -285,7 +285,7 @@ bool TrotFootStepPlanner::plan(const double t, const Eigen::VectorXd& q,
 
 
 const aligned_vector<SE3>& TrotFootStepPlanner::contactPlacements(const int step) const {
-  throw std::runtime_error("runtime error: contactPlacements() is not implemented!");
+  throw std::runtime_error("[TrotFootStepPlanner] runtime error: contactPlacements() is not implemented!");
   return contact_placement_ref_[step];
 }
 

@@ -33,7 +33,7 @@ BipedWalkFootStepPlanner::BipedWalkFootStepPlanner(const Robot& biped_robot)
     enable_double_support_phase_(false) {
   if (biped_robot.maxNumSurfaceContacts() < 2) {
     throw std::out_of_range(
-        "invalid argument: robot is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
+        "[BipedWalkFootStepPlanner] invalid argument: 'robot' is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
   }
 }
 
@@ -64,13 +64,13 @@ void BipedWalkFootStepPlanner::setRaibertGaitPattern(const Eigen::Vector3d& vcom
                                                      const double double_support_time, 
                                                      const double gain) {
   if (swing_time <= 0) {
-    throw std::out_of_range("invalid value: swing_time must be positive!");
+    throw std::out_of_range("[BipedWalkFootStepPlanner] invalid argument: 'swing_time' must be positive!");
   }
   if (double_support_time < 0) {
-    throw std::out_of_range("invalid value: double_support_time must be non-negative!");
+    throw std::out_of_range("[BipedWalkFootStepPlanner] invalid argument: 'double_support_time' must be non-negative!");
   }
   if (gain <= 0.0) {
-    throw std::out_of_range("invalid argument: gain must be positive!");
+    throw std::out_of_range("[BipedWalkFootStepPlanner] invalid argument: 'gain' must be positive!");
   }
   const double period = 2.0 * (swing_time + double_support_time);
   raibert_heuristic_.setParameters(period, gain);

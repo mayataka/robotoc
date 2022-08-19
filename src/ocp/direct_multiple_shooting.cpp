@@ -11,7 +11,7 @@ namespace robotoc{
 DirectMultipleShooting::DirectMultipleShooting(const int nthreads) 
   : nthreads_(nthreads) {
   if (nthreads <= 0) {
-    throw std::out_of_range("invalid value: nthreads must be positive!");
+    throw std::out_of_range("[DirectMultipleShooting] invalid argument: 'nthreads' must be positive!");
   }
 }
 

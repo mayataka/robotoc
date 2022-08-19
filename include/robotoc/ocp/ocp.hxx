@@ -32,10 +32,10 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     reserved_num_discrete_events_(contact_sequence->reservedNumDiscreteEvents()),
     is_sto_enabled_(true) {
   if (T <= 0) {
-    throw std::out_of_range("invalid value: T must be positive!");
+    throw std::out_of_range("[OCP] invalid argument: 'T' must be positive!");
   }
   if (N <= 0) {
-    throw std::out_of_range("invalid value: N must be positive!");
+    throw std::out_of_range("[OCP] invalid argument: 'N' must be positive!");
   }
   const auto& min_dt = sto_constraints->minimumDwellTimes();
   double sum_min_dt = 0;
@@ -44,7 +44,7 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   }
   if (T <= sum_min_dt) {
     throw std::out_of_range(
-        "invalid argument: sum of the minimum dwell-times must be smaller than T!");
+        "[OCP] invalid argument: sum of the minimum dwell-times must be smaller than T!");
   }
   discretization_.setDiscretizationMethod(DiscretizationMethod::PhaseBased);
 }
@@ -71,10 +71,10 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     reserved_num_discrete_events_(contact_sequence->reservedNumDiscreteEvents()),
     is_sto_enabled_(false) {
   if (T <= 0) {
-    throw std::out_of_range("invalid value: T must be positive!");
+    throw std::out_of_range("[OCP] invalid argument: 'T' must be positive!");
   }
   if (N <= 0) {
-    throw std::out_of_range("invalid value: N must be positive!");
+    throw std::out_of_range("[OCP] invalid argument: 'N' must be positive!");
   }
 }
 

@@ -115,11 +115,11 @@ void TaskSpace6DCost::set_weight(const Eigen::Vector3d& weight_position,
                                  const Eigen::Vector3d& weight_rotation) {
   if (weight_position.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "invalid argument: elements of weight_position must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position' must be non-negative!");
   }
   if (weight_rotation.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "invalid argument: elements of weight_rotation must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation' must be non-negative!");
   }
   weight_.template head<3>() = weight_rotation;
   weight_.template tail<3>() = weight_position;
@@ -132,11 +132,11 @@ void TaskSpace6DCost::set_weight_terminal(
     const Eigen::Vector3d& weight_rotation_terminal) {
   if (weight_position_terminal.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "invalid argument: elements of weight_position_terminal must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position_terminal' must be non-negative!");
   }
   if (weight_rotation_terminal.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "invalid argument: elements of weight_rotation_terminal must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation_terminal' must be non-negative!");
   }
   weight_terminal_.template head<3>() = weight_rotation_terminal;
   weight_terminal_.template tail<3>() = weight_position_terminal;
@@ -149,11 +149,11 @@ void TaskSpace6DCost::set_weight_impulse(
     const Eigen::Vector3d& weight_rotation_impulse) {
   if (weight_position_impulse.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "invalid argument: elements of weight_position_impulse must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position_impulse' must be non-negative!");
   }
   if (weight_rotation_impulse.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "invalid argument: elements of weight_rotation_impulse must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation_impulse' must be non-negative!");
   }
   weight_impulse_.template head<3>() = weight_rotation_impulse;
   weight_impulse_.template tail<3>() = weight_position_impulse;

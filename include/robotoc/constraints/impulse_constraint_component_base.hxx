@@ -17,15 +17,15 @@ inline ImpulseConstraintComponentBase::ImpulseConstraintComponentBase(
     fraction_to_boundary_rule_(_fraction_to_boundary_rule) {
   if (_barrier <= 0) {
     throw std::out_of_range(
-        "invalid argment: barrirer must be positive");
+        "[ImpulseConstraintComponentBase] invalid argment: 'barrier' must be positive");
   }
   if (_fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
-        "invalid argment: fraction_to_boundary_rule must be positive");
+        "[ImpulseConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive");
   }
   if (_fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
-        "invalid argment: fraction_to_boundary_rule must be less than 1");
+        "[ImpulseConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1");
   }
 }
 

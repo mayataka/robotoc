@@ -101,7 +101,7 @@ void TrajectoryViewer::setFrictionConeProperties() {
 void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj, 
                                const std::vector<double>& dt) {
   if (dt.size()+1 != q_traj.size()) {
-    throw std::out_of_range("invalid value: dt.size()+1 == q_traj.size() must hold!");
+    throw std::out_of_range("[TrajectoryViewer] invalid argument: dt.size()+1 == q_traj.size() must hold!");
   }
 
   pinocchio::gepetto::Viewer viewer(model_, &vmodel_, NULL);
@@ -141,7 +141,7 @@ void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj,
 void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj, 
                                const double dt) {
   if (dt < 0) {
-    throw std::out_of_range("invalid value: dt must be positive!");
+    throw std::out_of_range("[TrajectoryViewer] invalid argument: dt must be positive!");
   }
   std::vector<double> time_step(q_traj.size()-1, dt);
   display(q_traj, time_step);
@@ -153,10 +153,10 @@ void TrajectoryViewer::display(Robot& robot,
                                const std::vector<Eigen::VectorXd>& f_traj, 
                                const std::vector<double>& dt, const double mu) {
   if (dt.size()+1 != q_traj.size()) {
-    throw std::out_of_range("invalid value: dt.size()+1 == q_traj.size() must hold!");
+    throw std::out_of_range("[TrajectoryViewer] invalid argument: dt.size()+1 == q_traj.size() must hold!");
   }
   if (dt.size() != f_traj.size()) {
-    throw std::out_of_range("invalid value: dt.size() == f_traj.size() must hold!");
+    throw std::out_of_range("[TrajectoryViewer] invalid argument: dt.size() == f_traj.size() must hold!");
   }
 
   pinocchio::gepetto::Viewer viewer(model_, &vmodel_, NULL);
@@ -288,7 +288,7 @@ void TrajectoryViewer::display(Robot& robot,
                                const std::vector<Eigen::VectorXd>& f_traj, 
                                const double dt, const double mu) {
   if (dt < 0) {
-    throw std::out_of_range("invalid value: dt must be positive!");
+    throw std::out_of_range("[TrajectoryViewer] invalid argument: dt must be positive!");
   }
   std::vector<double> time_step(q_traj.size()-1, dt);
   display(robot, q_traj, f_traj, time_step, mu);

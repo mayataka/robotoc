@@ -26,7 +26,7 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc,
     solver_options_(solver_options),
     solver_statistics_() {
   if (nthreads <= 0) {
-    throw std::out_of_range("invalid value: nthreads must be positive!");
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: nthreads must be positive!");
   }
   initConstraints();
 }
@@ -185,7 +185,7 @@ void UnconstrParNMPCSolver::setSolution(const std::string& name,
     for (auto& e : s_.data) { e.u = value; }
   }
   else {
-    throw std::invalid_argument("invalid arugment: name must be q, v, a, or u!");
+    throw std::invalid_argument("[UnconstrParNMPCSolver] invalid arugment: name must be q, v, a, or u!");
   }
   initConstraints();
 }

@@ -25,15 +25,15 @@ inline DwellTimeLowerBound::DwellTimeLowerBound(
     log_barrier_(0) {
   if (_barrier <= 0) {
     throw std::out_of_range(
-        "Invalid argment: barrirer must be positive!");
+        "[DwellTimeLowerBound] invalid argment: 'barrier' must be positive!");
   }
   if (_fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be positive!");
+        "[DwellTimeLowerBound] invalid argment: 'fraction_to_boundary_rule' must be positive!");
   }
   if (_fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
-        "Invalid argment: fraction_to_boundary_rule must be less than 1!");
+        "[DwellTimeLowerBound] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
 }
 

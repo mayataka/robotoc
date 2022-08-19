@@ -39,7 +39,7 @@ MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N,
     enable_stance_phase_(false) {
   if (robot.maxNumPointContacts() < 4) {
     throw std::out_of_range(
-        "invalid argument: robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
+        "[MPCCrawl] invalid argument: 'robot' is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
   }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
@@ -119,16 +119,16 @@ void MPCCrawl::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_st
                               const double swing_height, const double swing_time,
                               const double stance_time, const double swing_start_time) {
   if (swing_height <= 0) {
-    throw std::out_of_range("invalid value: swing_height must be positive!");
+    throw std::out_of_range("[MPCCrawl] invalid argument: 'swing_height' must be positive!");
   }
   if (swing_time <= 0) {
-    throw std::out_of_range("invalid value: swing_time must be positive!");
+    throw std::out_of_range("[MPCCrawl] invalid argument: 'swing_time' must be positive!");
   }
   if (stance_time < 0) {
-    throw std::out_of_range("invalid value: stance_time must be non-negative!");
+    throw std::out_of_range("[MPCCrawl] invalid argument: 'stance_time' must be non-negative!");
   }
   if (swing_start_time <= 0) {
-    throw std::out_of_range("invalid value: swing_start_time must be positive!");
+    throw std::out_of_range("[MPCCrawl] invalid argument: 'swing_start_time' must be positive!");
   }
   foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
@@ -162,7 +162,7 @@ void MPCCrawl::init(const double t, const Eigen::VectorXd& q,
                     const SolverOptions& solver_options) {
   if (t >= swing_start_time_) {
     throw std::out_of_range(
-        "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
+        "[MPCCrawl] invalid argument: 't' must be less than " + std::to_string(swing_start_time_) + "!");
   }
   current_step_ = 0;
   predict_step_ = 0;

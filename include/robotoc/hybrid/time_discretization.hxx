@@ -39,13 +39,13 @@ inline TimeDiscretization::TimeDiscretization(const double T, const int N,
     sto_event_(2*reserved_num_discrete_events+1),
     discretization_method_(DiscretizationMethod::GridBased) {
   if (T <= 0) {
-    throw std::out_of_range("invalid value: T must be positive!");
+    throw std::out_of_range("[TimeDiscretization] invalid argument: 'T' must be positive!");
   }
   if (N <= 0) {
-    throw std::out_of_range("invalid value: N must be positive!");
+    throw std::out_of_range("[TimeDiscretization] invalid argument: 'N' must be positive!");
   }
   if (reserved_num_discrete_events < 0) {
-    throw std::out_of_range("invalid value: reserved_num_discrete_events must be non-negative!");
+    throw std::out_of_range("[TimeDiscretization] invalid argument: 'reserved_num_discrete_events' must be non-negative!");
   }
 }
 

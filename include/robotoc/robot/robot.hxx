@@ -866,7 +866,7 @@ inline void Robot::normalizeConfiguration(
 inline int Robot::frameId(const std::string& frame_name) const {
   if (!model_.existFrame(frame_name)) {
     throw std::invalid_argument(
-        "Invalid argument: frame " + frame_name + " does not exit!");
+        "[Robot] invalid argument: frame '" + frame_name + "' does not exit!");
   }
   return model_.getFrameId(frame_name);
 }

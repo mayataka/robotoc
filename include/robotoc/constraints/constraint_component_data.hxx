@@ -25,11 +25,11 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
     dimc_(dimc) {
   if (dimc <= 0) {
     throw std::out_of_range(
-        "Invalid argment: dimc must be positive!");
+        "[ConstraintComponentData] invalid argment: 'dimc' must be positive!");
   }
   if (barrier <= 0) {
     throw std::out_of_range(
-        "Invalid argment: barrirer must be positive!");
+        "[ConstraintComponentData] invalid argment: 'barrier' must be positive!");
   }
 }
 

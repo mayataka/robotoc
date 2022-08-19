@@ -44,10 +44,10 @@ public:
       N_(N),
       grid_info_(N+1, GridInfo()) {
     if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
+      throw std::out_of_range("[UnconstrParNMPC] invalid argument: 'T' must be positive!");
     }
     if (N <= 0) {
-      throw std::out_of_range("invalid value: N must be positive!");
+      throw std::out_of_range("[UnconstrParNMPC] invalid argument: 'N' must be positive!");
     }
     for (int i=0; i<=N; ++i) {
       grid_info_[i].t = dt_ * (i+1);
