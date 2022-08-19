@@ -156,8 +156,8 @@ void ImpulseFrictionCone::evalDerivatives(
       const Eigen::VectorXd& fWi = fW(data, i);
       // Friction cone in the world frame.
       Eigen::MatrixXd& cone_world_i = cone_world(data, i);
-      for (int i=1; i<5; ++i) {
-        cone_world_i.coeffRef(i, 2) = - (impulse_status.frictionCoefficient(i)/std::sqrt(2));
+      for (int j=0; j<4; ++j) {
+        cone_world_i.coeffRef(j+1, 2) = - (impulse_status.frictionCoefficient(i)/std::sqrt(2));
       }
       // Friction cone in the local frame of the contact surface.
       Eigen::MatrixXd& cone_local_i = cone_local(data, i);
