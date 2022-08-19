@@ -7,17 +7,17 @@
 
 namespace robotoc {
 
-Constraints::Constraints(const double barrier, 
+Constraints::Constraints(const double barrier_param, 
                          const double fraction_to_boundary_rule) 
   : position_level_constraints_(),
     velocity_level_constraints_(),
     acceleration_level_constraints_(),
     impulse_level_constraints_(),
-    barrier_(barrier), 
+    barrier_(barrier_param), 
     fraction_to_boundary_rule_(fraction_to_boundary_rule) {
-  if (barrier <= 0) {
+  if (barrier_param <= 0) {
     throw std::out_of_range(
-        "[Constraints] invalid argment: 'barrier' must be positive!");
+        "[Constraints] invalid argment: 'barrier_param' must be positive!");
   }
   if (fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
@@ -35,7 +35,7 @@ Constraints::~Constraints() {
 
 
 void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
-  constraint_component->setBarrier(barrier_);
+  constraint_component->setBarrierParam(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
         == KinematicsLevel::PositionLevel) {
@@ -53,7 +53,7 @@ void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
 
 
 void Constraints::push_back(ImpulseConstraintComponentBasePtr constraint_component) {
-  constraint_component->setBarrier(barrier_);
+  constraint_component->setBarrierParam(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
         == KinematicsLevel::AccelerationLevel) {
@@ -413,19 +413,29 @@ void Constraints::updateDual(ConstraintsData& data, const double step_size) {
 }
 
 
-void Constraints::setBarrier(const double _barrier) {
-  assert(_barrier > 0);
-  constraintsimpl::setBarrier(position_level_constraints_, _barrier);
-  constraintsimpl::setBarrier(velocity_level_constraints_, _barrier);
-  constraintsimpl::setBarrier(acceleration_level_constraints_, _barrier);
-  constraintsimpl::setBarrier(impulse_level_constraints_, _barrier);
-  barrier_ = _barrier;
+void Constraints::setBarrierParam(const double barrier_param) {
+  if (barrier_param <= 0) {
+    throw std::out_of_range(
+        "[Constraints] invalid argment: 'barrier_param' must be positive");
+  }
+  constraintsimpl::setBarrierParam(position_level_constraints_, barrier_param);
+  constraintsimpl::setBarrierParam(velocity_level_constraints_, barrier_param);
+  constraintsimpl::setBarrierParam(acceleration_level_constraints_, barrier_param);
+  constraintsimpl::setBarrierParam(impulse_level_constraints_, barrier_param);
+  barrier_ = barrier_param;
 }
 
 
 void Constraints::setFractionToBoundaryRule(
     const double fraction_to_boundary_rule) {
-  assert(fraction_to_boundary_rule > 0);
+  if (fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "[Constraint] invalid argment: 'fraction_to_boundary_rule' must be positive");
+  }
+  if (fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "[Constraint] invalid argment: 'fraction_to_boundary_rule' must be less than 1");
+  }
   constraintsimpl::setFractionToBoundaryRule(position_level_constraints_, 
                                              fraction_to_boundary_rule);
   constraintsimpl::setFractionToBoundaryRule(velocity_level_constraints_, 
@@ -438,12 +448,12 @@ void Constraints::setFractionToBoundaryRule(
 }
 
 
-double Constraints::barrier() const {
+double Constraints::getBarrierParam() const {
   return barrier_;
 }
 
 
-double Constraints::fractionToBoundaryRule() const {
+double Constraints::getFractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 

@@ -54,7 +54,7 @@ config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 
 # Create the constraints
-constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
+constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
 joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
@@ -104,7 +104,7 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 sto_constraints = robotoc.STOConstraints(min_dt=[0.15, 0.15, 0.65],
-                                         barrier=1.0e-03, 
+                                         barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
 T = t0 + flying_time + 2*ground_time

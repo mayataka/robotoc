@@ -33,13 +33,13 @@ class ConstraintComponentBase {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  ConstraintComponentBase(const double barrier=1.0e-03, 
+  ConstraintComponentBase(const double barrier_param=1.0e-03, 
                           const double fraction_to_boundary_rule=0.995);
 
   ///
@@ -201,23 +201,25 @@ public:
   static void updateDual(ConstraintComponentData& data, const double step_size);
 
   ///
-  /// @brief Returns the barrier parameter.
+  /// @brief Gets the barrier parameter.
+  /// @return The barrier parameter.
   ///
-  virtual double barrier() const final;
+  virtual double getBarrierParam() const final;
 
   ///
-  /// @brief Returns the parameter of the fraction-to-boundary-rule.
+  /// @brief Gets the margin parameter of the fraction-to-boundary-rule.
+  /// @return The margin parameter of the fraction-to-boundary-rule.
   ///
-  virtual double fractionToBoundaryRule() const final;
+  virtual double getFractionToBoundaryRule() const final;
 
   ///
   /// @brief Sets the barrier parameter.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   ///
-  virtual void setBarrier(const double barrier) final;
+  virtual void setBarrierParam(const double barrier_param) final;
 
   ///
-  /// @brief Sets the parameter of the fraction-to-boundary-rule.
+  /// @brief Sets the margin parameter of the fraction-to-boundary-rule.
   /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
   /// than 1. Should be between 0.9 and 0.995.
   ///

@@ -22,7 +22,7 @@ inline void createConstraintsData(
   data.clear();
   for (const auto& constraint : constraints) {
     auto component_data = ConstraintComponentData(constraint->dimc(), 
-                                                  constraint->barrier());
+                                                  constraint->getBarrierParam());
     constraint->allocateExtraData(component_data);
     data.push_back(component_data);
   }
@@ -184,10 +184,10 @@ inline void updateDual(std::vector<ConstraintComponentData>& data,
 
 
 template <typename ConstraintComponentBaseTypePtr>
-inline void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-                       const double barrier) {
+inline void setBarrierParam(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+                       const double barrier_param) {
   for (auto& constraint : constraints) {
-    constraint->setBarrier(barrier);
+    constraint->setBarrierParam(barrier_param);
   }
 }
 

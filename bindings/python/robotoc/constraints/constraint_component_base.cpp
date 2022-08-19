@@ -91,7 +91,7 @@ PYBIND11_MODULE(constraint_component_base, m) {
              PyConstraintComponentBase,
              std::shared_ptr<ConstraintComponentBase>>(m, "ConstraintComponentBase")
     .def(py::init<const double, const double>(),
-          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
+          py::arg("barrier_param")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
     .def("kinematicsLevel", &ConstraintComponentBase::kinematicsLevel)
     .def("allocateExtraData", &ConstraintComponentBase::allocateExtraData,
           py::arg("data"))

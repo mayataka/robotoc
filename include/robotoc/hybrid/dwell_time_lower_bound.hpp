@@ -15,12 +15,12 @@ class DwellTimeLowerBound {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. 
   ///
-  DwellTimeLowerBound(const double barrier, 
+  DwellTimeLowerBound(const double barrier_param, 
                       const double fraction_to_boundary_rule);
 
   ///
@@ -191,9 +191,9 @@ public:
 
   ///
   /// @brief Sets the barrier parameter for all the constraint components.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   ///
-  void setBarrier(const double barrier);
+  void setBarrierParam(const double barrier_param);
 
   ///
   /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
@@ -207,13 +207,13 @@ public:
   /// @brief Gets the barrier parameter.
   /// @return Barrier parameter. 
   ///
-  double barrier() const;
+  double getBarrierParam() const;
 
   ///
   /// @brief Gets the parameter of the fraction-to-boundary-rule. 
   /// @return The parameter of the fraction-to-boundary-rule. 
   ///
-  double fractionToBoundaryRule() const;
+  double getFractionToBoundaryRule() const;
 
   void disp(std::ostream& os) const;
 

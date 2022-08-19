@@ -196,18 +196,18 @@ public:
   ///
   /// @brief Returns the barrier parameter.
   ///
-  virtual double barrier() const final;
+  virtual double getBarrierParam() const final;
 
   ///
   /// @brief Returns the parameter of the fraction-to-boundary-rule.
   ///
-  virtual double fractionToBoundaryRule() const final;
+  virtual double getFractionToBoundaryRule() const final;
 
   ///
   /// @brief Sets the barrier parameter.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   ///
-  virtual void setBarrier(const double barrier) final;
+  virtual void setBarrierParam(const double barrier_param) final;
 
   ///
   /// @brief Sets the parameter of the fraction-to-boundary-rule.

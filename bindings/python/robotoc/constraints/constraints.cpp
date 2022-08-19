@@ -14,18 +14,18 @@ using ImpulseConstraintComponentBasePtr = std::shared_ptr<ImpulseConstraintCompo
 PYBIND11_MODULE(constraints, m) {
   py::class_<Constraints, std::shared_ptr<Constraints>>(m, "Constraints")
     .def(py::init<const double, const double>(),
-          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
+          py::arg("barrier_param")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
     .def("push_back", static_cast<void (Constraints::*)(ConstraintComponentBasePtr)>(&Constraints::push_back),
           py::arg("constraint_component"))
     .def("push_back", static_cast<void (Constraints::*)(ImpulseConstraintComponentBasePtr)>(&Constraints::push_back),
           py::arg("constraint_component"))
     .def("clear", &Constraints::clear)
-    .def("set_barrier", &Constraints::setBarrier,
-          py::arg("barrier"))
+    .def("set_barrier_param", &Constraints::setBarrierParam,
+          py::arg("barrier_param"))
     .def("set_fraction_to_boundary_rule", &Constraints::setFractionToBoundaryRule,
           py::arg("fraction_to_boundary_rule"))
-    .def("barrier", &Constraints::barrier)
-    .def("fraction_to_boundary_rule", &Constraints::fractionToBoundaryRule);
+    .def("get_barrier_param", &Constraints::getBarrierParam)
+    .def("get_fraction_to_boundary_rule", &Constraints::getFractionToBoundaryRule);
 }
 
 } // namespace python

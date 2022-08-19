@@ -7,43 +7,43 @@
 
 namespace robotoc {
 
-STOConstraints::STOConstraints(const int _reserved_num_switches, 
-                               const double _min_dt, 
-                               const double _barrier, 
-                               const double _fraction_to_boundary_rule) 
-  : STOConstraints(std::vector<double>(_reserved_num_switches+1, _min_dt), 
-                   _barrier, _fraction_to_boundary_rule) {
+STOConstraints::STOConstraints(const int reserved_num_switches, 
+                               const double min_dt, 
+                               const double barrier_param, 
+                               const double fraction_to_boundary_rule) 
+  : STOConstraints(std::vector<double>(reserved_num_switches+1, min_dt), 
+                   barrier_param, fraction_to_boundary_rule) {
 }
 
 
-STOConstraints::STOConstraints(const std::vector<double>& _min_dt, 
-                               const double _barrier, 
-                               const double _fraction_to_boundary_rule) 
-  : dtlb_(_min_dt.size(), DwellTimeLowerBound(_barrier, 
-                                              _fraction_to_boundary_rule)),
-    min_dt_(_min_dt), 
+STOConstraints::STOConstraints(const std::vector<double>& min_dt, 
+                               const double barrier_param, 
+                               const double fraction_to_boundary_rule) 
+  : dtlb_(min_dt.size(), DwellTimeLowerBound(barrier_param, 
+                                             fraction_to_boundary_rule)),
+    min_dt_(min_dt), 
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
-    barrier_(_barrier), 
-    fraction_to_boundary_rule_(_fraction_to_boundary_rule),
-    reserved_num_switches_(_min_dt.size()-1),
+    barrier_(barrier_param), 
+    fraction_to_boundary_rule_(fraction_to_boundary_rule),
+    reserved_num_switches_(min_dt.size()-1),
     num_switches_(0),
-    primal_step_size_(Eigen::VectorXd::Zero(_min_dt.size())), 
-    dual_step_size_(Eigen::VectorXd::Zero(_min_dt.size())) {
-  for (const auto e : _min_dt) {
+    primal_step_size_(Eigen::VectorXd::Zero(min_dt.size())), 
+    dual_step_size_(Eigen::VectorXd::Zero(min_dt.size())) {
+  for (const auto e : min_dt) {
     if (e < 0.) {
       throw std::out_of_range(
           "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
     }
   }
-  if (_barrier <= 0) {
+  if (barrier_param <= 0) {
     throw std::out_of_range(
-        "[STOConstraints] invalid argment: 'barrier' must be positive!");
+        "[STOConstraints] invalid argment: 'barrier_param' must be positive!");
   }
-  if (_fraction_to_boundary_rule <= 0) {
+  if (fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
         "[STOConstraints] invalid argment: 'fraction_to_boundary_rule' must be positive!");
   }
-  if (_fraction_to_boundary_rule >= 1) {
+  if (fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
         "[STOConstraints] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
@@ -493,37 +493,37 @@ void STOConstraints::setMinimumDwellTimes(
 }
 
 
-const std::vector<double>& STOConstraints::minimumDwellTimes() const {
+const std::vector<double>& STOConstraints::getMinimumDwellTimes() const {
   return min_dt_;
 }
 
 
-void STOConstraints::setBarrier(const double _barrier) {
-  assert(_barrier > 0.0);
+void STOConstraints::setBarrierParam(const double barrier_param) {
+  assert(barrier_param > 0.0);
   for (auto& e : dtlb_) {
-    e.setBarrier(_barrier);
+    e.setBarrierParam(barrier_param);
   }
-  barrier_ = _barrier;
+  barrier_ = barrier_param;
 }
 
 
 void STOConstraints::setFractionToBoundaryRule(
-    const double _fraction_to_boundary_rule) {
-  assert(_fraction_to_boundary_rule > 0.0);
-  assert(_fraction_to_boundary_rule < 1.0);
+    const double fraction_to_boundary_rule) {
+  assert(fraction_to_boundary_rule > 0.0);
+  assert(fraction_to_boundary_rule < 1.0);
   for (auto& e : dtlb_) {
-    e.setFractionToBoundaryRule(_fraction_to_boundary_rule);
+    e.setFractionToBoundaryRule(fraction_to_boundary_rule);
   }
-  fraction_to_boundary_rule_ = _fraction_to_boundary_rule;
+  fraction_to_boundary_rule_ = fraction_to_boundary_rule;
 }
 
 
-double STOConstraints::barrier() const {
+double STOConstraints::getBarrierParam() const {
   return barrier_;
 }
 
 
-double STOConstraints::fractionToBoundaryRule() const {
+double STOConstraints::getFractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 

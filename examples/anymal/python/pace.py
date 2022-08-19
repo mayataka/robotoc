@@ -97,7 +97,7 @@ com_cost.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
 # Create the constraints
-constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
+constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
 joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)

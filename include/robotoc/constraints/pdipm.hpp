@@ -11,55 +11,55 @@ namespace pdipm {
 
 ///
 /// @brief Sets the slack and dual variables positive.
-/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] barrier_param Barrier parameter. Must be positive. 
 /// @param[in, out] data Constraint component data.
 ///
-void setSlackAndDualPositive(const double barrier, 
+void setSlackAndDualPositive(const double barrier_param, 
                              ConstraintComponentData& data);
 
 ///
 /// @brief Computes the residual in the complementarity slackness between  
 /// the slack and dual variables.
-/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] barrier_param Barrier parameter. Must be positive. 
 /// @param[in, out] data Constraint component data.
 ///
-void computeComplementarySlackness(const double barrier, 
+void computeComplementarySlackness(const double barrier_param, 
                                    ConstraintComponentData& data);
 
 ///
 /// @brief Computes the residual in the complementarity slackness between  
 /// the slack and dual variables.
-/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] barrier_param Barrier parameter. Must be positive. 
 /// @param[in, out] data Constraint data.
 /// @param[in] start Start position of the segment.
 /// @param[in] size Size of the segment.
 ///
-void computeComplementarySlackness(const double barrier, 
+void computeComplementarySlackness(const double barrier_param, 
                                    ConstraintComponentData& data,
                                    const int start, const int size);
 
 ///
 /// @brief Computes the residual in the complementarity slackness between  
 /// the slack and dual variables.
-/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] barrier_param Barrier parameter. Must be positive. 
 /// @param[in, out] data Constraint data.
 /// @param[in] start Start position of the segment.
 /// @tparam Size Size of the segment.
 ///
 template <int Size>
-void computeComplementarySlackness(const double barrier, 
+void computeComplementarySlackness(const double barrier_param, 
                                    ConstraintComponentData& data,
                                    const int start);
 
 ///
 /// @brief Computes the residual in the complementarity slackness between  
 /// the slack and dual variables.
-/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] barrier_param Barrier parameter. Must be positive. 
 /// @param[in] slack An element of the slack variable.
 /// @param[in] dual An element of the dual variable.
 /// @return The complementarity slackness between the slack and dual variables.
 ///
-double computeComplementarySlackness(const double barrier, const double slack, 
+double computeComplementarySlackness(const double barrier_param, const double slack, 
                                      const double dual);
 
 ///
@@ -185,13 +185,13 @@ double computeDualDirection(const double slack, const double dual,
 
 ///
 /// @brief Computes the log barrier function.
-/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] barrier_param Barrier parameter. Must be positive. 
 /// @param[in] vec Argument of the log function. All the components must be 
 /// positive.
 /// @return log barrier function.
 ///
 template <typename VectorType>
-double logBarrier(const double barrier, 
+double logBarrier(const double barrier_param, 
                    const Eigen::MatrixBase<VectorType>& vec);
 
 } // namespace pdipm

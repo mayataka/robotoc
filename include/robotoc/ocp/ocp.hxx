@@ -37,7 +37,7 @@ inline OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   if (N <= 0) {
     throw std::out_of_range("[OCP] invalid argument: 'N' must be positive!");
   }
-  const auto& min_dt = sto_constraints->minimumDwellTimes();
+  const auto& min_dt = sto_constraints->getMinimumDwellTimes();
   double sum_min_dt = 0;
   for (const auto e : min_dt) {
     sum_min_dt += e;

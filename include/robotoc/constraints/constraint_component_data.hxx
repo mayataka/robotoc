@@ -11,9 +11,9 @@
 namespace robotoc {
 
 inline ConstraintComponentData::ConstraintComponentData(const int dimc,
-                                                        const double barrier)
-  : slack(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier))),
-    dual(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier))),
+                                                        const double barrier_param)
+  : slack(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier_param))),
+    dual(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier_param))),
     residual(Eigen::VectorXd::Zero(dimc)),
     cmpl(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
@@ -27,9 +27,9 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
     throw std::out_of_range(
         "[ConstraintComponentData] invalid argment: 'dimc' must be positive!");
   }
-  if (barrier <= 0) {
+  if (barrier_param <= 0) {
     throw std::out_of_range(
-        "[ConstraintComponentData] invalid argment: 'barrier' must be positive!");
+        "[ConstraintComponentData] invalid argment: 'barrier_param' must be positive!");
   }
 }
 

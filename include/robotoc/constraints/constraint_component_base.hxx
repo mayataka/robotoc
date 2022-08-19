@@ -10,18 +10,18 @@
 namespace robotoc {
 
 inline ConstraintComponentBase::ConstraintComponentBase(
-    const double _barrier, const double _fraction_to_boundary_rule) 
-  : barrier_(_barrier),
-    fraction_to_boundary_rule_(_fraction_to_boundary_rule) {
-  if (_barrier <= 0) {
+    const double barrier_param, const double fraction_to_boundary_rule) 
+  : barrier_(barrier_param),
+    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
+  if (barrier_param <= 0) {
     throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'barrier' must be positive!");
+        "[ConstraintComponentBase] invalid argment: 'barrier_param' must be positive!");
   }
-  if (_fraction_to_boundary_rule <= 0) {
+  if (fraction_to_boundary_rule <= 0) {
     throw std::out_of_range(
         "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive!");
   }
-  if (_fraction_to_boundary_rule >= 1) {
+  if (fraction_to_boundary_rule >= 1) {
     throw std::out_of_range(
         "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
@@ -54,25 +54,35 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
 }
 
 
-inline double ConstraintComponentBase::barrier() const {
+inline double ConstraintComponentBase::getBarrierParam() const {
   return barrier_;
 }
 
 
-inline double ConstraintComponentBase::fractionToBoundaryRule() const {
+inline double ConstraintComponentBase::getFractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 
 
-inline void ConstraintComponentBase::setBarrier(const double barrier) {
-  assert(barrier > 0);
-  barrier_ = barrier;
+inline void ConstraintComponentBase::setBarrierParam(const double barrier_param) {
+  if (barrier_param <= 0) {
+    throw std::out_of_range(
+        "[ConstraintComponentBase] invalid argment: 'barrier_param' must be positive");
+  }
+  barrier_ = barrier_param;
 }
 
 
 inline void ConstraintComponentBase::setFractionToBoundaryRule(
     const double fraction_to_boundary_rule) {
-  assert(fraction_to_boundary_rule > 0);
+  if (fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive");
+  }
+  if (fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1");
+  }
   fraction_to_boundary_rule_ = fraction_to_boundary_rule;
 }
 

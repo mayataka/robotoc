@@ -11,8 +11,8 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     dim = 100;
-    barrier = 0.001;
-    data = ConstraintComponentData(dim, barrier);
+    barrier_param = 0.001;
+    data = ConstraintComponentData(dim, barrier_param);
     data.slack.array() = Eigen::VectorXd::Random(dim).array().abs();
     data.dual.array() = Eigen::VectorXd::Random(dim).array().abs();
     data.dslack.array() = Eigen::VectorXd::Random(dim);
@@ -23,7 +23,7 @@ protected:
   }
 
   int dim;
-  double barrier;
+  double barrier_param;
   ConstraintComponentData data;
 };
 
@@ -31,19 +31,19 @@ protected:
 TEST_F(PDIPMTest, setSlackAndDualPositive) {
   data.slack = Eigen::VectorXd::Random(dim);
   data.dual = Eigen::VectorXd::Random(dim);
-  pdipm::setSlackAndDualPositive(barrier, data);
-  EXPECT_TRUE(data.slack.minCoeff() >= barrier);
-  EXPECT_TRUE(data.dual.minCoeff() >= barrier);
+  pdipm::setSlackAndDualPositive(barrier_param, data);
+  EXPECT_TRUE(data.slack.minCoeff() >= barrier_param);
+  EXPECT_TRUE(data.dual.minCoeff() >= barrier_param);
 }
 
 
 TEST_F(PDIPMTest, computeComplementarySlackness) {
   EXPECT_TRUE(data.slack.minCoeff() >= 0);
   EXPECT_TRUE(data.dual.minCoeff() >= 0);
-  pdipm::computeComplementarySlackness(barrier, data);
+  pdipm::computeComplementarySlackness(barrier_param, data);
   Eigen::VectorXd compl_ref = Eigen::VectorXd::Zero(dim);
   for (int i=0; i<dim; ++i) {
-    compl_ref(i) = data.slack(i) * data.dual(i) - barrier;
+    compl_ref(i) = data.slack(i) * data.dual(i) - barrier_param;
   }
   EXPECT_TRUE(data.cmpl.isApprox(compl_ref));
 }
@@ -86,7 +86,7 @@ TEST_F(PDIPMTest, fractionToBoundaryDual) {
 
 
 TEST_F(PDIPMTest, computeDualDirection) {
-  data.cmpl.array() = data.dual.array() * data.slack.array() - barrier;
+  data.cmpl.array() = data.dual.array() * data.slack.array() - barrier_param;
   pdipm::computeDualDirection(data);
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dim);
   for (int i=0; i<dim; ++i) {
@@ -97,8 +97,8 @@ TEST_F(PDIPMTest, computeDualDirection) {
 
 
 TEST_F(PDIPMTest, logBarrier) {
-  const double cost_ref = - barrier * (data.slack.array().log()).sum();
-  const double cost = pdipm::logBarrier(barrier, data.slack);
+  const double cost_ref = - barrier_param * (data.slack.array().log()).sum();
+  const double cost = pdipm::logBarrier(barrier_param, data.slack);
   EXPECT_DOUBLE_EQ(cost_ref, cost);
 }
 

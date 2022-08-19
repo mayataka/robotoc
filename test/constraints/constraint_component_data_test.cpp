@@ -17,8 +17,8 @@ protected:
 
 TEST_F(ConstraintComponentDataTest, constructor) {
   const int dimc = 5;
-  const double barrier = 0.01;
-  ConstraintComponentData data(dimc, barrier);
+  const double barrier_param = 0.01;
+  ConstraintComponentData data(dimc, barrier_param);
   EXPECT_EQ(data.slack.size(), dimc);
   EXPECT_EQ(data.dual.size(), dimc);
   EXPECT_EQ(data.residual.size(), dimc);
@@ -32,8 +32,8 @@ TEST_F(ConstraintComponentDataTest, constructor) {
 
 TEST_F(ConstraintComponentDataTest, err) {
   const int dimc = 5;
-  const double barrier = 0.01;
-  ConstraintComponentData data(dimc, barrier);
+  const double barrier_param = 0.01;
+  ConstraintComponentData data(dimc, barrier_param);
   data.residual.setRandom();
   data.cmpl.setRandom();
 

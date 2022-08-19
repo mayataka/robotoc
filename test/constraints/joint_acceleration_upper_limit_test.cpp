@@ -19,7 +19,7 @@ class JointAccelerationUpperLimitTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-03;
+    barrier_param = 1.0e-03;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
@@ -34,7 +34,7 @@ protected:
   void test_condenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
   void test_expandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
 
-  double barrier, dt;
+  double barrier_param, dt;
 };
 
 
@@ -46,7 +46,7 @@ void JointAccelerationUpperLimitTest::test_kinematics(Robot& robot, const Eigen:
 
 void JointAccelerationUpperLimitTest::test_isFeasible(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
   const auto contact_status = robot.createContactStatus();
   SplitSolution s(robot);
@@ -58,7 +58,7 @@ void JointAccelerationUpperLimitTest::test_isFeasible(Robot& robot, const Eigen:
 
 void JointAccelerationUpperLimitTest::test_setSlack(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier()), data_ref(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam()), data_ref(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -73,7 +73,7 @@ void JointAccelerationUpperLimitTest::test_evalConstraint(Robot& robot, const Ei
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -81,15 +81,15 @@ void JointAccelerationUpperLimitTest::test_evalConstraint(Robot& robot, const Ei
   auto data_ref = data;
   constr.evalConstraint(robot, contact_status, data, s);
   data_ref.residual = s.a.tail(dimc) - amax + data_ref.slack;
-  pdipm::computeComplementarySlackness(barrier, data_ref);
-  data_ref.log_barrier = pdipm::logBarrier(barrier, data_ref.slack);
+  pdipm::computeComplementarySlackness(barrier_param, data_ref);
+  data_ref.log_barrier = pdipm::logBarrier(barrier_param, data_ref.slack);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
 void JointAccelerationUpperLimitTest::test_evalDerivatives(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -105,7 +105,7 @@ void JointAccelerationUpperLimitTest::test_evalDerivatives(Robot& robot, const E
 
 void JointAccelerationUpperLimitTest::test_condenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -128,7 +128,7 @@ void JointAccelerationUpperLimitTest::test_condenseSlackAndDual(Robot& robot, co
 
 void JointAccelerationUpperLimitTest::test_expandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit constr(robot, amax); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
