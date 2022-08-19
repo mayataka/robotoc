@@ -12,14 +12,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(friction_cone, m) {
   py::class_<FrictionCone, ConstraintComponentBase, 
              std::shared_ptr<FrictionCone>>(m, "FrictionCone")
-    .def(py::init<const Robot&, const std::vector<double>&>(),
-          py::arg("robot"), py::arg("mu"))
-    .def(py::init<const Robot&, const double>(),
-          py::arg("robot"), py::arg("mu"))
-    .def("set_friction_coefficient", static_cast<void (FrictionCone::*)(const std::vector<double>&)>(&FrictionCone::setFrictionCoefficient),
-          py::arg("mu"))
-    .def("set_friction_coefficient", static_cast<void (FrictionCone::*)(const double)>(&FrictionCone::setFrictionCoefficient),
-          py::arg("mu"));
+    .def(py::init<const Robot&>(),
+          py::arg("robot"));
 }
 
 } // namespace python

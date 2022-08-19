@@ -57,7 +57,7 @@ joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
 mu = 0.6
 # wrench_friction_cone  = robotoc.WrenchFrictionCone(robot, mu, 0.1, 0.05)
-friction_cone  = robotoc.FrictionCone(robot, mu)
+friction_cone  = robotoc.FrictionCone(robot)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
 constraints.push_back(joint_velocity_lower)

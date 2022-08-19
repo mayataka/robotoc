@@ -56,14 +56,14 @@ protected:
 
 void ImpulseFrictionConeTest::test_kinematics(Robot& robot, 
                                              const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
 void ImpulseFrictionConeTest::test_isFeasible(Robot& robot, 
                                              const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   EXPECT_EQ(constr.dimc(), 5*impulse_status.maxNumContacts());
@@ -88,7 +88,7 @@ void ImpulseFrictionConeTest::test_isFeasible(Robot& robot,
 
 
 void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam()), data_ref(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   constr.allocateExtraData(data_ref);
@@ -108,7 +108,7 @@ void ImpulseFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& i
 
 void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot, 
                                                                const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
@@ -143,7 +143,7 @@ void ImpulseFrictionConeTest::test_evalConstraint(Robot& robot,
 
 
 void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
@@ -194,7 +194,7 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
 
 void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
                                                        const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
@@ -259,7 +259,7 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
 
 
 void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone constr(robot, mu); 
+  ImpulseFrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();

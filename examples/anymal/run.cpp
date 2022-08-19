@@ -173,9 +173,8 @@ int main(int argc, char *argv[]) {
   auto joint_velocity_upper  = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower   = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.7;
-  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot, mu);
-  auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot);
+  auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
