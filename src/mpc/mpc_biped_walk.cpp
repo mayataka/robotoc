@@ -79,11 +79,10 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.5;
   const double X = 0.1;
   const double Y = 0.05;
-  wrench_cone_ = std::make_shared<robotoc::WrenchFrictionCone>(robot, mu, X, Y);
-  impulse_wrench_cone_ = std::make_shared<robotoc::ImpulseWrenchFrictionCone>(robot, mu, X, Y);
+  wrench_cone_ = std::make_shared<robotoc::WrenchFrictionCone>(robot, X, Y);
+  impulse_wrench_cone_ = std::make_shared<robotoc::ImpulseWrenchFrictionCone>(robot, X, Y);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
@@ -96,6 +95,10 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
   cs_standing_.activateContacts(std::vector<int>({0, 1}));
   cs_right_swing_.activateContacts(std::vector<int>({0}));
   cs_left_swing_.activateContacts(std::vector<int>({1}));
+  const double friction_coefficient = 0.5;
+  cs_standing_.setFrictionCoefficients(std::vector<double>(2, friction_coefficient));
+  cs_right_swing_.setFrictionCoefficients(std::vector<double>(2, friction_coefficient));
+  cs_left_swing_.setFrictionCoefficients(std::vector<double>(2, friction_coefficient));
 }
 
 

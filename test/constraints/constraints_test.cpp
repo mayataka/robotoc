@@ -61,7 +61,7 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(const Robot& rob
   auto joint_torques_upper = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto joint_accel_lower = std::make_shared<robotoc::JointAccelerationLowerLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), -10));
   auto joint_accel_upper = std::make_shared<robotoc::JointAccelerationUpperLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), 10));
-  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot, 0.7);
+  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>(barrier_param, fraction_to_boundary_rule);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
@@ -227,7 +227,7 @@ TEST_F(ConstraintsTest, floatingBase) {
 
 TEST_F(ConstraintsTest, testParams) {
   auto robot = testhelper::CreateQuadrupedalRobot(0.001);
-  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot, 0.7);
+  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>(0.1, 0.5);
   constraints->push_back(friction_cone);
   EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.1);

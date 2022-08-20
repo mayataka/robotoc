@@ -66,7 +66,7 @@ protected:
 
 void ImpulseWrenchFrictionConeTest::test_isFeasible(Robot& robot, 
                                                     const ImpulseStatus& impulse_status) const {
-  ImpulseWrenchFrictionCone constr(robot, mu, X, Y); 
+  ImpulseWrenchFrictionCone constr(robot, X, Y); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   EXPECT_EQ(constr.dimc(), 17*robot.maxNumSurfaceContacts());
@@ -94,7 +94,7 @@ void ImpulseWrenchFrictionConeTest::test_isFeasible(Robot& robot,
 
 
 void ImpulseWrenchFrictionConeTest::test_setSlack(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseWrenchFrictionCone constr(robot, mu, X, Y); 
+  ImpulseWrenchFrictionCone constr(robot, X, Y); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam()), data_ref(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   constr.allocateExtraData(data_ref);
@@ -123,7 +123,7 @@ void ImpulseWrenchFrictionConeTest::test_setSlack(Robot& robot, const ImpulseSta
 
 
 void ImpulseWrenchFrictionConeTest::test_evalConstraint(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseWrenchFrictionCone constr(robot, mu, X, Y); 
+  ImpulseWrenchFrictionCone constr(robot, X, Y); 
   const int dimc = constr.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
@@ -163,7 +163,7 @@ void ImpulseWrenchFrictionConeTest::test_evalConstraint(Robot& robot, const Impu
 
 
 void ImpulseWrenchFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseWrenchFrictionCone constr(robot, mu, X, Y); 
+  ImpulseWrenchFrictionCone constr(robot, X, Y); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
@@ -206,7 +206,7 @@ void ImpulseWrenchFrictionConeTest::test_evalDerivatives(Robot& robot, const Imp
 
 void ImpulseWrenchFrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
                                                               const ImpulseStatus& impulse_status) const {
-  ImpulseWrenchFrictionCone constr(robot, mu, X, Y); 
+  ImpulseWrenchFrictionCone constr(robot, X, Y); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
@@ -259,7 +259,7 @@ void ImpulseWrenchFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
 
 
 void ImpulseWrenchFrictionConeTest::test_expandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseWrenchFrictionCone constr(robot, mu, X, Y); 
+  ImpulseWrenchFrictionCone constr(robot, X, Y); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();

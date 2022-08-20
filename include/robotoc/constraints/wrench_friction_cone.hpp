@@ -24,12 +24,10 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] mu Friction coefficient. Must be positive.
   /// @param[in] X A length of the rectangular. Must be positive.
   /// @param[in] Y A length of the rectangular. Must be positive.
   ///
-  WrenchFrictionCone(const Robot& robot, const double mu,
-                     const double X, const double Y);
+  WrenchFrictionCone(const Robot& robot, const double X, const double Y);
 
   ///
   /// @brief Default constructor. 
@@ -60,12 +58,6 @@ public:
   /// @brief Default move assign operator. 
   ///
   WrenchFrictionCone& operator=(WrenchFrictionCone&&) noexcept = default;
-
-  ///
-  /// @brief Sets the friction coefficient. 
-  /// @param[in] mu Friction coefficient. Must be positive.
-  ///
-  void setFrictionCoefficient(const double mu);
 
   ///
   /// @param[in] X A length of the rectangular. Must be positive.
@@ -110,10 +102,10 @@ private:
   int dimv_, dimc_, max_num_contacts_;
   std::vector<int> contact_frame_;
   std::vector<ContactType> contact_types_;
-  double mu_, X_, Y_;
-  Eigen::MatrixXd cone_;
+  double X_, Y_;
 
-  void setCone(const double mu, const double X, const double Y);
+  void computeCone(const double mu, Eigen::MatrixXd& cone) const;
+  void updateCone(const double mu, Eigen::MatrixXd& cone) const;
 
 };
 
