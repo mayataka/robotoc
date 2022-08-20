@@ -178,6 +178,39 @@ private:
     s.setContactStatus(s1);
     s.set_f_stack();
     s.set_mu_stack();
+    s.setImpulseStatus(s1);
+    if (s.hasActiveImpulse()) {
+      s.xi_stack() = s1.xi_stack();
+    }
+  }
+
+  template <typename SplitSolutionType>
+  static void interpolatePartial(const Robot& robot, const SplitSolution& s1, 
+                                 const SplitSolutionType& s2, const double alpha, 
+                                 SplitSolution& s) {
+    assert(alpha >= 0.0);
+    assert(alpha <= 1.0);
+    robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
+    s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
+    s.a = s1.a;
+    s.u = s1.u;
+    for (size_t i=0; i<s1.f.size(); ++i) {
+      s.f[i] = s1.f[i];
+    }
+    s.lmd  = (1.0 - alpha) * s1.lmd + alpha * s2.lmd;
+    s.gmm  = (1.0 - alpha) * s1.gmm + alpha * s2.gmm;
+    s.beta = s1.beta;
+    for (size_t i=0; i<s1.mu.size(); ++i) {
+      s.mu[i] = s1.mu[i];
+    }
+    s.nu_passive = s1.nu_passive;
+    s.setContactStatus(s1);
+    s.set_f_stack();
+    s.set_mu_stack();
+    s.setImpulseStatus(s1);
+    if (s.hasActiveImpulse()) {
+      s.xi_stack() = s1.xi_stack();
+    }
   }
 
 };

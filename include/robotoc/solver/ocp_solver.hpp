@@ -190,22 +190,6 @@ public:
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
-  /// @brief Extrapolates the solution over the grids on the last contact phase.
-  /// Also initializes the slack and dual variables of the inequality 
-  /// constraints on such stages.
-  /// @param[in] t Initial time of the horizon. 
-  ///
-  void extrapolateSolutionLastPhase(const double t);
-
-  ///
-  /// @brief Extrapolates the solution over the grids on the initial contact 
-  /// phase. Also initializes the slack and dual variables of the inequality 
-  /// constraints on such stages.
-  /// @param[in] t Initial time of the horizon. 
-  ///
-  void extrapolateSolutionInitialPhase(const double t);
-
-  ///
   /// @brief Computes the KKT residual of the optimal control problem and 
   /// returns the KKT error, that is, the l2-norm of the KKT residual. 
   /// @param[in] t Initial time of the horizon. 

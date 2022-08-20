@@ -214,7 +214,6 @@ void MPCPace::updateSolution(const double t, const double dt,
   if (!ts.empty()) {
     if (ts.front()+eps_ < t+dt) {
       ts_last_ = ts.front();
-      ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
       ++current_step_;

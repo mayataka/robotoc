@@ -199,7 +199,6 @@ void MPCJump::updateSolution(const double t, const double dt,
   bool remove_step = false;
   if (!ts.empty()) {
     if (ts.front()+eps_ < t+dt) {
-      ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
       ++current_step_;

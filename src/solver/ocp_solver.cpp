@@ -113,7 +113,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   }
   if (init_solver) {
     meshRefinement(t);
-    // solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
+    solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
     initConstraints(t);
     line_search_.clearFilter();
   }
@@ -133,10 +133,10 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
     if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
-      // solution_interpolator_.store(ocp_.timeDiscretization(), s_);
+      solution_interpolator_.store(ocp_.timeDiscretization(), s_);
       if (ocp_.timeDiscretization().dt_max() > solver_options_.max_dt_mesh) {
         meshRefinement(t);
-        // solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
+        solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }
@@ -155,7 +155,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   if (!solver_statistics_.convergence) {
     solver_statistics_.iter = solver_options_.max_iter;
   }
-  // solution_interpolator_.store(ocp_.timeDiscretization(), s_);
+  solution_interpolator_.store(ocp_.timeDiscretization(), s_);
   if (solver_options_.enable_benchmark) {
     timer_.tock();
     solver_statistics_.cpu_time = timer_.ms();
@@ -443,51 +443,6 @@ void OCPSolver::setSolution(const std::string& name,
   }
   else {
     throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, f, or u!");
-  }
-}
-
-
-void OCPSolver::extrapolateSolutionLastPhase(const double t) {
-  const int num_discrete_events = contact_sequence_->numDiscreteEvents();
-  if (num_discrete_events > 0) {
-    ocp_.discretize(t);
-    int time_stage_after_last_event;
-    if (contact_sequence_->eventType(num_discrete_events-1) 
-          == DiscreteEventType::Impulse) {
-      time_stage_after_last_event 
-          = ocp_.timeDiscretization().timeStageAfterImpulse(ocp_.timeDiscretization().N_impulse()-1);
-    }
-    else {
-      time_stage_after_last_event 
-          = ocp_.timeDiscretization().timeStageAfterLift(ocp_.timeDiscretization().N_lift()-1);
-    }
-    for (int i=time_stage_after_last_event; i<=ocp_.timeDiscretization().N(); ++i) {
-      s_[i].copyPrimal(s_[time_stage_after_last_event-1]);
-      s_[i].copyDual(s_[time_stage_after_last_event-1]);
-      ocp_[i].initConstraints(ocp_[time_stage_after_last_event-1]);
-    }
-  }
-}
-
-
-void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
-  const int num_discrete_events = contact_sequence_->numDiscreteEvents();
-  if (num_discrete_events > 0) {
-    ocp_.discretize(t);
-    int time_stage_before_initial_event;
-    if (contact_sequence_->eventType(0) == DiscreteEventType::Impulse) {
-      time_stage_before_initial_event 
-          = ocp_.timeDiscretization().timeStageBeforeImpulse(0);
-    }
-    else {
-      time_stage_before_initial_event 
-          = ocp_.timeDiscretization().timeStageBeforeLift(0);
-    }
-    for (int i=0; i<=time_stage_before_initial_event; ++i) {
-      s_[i].copyPrimal(s_[time_stage_before_initial_event+1]);
-      s_[i].copyDual(s_[time_stage_before_initial_event+1]);
-      ocp_[i].initConstraints(ocp_[time_stage_before_initial_event+1]);
-    }
   }
 }
 
