@@ -21,6 +21,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
     kkt_residual_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
     s_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
     d_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    solution_interpolator_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
     solver_options_(solver_options),
     solver_statistics_() {
   if (nthreads <= 0) {
@@ -112,6 +113,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   }
   if (init_solver) {
     meshRefinement(t);
+    // solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
     initConstraints(t);
     line_search_.clearFilter();
   }
@@ -131,8 +133,10 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
     if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
+      // solution_interpolator_.store(ocp_.timeDiscretization(), s_);
       if (ocp_.timeDiscretization().dt_max() > solver_options_.max_dt_mesh) {
         meshRefinement(t);
+        // solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }
@@ -151,6 +155,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   if (!solver_statistics_.convergence) {
     solver_statistics_.iter = solver_options_.max_iter;
   }
+  // solution_interpolator_.store(ocp_.timeDiscretization(), s_);
   if (solver_options_.enable_benchmark) {
     timer_.tock();
     solver_statistics_.cpu_time = timer_.ms();

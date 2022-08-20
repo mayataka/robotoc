@@ -6,13 +6,15 @@ namespace robotoc {
 SolutionInterpolator::SolutionInterpolator(const Robot& robot, const int N, 
                                            const int reserved_num_discrete_events) 
   : stored_time_discretization_(),
-    stored_solution_(robot, N, reserved_num_discrete_events) {
+    stored_solution_(robot, N, reserved_num_discrete_events),
+    has_stored_solution_(false) {
 }
 
 
 SolutionInterpolator::SolutionInterpolator()
   : stored_time_discretization_(),
-    stored_solution_() {
+    stored_solution_(),
+    has_stored_solution_(false) {
 }
 
 
@@ -26,16 +28,19 @@ void SolutionInterpolator::reserve(const Robot& robot,
 }
 
 
-void SolutionInterpolator::storeTimeDiscretization(
-    const TimeDiscretization& time_discretization) {
+void SolutionInterpolator::store(const TimeDiscretization& time_discretization,
+                                 const Solution& solution) {
   stored_time_discretization_ = time_discretization;
+  stored_solution_ = solution;
+  has_stored_solution_ = true;
 }
 
 
 void SolutionInterpolator::interpolate(
     const Robot& robot, const TimeDiscretization& time_discretization, 
-    Solution& solution) {
-  stored_solution_ = solution;
+    Solution& solution) const {
+  if (!has_stored_solution_) return;
+
   const int N = time_discretization.N();
   for (int i=0; i<N; ++i) {
     const double t = time_discretization.gridInfo(i).t;

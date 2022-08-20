@@ -26,6 +26,7 @@
 #include "robotoc/hybrid/switching_time_optimization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/solver/solution_interpolator.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
 #include "robotoc/utils/timer.hpp"
@@ -274,12 +275,14 @@ private:
   Solution s_;
   Direction d_;
   RiccatiFactorization riccati_factorization_;
+  SolutionInterpolator solution_interpolator_;
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
   Timer timer_;
 
   void reserveData();
   void discretizeSolution();
+  void interpolateSolution();
 
 };
 

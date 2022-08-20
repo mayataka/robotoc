@@ -71,24 +71,29 @@ public:
   }
 
   ///
-  /// @brief Stores the current time-discretization. 
+  /// @brief Stores the current time-discretization and solution. 
   /// @param[in] time_discretization Time discretization. 
+  /// @param[out] solution Solution. 
   ///
-  void storeTimeDiscretization(const TimeDiscretization& time_discretization);
+  void store(const TimeDiscretization& time_discretization,
+             const Solution& solution);
 
   ///
   /// @brief Interpolates the solution. 
   /// @param[in] robot Robot model.
   /// @param[in] time_discretization Time discretization. 
-  /// @param[in, out] solution Solution. 
+  /// @param[out] solution Solution. 
   ///
   void interpolate(const Robot& robot, 
                    const TimeDiscretization& time_discretization, 
-                   Solution& solution);
+                   Solution& solution) const;
+
+  bool hasStoredSolution() const { return has_stored_solution_; }
 
 private:
   TimeDiscretization stored_time_discretization_;
   Solution stored_solution_;
+  bool has_stored_solution_;
 
   int findStoredImpulseIndexBeforeTime(const double t) const {
     const int N = stored_time_discretization_.N();
