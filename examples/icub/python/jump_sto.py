@@ -55,8 +55,7 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.6
-# wrench_friction_cone  = robotoc.WrenchFrictionCone(robot, mu, 0.1, 0.05)
+# wrench_friction_cone  = robotoc.WrenchFrictionCone(robot, 0.1, 0.05)
 friction_cone  = robotoc.FrictionCone(robot)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
@@ -69,6 +68,8 @@ constraints.push_back(friction_cone)
 
 # Create the contact sequence
 contact_sequence = robotoc.ContactSequence(robot)
+mu = 0.6
+friction_coefficients = {'l_sole': mu, 'r_sole': mu} 
 
 robot.forward_kinematics(q_standing)
 x3d0_L = robot.frame_placement('l_sole')
@@ -78,6 +79,7 @@ contact_placements = {'l_sole': x3d0_L, 'r_sole': x3d0_R}
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['l_sole', 'r_sole'])
 contact_status_standing.set_contact_placements(contact_placements)
+contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()

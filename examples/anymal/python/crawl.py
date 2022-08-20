@@ -104,7 +104,6 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.7
 friction_cone         = robotoc.FrictionCone(robot)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
@@ -116,22 +115,27 @@ constraints.push_back(friction_cone)
 
 # Create the contact sequence
 contact_sequence = robotoc.ContactSequence(robot)
+mu = 0.7
+friction_coefficients = {'LF_FOOT': mu, 'LH_FOOT': mu, 'RF_FOOT': mu, 'RH_FOOT': mu} 
 
 contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
+contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 
 contact_status_rh_swing = robot.create_contact_status()
 contact_status_rh_swing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT'])
 contact_status_rh_swing.set_contact_placements(contact_positions)
+contact_status_rh_swing.set_friction_coefficients(friction_coefficients)
 contact_sequence.push_back(contact_status_rh_swing, t0)
 
 contact_positions['RH_FOOT'] += 0.5 * step_length
 contact_status_rf_swing = robot.create_contact_status()
 contact_status_rf_swing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RH_FOOT'])
 contact_status_rf_swing.set_contact_placements(contact_positions)
+contact_status_rf_swing.set_friction_coefficients(friction_coefficients)
 contact_sequence.push_back(contact_status_rf_swing, t0+swing_time)
 
 contact_positions['RF_FOOT'] += 0.5 * step_length
@@ -141,6 +145,7 @@ contact_sequence.push_back(contact_status_standing, t0+2*swing_time)
 contact_status_lh_swing = robot.create_contact_status()
 contact_status_lh_swing.activate_contacts(['LF_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_lh_swing.set_contact_placements(contact_positions)
+contact_status_lh_swing.set_friction_coefficients(friction_coefficients)
 contact_sequence.push_back(contact_status_lh_swing, 
                            t0+double_support_time+2*swing_time)
 
@@ -148,6 +153,7 @@ contact_positions['LH_FOOT'] += step_length
 contact_status_lf_swing = robot.create_contact_status()
 contact_status_lf_swing.activate_contacts(['LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_lf_swing.set_contact_placements(contact_positions)
+contact_status_lf_swing.set_friction_coefficients(friction_coefficients)
 contact_sequence.push_back(contact_status_lf_swing, 
                            t0+double_support_time+3*swing_time)
 

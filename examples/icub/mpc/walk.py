@@ -37,9 +37,7 @@ mpc.set_gait_pattern(planner, step_height, swing_time, double_support_time, swin
 mu = 0.4
 X = 0.05
 Y = 0.025
-mpc.get_wrench_cone_handle().set_friction_coefficient(mu=mu)
 mpc.get_wrench_cone_handle().set_rectangular(X=X, Y=Y)
-mpc.get_impulse_wrench_cone_handle().set_friction_coefficient(mu=mu)
 mpc.get_impulse_wrench_cone_handle().set_rectangular(X=X, Y=Y)
 
 q = np.array([0, 0, 0, 0, 0, 0, 1,
