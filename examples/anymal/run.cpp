@@ -186,6 +186,11 @@ int main(int argc, char *argv[]) {
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
+  const double mu = 0.7;
+  const std::unordered_map<std::string, double> friction_coefficients = {{"LF_FOOT", mu}, 
+                                                                         {"LH_FOOT", mu}, 
+                                                                         {"RF_FOOT", mu}, 
+                                                                         {"RH_FOOT", mu}};
 
   robot.updateFrameKinematics(q_standing);
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions 
@@ -200,6 +205,10 @@ int main(int argc, char *argv[]) {
   auto contact_status_hip_swing = robot.createContactStatus();
   contact_status_hip_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "RF_FOOT"}));
   auto contact_status_front_hip_swing = robot.createContactStatus();
+
+  contact_status_standing.setFrictionCoefficients(friction_coefficients);
+  contact_status_front_swing.setFrictionCoefficients(friction_coefficients);
+  contact_status_hip_swing.setFrictionCoefficients(friction_coefficients);
 
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->init(contact_status_standing);

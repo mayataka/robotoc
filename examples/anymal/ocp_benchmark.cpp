@@ -94,15 +94,18 @@ int main () {
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
+  const double mu = 0.7;
 
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
   const std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
-                                                       robot.framePosition(LH_foot_id),
-                                                       robot.framePosition(RF_foot_id),
-                                                       robot.framePosition(RH_foot_id)};
+                                                          robot.framePosition(LH_foot_id),
+                                                          robot.framePosition(RF_foot_id),
+                                                          robot.framePosition(RH_foot_id)};
+  const std::vector<double> friction_coefficients = {mu, mu, mu, mu};
   contact_status_standing.setContactPlacements(contact_positions);
+  contact_status_standing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->init(contact_status_standing);
 
   // Create OCPSolver
