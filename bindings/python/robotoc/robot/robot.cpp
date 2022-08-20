@@ -60,6 +60,14 @@ PYBIND11_MODULE(robot, m) {
         self.subtractConfiguration(qf, q0, qdiff);
         return qdiff;
      }, py::arg("qf"), py::arg("q0"))
+    .def("interpolate_configuration", [](const Robot& self, 
+                                         const Eigen::VectorXd& q1, 
+                                         const Eigen::VectorXd& q2,
+                                         const double t) {
+        Eigen::VectorXd qout = Eigen::VectorXd::Zero(self.dimq());
+        self.interpolateConfiguration(q1, q2, t, qout);
+        return qout;
+     }, py::arg("q1"), py::arg("q2"), py::arg("t"))
     .def("integrate_coeff_wise_jacobian", [](const Robot& self, const Eigen::VectorXd& q) {
         Eigen::MatrixXd J = Eigen::MatrixXd::Zero(self.dimq(), self.dimv());
         self.integrateCoeffWiseJacobian(q, J);

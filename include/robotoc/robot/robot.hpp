@@ -300,6 +300,21 @@ public:
       const Eigen::MatrixBase<MatrixType>& dqdiff_dq0) const;
 
   ///
+  /// @brief Computes an interpolation of two configurations by
+  /// (1.0 - t) * s1 + t * s2
+  /// @param[in] q1 Configuration. Size must be Robot::dimq().
+  /// @param[in] q2 Configuration. Size must be Robot::dimq().
+  /// @param[in] t Interpolation parameter. Must be between 0 to 1.
+  /// @param[out] qout Configuration. Size must be Robot::dimq().
+  ///
+  template <typename ConfigVectorType1, typename ConfigVectorType2, 
+            typename ConfigVectorType3>
+  void interpolateConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType1>& q1, 
+      const Eigen::MatrixBase<ConfigVectorType2>& q2, const double t,
+      const Eigen::MatrixBase<ConfigVectorType3>& qout) const;
+
+  ///
   /// @brief Transforms the Jacobian w.r.t. configuration to tangentspace.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in, out] J Jacobian. Size must be Robot::dimq() x Robot::dimv().

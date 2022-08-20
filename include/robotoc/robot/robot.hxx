@@ -140,6 +140,22 @@ inline void Robot::dSubtractConfiguration_dq0(
 }
 
 
+template <typename ConfigVectorType1, typename ConfigVectorType2, 
+          typename ConfigVectorType3>
+inline void Robot::interpolateConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType1>& q1, 
+    const Eigen::MatrixBase<ConfigVectorType2>& q2, const double t,
+    const Eigen::MatrixBase<ConfigVectorType3>& qout) const {
+  assert(q1.size() == dimq_);
+  assert(q2.size() == dimq_);
+  assert(qout.size() == dimq_);
+  assert(t >= 0.0);
+  assert(t <= 1.0);
+  pinocchio::interpolate(model_, q1, q2, t, 
+                         const_cast<Eigen::MatrixBase<ConfigVectorType3>&>(qout));
+}
+
+
 template <typename ConfigVectorType, typename MatrixType>
 inline void Robot::integrateCoeffWiseJacobian(
     const Eigen::MatrixBase<ConfigVectorType>& q, 
