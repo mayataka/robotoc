@@ -115,7 +115,7 @@ public:
   /// of the optimal control problem. 
   /// @return The discretization of the optimal control problem. 
   ///
-  const TimeDiscretization& discrete() const;
+  const TimeDiscretization& timeDiscretization() const;
 
   ///
   /// @return const reference to the Robot model. 

@@ -69,8 +69,8 @@ void TimeDiscretization::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const TimeDiscretization& discretization) {
-  discretization.disp(os);
+                         const TimeDiscretization& time_discretization) {
+  time_discretization.disp(os);
   return os;
 }
 

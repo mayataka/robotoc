@@ -31,8 +31,8 @@ protected:
     contact_sequence 
         = testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, 0, 3*dt);
 
-    discretization = TimeDiscretization(T, N, 2*max_num_impulse);
-    discretization.discretize(contact_sequence, t);
+    time_discretization = TimeDiscretization(T, N, 2*max_num_impulse);
+    time_discretization.discretize(contact_sequence, t);
   }
 
   virtual void TearDown() {
@@ -44,7 +44,7 @@ protected:
   KKTResidual kkt_residual;
   Direction d;
   std::shared_ptr<ContactSequence> contact_sequence;
-  TimeDiscretization discretization;
+  TimeDiscretization time_discretization;
 };
 
 
@@ -65,11 +65,11 @@ TEST_F(STOConstraintsTest, testParam) {
 TEST_F(STOConstraintsTest, test) {
   const int max_num_switches = 2 * max_num_impulse;
   auto constraints = STOConstraints(max_num_switches, min_dt);
-  constraints.setSlack(discretization);
-  constraints.evalConstraint(discretization);
-  constraints.linearizeConstraints(discretization, kkt_residual);
-  constraints.condenseSlackAndDual(discretization, kkt_matrix, kkt_residual);
-  constraints.expandSlackAndDual(discretization, d);
+  constraints.setSlack(time_discretization);
+  constraints.evalConstraint(time_discretization);
+  constraints.linearizeConstraints(time_discretization, kkt_residual);
+  constraints.condenseSlackAndDual(time_discretization, kkt_matrix, kkt_residual);
+  constraints.expandSlackAndDual(time_discretization, d);
   const double primal_step_size = constraints.maxPrimalStepSize();
   const double dual_step_size = constraints.maxDualStepSize();
   EXPECT_TRUE(0 < primal_step_size && primal_step_size <= 1.0);

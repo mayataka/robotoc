@@ -195,8 +195,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
-  const auto discretization = ocp_solver.getTimeDiscretization();
-  const auto time_steps = discretization.timeSteps();
+  const auto time_discretization = ocp_solver.getTimeDiscretization();
+  const auto time_steps = time_discretization.timeSteps();
   viewer.display(robot, ocp_solver.getSolution("q"), 
                  ocp_solver.getSolution("f", "WORLD"), time_steps, mu);
 #endif 

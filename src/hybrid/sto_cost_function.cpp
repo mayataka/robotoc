@@ -24,11 +24,11 @@ void STOCostFunction::clear() {
 }
 
 
-double STOCostFunction::evalCost(const TimeDiscretization& discretization) {
+double STOCostFunction::evalCost(const TimeDiscretization& time_discretization) {
   if (!costs_.empty()) {
     double cost = 0;
     for (auto& e : costs_) {
-      cost += e->evalCost(discretization);
+      cost += e->evalCost(time_discretization);
     }
     return cost;
   }
@@ -38,18 +38,18 @@ double STOCostFunction::evalCost(const TimeDiscretization& discretization) {
 }
 
 
-double STOCostFunction::linearizeCost(const TimeDiscretization& discretization, 
+double STOCostFunction::linearizeCost(const TimeDiscretization& time_discretization, 
                                       KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
-    const int num_events = discretization.N_impulse() + discretization.N_lift();
+    const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
     lts_.resize(num_events);
     lts_.setZero();
     double cost = 0;
     for (auto& e : costs_) {
-      cost += e->evalCost(discretization);
-      e->evalCostDerivatives(discretization, lts_);
+      cost += e->evalCost(time_discretization);
+      e->evalCostDerivatives(time_discretization, lts_);
     }
-    setToKKT(discretization, kkt_residual);
+    setToKKT(time_discretization, kkt_residual);
     return cost;
   }
   else {
@@ -58,11 +58,11 @@ double STOCostFunction::linearizeCost(const TimeDiscretization& discretization,
 }
 
 
-double STOCostFunction::quadratizeCost(const TimeDiscretization& discretization, 
+double STOCostFunction::quadratizeCost(const TimeDiscretization& time_discretization, 
                                        KKTMatrix& kkt_matrix, 
                                        KKTResidual& kkt_residual) {
   if (!costs_.empty()) {
-    const int num_events = discretization.N_impulse() + discretization.N_lift();
+    const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
     if (lts_.size() != num_events) {
       lts_.resize(num_events);
     }
@@ -73,11 +73,11 @@ double STOCostFunction::quadratizeCost(const TimeDiscretization& discretization,
     Qts_.setZero();
     double cost = 0;
     for (auto& e : costs_) {
-      cost += e->evalCost(discretization);
-      e->evalCostDerivatives(discretization, lts_);
-      e->evalCostHessian(discretization, Qts_);
+      cost += e->evalCost(time_discretization);
+      e->evalCostDerivatives(time_discretization, lts_);
+      e->evalCostHessian(time_discretization, Qts_);
     }
-    setToKKT(discretization, kkt_matrix, kkt_residual);
+    setToKKT(time_discretization, kkt_matrix, kkt_residual);
     return cost;
   }
   else {
@@ -86,13 +86,13 @@ double STOCostFunction::quadratizeCost(const TimeDiscretization& discretization,
 }
 
 
-void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
+void STOCostFunction::setToKKT(const TimeDiscretization& time_discretization, 
                                KKTResidual& kkt_residual) {
-  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
     int lift_index = 0;
-    if (discretization.eventType(0) == DiscreteEventType::Impulse) {
+    if (time_discretization.eventType(0) == DiscreteEventType::Impulse) {
       kkt_residual.aux[0].h -= lts_.coeff(0);
       ++impulse_index;
     }
@@ -102,7 +102,7 @@ void STOCostFunction::setToKKT(const TimeDiscretization& discretization,
     }
     for (int event_index=1; event_index<num_events; ++event_index) {
       assert(event_index == impulse_index+lift_index);
-      if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      if (time_discretization.eventType(event_index) == DiscreteEventType::Impulse) {
         kkt_residual.aux[impulse_index].h -= lts_.coeff(event_index);
         ++impulse_index;
       }
@@ -115,13 +115,13 @@ void STOCostFunction::setToKKT(const TimeDiscretization& discretization,
 }
 
 
-void STOCostFunction::setToKKT(const TimeDiscretization& discretization, 
+void STOCostFunction::setToKKT(const TimeDiscretization& time_discretization, 
                                KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-  const int num_events = discretization.N_impulse() + discretization.N_lift();
+  const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
   if (num_events > 0) {
     int impulse_index = 0;
     int lift_index = 0;
-    if (discretization.eventType(0) == DiscreteEventType::Impulse) {
+    if (time_discretization.eventType(0) == DiscreteEventType::Impulse) {
       kkt_residual.aux[0].h -= lts_.coeff(0);
       kkt_matrix.aux[0].Qtt += Qts_.coeff(0, 0);
       kkt_matrix.aux[0].Qtt_prev += Qts_.coeff(0, 1);
@@ -135,7 +135,7 @@ void STOCostFunction::setToKKT(const TimeDiscretization& discretization,
     }
     for (int event_index=1; event_index<num_events; ++event_index) {
       assert(event_index == impulse_index+lift_index);
-      if (discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+      if (time_discretization.eventType(event_index) == DiscreteEventType::Impulse) {
         kkt_residual.aux[impulse_index].h -= lts_.coeff(event_index);
         kkt_matrix.aux[impulse_index].Qtt += Qts_.coeff(event_index, event_index);
         if (event_index<num_events-1) {

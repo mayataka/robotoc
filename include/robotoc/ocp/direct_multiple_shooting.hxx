@@ -114,73 +114,73 @@ inline void DirectMultipleShooting::runParallel(
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
-  const int N = ocp.discrete().N();
-  const int N_impulse = ocp.discrete().N_impulse();
-  const int N_lift = ocp.discrete().N_lift();
+  const int N = ocp.timeDiscretization().N();
+  const int N_impulse = ocp.timeDiscretization().N_impulse();
+  const int N_lift = ocp.timeDiscretization().N_lift();
   const int N_all = N + 1 + 2*N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
-      if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
-        assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
-        const int contact_phase = ocp.discrete().contactPhase(i);
+      if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        assert(!ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1));
+        const int contact_phase = ocp.timeDiscretization().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
-                       s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], 
+                       ocp.timeDiscretization().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
+                       s.impulse[ocp.timeDiscretization().impulseIndexAfterTimeStage(i)], 
                        kkt_matrix[i], kkt_residual[i]);
         SplitOCP::correctSTOSensitivities(kkt_matrix[i], kkt_residual[i], 
-                                          ocp.discrete().N_phase(contact_phase));
+                                          ocp.timeDiscretization().N_phase(contact_phase));
       }
-      else if (ocp.discrete().isTimeStageBeforeLift(i)) {
-        assert(!ocp.discrete().isTimeStageBeforeImpulse(i+1));
-        const int contact_phase = ocp.discrete().contactPhase(i);
+      else if (ocp.timeDiscretization().isTimeStageBeforeLift(i)) {
+        assert(!ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1));
+        const int contact_phase = ocp.timeDiscretization().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
-                       s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
+                       ocp.timeDiscretization().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
+                       s.lift[ocp.timeDiscretization().liftIndexAfterTimeStage(i)], 
                        kkt_matrix[i], kkt_residual[i]);
         SplitOCP::correctSTOSensitivities(kkt_matrix[i], kkt_residual[i], 
-                                          ocp.discrete().N_phase(contact_phase));
+                                          ocp.timeDiscretization().N_phase(contact_phase));
       }
-      else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+      else if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index  
-            = ocp.discrete().impulseIndexAfterTimeStage(i+1);
-        const int contact_phase = ocp.discrete().contactPhase(i);
+            = ocp.timeDiscretization().impulseIndexAfterTimeStage(i+1);
+        const int contact_phase = ocp.timeDiscretization().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
+                       ocp.timeDiscretization().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
                        s[i+1], kkt_matrix[i], kkt_residual[i], 
                        contact_sequence->impulseStatus(impulse_index), 
-                       ocp.discrete().gridInfo(i+1), 
+                       ocp.timeDiscretization().gridInfo(i+1), 
                        kkt_matrix.switching[impulse_index], 
                        kkt_residual.switching[impulse_index]);
         SplitOCP::correctSTOSensitivities(kkt_matrix[i], kkt_residual[i], 
                                           kkt_matrix.switching[impulse_index],
-                                          ocp.discrete().N_phase(contact_phase));
+                                          ocp.timeDiscretization().N_phase(contact_phase));
       }
       else {
-        const int contact_phase = ocp.discrete().contactPhase(i);
+        const int contact_phase = ocp.timeDiscretization().contactPhase(i);
         Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence->contactStatus(contact_phase), 
-                       ocp.discrete().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
+                       ocp.timeDiscretization().gridInfo(i), q_prev(ocp, q, s, i), s[i], 
                        s[i+1], kkt_matrix[i], kkt_residual[i]);
         SplitOCP::correctSTOSensitivities(kkt_matrix[i], kkt_residual[i], 
-                                          ocp.discrete().N_phase(contact_phase));
+                                          ocp.timeDiscretization().N_phase(contact_phase));
       }
     }
     else if (i == N) {
       Algorithm::run(ocp.terminal, robots[omp_get_thread_num()], 
-                     ocp.discrete().gridInfo(N), q_prev(ocp, q, s, N), s[N], 
+                     ocp.timeDiscretization().gridInfo(N), q_prev(ocp, q, s, N), s[N], 
                      kkt_matrix[N], kkt_residual[N]);
     }
     else if (i < N+1+N_impulse) {
       const int impulse_index  = i - (N+1);
       const int time_stage_before_impulse 
-          = ocp.discrete().timeStageBeforeImpulse(impulse_index);
+          = ocp.timeDiscretization().timeStageBeforeImpulse(impulse_index);
       Algorithm::run(ocp.impulse[impulse_index], robots[omp_get_thread_num()], 
                      contact_sequence->impulseStatus(impulse_index), 
-                     ocp.discrete().gridInfoImpulse(impulse_index), 
+                     ocp.timeDiscretization().gridInfoImpulse(impulse_index), 
                      s[time_stage_before_impulse].q, s.impulse[impulse_index], 
                      s.aux[impulse_index], kkt_matrix.impulse[impulse_index], 
                      kkt_residual.impulse[impulse_index]);
@@ -188,30 +188,30 @@ inline void DirectMultipleShooting::runParallel(
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
       const int time_stage_after_impulse 
-          = ocp.discrete().timeStageAfterImpulse(impulse_index);
-      const int contact_phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
+          = ocp.timeDiscretization().timeStageAfterImpulse(impulse_index);
+      const int contact_phase = ocp.timeDiscretization().contactPhaseAfterImpulse(impulse_index);
       Algorithm::run(ocp.aux[impulse_index], robots[omp_get_thread_num()], 
                      contact_sequence->contactStatus(contact_phase),
-                     ocp.discrete().gridInfoAux(impulse_index), s.impulse[impulse_index].q, 
+                     ocp.timeDiscretization().gridInfoAux(impulse_index), s.impulse[impulse_index].q, 
                      s.aux[impulse_index], s[time_stage_after_impulse], 
                      kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
       SplitOCP::correctSTOSensitivities(kkt_matrix.aux[impulse_index], 
                                         kkt_residual.aux[impulse_index], 
-                                        ocp.discrete().N_phase(contact_phase));
+                                        ocp.timeDiscretization().N_phase(contact_phase));
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
       const int time_stage_after_lift
-          = ocp.discrete().timeStageAfterLift(lift_index);
-      const int contact_phase = ocp.discrete().contactPhaseAfterLift(lift_index);
+          = ocp.timeDiscretization().timeStageAfterLift(lift_index);
+      const int contact_phase = ocp.timeDiscretization().contactPhaseAfterLift(lift_index);
       Algorithm::run(ocp.lift[lift_index], robots[omp_get_thread_num()], 
                      contact_sequence->contactStatus(contact_phase),
-                     ocp.discrete().gridInfoLift(lift_index), s[time_stage_after_lift-1].q, 
+                     ocp.timeDiscretization().gridInfoLift(lift_index), s[time_stage_after_lift-1].q, 
                      s.lift[lift_index], s[time_stage_after_lift], 
                      kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
       SplitOCP::correctSTOSensitivities(kkt_matrix.lift[lift_index], 
                                         kkt_residual.lift[lift_index],
-                                        ocp.discrete().N_phase(contact_phase));
+                                        ocp.timeDiscretization().N_phase(contact_phase));
     }
   }
 }
@@ -222,15 +222,15 @@ inline const Eigen::VectorXd& DirectMultipleShooting::q_prev(const OCP& ocp,
                                                              const Solution& s, 
                                                              const int time_stage) {
   assert(time_stage >= 0);
-  assert(time_stage <= ocp.discrete().N());
+  assert(time_stage <= ocp.timeDiscretization().N());
   if (time_stage == 0) {
     return q;
   }
-  else if (ocp.discrete().isTimeStageBeforeImpulse(time_stage-1)) {
-    return s.aux[ocp.discrete().impulseIndexAfterTimeStage(time_stage-1)].q;
+  else if (ocp.timeDiscretization().isTimeStageBeforeImpulse(time_stage-1)) {
+    return s.aux[ocp.timeDiscretization().impulseIndexAfterTimeStage(time_stage-1)].q;
   }
-  else if (ocp.discrete().isTimeStageBeforeLift(time_stage-1)) {
-    return s.lift[ocp.discrete().liftIndexAfterTimeStage(time_stage-1)].q;
+  else if (ocp.timeDiscretization().isTimeStageBeforeLift(time_stage-1)) {
+    return s.lift[ocp.timeDiscretization().liftIndexAfterTimeStage(time_stage-1)].q;
   }
   else {
     return s[time_stage-1].q;
@@ -241,27 +241,27 @@ inline const Eigen::VectorXd& DirectMultipleShooting::q_prev(const OCP& ocp,
 inline double DirectMultipleShooting::dts_stage(const OCP& ocp, 
                                                 const Direction& d, 
                                                 const int time_stage) {
-  const int phase = ocp.discrete().contactPhase(time_stage);
+  const int phase = ocp.timeDiscretization().contactPhase(time_stage);
   return ((d[time_stage].dts_next-d[time_stage].dts) 
-            / ocp.discrete().N_phase(phase));
+            / ocp.timeDiscretization().N_phase(phase));
 }
 
 
 inline double DirectMultipleShooting::dts_aux(const OCP& ocp, 
                                               const Direction& d, 
                                               const int impulse_index) {
-  const int phase = ocp.discrete().contactPhaseAfterImpulse(impulse_index);
+  const int phase = ocp.timeDiscretization().contactPhaseAfterImpulse(impulse_index);
   return ((d.aux[impulse_index].dts_next-d.aux[impulse_index].dts) 
-            / ocp.discrete().N_phase(phase));
+            / ocp.timeDiscretization().N_phase(phase));
 }
 
 
 inline double DirectMultipleShooting::dts_lift(const OCP& ocp, 
                                                const Direction& d, 
                                                const int lift_index) {
-  const int phase = ocp.discrete().contactPhaseAfterLift(lift_index);
+  const int phase = ocp.timeDiscretization().contactPhaseAfterLift(lift_index);
   return ((d.lift[lift_index].dts_next-d.lift[lift_index].dts) 
-            / ocp.discrete().N_phase(phase));
+            / ocp.timeDiscretization().N_phase(phase));
 }
 
 } // namespace robotoc 

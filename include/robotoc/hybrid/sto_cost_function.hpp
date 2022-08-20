@@ -69,34 +69,34 @@ public:
 
   ///
   /// @brief Computes the cost on the switching times. 
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @return Cost on the switching times.
   ///
-  double evalCost(const TimeDiscretization& discretization);
+  double evalCost(const TimeDiscretization& time_discretization);
 
   ///
   /// @brief Computes the cost on the switching times and its first-order 
   /// partial derivatives. 
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[in, out] kkt_residual KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Cost on the switching times.
   ///
-  double linearizeCost(const TimeDiscretization& discretization,
+  double linearizeCost(const TimeDiscretization& time_discretization,
                        KKTResidual& kkt_residual); 
 
   ///
   /// @brief Computes the cost, its first-order partial derivatives, and 
   /// its Hessian, i.e., its second-order partial derivatives. 
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   /// @return Cost on the switching times.
   ///
-  double quadratizeCost(const TimeDiscretization& discretization,
+  double quadratizeCost(const TimeDiscretization& time_discretization,
                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 private:
@@ -104,10 +104,10 @@ private:
   Eigen::VectorXd lts_;
   Eigen::MatrixXd Qts_;
 
-  void setToKKT(const TimeDiscretization& discretization,
+  void setToKKT(const TimeDiscretization& time_discretization,
                 KKTResidual& kkt_residual);
 
-  void setToKKT(const TimeDiscretization& discretization,
+  void setToKKT(const TimeDiscretization& time_discretization,
                 KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 };

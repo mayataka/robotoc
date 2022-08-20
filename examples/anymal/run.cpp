@@ -323,8 +323,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
-  const auto discretization = ocp_solver.getTimeDiscretization();
-  const auto time_steps = discretization.timeSteps();
+  const auto time_discretization = ocp_solver.getTimeDiscretization();
+  const auto time_steps = time_discretization.timeSteps();
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
   camera_pos << 0.119269, -7.96283, 1.95978;

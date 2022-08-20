@@ -85,49 +85,49 @@ public:
 
   ///
   /// @brief Sets the slack variables. 
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   ///
-  void setSlack(const TimeDiscretization& discretization);
+  void setSlack(const TimeDiscretization& time_discretization);
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   ///
-  void evalConstraint(const TimeDiscretization& discretization);
+  void evalConstraint(const TimeDiscretization& time_discretization);
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(const TimeDiscretization& discretization,
+  void linearizeConstraints(const TimeDiscretization& time_discretization,
                             KKTResidual& kkt_residual); 
 
   ///
   /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
   /// and condense the slack and dual variables.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void condenseSlackAndDual(const TimeDiscretization& discretization,
+  void condenseSlackAndDual(const TimeDiscretization& time_discretization,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[in] d Newton direction.
   ///
-  void expandSlackAndDual(const TimeDiscretization& discretization, 
+  void expandSlackAndDual(const TimeDiscretization& time_discretization, 
                           const Direction& d); 
 
   ///

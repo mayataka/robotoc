@@ -49,7 +49,7 @@ void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
 
 void OCPSolver::meshRefinement(const double t) {
   ocp_.meshRefinement(t);
-  if (ocp_.discrete().discretizationMethod() == DiscretizationMethod::PhaseBased) {
+  if (ocp_.timeDiscretization().discretizationMethod() == DiscretizationMethod::PhaseBased) {
     reserveData();
     discretizeSolution();
     dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
@@ -131,7 +131,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
     if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
-      if (ocp_.discrete().dt_max() > solver_options_.max_dt_mesh) {
+      if (ocp_.timeDiscretization().dt_max() > solver_options_.max_dt_mesh) {
         meshRefinement(t);
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
@@ -170,7 +170,7 @@ const Solution& OCPSolver::getSolution() const {
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= ocp_.discrete().N());
+  assert(stage <= ocp_.timeDiscretization().N());
   return s_[stage];
 }
 
@@ -179,47 +179,47 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name, const std::string& option) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<=ocp_.discrete().N(); ++i) {
+    for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
       sol.push_back(s_[i].q);
-      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
         sol.push_back(s_.aux[impulse_index].q);
       }
-      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
         sol.push_back(s_.lift[lift_index].q);
       }
     }
   }
   else if (name == "v") {
-    for (int i=0; i<=ocp_.discrete().N(); ++i) {
+    for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
       sol.push_back(s_[i].v);
-      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
         sol.push_back(s_.aux[impulse_index].v);
       }
-      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
         sol.push_back(s_.lift[lift_index].v);
       }
     }
   }
   else if (name == "a") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
+    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
       sol.push_back(s_[i].a);
-      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
         sol.push_back(s_.aux[impulse_index].a);
       }
-      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
         sol.push_back(s_.lift[lift_index].a);
       }
     }
   }
   else if (name == "f" && option == "WORLD") {
     Robot robot = robots_[0];
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
+    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       robot.updateFrameKinematics(s_[i].q);
       for (int j=0; j<robot.maxNumContacts(); ++j) {
@@ -230,8 +230,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         }
       }
       sol.push_back(f);
-      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
         robot.updateFrameKinematics(s_.aux[impulse_index].q);
         for (int j=0; j<robot.maxNumContacts(); ++j) {
@@ -244,8 +244,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         }
         sol.push_back(f);
       }
-      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
         robot.updateFrameKinematics(s_.lift[lift_index].q);
         for (int j=0; j<robot.maxNumContacts(); ++j) {
@@ -262,7 +262,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
   }
   else if (name == "f") {
     Robot robot = robots_[0];
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
+    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       for (int j=0; j<robot.maxNumContacts(); ++j) {
         if (s_[i].isContactActive(j)) {
@@ -270,8 +270,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         }
       }
       sol.push_back(f);
-      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           if (s_.aux[impulse_index].isContactActive(j)) {
@@ -280,8 +280,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         }
         sol.push_back(f);
       }
-      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           if (s_.lift[lift_index].isContactActive(j)) {
@@ -293,25 +293,25 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     }
   }
   else if (name == "u") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
+    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
       sol.push_back(s_[i].u);
-      if (ocp_.discrete().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.discrete().impulseIndexAfterTimeStage(i);
+      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
         sol.push_back(s_.aux[impulse_index].u);
       }
-      else if (ocp_.discrete().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.discrete().liftIndexAfterTimeStage(i);
+      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
         sol.push_back(s_.lift[lift_index].u);
       }
     }
   }
   else if (name == "ts") {
-    const int num_events = ocp_.discrete().N_impulse()+ocp_.discrete().N_lift();
+    const int num_events = ocp_.timeDiscretization().N_impulse()+ocp_.timeDiscretization().N_lift();
     int impulse_index = 0;
     int lift_index = 0;
     Eigen::VectorXd ts(num_events);
     for (int event_index=0; event_index<num_events; ++event_index) {
-      if (ocp_.discrete().eventType(event_index) == DiscreteEventType::Impulse) {
+      if (ocp_.timeDiscretization().eventType(event_index) == DiscreteEventType::Impulse) {
         ts.coeffRef(event_index) = contact_sequence_->impulseTime(impulse_index);
         ++impulse_index;
       }
@@ -450,13 +450,13 @@ void OCPSolver::extrapolateSolutionLastPhase(const double t) {
     if (contact_sequence_->eventType(num_discrete_events-1) 
           == DiscreteEventType::Impulse) {
       time_stage_after_last_event 
-          = ocp_.discrete().timeStageAfterImpulse(ocp_.discrete().N_impulse()-1);
+          = ocp_.timeDiscretization().timeStageAfterImpulse(ocp_.timeDiscretization().N_impulse()-1);
     }
     else {
       time_stage_after_last_event 
-          = ocp_.discrete().timeStageAfterLift(ocp_.discrete().N_lift()-1);
+          = ocp_.timeDiscretization().timeStageAfterLift(ocp_.timeDiscretization().N_lift()-1);
     }
-    for (int i=time_stage_after_last_event; i<=ocp_.discrete().N(); ++i) {
+    for (int i=time_stage_after_last_event; i<=ocp_.timeDiscretization().N(); ++i) {
       s_[i].copyPrimal(s_[time_stage_after_last_event-1]);
       s_[i].copyDual(s_[time_stage_after_last_event-1]);
       ocp_[i].initConstraints(ocp_[time_stage_after_last_event-1]);
@@ -472,11 +472,11 @@ void OCPSolver::extrapolateSolutionInitialPhase(const double t) {
     int time_stage_before_initial_event;
     if (contact_sequence_->eventType(0) == DiscreteEventType::Impulse) {
       time_stage_before_initial_event 
-          = ocp_.discrete().timeStageBeforeImpulse(0);
+          = ocp_.timeDiscretization().timeStageBeforeImpulse(0);
     }
     else {
       time_stage_before_initial_event 
-          = ocp_.discrete().timeStageBeforeLift(0);
+          = ocp_.timeDiscretization().timeStageBeforeLift(0);
     }
     for (int i=0; i<=time_stage_before_initial_event; ++i) {
       s_[i].copyPrimal(s_[time_stage_before_initial_event+1]);
@@ -518,7 +518,7 @@ bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
 
 
 const TimeDiscretization& OCPSolver::getTimeDiscretization() const {
-  return ocp_.discrete();
+  return ocp_.timeDiscretization();
 }
 
 
@@ -541,28 +541,28 @@ void OCPSolver::reserveData() {
 
 
 void OCPSolver::discretizeSolution() {
-  for (int i=0; i<=ocp_.discrete().N(); ++i) {
+  for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
     s_[i].setContactStatus(
-        contact_sequence_->contactStatus(ocp_.discrete().contactPhase(i)));
+        contact_sequence_->contactStatus(ocp_.timeDiscretization().contactPhase(i)));
     s_[i].set_f_stack();
     s_[i].setImpulseStatus();
   }
-  for (int i=0; i<ocp_.discrete().N_lift(); ++i) {
+  for (int i=0; i<ocp_.timeDiscretization().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_->contactStatus(
-            ocp_.discrete().contactPhaseAfterLift(i)));
+            ocp_.timeDiscretization().contactPhaseAfterLift(i)));
     s_.lift[i].set_f_stack();
     s_.lift[i].setImpulseStatus();
   }
-  for (int i=0; i<ocp_.discrete().N_impulse(); ++i) {
+  for (int i=0; i<ocp_.timeDiscretization().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_->impulseStatus(i));
     s_.impulse[i].set_f_stack();
     s_.aux[i].setContactStatus(
         contact_sequence_->contactStatus(
-            ocp_.discrete().contactPhaseAfterImpulse(i)));
+            ocp_.timeDiscretization().contactPhaseAfterImpulse(i)));
     s_.aux[i].set_f_stack();
     const int time_stage_before_impulse 
-        = ocp_.discrete().timeStageBeforeImpulse(i);
+        = ocp_.timeDiscretization().timeStageBeforeImpulse(i);
     if (time_stage_before_impulse-1 >= 0) {
       s_[time_stage_before_impulse-1].setImpulseStatus(
           contact_sequence_->impulseStatus(i));

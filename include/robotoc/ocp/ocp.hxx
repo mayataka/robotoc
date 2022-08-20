@@ -142,7 +142,7 @@ inline void OCP::meshRefinement(const double t) {
 }
 
 
-inline const TimeDiscretization& OCP::discrete() const {
+inline const TimeDiscretization& OCP::timeDiscretization() const {
   return discretization_;
 }
 

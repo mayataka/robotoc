@@ -35,12 +35,12 @@ public:
 
   void set_weight(const double weight);
 
-  double evalCost(const TimeDiscretization& discretization) const override;
+  double evalCost(const TimeDiscretization& time_discretization) const override;
 
-  void evalCostDerivatives(const TimeDiscretization& discretization, 
+  void evalCostDerivatives(const TimeDiscretization& time_discretization, 
                            Eigen::VectorXd& lts) const override;
 
-  void evalCostHessian(const TimeDiscretization& discretization,
+  void evalCostHessian(const TimeDiscretization& time_discretization,
                        Eigen::MatrixXd& Qts) const override;
 
 private:
