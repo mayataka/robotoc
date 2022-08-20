@@ -133,8 +133,8 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
     if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
-      solution_interpolator_.store(ocp_.timeDiscretization(), s_);
       if (ocp_.timeDiscretization().dt_max() > solver_options_.max_dt_mesh) {
+        solution_interpolator_.store(ocp_.timeDiscretization(), s_);
         meshRefinement(t);
         solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
         inner_iter = 0;
