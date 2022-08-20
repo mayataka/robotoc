@@ -11,10 +11,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(impulse_wrench_friction_cone, m) {
   py::class_<ImpulseWrenchFrictionCone, ImpulseConstraintComponentBase, 
              std::shared_ptr<ImpulseWrenchFrictionCone>>(m, "ImpulseWrenchFrictionCone")
-    .def(py::init<const Robot&, const double, const double, const double>(),
-          py::arg("robot"), py::arg("mu"), py::arg("X"), py::arg("Y"))
-    .def("set_friction_coefficient", &ImpulseWrenchFrictionCone::setFrictionCoefficient,
-          py::arg("mu"))
+    .def(py::init<const Robot&, const double, const double>(),
+          py::arg("robot"), py::arg("X"), py::arg("Y"))
     .def("set_rectangular", &ImpulseWrenchFrictionCone::setRectangular,
           py::arg("X"), py::arg("Y"));
 }

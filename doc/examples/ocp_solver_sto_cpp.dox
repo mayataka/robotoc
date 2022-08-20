@@ -118,8 +118,7 @@ Next, we construct the constraints.
   auto joint_velocity_upper  = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower   = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.7;
-  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -134,6 +133,15 @@ Next, we construct the contact sequence `robotoc::ContactSequence` as
 auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
+
+We set the friction coefficients via the contact sequence. We then define the friction coefficients.
+```
+  const double mu = 0.7;
+  const std::unordered_map<std::string, double> friction_coefficients = {{"LF_FOOT", mu}, 
+                                                                         {"LH_FOOT", mu}, 
+                                                                         {"RF_FOOT", mu}, 
+                                                                         {"RH_FOOT", mu}};
+```
 
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
@@ -151,6 +159,7 @@ In the beginning, the robot is standing, so all the contacts are active.
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
+  contact_status_standing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->init(contact_status_standing);
 ```
 

@@ -142,8 +142,7 @@ int main(int argc, char *argv[]) {
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.7;
-  auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -154,6 +153,11 @@ int main(int argc, char *argv[]) {
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
+  const double mu = 0.7;
+  const std::unordered_map<std::string, double> friction_coefficients = {{"LF_FOOT", mu}, 
+                                                                         {"LH_FOOT", mu}, 
+                                                                         {"RF_FOOT", mu}, 
+                                                                         {"RH_FOOT", mu}};
 
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions = {{"LF_FOOT", x3d0_LF}, 
                                                                         {"LH_FOOT", x3d0_LH}, 
@@ -162,17 +166,20 @@ int main(int argc, char *argv[]) {
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
+  contact_status_standing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->init(contact_status_standing);
 
   auto contact_status_rh_swing = robot.createContactStatus();
   contact_status_rh_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT"}));
   contact_status_rh_swing.setContactPlacements(contact_positions);
+  contact_status_rh_swing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->push_back(contact_status_rh_swing, t0);
 
   contact_positions["RH_FOOT"].noalias() += 0.5 * step_length;
   auto contact_status_rf_swing = robot.createContactStatus();
   contact_status_rf_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RH_FOOT"}));
   contact_status_rf_swing.setContactPlacements(contact_positions);
+  contact_status_rf_swing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->push_back(contact_status_rf_swing, t0+swing_time);
 
   contact_positions["RF_FOOT"].noalias() += 0.5 * step_length;
@@ -182,6 +189,7 @@ int main(int argc, char *argv[]) {
   auto contact_status_lh_swing = robot.createContactStatus();
   contact_status_lh_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_lh_swing.setContactPlacements(contact_positions);
+  contact_status_lh_swing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->push_back(contact_status_lh_swing, 
                               t0+double_support_time+2*swing_time);
 
@@ -189,6 +197,7 @@ int main(int argc, char *argv[]) {
   auto contact_status_lf_swing = robot.createContactStatus();
   contact_status_lf_swing.activateContacts(std::vector<std::string>({"LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_lf_swing.setContactPlacements(contact_positions);
+  contact_status_lf_swing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->push_back(contact_status_lf_swing, 
                               t0+double_support_time+3*swing_time);
 

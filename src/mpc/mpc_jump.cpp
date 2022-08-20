@@ -58,8 +58,7 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.5;
-  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
@@ -71,6 +70,8 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   for (int i=0; i<cs_ground_.maxNumContacts(); ++i) {
     cs_ground_.activateContact(i);
   }
+  const double friction_coefficient = 0.5;
+  cs_ground_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
 }
 
 

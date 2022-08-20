@@ -89,8 +89,7 @@ MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N,
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.5;
-  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
@@ -104,6 +103,12 @@ MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N,
   cs_lh_.activateContacts(std::vector<int>({0, 2, 3}));
   cs_rf_.activateContacts(std::vector<int>({0, 1, 3}));
   cs_rh_.activateContacts(std::vector<int>({0, 1, 2}));
+  const double friction_coefficient = 0.5;
+  cs_standing_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_lf_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_lh_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_rf_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_rh_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
 }
 
 

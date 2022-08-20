@@ -81,8 +81,7 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.6
-friction_cone  = robotoc.FrictionCone(robot, mu)
+friction_cone  = robotoc.FrictionCone(robot)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
 constraints.push_back(joint_velocity_lower)
@@ -98,6 +97,12 @@ contact_sequence = robotoc.ContactSequence(robot)
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
 
+We set the friction coefficients via the contact sequence. We then define the friction coefficients.
+```
+  mu = 0.6
+  friction_coefficients = {'l_sole': mu, 'r_sole': mu} 
+```
+
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
@@ -109,6 +114,7 @@ contact_placements = {'l_sole': x3d0_L, 'r_sole': x3d0_R}
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['l_sole', 'r_sole'])
 contact_status_standing.set_contact_placements(contact_placements)
+contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 ```
 

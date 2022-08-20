@@ -56,14 +56,14 @@ protected:
 
 void FrictionConeTest::test_kinematics(Robot& robot, 
                                       const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
 void FrictionConeTest::test_isFeasible(Robot& robot, 
                                       const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   EXPECT_EQ(constr.dimc(), 5*contact_status.maxNumContacts());
@@ -88,7 +88,7 @@ void FrictionConeTest::test_isFeasible(Robot& robot,
 
 
 void FrictionConeTest::test_setSlack(Robot& robot, const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam()), data_ref(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   constr.allocateExtraData(data_ref);
@@ -107,7 +107,7 @@ void FrictionConeTest::test_setSlack(Robot& robot, const ContactStatus& contact_
 
 
 void FrictionConeTest::test_evalConstraint(Robot& robot, const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
   robot.updateKinematics(s.q);
@@ -142,7 +142,7 @@ void FrictionConeTest::test_evalConstraint(Robot& robot, const ContactStatus& co
 
 
 void FrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
@@ -193,7 +193,7 @@ void FrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& c
 
 void FrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
                                                 const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
@@ -258,7 +258,7 @@ void FrictionConeTest::test_condenseSlackAndDual(Robot& robot,
 
 
 void FrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
-  FrictionCone constr(robot, mu); 
+  FrictionCone constr(robot); 
   ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
