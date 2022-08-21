@@ -1,4 +1,4 @@
-#include "robotoc/constraints/impulse_wrench_friction_cone.hpp"
+#include "robotoc/constraints/impulse_wrench_cone.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -6,9 +6,8 @@
 
 namespace robotoc {
 
-ImpulseWrenchFrictionCone::ImpulseWrenchFrictionCone(const Robot& robot, 
-                                                     const double X, 
-                                                     const double Y)
+ImpulseWrenchCone::ImpulseWrenchCone(const Robot& robot, 
+                                     const double X, const double Y)
   : ImpulseConstraintComponentBase(),
     dimc_(17*robot.maxNumSurfaceContacts()),
     max_num_contacts_(robot.maxNumContacts()),
@@ -18,20 +17,20 @@ ImpulseWrenchFrictionCone::ImpulseWrenchFrictionCone(const Robot& robot,
     Y_(Y) {
   if (robot.maxNumContacts() == 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchFrictionCone] invalid argument: robot.maxNumContacts() must be positive!");
+        "[ImpulseWrenchCone] invalid argument: robot.maxNumContacts() must be positive!");
   }
   if (X <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchFrictionCone] invalid argument: 'X' must be positive!");
+        "[ImpulseWrenchCone] invalid argument: 'X' must be positive!");
   }
   if (Y <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchFrictionCone] invalid argument: 'Y' must be positive!");
+        "[ImpulseWrenchCone] invalid argument: 'Y' must be positive!");
   }
 }
 
 
-ImpulseWrenchFrictionCone::ImpulseWrenchFrictionCone()
+ImpulseWrenchCone::ImpulseWrenchCone()
   : ImpulseConstraintComponentBase(),
     dimc_(0),
     max_num_contacts_(0),
@@ -43,31 +42,30 @@ ImpulseWrenchFrictionCone::ImpulseWrenchFrictionCone()
 }
 
 
-ImpulseWrenchFrictionCone::~ImpulseWrenchFrictionCone() {
+ImpulseWrenchCone::~ImpulseWrenchCone() {
 }
 
 
-void ImpulseWrenchFrictionCone::setRectangular(const double X, const double Y) {
+void ImpulseWrenchCone::setRectangular(const double X, const double Y) {
   if (X <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchFrictionCone] invalid argument: 'X' must be positive!");
+        "[ImpulseWrenchCone] invalid argument: 'X' must be positive!");
   }
   if (Y <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchFrictionCone] invalid argument: 'Y' must be positive!");
+        "[ImpulseWrenchCone] invalid argument: 'Y' must be positive!");
   }
   X_ = X;
   Y_ = Y;
 }
 
 
-KinematicsLevel ImpulseWrenchFrictionCone::kinematicsLevel() const {
+KinematicsLevel ImpulseWrenchCone::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }
 
 
-void ImpulseWrenchFrictionCone::allocateExtraData(
-    ConstraintComponentData& data) const {
+void ImpulseWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
   data.r.clear();
   data.r.push_back(Eigen::VectorXd::Zero(17));
   const double mu = 0.7;
@@ -80,10 +78,10 @@ void ImpulseWrenchFrictionCone::allocateExtraData(
 }
 
 
-bool ImpulseWrenchFrictionCone::isFeasible(Robot& robot, 
-                                           const ImpulseStatus& impulse_status,
-                                           ConstraintComponentData& data, 
-                                           const ImpulseSplitSolution& s) const {
+bool ImpulseWrenchCone::isFeasible(Robot& robot, 
+                                   const ImpulseStatus& impulse_status,
+                                   ConstraintComponentData& data, 
+                                   const ImpulseSplitSolution& s) const {
   data.residual.setZero();
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -112,10 +110,10 @@ bool ImpulseWrenchFrictionCone::isFeasible(Robot& robot,
 }
 
 
-void ImpulseWrenchFrictionCone::setSlack(Robot& robot, 
-                                         const ImpulseStatus& impulse_status,
-                                         ConstraintComponentData& data, 
-                                         const ImpulseSplitSolution& s) const {
+void ImpulseWrenchCone::setSlack(Robot& robot, 
+                                 const ImpulseStatus& impulse_status,
+                                 ConstraintComponentData& data, 
+                                 const ImpulseSplitSolution& s) const {
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
@@ -138,10 +136,10 @@ void ImpulseWrenchFrictionCone::setSlack(Robot& robot,
 }
 
 
-void ImpulseWrenchFrictionCone::evalConstraint(Robot& robot, 
-                                               const ImpulseStatus& impulse_status,
-                                               ConstraintComponentData& data, 
-                                               const ImpulseSplitSolution& s) const {
+void ImpulseWrenchCone::evalConstraint(Robot& robot, 
+                                       const ImpulseStatus& impulse_status,
+                                       ConstraintComponentData& data, 
+                                       const ImpulseSplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -168,10 +166,11 @@ void ImpulseWrenchFrictionCone::evalConstraint(Robot& robot,
 }
 
 
-void ImpulseWrenchFrictionCone::evalDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status,
-    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+void ImpulseWrenchCone::evalDerivatives(Robot& robot, 
+                                        const ImpulseStatus& impulse_status, 
+                                        ConstraintComponentData& data, 
+                                        const ImpulseSplitSolution& s, 
+                                        ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -197,10 +196,10 @@ void ImpulseWrenchFrictionCone::evalDerivatives(
 }
 
 
-void ImpulseWrenchFrictionCone::condenseSlackAndDual(
-    const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
-    ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+void ImpulseWrenchCone::condenseSlackAndDual(const ImpulseStatus& impulse_status, 
+                                             ConstraintComponentData& data, 
+                                             ImpulseSplitKKTMatrix& kkt_matrix, 
+                                             ImpulseSplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
   int c_begin = 0;
@@ -232,9 +231,9 @@ void ImpulseWrenchFrictionCone::condenseSlackAndDual(
 }
 
 
-void ImpulseWrenchFrictionCone::expandSlackAndDual(
-     const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
-    const ImpulseSplitDirection& d) const {
+void ImpulseWrenchCone::expandSlackAndDual(const ImpulseStatus& impulse_status, 
+                                           ConstraintComponentData& data, 
+                                           const ImpulseSplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
   // determined by the fraction-to-boundary-rule.
@@ -267,13 +266,12 @@ void ImpulseWrenchFrictionCone::expandSlackAndDual(
 }
 
 
-int ImpulseWrenchFrictionCone::dimc() const {
+int ImpulseWrenchCone::dimc() const {
   return dimc_;
 }
 
 
-void ImpulseWrenchFrictionCone::computeCone(const double mu, 
-                                            Eigen::MatrixXd& cone) const {
+void ImpulseWrenchCone::computeCone(const double mu, Eigen::MatrixXd& cone) const {
   const double XYmu = (X_+Y_)*mu;
   cone.resize(17, 6);
   cone <<  0,  0,  -1,  0,  0,  0,
@@ -296,8 +294,7 @@ void ImpulseWrenchFrictionCone::computeCone(const double mu,
 }
 
 
-void ImpulseWrenchFrictionCone::updateCone(const double mu, 
-                                           Eigen::MatrixXd& cone) const {
+void ImpulseWrenchCone::updateCone(const double mu, Eigen::MatrixXd& cone) const {
   for (int i=1; i<5; ++i) {
     cone.coeffRef(i, 2) = -mu;
   }

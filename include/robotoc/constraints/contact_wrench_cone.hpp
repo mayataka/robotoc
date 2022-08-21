@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_WRENCH_FRICTION_CONE_HPP_
-#define ROBOTOC_WRENCH_FRICTION_CONE_HPP_
+#ifndef ROBOTOC_CONTACT_WRENCH_CONE_HPP_
+#define ROBOTOC_CONTACT_WRENCH_CONE_HPP_
 
 #include "Eigen/Core"
 
@@ -16,10 +16,10 @@
 namespace robotoc {
 
 ///
-/// @class WrenchFrictionCone
-/// @brief Constraint on the wrench firction cone for surface contacts.
+/// @class ContactWrenchCone
+/// @brief Constraint on the contact wrench cone for surface contacts.
 ///
-class WrenchFrictionCone final : public ConstraintComponentBase {
+class ContactWrenchCone final : public ConstraintComponentBase {
 public:
   ///
   /// @brief Constructor. 
@@ -27,37 +27,37 @@ public:
   /// @param[in] X A length of the rectangular. Must be positive.
   /// @param[in] Y A length of the rectangular. Must be positive.
   ///
-  WrenchFrictionCone(const Robot& robot, const double X, const double Y);
+  ContactWrenchCone(const Robot& robot, const double X, const double Y);
 
   ///
   /// @brief Default constructor. 
   ///
-  WrenchFrictionCone();
+  ContactWrenchCone();
 
   ///
   /// @brief Destructor. 
   ///
-  ~WrenchFrictionCone();
+  ~ContactWrenchCone();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  WrenchFrictionCone(const WrenchFrictionCone&) = default;
+  ContactWrenchCone(const ContactWrenchCone&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  WrenchFrictionCone& operator=(const WrenchFrictionCone&) = default;
+  ContactWrenchCone& operator=(const ContactWrenchCone&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  WrenchFrictionCone(WrenchFrictionCone&&) noexcept = default;
+  ContactWrenchCone(ContactWrenchCone&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  WrenchFrictionCone& operator=(WrenchFrictionCone&&) noexcept = default;
+  ContactWrenchCone& operator=(ContactWrenchCone&&) noexcept = default;
 
   ///
   /// @param[in] X A length of the rectangular. Must be positive.
@@ -111,4 +111,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_WRENCH_FRICTION_CONE_HPP_ 
+#endif // ROBOTOC_CONTACT_WRENCH_CONE_HPP_

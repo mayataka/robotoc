@@ -81,15 +81,15 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   const double X = 0.1;
   const double Y = 0.05;
-  wrench_cone_ = std::make_shared<robotoc::WrenchFrictionCone>(robot, X, Y);
-  impulse_wrench_cone_ = std::make_shared<robotoc::ImpulseWrenchFrictionCone>(robot, X, Y);
+  contact_wrench_cone_ = std::make_shared<robotoc::ContactWrenchCone>(robot, X, Y);
+  impulse_wrench_cone_ = std::make_shared<robotoc::ImpulseWrenchCone>(robot, X, Y);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
   constraints_->push_back(joint_velocity_upper);
   constraints_->push_back(joint_torques_lower);
   constraints_->push_back(joint_torques_upper);
-  constraints_->push_back(wrench_cone_);
+  constraints_->push_back(contact_wrench_cone_);
   constraints_->push_back(impulse_wrench_cone_);
   // create contact status
   cs_standing_.activateContacts(std::vector<int>({0, 1}));
@@ -268,12 +268,12 @@ std::shared_ptr<Constraints> MPCBipedWalk::getConstraintsHandle() {
 }
 
 
-std::shared_ptr<WrenchFrictionCone> MPCBipedWalk::getWrenchConeHandle() {
-  return wrench_cone_;
+std::shared_ptr<ContactWrenchCone> MPCBipedWalk::getContactWrenchConeHandle() {
+  return contact_wrench_cone_;
 }
 
 
-std::shared_ptr<ImpulseWrenchFrictionCone> MPCBipedWalk::getImpulseWrenchConeHandle() {
+std::shared_ptr<ImpulseWrenchCone> MPCBipedWalk::getImpulseWrenchConeHandle() {
   return impulse_wrench_cone_;
 }
 

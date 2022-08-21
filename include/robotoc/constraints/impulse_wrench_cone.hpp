@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_IMPULSE_WRENCH_FRICTION_CONE_HPP_
-#define ROBOTOC_IMPULSE_WRENCH_FRICTION_CONE_HPP_
+#ifndef ROBOTOC_IMPULSE_WRENCH_CONE_HPP_
+#define ROBOTOC_IMPULSE_WRENCH_CONE_HPP_
 
 #include "Eigen/Core"
 
@@ -16,10 +16,10 @@
 namespace robotoc {
 
 ///
-/// @class ImpulseWrenchFrictionCone
+/// @class ImpulseWrenchCone
 /// @brief Constraint on the wrench firction cone for surface contacts.
 ///
-class ImpulseWrenchFrictionCone final : public ImpulseConstraintComponentBase {
+class ImpulseWrenchCone final : public ImpulseConstraintComponentBase {
 public:
   ///
   /// @brief Constructor. 
@@ -27,37 +27,37 @@ public:
   /// @param[in] X A length of the rectangular. Must be positive.
   /// @param[in] Y A length of the rectangular. Must be positive.
   ///
-  ImpulseWrenchFrictionCone(const Robot& robot, const double X, const double Y);
+  ImpulseWrenchCone(const Robot& robot, const double X, const double Y);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseWrenchFrictionCone();
+  ImpulseWrenchCone();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseWrenchFrictionCone();
+  ~ImpulseWrenchCone();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseWrenchFrictionCone(const ImpulseWrenchFrictionCone&) = default;
+  ImpulseWrenchCone(const ImpulseWrenchCone&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseWrenchFrictionCone& operator=(const ImpulseWrenchFrictionCone&) = default;
+  ImpulseWrenchCone& operator=(const ImpulseWrenchCone&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseWrenchFrictionCone(ImpulseWrenchFrictionCone&&) noexcept = default;
+  ImpulseWrenchCone(ImpulseWrenchCone&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseWrenchFrictionCone& operator=(ImpulseWrenchFrictionCone&&) noexcept = default;
+  ImpulseWrenchCone& operator=(ImpulseWrenchCone&&) noexcept = default;
 
   ///
   /// @param[in] X A length of the rectangular. Must be positive.
@@ -112,4 +112,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_IMPULSE_WRENCH_FRICTION_CONE_HPP_ 
+#endif // ROBOTOC_IMPULSE_WRENCH_CONE_HPP_
