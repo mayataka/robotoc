@@ -19,23 +19,17 @@ MPCPeriodicCoMRef::MPCPeriodicCoMRef(const double swing_start_time,
     period_inactive_(period_inactive), 
     period_(period_active+period_inactive),
     num_phases_in_period_(num_phases_in_period) {
-  try {
-    if (period_active < 0.0) {
-      throw std::out_of_range(
-          "invalid argument: period_active must be non-negative!");
-    }
-    if (period_inactive < 0.0) {
-      throw std::out_of_range(
-          "invalid argument: period_active must be non-negative!");
-    }
-    if (num_phases_in_period < 1) {
-      throw std::out_of_range(
-          "invalid argument: num_phases_in_period must be positive!");
-    }
+  if (period_active < 0.0) {
+    throw std::out_of_range(
+        "[MPCPeriodicCoMRef] invalid argument: 'period_active' must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (period_inactive < 0.0) {
+    throw std::out_of_range(
+        "[MPCPeriodicCoMRef] invalid argument: 'period_inactive' must be non-negative!");
+  }
+  if (num_phases_in_period < 1) {
+    throw std::out_of_range(
+        "[MPCPeriodicCoMRef] invalid argument: 'num_phases_in_period' must be positive!");
   }
 }
 
@@ -48,23 +42,17 @@ void MPCPeriodicCoMRef::setPeriod(const double swing_start_time,
                                   const double period_active, 
                                   const double period_inactive,
                                   const int num_phases_in_period) {
-  try {
-    if (period_active < 0.0) {
-      throw std::out_of_range(
-          "invalid argument: period_active must be non-negative!");
-    }
-    if (period_inactive < 0.0) {
-      throw std::out_of_range(
-          "invalid argument: period_active must be non-negative!");
-    }
-    if (num_phases_in_period < 1) {
-      throw std::out_of_range(
-          "invalid argument: phaseas_period must be positive!");
-    }
+  if (period_active < 0.0) {
+    throw std::out_of_range(
+        "[MPCPeriodicCoMRef] invalid argument: 'period_active' must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (period_inactive < 0.0) {
+    throw std::out_of_range(
+        "[MPCPeriodicCoMRef] invalid argument: 'period_inactive' must be non-negative!");
+  }
+  if (num_phases_in_period < 1) {
+    throw std::out_of_range(
+        "[MPCPeriodicCoMRef] invalid argument: 'num_phases_in_period' must be positive!");
   }
   swing_start_time_ = swing_start_time;
   period_active_ = period_active;

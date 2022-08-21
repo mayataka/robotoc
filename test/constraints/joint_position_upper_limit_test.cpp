@@ -19,7 +19,7 @@ class JointPositionUpperLimitTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-03;
+    barrier_param = 1.0e-03;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
@@ -34,20 +34,19 @@ protected:
   void test_condenseSlackAndDual(Robot& robot) const;
   void test_expandSlackAndDual(Robot& robot) const;
 
-  double barrier, dt;
+  double barrier_param, dt;
 };
 
 
 void JointPositionUpperLimitTest::test_kinematics(Robot& robot) const {
   JointPositionUpperLimit constr(robot); 
-  EXPECT_FALSE(constr.useKinematics());
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::PositionLevel);
 }
 
 
 void JointPositionUpperLimitTest::test_isFeasible(Robot& robot) const {
   JointPositionUpperLimit constr(robot); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
   const auto contact_status = robot.createContactStatus();
   SplitSolution s(robot);
@@ -59,7 +58,7 @@ void JointPositionUpperLimitTest::test_isFeasible(Robot& robot) const {
 
 void JointPositionUpperLimitTest::test_setSlack(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrier()), data_ref(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam()), data_ref(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -76,7 +75,7 @@ void JointPositionUpperLimitTest::test_evalConstraint(Robot& robot) const {
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd qmax = robot.upperJointPositionLimit();
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -84,15 +83,15 @@ void JointPositionUpperLimitTest::test_evalConstraint(Robot& robot) const {
   auto data_ref = data;
   constr.evalConstraint(robot, contact_status, data, s);
   data_ref.residual = s.q.tail(dimc) - qmax + data_ref.slack;
-  pdipm::computeComplementarySlackness(barrier, data_ref);
-  data_ref.log_barrier = pdipm::logBarrier(barrier, data_ref.slack);
+  pdipm::computeComplementarySlackness(barrier_param, data_ref);
+  data_ref.log_barrier = pdipm::logBarrier(barrier_param, data_ref.slack);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
 void JointPositionUpperLimitTest::test_evalDerivatives(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -108,7 +107,7 @@ void JointPositionUpperLimitTest::test_evalDerivatives(Robot& robot) const {
 
 void JointPositionUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
@@ -133,7 +132,7 @@ void JointPositionUpperLimitTest::test_condenseSlackAndDual(Robot& robot) const 
 
 void JointPositionUpperLimitTest::test_expandSlackAndDual(Robot& robot) const {
   JointPositionUpperLimit constr(robot);
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);

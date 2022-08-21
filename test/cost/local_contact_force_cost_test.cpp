@@ -47,7 +47,6 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   }
   auto cost = std::make_shared<LocalContactForceCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
   cost->set_f_ref(f_ref);
   cost->set_fi_weight(fi_weight);
@@ -137,7 +136,6 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   }
   auto cost = std::make_shared<LocalContactForceCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
   cost->set_f_ref(f_ref);
   cost->set_fi_weight(fi_weight);
@@ -185,7 +183,6 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   }
   auto cost = std::make_shared<LocalContactForceCost>(robot);
   CostFunctionData data(robot);
-  EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
   cost->set_f_ref(f_ref);
   cost->set_fi_weight(fi_weight);

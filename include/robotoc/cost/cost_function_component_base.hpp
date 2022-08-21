@@ -57,14 +57,6 @@ public:
       = default;
 
   ///
-  /// @brief Check if the cost function component requres kinematics
-  /// (forward kinematics and its Jacobians) of robot model.
-  /// @return true if the cost function component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  virtual bool useKinematics() const = 0;
-
-  ///
   /// @brief Computes the stage cost. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.

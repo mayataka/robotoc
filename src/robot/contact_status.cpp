@@ -37,6 +37,12 @@ void ContactStatus::disp(std::ostream& os) const {
     os << "[" << contactRotation(i).row(2) << "], ";
   }
   os << "[" << contactRotation(maxNumContacts()-1).row(2) << "]";
+  os << "]" << std::endl;
+  os << "  friction coefficients: [";
+  for (int i=0; i<maxNumContacts()-1; ++i) {
+    os << "[" << frictionCoefficient(i) << "], ";
+  }
+  os << "[" << frictionCoefficient(maxNumContacts()-1) << "]";
   os << "]" << std::flush;
 }
 

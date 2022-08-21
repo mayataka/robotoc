@@ -43,17 +43,11 @@ public:
       dt_(T/N),
       N_(N),
       grid_info_(N+1, GridInfo()) {
-    try {
-      if (T <= 0) {
-        throw std::out_of_range("invalid value: T must be positive!");
-      }
-      if (N <= 0) {
-        throw std::out_of_range("invalid value: N must be positive!");
-      }
+    if (T <= 0) {
+      throw std::out_of_range("[UnconstrOCP] invalid argument: 'T' must be positive!");
     }
-    catch(const std::exception& e) {
-      std::cerr << e.what() << '\n';
-      std::exit(EXIT_FAILURE);
+    if (N <= 0) {
+      throw std::out_of_range("[UnconstrOCP] invalid argument: 'N' must be positive!");
     }
     for (int i=0; i<=N; ++i) {
       grid_info_[i].t = dt_ * i;

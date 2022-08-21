@@ -90,15 +90,9 @@ void ConfigurationSpaceCost::set_ref(
 
 
 void ConfigurationSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
-  try {
-    if (q_ref.size() != dimq_) {
-      throw std::invalid_argument(
-          "invalid size: q_ref.size() must be " + std::to_string(dimq_) + "!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (q_ref.size() != dimq_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: q_ref.size() must be " + std::to_string(dimq_) + "!");
   }
   q_ref_ = q_ref;
   use_nonconst_ref_ = false;
@@ -106,49 +100,31 @@ void ConfigurationSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
 
 
 void ConfigurationSpaceCost::set_v_ref(const Eigen::VectorXd& v_ref) {
-  try {
-    if (v_ref.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: v_ref.size() must be " + std::to_string(dimv_) + "!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (v_ref.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: v_ref.size() must be " + std::to_string(dimv_) + "!");
   }
   v_ref_ = v_ref;
 }
 
 
 void ConfigurationSpaceCost::set_u_ref(const Eigen::VectorXd& u_ref) {
-  try {
-    if (u_ref.size() != dimu_) {
-      throw std::invalid_argument(
-          "invalid size: u_ref.size() must be " + std::to_string(dimu_) + "!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (u_ref.size() != dimu_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: u_ref.size() must be " + std::to_string(dimu_) + "!");
   }
   u_ref_ = u_ref;
 }
 
 
 void ConfigurationSpaceCost::set_q_weight(const Eigen::VectorXd& q_weight) {
-  try {
-    if (q_weight.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: q_weight.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (q_weight.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of q_weight must be non-negative!");
-    }
+  if (q_weight.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: q_weight.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (q_weight.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'q_weight' must be non-negative!");
   }
   q_weight_ = q_weight;
   enable_q_cost_ = (!q_weight.isZero());
@@ -156,19 +132,13 @@ void ConfigurationSpaceCost::set_q_weight(const Eigen::VectorXd& q_weight) {
 
 
 void ConfigurationSpaceCost::set_v_weight(const Eigen::VectorXd& v_weight) {
-  try {
-    if (v_weight.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: v_weight.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (v_weight.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of v_weight must be non-negative!");
-    }
+  if (v_weight.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: v_weight.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (v_weight.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'v_weight' must be non-negative!");
   }
   v_weight_ = v_weight;
   enable_v_cost_ = (!v_weight.isZero());
@@ -176,19 +146,13 @@ void ConfigurationSpaceCost::set_v_weight(const Eigen::VectorXd& v_weight) {
 
 
 void ConfigurationSpaceCost::set_a_weight(const Eigen::VectorXd& a_weight) {
-  try {
-    if (a_weight.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: a_weight.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (a_weight.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of a_weight must be non-negative!");
-    }
+  if (a_weight.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: a_weight.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (a_weight.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'a_weight' must be non-negative!");
   }
   a_weight_ = a_weight;
   enable_a_cost_ = (!a_weight.isZero());
@@ -196,19 +160,13 @@ void ConfigurationSpaceCost::set_a_weight(const Eigen::VectorXd& a_weight) {
 
 
 void ConfigurationSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
-  try {
-    if (u_weight.size() != dimu_) {
-      throw std::invalid_argument(
-          "invalid size: u_weight.size() must be " + std::to_string(dimu_) + "!");
-    }
-    if (u_weight.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of u_weight must be non-negative!");
-    }
+  if (u_weight.size() != dimu_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: u_weight.size() must be " + std::to_string(dimu_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (u_weight.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'u_weight' must be non-negative!");
   }
   u_weight_ = u_weight;
   enable_u_cost_ = (!u_weight.isZero());
@@ -217,19 +175,13 @@ void ConfigurationSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
 
 void ConfigurationSpaceCost::set_q_weight_terminal(
     const Eigen::VectorXd& q_weight_terminal) {
-  try {
-    if (q_weight_terminal.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: q_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (q_weight_terminal.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of q_weight_terminal must be non-negative!");
-    }
+  if (q_weight_terminal.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: q_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (q_weight_terminal.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'q_weight_terminal' must be non-negative!");
   }
   q_weight_terminal_ = q_weight_terminal;
   enable_q_cost_terminal_ = (!q_weight_terminal.isZero());
@@ -238,19 +190,13 @@ void ConfigurationSpaceCost::set_q_weight_terminal(
 
 void ConfigurationSpaceCost::set_v_weight_terminal(
     const Eigen::VectorXd& v_weight_terminal) {
-  try {
-    if (v_weight_terminal.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: v_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (v_weight_terminal.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of v_weight_terminal must be non-negative!");
-    }
+  if (v_weight_terminal.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: v_weight_terminal.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (v_weight_terminal.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'v_weight_terminal' must be non-negative!");
   }
   v_weight_terminal_ = v_weight_terminal;
   enable_v_cost_terminal_ = (!v_weight_terminal.isZero());
@@ -259,19 +205,13 @@ void ConfigurationSpaceCost::set_v_weight_terminal(
 
 void ConfigurationSpaceCost::set_q_weight_impulse(
     const Eigen::VectorXd& q_weight_impulse) {
-  try {
-    if (q_weight_impulse.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: q_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (q_weight_impulse.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of q_weight_impulse must be non-negative!");
-    }
+  if (q_weight_impulse.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: q_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (q_weight_impulse.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'q_weight_impulse' must be non-negative!");
   }
   q_weight_impulse_ = q_weight_impulse;
   enable_q_cost_impulse_ = (!q_weight_impulse.isZero());
@@ -280,19 +220,13 @@ void ConfigurationSpaceCost::set_q_weight_impulse(
 
 void ConfigurationSpaceCost::set_v_weight_impulse(
     const Eigen::VectorXd& v_weight_impulse) {
-  try {
-    if (v_weight_impulse.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: v_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (v_weight_impulse.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of v_weight_impulse must be non-negative!");
-    }
+  if (v_weight_impulse.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: v_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (v_weight_impulse.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'v_weight_impulse' must be non-negative!");
   }
   v_weight_impulse_ = v_weight_impulse;
   enable_v_cost_impulse_ = (!v_weight_impulse.isZero());
@@ -301,27 +235,16 @@ void ConfigurationSpaceCost::set_v_weight_impulse(
 
 void ConfigurationSpaceCost::set_dv_weight_impulse(
     const Eigen::VectorXd& dv_weight_impulse) {
-  try {
-    if (dv_weight_impulse.size() != dimv_) {
-      throw std::invalid_argument(
-          "invalid size: dv_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
-    }
-    if (dv_weight_impulse.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of dv_weight_impulse must be non-negative!");
-    }
+  if (dv_weight_impulse.size() != dimv_) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: dv_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (dv_weight_impulse.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[ConfigurationSpaceCost] invalid argument: elements of 'dv_weight_impulse' must be non-negative!");
   }
   dv_weight_impulse_ = dv_weight_impulse;
   enable_dv_cost_impulse_ = (!dv_weight_impulse.isZero());
-}
-
-
-bool ConfigurationSpaceCost::useKinematics() const {
-  return false;
 }
 
 

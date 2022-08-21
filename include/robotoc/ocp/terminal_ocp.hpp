@@ -193,7 +193,6 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   TerminalStateEquation state_equation_;
-  bool use_kinematics_;
   double terminal_cost_, barrier_cost_;
 
 };

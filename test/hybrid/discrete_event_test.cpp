@@ -18,6 +18,11 @@ protected:
     std::random_device rnd;
     max_num_contacts = 10;
     contact_types = std::vector<ContactType>(max_num_contacts, ContactType::PointContact);
+    contact_frame_names.clear();
+    for (int i=0; i<max_num_contacts; ++i) {
+      contact_frame_names.push_back(std::to_string(i));
+    }
+    contact_status = ContactStatus(contact_types, contact_frame_names);
   }
 
   virtual void TearDown() {
@@ -25,27 +30,13 @@ protected:
 
   int max_num_contacts;
   std::vector<ContactType> contact_types;
+  std::vector<std::string> contact_frame_names;
+  ContactStatus contact_status;
 };
 
 
-TEST_F(DiscreteEventTest, constructor1) {
-  DiscreteEvent discrete_event(contact_types);
-  EXPECT_EQ(discrete_event.maxNumContacts(), max_num_contacts);
-  EXPECT_FALSE(discrete_event.existDiscreteEvent());
-  EXPECT_FALSE(discrete_event.existImpulse());
-  EXPECT_FALSE(discrete_event.existLift());
-  ContactStatus contact_status(contact_types);
-  EXPECT_EQ(contact_status.dimf(), 0);
-  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
-  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::None);
-  EXPECT_NO_THROW(
-    std::cout << discrete_event << std::endl;
-  );
-}
-
-
-TEST_F(DiscreteEventTest, constructor2) {
-  ContactStatus cs_before(contact_types), cs_after(contact_types);
+TEST_F(DiscreteEventTest, constructor) {
+  ContactStatus cs_before(contact_types, contact_frame_names), cs_after(contact_types, contact_frame_names);
   std::vector<Eigen::Vector3d> contact_positions;
   for (int i=0; i<max_num_contacts; ++i) {
     contact_positions.push_back(Eigen::Vector3d::Random());
@@ -71,11 +62,10 @@ TEST_F(DiscreteEventTest, constructor2) {
 
 
 TEST_F(DiscreteEventTest, impulse) {
-  DiscreteEvent discrete_event(contact_types);
-  ContactStatus cs_before(contact_types), cs_after(contact_types);
+  ContactStatus cs_before(contact_types, contact_frame_names), cs_after(contact_types, contact_frame_names);
   cs_before.activateContacts({1, 2, 3});
   cs_after.activateContacts({1, 2, 3, 4, 5, 6});
-  discrete_event.setDiscreteEvent(cs_before, cs_after);
+  DiscreteEvent discrete_event(cs_before, cs_after);
   EXPECT_EQ(discrete_event.maxNumContacts(), max_num_contacts);
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
@@ -90,11 +80,10 @@ TEST_F(DiscreteEventTest, impulse) {
 
 
 TEST_F(DiscreteEventTest, lift) {
-  DiscreteEvent discrete_event(contact_types);
-  ContactStatus cs_before(contact_types), cs_after(contact_types);
+  ContactStatus cs_before(contact_types, contact_frame_names), cs_after(contact_types, contact_frame_names);
   cs_before.activateContacts({1, 2, 3, 4, 5, 6});
   cs_after.activateContacts({1, 2, 3});
-  discrete_event.setDiscreteEvent(cs_before, cs_after);
+  DiscreteEvent discrete_event(cs_before, cs_after);
   EXPECT_EQ(discrete_event.maxNumContacts(), max_num_contacts);
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
@@ -109,11 +98,10 @@ TEST_F(DiscreteEventTest, lift) {
 
 
 TEST_F(DiscreteEventTest, impulseAndLift) {
-  DiscreteEvent discrete_event(contact_types);
-  ContactStatus cs_before(contact_types), cs_after(contact_types);
+  ContactStatus cs_before(contact_types, contact_frame_names), cs_after(contact_types, contact_frame_names);
   cs_before.activateContacts({1, 2, 3, 6, 7});
   cs_after.activateContacts({3, 5, 6, 7, 8, 9});
-  discrete_event.setDiscreteEvent(cs_before, cs_after);
+  DiscreteEvent discrete_event(cs_before, cs_after);
   EXPECT_EQ(discrete_event.maxNumContacts(), max_num_contacts);
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);

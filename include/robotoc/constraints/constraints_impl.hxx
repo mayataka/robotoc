@@ -16,25 +16,13 @@ inline void clear(std::vector<ConstraintComponentBaseTypePtr>& constraints) {
 
 
 template <typename ConstraintComponentBaseTypePtr>
-inline bool useKinematics(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints) {
-  for (const auto& constraint : constraints) {
-    if (constraint->useKinematics()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-template <typename ConstraintComponentBaseTypePtr>
 inline void createConstraintsData(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     std::vector<ConstraintComponentData>& data) {
   data.clear();
   for (const auto& constraint : constraints) {
     auto component_data = ConstraintComponentData(constraint->dimc(), 
-                                                  constraint->barrier());
+                                                  constraint->getBarrierParam());
     constraint->allocateExtraData(component_data);
     data.push_back(component_data);
   }
@@ -196,10 +184,10 @@ inline void updateDual(std::vector<ConstraintComponentData>& data,
 
 
 template <typename ConstraintComponentBaseTypePtr>
-inline void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-                       const double barrier) {
+inline void setBarrierParam(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+                       const double barrier_param) {
   for (auto& constraint : constraints) {
-    constraint->setBarrier(barrier);
+    constraint->setBarrierParam(barrier_param);
   }
 }
 

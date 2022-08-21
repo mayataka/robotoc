@@ -37,12 +37,12 @@ public:
 
   ///
   /// @brief Constructor. 
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03
   /// @param[in] fraction_to_boundary_rule Must be larger than 0 and smaller 
   /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  Constraints(const double barrier=1.0e-03, 
+  Constraints(const double barrier_param=1.0e-03, 
               const double fraction_to_boundary_rule=0.995);
 
   ///
@@ -90,14 +90,6 @@ public:
   /// @brief Clears constraints by removing all components.
   ///
   void clear();
-
-  ///
-  /// @brief Checks if the constraints component requres kinematics of robot 
-  /// model.
-  /// @return true if the constraints component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  bool useKinematics() const;
 
   ///
   /// @brief Creates ConstraintsData according to robot model and constraint 
@@ -286,9 +278,9 @@ public:
 
   ///
   /// @brief Sets the barrier parameter for all the constraint components.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   ///
-  void setBarrier(const double barrier);
+  void setBarrierParam(const double barrier_param);
 
   ///
   /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
@@ -302,13 +294,13 @@ public:
   /// @brief Gets the barrier parameter.
   /// @return Barrier parameter. 
   ///
-  double barrier() const;
+  double getBarrierParam() const;
 
   ///
   /// @brief Gets the parameter of the fraction-to-boundary-rule. 
   /// @return The parameter of the fraction-to-boundary-rule. 
   ///
-  double fractionToBoundaryRule() const;
+  double getFractionToBoundaryRule() const;
 
 private:
   std::vector<ConstraintComponentBasePtr> position_level_constraints_, 

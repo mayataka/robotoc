@@ -14,9 +14,9 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     min_dt = Eigen::VectorXd::Random(1).array().abs()[0];
-    barrier = 1e-03;
+    barrier_param = 1e-03;
     fraction_to_boundary_rule = 0.995;
-    bound = DwellTimeLowerBound(barrier, fraction_to_boundary_rule);
+    bound = DwellTimeLowerBound(barrier_param, fraction_to_boundary_rule);
     ts1 = Eigen::VectorXd::Random(1).array().abs()[0];
     ts2 = ts1 + Eigen::VectorXd::Random(1).array().abs()[0];
   }
@@ -27,40 +27,40 @@ protected:
   int max_num_contacts;
 
   DwellTimeLowerBound bound;
-  double min_dt, barrier, fraction_to_boundary_rule, ts1, ts2;
+  double min_dt, barrier_param, fraction_to_boundary_rule, ts1, ts2;
 };
 
 
 TEST_F(DwellTimeLowerBoundTest, testParam) {
-  EXPECT_DOUBLE_EQ(bound.barrier(), 1.0e-03);
-  EXPECT_DOUBLE_EQ(bound.fractionToBoundaryRule(), 0.995);
+  EXPECT_DOUBLE_EQ(bound.getBarrierParam(), 1.0e-03);
+  EXPECT_DOUBLE_EQ(bound.getFractionToBoundaryRule(), 0.995);
   // overwrite parameters
-  const double barrier = 0.8;
+  const double barrier_param = 0.8;
   const double fraction_to_boundary_rule = 0.5;
-  bound.setBarrier(barrier);
+  bound.setBarrierParam(barrier_param);
   bound.setFractionToBoundaryRule(fraction_to_boundary_rule);
-  EXPECT_DOUBLE_EQ(bound.barrier(), barrier);
-  EXPECT_DOUBLE_EQ(bound.fractionToBoundaryRule(), fraction_to_boundary_rule);
+  EXPECT_DOUBLE_EQ(bound.getBarrierParam(), barrier_param);
+  EXPECT_DOUBLE_EQ(bound.getFractionToBoundaryRule(), fraction_to_boundary_rule);
 }
 
 
 TEST_F(DwellTimeLowerBoundTest, lub) {
   // overwrite parameters
-  const double barrier = 1e-03;
+  const double barrier_param = 1e-03;
   const double fraction_to_boundary_rule = 0.95;
-  bound.setBarrier(barrier);
+  bound.setBarrierParam(barrier_param);
   bound.setFractionToBoundaryRule(fraction_to_boundary_rule);
   bound.setSlack(min_dt, ts1, ts2);
   double slack_ref = ts2 - ts1 - min_dt;
   if (slack_ref <= 0) {
-    slack_ref = std::sqrt(barrier);
+    slack_ref = std::sqrt(barrier_param);
   }
-  double dual_ref = barrier / slack_ref;
+  double dual_ref = barrier_param / slack_ref;
 
   bound.evalConstraint(min_dt, ts1, ts2);
   double residual_ref = ts1 + min_dt - ts2 + slack_ref;
-  double cmpl_ref = slack_ref * dual_ref - barrier;
-  const double log_barrier = - barrier * std::log(slack_ref);
+  double cmpl_ref = slack_ref * dual_ref - barrier_param;
+  const double log_barrier = - barrier_param * std::log(slack_ref);
   const double kkt_error = bound.KKTError();
   const double kkt_error_ref = residual_ref*residual_ref + cmpl_ref*cmpl_ref;
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -88,14 +88,14 @@ TEST_F(DwellTimeLowerBoundTest, lb) {
   bound.setSlack(min_dt, ts1, ts2);
   double slack_ref = ts2 - ts1 - min_dt;
   if (slack_ref <= 0) {
-    slack_ref = std::sqrt(barrier);
+    slack_ref = std::sqrt(barrier_param);
   }
-  double dual_ref = barrier / slack_ref;
+  double dual_ref = barrier_param / slack_ref;
 
   bound.evalConstraint(min_dt, ts1, ts2);
   double residual_ref = ts1 + min_dt - ts2 + slack_ref;
-  double cmpl_ref = slack_ref * dual_ref - barrier;
-  const double log_barrier = - barrier * std::log(slack_ref);
+  double cmpl_ref = slack_ref * dual_ref - barrier_param;
+  const double log_barrier = - barrier_param * std::log(slack_ref);
   const double kkt_error = bound.KKTError();
   const double kkt_error_ref = residual_ref*residual_ref + cmpl_ref*cmpl_ref;
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -117,14 +117,14 @@ TEST_F(DwellTimeLowerBoundTest, ub) {
   bound.setSlack(min_dt, ts1, ts2);
   double slack_ref = ts2 - ts1 - min_dt;
   if (slack_ref <= 0) {
-    slack_ref = std::sqrt(barrier);
+    slack_ref = std::sqrt(barrier_param);
   }
-  double dual_ref = barrier / slack_ref;
+  double dual_ref = barrier_param / slack_ref;
 
   bound.evalConstraint(min_dt, ts1, ts2);
   double residual_ref = ts1 + min_dt - ts2 + slack_ref;
-  double cmpl_ref = slack_ref * dual_ref - barrier;
-  const double log_barrier = - barrier * std::log(slack_ref);
+  double cmpl_ref = slack_ref * dual_ref - barrier_param;
+  const double log_barrier = - barrier_param * std::log(slack_ref);
   const double kkt_error = bound.KKTError();
   const double kkt_error_ref = residual_ref*residual_ref + cmpl_ref*cmpl_ref;
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);

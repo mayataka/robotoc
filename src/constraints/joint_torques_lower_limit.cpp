@@ -21,11 +21,6 @@ JointTorquesLowerLimit::~JointTorquesLowerLimit() {
 }
 
 
-bool JointTorquesLowerLimit::useKinematics() const {
-  return false;
-}
-
-
 KinematicsLevel JointTorquesLowerLimit::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }

@@ -15,9 +15,9 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(impulse_status, m) {
   py::class_<ImpulseStatus>(m, "ImpulseStatus")
-    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const int>(),
+    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double, const int>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
-          py::arg("contact_mode_id")=0)
+          py::arg("default_friction_coefficient")=0.7, py::arg("contact_mode_id")=0)
     .def("max_num_contacts", &ImpulseStatus::maxNumContacts)
     .def("is_impulse_active", 
           static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),
@@ -53,6 +53,25 @@ PYBIND11_MODULE(impulse_status, m) {
     .def("contact_rotation", &ImpulseStatus::contactRotation,
           py::arg("contact_index"))
     .def("contact_rotations", &ImpulseStatus::contactRotations)
+    .def("set_friction_coefficient", 
+          static_cast<void (ImpulseStatus::*)(const int, const double)>(&ImpulseStatus::setFrictionCoefficient),
+          py::arg("contact_index"), py::arg("friction_coefficient"))
+    .def("set_friction_coefficient", 
+          static_cast<void (ImpulseStatus::*)(const std::string&, const double)>(&ImpulseStatus::setFrictionCoefficient),
+          py::arg("contact_frame_name"), py::arg("friction_coefficient"))
+    .def("set_friction_coefficients", 
+          static_cast<void (ImpulseStatus::*)(const std::vector<double>&)>(&ImpulseStatus::setFrictionCoefficients),
+          py::arg("friction_coefficients"))
+    .def("set_friction_coefficients", 
+          static_cast<void (ImpulseStatus::*)(const std::unordered_map<std::string, double>&)>(&ImpulseStatus::setFrictionCoefficients),
+          py::arg("friction_coefficients"))
+    .def("friction_coefficient", 
+          static_cast<double (ImpulseStatus::*)(const int) const>(&ImpulseStatus::frictionCoefficient),
+          py::arg("contact_index"))
+    .def("friction_coefficient", 
+          static_cast<double (ImpulseStatus::*)(const std::string&) const>(&ImpulseStatus::frictionCoefficient),
+          py::arg("contact_frame_name"))
+    .def("friction_coefficients", &ImpulseStatus::frictionCoefficients)
     .def("set_impulse_mode_id", &ImpulseStatus::setImpulseModeId,
           py::arg("impulse_mode_id"))
     .def("impulse_mode_id", &ImpulseStatus::impulseModeId)

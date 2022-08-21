@@ -25,14 +25,8 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc,
     dt_(parnmpc.T()/parnmpc.N()),
     solver_options_(solver_options),
     solver_statistics_() {
-  try {
-    if (nthreads <= 0) {
-      throw std::out_of_range("invalid value: nthreads must be positive!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (nthreads <= 0) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: nthreads must be positive!");
   }
   initConstraints();
 }
@@ -178,26 +172,20 @@ std::vector<Eigen::VectorXd> UnconstrParNMPCSolver::getSolution(
 
 void UnconstrParNMPCSolver::setSolution(const std::string& name, 
                                         const Eigen::VectorXd& value) {
-  try {
-    if (name == "q") {
-      for (auto& e : s_.data) { e.q = value; }
-    }
-    else if (name == "v") {
-      for (auto& e : s_.data) { e.v = value; }
-    }
-    else if (name == "a") {
-      for (auto& e : s_.data) { e.a  = value; }
-    }
-    else if (name == "u") {
-      for (auto& e : s_.data) { e.u = value; }
-    }
-    else {
-      throw std::invalid_argument("invalid arugment: name must be q, v, a, or u!");
-    }
+  if (name == "q") {
+    for (auto& e : s_.data) { e.q = value; }
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  else if (name == "v") {
+    for (auto& e : s_.data) { e.v = value; }
+  }
+  else if (name == "a") {
+    for (auto& e : s_.data) { e.a  = value; }
+  }
+  else if (name == "u") {
+    for (auto& e : s_.data) { e.u = value; }
+  }
+  else {
+    throw std::invalid_argument("[UnconstrParNMPCSolver] invalid arugment: name must be q, v, a, or u!");
   }
   initConstraints();
 }

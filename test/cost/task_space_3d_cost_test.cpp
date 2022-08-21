@@ -106,7 +106,6 @@ void TaskSpace3DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<TaskSpace3DCost >(robot, robot.frameName(frame_id));
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -144,7 +143,6 @@ void TaskSpace3DCostTest::testTerminalCostConstRef(Robot& robot, const int frame
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<TaskSpace3DCost >(robot, frame_id);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -181,7 +179,6 @@ void TaskSpace3DCostTest::testImpulseCostConstRef(Robot& robot, const int frame_
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<TaskSpace3DCost >(robot, frame_id);
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -222,7 +219,6 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   auto cost = std::make_shared<TaskSpace3DCost>(robot, robot.frameName(frame_id), ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -275,7 +271,6 @@ void TaskSpace3DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   auto cost = std::make_shared<TaskSpace3DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
@@ -327,7 +322,6 @@ void TaskSpace3DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   auto cost = std::make_shared<TaskSpace3DCost>(robot, frame_id, ref);
 
   CostFunctionData data(robot);
-  EXPECT_TRUE(cost->useKinematics());
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);

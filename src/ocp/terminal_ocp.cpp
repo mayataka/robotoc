@@ -13,12 +13,8 @@ TerminalOCP::TerminalOCP(const Robot& robot,
     constraints_(constraints),
     constraints_data_(),
     state_equation_(robot),
-    use_kinematics_(false),
     terminal_cost_(0),
     barrier_cost_(0) {
-  if (cost_->useKinematics() || constraints_->useKinematics()) {
-    use_kinematics_ = true;
-  }
 }
 
 
@@ -28,7 +24,6 @@ TerminalOCP::TerminalOCP()
     constraints_(),
     constraints_data_(),
     state_equation_(),
-    use_kinematics_(false),
     terminal_cost_(0),
     barrier_cost_(0) {
 }
@@ -54,9 +49,7 @@ void TerminalOCP::initConstraints(Robot& robot, const int time_stage,
 void TerminalOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
                           const SplitSolution& s, 
                           SplitKKTResidual& kkt_residual) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
+  robot.updateKinematics(s.q, s.v);
   terminal_cost_ = cost_->evalTerminalCost(robot, cost_data_, grid_info, s);
 }
 
@@ -66,9 +59,7 @@ void TerminalOCP::computeKKTResidual(Robot& robot, const GridInfo& grid_info,
                                      const SplitSolution& s,
                                      SplitKKTMatrix& kkt_matrix,
                                      SplitKKTResidual& kkt_residual) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
+  robot.updateKinematics(s.q, s.v);
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, grid_info, s, 
                                                 kkt_residual);
@@ -83,9 +74,7 @@ void TerminalOCP::computeKKTSystem(Robot& robot, const GridInfo& grid_info,
                                    const SplitSolution& s,
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
+  robot.updateKinematics(s.q, s.v);
   kkt_matrix.Qxx.setZero();
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, grid_info, s, 

@@ -8,23 +8,14 @@
 
 namespace robotoc {
 
-inline DiscreteEvent::DiscreteEvent(
-    const std::vector<ContactType>& contact_types)
-  : pre_contact_status_(contact_types),
-    post_contact_status_(contact_types),
-    impulse_status_(contact_types),
-    max_num_contacts_(contact_types.size()),
-    event_type_(DiscreteEventType::None),
-    exist_impulse_(false), 
-    exist_lift_(false) {
-}
-
-
 inline DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status, 
                                     const ContactStatus& post_contact_status)
-  : pre_contact_status_(pre_contact_status.contactTypes()),
-    post_contact_status_(pre_contact_status.contactTypes()),
-    impulse_status_(pre_contact_status.contactTypes()),
+  : pre_contact_status_(pre_contact_status.contactTypes(), 
+                        pre_contact_status.contactFrameNames()),
+    post_contact_status_(pre_contact_status.contactTypes(), 
+                         pre_contact_status.contactFrameNames()),
+    impulse_status_(pre_contact_status.contactTypes(), 
+                    pre_contact_status.contactFrameNames()),
     max_num_contacts_(pre_contact_status.maxNumContacts()),
     event_type_(DiscreteEventType::None),
     exist_impulse_(false), 
@@ -102,6 +93,7 @@ inline void DiscreteEvent::setDiscreteEvent(
       }
     }
   }
+  impulse_status_.setFrictionCoefficients(pre_contact_status.frictionCoefficients());
   impulse_status_.setImpulseModeId(pre_contact_status.contactModeId());
   setContactPlacements(post_contact_status.contactPositions(),
                        post_contact_status.contactRotations());
@@ -141,6 +133,18 @@ inline void DiscreteEvent::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions,
     const std::vector<Eigen::Matrix3d>& contact_rotations) {
   impulse_status_.setContactPlacements(contact_positions, contact_rotations);
+}
+
+
+inline void DiscreteEvent::setFrictionCoefficient(
+    const int contact_index, const double friction_coefficient) {
+  impulse_status_.setFrictionCoefficient(contact_index, friction_coefficient);
+}
+
+
+inline void DiscreteEvent::setFrictionCoefficients(
+    const std::vector<double>& friction_coefficients) {
+  impulse_status_.setFrictionCoefficients(friction_coefficients);
 }
 
 

@@ -10,17 +10,17 @@
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/constraints/pdipm.hpp"
-#include "robotoc/constraints/wrench_friction_cone.hpp"
+#include "robotoc/constraints/contact_wrench_cone.hpp"
 
 #include "robot_factory.hpp"
 
 namespace robotoc {
 
-class WrenchFrictionConeTest : public ::testing::Test {
+class ContactWrenchConeTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-03;
+    barrier_param = 1.0e-03;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.7;
     X = 0.1;
@@ -59,23 +59,22 @@ protected:
                                 const ContactStatus& contact_status) const;
   void test_expandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
 
-  double barrier, dt, mu, X, Y, fraction_to_boundary_rule;
+  double barrier_param, dt, mu, X, Y, fraction_to_boundary_rule;
   Eigen::MatrixXd cone;
 };
 
 
-void WrenchFrictionConeTest::test_kinematics(Robot& robot, 
+void ContactWrenchConeTest::test_kinematics(Robot& robot, 
                                              const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
-  EXPECT_TRUE(constr.useKinematics());
+  ContactWrenchCone constr(robot, X, Y); 
   EXPECT_TRUE(constr.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
-void WrenchFrictionConeTest::test_isFeasible(Robot& robot, 
+void ContactWrenchConeTest::test_isFeasible(Robot& robot, 
                                              const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ContactWrenchCone constr(robot, X, Y); 
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   EXPECT_EQ(constr.dimc(), 17*robot.maxNumSurfaceContacts());
   const auto s = SplitSolution::Random(robot, contact_status);
@@ -101,9 +100,9 @@ void WrenchFrictionConeTest::test_isFeasible(Robot& robot,
 }
 
 
-void WrenchFrictionConeTest::test_setSlack(Robot& robot, const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier()), data_ref(constr.dimc(), constr.barrier());
+void ContactWrenchConeTest::test_setSlack(Robot& robot, const ContactStatus& contact_status) const {
+  ContactWrenchCone constr(robot, X, Y); 
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam()), data_ref(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   constr.allocateExtraData(data_ref);
   const int dimc = constr.dimc();
@@ -127,15 +126,17 @@ void WrenchFrictionConeTest::test_setSlack(Robot& robot, const ContactStatus& co
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));
+  std::cout << "data.slack - data_ref.slack: " << (data.slack - data_ref.slack).transpose() << std::endl;
+  std::cout << "data.residual- data_ref.residual: " << (data.residual - data_ref.residual).transpose() << std::endl;
 }
 
 
-void WrenchFrictionConeTest::test_evalConstraint(Robot& robot, const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
+void ContactWrenchConeTest::test_evalConstraint(Robot& robot, const ContactStatus& contact_status) const {
+  ContactWrenchCone constr(robot, X, Y); 
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
   robot.updateKinematics(s.q);
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   data.slack.setRandom();
   data.dual.setRandom();
@@ -157,8 +158,8 @@ void WrenchFrictionConeTest::test_evalConstraint(Robot& robot, const ContactStat
         if (contact_status.isContactActive(i)) {
           data_ref.residual.segment(c_begin, 17).noalias() 
               = cone * s.f[i] + data_ref.slack.segment(c_begin, 17);
-          pdipm::computeComplementarySlackness(barrier, data_ref, c_begin, 17);
-          data_ref.log_barrier += pdipm::logBarrier(barrier, data_ref.slack.segment(c_begin, 17));
+          pdipm::computeComplementarySlackness(barrier_param, data_ref, c_begin, 17);
+          data_ref.log_barrier += pdipm::logBarrier(barrier_param, data_ref.slack.segment(c_begin, 17));
         }
         c_begin += 17;
         break;
@@ -170,9 +171,9 @@ void WrenchFrictionConeTest::test_evalConstraint(Robot& robot, const ContactStat
 }
 
 
-void WrenchFrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+void ContactWrenchConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& contact_status) const {
+  ContactWrenchCone constr(robot, X, Y); 
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
@@ -212,10 +213,10 @@ void WrenchFrictionConeTest::test_evalDerivatives(Robot& robot, const ContactSta
 }
 
 
-void WrenchFrictionConeTest::test_condenseSlackAndDual(Robot& robot, 
+void ContactWrenchConeTest::test_condenseSlackAndDual(Robot& robot, 
                                                        const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+  ContactWrenchCone constr(robot, X, Y); 
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
@@ -266,9 +267,9 @@ void WrenchFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
 }
 
 
-void WrenchFrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
-  WrenchFrictionCone constr(robot, mu, X, Y); 
-  ConstraintComponentData data(constr.dimc(), constr.barrier());
+void ContactWrenchConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
+  ContactWrenchCone constr(robot, X, Y); 
+  ConstraintComponentData data(constr.dimc(), constr.getBarrierParam());
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
@@ -318,7 +319,7 @@ void WrenchFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Contact
 }
 
 
-TEST_F(WrenchFrictionConeTest, testWithHumanoidRobot) {
+TEST_F(ContactWrenchConeTest, testWithHumanoidRobot) {
   auto robot = testhelper::CreateHumanoidRobot(dt);
   auto contact_status = robot.createContactStatus();
   test_kinematics(robot, contact_status);

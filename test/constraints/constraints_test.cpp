@@ -31,7 +31,7 @@ class ConstraintsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    barrier = 1.0e-03;
+    barrier_param = 1.0e-03;
     mu = 0.7;
   }
 
@@ -39,19 +39,19 @@ protected:
   }
 
   std::shared_ptr<Constraints> createConstraints(const Robot& robot, 
-                                                 const double barrier=1.0e-03,
+                                                 const double barrier_param=1.0e-03,
                                                  const double fraction_to_boundary_rule=0.995) const;
 
   void timeStage0(Robot& robot, const ContactStatus& contact_status) const;
   void timeStage1(Robot& robot, const ContactStatus& contact_status) const;
   void timeStage2(Robot& robot, const ContactStatus& contact_status) const;
 
-  double barrier, mu;
+  double barrier_param, mu;
 };
 
 
 std::shared_ptr<Constraints> ConstraintsTest::createConstraints(const Robot& robot, 
-                                                                const double barrier, 
+                                                                const double barrier_param, 
                                                                 const double fraction_to_boundary_rule) const {
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
@@ -61,8 +61,8 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(const Robot& rob
   auto joint_torques_upper = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto joint_accel_lower = std::make_shared<robotoc::JointAccelerationLowerLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), -10));
   auto joint_accel_upper = std::make_shared<robotoc::JointAccelerationUpperLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), 10));
-  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot, 0.7);
-  auto constraints = std::make_shared<Constraints>(barrier, fraction_to_boundary_rule);
+  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
+  auto constraints = std::make_shared<Constraints>(barrier_param, fraction_to_boundary_rule);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -227,15 +227,15 @@ TEST_F(ConstraintsTest, floatingBase) {
 
 TEST_F(ConstraintsTest, testParams) {
   auto robot = testhelper::CreateQuadrupedalRobot(0.001);
-  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot, 0.7);
+  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>(0.1, 0.5);
   constraints->push_back(friction_cone);
-  EXPECT_DOUBLE_EQ(friction_cone->barrier(), 0.1);
-  EXPECT_DOUBLE_EQ(friction_cone->fractionToBoundaryRule(), 0.5);
-  constraints->setBarrier(0.2);
-  EXPECT_DOUBLE_EQ(friction_cone->barrier(), 0.2);
+  EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.1);
+  EXPECT_DOUBLE_EQ(friction_cone->getFractionToBoundaryRule(), 0.5);
+  constraints->setBarrierParam(0.2);
+  EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.2);
   constraints->setFractionToBoundaryRule(0.8);
-  EXPECT_DOUBLE_EQ(friction_cone->fractionToBoundaryRule(), 0.8);
+  EXPECT_DOUBLE_EQ(friction_cone->getFractionToBoundaryRule(), 0.8);
 }
 
 } // namespace robotoc

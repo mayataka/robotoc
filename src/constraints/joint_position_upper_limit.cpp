@@ -21,10 +21,6 @@ JointPositionUpperLimit::~JointPositionUpperLimit() {
 }
 
 
-bool JointPositionUpperLimit::useKinematics() const {
-  return false;
-}
-
 KinematicsLevel JointPositionUpperLimit::kinematicsLevel() const {
   return KinematicsLevel::PositionLevel;
 }

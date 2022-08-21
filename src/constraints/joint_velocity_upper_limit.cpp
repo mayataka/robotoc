@@ -21,11 +21,6 @@ JointVelocityUpperLimit::~JointVelocityUpperLimit() {
 }
 
 
-bool JointVelocityUpperLimit::useKinematics() const {
-  return false;
-}
-
-
 KinematicsLevel JointVelocityUpperLimit::kinematicsLevel() const {
   return KinematicsLevel::VelocityLevel;
 }

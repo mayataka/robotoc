@@ -21,8 +21,6 @@ PYBIND11_MODULE(discrete_event, m) {
     .export_values();
 
   py::class_<DiscreteEvent>(m, "DiscreteEvent")
-    .def(py::init<const std::vector<ContactType>&>(),
-          py::arg("contact_types"))
     .def(py::init<const ContactStatus&, const ContactStatus&>(),
           py::arg("pre_contact_status"), py::arg("post_contact_status"))
     .def("exist_discrete_event", &DiscreteEvent::existDiscreteEvent)

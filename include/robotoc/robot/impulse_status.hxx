@@ -12,8 +12,10 @@ namespace robotoc {
 inline ImpulseStatus::ImpulseStatus(
     const std::vector<ContactType>& contact_types, 
     const std::vector<std::string>& contact_frame_names,
+    const double default_friction_coefficients,
     const int impulse_mode_id)
-  : contact_status_(contact_types, contact_frame_names, impulse_mode_id) {
+  : contact_status_(contact_types, contact_frame_names, 
+                    default_friction_coefficients, impulse_mode_id) {
 }
 
 
@@ -178,6 +180,46 @@ ImpulseStatus::contactRotations() const {
 
 inline void ImpulseStatus::setImpulseModeId(const int impulse_mode_id) {
   contact_status_.setContactModeId(impulse_mode_id);
+}
+
+
+inline void ImpulseStatus::setFrictionCoefficient(const int contact_index, 
+                                                  const double friction_coefficient) {
+  contact_status_.setFrictionCoefficient(contact_index, friction_coefficient);
+}
+
+
+inline void ImpulseStatus::setFrictionCoefficient(const std::string& contact_frame_name, 
+                                                  const double friction_coefficient) {
+  contact_status_.setFrictionCoefficient(contact_frame_name, friction_coefficient);
+}
+
+
+inline void ImpulseStatus::setFrictionCoefficients(
+    const std::vector<double>& friction_coefficients) {
+  contact_status_.setFrictionCoefficients(friction_coefficients);
+}
+
+
+inline void ImpulseStatus::setFrictionCoefficients(
+    const std::unordered_map<std::string, double>& friction_coefficients) {
+  contact_status_.setFrictionCoefficients(friction_coefficients);
+}
+
+
+inline double ImpulseStatus::frictionCoefficient(const int contact_index) const {
+  return contact_status_.frictionCoefficient(contact_index);
+}
+
+
+inline double ImpulseStatus::frictionCoefficient(
+    const std::string& contact_frame_name) const {
+  return contact_status_.frictionCoefficient(contact_frame_name);
+}
+
+
+inline const std::vector<double>& ImpulseStatus::frictionCoefficients() const {
+  return contact_status_.frictionCoefficients();
 }
 
 

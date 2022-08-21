@@ -18,17 +18,13 @@ UnconstrDynamics::UnconstrDynamics(const Robot& robot)
     Quu_dID_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Quu_dID_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dimv_(robot.dimv()) {
-  try {
-    if (robot.hasFloatingBase()) {
-      throw std::logic_error("robot has floating base: robot should have no constraints!");
-    }
-    if (robot.maxNumContacts() > 0) {
-      throw std::logic_error("robot can have contacts: robot should have no constraints!");
-    }
+  if (robot.hasFloatingBase()) {
+    throw std::invalid_argument(
+        "[UnconstrDynamics] robot has a floating base: robot should have no constraints!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (robot.maxNumContacts() > 0) {
+    throw std::invalid_argument(
+        "[UnconstrDynamics] robot have contact frames: robot should have no constraints!");
   }
 }
 

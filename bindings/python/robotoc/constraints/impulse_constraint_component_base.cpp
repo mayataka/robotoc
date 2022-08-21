@@ -85,7 +85,7 @@ PYBIND11_MODULE(impulse_constraint_component_base, m) {
              PyImpulseConstraintComponentBase, 
              std::shared_ptr<ImpulseConstraintComponentBase>>(m, "ImpulseConstraintComponentBase")
     .def(py::init<const double, const double>(),
-          py::arg("barrier")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
+          py::arg("barrier_param")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
     .def("kinematicsLevel", &ImpulseConstraintComponentBase::kinematicsLevel)
     .def("allocateExtraData", &ImpulseConstraintComponentBase::allocateExtraData,
           py::arg("data"))

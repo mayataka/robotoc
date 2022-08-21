@@ -35,15 +35,9 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
     current_step_(0),
     predict_step_(0),
     enable_double_support_phase_(false) {
-  try {
-    if (robot.maxNumSurfaceContacts() < 2) {
-      throw std::out_of_range(
-          "invalid argument: robot is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (robot.maxNumSurfaceContacts() < 2) {
+    throw std::out_of_range(
+        "[MPCBipedWalk] invalid argument: 'robot' is not a bipedal robot!\n robot.maxNumSurfaceContacts() must be larger than 2!");
   }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
@@ -85,23 +79,26 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N,
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.5;
   const double X = 0.1;
   const double Y = 0.05;
-  wrench_cone_ = std::make_shared<robotoc::WrenchFrictionCone>(robot, mu, X, Y);
-  impulse_wrench_cone_ = std::make_shared<robotoc::ImpulseWrenchFrictionCone>(robot, mu, X, Y);
+  contact_wrench_cone_ = std::make_shared<robotoc::ContactWrenchCone>(robot, X, Y);
+  impulse_wrench_cone_ = std::make_shared<robotoc::ImpulseWrenchCone>(robot, X, Y);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
   constraints_->push_back(joint_velocity_upper);
   constraints_->push_back(joint_torques_lower);
   constraints_->push_back(joint_torques_upper);
-  constraints_->push_back(wrench_cone_);
+  constraints_->push_back(contact_wrench_cone_);
   constraints_->push_back(impulse_wrench_cone_);
   // create contact status
   cs_standing_.activateContacts(std::vector<int>({0, 1}));
   cs_right_swing_.activateContacts(std::vector<int>({0}));
   cs_left_swing_.activateContacts(std::vector<int>({1}));
+  const double friction_coefficient = 0.5;
+  cs_standing_.setFrictionCoefficients(std::vector<double>(2, friction_coefficient));
+  cs_right_swing_.setFrictionCoefficients(std::vector<double>(2, friction_coefficient));
+  cs_left_swing_.setFrictionCoefficients(std::vector<double>(2, friction_coefficient));
 }
 
 
@@ -117,23 +114,17 @@ void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foo
                                   const double swing_height, const double swing_time,
                                   const double double_support_time,
                                   const double swing_start_time) {
-  try {
-    if (swing_height <= 0) {
-      throw std::out_of_range("invalid value: swing_height must be positive!");
-    }
-    if (swing_time <= 0) {
-      throw std::out_of_range("invalid value: swing_time must be positive!");
-    }
-    if (double_support_time < 0) {
-      throw std::out_of_range("invalid value: double_support_time must be non-negative!");
-    }
-    if (swing_start_time <= 0) {
-      throw std::out_of_range("invalid value: swing_start_time must be positive!");
-    }
+  if (swing_height <= 0) {
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'swing_height' must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (swing_time <= 0) {
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'swing_time' must be positive!");
+  }
+  if (double_support_time < 0) {
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'double_support_time' must be non-negative!");
+  }
+  if (swing_start_time <= 0) {
+    throw std::out_of_range("[MPCBipedWalk] invalid argument: 'swing_start_time' must be positive!");
   }
   foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
@@ -156,15 +147,9 @@ void MPCBipedWalk::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foo
 void MPCBipedWalk::init(const double t, const Eigen::VectorXd& q, 
                         const Eigen::VectorXd& v, 
                         const SolverOptions& solver_options) {
-  try {
-    if (t >= swing_start_time_) {
-      throw std::out_of_range(
-          "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (t >= swing_start_time_) {
+    throw std::out_of_range(
+        "[MPCBipedWalk] invalid argument: 't' must be less than " + std::to_string(swing_start_time_) + "!");
   }
   current_step_ = 0;
   predict_step_ = 0;
@@ -215,7 +200,6 @@ void MPCBipedWalk::updateSolution(const double t, const double dt,
   if (!ts.empty()) {
     if (ts.front()+eps_ < t+dt) {
       ts_last_ = ts.front();
-      ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
       ++current_step_;
@@ -284,12 +268,12 @@ std::shared_ptr<Constraints> MPCBipedWalk::getConstraintsHandle() {
 }
 
 
-std::shared_ptr<WrenchFrictionCone> MPCBipedWalk::getWrenchConeHandle() {
-  return wrench_cone_;
+std::shared_ptr<ContactWrenchCone> MPCBipedWalk::getContactWrenchConeHandle() {
+  return contact_wrench_cone_;
 }
 
 
-std::shared_ptr<ImpulseWrenchFrictionCone> MPCBipedWalk::getImpulseWrenchConeHandle() {
+std::shared_ptr<ImpulseWrenchCone> MPCBipedWalk::getImpulseWrenchConeHandle() {
   return impulse_wrench_cone_;
 }
 

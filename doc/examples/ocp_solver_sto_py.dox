@@ -79,15 +79,14 @@ cost.push_back(config_cost)
 
 Next, we construct the constraints.
 ```
-constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
+constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
 joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.7
-friction_cone         = robotoc.FrictionCone(robot, mu)
+friction_cone         = robotoc.FrictionCone(robot)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
 constraints.push_back(joint_velocity_lower)
@@ -103,6 +102,12 @@ contact_sequence = robotoc.ContactSequence(robot)
 ```
 Then we can set an impulse event and a lift event to the contact sequence.
 
+We set the friction coefficients via the contact sequence. We then define the friction coefficients.
+```
+  mu = 0.7
+  friction_coefficients = {'LF_FOOT': mu, 'LH_FOOT': mu, 'RF_FOOT': mu, 'RH_FOOT': mu} 
+```
+
 We set the initial contact status of the robot. 
 In the beginning, the robot is standing, so all the contacts are active.
 ```
@@ -116,6 +121,7 @@ contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF,
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
+contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 ```
 
@@ -150,7 +156,7 @@ sto_cost = robotoc.STOCostFunction()
 and the minimum dwell-time constraints for the STO problem
 ```
 sto_constraints = robotoc.STOConstraints(min_dt=[0.15, 0.15, 0.65],
-                                         barrier=1.0e-03, 
+                                         barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 ```
 
@@ -237,9 +243,9 @@ viewer.display(ocp_solver.get_time_discretization().time_steps(),
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
 ```
-discretization = robotoc.TimeDiscretization(T, N)
-discretization.discretize(contact_sequence, t)
-print(discretization)
+time_discretization = robotoc.TimeDiscretization(T, N)
+time_discretization.discretize(contact_sequence, t)
+print(time_discretization)
 ```
 or 
 ```

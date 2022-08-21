@@ -51,9 +51,9 @@ TEST_F(UnconstrOCPSolverTest, test) {
   cost->push_back(config_cost);
 
   // Create joint constraints.
-  const double barrier = 1.0e-03;
+  const double barrier_param = 1.0e-03;
   const double fraction_to_boundary_rule = 0.995;
-  auto constraints = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
+  auto constraints = std::make_shared<robotoc::Constraints>(barrier_param, fraction_to_boundary_rule);
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);

@@ -13,20 +13,14 @@ CostFunction::CostFunction(const double discount_factor,
     discount_factor_(discount_factor),
     discount_time_step_(discount_time_step),
     discounted_cost_(true) {
-  try {
-    if (discount_factor <= 0.0) {
-      throw std::out_of_range("invalid argument: discount_factor must be positive!");
-    }
-    if (discount_factor >= 1.0) {
-      throw std::out_of_range("invalid argument: discount_factor must be smaller than 1.0!");
-    }
-    if (discount_time_step <= 0.0) {
-      throw std::out_of_range("invalid argument: discount_time_step must be positive!");
-    }
+  if (discount_factor <= 0.0) {
+    throw std::out_of_range("[CostFunction] invalid argument: 'discount_factor' must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (discount_factor >= 1.0) {
+    throw std::out_of_range("[CostFunction] invalid argument: 'discount_factor' must be smaller than 1.0!");
+  }
+  if (discount_time_step <= 0.0) {
+    throw std::out_of_range("[CostFunction] invalid argument: 'discount_time_step' must be positive!");
   }
 }
 
@@ -85,16 +79,6 @@ void CostFunction::push_back(const CostFunctionComponentBasePtr& cost) {
 
 void CostFunction::clear() {
   costs_.clear();
-}
-
-
-bool CostFunction::useKinematics() const {
-  for (const auto cost : costs_) {
-    if (cost->useKinematics()) {
-      return true;
-    }
-  }
-  return false;
 }
 
 

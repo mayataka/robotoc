@@ -43,10 +43,6 @@ PYBIND11_MODULE(ocp_solver, m) {
     .def("set_solution", 
           static_cast<void (OCPSolver::*)(const std::string&, const Eigen::VectorXd&)>(&OCPSolver::setSolution),
           py::arg("name"), py::arg("value"))
-    .def("extrapolate_solution_last_phase", &OCPSolver::extrapolateSolutionLastPhase,
-          py::arg("t"))
-    .def("extrapolate_solution_initial_phase", &OCPSolver::extrapolateSolutionInitialPhase,
-          py::arg("t"))
     .def("KKT_error", 
           static_cast<double (OCPSolver::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&OCPSolver::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

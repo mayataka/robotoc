@@ -12,26 +12,20 @@
 namespace robotoc {
 
 inline ImpulseConstraintComponentBase::ImpulseConstraintComponentBase(
-    const double _barrier, const double _fraction_to_boundary_rule) 
-  : barrier_(_barrier),
-    fraction_to_boundary_rule_(_fraction_to_boundary_rule) {
-    try {
-    if (_barrier <= 0) {
-      throw std::out_of_range(
-          "invalid argment: barrirer must be positive");
-    }
-    if (_fraction_to_boundary_rule <= 0) {
-      throw std::out_of_range(
-          "invalid argment: fraction_to_boundary_rule must be positive");
-    }
-    if (_fraction_to_boundary_rule >= 1) {
-      throw std::out_of_range(
-          "invalid argment: fraction_to_boundary_rule must be less than 1");
-    }
+    const double barrier_param, const double fraction_to_boundary_rule) 
+  : barrier_(barrier_param),
+    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
+  if (barrier_param <= 0) {
+    throw std::out_of_range(
+        "[ImpulseConstraintComponentBase] invalid argment: 'barrier_param' must be positive");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "[ImpulseConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive");
+  }
+  if (fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "[ImpulseConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1");
   }
 }
 
@@ -62,25 +56,35 @@ inline void ImpulseConstraintComponentBase::updateDual(
 }
 
 
-inline double ImpulseConstraintComponentBase::barrier() const {
+inline double ImpulseConstraintComponentBase::getBarrierParam() const {
   return barrier_;
 }
 
 
-inline double ImpulseConstraintComponentBase::fractionToBoundaryRule() const {
+inline double ImpulseConstraintComponentBase::getFractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 
 
-inline void ImpulseConstraintComponentBase::setBarrier(const double barrier) {
-  assert(barrier > 0);
-  barrier_ = barrier;
+inline void ImpulseConstraintComponentBase::setBarrierParam(const double barrier_param) {
+  if (barrier_param <= 0) {
+    throw std::out_of_range(
+        "[ImpulseConstraintComponentBase] invalid argment: 'barrier_param' must be positive");
+  }
+  barrier_ = barrier_param;
 }
 
 
 inline void ImpulseConstraintComponentBase::setFractionToBoundaryRule(
     const double fraction_to_boundary_rule) {
-  assert(fraction_to_boundary_rule > 0);
+  if (fraction_to_boundary_rule <= 0) {
+    throw std::out_of_range(
+        "[ImpulseConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive");
+  }
+  if (fraction_to_boundary_rule >= 1) {
+    throw std::out_of_range(
+        "[ImpulseConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1");
+  }
   fraction_to_boundary_rule_ = fraction_to_boundary_rule;
 }
 

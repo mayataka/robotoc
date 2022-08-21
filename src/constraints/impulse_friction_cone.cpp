@@ -6,46 +6,16 @@
 
 namespace robotoc {
 
-ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu)
-  : ImpulseFrictionCone(robot, std::vector<double>(robot.maxNumContacts(), mu)) {
-}
-
-
-ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const std::vector<double>& mu)
+ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot)
   : ImpulseConstraintComponentBase(),
     dimv_(robot.dimv()),
     dimc_(5*robot.maxNumContacts()),
     max_num_contacts_(robot.maxNumContacts()),
     contact_frame_(robot.contactFrames()),
-    contact_types_(robot.contactTypes()),
-    mu_(mu),
-    cone_(robot.maxNumContacts(), Eigen::MatrixXd::Zero(5, 3)) {
-  try {
-    if (robot.maxNumContacts() == 0) {
-      throw std::out_of_range(
-          "Invalid argument: robot.maxNumContacts() must be positive!");
-    }
-    if (mu.size() != robot.maxNumContacts()) {
-      throw std::out_of_range(
-          "Invalid argument: mu.size() must be" + std::to_string(robot.maxNumContacts()) + "!");
-    }
-    for (int i=0; i<robot.maxNumContacts(); ++i) {
-      if (mu[i] <= 0) {
-        throw std::out_of_range(
-            "Invalid argument: mu[" + std::to_string(i) + "] must be positive!");
-      }
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  for (int i=0; i<robot.maxNumContacts(); ++i) {
-    cone_[i] <<  0,  0, -1, 
-                 1,  0, -(mu[i]/std::sqrt(2)),
-                -1,  0, -(mu[i]/std::sqrt(2)),
-                 0,  1, -(mu[i]/std::sqrt(2)),
-                 0, -1, -(mu[i]/std::sqrt(2));
+    contact_types_(robot.contactTypes()) {
+  if (robot.maxNumContacts() == 0) {
+    throw std::out_of_range(
+        "[ImpulseFrictionCone] invalid argument: robot.maxNumContacts() must be positive!");
   }
 }
 
@@ -56,46 +26,11 @@ ImpulseFrictionCone::ImpulseFrictionCone()
     max_num_contacts_(0),
     dimv_(0),
     contact_frame_(),
-    contact_types_(),
-    mu_(),
-    cone_() {
+    contact_types_() {
 }
 
 
 ImpulseFrictionCone::~ImpulseFrictionCone() {
-}
-
-
-void ImpulseFrictionCone::setFrictionCoefficient(const double mu) {
-  setFrictionCoefficient(std::vector<double>(max_num_contacts_, mu));
-}
-
-
-void ImpulseFrictionCone::setFrictionCoefficient(const std::vector<double>& mu) {
-  try {
-    if (mu.size() != max_num_contacts_) {
-      throw std::out_of_range(
-          "Invalid argument: mu.size() must be" + std::to_string(max_num_contacts_) + "!");
-    }
-    for (int i=0; i<max_num_contacts_; ++i) {
-      if (mu[i] <= 0) {
-        throw std::out_of_range(
-            "Invalid argument: mu[" + std::to_string(i) + "] must be positive!");
-      }
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  for (int i=0; i<max_num_contacts_; ++i) {
-    mu_[i]  = mu[i];
-    cone_[i] <<  0,  0, -1, 
-                 1,  0, -(mu[i]/std::sqrt(2)),
-                -1,  0, -(mu[i]/std::sqrt(2)),
-                 0,  1, -(mu[i]/std::sqrt(2)),
-                 0, -1, -(mu[i]/std::sqrt(2));
-  }
 }
 
 
@@ -129,6 +64,15 @@ void ImpulseFrictionCone::allocateExtraData(
   for (int i=0; i<max_num_contacts_; ++i) {
     data.J.push_back(Eigen::MatrixXd::Zero(5, 3)); // cone_local
   }
+  for (int i=0; i<max_num_contacts_; ++i) {
+    Eigen::MatrixXd cone_world = Eigen::MatrixXd::Zero(5, 3);
+    cone_world <<  0,  0, -1, 
+                   1,  0,  0,
+                  -1,  0,  0,
+                   0,  1,  0,
+                   0, -1,  0;
+    data.J.push_back(cone_world); 
+  }
 }
 
 
@@ -143,7 +87,8 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
       Eigen::VectorXd& fWi = fW(data, i);
       robot.transformFromLocalToWorld(contact_frame_[i], 
                                       s.f[i].template head<3>(), fWi);
-      frictionConeResidual(mu_[i], fWi, impulse_status.contactRotation(i), 
+      frictionConeResidual(impulse_status.frictionCoefficient(i), fWi, 
+                           impulse_status.contactRotation(i), 
                            data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
@@ -164,7 +109,8 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
     Eigen::VectorXd& fWi = fW(data, i);
     robot.transformFromLocalToWorld(contact_frame_[i], 
                                     s.f[i].template head<3>(), fWi);
-    frictionConeResidual(mu_[i], fWi, impulse_status.contactRotation(i), 
+    frictionConeResidual(impulse_status.frictionCoefficient(i), fWi, 
+                         impulse_status.contactRotation(i), 
                          data.residual.template segment<5>(idx));
     data.slack.template segment<5>(idx)
         = - data.residual.template segment<5>(idx);
@@ -186,7 +132,8 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
       Eigen::VectorXd& fWi = fW(data, i);
       robot.transformFromLocalToWorld(contact_frame_[i], 
                                       s.f[i].template head<3>(), fWi);
-      frictionConeResidual(mu_[i], fWi, impulse_status.contactRotation(i), 
+      frictionConeResidual(impulse_status.frictionCoefficient(i), fWi, 
+                           impulse_status.contactRotation(i), 
                            data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
@@ -207,9 +154,14 @@ void ImpulseFrictionCone::evalDerivatives(
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       const Eigen::VectorXd& fWi = fW(data, i);
+      // Friction cone in the world frame.
+      Eigen::MatrixXd& cone_world_i = cone_world(data, i);
+      for (int j=0; j<4; ++j) {
+        cone_world_i.coeffRef(j+1, 2) = - (impulse_status.frictionCoefficient(i)/std::sqrt(2));
+      }
       // Friction cone in the local frame of the contact surface.
       Eigen::MatrixXd& cone_local_i = cone_local(data, i);
-      cone_local_i.noalias() = cone_[i] * impulse_status.contactRotation(i).transpose();
+      cone_local_i.noalias() = cone_world_i * impulse_status.contactRotation(i).transpose();
       // Jacobian of the contact force expressed in the world frame fWi 
       // with respect to the configuration q.
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);

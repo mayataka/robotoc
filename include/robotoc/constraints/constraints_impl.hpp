@@ -19,15 +19,6 @@ template <typename ConstraintComponentBaseTypePtr>
 void clear(std::vector<ConstraintComponentBaseTypePtr>& constraints);
 
 ///
-/// @brief Checks whether the constrainst use kinematics or not. 
-/// @param[in] constraints Vector of the constraints. 
-/// @return true if the constraints requre kinematics of Robot model. false if not.
-///
-template <typename ConstraintComponentBaseTypePtr>
-bool useKinematics(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints);
-
-///
 /// @brief Creates constraints data.
 /// @param[in] constraints Vector of the constraints. 
 /// @param[out] data Vector of the constraints data. 
@@ -70,7 +61,7 @@ void setSlackAndDual(
 
 ///
 /// @brief Computes the primal residual, residual in the complementary 
-/// slackness, and the log-barrier function of the slack varible.
+/// slackness, and the log-barrier_param function of the slack varible.
 /// @param[in] constraints Vector of the constraint components. 
 /// @param[in] robot Robot model.
 /// @param[in] contact_status Contact status.
@@ -177,11 +168,11 @@ void updateDual(std::vector<ConstraintComponentData>& data,
 ///
 /// @brief Sets the barrier parameter.
 /// @param[in, out] constraints Vector of the constraint components. 
-/// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+/// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
 ///
 template <typename ConstraintComponentBaseTypePtr>
-void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-                const double barrier);
+void setBarrierParam(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+                const double barrier_param);
 
 ///
 /// @brief Sets the parameter of the fraction-to-boundary-rule.

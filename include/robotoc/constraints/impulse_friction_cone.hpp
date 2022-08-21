@@ -26,17 +26,8 @@ public:
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] mu Friction coefficient. Must be positive.
   ///
-  ImpulseFrictionCone(const Robot& robot, const double mu);
-
-  ///
-  /// @brief Constructor. 
-  /// @param[in] robot Robot model.
-  /// @param[in] mu Friction coefficient. Size must be the same as 
-  /// Robot::maxNumContacts(). Each element must be positive.
-  ///
-  ImpulseFrictionCone(const Robot& robot, const std::vector<double>& mu);
+  ImpulseFrictionCone(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
@@ -67,19 +58,6 @@ public:
   /// @brief Default move assign operator. 
   ///
   ImpulseFrictionCone& operator=(ImpulseFrictionCone&&) noexcept = default;
-
-  ///
-  /// @brief Sets the friction coefficient. 
-  /// @param[in] mu Friction coefficient. Must be positive.
-  ///
-  void setFrictionCoefficient(const double mu);
-
-  ///
-  /// @brief Sets the friction coefficient. 
-  /// @param[in] mu Friction coefficient. Size must be the same as 
-  /// Robot::maxNumContacts(). Each element must be positive.
-  ///
-  void setFrictionCoefficient(const std::vector<double>& mu);
 
   KinematicsLevel kinematicsLevel() const override;
 
@@ -148,8 +126,6 @@ private:
   int dimv_, dimc_, max_num_contacts_;
   std::vector<int> contact_frame_;
   std::vector<ContactType> contact_types_;
-  std::vector<double> mu_;
-  std::vector<Eigen::MatrixXd> cone_;
 
   Eigen::VectorXd& fW(ConstraintComponentData& data, 
                       const int contact_idx) const {
@@ -184,6 +160,11 @@ private:
   Eigen::MatrixXd& cone_local(ConstraintComponentData& data, 
                               const int contact_idx) const {
     return data.J[4*max_num_contacts_+contact_idx];
+  }
+
+  Eigen::MatrixXd& cone_world(ConstraintComponentData& data, 
+                              const int contact_idx) const {
+    return data.J[5*max_num_contacts_+contact_idx];
   }
 
 };

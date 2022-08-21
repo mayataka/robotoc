@@ -10,56 +10,56 @@
 namespace robotoc {
 namespace pdipm {
 
-inline void setSlackAndDualPositive(const double barrier, 
+inline void setSlackAndDualPositive(const double barrier_param, 
                                     ConstraintComponentData& data) {
-  assert(barrier > 0);
+  assert(barrier_param > 0);
   assert(data.checkDimensionalConsistency());
-  const double sqrt_barrier = std::sqrt(barrier);
+  const double sqrt_barrier = std::sqrt(barrier_param);
   for (int i=0; i<data.slack.size(); ++i) {
     if (data.slack.coeff(i) < sqrt_barrier) {
       data.slack.coeffRef(i) = sqrt_barrier;
     }
   }
-  data.dual.array() = barrier / data.slack.array();
+  data.dual.array() = barrier_param / data.slack.array();
 }
 
 
-inline void computeComplementarySlackness(const double barrier, 
+inline void computeComplementarySlackness(const double barrier_param, 
                                           ConstraintComponentData& data) {
-  assert(barrier > 0);
+  assert(barrier_param > 0);
   assert(data.checkDimensionalConsistency());
-  data.cmpl.array() = data.slack.array() * data.dual.array() - barrier;
+  data.cmpl.array() = data.slack.array() * data.dual.array() - barrier_param;
 }
 
 
-inline void computeComplementarySlackness(const double barrier, 
+inline void computeComplementarySlackness(const double barrier_param, 
                                           ConstraintComponentData& data,
                                           const int start, const int size) {
-  assert(barrier > 0);
+  assert(barrier_param > 0);
   assert(data.checkDimensionalConsistency());
   data.cmpl.segment(start, size).array() 
       = data.slack.segment(start, size).array() 
-          * data.dual.segment(start, size).array() - barrier;
+          * data.dual.segment(start, size).array() - barrier_param;
 }
 
 
 template <int Size>
-inline void computeComplementarySlackness(const double barrier, 
+inline void computeComplementarySlackness(const double barrier_param, 
                                           ConstraintComponentData& data,
                                           const int start) {
-  assert(barrier > 0);
+  assert(barrier_param > 0);
   assert(data.checkDimensionalConsistency());
   data.cmpl.template segment<Size>(start).array() 
       = data.slack.template segment<Size>(start).array() 
-          * data.dual.template segment<Size>(start).array() - barrier;
+          * data.dual.template segment<Size>(start).array() - barrier_param;
 }
 
 
-inline double computeComplementarySlackness(const double barrier, 
+inline double computeComplementarySlackness(const double barrier_param, 
                                             const double slack, 
                                             const double dual) {
-  assert(barrier > 0);
-  return (slack * dual - barrier); 
+  assert(barrier_param > 0);
+  return (slack * dual - barrier_param); 
 }
 
 
@@ -192,11 +192,11 @@ inline double computeDualDirection(const double slack, const double dual,
 
 
 template <typename VectorType>
-inline double logBarrier(const double barrier, 
+inline double logBarrier(const double barrier_param, 
                           const Eigen::MatrixBase<VectorType>& vec) {
-  assert(barrier > 0);
+  assert(barrier_param > 0);
   assert(vec.array().minCoeff() > 0);
-  return (- barrier * vec.array().log().sum());
+  return (- barrier_param * vec.array().log().sum());
 }
 
 } // namespace pdipm

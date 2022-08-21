@@ -132,17 +132,16 @@ int main(int argc, char *argv[]) {
   cost->push_back(com_cost);
 
   // Create the constraints
-  const double barrier = 1.0e-03;
+  const double barrier_param = 1.0e-03;
   const double fraction_to_boundary_rule = 0.995;
-  auto constraints          = std::make_shared<robotoc::Constraints>(barrier, fraction_to_boundary_rule);
+  auto constraints          = std::make_shared<robotoc::Constraints>(barrier_param, fraction_to_boundary_rule);
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<robotoc::JointVelocityLowerLimit>(robot);
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.7;
-  auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -153,6 +152,11 @@ int main(int argc, char *argv[]) {
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
+  const double mu = 0.7;
+  const std::unordered_map<std::string, double> friction_coefficients = {{"LF_FOOT", mu}, 
+                                                                         {"LH_FOOT", mu}, 
+                                                                         {"RF_FOOT", mu}, 
+                                                                         {"RH_FOOT", mu}};
 
   std::unordered_map<std::string, Eigen::Vector3d> contact_positions = {{"LF_FOOT", x3d0_LF}, 
                                                                         {"LH_FOOT", x3d0_LH}, 
@@ -161,11 +165,13 @@ int main(int argc, char *argv[]) {
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}));
   contact_status_standing.setContactPlacements(contact_positions);
+  contact_status_standing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->init(contact_status_standing);
 
   auto contact_status_rfrh_swing = robot.createContactStatus();
   contact_status_rfrh_swing.activateContacts(std::vector<std::string>({"LF_FOOT", "LH_FOOT"}));
   contact_status_rfrh_swing.setContactPlacements(contact_positions);
+  contact_status_rfrh_swing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->push_back(contact_status_rfrh_swing, t0);
 
   contact_positions["RF_FOOT"].noalias() += 0.5 * step_length;
@@ -176,6 +182,7 @@ int main(int argc, char *argv[]) {
   auto contact_status_lflh_swing = robot.createContactStatus();
   contact_status_lflh_swing.activateContacts(std::vector<std::string>({"RF_FOOT", "RH_FOOT"}));
   contact_status_lflh_swing.setContactPlacements(contact_positions);
+  contact_status_lflh_swing.setFrictionCoefficients(friction_coefficients);
   contact_sequence->push_back(contact_status_lflh_swing, 
                               t0+swing_time+double_support_time);
 
@@ -239,8 +246,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_VIEWER
   robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
-  const auto discretization = ocp_solver.getTimeDiscretization();
-  const auto time_steps = discretization.timeSteps();
+  const auto time_discretization = ocp_solver.getTimeDiscretization();
+  const auto time_steps = time_discretization.timeSteps();
   viewer.display(robot, ocp_solver.getSolution("q"), 
                  ocp_solver.getSolution("f", "WORLD"), time_steps, mu);
 #endif 

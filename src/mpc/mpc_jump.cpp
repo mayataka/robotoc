@@ -58,8 +58,7 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.5;
-  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot, mu);
+  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
@@ -71,6 +70,8 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   for (int i=0; i<cs_ground_.maxNumContacts(); ++i) {
     cs_ground_.activateContact(i);
   }
+  const double friction_coefficient = 0.5;
+  cs_ground_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
 }
 
 
@@ -86,29 +87,23 @@ void MPCJump::setJumpPattern(
     const std::shared_ptr<ContactPlannerBase>& foot_step_planner, 
     const double flying_time, const double min_flying_time, 
     const double ground_time, const double min_ground_time) {
-  try {
-    if (flying_time <= 0) {
-      throw std::out_of_range("invalid value: flying_time must be positive!");
-    }
-    if (min_flying_time <= 0) {
-      throw std::out_of_range("invalid value: min_flying_time must be positive!");
-    }
-    if (ground_time <= 0) {
-      throw std::out_of_range("invalid value: ground_time must be positive!");
-    }
-    if (min_ground_time <= 0) {
-      throw std::out_of_range("invalid value: min_ground_time must be positive!");
-    }
-    if (flying_time+ground_time > T_) {
-      throw std::out_of_range("invalid value: flying_time+ground_time must be less than T!");
-    }
-    if (min_flying_time+min_ground_time > T_) {
-      throw std::out_of_range("invalid value: min_flying_time+min_ground_time must be less than T!");
-    }
+  if (flying_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: 'flying_time' must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (min_flying_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: 'min_flying_time' must be positive!");
+  }
+  if (ground_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: 'ground_time' must be positive!");
+  }
+  if (min_ground_time <= 0) {
+    throw std::out_of_range("[MPCJump] invalid argument: 'min_ground_time' must be positive!");
+  }
+  if (flying_time+ground_time > T_) {
+    throw std::out_of_range("[MPCJump] invalid argument: 'flying_time' + 'ground_time' must be less than T!");
+  }
+  if (min_flying_time+min_ground_time > T_) {
+    throw std::out_of_range("[MPCJump] invalid argument: 'min_flying_time' + 'min_ground_time' must be less than T!");
   }
   foot_step_planner_ = foot_step_planner;
   flying_time_ = flying_time;
@@ -204,7 +199,6 @@ void MPCJump::updateSolution(const double t, const double dt,
   bool remove_step = false;
   if (!ts.empty()) {
     if (ts.front()+eps_ < t+dt) {
-      ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
       ++current_step_;

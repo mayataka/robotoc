@@ -26,13 +26,7 @@ enum class DiscreteEventType {
 class DiscreteEvent {
 public:
   ///
-  /// @brief Constructor. 
-  /// @param[in] contact_types Types of contacts. 
-  ///
-  DiscreteEvent(const std::vector<ContactType>& contact_types);
-
-  ///
-  /// @brief Set the contact status from two sequential contact status.
+  /// @brief Constructs discrete event from two sequential contact status.
   /// The impulse mode id of this event is set to contactModeId() of 
   /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
@@ -173,6 +167,22 @@ public:
   /// DiscreteEvent::maxNumContacts().
   ///
   void setContactPlacements(const aligned_vector<SE3>& contact_placements);
+
+
+  ///
+  /// @brief Gets the friction coefficint.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
+  ///
+  void setFrictionCoefficient(const int contact_index, 
+                              const double friction_coefficient);
+
+  ///
+  /// @brief Sets the friction coefficints.
+  /// @param[in] friction_coefficients Friction coefficients. 
+  /// Size must be ContactStatus::maxNumContacts() and each element must be positive.
+  ///
+  void setFrictionCoefficients(const std::vector<double>& friction_coefficients);
 
   ///
   /// @brief Returns the maximum number of the contacts.

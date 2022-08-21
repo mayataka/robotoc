@@ -16,25 +16,7 @@ SplitUnconstrParNMPC::SplitUnconstrParNMPC(
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
     contact_status_(robot.createContactStatus()),
-    use_kinematics_(false),
     stage_cost_(0) {
-  if (cost_->useKinematics() || constraints_->useKinematics()) {
-    use_kinematics_ = true;
-  }
-  try {
-    if (robot.hasFloatingBase()) {
-      throw std::logic_error(
-          "robot has floating base: robot should have no constraints!");
-    }
-    if (robot.maxNumContacts() > 0) {
-      throw std::logic_error(
-          "robot can have contacts: robot should have no constraints!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
 }
 
 
@@ -45,7 +27,6 @@ SplitUnconstrParNMPC::SplitUnconstrParNMPC()
     constraints_data_(),
     unconstr_dynamics_(),
     contact_status_(),
-    use_kinematics_(false),
     stage_cost_(0) {
 }
 
@@ -74,9 +55,7 @@ void SplitUnconstrParNMPC::evalOCP(Robot& robot, const GridInfo& grid_info,
                                    SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
+  robot.updateKinematics(s.q);
   kkt_residual.setZero();
   stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, 
                                      grid_info, s);
@@ -98,9 +77,7 @@ void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot,
                                               SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
+  robot.updateKinematics(s.q);
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
                                           grid_info, s, kkt_residual);
@@ -124,9 +101,7 @@ void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot,
                                             SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
+  robot.updateKinematics(s.q);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 

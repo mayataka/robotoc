@@ -140,6 +140,22 @@ inline void Robot::dSubtractConfiguration_dq0(
 }
 
 
+template <typename ConfigVectorType1, typename ConfigVectorType2, 
+          typename ConfigVectorType3>
+inline void Robot::interpolateConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType1>& q1, 
+    const Eigen::MatrixBase<ConfigVectorType2>& q2, const double t,
+    const Eigen::MatrixBase<ConfigVectorType3>& qout) const {
+  assert(q1.size() == dimq_);
+  assert(q2.size() == dimq_);
+  assert(qout.size() == dimq_);
+  assert(t >= 0.0);
+  assert(t <= 1.0);
+  pinocchio::interpolate(model_, q1, q2, t, 
+                         const_cast<Eigen::MatrixBase<ConfigVectorType3>&>(qout));
+}
+
+
 template <typename ConfigVectorType, typename MatrixType>
 inline void Robot::integrateCoeffWiseJacobian(
     const Eigen::MatrixBase<ConfigVectorType>& q, 
@@ -864,15 +880,9 @@ inline void Robot::normalizeConfiguration(
 
 
 inline int Robot::frameId(const std::string& frame_name) const {
-  try {
-    if (!model_.existFrame(frame_name)) {
-      throw std::invalid_argument(
-          "Invalid argument: frame " + frame_name + " does not exit!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (!model_.existFrame(frame_name)) {
+    throw std::invalid_argument(
+        "[Robot] invalid argument: frame '" + frame_name + "' does not exit!");
   }
   return model_.getFrameId(frame_name);
 }

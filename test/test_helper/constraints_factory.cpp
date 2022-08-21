@@ -28,9 +28,8 @@ std::shared_ptr<Constraints> CreateConstraints(const Robot& robot) {
   constraints->push_back(torques_lower_limit);
   constraints->push_back(torques_upper_limit);
   if (robot.maxNumContacts() > 0) {
-    const double mu = 0.7;
-    auto friction_cone = std::make_shared<FrictionCone>(robot, mu);
-    auto impulse_friction_cone = std::make_shared<ImpulseFrictionCone>(robot, mu);
+    auto friction_cone = std::make_shared<FrictionCone>(robot);
+    auto impulse_friction_cone = std::make_shared<ImpulseFrictionCone>(robot);
     constraints->push_back(friction_cone);
     constraints->push_back(impulse_friction_cone);
   }

@@ -26,6 +26,7 @@
 #include "robotoc/hybrid/switching_time_optimization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"
 #include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/solver/solution_interpolator.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
 #include "robotoc/utils/timer.hpp"
@@ -189,22 +190,6 @@ public:
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
-  /// @brief Extrapolates the solution over the grids on the last contact phase.
-  /// Also initializes the slack and dual variables of the inequality 
-  /// constraints on such stages.
-  /// @param[in] t Initial time of the horizon. 
-  ///
-  void extrapolateSolutionLastPhase(const double t);
-
-  ///
-  /// @brief Extrapolates the solution over the grids on the initial contact 
-  /// phase. Also initializes the slack and dual variables of the inequality 
-  /// constraints on such stages.
-  /// @param[in] t Initial time of the horizon. 
-  ///
-  void extrapolateSolutionInitialPhase(const double t);
-
-  ///
   /// @brief Computes the KKT residual of the optimal control problem and 
   /// returns the KKT error, that is, the l2-norm of the KKT residual. 
   /// @param[in] t Initial time of the horizon. 
@@ -274,12 +259,14 @@ private:
   Solution s_;
   Direction d_;
   RiccatiFactorization riccati_factorization_;
+  SolutionInterpolator solution_interpolator_;
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
   Timer timer_;
 
   void reserveData();
   void discretizeSolution();
+  void interpolateSolution();
 
 };
 

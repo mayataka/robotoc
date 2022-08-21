@@ -35,15 +35,9 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
     current_step_(0),
     predict_step_(0),
     enable_stance_phase_(false) {
-  try {
-    if (robot.maxNumPointContacts() < 4) {
-      throw std::out_of_range(
-          "invalid argument: input robot is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (robot.maxNumPointContacts() < 4) {
+    throw std::out_of_range(
+        "[MPCPace] invalid argument: 'robot' is not a quadrupedal robot!\n robot.maxNumPointContacts() must be larger than 4!");
   }
   // create costs
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
@@ -93,9 +87,8 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  const double mu = 0.5;
-  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot, mu);
-  // auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot, mu);
+  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
+  // auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
@@ -108,6 +101,10 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   cs_standing_.activateContacts(std::vector<int>({0, 1, 2, 3}));
   cs_left_swing_.activateContacts(std::vector<int>({2, 3}));
   cs_right_swing_.activateContacts(std::vector<int>({0, 1}));
+  const double friction_coefficient = 0.5;
+  cs_standing_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_left_swing_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_right_swing_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
 }
 
 
@@ -122,23 +119,17 @@ MPCPace::~MPCPace() {
 void MPCPace::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_step_planner,
                              const double swing_height, const double swing_time,
                              const double stance_time, const double swing_start_time) {
-  try {
-    if (swing_height <= 0) {
-      throw std::out_of_range("invalid value: swing_height must be positive!");
-    }
-    if (swing_time <= 0) {
-      throw std::out_of_range("invalid value: swing_time must be positive!");
-    }
-    if (stance_time < 0) {
-      throw std::out_of_range("invalid value: stance_time must be non-negative!");
-    }
-    if (swing_start_time <= 0) {
-      throw std::out_of_range("invalid value: swing_start_time must be positive!");
-    }
+  if (swing_height <= 0) {
+    throw std::out_of_range("[MPCPace] invalid argument: 'swing_height' must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (swing_time <= 0) {
+    throw std::out_of_range("[MPCPace] invalid argument: 'swing_time' must be positive!");
+  }
+  if (stance_time < 0) {
+    throw std::out_of_range("[MPCPace] invalid argument: 'stance_time' must be non-negative!");
+  }
+  if (swing_start_time <= 0) {
+    throw std::out_of_range("[MPCPace] invalid argument: 'swing_start_time' must be positive!");
   }
   foot_step_planner_ = foot_step_planner;
   swing_time_ = swing_time;
@@ -170,15 +161,9 @@ void MPCPace::setGaitPattern(const std::shared_ptr<ContactPlannerBase>& foot_ste
 void MPCPace::init(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, 
                    const SolverOptions& solver_options) {
-  try {
-    if (t >= swing_start_time_) {
-      throw std::out_of_range(
-          "invalid value: t must be less than" + std::to_string(swing_start_time_) + "!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (t >= swing_start_time_) {
+    throw std::out_of_range(
+        "[MPCPace] invalid argument: 't' must be less than " + std::to_string(swing_start_time_) + "!");
   }
   current_step_ = 0;
   predict_step_ = 0;
@@ -229,7 +214,6 @@ void MPCPace::updateSolution(const double t, const double dt,
   if (!ts.empty()) {
     if (ts.front()+eps_ < t+dt) {
       ts_last_ = ts.front();
-      ocp_solver_.extrapolateSolutionInitialPhase(t);
       contact_sequence_->pop_front();
       remove_step = true;
       ++current_step_;

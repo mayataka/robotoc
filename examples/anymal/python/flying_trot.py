@@ -98,15 +98,14 @@ com_cost.set_weight(np.full(3, 1.0e06))
 cost.push_back(com_cost)
 
 # Create the constraints
-constraints           = robotoc.Constraints(barrier=1.0e-03, fraction_to_boundary_rule=0.995)
+constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)
 joint_position_lower  = robotoc.JointPositionLowerLimit(robot)
 joint_position_upper  = robotoc.JointPositionUpperLimit(robot)
 joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-mu = 0.7
-friction_cone         = robotoc.FrictionCone(robot, mu)
+friction_cone         = robotoc.FrictionCone(robot)
 constraints.push_back(joint_position_lower)
 constraints.push_back(joint_position_upper)
 constraints.push_back(joint_velocity_lower)
@@ -117,16 +116,20 @@ constraints.push_back(friction_cone)
 
 # Create the contact sequence
 contact_sequence = robotoc.ContactSequence(robot)
+mu = 0.7
+friction_coefficients = {'LF_FOOT': mu, 'LH_FOOT': mu, 'RF_FOOT': mu, 'RH_FOOT': mu} 
 
 contact_positions = {'LF_FOOT': x3d0_LF, 'LH_FOOT': x3d0_LH, 'RF_FOOT': x3d0_RF, 'RH_FOOT': x3d0_RH} 
 contact_status_standing = robot.create_contact_status()
 contact_status_standing.activate_contacts(['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'])
 contact_status_standing.set_contact_placements(contact_positions)
+contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 
 contact_status_lhrf_swing = robot.create_contact_status()
 contact_status_lhrf_swing.activate_contacts(['LF_FOOT', 'RH_FOOT'])
 contact_status_lhrf_swing.set_contact_placements(contact_positions)
+contact_status_lhrf_swing.set_friction_coefficients(friction_coefficients)
 contact_sequence.push_back(contact_status_lhrf_swing, t0)
 
 contact_status_flying = robot.create_contact_status()
@@ -138,6 +141,7 @@ contact_positions['RF_FOOT'] += 0.5 * step_length
 contact_status_rhlf_swing = robot.create_contact_status()
 contact_status_rhlf_swing.activate_contacts(['LH_FOOT', 'RF_FOOT'])
 contact_status_rhlf_swing.set_contact_placements(contact_positions)
+contact_status_rhlf_swing.set_friction_coefficients(friction_coefficients)
 contact_sequence.push_back(contact_status_rhlf_swing, t0+stance_time+flying_time)
 
 contact_status_flying.set_contact_placements(contact_positions)
@@ -196,6 +200,6 @@ viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf,
                                         base_joint_type=robotoc.BaseJointType.FloatingBase,
                                         viewer_type='gepetto')
 viewer.set_contact_info(robot.contact_frames(), mu)
-discretization = ocp_solver.get_time_discretization()
-viewer.display(discretization.time_steps(), ocp_solver.get_solution('q'), 
+time_discretization = ocp_solver.get_time_discretization()
+viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

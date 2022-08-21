@@ -15,25 +15,7 @@ SplitUnconstrOCP::SplitUnconstrOCP(
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
     contact_status_(robot.createContactStatus()),
-    use_kinematics_(false),
     stage_cost_(0) {
-  if (cost_->useKinematics() || constraints_->useKinematics()) {
-    use_kinematics_ = true;
-  }
-  try {
-    if (robot.hasFloatingBase()) {
-      throw std::logic_error(
-          "robot has floating base: robot should have no constraints!");
-    }
-    if (robot.maxNumContacts() > 0) {
-      throw std::logic_error(
-          "robot can have contacts: robot should have no constraints!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
 }
 
 
@@ -44,7 +26,6 @@ SplitUnconstrOCP::SplitUnconstrOCP()
     constraints_data_(),
     unconstr_dynamics_(),
     contact_status_(),
-    use_kinematics_(false),
     stage_cost_(0) {
 }
 
@@ -73,9 +54,7 @@ void SplitUnconstrOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
                                SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
+  robot.updateKinematics(s.q);
   kkt_residual.setZero();
   stage_cost_ = cost_->evalStageCost(robot, contact_status_, cost_data_, 
                                      grid_info, s);
@@ -93,9 +72,7 @@ void SplitUnconstrOCP::computeKKTResidual(Robot& robot,
                                           const SplitSolution& s_next,
                                           SplitKKTMatrix& kkt_matrix, 
                                           SplitKKTResidual& kkt_residual) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
+  robot.updateKinematics(s.q);
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, contact_status_, cost_data_, 
                                           grid_info, s, kkt_residual);
@@ -113,9 +90,7 @@ void SplitUnconstrOCP::computeKKTSystem(Robot& robot, const GridInfo& grid_info,
                                         const SplitSolution& s_next, 
                                         SplitKKTMatrix& kkt_matrix,
                                         SplitKKTResidual& kkt_residual) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q);
-  }
+  robot.updateKinematics(s.q);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, contact_status_, cost_data_, 

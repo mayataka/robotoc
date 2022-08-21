@@ -12,20 +12,14 @@ RaibertHeuristic::RaibertHeuristic(const double period, const double gain)
   : period_(period),
     gain_(gain),
     step_length_(Eigen::Vector3d::Zero()) {
-  try {
-    if (period <= 0.0) {
-      throw std::out_of_range("invalid argument: period must be positive!");
-    }
-    if (gain <= 0.0) {
-      throw std::out_of_range("invalid argument: gain must be positive!");
-    }
-    if (gain > 1.0) {
-      throw std::out_of_range("invalid argument: gain must be less than 1.0!");
-    }
+  if (period <= 0.0) {
+    throw std::out_of_range("[RaibertHeuristic] invalid argument: 'period' must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (gain <= 0.0) {
+    throw std::out_of_range("[RaibertHeuristic] invalid argument: 'gain' must be positive!");
+  }
+  if (gain > 1.0) {
+    throw std::out_of_range("[RaibertHeuristic] invalid argument: 'gain' must be less than 1.0!");
   }
 }
 
@@ -42,17 +36,11 @@ RaibertHeuristic::~RaibertHeuristic() {
 
 
 void RaibertHeuristic::setParameters(const double period, const double gain) {
-  try {
-    if (period <= 0.0) {
-      throw std::out_of_range("invalid argument: period must be positive!");
-    }
-    if (gain <= 0.0) {
-      throw std::out_of_range("invalid argument: gain must be positive!");
-    }
+  if (period <= 0.0) {
+    throw std::out_of_range("[RaibertHeuristic] invalid argument: 'period' must be positive!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (gain <= 0.0) {
+    throw std::out_of_range("[RaibertHeuristic] invalid argument: 'gain' must be positive!");
   }
   period_ = period;
   gain_ = gain;

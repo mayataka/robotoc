@@ -113,19 +113,13 @@ void TaskSpace6DCost::set_const_ref(const Eigen::Vector3d& const_position_ref,
 
 void TaskSpace6DCost::set_weight(const Eigen::Vector3d& weight_position,
                                  const Eigen::Vector3d& weight_rotation) {
-  try {
-    if (weight_position.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight_position must be non-negative!");
-    }
-    if (weight_rotation.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight_rotation must be non-negative!");
-    }
+  if (weight_position.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position' must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (weight_rotation.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation' must be non-negative!");
   }
   weight_.template head<3>() = weight_rotation;
   weight_.template tail<3>() = weight_position;
@@ -136,19 +130,13 @@ void TaskSpace6DCost::set_weight(const Eigen::Vector3d& weight_position,
 void TaskSpace6DCost::set_weight_terminal(
     const Eigen::Vector3d& weight_position_terminal, 
     const Eigen::Vector3d& weight_rotation_terminal) {
-  try {
-    if (weight_position_terminal.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight_position_terminal must be non-negative!");
-    }
-    if (weight_rotation_terminal.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight_rotation_terminal must be non-negative!");
-    }
+  if (weight_position_terminal.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position_terminal' must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (weight_rotation_terminal.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation_terminal' must be non-negative!");
   }
   weight_terminal_.template head<3>() = weight_rotation_terminal;
   weight_terminal_.template tail<3>() = weight_position_terminal;
@@ -159,28 +147,17 @@ void TaskSpace6DCost::set_weight_terminal(
 void TaskSpace6DCost::set_weight_impulse(
     const Eigen::Vector3d& weight_position_impulse, 
     const Eigen::Vector3d& weight_rotation_impulse) {
-  try {
-    if (weight_position_impulse.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight_position_impulse must be non-negative!");
-    }
-    if (weight_rotation_impulse.minCoeff() < 0.0) {
-      throw std::invalid_argument(
-          "invalid argument: elements of weight_rotation_impulse must be non-negative!");
-    }
+  if (weight_position_impulse.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position_impulse' must be non-negative!");
   }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
+  if (weight_rotation_impulse.minCoeff() < 0.0) {
+    throw std::invalid_argument(
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation_impulse' must be non-negative!");
   }
   weight_impulse_.template head<3>() = weight_rotation_impulse;
   weight_impulse_.template tail<3>() = weight_position_impulse;
   enable_cost_impulse_ = (!weight_impulse_.isZero());
-}
-
-
-bool TaskSpace6DCost::useKinematics() const {
-  return true;
 }
 
 

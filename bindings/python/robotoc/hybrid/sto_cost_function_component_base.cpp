@@ -14,24 +14,24 @@ public:
   // Inherit the constructors
   using STOCostFunctionComponentBase::STOCostFunctionComponentBase;
 
-  double evalCost(const TimeDiscretization& discretization) const override {
+  double evalCost(const TimeDiscretization& time_discretization) const override {
     PYBIND11_OVERRIDE_PURE(double, STOCostFunctionComponentBase, 
                            evalCost, 
-                           discretization);
+                           time_discretization);
   }
 
-  void evalCostDerivatives(const TimeDiscretization& discretization,
+  void evalCostDerivatives(const TimeDiscretization& time_discretization,
                            Eigen::VectorXd& lts) const override {
     PYBIND11_OVERRIDE_PURE(void, STOCostFunctionComponentBase, 
                            evalCostDerivatives, 
-                           discretization, lts);
+                           time_discretization, lts);
   }
 
-  void evalCostHessian(const TimeDiscretization& discretization,
+  void evalCostHessian(const TimeDiscretization& time_discretization,
                        Eigen::MatrixXd& Qts) const override {
     PYBIND11_OVERRIDE_PURE(void, STOCostFunctionComponentBase, 
                            evalStageCostHessian, 
-                           discretization, Qts);
+                           time_discretization, Qts);
   }
 };
 

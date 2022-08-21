@@ -28,7 +28,7 @@ public:
   /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
   /// minimum dwell times are set to this value. Default is 
   /// std::numeric_limits<double>::epsilon().
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
@@ -36,21 +36,21 @@ public:
   ///
   STOConstraints(const int reserved_num_switches, 
                  const double min_dt=std::numeric_limits<double>::epsilon(),
-                 const double barrier=1.0e-03, 
+                 const double barrier_param=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Constructor. 
   /// @param[in] min_dt Minimum dwell times. Each component must be 
   /// non-negative. 
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
   STOConstraints(const std::vector<double>& min_dt,
-                 const double barrier=1.0e-03, 
+                 const double barrier_param=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
   ///
@@ -85,49 +85,49 @@ public:
 
   ///
   /// @brief Sets the slack variables. 
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   ///
-  void setSlack(const TimeDiscretization& discretization);
+  void setSlack(const TimeDiscretization& time_discretization);
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   ///
-  void evalConstraint(const TimeDiscretization& discretization);
+  void evalConstraint(const TimeDiscretization& time_discretization);
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
   /// the products of the Jacobian of the constraints and Lagrange multipliers.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void linearizeConstraints(const TimeDiscretization& discretization,
+  void linearizeConstraints(const TimeDiscretization& time_discretization,
                             KKTResidual& kkt_residual); 
 
   ///
   /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
   /// and condense the slack and dual variables.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[out] kkt_matrix KKT matrix.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void condenseSlackAndDual(const TimeDiscretization& discretization,
+  void condenseSlackAndDual(const TimeDiscretization& time_discretization,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
-  /// @param[in] discretization Time discretization of the hybrid optimal 
+  /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
   /// @param[in] d Newton direction.
   ///
-  void expandSlackAndDual(const TimeDiscretization& discretization, 
+  void expandSlackAndDual(const TimeDiscretization& time_discretization, 
                           const Direction& d); 
 
   ///
@@ -184,13 +184,13 @@ public:
   /// @brief Gets the minimum dwell times. 
   /// @return const reference to the minimum dwell times. 
   ///
-  const std::vector<double>& minimumDwellTimes() const;
+  const std::vector<double>& getMinimumDwellTimes() const;
 
   ///
   /// @brief Sets the barrier parameter for all the constraint components.
-  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   ///
-  void setBarrier(const double barrier);
+  void setBarrierParam(const double barrier_param);
 
   ///
   /// @brief Sets the parameter of the fraction-to-boundary-rule for all the 
@@ -204,13 +204,13 @@ public:
   /// @brief Gets the barrier parameter.
   /// @return Barrier parameter. 
   ///
-  double barrier() const;
+  double getBarrierParam() const;
 
   ///
   /// @brief Gets the parameter of the fraction-to-boundary-rule. 
   /// @return The parameter of the fraction-to-boundary-rule. 
   ///
-  double fractionToBoundaryRule() const;
+  double getFractionToBoundaryRule() const;
 
   ///
   /// @brief Reserves the number of switches to avoid dynamic memory allocation.
