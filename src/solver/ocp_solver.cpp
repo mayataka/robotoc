@@ -108,6 +108,12 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 
 void OCPSolver::solve(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v, const bool init_solver) {
+  if (q.size() != robots_[0].dimq()) {
+    throw std::out_of_range("[OCPSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
+  }
+  if (v.size() != robots_[0].dimv()) {
+    throw std::out_of_range("[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+  }
   if (solver_options_.enable_benchmark) {
     timer_.tick();
   }
@@ -346,6 +352,22 @@ void OCPSolver::setSolution(const Solution& s) {
   assert(s.lift.size() == s_.lift.size());
   assert(s.aux.size() == s_.aux.size());
   assert(s.impulse.size() == s_.impulse.size());
+  if (s.data.size() != s_.data.size()) {
+    throw std::out_of_range(
+        "[OCPSolver] invalid argument: s.data.size() must be " + std::to_string(s_.data.size()) + "!");
+  }
+  if (s.lift.size() != s_.lift.size()) {
+    throw std::out_of_range(
+        "[OCPSolver] invalid argument: s.lift.size() must be " + std::to_string(s_.lift.size()) + "!");
+  }
+  if (s.aux.size() != s_.aux.size()) {
+    throw std::out_of_range(
+        "[OCPSolver] invalid argument: s.aux.size() must be " + std::to_string(s_.aux.size()) + "!");
+  }
+  if (s.impulse.size() != s_.impulse.size()) {
+    throw std::out_of_range(
+        "[OCPSolver] invalid argument: s.impulse.size() must be " + std::to_string(s_.impulse.size()) + "!");
+  }
   s_ = s;
 }
 
@@ -449,6 +471,12 @@ void OCPSolver::setSolution(const std::string& name,
 
 double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q, 
                            const Eigen::VectorXd& v) {
+  if (q.size() != robots_[0].dimq()) {
+    throw std::out_of_range("[OCPSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
+  }
+  if (v.size() != robots_[0].dimv()) {
+    throw std::out_of_range("[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+  }
   ocp_.discretize(t);
   reserveData();
   discretizeSolution();

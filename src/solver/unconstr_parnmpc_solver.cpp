@@ -102,6 +102,12 @@ void UnconstrParNMPCSolver::updateSolution(const double t,
 void UnconstrParNMPCSolver::solve(const double t, const Eigen::VectorXd& q, 
                                   const Eigen::VectorXd& v,
                                   const bool init_solver) {
+  if (q.size() != robots_[0].dimq()) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
+  }
+  if (v.size() != robots_[0].dimv()) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+  }
   if (solver_options_.enable_benchmark) {
     timer_.tick();
   }
@@ -193,8 +199,12 @@ void UnconstrParNMPCSolver::setSolution(const std::string& name,
 
 double UnconstrParNMPCSolver::KKTError(const double t, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v) {
-  assert(q.size() == robots_[0].dimq());
-  assert(v.size() == robots_[0].dimv());
+  if (q.size() != robots_[0].dimq()) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
+  }
+  if (v.size() != robots_[0].dimv()) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+  }
   parnmpc_.discretize(t);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
