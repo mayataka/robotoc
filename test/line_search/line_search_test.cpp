@@ -132,11 +132,21 @@ TEST_P(LineSearchTest, floatingBase) {
   test(robot, settings);
 }
 
-LineSearchSettings filter_settings = LineSearchSettings();
-LineSearchSettings backtrack_settings(LineSearchMethod::MeritBacktracking, 0.75, 0.05, 0.001, 0.05, 1.0e-08);
+
+auto createFilterSettings = []() {
+  LineSearchSettings filter_settings;
+  filter_settings.line_search_method = LineSearchMethod::Filter;
+  return filter_settings;
+};
+
+auto createBacktrackSettings = []() {
+  LineSearchSettings backtrack_settings;
+  backtrack_settings.line_search_method = LineSearchMethod::MeritBacktracking;
+  return backtrack_settings;
+};
 
 INSTANTIATE_TEST_SUITE_P(ParamtererizedTest, LineSearchTest, 
-                         ::testing::Values(filter_settings, backtrack_settings));
+                         ::testing::Values(createFilterSettings(), createBacktrackSettings()));
 
 } // namespace robotoc
 
