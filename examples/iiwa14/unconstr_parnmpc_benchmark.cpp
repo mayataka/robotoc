@@ -58,7 +58,7 @@ int main() {
   const double T = 1;
   const int N = 20;
   robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 8; // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
   robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, solver_options, nthreads);
 

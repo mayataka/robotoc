@@ -71,7 +71,7 @@ TEST_F(UnconstrParNMPCSolverTest, test) {
   const double T = 1;
   const int N = 20;
   robotoc::UnconstrParNMPC ocp(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::UnconstrParNMPCSolver ocp_solver(ocp, solver_options, nthreads);
 

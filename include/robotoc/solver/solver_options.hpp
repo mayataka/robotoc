@@ -13,38 +13,7 @@ namespace robotoc {
 /// @class SolverOptions
 /// @brief Options of optimal control solvers. 
 ///
-class SolverOptions {
-public:
-  ///
-  /// @brief Default constructor. 
-  ///
-  SolverOptions();
-
-  ///
-  /// @brief Destructor. 
-  ///
-  ~SolverOptions();
-
-  ///
-  /// @brief Default copy constructor. 
-  ///
-  SolverOptions(const SolverOptions&) = default;
-
-  ///
-  /// @brief Default copy assign operator. 
-  ///
-  SolverOptions& operator=(const SolverOptions&) = default;
-
-  ///
-  /// @brief Default move constructor. 
-  ///
-  SolverOptions(SolverOptions&&) noexcept = default;
-
-  ///
-  /// @brief Default move assign operator. 
-  ///
-  SolverOptions& operator=(SolverOptions&&) noexcept = default;
-
+struct SolverOptions {
   ///
   /// @brief Maximum number of iterations. Must be non-negative. 
   /// Default is 100. 
@@ -94,10 +63,9 @@ public:
   bool enable_line_search = false;
 
   ///
-  /// @brief Line search settings. Default is 
-  /// LineSearchSettings::defaultSettings().
+  /// @brief Line search settings. 
   ///
-  LineSearchSettings line_search_settings = LineSearchSettings::defaultSettings();
+  LineSearchSettings line_search_settings;
 
   ///
   /// @brief Discretization method of the hybrid optimal control problem.
@@ -158,14 +126,15 @@ public:
   double max_dts_riccati = 0.1;
 
   ///
+  /// @brief If true, the solution initial guess is constructed from the linear 
+  /// interpolation of the previous solution. 
+  ///
+  bool enable_solution_interpolation = true;
+
+  ///
   /// @brief If true, the CPU time is measured at each solve().
   ///
   bool enable_benchmark = false;
-
-  ///
-  /// @brief Returns options with default parameters.
-  ///
-  static SolverOptions defaultOptions();
 
   ///
   /// @brief Displays the solver settings onto a ostream.

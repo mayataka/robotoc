@@ -18,11 +18,6 @@ PYBIND11_MODULE(line_search_settings, m) {
     .export_values();
 
   py::class_<LineSearchSettings>(m, "LineSearchSettings")
-    .def(py::init<const LineSearchMethod, const double, const double, const double,
-                  const double, const double>(),
-          py::arg("line_search_method"), py::arg("step_size_reduction_rate"),
-          py::arg("min_step_size"), py::arg("armijo_control_rate"),
-          py::arg("margin_rate"), py::arg("eps"))
     .def(py::init<>())
     .def_readwrite("line_search_method", &LineSearchSettings::line_search_method)
     .def_readwrite("step_size_reduction_rate", &LineSearchSettings::step_size_reduction_rate)

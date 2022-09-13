@@ -296,7 +296,7 @@ int main(int argc, char *argv[]) {
   const double T = 7; 
   const int N = 240;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 

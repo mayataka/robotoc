@@ -14,8 +14,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(unconstr_ocp_solver, m) {
   py::class_<UnconstrOCPSolver>(m, "UnconstrOCPSolver")
     .def(py::init<const UnconstrOCP&, const SolverOptions&, const int>(),
-          py::arg("ocp"), 
-          py::arg("solver_options")=SolverOptions::defaultOptions(), 
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
           py::arg("nthreads")=1)
     .def("set_solver_options", &UnconstrOCPSolver::setSolverOptions,
           py::arg("solver_options"))

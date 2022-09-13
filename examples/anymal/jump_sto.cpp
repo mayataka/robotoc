@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
   const int N = std::floor(T / dt);
   robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
                    contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;
   solver_options.max_iter = 200;

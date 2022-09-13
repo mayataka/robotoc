@@ -211,7 +211,7 @@ Finally, we can construct the optimal control solver!
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = T / dt;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 ```

@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
   const double T = 6;
   const int N = 120;
   robotoc::UnconstrOCP ocp(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options, nthreads);
 

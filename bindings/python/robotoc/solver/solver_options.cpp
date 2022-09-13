@@ -28,6 +28,7 @@ PYBIND11_MODULE(solver_options, m) {
     .def_readwrite("kkt_tol_mesh", &SolverOptions::kkt_tol_mesh)
     .def_readwrite("max_dt_mesh", &SolverOptions::max_dt_mesh)
     .def_readwrite("max_dts_riccati", &SolverOptions::max_dts_riccati)
+    .def_readwrite("enable_solution_interpolation", &SolverOptions::enable_solution_interpolation)
     .def_readwrite("enable_benchmark", &SolverOptions::enable_benchmark)
     .def("__str__", [](const SolverOptions& self) {
         std::stringstream ss;

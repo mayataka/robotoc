@@ -34,7 +34,7 @@ public:
   /// @param[in] line_search_settings Line search settings.
   ///
   LineSearch(const OCP& ocp, const int nthreads=1, 
-             const LineSearchSettings& line_search_settings=LineSearchSettings::defaultSettings());
+             const LineSearchSettings& line_search_settings=LineSearchSettings());
 
   ///
   /// @brief Default constructor. 

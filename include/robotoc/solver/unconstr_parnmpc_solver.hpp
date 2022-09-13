@@ -36,13 +36,13 @@ public:
   /// @brief Construct optimal control problem solver.
   /// @param[in] parnmpc Optimal control problem. 
   /// @param[in] solver_options Solver options. Default is 
-  /// SolverOptions::defaultOptions().
+  /// SolverOptions().
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   UnconstrParNMPCSolver(
       const UnconstrParNMPC& parnmpc, 
-      const SolverOptions& solver_options=SolverOptions::defaultOptions(), 
+      const SolverOptions& solver_options=SolverOptions(), 
       const int nthreads=1);
 
   ///

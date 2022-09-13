@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
   const double T = t0 + cycle*(2*double_support_time+2*swing_time);
   const int N = T / dt; 
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 

@@ -112,7 +112,7 @@ int main () {
   const double T = 0.5;
   const int N = 20;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
 

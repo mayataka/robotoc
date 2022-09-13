@@ -49,12 +49,14 @@ t = 0.0
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 50
 option_init.initial_sto_reg_iter = 50
+option_init.enable_solution_interpolation = False
 mpc.init(t, q, v, option_init, sto=True)  
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations
 option_mpc.initial_sto_reg_iter = 0
 option_mpc.max_dt_mesh = T / N
+option_mpc.enable_solution_interpolation = False
 mpc.set_solver_options(option_mpc)
 
 sim_time_step = 0.0025 # 400 Hz MPC
