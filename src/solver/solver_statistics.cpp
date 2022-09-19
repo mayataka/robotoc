@@ -6,22 +6,6 @@
 
 namespace robotoc {
 
-SolverStatistics::SolverStatistics()
-  : convergence(false),
-    iter(0),
-    kkt_error(),
-    primal_step_size(),
-    dual_step_size(),
-    ts(),
-    mesh_refinement_iter(),
-    cpu_time(0.0) {
-}
-
-
-SolverStatistics::~SolverStatistics() {
-}
-
-
 void SolverStatistics::clear() {
   convergence = false;
   iter = 0;
