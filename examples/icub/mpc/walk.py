@@ -1,6 +1,7 @@
 import robotoc
-import numpy as np
+from robotoc_sim import MPCSimulation, CameraSettings
 from icub_simulator import iCubSimulator
+import numpy as np
 
 
 path_to_urdf = '../icub_description/urdf/icub_lower_half.urdf'
@@ -39,42 +40,43 @@ Y = 0.025
 mpc.get_contact_wrench_cone_handle().set_rectangular(X=X, Y=Y)
 mpc.get_impulse_wrench_cone_handle().set_rectangular(X=X, Y=Y)
 
-q = np.array([0, 0, 0, 0, 0, 0, 1,
-              0.5*knee_angle, 0, 0, -knee_angle, 0.5*knee_angle, 0,  # left leg
-              0.5*knee_angle, 0, 0, -knee_angle, 0.5*knee_angle, 0]) # right leg
-robot.forward_kinematics(q)
-q[2] = - 0.5 * (robot.frame_position('l_sole')[2] + robot.frame_position('r_sole')[2]) 
-v = np.zeros(robot.dimv())
-t = 0.0
+t0 = 0.0
+q0 = np.array([0, 0, 0, 0, 0, 0, 1,
+               0.5*knee_angle, 0, 0, -knee_angle, 0.5*knee_angle, 0,  # left leg
+               0.5*knee_angle, 0, 0, -knee_angle, 0.5*knee_angle, 0]) # right leg
+robot.forward_kinematics(q0)
+q0[2] = - 0.5 * (robot.frame_position('l_sole')[2] + robot.frame_position('r_sole')[2]) 
+v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 200
-mpc.init(t, q, v, option_init)
+mpc.init(t0, q0, v0, option_init)
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 1 # MPC iterations
 mpc.set_solver_options(option_mpc)
 
-sim_time_step = 0.0025 # 400 Hz MPC
-sim_start_time = 0.0
-sim_end_time = 20.0
-sim = iCubSimulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
+time_step = 0.0025 # 400 Hz MPC
+icub_simulator = iCubSimulator(urdf_path=path_to_urdf, time_step=time_step)
+camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
+                                 camera_target_pos=q0[0:3]+np.array([0.7, 1.2, 0.0]))
+icub_simulator.set_camera_settings(camera_settings=camera_settings)
 
+simulation_time = 10.0
 log = False
 record = False
-
-sim.set_camera(2.0, 40, -10, q[0:3]+np.array([0.7, 1.2, 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, 
-                   record=record, log=log, sim_name='icub_walk')
+simulation = MPCSimulation(simulator=icub_simulator)
+simulation.run(mpc=mpc, t0=t0, q0=q0, simulation_time=simulation_time, 
+               feedback_delay=True, verbose=False, 
+               record=record, log=log, name='icub_walk')
 
 if record:
-    sim.disconnect()
-    robotoc.utils.adjust_video_duration(sim.sim_name+'.mp4', 
-                                        desired_duration_sec=(sim_end_time-sim_start_time))
+    robotoc.utils.adjust_video_duration(simulation.name+'.mp4', 
+                                        desired_duration_sec=simulation_time)
 
 if log:
-    q_log = np.genfromtxt(sim.q_log)
-    v_log = np.genfromtxt(sim.v_log)
-    t_log = np.genfromtxt(sim.t_log)
+    q_log = np.genfromtxt(simulation.q_log)
+    v_log = np.genfromtxt(simulation.v_log)
+    t_log = np.genfromtxt(simulation.t_log)
     sim_steps = t_log.shape[0]
 
     vcom_log = []
@@ -82,7 +84,7 @@ if log:
     vcom_cmd_log = []
     yaw_rate_cmd_log = []
     for i in range(sim_steps):
-        R = robotoc.utils.rotation_matrix(q_log[i][3:7])
+        R = robotoc.utils.rotation_matrix_from_quaternion(q_log[i][3:7])
         robot.forward_kinematics(q_log[i], v_log[i])
         vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
         wcom_log.append(v_log[i][3:6])
@@ -91,4 +93,4 @@ if log:
 
     plot_mpc = robotoc.utils.PlotCoMVelocity()
     plot_mpc.plot(t_log, vcom_log, wcom_log, vcom_cmd_log, yaw_rate_cmd_log, 
-                  fig_name=sim.sim_name+'_com_vel')
+                  fig_name=simulation.name+'_com_vel')

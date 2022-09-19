@@ -1,209 +1,31 @@
 import pybullet
-import math
 import time
 import abc
 import numpy as np
 import os
 
 
-class LeggedSimulator(metaclass=abc.ABCMeta):
-    def __init__(self, path_to_urdf, time_step, start_time, end_time):
-        self.path_to_urdf = path_to_urdf
-        self.time_step = time_step
-        self.start_time = start_time
-        self.end_time = end_time
-        self.calib_camera = False
-        self.camera_distance = 0.0
-        self.camera_yaw = 0.0
-        self.camera_pitch = 0.0
-        self.camera_target_pos = [0., 0., 0.]
-        self.print_items = []
-        self.terrain_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
-        self.height_range = None
-        self.num_heightfield_rows = None
-        self.num_heightfield_columns = None
-        self.log_dir = None
-        self.q_log = None
-        self.v_log = None
-        self.u_log = None
-        self.t_log = None
-        self.kkt_log = None
-        self.sim_name = None
-
-    def set_sim_settings(self, time_step, start_time, end_time):
-        self.time_step  = time_step
-        self.start_time = start_time
-        self.end_time   = end_time
-
-    def set_urdf(self, path_to_urdf):
-        self.path_to_urdf = path_to_urdf
-
-    def set_camera(self, camera_distance, camera_yaw, camera_pitch, camera_target_pos):
-        self.calib_camera = True
+class CameraSettings(object):
+    def __init__(self, camera_distance, camera_yaw, camera_pitch, camera_target_pos):
         self.camera_distance = camera_distance
         self.camera_yaw = camera_yaw
         self.camera_pitch = camera_pitch
         self.camera_target_pos = camera_target_pos
 
-    def get_body_local_velocity(pybullet_robot):
-        basePos, baseOrn = pybullet.getBasePositionAndOrientation(pybullet_robot)
-        R = np.reshape(pybullet.getMatrixFromQuaternion(baseOrn), [3, 3]) 
-        baseVel, baseAngVel = pybullet.getBaseVelocity(pybullet_robot)
-        baseVel = R.T @ np.array(baseVel)
-        baseAngVel = R.T @ np.array(baseAngVel)
-        return baseVel, baseAngVel
 
-    @abc.abstractmethod
-    def get_state_from_pybullet(self, pybullet_robot):
-        return NotImplementedError()
-
-    @abc.abstractmethod
-    def apply_control_input_to_pybullet(self, pybullet_robot, u):
-        return NotImplementedError()
-
-    @abc.abstractmethod
-    def init_pybullet_robot(self, pybullet_robot, q):
-        return NotImplementedError()
-
-    def print_joint_info(self):
-        pybullet.connect(pybullet.DIRECT)
-        robot = pybullet.loadURDF(self.path_to_urdf, 
-                                  useFixedBase=False, 
-                                  useMaximalCoordinates=False)
-        nJoints = pybullet.getNumJoints(robot)
-        for j in range(nJoints):
-            info = pybullet.getJointInfo(robot, j)
-            print(info)
-        pybullet.disconnect()
-
-    def add_print_item(self, item):
-        self.print_items.append(item)
-
-    def run_simulation(self, mpc, q0, v0, feedback_delay=False, terrain=False, 
-                       verbose=False, log=False, record=False, 
-                       sim_name='mpc_sim'):
-        pybullet.connect(pybullet.GUI)
-        pybullet.setGravity(0, 0, -9.81)
-        pybullet.setTimeStep(self.time_step)
-        if terrain:
-            if self.height_range is not None \
-                and self.num_heightfield_rows is not None \
-                and self.num_heightfield_columns is not None:
-
-                terrain_shape = self._create_random_terrain_shape(self.height_range, 
-                                                                  self.num_heightfield_rows, 
-                                                                  self.num_heightfield_columns)
-                terrain = pybullet.createMultiBody(0, terrain_shape)
-                pybullet.changeVisualShape(terrain, -1, rgbaColor=[1.0, 1.0, 1.0, 1.0])
-                pybullet.resetBasePositionAndOrientation(terrain, [0., 0., 0.], [0., 0., 0., 1.])
-                ray_test = pybullet.rayTest([q0[0], q0[1], self.height_range], 
-                                            [q0[0], q0[1], -self.height_range])
-                ray_hit_position = ray_test[0][3]
-                pybullet.resetBasePositionAndOrientation(terrain, [0., 0., -ray_hit_position[2]], [0., 0., 0., 1.])
-                pybullet.changeDynamics(terrain, -1, lateralFriction=1.0)
-            else:
-                terrain = pybullet.loadURDF(fileName=self.terrain_urdf)
-        else:
-            import pybullet_data
-            pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
-            plane = pybullet.loadURDF("plane.urdf")
-        robot = pybullet.loadURDF(self.path_to_urdf,  
-                                  useFixedBase=False, 
-                                  useMaximalCoordinates=False)
-
-        self.init_pybullet_robot(robot, q0)
-        t = self.start_time
-        q = q0
-        v = v0
-        u = mpc.get_initial_control_input().copy()
-        sim_time = self.end_time - self.start_time
-        sim_steps = math.floor(sim_time/self.time_step)
-
-        if log:
-            log_dir = os.path.join(os.getcwd(), sim_name+"_log")
-            self.log_dir = log_dir
-            os.makedirs(log_dir, exist_ok=True)
-            q_log = open(os.path.join(log_dir, "q.log"), mode='w')
-            v_log = open(os.path.join(log_dir, "v.log"), mode='w')
-            u_log = open(os.path.join(log_dir, "u.log"), mode='w')
-            t_log = open(os.path.join(log_dir, "t.log"), mode='w')
-            kkt_log = open(os.path.join(log_dir, "kkt.log"), mode='w')
-
-        if self.calib_camera:
-            pybullet.resetDebugVisualizerCamera(self.camera_distance,
-                                                self.camera_yaw,
-                                                self.camera_pitch,
-                                                self.camera_target_pos)
-        pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
-
-        if record:
-            pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, 
-                                       sim_name+".mp4")
-
-        for i in range(sim_steps):
-            q, v = self.get_state_from_pybullet(robot)
-            assert q.shape[0] == q0.shape[0]
-            assert v.shape[0] == v0.shape[0]
-            if verbose:
-                print('t = {:.6g}:'.format(t))
-            if feedback_delay:
-                u = mpc.get_initial_control_input().copy()
-            mpc.update_solution(t, self.time_step, q, v)
-            kkt_error = mpc.KKT_error(t, q, v) 
-            if verbose:
-                print('KKT error = {:.6g}'.format(kkt_error))
-                print('')
-                if self.print_items:
-                    for e in self.print_items:
-                        print(e)
-            if not feedback_delay:
-                u = mpc.get_initial_control_input().copy()
-            self.apply_control_input_to_pybullet(robot, u)
-            pybullet.stepSimulation()
-            time.sleep(self.time_step)
-            if log:
-                np.savetxt(q_log, [q])
-                np.savetxt(v_log, [v])
-                np.savetxt(u_log, [u])
-                np.savetxt(t_log, np.array([t]))
-                np.savetxt(kkt_log, np.array([kkt_error]))
-            t = t + self.time_step
-
-        if log:
-            q_log.close()
-            v_log.close()
-            u_log.close()
-            t_log.close()
-            kkt_log.close()
-            self.q_log = os.path.abspath(os.path.join(log_dir, "q.log"))
-            self.v_log = os.path.abspath(os.path.join(log_dir, "v.log"))
-            self.u_log = os.path.abspath(os.path.join(log_dir, "u.log"))
-            self.t_log = os.path.abspath(os.path.join(log_dir, "t.log"))
-            self.kkt_log = os.path.abspath(os.path.join(log_dir, "kkt.log"))
-            self.log_dir = os.path.abspath(log_dir)
-            print('Logs are saved at ' + self.log_dir)
-        
-        self.sim_name = sim_name
-
-
-    def disconnect(self):
-        pybullet.disconnect()
-
-
-    def set_terrain_shape(self, height_range=1.0, 
-                          num_heightfield_rows=100,
-                          num_heightfield_columns=100):
+class TerrainSettings(object):
+    def __init__(self, height_range: float=1.0, num_heightfield_rows: int=100, num_heightfield_columns: int=100, from_urdf=True):
         self.height_range = height_range
         self.num_heightfield_rows = num_heightfield_rows
         self.num_heightfield_columns = num_heightfield_columns
+        self.terrain_urdf = None
+        if from_urdf:
+            self.terrain_urdf = os.path.join(os.path.dirname(__file__), "rsc/terrain.urdf")
 
-
-    def _create_random_terrain_shape(self, height_range, 
-                                     num_heightfield_rows, 
-                                     num_heightfield_columns):
-        heightfield_data = np.zeros(shape=[num_heightfield_columns, num_heightfield_rows], dtype=np.float)
-        for i in range(int(num_heightfield_columns/2)):
-            for j in range(int(num_heightfield_rows)):
+    def create_random_terrain_shape(self):
+        heightfield_data = np.zeros(shape=[self.num_heightfield_columns, self.num_heightfield_rows], dtype=np.float)
+        for i in range(int(self.num_heightfield_columns/2)):
+            for j in range(int(self.num_heightfield_rows)):
                 n1 = 0
                 n2 = 0
                 if j > 0:
@@ -217,7 +39,7 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
         max = np.max(heightfield_data)
         min = np.min(heightfield_data)
         if max - min > 0:
-            heightfield_data = (2.0 * height_range / (max-min)) * heightfield_data 
+            heightfield_data = (2.0 * self.height_range / (max-min)) * heightfield_data 
         heightfield_data_inv = heightfield_data[::-1,:]
         heightfield_data_2 = np.concatenate((heightfield_data_inv, heightfield_data))
         col, row = heightfield_data_2.shape
@@ -228,3 +50,177 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
                                                       numHeightfieldRows=row, 
                                                       numHeightfieldColumns=col)
         return terrain_shape
+
+
+class ContactInfo(object):
+    def __init__(self, link_id, link_name, contact_normal, contact_force):
+        self.link_id = link_id
+        self.link_name = link_name
+        self.contact_normal = contact_normal
+        self.contact_force = contact_force
+
+
+class LeggedSimulator(metaclass=abc.ABCMeta):
+    def __init__(self, urdf_path, time_step: float):
+        self.urdf_path = urdf_path
+        self.time_step = time_step
+        self.camera_settings = None
+        self.terrain_settings = None
+        self.robot = None
+        self.world = None
+        self.t = 0
+        self.q = None 
+        self.v = None 
+        self.u = None 
+        self.base_lin_vel_world_prev = np.zeros(3)
+    
+    def set_camera_settings(self, camera_settings: CameraSettings):
+        self.camera_settings = camera_settings
+
+    def set_terrain_settings(self, terrain_settings: TerrainSettings):
+        self.terrain_settings = terrain_settings
+
+    def get_time(self):
+        return self.t
+
+    @abc.abstractmethod
+    def get_joint_id_map(self):
+        return NotImplementedError()
+
+    def get_base_rotation_matrix(self):
+        base_pos, base_orn = pybullet.getBasePositionAndOrientation(self.robot)
+        R = np.reshape(pybullet.getMatrixFromQuaternion(base_orn), [3, 3]) 
+        return R
+
+    def get_body_world_velocity(self):
+        base_lin_vel_world, base_ang_vel_world = pybullet.getBaseVelocity(self.robot)
+        return np.array(base_lin_vel_world), np.array(base_ang_vel_world)
+
+    def get_body_local_velocity(self):
+        R = self.get_base_rotation_matrix()
+        base_lin_vel_world, base_ang_vel_world = self.get_body_world_velocity()
+        base_lin_vel_local = R.T @ np.array(base_lin_vel_world)
+        base_ang_vel_local = R.T @ np.array(base_ang_vel_world)
+        return base_lin_vel_local, base_ang_vel_local
+
+    def get_imu_measurements(self):
+        _, base_ang_vel_local = self.get_body_local_velocity()
+        base_lin_vel_world, _ = self.get_body_world_velocity()
+        base_lin_acc_world = (base_lin_vel_world - self.base_lin_vel_world_prev) / self.time_step + np.array([0, 0, 9.81])
+        R = self.get_base_rotation_matrix()
+        base_lin_acc_local = R.T @ base_lin_acc_world
+        return base_ang_vel_local, base_lin_acc_local 
+
+    def get_joint_measurements(self):
+        q, v = self.get_state(self.robot)
+        num_joints = len(self.get_joint_id_map())
+        return q[-num_joints:], v[-num_joints:], self.u
+
+    def get_state(self):
+        joint_id_map = self.get_joint_id_map()
+        num_joints = len(joint_id_map)
+        q = np.zeros(7+num_joints)
+        base_pos, base_orn = pybullet.getBasePositionAndOrientation(self.robot)
+        q[0:3] = base_pos
+        q[3:7] = base_orn
+        for i in range(num_joints):
+            q[7+i] = pybullet.getJointState(self.robot, joint_id_map[i])[0]
+        v = np.zeros(6+num_joints)
+        base_lin_vel, base_ang_vel = self.get_body_local_velocity()
+        v[0:3] = base_lin_vel
+        v[3:6] = base_ang_vel
+        for i in range(num_joints):
+            v[6+i] = pybullet.getJointState(self.robot, joint_id_map[i])[1]
+        return q, v
+
+    def get_contact_info(self):
+        contact_points = pybullet.getContactPoints(self.robot, self.plane)
+        contact_info = []
+        for e in contact_points:
+            link_id = e[3]
+            link_name = pybullet.getJointInfo(self.robot, link_id)[1].decode()
+            contact_normal = np.array(e[7])
+            contact_force = e[9] * contact_normal
+            contact_info.append(ContactInfo(link_id, link_name, contact_normal, contact_force))
+        return contact_info
+
+    def apply_control_input(self, u: np.ndarray):
+        joint_id_map = self.get_joint_id_map()
+        num_joints = len(joint_id_map)
+        assert u.shape[0] == num_joints
+        mode = pybullet.TORQUE_CONTROL
+        for i in range(num_joints):
+            pybullet.setJointMotorControl2(self.robot, joint_id_map[i], controlMode=mode, force=u[i])
+
+    def init_state(self, q: np.ndarray):
+        joint_id_map = self.get_joint_id_map()
+        num_joints = len(joint_id_map)
+        assert q.shape[0] == 7 + num_joints
+        pybullet.resetBasePositionAndOrientation(self.robot, q[0:3], q[3:7])
+        for i in range(num_joints):
+            pybullet.resetJointState(self.robot, joint_id_map[i], q[7+i])
+        for j in joint_id_map:
+            pybullet.setJointMotorControl2(self.robot, j, 
+                                           controlMode=pybullet.VELOCITY_CONTROL, 
+                                           force=0.)
+            pybullet.setJointMotorControl2(self.robot, j, 
+                                           controlMode=pybullet.POSITION_CONTROL, 
+                                           force=0.)
+
+    def init_simulation(self, t0: float, q0: np.ndarray):
+        pybullet.connect(pybullet.GUI)
+        pybullet.setGravity(0, 0, -9.81)
+        pybullet.setTimeStep(self.time_step)
+        if self.terrain_settings is not None:
+            if self.terrain_settings.terrain_urdf is not None:
+                self.world = pybullet.loadURDF(self.terrain_settings.terrain_urdf)
+            else:
+                terrain_shape = self.terrain_settings.create_random_terrain_shape()
+                self.world = pybullet.createMultiBody(0, terrain_shape)
+                pybullet.changeVisualShape(self.world, -1, rgbaColor=[1.0, 1.0, 1.0, 1.0])
+                pybullet.resetBasePositionAndOrientation(self.world, [0., 0., 0.], [0., 0., 0., 1.])
+                ray_test = pybullet.rayTest([q0[0], q0[1], self.height_range], 
+                                            [q0[0], q0[1], -self.height_range])
+                ray_hit_position = ray_test[0][3]
+                pybullet.resetBasePositionAndOrientation(self.world, [0., 0., -ray_hit_position[2]], [0., 0., 0., 1.])
+        else:
+            import pybullet_data
+            pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
+            self.world = pybullet.loadURDF("plane.urdf")
+        pybullet.changeDynamics(self.world, -1, lateralFriction=1.0)
+        pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
+        self.robot = pybullet.loadURDF(self.urdf_path,  useFixedBase=False, useMaximalCoordinates=False)
+        self.init_state(q0)
+        self.t = t0
+        self.q = q0
+        num_joints = len(self.get_joint_id_map())
+        self.v = np.zeros(6+num_joints)
+        self.u = np.zeros(num_joints)
+        if self.camera_settings is not None:
+            pybullet.resetDebugVisualizerCamera(self.camera_settings.camera_distance,
+                                                self.camera_settings.camera_yaw,
+                                                self.camera_settings.camera_pitch,
+                                                self.camera_settings.camera_target_pos)
+
+    def step_simulation(self, u: np.ndarray):
+        base_lin_vel_world, _ = self.get_body_world_velocity()
+        self.base_lin_vel_world_prev = base_lin_vel_world
+        self.u = u
+        self.apply_control_input(self.u)
+        pybullet.stepSimulation()
+        time.sleep(self.time_step)
+        self.t += self.time_step
+
+    def disconnect(self):
+        pybullet.disconnect()
+
+    def print_joint_info(self):
+        pybullet.connect(pybullet.DIRECT)
+        robot = pybullet.loadURDF(self.urdf_path, 
+                                  useFixedBase=False, 
+                                  useMaximalCoordinates=False)
+        nJoints = pybullet.getNumJoints(robot)
+        for j in range(nJoints):
+            info = pybullet.getJointInfo(robot, j)
+            print(info)
+        pybullet.disconnect()

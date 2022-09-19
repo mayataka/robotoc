@@ -1,6 +1,7 @@
 import robotoc
-import numpy as np
+from robotoc_sim import MPCSimulation, CameraSettings
 from a1_simulator import A1Simulator
+import numpy as np
 
 
 # cmd_type = 'forward'
@@ -51,43 +52,43 @@ planner = robotoc.FlyingTrotFootStepPlanner(robot)
 planner.set_raibert_gait_pattern(vcom_cmd, yaw_rate_cmd, flying_time, stance_time, gain=0.95)
 mpc.set_gait_pattern(planner, step_height, flying_time, stance_time, swing_start_time)
 
-q = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
-              0.0,  0.67, -1.3, 
-              0.0,  0.67, -1.3, 
-              0.0,  0.67, -1.3, 
-              0.0,  0.67, -1.3])
-v = np.zeros(robot.dimv())
-t = 0.0
+t0 = 0.0
+q0 = np.array([0, 0, 0.3181, 0, 0, 0, 1, 
+               0.0,  0.67, -1.3, 
+               0.0,  0.67, -1.3, 
+               0.0,  0.67, -1.3, 
+               0.0,  0.67, -1.3])
+v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 10
+mpc.init(t0, q0, v0, option_init)
 
-mpc.init(t, q, v, option_init)
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations
 mpc.set_solver_options(option_mpc)
 
-sim_time_step = 0.0025 # 400 Hz MPC
-sim_start_time = 0.0
-sim_end_time = 5.0
+time_step = 0.0025 # 400 Hz MPC
+a1_simulator = A1Simulator(urdf_path=path_to_urdf, time_step=time_step)
+camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
+                                 camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.0]))
+a1_simulator.set_camera_settings(camera_settings=camera_settings)
 
-sim = A1Simulator(path_to_urdf, sim_time_step, sim_start_time, sim_end_time)
-
+simulation_time = 5.0
 log = False
 record = False
-
-sim.set_camera(2.0, 45, -10, q[0:3]+np.array([0.1, 0.5, 0.]))
-sim.run_simulation(mpc, q, v, feedback_delay=True, verbose=False, 
-                   record=record, log=log, sim_name='a1_flying_trot_'+cmd_type)
+simulation = MPCSimulation(simulator=a1_simulator)
+simulation.run(mpc=mpc, t0=t0, q0=q0, simulation_time=simulation_time, 
+               feedback_delay=True, verbose=False, 
+               record=record, log=log, name='a1_flying_trot')
 
 if record:
-    sim.disconnect()
-    robotoc.utils.adjust_video_duration(sim.sim_name+'.mp4', 
-                                        desired_duration_sec=(sim_end_time-sim_start_time))
+    robotoc.utils.adjust_video_duration(simulation.name+'.mp4', 
+                                        desired_duration_sec=simulation_time)
 
 if log:
-    q_log = np.genfromtxt(sim.q_log)
-    v_log = np.genfromtxt(sim.v_log)
-    t_log = np.genfromtxt(sim.t_log)
+    q_log = np.genfromtxt(simulation.q_log)
+    v_log = np.genfromtxt(simulation.v_log)
+    t_log = np.genfromtxt(simulation.t_log)
     sim_steps = t_log.shape[0]
 
     vcom_log = []
@@ -95,7 +96,7 @@ if log:
     vcom_cmd_log = []
     yaw_rate_cmd_log = []
     for i in range(sim_steps):
-        R = robotoc.utils.rotation_matrix(q_log[i][3:7])
+        R = robotoc.utils.rotation_matrix_from_quaternion(q_log[i][3:7])
         robot.forward_kinematics(q_log[i], v_log[i])
         vcom_log.append(R.T@robot.com_velocity()) # robot.com_velocity() is expressed in the world coordinate
         wcom_log.append(v_log[i][3:6])
@@ -104,4 +105,4 @@ if log:
 
     plot_mpc = robotoc.utils.PlotCoMVelocity()
     plot_mpc.plot(t_log, vcom_log, wcom_log, vcom_cmd_log, yaw_rate_cmd_log, 
-                  fig_name=sim.sim_name+'_com_vel')
+                  fig_name=simulation.name+'_com_vel')
