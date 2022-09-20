@@ -4,7 +4,7 @@
 namespace robotoc {
 
 void ContactStatus::disp(std::ostream& os) const {
-  os << "contact status:" << std::endl;
+  os << "ContactStatus:" << std::endl;
   os << "  contact mode id: " << contact_mode_id_ << std::endl;
   os << "  active contacts: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {

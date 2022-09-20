@@ -54,10 +54,6 @@ inline ContactStatus::ContactStatus()
 }
 
 
-inline ContactStatus::~ContactStatus() {
-}
-
-
 inline bool ContactStatus::operator==(const ContactStatus& other) const {
   assert(other.maxNumContacts() == max_num_contacts_);
   for (int i=0; i<max_num_contacts_; ++i) {

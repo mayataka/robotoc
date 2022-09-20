@@ -13,10 +13,6 @@ inline SE3JacobianInverse::SE3JacobianInverse()
 }
 
 
-inline SE3JacobianInverse::~SE3JacobianInverse() {
-}
-
-
 template <typename MatrixType1, typename MatrixType2>
 inline void SE3JacobianInverse::compute(
     const Eigen::MatrixBase<MatrixType1>& Jac, 

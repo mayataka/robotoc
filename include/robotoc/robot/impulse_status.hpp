@@ -40,9 +40,9 @@ public:
   ImpulseStatus();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ImpulseStatus();
+  ~ImpulseStatus() = default;
 
   ///
   /// @brief Default copy constructor. 

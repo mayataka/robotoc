@@ -18,9 +18,9 @@ public:
   SE3JacobianInverse();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SE3JacobianInverse();
+  ~SE3JacobianInverse() = default;
 
   ///
   /// @brief Default copy constructor. 

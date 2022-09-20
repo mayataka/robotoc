@@ -51,9 +51,9 @@ public:
   ContactStatus();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ContactStatus();
+  ~ContactStatus() = default;
 
   ///
   /// @brief Default copy constructor. 

@@ -4,7 +4,7 @@
 namespace robotoc {
 
 void ImpulseStatus::disp(std::ostream& os) const {
-  os << "impulse status:" << std::endl;
+  os << "ImpulseStatus:" << std::endl;
   os << "  impulse mode id: " << contact_status_.contactModeId() << std::endl;
   os << "  active impulses: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {

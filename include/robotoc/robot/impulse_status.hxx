@@ -24,10 +24,6 @@ inline ImpulseStatus::ImpulseStatus()
 }
  
 
-inline ImpulseStatus::~ImpulseStatus() {
-}
-
-
 inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
   assert(other.maxNumContacts() == maxNumContacts());
   for (int i=0; i<maxNumContacts(); ++i) {
