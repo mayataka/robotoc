@@ -29,6 +29,7 @@ namespace robotoc {
 ///
 struct RobotProperties {
   Eigen::VectorXd generalized_momentum_bias; 
+  bool has_generalized_momentum_bias = false;
 };
 
 } // namespace robotoc 

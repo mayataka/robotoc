@@ -6,15 +6,12 @@
 namespace robotoc {
 
 SurfaceContact::SurfaceContact(const pinocchio::Model& model, 
-                               const int contact_frame_id,
-                               const double baumgarte_weight_on_velocity,
-                               const double baumgarte_weight_on_position)
-  : contact_frame_id_(contact_frame_id),
-    parent_joint_id_(model.frames[contact_frame_id_].parent), 
+                               const ContactModelInfo& info)
+  : info_(info),
+    contact_frame_id_(0),
+    parent_joint_id_(0), 
     dimv_(model.nv),
-    baumgarte_weight_on_velocity_(baumgarte_weight_on_velocity),
-    baumgarte_weight_on_position_(baumgarte_weight_on_position), 
-    jXf_(model.frames[contact_frame_id_].placement),
+    jXf_(SE3::Identity()),
     X_diff_(SE3::Identity()),
     J_frame_(Eigen::MatrixXd::Zero(6, model.nv)),
     frame_v_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
@@ -22,65 +19,92 @@ SurfaceContact::SurfaceContact(const pinocchio::Model& model,
     frame_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
     frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)),
     Jlog6_(Matrix66d::Zero()) {
-  if (contact_frame_id_ < 0) {
-    throw std::out_of_range(
-        "[SurfaceContact] invalid argument: contact_frame_id must be non-negative!");
+  if (!model.existFrame(info.frame)) {
+    throw std::invalid_argument(
+        "[SurfaceContact] invalid argument: frame '" + info.frame + "' does not exit!");
   }
-  if (baumgarte_weight_on_velocity < 0) {
+  contact_frame_id_ = model.getFrameId(info.frame);
+  parent_joint_id_ = model.frames[contact_frame_id_].parent;
+  jXf_ = model.frames[contact_frame_id_].placement;
+  if (info.baumgarte_velocity_gain < 0) {
     throw std::out_of_range(
-        "[SurfaceContact] invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+        "[SurfaceContact] invalid argument: 'baumgarte_velocity_gain' must be non-negative!");
   }
-  if (baumgarte_weight_on_position < 0) {
+  if (info.baumgarte_position_gain < 0) {
     throw std::out_of_range(
-        "[SurfaceContact] invalid argument: baumgarte_weight_on_position must be non-negative!");
+        "[SurfaceContact] invalid argument: 'baumgarte_position_gain' must be non-negative!");
   }
 }
 
 
-SurfaceContact::SurfaceContact() 
-  : contact_frame_id_(0),
+SurfaceContact::SurfaceContact()
+  : info_(),
+    contact_frame_id_(0),
     parent_joint_id_(0), 
     dimv_(0),
-    baumgarte_weight_on_velocity_(0),
-    baumgarte_weight_on_position_(0), 
-    jXf_(),
-    X_diff_(),
+    jXf_(SE3::Identity()),
+    X_diff_(SE3::Identity()),
     J_frame_(),
     frame_v_partial_dq_(),
     frame_a_partial_dq_(),
     frame_a_partial_dv_(),
     frame_a_partial_da_(),
-    Jlog6_() {
+    Jlog6_(Matrix66d::Zero()) {
 }
 
 
-SurfaceContact::~SurfaceContact() {
+void SurfaceContact::computeJointForceFromContactWrench(
+    const Vector6d& contact_wrench, 
+    pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const {
+  joint_forces[parent_joint_id_] = jXf_.act(pinocchio::Force(contact_wrench));
 }
 
 
-void SurfaceContact::setBaumgarteWeights(
-    const double baumgarte_weight_on_velocity,
-    const double baumgarte_weight_on_position) {
-  if (baumgarte_weight_on_velocity < 0) {
+
+void SurfaceContact::setBaumgarteGains(const double baumgarte_position_gain, 
+                                       const double baumgarte_velocity_gain) {
+  if (baumgarte_velocity_gain < 0) {
     throw std::out_of_range(
-        "[SurfaceContact] invalid argument: baumgarte_weight_on_velocity must be non-negative!");
+        "[SurfaceContact] invalid argument: 'baumgarte_velocity_gain' must be non-negative!");
   }
-  if (baumgarte_weight_on_position < 0) {
+  if (baumgarte_position_gain < 0) {
     throw std::out_of_range(
-        "[SurfaceContact] invalid argument: baumgarte_weight_on_position must be non-negative!");
+        "[SurfaceContact] invalid argument: 'baumgarte_position_gain' must be non-negative!");
   }
-  baumgarte_weight_on_velocity_ = baumgarte_weight_on_velocity;
-  baumgarte_weight_on_position_ = baumgarte_weight_on_position;
+  info_.baumgarte_position_gain = baumgarte_position_gain;
+  info_.baumgarte_velocity_gain = baumgarte_velocity_gain;
+}
+
+
+const SE3& SurfaceContact::contactPlacement(
+    const pinocchio::Data& data) const {
+  return data.oMf[contact_frame_id_];
+}
+
+
+int SurfaceContact::contactFrameId() const {
+  return contact_frame_id_;
+}
+
+
+int SurfaceContact::parentJointId() const {
+  return parent_joint_id_;
+}
+
+
+const ContactModelInfo& SurfaceContact::contactModelInfo() const {
+  return info_;
 }
 
 
 void SurfaceContact::disp(std::ostream& os) const {
-  os << "surface contact:" << std::endl;
-  os << "  contact frame id: " << contact_frame_id_ << std::endl;
-  os << "  parent joint id: " << parent_joint_id_ << std::endl;
-  os << "  Baumgarte's weights on (velocity, position): (" 
-     << baumgarte_weight_on_velocity_ << ", " 
-     << baumgarte_weight_on_position_ << ")" << std::flush;
+  os << "SurfaceContact:\n";
+  os << "  contact frame: " << info_.frame << "\n";
+  os << "  contact frame id: " << contact_frame_id_ << "\n";
+  os << "  parent joint id: " << parent_joint_id_ << "\n";
+  os << "  Baumgarte's gains on (position, velocity): (" 
+     << info_.baumgarte_position_gain << ", " 
+     << info_.baumgarte_velocity_gain << ")" << std::flush;
 }
 
 

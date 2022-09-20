@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/robot/contact_status.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 #include <iostream>
 
@@ -23,6 +24,7 @@ PYBIND11_MODULE(contact_status, m) {
     .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double, const int>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
           py::arg("default_friction_coefficient")=0.7, py::arg("contact_mode_id")=0)
+    .def(py::init<>())
     .def("max_num_contacts", &ContactStatus::maxNumContacts)
     .def("is_contact_active", 
           static_cast<bool (ContactStatus::*)(const int) const>(&ContactStatus::isContactActive),
@@ -138,11 +140,8 @@ PYBIND11_MODULE(contact_status, m) {
     .def("set_contact_mode_id", &ContactStatus::setContactModeId,
           py::arg("contact_mode_id"))
     .def("contact_mode_id", &ContactStatus::contactModeId)
-    .def("__str__", [](const ContactStatus& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ContactStatus)
+     DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(ContactStatus);
 }
 
 } // namespace python

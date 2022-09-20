@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 #include <iostream>
 
@@ -18,6 +19,7 @@ PYBIND11_MODULE(impulse_status, m) {
     .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double, const int>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
           py::arg("default_friction_coefficient")=0.7, py::arg("contact_mode_id")=0)
+    .def(py::init<>())
     .def("max_num_contacts", &ImpulseStatus::maxNumContacts)
     .def("is_impulse_active", 
           static_cast<bool (ImpulseStatus::*)(const int) const>(&ImpulseStatus::isImpulseActive),
@@ -75,11 +77,8 @@ PYBIND11_MODULE(impulse_status, m) {
     .def("set_impulse_mode_id", &ImpulseStatus::setImpulseModeId,
           py::arg("impulse_mode_id"))
     .def("impulse_mode_id", &ImpulseStatus::impulseModeId)
-    .def("__str__", [](const ImpulseStatus& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ImpulseStatus)
+     DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(ImpulseStatus);
 }
 
 } // namespace python

@@ -7,6 +7,7 @@
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
+#include "robotoc/robot/contact_model_info.hpp"
 #include "robotoc/robot/se3.hpp"
 
 #include <iostream>
@@ -26,15 +27,10 @@ public:
   /// @brief Construct a point contact model.
   /// @param[in] model The pinocchio model. Before calling this constructor, 
   /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
-  /// @param[in] contact_frame_id The index of the contact frame. 
-  /// @param[in] baumgarte_weight_on_velocity The weight paramter of the error 
-  /// on the contact velocity. Must be non-negative.
-  /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
-  /// on the contact position. Must be non-negative.
+  /// @param[in] contact_model_info Info of the point contact model. 
   ///
-  PointContact(const pinocchio::Model& model, const int contact_frame_id,
-               const double baumgarte_weight_on_velocity,
-               const double baumgarte_weight_on_position); 
+  PointContact(const pinocchio::Model& model, 
+               const ContactModelInfo& contact_model_info); 
 
   ///
   /// @brief Default constructor. 
@@ -42,9 +38,9 @@ public:
   PointContact();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~PointContact();
+  ~PointContact() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -83,14 +79,14 @@ public:
   /// updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_position Contact position. Size must be 3.
+  /// @param[in] desired_contact_position Desired contact position. Size must be 3.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint. 
   /// Size must be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_position,
+      const Eigen::MatrixBase<VectorType1>& desired_contact_position,
       const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const;
 
   ///
@@ -150,14 +146,14 @@ public:
   /// be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] contact_position Contact position. Size must be 3.
+  /// @param[in] desired_contact_position Desired contact position. Size must be 3.
   /// @param[out] position_residual Residual of the contact constraint. Size must 
   /// be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
   void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType1>& contact_position,
+      const Eigen::MatrixBase<VectorType1>& desired_contact_position,
       const Eigen::MatrixBase<VectorType2>& position_residual) const;
 
   ///
@@ -176,16 +172,6 @@ public:
       const Eigen::MatrixBase<MatrixType>& position_partial_dq);
 
   ///
-  /// @brief Sets the weight parameters of the Baumgarte's stabilization method.
-  /// @param[in] baumgarte_weight_on_velocity The weight paramter of the error 
-  /// on the contact velocity.
-  /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
-  /// on the contact position.
-  /// 
-  void setBaumgarteWeights(const double baumgarte_weight_on_velocity , 
-                           const double baumgarte_weight_on_position);
-
-  ///
   /// @brief Returns the contact position at the current kinematics of the robot. 
   /// Before calling this function, kinematics of the robot model (frame 
   /// position) must be updated.
@@ -195,17 +181,33 @@ public:
   const Eigen::Vector3d& contactPosition(const pinocchio::Data& data) const;
 
   ///
+  /// @brief Sets the gain parameters of the Baumgarte's stabilization method.
+  /// @param[in] baumgarte_position_gain The position gain of the Baumgarte's 
+  /// stabilization method. Must be non-negative.
+  /// @param[in] baumgarte_velocity_gain The velocity gain of the Baumgarte's 
+  /// stabilization method. Must be non-negative.
+  /// 
+  void setBaumgarteGains(const double baumgarte_position_gain, 
+                         const double baumgarte_velocity_gain);
+
+  ///
   /// @brief Returns contact frame id, i.e., the index of the contact frame.
   /// @return Contact frame id.
   /// 
-  int contact_frame_id() const;
+  int contactFrameId() const;
 
   ///
   /// @brief Returns parent joint id, i.e., the index of the parent joint of 
   /// the contact frame.
   /// @return Parent joint id.
   /// 
-  int parent_joint_id() const;
+  int parentJointId() const;
+
+  ///
+  /// @brief Gets the contact model info.
+  /// @return const reference to the contact model info.
+  /// 
+  const ContactModelInfo& contactModelInfo() const;
 
   ///
   /// @brief Displays the point contact onto a ostream.
@@ -218,8 +220,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+  ContactModelInfo info_;
   int contact_frame_id_, parent_joint_id_, dimv_;
-  double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
   SE3 jXf_;
   pinocchio::Motion v_frame_;
   Eigen::Matrix3d v_linear_skew_, v_angular_skew_;

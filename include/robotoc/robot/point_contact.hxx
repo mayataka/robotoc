@@ -13,31 +13,23 @@
 
 namespace robotoc {
 
-inline void PointContact::computeJointForceFromContactForce(
-    const Eigen::Vector3d& contact_force, 
-    pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const {
-  joint_forces[parent_joint_id_] 
-      = jXf_.act(pinocchio::Force(contact_force, Eigen::Vector3d::Zero()));
-}
-
-
 template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const Eigen::MatrixBase<VectorType1>& contact_position,
+    const Eigen::MatrixBase<VectorType1>& desired_contact_position,
     const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const {
-  assert(contact_position.size() == 3);
+  assert(desired_contact_position.size() == 3);
   assert(baumgarte_residual.size() == 3);
   const_cast<Eigen::MatrixBase<VectorType2>&> (baumgarte_residual).noalias()
       = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id_, 
                                                  pinocchio::LOCAL).linear();
   (const_cast<Eigen::MatrixBase<VectorType2>&> (baumgarte_residual)).noalias()
-      += baumgarte_weight_on_velocity_ 
+      += info_.baumgarte_velocity_gain 
           * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
                                               pinocchio::LOCAL).linear();
   (const_cast<Eigen::MatrixBase<VectorType2>&> (baumgarte_residual)).noalias()
-      += baumgarte_weight_on_position_
-          * (data.oMf[contact_frame_id_].translation()-contact_position);
+      += info_.baumgarte_position_gain
+          * (data.oMf[contact_frame_id_].translation()-desired_contact_position);
 }
 
 
@@ -83,13 +75,13 @@ inline void PointContact::computeBaumgarteDerivatives(
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = frame_a_partial_da_.template topRows<3>();
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_velocity_
+      += info_.baumgarte_velocity_gain
           * frame_v_partial_dq_.template topRows<3>();
   (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
-      += baumgarte_weight_on_velocity_ 
+      += info_.baumgarte_velocity_gain 
           * frame_a_partial_da_.template topRows<3>();
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_position_ * data.oMf[contact_frame_id_].rotation()
+      += info_.baumgarte_position_gain * data.oMf[contact_frame_id_].rotation()
                                        * J_frame_.template topRows<3>();
 }
 
@@ -128,12 +120,12 @@ inline void PointContact::computeContactVelocityDerivatives(
 template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeContactPositionResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const Eigen::MatrixBase<VectorType1>& contact_position,
+    const Eigen::MatrixBase<VectorType1>& desired_contact_position,
     const Eigen::MatrixBase<VectorType2>& position_residual) const {
-  assert(contact_position.size() == 3);
+  assert(desired_contact_position.size() == 3);
   assert(position_residual.size() == 3);
   (const_cast<Eigen::MatrixBase<VectorType2>&> (position_residual))
-      = (data.oMf[contact_frame_id_].translation()-contact_position);
+      = (data.oMf[contact_frame_id_].translation()-desired_contact_position);
 }
 
 
@@ -147,22 +139,6 @@ inline void PointContact::computeContactPositionDerivative(
                               pinocchio::LOCAL, J_frame_);
   (const_cast<Eigen::MatrixBase<MatrixType>&> (position_partial_dq)).noalias()
       = data.oMf[contact_frame_id_].rotation() * J_frame_.template topRows<3>();
-}
-
-
-inline const Eigen::Vector3d& PointContact::contactPosition(
-    const pinocchio::Data& data) const {
-  return data.oMf[contact_frame_id_].translation();
-}
-
-
-inline int PointContact::contact_frame_id() const {
-  return contact_frame_id_;
-}
-
-
-inline int PointContact::parent_joint_id() const {
-  return parent_joint_id_;
 }
 
 } // namespace robotoc

@@ -17,97 +17,81 @@
 
 #include "robotoc/robot/point_contact.hpp"
 
+#include "urdf_factory.hpp"
+
 
 namespace robotoc {
 
-class PointContactTest : public ::testing::Test {
+class PointContactTest : public ::testing::TestWithParam<std::pair<bool, ContactModelInfo>> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    pinocchio::urdf::buildModel(fixed_base_urdf, fixed_base_robot);
-    pinocchio::urdf::buildModel(floating_base_urdf, 
-                                pinocchio::JointModelFreeFlyer(), 
-                                floating_base_robot);
-    fixed_base_data = pinocchio::Data(fixed_base_robot);
-    floating_base_data = pinocchio::Data(floating_base_robot);
-    fixed_base_contact_frames = {18};
-    floating_base_contact_frames = {12, 22, 32, 42};
-    baumgarte_weight_on_velocity = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
-    baumgarte_weight_on_position = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  void testConstructor(pinocchio::Model& model, pinocchio::Data& data, 
-                       const int contact_frame_id) const;
-  void testComputeJointForcesFromContactForce(pinocchio::Model& model, 
-                                              pinocchio::Data& data, 
-                                              const int contact_frame_id) const;
-  void testBaumgarteResidual(pinocchio::Model& model, pinocchio::Data& data, 
-                              const int contact_frame_id) const;
-  void testBaumgarteDerivative(pinocchio::Model& model, pinocchio::Data& data, 
-                               const int contact_frame_id) const;
-  void testContactVelocityResidual(pinocchio::Model& model, 
-                                   pinocchio::Data& data, 
-                                   const int contact_frame_id) const;
-  void testContactVelocityDerivatives(pinocchio::Model& model, 
-                                      pinocchio::Data& data, 
-                                      const int contact_frame_id) const;
-  void testContactResidual(pinocchio::Model& model, pinocchio::Data& data, 
-                           const int contact_frame_id) const;
-  void testContactDerivatives(pinocchio::Model& model, pinocchio::Data& data, 
-                              const int contact_frame_id) const;
-
-  std::string fixed_base_urdf, floating_base_urdf;
-  pinocchio::Model fixed_base_robot, floating_base_robot;
-  pinocchio::Data fixed_base_data, floating_base_data;
-  std::vector<int> fixed_base_contact_frames, floating_base_contact_frames;
-  double baumgarte_weight_on_velocity, baumgarte_weight_on_position;
+  pinocchio::Model getModel(const bool floating_base) {
+    pinocchio::Model model;
+    if (floating_base) {
+      pinocchio::urdf::buildModel(testhelper::QuadrupedURDF(), 
+                                  pinocchio::JointModelFreeFlyer(), model);
+    }
+    else {
+      pinocchio::urdf::buildModel(testhelper::RobotManipulatorURDF(), model);
+    }
+    return model;
+  }
 };
 
 
-TEST_F(PointContactTest, defaultConstructor) {
+TEST_P(PointContactTest, defaultConstructor) {
   PointContact contact;
-  EXPECT_EQ(contact.contact_frame_id(), 0);
-  EXPECT_EQ(contact.parent_joint_id(), 0);
+  EXPECT_EQ(contact.contactFrameId(), 0);
+  EXPECT_EQ(contact.parentJointId(), 0);
 }
 
 
-void PointContactTest::testConstructor(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
-  EXPECT_EQ(contact.contact_frame_id(), contact_frame_id);
-  EXPECT_EQ(contact.parent_joint_id(), model.frames[contact_frame_id].parent);
+TEST_P(PointContactTest, constructor) {
+  const bool floating_base = GetParam().first;
+  const auto model = getModel(floating_base);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+  EXPECT_EQ(contact.contactFrameId(), model.getFrameId(contact_model_info.frame));
+  EXPECT_EQ(contact.parentJointId(), model.frames[model.getFrameId(contact_model_info.frame)].parent);
   EXPECT_NO_THROW(
     std::cout << contact << std::endl;
   );
 }
 
 
-void PointContactTest::testComputeJointForcesFromContactForce(
-    pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeJointForcesFromContactForce) {
+  const bool floating_base = GetParam().first;
+  const auto model = getModel(floating_base);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint
-      = pinocchio::container::aligned_vector<pinocchio::Force>(
-            model.joints.size(), pinocchio::Force::Zero());
+      = pinocchio::container::aligned_vector<pinocchio::Force>(model.joints.size(), pinocchio::Force::Zero());
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_ref = fjoint;
   const Eigen::Vector3d fext = Eigen::Vector3d::Random();
   contact.computeJointForceFromContactForce(fext, fjoint);
-  const int parent_joint_id = contact.parent_joint_id();
+  const int parent_joint_id = contact.parentJointId();
   fjoint_ref[parent_joint_id] 
-      = model.frames[contact_frame_id].placement.act(
-          pinocchio::Force(fext, Eigen::Vector3d::Zero()));
+      = model.frames[contact.contactFrameId()].placement.act(pinocchio::Force(fext, Eigen::Vector3d::Zero()));
   for (int i=0; i<fjoint.size(); ++i) {
     EXPECT_TRUE(fjoint[i].isApprox(fjoint_ref[i]));
   }
 }
 
 
-void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeBaumgarteResidual) {
+  const bool floating_base = GetParam().first;
+  auto model = getModel(floating_base);
+  auto data = pinocchio::Data(model);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -115,31 +99,28 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
-  const int parent_joint_id = contact.parent_joint_id();
+  const int parent_joint_id = contact.parentJointId();
   Eigen::Vector3d residual, residual_ref;
-  residual.setZero();
-  residual_ref.setZero();
-  const Eigen::Vector3d contact_position = Eigen::Vector3d::Random();
-  contact.computeBaumgarteResidual(model, data, contact_position, residual);
+  residual.setZero(); residual_ref.setZero();
+  const Eigen::Vector3d desired_contact_position = Eigen::Vector3d::Random();
+  contact.computeBaumgarteResidual(model, data, desired_contact_position, residual);
   residual_ref 
-      = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id, 
-                                                 pinocchio::LOCAL).linear()
-          + baumgarte_weight_on_velocity
-              * pinocchio::getFrameVelocity(model, data, contact_frame_id, 
-                                            pinocchio::LOCAL).linear()
-          + baumgarte_weight_on_position 
-              * (data.oMf[contact_frame_id].translation()
-                 -contact_position);
+      = pinocchio::getFrameClassicalAcceleration(model, data, contact.contactFrameId(), pinocchio::LOCAL).linear()
+          + contact_model_info.baumgarte_velocity_gain 
+              * pinocchio::getFrameVelocity(model, data, contact.contactFrameId(), pinocchio::LOCAL).linear()
+          + contact_model_info.baumgarte_position_gain
+              * (data.oMf[contact.contactFrameId()].translation()-desired_contact_position);
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeBaumgarteResidual(model, data, contact_position, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
 }
 
 
-void PointContactTest::testBaumgarteDerivative(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeBaumgarteDerivatives) {
+  const bool floating_base = GetParam().first;
+  auto model = getModel(floating_base);
+  auto data = pinocchio::Data(model);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -147,13 +128,12 @@ void PointContactTest::testBaumgarteDerivative(pinocchio::Model& model, pinocchi
   const int dimv = model.nv;
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
-  pinocchio::updateFramePlacement(model, data, contact_frame_id);
-  const int parent_joint_id = contact.parent_joint_id();
+  pinocchio::updateFramePlacement(model, data, contact.contactFrameId());
+  const int parent_joint_id = contact.parentJointId();
   Eigen::MatrixXd baum_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd baum_partial_dv = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd baum_partial_da = Eigen::MatrixXd::Zero(3, dimv);
-  contact.computeBaumgarteDerivatives(model, data, baum_partial_dq, 
-                                      baum_partial_dv, baum_partial_da);
+  contact.computeBaumgarteDerivatives(model, data, baum_partial_dq, baum_partial_dv, baum_partial_da);
   Eigen::MatrixXd baum_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd baum_partial_dv_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd baum_partial_da_ref = Eigen::MatrixXd::Zero(3, dimv);
@@ -161,38 +141,27 @@ void PointContactTest::testBaumgarteDerivative(pinocchio::Model& model, pinocchi
   Eigen::MatrixXd frame_a_partial_dq = Eigen::MatrixXd::Zero(6, dimv);
   Eigen::MatrixXd frame_a_partial_dv = Eigen::MatrixXd::Zero(6, dimv);
   Eigen::MatrixXd frame_a_partial_da = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id, 
-                                             pinocchio::LOCAL,
-                                             frame_v_partial_dq, 
-                                             frame_a_partial_dq, 
-                                             frame_a_partial_dv, 
-                                             frame_a_partial_da);
+  pinocchio::getFrameAccelerationDerivatives(model, data, contact.contactFrameId(), pinocchio::LOCAL,
+                                             frame_v_partial_dq, frame_a_partial_dq, 
+                                             frame_a_partial_dv, frame_a_partial_da);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id, 
-                              pinocchio::LOCAL, J_frame);
-  pinocchio::Motion v_frame = pinocchio::getFrameVelocity(model, data, 
-                                                          contact_frame_id, 
-                                                          pinocchio::LOCAL);
+  pinocchio::getFrameJacobian(model, data, contact.contactFrameId(), pinocchio::LOCAL, J_frame);
+  pinocchio::Motion v_frame = pinocchio::getFrameVelocity(model, data, contact.contactFrameId(), pinocchio::LOCAL);
   Eigen::Matrix3d v_linear_skew, v_angular_skew;
-  v_linear_skew.setZero();
-  v_angular_skew.setZero();
+  v_linear_skew.setZero(); v_angular_skew.setZero();
   pinocchio::skew(v_frame.linear(), v_linear_skew);
   pinocchio::skew(v_frame.angular(), v_angular_skew);
   baum_partial_dq_ref 
       = frame_a_partial_dq.template topRows<3>()
           + v_angular_skew * frame_v_partial_dq.template topRows<3>()
           - v_linear_skew * frame_v_partial_dq.template bottomRows<3>()
-          + baumgarte_weight_on_velocity 
-              * frame_v_partial_dq.template topRows<3>()
-          + baumgarte_weight_on_position 
-              * data.oMf[contact_frame_id].rotation()
-              * J_frame.template topRows<3>();
+          + contact_model_info.baumgarte_velocity_gain * frame_v_partial_dq.template topRows<3>()
+          + contact_model_info.baumgarte_position_gain * data.oMf[contact.contactFrameId()].rotation() * J_frame.template topRows<3>();
   baum_partial_dv_ref 
       = frame_a_partial_dv.template topRows<3>()
           + v_angular_skew * J_frame.template topRows<3>()
           - v_linear_skew * J_frame.template bottomRows<3>()
-          + baumgarte_weight_on_velocity
-              * frame_a_partial_da.template topRows<3>();
+          + contact_model_info.baumgarte_velocity_gain * frame_a_partial_da.template topRows<3>();
   baum_partial_da_ref 
       = frame_a_partial_da.template topRows<3>();
   EXPECT_TRUE(baum_partial_dq_ref.isApprox(baum_partial_dq));
@@ -201,8 +170,13 @@ void PointContactTest::testBaumgarteDerivative(pinocchio::Model& model, pinocchi
 }
 
 
-void PointContactTest::testContactVelocityResidual(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeContactVelocityResidual) {
+  const bool floating_base = GetParam().first;
+  auto model = getModel(floating_base);
+  auto data = pinocchio::Data(model);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -211,24 +185,22 @@ void PointContactTest::testContactVelocityResidual(pinocchio::Model& model, pino
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
-  const int parent_joint_id = contact.parent_joint_id();
+  const int parent_joint_id = contact.parentJointId();
   Eigen::Vector3d residual, residual_ref;
-  residual.setZero();
-  residual_ref.setZero();
+  residual.setZero(); residual_ref.setZero();
   contact.computeContactVelocityResidual(model, data, residual);
-  residual_ref = pinocchio::getFrameVelocity(model, data, contact_frame_id, 
-                                             pinocchio::LOCAL).linear();
+  residual_ref = pinocchio::getFrameVelocity(model, data, contact.contactFrameId(), pinocchio::LOCAL).linear();
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeContactVelocityResidual(model, data, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
-  EXPECT_TRUE(residuals.tail(2).isZero());
 }
 
 
-void PointContactTest::testContactVelocityDerivatives(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeContactVelocityDerivatives) {
+  const bool floating_base = GetParam().first;
+  auto model = getModel(floating_base);
+  auto data = pinocchio::Data(model);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -236,20 +208,17 @@ void PointContactTest::testContactVelocityDerivatives(pinocchio::Model& model, p
   const int dimv = model.nv;
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
-  pinocchio::updateFramePlacement(model, data, contact_frame_id);
-  const int parent_joint_id = contact.parent_joint_id();
+  pinocchio::updateFramePlacement(model, data, contact.contactFrameId());
+  const int parent_joint_id = contact.parentJointId();
   Eigen::MatrixXd vel_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd vel_partial_dv = Eigen::MatrixXd::Zero(3, dimv);
-  contact.computeContactVelocityDerivatives(model, data, 
-                                            vel_partial_dq, vel_partial_dv);
+  contact.computeContactVelocityDerivatives(model, data, vel_partial_dq, vel_partial_dv);
   Eigen::MatrixXd vel_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd vel_partial_dv_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd frame_v_partial_dq = Eigen::MatrixXd::Zero(6, dimv);
   Eigen::MatrixXd frame_v_partial_dv = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::getFrameVelocityDerivatives(model, data, contact_frame_id, 
-                                         pinocchio::LOCAL,
-                                         frame_v_partial_dq, 
-                                         frame_v_partial_dv);
+  pinocchio::getFrameVelocityDerivatives(model, data, contact.contactFrameId(), pinocchio::LOCAL,
+                                         frame_v_partial_dq, frame_v_partial_dv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
   vel_partial_dq_ref = frame_v_partial_dq.template topRows<3>();
   vel_partial_dv_ref = frame_v_partial_dv.template topRows<3>();
@@ -258,8 +227,13 @@ void PointContactTest::testContactVelocityDerivatives(pinocchio::Model& model, p
 }
 
 
-void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeContactPositionResidual) {
+  const bool floating_base = GetParam().first;
+  auto model = getModel(floating_base);
+  auto data = pinocchio::Data(model);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
@@ -268,24 +242,24 @@ void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::D
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
-  const int parent_joint_id = contact.parent_joint_id();
+  const int parent_joint_id = contact.parentJointId();
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  const Eigen::Vector3d contact_position = Eigen::Vector3d::Random();
-  contact.computeContactPositionResidual(model, data, contact_position, residual);
-  residual_ref = (data.oMf[contact_frame_id].translation()-contact_position);
+  const Eigen::Vector3d desired_contact_position = Eigen::Vector3d::Random();
+  contact.computeContactPositionResidual(model, data, desired_contact_position, residual);
+  residual_ref = (data.oMf[contact.contactFrameId()].translation()-desired_contact_position);
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeContactPositionResidual(model, data, contact_position, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
-  EXPECT_TRUE(residuals.tail(2).isZero());
 }
 
 
-void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+TEST_P(PointContactTest, computeContactPositionDerivative) {
+  const bool floating_base = GetParam().first;
+  auto model = getModel(floating_base);
+  auto data = pinocchio::Data(model);
+  const auto contact_model_info = GetParam().second;
+  PointContact contact(model, contact_model_info);
+
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
@@ -293,46 +267,23 @@ void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio
   const int dimv = model.nv;
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
-  pinocchio::updateFramePlacement(model, data, contact_frame_id);
-  const int parent_joint_id = contact.parent_joint_id();
+  pinocchio::updateFramePlacement(model, data, contact.contactFrameId());
+  const int parent_joint_id = contact.parentJointId();
   Eigen::MatrixXd position_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
   contact.computeContactPositionDerivative(model, data, position_partial_dq);
   Eigen::MatrixXd position_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id, 
-                              pinocchio::LOCAL, J_frame);
-  position_partial_dq_ref 
-      = data.oMf[contact_frame_id].rotation() * J_frame.template topRows<3>();
+  pinocchio::getFrameJacobian(model, data, contact.contactFrameId(), pinocchio::LOCAL, J_frame);
+  position_partial_dq_ref = data.oMf[contact.contactFrameId()].rotation() * J_frame.template topRows<3>();
   EXPECT_TRUE(position_partial_dq_ref.isApprox(position_partial_dq));
 }
 
 
-TEST_F(PointContactTest, test) {
-  for (const auto frame : fixed_base_contact_frames) {
-    pinocchio::Model robot = fixed_base_robot;
-    pinocchio::Data data = fixed_base_data;
-    testConstructor(robot, data, frame);
-    testComputeJointForcesFromContactForce(robot, data, frame);
-    testBaumgarteResidual(robot, data, frame);
-    testBaumgarteDerivative(robot, data, frame);
-    testContactVelocityResidual(robot, data, frame);
-    testContactVelocityDerivatives(robot, data, frame);
-    testContactResidual(robot, data, frame);
-    testContactDerivatives(robot, data, frame);
-  }
-  for (const auto frame : floating_base_contact_frames) {
-    pinocchio::Model robot = floating_base_robot;
-    pinocchio::Data data = floating_base_data;
-    testConstructor(robot, data, frame);
-    testComputeJointForcesFromContactForce(robot, data, frame);
-    testBaumgarteResidual(robot, data, frame);
-    testBaumgarteDerivative(robot, data, frame);
-    testContactVelocityResidual(robot, data, frame);
-    testContactVelocityDerivatives(robot, data, frame);
-    testContactResidual(robot, data, frame);
-    testContactDerivatives(robot, data, frame);
-  }
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, PointContactTest, 
+  ::testing::Values(std::make_pair(false, ContactModelInfo("iiwa_link_ee_kuka", 0.001)),
+                    std::make_pair(true, ContactModelInfo("LF_FOOT", 0.001)))
+);
 
 } // namespace robotoc
 

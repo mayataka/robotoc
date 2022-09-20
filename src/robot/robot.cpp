@@ -5,225 +5,91 @@
 
 namespace robotoc {
 
-Robot::Robot(const std::string& path_to_urdf, 
-             const BaseJointType& base_joint_type)
-  : path_to_urdf_(path_to_urdf),
+Robot::Robot(const RobotModelInfo& info)
+  : info_(info),
     model_(),
     impulse_model_(),
     data_(),
     impulse_data_(),
-    contact_frame_names_(),
-    contact_frames_(),
-    contact_types_(),
+    fjoint_(),
+    dimpulse_dv_(),
     point_contacts_(),
     surface_contacts_(),
-    fjoint_(),
     dimq_(0),
     dimv_(0),
     dimu_(0),
     dim_passive_(0),
     max_dimf_(0),
     max_num_contacts_(0),
-    contact_inv_damping_(0),
-    baumgarte_weights_({0, 0}),
-    has_floating_base_(false),
-    has_generalized_momentum_bias_(false),
-    dimpulse_dv_(),
-    generalized_momentum_bias_(),
+    properties_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
-  switch (base_joint_type) {
+  switch (info.base_joint_type) {
     case BaseJointType::FloatingBase:
-      pinocchio::urdf::buildModel(path_to_urdf, 
+      pinocchio::urdf::buildModel(info.urdf_path, 
                                   pinocchio::JointModelFreeFlyer(), model_);
       dim_passive_ = 6;
-      has_floating_base_ = true;
+      break;
+    case BaseJointType::FixedBase:
+      pinocchio::urdf::buildModel(info.urdf_path, model_);
+      dim_passive_ = 0;
       break;
     default:
-      pinocchio::urdf::buildModel(path_to_urdf, model_);
-      dim_passive_ = 0;
-      has_floating_base_ = false;
+      std::runtime_error("[Robot] invalid argument: invalid base joint type");
       break;
   }
+  impulse_model_ = model_;
+  impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
+  impulse_data_ = pinocchio::Data(impulse_model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                model_.joints.size(), pinocchio::Force::Zero());
+  point_contacts_.clear();
+  for (const auto& e : info.point_contacts) {
+    point_contacts_.push_back(PointContact(model_, e));
+  }
+  surface_contacts_.clear();
+  for (const auto& e : info.surface_contacts) {
+    surface_contacts_.push_back(SurfaceContact(model_, e));
+  }
   dimq_ = model_.nq;
   dimv_ = model_.nv;
   dimu_ = model_.nv - dim_passive_;
-  generalized_momentum_bias_ = Eigen::VectorXd::Zero(dimv_);
+  max_dimf_ = 3 * point_contacts_.size() + 6 * surface_contacts_.size();
+  max_num_contacts_ = point_contacts_.size() + surface_contacts_.size();
+  data_.JMinvJt.resize(max_dimf_, max_dimf_);
+  data_.JMinvJt.setZero();
+  data_.sDUiJt.resize(model_.nv, max_dimf_);
+  data_.sDUiJt.setZero();
+  impulse_data_.JMinvJt.resize(max_dimf_, max_dimf_);
+  impulse_data_.JMinvJt.setZero();
+  impulse_data_.sDUiJt.resize(model_.nv, max_dimf_);
+  impulse_data_.sDUiJt.setZero();
+  dimpulse_dv_.resize(model_.nv, model_.nv);
+  dimpulse_dv_.setZero();
   initializeJointLimits();
 }
 
 
-Robot::Robot(const std::string& path_to_urdf, 
-             const BaseJointType& base_joint_type,
-             const std::vector<int>& contact_frames,
-             const std::vector<ContactType>& contact_types,
-             const std::pair<double, double>& baumgarte_weights,
-             const double contact_inv_damping)
-  : Robot(path_to_urdf, base_joint_type) {
-  if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
-    throw std::out_of_range(
-        "[Robot] invalid argument: 'baumgarte_weights' must be non-negative!");
-  }
-  if (contact_frames.size() != contact_types.size()) {
-    throw std::out_of_range(
-        "[Robot] invalid argument: contact_frames.size() and contact_types.size() must be the same!");
-  }
-  if (contact_inv_damping < 0) {
-    throw std::out_of_range(
-        "[Robot] invalid argument: contact_inv_damping must be non-negative!");
-  }
-  baumgarte_weights_ = baumgarte_weights;
-  impulse_model_ = model_;
-  impulse_model_.gravity.linear().setZero();
-  impulse_data_ = pinocchio::Data(impulse_model_);
-  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                model_.joints.size(), pinocchio::Force::Zero());
-  max_num_contacts_ = contact_frames.size();
-  contact_frames_ = contact_frames;
-  contact_frame_names_.clear();
-  for (const auto e : contact_frames_) {
-    contact_frame_names_.push_back(model_.frames[e].name);
-  }
-  contact_types_ = contact_types; 
-  for (int i=0; i<contact_frames.size(); ++i) {
-    switch (contact_types[i]) {
-      case ContactType::PointContact:
-        point_contacts_.push_back(PointContact(model_, contact_frames[i], 
-                                               baumgarte_weights.first,
-                                               baumgarte_weights.second));
-        break;
-      case ContactType::SurfaceContact:
-        surface_contacts_.push_back(SurfaceContact(model_, contact_frames[i], 
-                                                   baumgarte_weights.first,
-                                                   baumgarte_weights.second));
-        break;
-      default:
-        break;
-    }
-  }
-  max_dimf_ = 3 * point_contacts_.size() + 6 * surface_contacts_.size();
-  contact_inv_damping_ = contact_inv_damping;
-  data_.JMinvJt.resize(max_dimf_, max_dimf_);
-  data_.JMinvJt.setZero();
-  data_.sDUiJt.resize(model_.nv, max_dimf_);
-  data_.sDUiJt.setZero();
-  dimpulse_dv_.resize(model_.nv, model_.nv);
-  dimpulse_dv_.setZero();
-}
-
-
-Robot::Robot(const std::string& path_to_urdf, 
-             const BaseJointType& base_joint_type,
-             const std::vector<std::string>& contact_frame_names,
-             const std::vector<ContactType>& contact_types,
-             const std::pair<double, double>& baumgarte_weights,
-             const double contact_inv_damping)
-  : Robot(path_to_urdf, base_joint_type) {
-  if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
-    throw std::out_of_range(
-        "[Robot] invalid argument: baumgarte_weights must be non-negative!");
-  }
-  if (contact_frame_names.size() != contact_types.size()) {
-    throw std::out_of_range(
-        "[Robot] invalid argument: contact_frame_names.size() and contact_types.size() must be the same!");
-  }
-  if (contact_inv_damping < 0) {
-    throw std::out_of_range(
-        "[Robot] invalid argument: contact_inv_damping must be non-negative!");
-  }
-  baumgarte_weights_ = baumgarte_weights;
-  impulse_model_ = model_;
-  impulse_model_.gravity.linear().setZero();
-  impulse_data_ = pinocchio::Data(impulse_model_);
-  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                model_.joints.size(), pinocchio::Force::Zero());
-  max_num_contacts_ = contact_frame_names.size();
-  contact_frames_.clear();
-  for (const auto& e : contact_frame_names) {
-    if (!model_.existFrame(e)) {
-      throw std::invalid_argument(
-          "[Robot] invalid argument: frame '" + e + "' does not exit!");
-    }
-    contact_frames_.push_back(model_.getFrameId(e));
-  }
-  contact_frame_names_ = contact_frame_names;
-  contact_types_ = contact_types; 
-  for (int i=0; i<contact_frames_.size(); ++i) {
-    switch (contact_types[i]) {
-      case ContactType::PointContact:
-        point_contacts_.push_back(PointContact(model_, contact_frames_[i], 
-                                               baumgarte_weights.first,
-                                               baumgarte_weights.second));
-        break;
-      case ContactType::SurfaceContact:
-        surface_contacts_.push_back(SurfaceContact(model_, contact_frames_[i], 
-                                                   baumgarte_weights.first,
-                                                   baumgarte_weights.second));
-        break;
-      default:
-        break;
-    }
-  }
-  max_dimf_ = 3 * point_contacts_.size() + 6 * surface_contacts_.size();
-  contact_inv_damping_ = contact_inv_damping;
-  data_.JMinvJt.resize(max_dimf_, max_dimf_);
-  data_.JMinvJt.setZero();
-  data_.sDUiJt.resize(model_.nv, max_dimf_);
-  data_.sDUiJt.setZero();
-  dimpulse_dv_.resize(model_.nv, model_.nv);
-  dimpulse_dv_.setZero();
-}
-
-
-Robot::Robot(const std::string& path_to_urdf, 
-             const BaseJointType& base_joint_type,
-             const std::vector<int>& contact_frames,
-             const std::vector<ContactType>& contact_types,
-             const double time_step, const double contact_inv_damping)
-  : Robot(path_to_urdf, base_joint_type, contact_frames, contact_types,
-          std::make_pair(2.0/time_step, 1.0/(time_step*time_step)), 
-          contact_inv_damping) {
-}
-
-
-Robot::Robot(const std::string& path_to_urdf, 
-             const BaseJointType& base_joint_type,
-             const std::vector<std::string>& contact_frame_names,
-             const std::vector<ContactType>& contact_types,
-             const double time_step, const double contact_inv_damping)
-  : Robot(path_to_urdf, base_joint_type, contact_frame_names, contact_types,
-          std::make_pair(2.0/time_step, 1.0/(time_step*time_step)), 
-          contact_inv_damping) {
-}
-
-
 Robot::Robot()
-  : path_to_urdf_(),
+  : info_(),
     model_(),
     impulse_model_(),
     data_(),
     impulse_data_(),
-    contact_frames_(),
-    contact_frame_names_(),
-    contact_types_(),
+    fjoint_(),
+    dimpulse_dv_(),
     point_contacts_(),
     surface_contacts_(),
-    fjoint_(),
     dimq_(0),
     dimv_(0),
     dimu_(0),
     dim_passive_(0),
-    contact_inv_damping_(0),
-    baumgarte_weights_({0, 0}),
     max_dimf_(0),
     max_num_contacts_(0),
-    has_floating_base_(false),
-    has_generalized_momentum_bias_(false),
-    dimpulse_dv_(),
-    generalized_momentum_bias_(),
+    properties_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
@@ -231,40 +97,16 @@ Robot::Robot()
 }
 
 
-Robot::~Robot() {
-}
-
-
-Robot Robot::clone() const {
-  BaseJointType base_joint_type;
-  if (hasFloatingBase()) {
-    base_joint_type = BaseJointType::FloatingBase;
-  }
-  else {
-    base_joint_type = BaseJointType::FixedBase;
-  }
-  auto robot = Robot(path_to_urdf_, base_joint_type, 
-                     contact_frame_names_, contact_types_, 
-                     baumgarte_weights_, contact_inv_damping_);
-  robot.setGeneralizedMomentumBias(generalizedMomentumBias());
-  robot.setJointEffortLimit(jointEffortLimit());
-  robot.setJointVelocityLimit(jointVelocityLimit());
-  robot.setLowerJointPositionLimit(lowerJointPositionLimit());
-  robot.setUpperJointPositionLimit(upperJointPositionLimit());
-  return robot;
-}
-
-
 void Robot::initializeJointLimits() {
-  const int dim_joint = model_.nv - dim_passive_;
-  joint_effort_limit_.resize(dim_joint);
-  joint_velocity_limit_.resize(dim_joint);
-  lower_joint_position_limit_.resize(dim_joint);
-  upper_joint_position_limit_.resize(dim_joint);
-  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
-  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
-  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
-  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
+  const int njoints = model_.nv - dim_passive_;
+  joint_effort_limit_.resize(njoints);
+  joint_velocity_limit_.resize(njoints);
+  lower_joint_position_limit_.resize(njoints);
+  upper_joint_position_limit_.resize(njoints);
+  joint_effort_limit_ = model_.effortLimit.tail(njoints);
+  joint_velocity_limit_ = model_.velocityLimit.tail(njoints);
+  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(njoints);
+  upper_joint_position_limit_ = model_.upperPositionLimit.tail(njoints);
 }
 
 
@@ -311,9 +153,9 @@ void Robot::setUpperJointPositionLimit(
 
 
 void Robot::disp(std::ostream& os) const {
-  os << "robot model:" << std::endl;
+  os << "Robot:" << std::endl;
   os << "  name: " << model_.name << std::endl;
-  if (has_floating_base_) {
+  if (info_.base_joint_type == BaseJointType::FloatingBase) {
     os << "  base joint: floating base" << std::endl;
   }
   else {

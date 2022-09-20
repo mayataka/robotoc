@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 #include <iostream>
 
@@ -14,45 +15,15 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(robot, m) {
-  py::enum_<BaseJointType>(m, "BaseJointType", py::arithmetic())
-    .value("FixedBase", BaseJointType::FixedBase)
-    .value("FloatingBase", BaseJointType::FloatingBase)
-    .export_values();
-
   py::class_<Robot>(m, "Robot")
-    .def(py::init<const std::string&, const BaseJointType&>(), 
-          py::arg("path_to_urdf"),
-          py::arg("base_joint_type")=BaseJointType::FixedBase)
-    .def(py::init<const std::string&, const BaseJointType&, 
-                  const std::vector<int>&, const std::vector<ContactType>&, 
-                  const std::pair<double, double>&, const double>(),
-          py::arg("path_to_urdf"), py::arg("base_joint_type"),
-          py::arg("contact_frames"), py::arg("contact_types"), 
-          py::arg("baumgarte_weights"), py::arg("contact_inv_damping")=0.)
-    .def(py::init<const std::string&, const BaseJointType&, 
-                  const std::vector<std::string>&, const std::vector<ContactType>&, 
-                  const std::pair<double, double>&, const double>(),
-          py::arg("path_to_urdf"), py::arg("base_joint_type"),
-          py::arg("contact_frame_names"), py::arg("contact_types"), 
-          py::arg("baumgarte_weights"), py::arg("contact_inv_damping")=0.)
-    .def(py::init<const std::string&, const BaseJointType&, 
-                  const std::vector<int>&, const std::vector<ContactType>&, 
-                  const double, const double>(),
-          py::arg("path_to_urdf"), py::arg("base_joint_type"),
-          py::arg("contact_frames"), py::arg("contact_types"), 
-          py::arg("baumgarte_time_step"), py::arg("contact_inv_damping")=0.)
-    .def(py::init<const std::string&, const BaseJointType&, 
-                  const std::vector<std::string>&, const std::vector<ContactType>&, 
-                  const double, const double>(),
-          py::arg("path_to_urdf"), py::arg("base_joint_type"),
-          py::arg("contact_frame_names"), py::arg("contact_types"), 
-          py::arg("baumgarte_time_step"), py::arg("contact_inv_damping")=0.)
-    .def("clone", &Robot::clone)
+    .def(py::init<const RobotModelInfo&>(), 
+          py::arg("robot_model_info"))
+    .def(py::init<>())
     .def("integrate_configuration", [](const Robot& self, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, const double dt) {
-        Eigen::VectorXd q_ret = Eigen::VectorXd::Zero(self.dimq());
-        self.integrateConfiguration(q, v, dt, q_ret);
-        return q_ret;
+        Eigen::VectorXd qout = Eigen::VectorXd::Zero(self.dimq());
+        self.integrateConfiguration(q, v, dt, qout);
+        return qout;
      }, py::arg("q"), py::arg("v"), py::arg("dt"))
     .def("subtract_configuration", [](const Robot& self, const Eigen::VectorXd& qf, 
                                       const Eigen::VectorXd& q0) {
@@ -140,6 +111,7 @@ PYBIND11_MODULE(robot, m) {
           py::arg("frame_name"))
     .def("frame_name", &Robot::frameName,
           py::arg("frame_id"))
+    .def("total_mass", &Robot::totalMass)
     .def("total_weight", &Robot::totalWeight)
     .def("dimq", &Robot::dimq)
     .def("dimv", &Robot::dimv)
@@ -159,9 +131,6 @@ PYBIND11_MODULE(robot, m) {
     .def("point_contact_frame_names", &Robot::pointContactFrameNames)
     .def("surface_contact_frames", &Robot::surfaceContactFrames)
     .def("surface_contact_frame_names", &Robot::surfaceContactFrameNames)
-    .def("generalized_momentum_bias", &Robot::generalizedMomentumBias)
-    .def("set_generalized_momentum_bias", &Robot::setGeneralizedMomentumBias,
-          py::arg("generalized_momentum_bias"))
     .def("joint_effort_limit", &Robot::jointEffortLimit)
     .def("joint_velocity_limit", &Robot::jointVelocityLimit)
     .def("lower_joint_position_limit", &Robot::lowerJointPositionLimit)
@@ -174,14 +143,12 @@ PYBIND11_MODULE(robot, m) {
           py::arg("lower_joint_position_limit"))
     .def("set_upper_joint_position_limit", &Robot::setUpperJointPositionLimit,
           py::arg("upper_joint_position_limit"))
-    .def("createRobotProperties", &Robot::createRobotProperties)
+    .def("robot_model_info", &Robot::robotModelInfo)
+    .def("robot_properties", &Robot::robotProperties)
     .def("set_robot_properties", &Robot::setRobotProperties,
           py::arg("properties"))
-    .def("__str__", [](const Robot& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(Robot)
+     DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(Robot);
 }
 
 } // namespace python
