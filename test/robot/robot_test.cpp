@@ -800,14 +800,6 @@ INSTANTIATE_TEST_SUITE_P(
                     humanoidInfo(true))
 );
 
-// INSTANTIATE_TEST_SUITE_P(
-//   TestWithMultipleRobots, RobotTest, 
-//   ::testing::Values(manipulatorInfo(false), 
-//                     manipulatorInfo(true),
-//                     quadrupedInfo(false),
-//                     quadrupedInfo(true))
-// );
-
 } // namespace robotoc 
 
 

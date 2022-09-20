@@ -674,30 +674,6 @@ public:
       const Eigen::MatrixBase<ConfigVectorType>& q) const;
 
   ///
-  /// @brief Returns the effort limit of each joints.
-  /// @return The effort limit of each joints.
-  /// 
-  Eigen::VectorXd jointEffortLimit() const;
-
-  ///
-  /// @brief Returns the joint velocity limit of each joints.
-  /// @return The joint velocity limit of each joints.
-  /// 
-  Eigen::VectorXd jointVelocityLimit() const;
-
-  ///
-  /// @brief Returns the lower limit of the position of each joints.
-  /// @return The lower limit of the position of each joints.
-  /// 
-  Eigen::VectorXd lowerJointPositionLimit() const;
-
-  ///
-  /// @brief Returns the upper limit of the position of each joints.
-  /// @return The upper limit of the position of each joints.
-  ///
-  Eigen::VectorXd upperJointPositionLimit() const;
-
-  ///
   /// @brief Gets the id of the specified frame.
   /// @param[in] frame_name Frame name of interest.
   /// @return id of the specified frame. Returns maximum number of the frames 
@@ -850,6 +826,30 @@ public:
   /// lowerJointPositionLimit(), and upperJointPositionLimit() by the URDF.
   /// 
   void initializeJointLimits();
+
+  ///
+  /// @brief Returns the effort limit of each joints.
+  /// @return The effort limit of each joints.
+  /// 
+  Eigen::VectorXd jointEffortLimit() const;
+
+  ///
+  /// @brief Returns the joint velocity limit of each joints.
+  /// @return The joint velocity limit of each joints.
+  /// 
+  Eigen::VectorXd jointVelocityLimit() const;
+
+  ///
+  /// @brief Returns the lower limit of the position of each joints.
+  /// @return The lower limit of the position of each joints.
+  /// 
+  Eigen::VectorXd lowerJointPositionLimit() const;
+
+  ///
+  /// @brief Returns the upper limit of the position of each joints.
+  /// @return The upper limit of the position of each joints.
+  ///
+  Eigen::VectorXd upperJointPositionLimit() const;
 
   ///
   /// @brief Sets the effort limit of each joints.
