@@ -264,7 +264,7 @@ double TaskSpace6DCost::evalImpulseCost(Robot& robot,
 void TaskSpace6DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+    SplitKKTResidual& kkt_residual) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
@@ -280,7 +280,7 @@ void TaskSpace6DCost::evalImpulseCostDerivatives(
 void TaskSpace6DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix) const {
+    SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.JJ_6d.transpose() * weight_impulse_.asDiagonal() * data.JJ_6d;

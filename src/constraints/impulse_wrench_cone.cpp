@@ -170,7 +170,7 @@ void ImpulseWrenchCone::evalDerivatives(Robot& robot,
                                         const ImpulseStatus& impulse_status, 
                                         ConstraintComponentData& data, 
                                         const ImpulseSplitSolution& s, 
-                                        ImpulseSplitKKTResidual& kkt_residual) const {
+                                        SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -198,8 +198,8 @@ void ImpulseWrenchCone::evalDerivatives(Robot& robot,
 
 void ImpulseWrenchCone::condenseSlackAndDual(const ImpulseStatus& impulse_status, 
                                              ConstraintComponentData& data, 
-                                             ImpulseSplitKKTMatrix& kkt_matrix, 
-                                             ImpulseSplitKKTResidual& kkt_residual) const {
+                                             SplitKKTMatrix& kkt_matrix, 
+                                             SplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
   int c_begin = 0;

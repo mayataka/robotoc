@@ -111,8 +111,8 @@ TEST_P(BackwardRiccatiRecursionFactorizerTest, test_impulse) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
-  auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
-  auto kkt_residual = testhelper::CreateImpulseSplitKKTResidual(robot);
+  auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot);
+  auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   const auto kkt_matrix_ref = kkt_matrix;
   const auto kkt_residual_ref = kkt_residual;
   BackwardRiccatiRecursionFactorizer factorizer(robot);

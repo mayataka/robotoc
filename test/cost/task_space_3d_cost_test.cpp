@@ -169,8 +169,8 @@ void TaskSpace3DCostTest::testTerminalCostConstRef(Robot& robot, const int frame
 
 void TaskSpace3DCostTest::testImpulseCostConstRef(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
@@ -309,8 +309,8 @@ void TaskSpace3DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
 
 void TaskSpace3DCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();

@@ -16,8 +16,6 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 
@@ -235,7 +233,7 @@ public:
   double linearizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const ImpulseSplitSolution& s, 
-                              ImpulseSplitKKTResidual& kkt_residual) const;
+                              SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the impulse cost, its first-order partial derivatives, 
@@ -254,8 +252,8 @@ public:
   double quadratizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
                                CostFunctionData& data, const GridInfo& grid_info,
                                const ImpulseSplitSolution& s, 
-                               ImpulseSplitKKTResidual& kkt_residual,
-                               ImpulseSplitKKTMatrix& kkt_matrix) const;
+                               SplitKKTResidual& kkt_residual,
+                               SplitKKTMatrix& kkt_matrix) const;
 
 private:
   std::vector<CostFunctionComponentBasePtr> costs_;

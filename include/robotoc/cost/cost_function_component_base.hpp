@@ -11,8 +11,6 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 
@@ -182,7 +180,7 @@ public:
                                           CostFunctionData& data,  
                                           const GridInfo& grid_info, 
                                           const ImpulseSplitSolution& s, 
-                                          ImpulseSplitKKTResidual& kkt_residual) const = 0;
+                                          SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Computes the Hessian, i.e., the second-order partial derivatives of 
@@ -201,7 +199,7 @@ public:
                                       CostFunctionData& data,  
                                       const GridInfo& grid_info, 
                                       const ImpulseSplitSolution& s, 
-                                      ImpulseSplitKKTMatrix& kkt_matrix) const = 0; 
+                                      SplitKKTMatrix& kkt_matrix) const = 0; 
 
 };
 

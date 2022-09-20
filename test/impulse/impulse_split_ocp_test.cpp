@@ -9,8 +9,8 @@
 #include "robotoc/impulse/impulse_split_ocp.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_dynamics.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
@@ -50,14 +50,14 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   const auto grid_info = GridInfo::Random();
   const double t = grid_info.t;
   ocp.initConstraints(robot, impulse_status, s);
-  ImpulseSplitKKTMatrix kkt_matrix(robot);
-  ImpulseSplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   ocp.computeKKTResidual(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   const double kkt_error = ocp.KKTError(kkt_residual);
-  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setImpulseStatus(impulse_status);
-  ImpulseSplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setImpulseStatus(impulse_status);
+  SplitKKTMatrix kkt_matrix_ref(robot);
+  kkt_matrix_ref.setContactStatus(impulse_status);
+  SplitKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, -1);
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
@@ -92,13 +92,13 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   const auto grid_info = GridInfo::Random();
   const double t = grid_info.t;
   ocp.initConstraints(robot, impulse_status, s);
-  ImpulseSplitKKTMatrix kkt_matrix(robot);
-  ImpulseSplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   ocp.computeKKTSystem(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
-  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setImpulseStatus(impulse_status);
-  ImpulseSplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setImpulseStatus(impulse_status);
+  SplitKKTMatrix kkt_matrix_ref(robot);
+  kkt_matrix_ref.setContactStatus(impulse_status);
+  SplitKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, -1);
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
@@ -152,13 +152,13 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   const auto grid_info = GridInfo::Random();
   const double t = grid_info.t;
   ocp.initConstraints(robot, impulse_status, s);
-  ImpulseSplitKKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   ocp.evalOCP(robot, impulse_status, grid_info, s, s_prev.q, s_prev.v, kkt_residual);
   const double impulse_cost = ocp.stageCost();
   const double constraint_violation = ocp.constraintViolation(kkt_residual);
 
-  ImpulseSplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setImpulseStatus(impulse_status);
+  SplitKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, -1);
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);

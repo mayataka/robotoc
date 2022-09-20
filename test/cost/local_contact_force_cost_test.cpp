@@ -191,10 +191,10 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     impulse_status.deactivateImpulse(i);
   }
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_mat.setImpulseStatus(impulse_status);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
+  kkt_res.setContactStatus(impulse_status);
+  kkt_mat.setContactStatus(impulse_status);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0);
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
@@ -212,8 +212,8 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
     }
   }
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0.5*l_ref);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_mat.setImpulseStatus(impulse_status);
+  kkt_res.setContactStatus(impulse_status);
+  kkt_mat.setContactStatus(impulse_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;

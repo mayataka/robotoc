@@ -72,7 +72,7 @@ public:
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const override {
+                                  SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalImpulseCostDerivatives, 
                            robot, impulse_status, data, grid_info, s, kkt_residual);
@@ -81,7 +81,7 @@ public:
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const ImpulseSplitSolution& s, 
-                              ImpulseSplitKKTMatrix& kkt_matrix) const override {
+                              SplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
                            evalImpulseCostHessian, 
                            robot, impulse_status, data, grid_info, s, kkt_matrix);

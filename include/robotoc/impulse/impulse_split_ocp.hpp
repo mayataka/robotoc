@@ -9,8 +9,8 @@
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
@@ -115,7 +115,7 @@ public:
   void evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
                const GridInfo& grid_info, const ImpulseSplitSolution& s, 
                const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
-               ImpulseSplitKKTResidual& kkt_residual);
+               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT residual of this impulse stage.
@@ -133,8 +133,8 @@ public:
                           const Eigen::VectorXd& q_prev, 
                           const ImpulseSplitSolution& s, 
                           const SplitSolution& s_next,
-                          ImpulseSplitKKTMatrix& kkt_matrix, 
-                          ImpulseSplitKKTResidual& kkt_residual);
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT system of this impuse stage, i.e., the condensed
@@ -153,8 +153,8 @@ public:
                         const Eigen::VectorXd& q_prev, 
                         const ImpulseSplitSolution& s, 
                         const SplitSolution& s_next, 
-                        ImpulseSplitKKTMatrix& kkt_matrix, 
-                        ImpulseSplitKKTResidual& kkt_residual);
+                        SplitKKTMatrix& kkt_matrix, 
+                        SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
@@ -211,7 +211,7 @@ public:
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double KKTError(const ImpulseSplitKKTResidual& kkt_residual) const;
+  double KKTError(const SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the stage cost of this impulse stage for the line search.
@@ -233,7 +233,7 @@ public:
   /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @return The constraint violation of this impulse stage.
   ///
-  double constraintViolation(const ImpulseSplitKKTResidual& kkt_residual) const;
+  double constraintViolation(const SplitKKTResidual& kkt_residual) const;
 
 private:
   std::shared_ptr<CostFunction> cost_;

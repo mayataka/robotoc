@@ -8,8 +8,8 @@
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/constraints/pdipm.hpp"
 #include "robotoc/constraints/impulse_friction_cone.hpp"
 
@@ -155,7 +155,7 @@ void ImpulseFrictionConeTest::test_evalDerivatives(Robot& robot, const ImpulseSt
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
   constr.evalConstraint(robot, impulse_status, data, s);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   auto data_ref = data;
   auto kkt_res_ref = kkt_res;
   constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
@@ -207,8 +207,11 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   data.dual = data.dual.array().abs();
   data.residual.setRandom();
   data.cmpl.setRandom();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  // auto kkt_mat = SplitKKTMatrix::Random(robot, impulse_status);
+  auto kkt_mat = SplitKKTMatrix(robot);
+  kkt_mat.setContactStatus(impulse_status);
+  kkt_mat.setRandom();
+  auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, impulse_status, data, s);
   constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   auto data_ref = data;
@@ -273,8 +276,11 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   data.cmpl.setRandom();
   data.dslack.setRandom();
   data.ddual.setRandom();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  // auto kkt_mat = SplitKKTMatrix::Random(robot, impulse_status);
+  auto kkt_mat = SplitKKTMatrix(robot);
+  kkt_mat.setContactStatus(impulse_status);
+  kkt_mat.setRandom();
+  auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, impulse_status, data, s);
   constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   constr.condenseSlackAndDual(impulse_status, data, kkt_mat, kkt_res);

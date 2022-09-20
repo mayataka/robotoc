@@ -7,10 +7,10 @@
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/constraints/constraint_component_data.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/constraints/constraint_component_base.hpp"
+#include "robotoc/constraints/constraint_component_data.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 
 
 namespace robotoc {
@@ -122,7 +122,7 @@ public:
   virtual void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                ConstraintComponentData& data, 
                                const ImpulseSplitSolution& s,
-                               ImpulseSplitKKTResidual& kkt_residual) const = 0;
+                               SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Condenses the slack and dual variables, i.e., factorizes the  
@@ -137,8 +137,8 @@ public:
   ///
   virtual void condenseSlackAndDual(
       const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
-      ImpulseSplitKKTMatrix& kkt_matrix, 
-      ImpulseSplitKKTResidual& kkt_residual) const = 0;
+      SplitKKTMatrix& kkt_matrix, 
+      SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 

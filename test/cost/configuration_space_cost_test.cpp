@@ -10,8 +10,6 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 
 #include "robotoc/utils/derivative_checker.hpp"
 
@@ -239,8 +237,8 @@ void ConfigurationSpaceCostTest::testTerminalCostConstRef(Robot& robot) const {
 void ConfigurationSpaceCostTest::testImpulseCostConstRef(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_mat.Qxx.setRandom();
   kkt_mat.Qdvdv.setRandom();
   kkt_res.lx.setRandom();
@@ -430,8 +428,8 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
 void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Random(dimv).cwiseAbs();

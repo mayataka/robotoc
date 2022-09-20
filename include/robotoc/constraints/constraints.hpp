@@ -13,8 +13,6 @@
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/constraints/constraint_component_base.hpp"
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
@@ -194,7 +192,7 @@ public:
   ///
   void linearizeConstraints(Robot& robot, const ImpulseStatus& impulse_status, 
                             ConstraintsData& data, const ImpulseSplitSolution& s,
-                            ImpulseSplitKKTResidual& kkt_residual) const;
+                            SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
@@ -222,8 +220,8 @@ public:
   ///
   void condenseSlackAndDual(const ImpulseStatus& impulse_status, 
                             ConstraintsData& data, 
-                            ImpulseSplitKKTMatrix& kkt_matrix, 
-                            ImpulseSplitKKTResidual& kkt_residual) const;
+                            SplitKKTMatrix& kkt_matrix, 
+                            SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 

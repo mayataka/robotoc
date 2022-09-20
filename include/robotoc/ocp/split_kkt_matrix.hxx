@@ -13,6 +13,7 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Fvu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimu())),
     Qxx(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     Qaa(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Qdvdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Qxu(Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimu())),
     Quu(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())),
     Fqq_prev(),
@@ -42,6 +43,7 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     Fvu(),
     Qxx(),
     Qaa(),
+    Qdvdv(),
     Qxu(),
     Quu(),
     Fqq_prev(),
@@ -69,6 +71,12 @@ inline SplitKKTMatrix::~SplitKKTMatrix() {
 inline void SplitKKTMatrix::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
+}
+
+
+inline void SplitKKTMatrix::setContactStatus(
+    const ImpulseStatus& contact_status) {
+  dimf_ = contact_status.dimi();
 }
 
 
@@ -252,6 +260,7 @@ inline void SplitKKTMatrix::setZero() {
   Fvu.setZero();
   Qxx.setZero();
   Qaa.setZero();
+  Qdvdv.setZero();
   Qxu.setZero();
   Quu.setZero();
   Qff().setZero();
@@ -281,6 +290,8 @@ inline bool SplitKKTMatrix::isDimensionConsistent() const {
   if (Qxx.cols() != 2*dimv_) return false;
   if (Qaa.rows() != dimv_) return false;
   if (Qaa.cols() != dimv_) return false;
+  if (Qdvdv.rows() != dimv_) return false;
+  if (Qdvdv.cols() != dimv_) return false;
   if (Qxu.rows() != 2*dimv_) return false;
   if (Qxu.cols() != dimu_) return false;
   if (Quu.rows() != dimu_) return false;
@@ -302,6 +313,7 @@ inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
   if (!Fvu.isApprox(other.Fvu)) return false;
   if (!Qxx.isApprox(other.Qxx)) return false;
   if (!Qaa.isApprox(other.Qaa)) return false;
+  if (!Qdvdv.isApprox(other.Qdvdv)) return false;
   if (!Qxu.isApprox(other.Qxu)) return false;
   if (!Quu.isApprox(other.Quu)) return false;
   if (!Qff().isApprox(other.Qff())) return false;
@@ -325,6 +337,7 @@ inline bool SplitKKTMatrix::hasNaN() const {
   if (Fvu.hasNaN()) return true;
   if (Qxx.hasNaN()) return true;
   if (Qaa.hasNaN()) return true;
+  if (Qdvdv.hasNaN()) return true;
   if (Qxu.hasNaN()) return true;
   if (Quu.hasNaN()) return true;
   if (Qff().hasNaN()) return true;
@@ -353,6 +366,7 @@ inline void SplitKKTMatrix::setRandom() {
   const Eigen::MatrixXd Qaaff_seed = Eigen::MatrixXd::Random(dimv_+dimf_, dimv_+dimf_);
   const Eigen::MatrixXd Qaaff = Qaaff_seed * Qaaff_seed.transpose();
   Qaa = Qaaff.topLeftCorner(dimv_, dimv_);
+  Qdvdv = Qaa;
   Qff() = Qaaff.bottomRightCorner(dimf_, dimf_);
   Qqf().setRandom();
   Fqq_prev.setRandom();

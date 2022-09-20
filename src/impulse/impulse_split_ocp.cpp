@@ -64,10 +64,11 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
                               const ImpulseSplitSolution& s, 
                               const Eigen::VectorXd& q_next, 
                               const Eigen::VectorXd& v_next, 
-                              ImpulseSplitKKTResidual& kkt_residual) {
+                              SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
-  kkt_residual.setImpulseStatus(impulse_status);
+  // kkt_residual.setImpulseStatus(impulse_status);
+  kkt_residual.setContactStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
   stage_cost_ = cost_->evalImpulseCost(robot, impulse_status, cost_data_, 
@@ -82,12 +83,14 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
 void ImpulseSplitOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const GridInfo& grid_info, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
-    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
+    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setImpulseStatus(impulse_status);
-  kkt_residual.setImpulseStatus(impulse_status);
+  // kkt_matrix.setImpulseStatus(impulse_status);
+  // kkt_residual.setImpulseStatus(impulse_status);
+  kkt_matrix.setContactStatus(impulse_status);
+  kkt_residual.setContactStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeImpulseCost(robot, impulse_status, cost_data_, 
@@ -106,12 +109,14 @@ void ImpulseSplitOCP::computeKKTResidual(
 void ImpulseSplitOCP::computeKKTSystem(
     Robot& robot, const ImpulseStatus& impulse_status, const GridInfo& grid_info,
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
-    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
+    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setImpulseStatus(impulse_status);
-  kkt_residual.setImpulseStatus(impulse_status);
+  // kkt_matrix.setImpulseStatus(impulse_status);
+  // kkt_residual.setImpulseStatus(impulse_status);
+  kkt_matrix.setContactStatus(impulse_status);
+  kkt_residual.setContactStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeImpulseCost(robot, impulse_status, cost_data_,  
@@ -177,7 +182,7 @@ void ImpulseSplitOCP::updateDual(const double dual_step_size) {
 
 
 double ImpulseSplitOCP::KKTError(
-    const ImpulseSplitKKTResidual& kkt_residual) const {
+    const SplitKKTResidual& kkt_residual) const {
   double err = 0;
   err += kkt_residual.KKTError();
   err += impulse_dynamics_.KKTError();
@@ -197,7 +202,7 @@ double ImpulseSplitOCP::stageCost(const bool include_cost_barrier) const {
 
 
 double ImpulseSplitOCP::constraintViolation(
-    const ImpulseSplitKKTResidual& kkt_residual) const {
+    const SplitKKTResidual& kkt_residual) const {
   double vio = 0;
   vio += kkt_residual.constraintViolation();
   vio += constraints_data_.constraintViolation();

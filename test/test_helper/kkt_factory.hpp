@@ -15,13 +15,9 @@ namespace testhelper {
 
 SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt);
 
-ImpulseSplitKKTMatrix CreateImpulseSplitKKTMatrix(const Robot& robot);
+SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot);
 
 SplitKKTResidual CreateSplitKKTResidual(const Robot& robot);
-
-SplitKKTResidual CreateSplitKKTResidual(const Robot& robot);
-
-ImpulseSplitKKTResidual CreateImpulseSplitKKTResidual(const Robot& robot);
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, 
                           const std::shared_ptr<ContactSequence>& contact_sequence, 

@@ -9,8 +9,8 @@
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 
 
 namespace robotoc {
@@ -78,12 +78,12 @@ public:
   void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                        ConstraintComponentData& data, 
                        const ImpulseSplitSolution& s,
-                       ImpulseSplitKKTResidual& kkt_residual) const override;
+                       SplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(const ImpulseStatus& impulse_status,
                             ConstraintComponentData& data, 
-                            ImpulseSplitKKTMatrix& kkt_matrix,
-                            ImpulseSplitKKTResidual& kkt_residual) const override;
+                            SplitKKTMatrix& kkt_matrix,
+                            SplitKKTResidual& kkt_residual) const override;
 
   void expandSlackAndDual(const ImpulseStatus& impulse_status, 
                           ConstraintComponentData& data, 

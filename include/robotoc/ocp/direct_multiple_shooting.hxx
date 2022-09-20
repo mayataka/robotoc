@@ -47,8 +47,8 @@ struct ComputeKKTResidual {
                          const ImpulseStatus& impulse_status, 
                          const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
                          const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-                         ImpulseSplitKKTMatrix& kkt_matrix, 
-                         ImpulseSplitKKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual) {
     impulse_split_ocp.computeKKTResidual(robot, impulse_status, grid_info, 
                                          q_prev, s, s_next, kkt_matrix, kkt_residual);
   }
@@ -92,8 +92,8 @@ struct ComputeKKTSystem {
                          const ImpulseStatus& impulse_status, 
                          const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
                          const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-                         ImpulseSplitKKTMatrix& kkt_matrix, 
-                         ImpulseSplitKKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual) {
     impulse_split_ocp.computeKKTSystem(robot, impulse_status, grid_info, q_prev,  
                                        s, s_next, kkt_matrix, kkt_residual);
   }

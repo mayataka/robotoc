@@ -211,7 +211,7 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
 
 void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix);
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
@@ -221,7 +221,7 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
 
 void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati, const bool sto) {
   backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
   if (sto) {
@@ -260,8 +260,8 @@ void RiccatiFactorizer::forwardRiccatiRecursion(
 
 
 void RiccatiFactorizer::forwardRiccatiRecursion(
-    const ImpulseSplitKKTMatrix& kkt_matrix, 
-    const ImpulseSplitKKTResidual& kkt_residual, 
+    const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, 
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx = kkt_residual.Fx;
   d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;

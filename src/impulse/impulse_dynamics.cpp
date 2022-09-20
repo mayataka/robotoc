@@ -31,7 +31,7 @@ void ImpulseDynamics::evalImpulseDynamics(Robot& robot,
 
 void ImpulseDynamics::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
-    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
+    const ImpulseSplitSolution& s, SplitKKTResidual& kkt_residual) {
   evalImpulseDynamics(robot, impulse_status, s);
   robot.RNEAImpulseDerivatives(s.q, s.dv, data_.dImDdq(), data_.dImDddv);
   robot.computeImpulseVelocityDerivatives(impulse_status, data_.dCdq(), 
@@ -49,7 +49,7 @@ void ImpulseDynamics::linearizeImpulseDynamics(
 
 void ImpulseDynamics::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimi();

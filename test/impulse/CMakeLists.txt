@@ -1,7 +1,5 @@
 add_robotoc_test(impulse_split_solution_test)
 add_robotoc_test(impulse_split_direction_test)
-add_robotoc_test(impulse_split_kkt_residual_test)
-add_robotoc_test(impulse_split_kkt_matrix_test)
 add_robotoc_test(impulse_state_equation_test)
 add_robotoc_test(impulse_dynamics_data_test)
 add_robotoc_test(impulse_dynamics_test)

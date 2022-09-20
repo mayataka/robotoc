@@ -4,8 +4,8 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/impulse/impulse_dynamics_data.hpp"
@@ -54,7 +54,7 @@ void ImpulseDynamicsTest::test_linearize(Robot& robot, const ImpulseStatus& impu
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
-  auto kkt_residual = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  auto kkt_residual = SplitKKTResidual::Random(robot, impulse_status);
   auto kkt_residual_ref = kkt_residual;
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual);
   const double l1norm = id.constraintViolation();
@@ -84,7 +84,7 @@ void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impul
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
-  auto kkt_residual = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  auto kkt_residual = SplitKKTResidual::Random(robot, impulse_status);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual);
   ImpulseDynamicsData data(robot);
   data.setImpulseStatus(impulse_status);
@@ -95,7 +95,10 @@ void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impul
   robot.computeImpulseVelocityDerivatives(impulse_status, data.dCdq(), data.dCdv());
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimi();
-  auto kkt_matrix = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
+  // auto kkt_matrix = SplitKKTMatrix::Random(robot, impulse_status);
+  auto kkt_matrix = SplitKKTMatrix(robot);
+  kkt_matrix.setContactStatus(impulse_status);
+  kkt_matrix.setRandom();
   kkt_matrix.Fxx.setZero();
   kkt_matrix.Qdvdv.setZero();
   kkt_matrix.Qdvdv.diagonal().setRandom();

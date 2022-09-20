@@ -230,7 +230,7 @@ void Constraints::linearizeConstraints(Robot& robot,
                                        const ImpulseStatus& impulse_status, 
                                        ConstraintsData& data, 
                                        const ImpulseSplitSolution& s, 
-                                       ImpulseSplitKKTResidual& kkt_residual) const {
+                                       SplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::linearizeConstraints(impulse_level_constraints_, robot, 
                                           impulse_status, 
@@ -266,8 +266,8 @@ void Constraints::condenseSlackAndDual(const ContactStatus& contact_status,
 
 void Constraints::condenseSlackAndDual(const ImpulseStatus& impulse_status, 
                                        ConstraintsData& data, 
-                                       ImpulseSplitKKTMatrix& kkt_matrix, 
-                                       ImpulseSplitKKTResidual& kkt_residual) const {
+                                       SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::condenseSlackAndDual(impulse_level_constraints_, 
                                           impulse_status, 

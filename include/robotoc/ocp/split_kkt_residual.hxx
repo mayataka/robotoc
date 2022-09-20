@@ -12,6 +12,7 @@ inline SplitKKTResidual::SplitKKTResidual(const Robot& robot)
   : Fx(Eigen::VectorXd::Zero(2*robot.dimv())),
     lx(Eigen::VectorXd::Zero(2*robot.dimv())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
+    ldv(Eigen::VectorXd::Zero(robot.dimv())),
     lu(Eigen::VectorXd::Zero(robot.dimu())),
     h(0.0),
     kkt_error(0.0),
@@ -28,6 +29,7 @@ inline SplitKKTResidual::SplitKKTResidual()
   : Fx(),
     lx(),
     la(),
+    ldv(),
     lu(),
     h(0.0),
     kkt_error(0.0),
@@ -47,6 +49,12 @@ inline SplitKKTResidual::~SplitKKTResidual() {
 inline void SplitKKTResidual::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
+}
+
+
+inline void SplitKKTResidual::setContactStatus(
+    const ImpulseStatus& contact_status) {
+  dimf_ = contact_status.dimi();
 }
 
 
@@ -111,6 +119,7 @@ inline double SplitKKTResidual::KKTError() const {
   err += lx.squaredNorm();
   err += lu.squaredNorm();
   err += la.squaredNorm();
+  err += ldv.squaredNorm();
   err += lf().squaredNorm();
   return err;
 }
@@ -126,6 +135,7 @@ inline void SplitKKTResidual::setZero() {
   Fx.setZero();
   lx.setZero();
   la.setZero();
+  ldv.setZero();
   lu.setZero();
   lf().setZero();
   h = 0.0;
@@ -144,6 +154,7 @@ inline bool SplitKKTResidual::isDimensionConsistent() const {
   if (Fx.size() != 2*dimv_) return false;
   if (lx.size() != 2*dimv_) return false;
   if (la.size() != dimv_) return false;
+  if (ldv.size() != dimv_) return false;
   if (lu.size() != dimu_) return false;
   return true;
 }
@@ -155,6 +166,7 @@ inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (!Fx.isApprox(other.Fx)) return false;
   if (!lx.isApprox(other.lx)) return false;
   if (!la.isApprox(other.la)) return false;
+  if (!ldv.isApprox(other.ldv)) return false;
   if (!lu.isApprox(other.lu)) return false;
   if (dimf_ > 0) {
     if (!lf().isApprox(other.lf())) return false;
@@ -172,6 +184,7 @@ inline bool SplitKKTResidual::hasNaN() const {
   if (Fx.hasNaN()) return true;
   if (lx.hasNaN()) return true;
   if (la.hasNaN()) return true;
+  if (ldv.hasNaN()) return true;
   if (lu.hasNaN()) return true;
   if (lf().hasNaN()) return true;
   Eigen::VectorXd vec(4), other_vec(4);
@@ -185,6 +198,7 @@ inline void SplitKKTResidual::setRandom() {
   Fx.setRandom();
   lx.setRandom();
   la.setRandom();
+  ldv.setRandom();
   lu.setRandom();
   lf().setRandom();
   const Eigen::VectorXd vec = Eigen::VectorXd::Random(4);
@@ -201,6 +215,12 @@ inline void SplitKKTResidual::setRandom(const ContactStatus& contact_status) {
 }
 
 
+inline void SplitKKTResidual::setRandom(const ImpulseStatus& impulse_status) {
+  setContactStatus(impulse_status);
+  setRandom();
+}
+
+
 inline SplitKKTResidual SplitKKTResidual::Random(const Robot& robot) {
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.setRandom();
@@ -212,6 +232,14 @@ inline SplitKKTResidual SplitKKTResidual::Random(
     const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.setRandom(contact_status);
+  return kkt_residual;
+}
+
+
+inline SplitKKTResidual SplitKKTResidual::Random(
+    const Robot& robot, const ImpulseStatus& impulse_status) {
+  SplitKKTResidual kkt_residual(robot);
+  kkt_residual.setRandom(impulse_status);
   return kkt_residual;
 }
 

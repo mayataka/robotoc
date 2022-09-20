@@ -60,6 +60,12 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
+  /// @brief Set contact status, i.e., set dimension of the contacts.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setContactStatus(const ImpulseStatus& contact_status);
+
+  ///
   /// @brief Jacobian of the state equation w.r.t. the state x.
   ///
   Eigen::MatrixXd Fxx;
@@ -170,6 +176,11 @@ public:
   /// @brief Hessian w.r.t. the acceleration a and acceleration a. 
   ///
   Eigen::MatrixXd Qaa;
+
+  ///
+  /// @brief Hessian w.r.t. the impulse change in the velocity ddv. 
+  ///
+  Eigen::MatrixXd Qdvdv;
 
   ///
   /// @brief Hessian w.r.t. the state x and the control input torques u.

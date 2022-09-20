@@ -48,7 +48,7 @@ public:
   void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                        ConstraintComponentData& data,
                        const ImpulseSplitSolution& s,
-                       ImpulseSplitKKTResidual& kkt_residual) const override {
+                       SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            evalDerivatives, 
                            robot, impulse_status, data, s, kkt_residual);
@@ -56,8 +56,8 @@ public:
 
   void condenseSlackAndDual(const ImpulseStatus& impulse_status, 
                             ConstraintComponentData& data,
-                            ImpulseSplitKKTMatrix& kkt_matrix,
-                            ImpulseSplitKKTResidual& kkt_residual) const override {
+                            SplitKKTMatrix& kkt_matrix,
+                            SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            condenseSlackAndDual, 
                            impulse_status, data, kkt_matrix, kkt_residual);

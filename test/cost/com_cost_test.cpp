@@ -157,8 +157,8 @@ void CoMCostTest::testTerminalCostConstRef(Robot& robot) const {
 
 void CoMCostTest::testImpulseCostConstRef(Robot& robot) const {
   const int dimv = robot.dimv();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
@@ -293,8 +293,8 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
 
 void CoMCostTest::testImpulseCost(Robot& robot) const {
   const int dimv = robot.dimv();
-  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
-  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();

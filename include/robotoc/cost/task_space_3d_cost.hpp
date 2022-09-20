@@ -14,8 +14,6 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/cost/task_space_3d_ref_base.hpp"
 
 
@@ -208,12 +206,12 @@ public:
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const override;
+                                  SplitKKTResidual& kkt_residual) const override;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const ImpulseSplitSolution& s, 
-                              ImpulseSplitKKTMatrix& kkt_matrix) const override;
+                              SplitKKTMatrix& kkt_matrix) const override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

@@ -6,8 +6,6 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 
@@ -96,7 +94,7 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
-                          ImpulseSplitKKTMatrix& kkt_matrix);
+                          SplitKKTMatrix& kkt_matrix);
 
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
@@ -139,8 +137,8 @@ public:
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 
-      const ImpulseSplitKKTMatrix& kkt_matrix, 
-      const ImpulseSplitKKTResidual& kkt_residual, 
+      const SplitKKTMatrix& kkt_matrix, 
+      const SplitKKTResidual& kkt_residual, 
       SplitRiccatiFactorization& riccati);
 
   ///
@@ -152,8 +150,8 @@ public:
   ///
   void factorizeSTOFactorization(
       const SplitRiccatiFactorization& riccati_next, 
-      const ImpulseSplitKKTMatrix& kkt_matrix, 
-      const ImpulseSplitKKTResidual& kkt_residual, 
+      const SplitKKTMatrix& kkt_matrix, 
+      const SplitKKTResidual& kkt_residual, 
       SplitRiccatiFactorization& riccati);
 
 private:

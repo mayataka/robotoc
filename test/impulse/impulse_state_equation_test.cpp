@@ -4,8 +4,8 @@
 #include "Eigen/LU"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/impulse/impulse_state_equation.hpp"
@@ -32,8 +32,8 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const auto s = ImpulseSplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
-  ImpulseSplitKKTResidual kkt_residual(robot);
-  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   ImpulseStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
@@ -66,8 +66,8 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
-  ImpulseSplitKKTResidual kkt_residual(robot);
-  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   ImpulseStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, q_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);

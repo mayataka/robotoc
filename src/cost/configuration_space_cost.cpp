@@ -399,7 +399,7 @@ double ConfigurationSpaceCost::evalImpulseCost(
 void ConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+    SplitKKTResidual& kkt_residual) const {
   if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       evalConfigDiffJac(robot, data, grid_info, s.q);
@@ -423,7 +423,7 @@ void ConfigurationSpaceCost::evalImpulseCostDerivatives(
 void ConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix) const {
+    SplitKKTMatrix& kkt_matrix) const {
   if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()

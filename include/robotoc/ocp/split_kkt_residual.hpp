@@ -60,6 +60,12 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
+  /// @brief Set contact status, i.e., set dimension of the contact.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setContactStatus(const ImpulseStatus& contact_status);
+
+  ///
   /// @brief Residual in the state equation. Size is 2 * Robot::dimv().
   ///
   Eigen::VectorXd Fx;
@@ -100,7 +106,7 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> lq();
 
   ///
-  /// @brief const version of ImpulseSplitKKTResidual::lq().
+  /// @brief const version of SplitKKTResidual::lq().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lq() const;
 
@@ -111,7 +117,7 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> lv();
 
   ///
-  /// @brief const version of ImpulseSplitKKTResidual::lv().
+  /// @brief const version of SplitKKTResidual::lv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lv() const;
 
@@ -119,6 +125,12 @@ public:
   /// @brief KKT residual w.r.t. the acceleration a. Size is Robot::dimv().
   /// 
   Eigen::VectorXd la;
+
+  /// 
+  /// @brief KKT residual w.r.t. the impulse change in the velocity ddv. 
+  /// Size is Robot::dimv().
+  /// 
+  Eigen::VectorXd ldv;
 
   /// 
   /// @brief KKT residual w.r.t. the control input torques u. Size is 
@@ -220,6 +232,12 @@ public:
   void setRandom(const ContactStatus& contact_status);
 
   ///
+  /// @brief Set by random value. Contact status is reset.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setRandom(const ImpulseStatus& impulse_status);
+
+  ///
   /// @brief Generates split KKT residual filled randomly.
   /// @return Split KKT residual filled randomly.
   /// @param[in] robot Robot model. 
@@ -234,6 +252,15 @@ public:
   ///
   static SplitKKTResidual Random(const Robot& robot, 
                                  const ContactStatus& contact_status);
+
+  ///
+  /// @brief Generates split KKT residual filled randomly.
+  /// @return Split KKT residual filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status.
+  ///
+  static SplitKKTResidual Random(const Robot& robot, 
+                                 const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Displays the split KKT residual onto a ostream.

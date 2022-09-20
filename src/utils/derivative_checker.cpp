@@ -339,8 +339,8 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
   const int dimf = impulse_status.dimi();
-  ImpulseSplitKKTResidual kkt_residual(robot_);
-  kkt_residual.setImpulseStatus(impulse_status);
+  SplitKKTResidual kkt_residual(robot_);
+  kkt_residual.setContactStatus(impulse_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
   double cost0 = cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s);
@@ -408,17 +408,17 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
   const int dimf = impulse_status.dimi();
-  ImpulseSplitKKTMatrix kkt_matrix(robot_);
-  kkt_matrix.setImpulseStatus(impulse_status);
-  ImpulseSplitKKTResidual kkt_residual0(robot_);
-  kkt_residual0.setImpulseStatus(impulse_status);
+  SplitKKTMatrix kkt_matrix(robot_);
+  kkt_matrix.setContactStatus(impulse_status);
+  SplitKKTResidual kkt_residual0(robot_);
+  kkt_residual0.setContactStatus(impulse_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
   cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s);
   cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s, kkt_residual0);
   cost->evalImpulseCostHessian(robot_, impulse_status, data, grid_info, s, kkt_matrix);
-  ImpulseSplitKKTResidual kkt_residual(robot_);
-  kkt_residual.setImpulseStatus(impulse_status);
+  SplitKKTResidual kkt_residual(robot_);
+  kkt_residual.setContactStatus(impulse_status);
   auto s1 = s;
   Eigen::MatrixXd Qqq_ref(dimv, dimv);
   for (int i=0; i<dimv; ++i) {

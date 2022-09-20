@@ -42,7 +42,7 @@ ImpulseStateEquation::~ImpulseStateEquation() {
 void ImpulseStateEquation::evalStateEquation(
     const Robot& robot, const ImpulseSplitSolution& s, 
     const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
-    ImpulseSplitKKTResidual& kkt_residual) {
+    SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
@@ -53,7 +53,7 @@ void ImpulseStateEquation::evalStateEquation(
 void ImpulseStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::VectorXd& q_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   evalStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
@@ -79,8 +79,8 @@ void ImpulseStateEquation::linearizeStateEquation(
 
 void ImpulseStateEquation::correctLinearizedStateEquation(
     const Robot& robot, const ImpulseSplitSolution& s, 
-    const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
+    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   if (has_floating_base_) {
     se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
     robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);

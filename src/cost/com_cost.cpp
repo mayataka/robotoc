@@ -189,7 +189,7 @@ double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_statu
 void CoMCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+    SplitKKTResidual& kkt_residual) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
@@ -204,7 +204,7 @@ void CoMCost::evalImpulseCostHessian(Robot& robot,
                                      CostFunctionData& data, 
                                      const GridInfo& grid_info,
                                      const ImpulseSplitSolution& s, 
-                                     ImpulseSplitKKTMatrix& kkt_matrix) const {
+                                     SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;

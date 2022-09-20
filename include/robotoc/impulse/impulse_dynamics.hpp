@@ -7,8 +7,8 @@
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_dynamics_data.hpp"
 
 
@@ -75,7 +75,7 @@ public:
   void linearizeImpulseDynamics(Robot& robot, 
                                 const ImpulseStatus& impulse_status, 
                                 const ImpulseSplitSolution& s, 
-                                ImpulseSplitKKTResidual& kkt_residual);
+                                SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Condenses the inverse dynamics constraint. 
@@ -86,8 +86,8 @@ public:
   ///
   void condenseImpulseDynamics(Robot& robot, 
                                const ImpulseStatus& impulse_status,
-                               ImpulseSplitKKTMatrix& kkt_matrix, 
-                               ImpulseSplitKKTResidual& kkt_residual);
+                               SplitKKTMatrix& kkt_matrix, 
+                               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the primal variables, i.e., computes the Newton direction 

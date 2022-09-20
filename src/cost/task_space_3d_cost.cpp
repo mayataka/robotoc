@@ -216,7 +216,7 @@ double TaskSpace3DCost::evalImpulseCost(Robot& robot,
 void TaskSpace3DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+    SplitKKTResidual& kkt_residual) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
@@ -231,7 +231,7 @@ void TaskSpace3DCost::evalImpulseCostDerivatives(
 void TaskSpace3DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
     const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix) const {
+    SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;

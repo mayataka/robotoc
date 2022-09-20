@@ -246,7 +246,7 @@ double CostFunction::linearizeImpulseCost(Robot& robot,
                                           CostFunctionData& data, 
                                           const GridInfo& grid_info, 
                                           const ImpulseSplitSolution& s, 
-                                          ImpulseSplitKKTResidual& kkt_residual) const {
+                                          SplitKKTResidual& kkt_residual) const {
   double l = 0;
   for (const auto e : costs_) {
     l += e->evalImpulseCost(robot, impulse_status, data, grid_info, s);
@@ -271,8 +271,8 @@ double CostFunction::quadratizeImpulseCost(Robot& robot,
                                            CostFunctionData& data, 
                                            const GridInfo& grid_info, 
                                            const ImpulseSplitSolution& s, 
-                                           ImpulseSplitKKTResidual& kkt_residual, 
-                                           ImpulseSplitKKTMatrix& kkt_matrix) const {
+                                           SplitKKTResidual& kkt_residual, 
+                                           SplitKKTMatrix& kkt_matrix) const {
   double l = 0;
   for (const auto e : costs_) {
     l += e->evalImpulseCost(robot, impulse_status, data, grid_info, s);

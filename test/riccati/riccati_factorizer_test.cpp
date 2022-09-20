@@ -240,8 +240,8 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionImpulse) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
-  auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
-  auto kkt_residual = testhelper::CreateImpulseSplitKKTResidual(robot);
+  auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot);
+  auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   RiccatiFactorizer factorizer(robot);
@@ -378,8 +378,8 @@ TEST_P(RiccatiFactorizerTest, forwardRecursionImpulse) {
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_next_ref = riccati_next;
-  auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
-  auto kkt_residual = testhelper::CreateImpulseSplitKKTResidual(robot);
+  auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot);
+  auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   RiccatiFactorizer factorizer(robot);
   auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_ref = riccati;

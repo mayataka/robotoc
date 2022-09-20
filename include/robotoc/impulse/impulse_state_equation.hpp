@@ -8,8 +8,8 @@
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
+#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/ocp/split_kkt_matrix.hpp"
 
 
 namespace robotoc {
@@ -70,7 +70,7 @@ public:
                                 const ImpulseSplitSolution& s, 
                                 const Eigen::VectorXd& q_next, 
                                 const Eigen::VectorXd& v_next, 
-                                ImpulseSplitKKTResidual& kkt_residual);
+                                SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Linearizes the impulse state equation. 
@@ -87,8 +87,8 @@ public:
                                      const Eigen::VectorXd& q_prev, 
                                      const ImpulseSplitSolution& s, 
                                      const SplitSolution& s_next, 
-                                     ImpulseSplitKKTMatrix& kkt_matrix, 
-                                     ImpulseSplitKKTResidual& kkt_residual);
+                                     SplitKKTMatrix& kkt_matrix, 
+                                     SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Corrects the linearized state equation using the Jacobian of the 
@@ -104,8 +104,8 @@ public:
   void correctLinearizedStateEquation(const Robot& robot, 
                                       const ImpulseSplitSolution& s, 
                                       const SplitSolution& s_next, 
-                                      ImpulseSplitKKTMatrix& kkt_matrix, 
-                                      ImpulseSplitKKTResidual& kkt_residual);
+                                      SplitKKTMatrix& kkt_matrix, 
+                                      SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Corrects the costate direction using the Jacobian of the Lie group. 

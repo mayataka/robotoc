@@ -8,8 +8,6 @@
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/ocp/switching_constraint_jacobian.hpp"
 #include "robotoc/ocp/switching_constraint_residual.hpp"
@@ -177,8 +175,8 @@ public:
   /// @param[in, out] riccati Riccati factorization of this impulse stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
-                                ImpulseSplitKKTMatrix& kkt_matrix, 
-                                ImpulseSplitKKTResidual& kkt_residual, 
+                                SplitKKTMatrix& kkt_matrix, 
+                                SplitKKTResidual& kkt_residual, 
                                 SplitRiccatiFactorization& riccati);
 
   ///
@@ -190,8 +188,8 @@ public:
   /// @param[in] sto If true, the STO sensitivities are also considered. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
-                                ImpulseSplitKKTMatrix& kkt_matrix, 
-                                ImpulseSplitKKTResidual& kkt_residual, 
+                                SplitKKTMatrix& kkt_matrix, 
+                                SplitKKTResidual& kkt_residual, 
                                 SplitRiccatiFactorization& riccati,
                                 const bool sto);
 
@@ -250,8 +248,8 @@ public:
   /// @param[in] d Split direction of this impulse stage. 
   /// @param[in, out] d_next Split direction of the next stage. 
   ///
-  void forwardRiccatiRecursion(const ImpulseSplitKKTMatrix& kkt_matrix, 
-                               const ImpulseSplitKKTResidual& kkt_residual,
+  void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
+                               const SplitKKTResidual& kkt_residual,
                                const ImpulseSplitDirection& d, 
                                SplitDirection& d_next) const;
 
