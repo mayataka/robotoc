@@ -3,12 +3,15 @@ import numpy as np
 import math
 
 
-path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
-contact_frames = ['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'] 
-contact_types = [robotoc.ContactType.PointContact for i in range(4)]
-baumgarte_time_step = 0.04
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../anymal_b_simple_description/urdf/anymal.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
+baumgarte_time_step = 0.05
+model_info.point_contacts = [robotoc.ContactModelInfo('LF_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('LH_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RF_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RH_FOOT', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 dt = 0.02
 step_length = np.array([0.25, 0, 0])
@@ -218,10 +221,8 @@ print(ocp_solver.get_solver_statistics())
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                        viewer_type='gepetto')
-viewer.set_contact_info(robot.contact_frames(), mu)
+viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
+viewer.set_contact_info(mu=mu)
 time_discretization = ocp_solver.get_time_discretization()
 viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

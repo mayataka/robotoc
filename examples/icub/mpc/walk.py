@@ -4,12 +4,13 @@ from icub_simulator import iCubSimulator
 import numpy as np
 
 
-path_to_urdf = '../icub_description/urdf/icub_lower_half.urdf'
-contact_frames = ['l_sole', 'r_sole']
-contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../icub_description/urdf/icub_lower_half.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.surface_contacts = [robotoc.ContactModelInfo('l_sole', baumgarte_time_step),
+                               robotoc.ContactModelInfo('r_sole', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 knee_angle = np.pi / 6
 step_length = np.array([0.22, 0, 0]) 
@@ -56,7 +57,7 @@ option_mpc.max_iter = 1 # MPC iterations
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC
-icub_simulator = iCubSimulator(urdf_path=path_to_urdf, time_step=time_step)
+icub_simulator = iCubSimulator(urdf_path=model_info.urdf_path, time_step=time_step)
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.7, 1.2, 0.0]))
 icub_simulator.set_camera_settings(camera_settings=camera_settings)

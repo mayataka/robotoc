@@ -3,12 +3,13 @@ import numpy as np
 import math
 
 
-path_to_urdf = '../icub_description/urdf/icub.urdf'
-contact_frames = ['l_sole', 'r_sole']
-contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../icub_description/urdf/icub.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.surface_contacts = [robotoc.ContactModelInfo('l_sole', baumgarte_time_step),
+                               robotoc.ContactModelInfo('r_sole', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 dt = 0.02
 jump_length = np.array([0.5, 0, 0])
@@ -133,10 +134,8 @@ print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
 # Display results
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                        viewer_type='gepetto')
-viewer.set_contact_info(robot.contact_frames(), mu)
+viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
+viewer.set_contact_info(mu=mu)
 time_discretization = ocp_solver.get_time_discretization()
 viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

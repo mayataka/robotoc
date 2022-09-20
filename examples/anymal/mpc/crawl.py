@@ -4,12 +4,15 @@ from anymal_simulator import ANYmalSimulator
 import numpy as np
 
 
-path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
-contact_frames = ['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'] 
-contact_types = [robotoc.ContactType.PointContact for i in range(4)]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../anymal_b_simple_description/urdf/anymal.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.point_contacts = [robotoc.ContactModelInfo('LF_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('LH_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RF_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RH_FOOT', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 step_length = np.array([0.15, 0, 0]) 
 step_yaw = 0
@@ -48,7 +51,7 @@ option_mpc.max_iter = 1 # MPC iterations
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC
-anymal_simulator = ANYmalSimulator(urdf_path=path_to_urdf, time_step=time_step)
+anymal_simulator = ANYmalSimulator(urdf_path=model_info.urdf_path, time_step=time_step)
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.]))
 anymal_simulator.set_camera_settings(camera_settings=camera_settings)

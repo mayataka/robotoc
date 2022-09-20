@@ -3,8 +3,9 @@ import numpy as np
 import math
 
 
-path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf"
-robot = robotoc.Robot(path_to_urdf)
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = "../iiwa_description/urdf/iiwa14.urdf"
+robot = robotoc.Robot(model_info)
 
 # Change the limits from the default parameters.
 robot.set_joint_effort_limit(np.full(robot.dimu(), 50))
@@ -77,6 +78,6 @@ parnmpc_solver.solve(t, q, v, init_solver=True)
 print("KKT error after convergence: ", parnmpc_solver.KKT_error(t, q, v))
 print(parnmpc_solver.get_solver_statistics())
 
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')
+viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='meshcat')
 viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)
 viewer.display((T/N), ocp_solver.get_solution('q'))

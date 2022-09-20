@@ -26,13 +26,15 @@ elif cmd_type == 'rotation':
     step_length = np.array([0.0, 0.0, 0.0]) 
     step_yaw = np.pi / 20.
 
-
-path_to_urdf = '../a1_description/urdf/a1.urdf'
-contact_frames = ['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'] 
-contact_types = [robotoc.ContactType.PointContact for i in contact_frames]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../a1_description/urdf/a1.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.point_contacts = [robotoc.ContactModelInfo('FL_foot', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RL_foot', baumgarte_time_step),
+                             robotoc.ContactModelInfo('FR_foot', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RR_foot', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 step_height = 0.1
 stance_time = 0.15
@@ -68,7 +70,7 @@ option_mpc.max_iter = 2 # MPC iterations
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC
-a1_simulator = A1Simulator(urdf_path=path_to_urdf, time_step=time_step)
+a1_simulator = A1Simulator(urdf_path=model_info.urdf_path, time_step=time_step)
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.0]))
 a1_simulator.set_camera_settings(camera_settings=camera_settings)
