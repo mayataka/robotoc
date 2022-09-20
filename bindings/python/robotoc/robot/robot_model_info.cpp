@@ -28,11 +28,11 @@ PYBIND11_MODULE(robot_model_info, m) {
           py::arg("point_contacts"), py::arg("surface_contacts"),
           py::arg("contact_inv_damping"))
     .def(py::init<>())
-    .def_readwrite("urdf_path")
-    .def_readwrite("base_joint_type")
-    .def_readwrite("point_contacts")
-    .def_readwrite("surface_contacts")
-    .def_readwrite("contact_inv_damping")
+    .def_readwrite("urdf_path", &RobotModelInfo::urdf_path)
+    .def_readwrite("base_joint_type", &RobotModelInfo::base_joint_type)
+    .def_readwrite("point_contacts", &RobotModelInfo::point_contacts)
+    .def_readwrite("surface_contacts", &RobotModelInfo::surface_contacts)
+    .def_readwrite("contact_inv_damping", &RobotModelInfo::contact_inv_damping)
     .def_static("Manipulator", &RobotModelInfo::Manipulator,
                  py::arg("urdf_path"))
     .def_static("Quadruped", &RobotModelInfo::Quadruped,

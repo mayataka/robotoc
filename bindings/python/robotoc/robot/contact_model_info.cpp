@@ -22,9 +22,9 @@ PYBIND11_MODULE(contact_model_info, m) {
           py::arg("frame"), py::arg("baumgarte_position_gain"), 
           py::arg("baumgarte_velocity_gain"))
     .def(py::init<>())
-    .def_readwrite("frame")
-    .def_readwrite("baumgarte_position_gain")
-    .def_readwrite("baumgarte_velocity_gain")
+    .def_readwrite("frame", &ContactModelInfo::frame)
+    .def_readwrite("baumgarte_position_gain", &ContactModelInfo::baumgarte_position_gain)
+    .def_readwrite("baumgarte_velocity_gain", &ContactModelInfo::baumgarte_velocity_gain) 
      DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ContactModelInfo);
 }
 
