@@ -20,8 +20,7 @@ struct ContactModelInfo {
 
   ///
   /// @brief Construct a contact model info.
-  /// @param[in] model The pinocchio model. Before calling this constructor, 
-  /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
+  /// @param[in] frame Name of the contact frame.
   /// @param[in] baumgarte_position_gain The position gain of the Baumgarte's 
   /// stabilization method. Must be non-negative.
   /// @param[in] baumgarte_velocity_gain The velocity gain of the Baumgarte's 
