@@ -25,19 +25,15 @@
 
 int main () {
   // Create a robot with contacts.
-  const int LF_foot_id = 12;
-  const int LH_foot_id = 22;
-  const int RF_foot_id = 32;
-  const int RH_foot_id = 42;
-  const std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; 
-  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact};
-  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  const double baumgarte_time_step = 0.5 / 20;
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, contact_types, baumgarte_time_step);
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../anymal_b_simple_description/urdf/anymal.urdf";
+  model_info.base_joint_type = robotoc::BaseJointType::FloatingBase;
+  const double baumgarte_time_step = 0.025;
+  model_info.point_contacts = {robotoc::ContactModelInfo("LF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("LH_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RH_FOOT", baumgarte_time_step)};
+  robotoc::Robot robot(model_info);
 
   // Create a cost function.
   auto cost = std::make_shared<robotoc::CostFunction>();
@@ -63,7 +59,7 @@ int main () {
   cost->push_back(config_cost);
   auto local_contact_force_cost = std::make_shared<robotoc::LocalContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<contact_frames.size(); ++i) {
+  for (int i=0; i<model_info.point_contacts.size(); ++i) {
     Eigen::Vector3d fw; 
     fw << 0.001, 0.001, 0.001;
     f_weight.push_back(fw);
@@ -99,10 +95,10 @@ int main () {
   auto contact_status_standing = robot.createContactStatus();
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
-  const std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
-                                                          robot.framePosition(LH_foot_id),
-                                                          robot.framePosition(RF_foot_id),
-                                                          robot.framePosition(RH_foot_id)};
+  const std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition("LF_FOOT"), 
+                                                          robot.framePosition("LH_FOOT"),
+                                                          robot.framePosition("RF_FOOT"),
+                                                          robot.framePosition("RH_FOOT")};
   const std::vector<double> friction_coefficients = {mu, mu, mu, mu};
   contact_status_standing.setContactPlacements(contact_positions);
   contact_status_standing.setFrictionCoefficients(friction_coefficients);

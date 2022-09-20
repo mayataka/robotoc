@@ -23,8 +23,9 @@
 
 int main(int argc, char *argv[]) {
   // Create a robot.
-  const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
-  robotoc::Robot robot(path_to_urdf);
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../iiwa_description/urdf/iiwa14.urdf";
+  robotoc::Robot robot(model_info);
 
   // Change the limits from the default parameters.
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 50));

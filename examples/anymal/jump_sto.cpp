@@ -33,15 +33,15 @@
 
 
 int main(int argc, char *argv[]) {
-  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  const std::vector<std::string> contact_frames = {"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}; 
-  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact};
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../anymal_b_simple_description/urdf/anymal.urdf";
+  model_info.base_joint_type = robotoc::BaseJointType::FloatingBase;
   const double baumgarte_time_step = 0.05;
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, contact_types, baumgarte_time_step);
+  model_info.point_contacts = {robotoc::ContactModelInfo("LF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("LH_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RH_FOOT", baumgarte_time_step)};
+  robotoc::Robot robot(model_info);
 
   const double dt = 0.02;
   const Eigen::Vector3d jump_length = {0.8, 0, 0};
