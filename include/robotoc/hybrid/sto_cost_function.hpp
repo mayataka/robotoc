@@ -8,8 +8,8 @@
 
 #include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/hybrid/sto_cost_function_component_base.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
 
 
 namespace robotoc {

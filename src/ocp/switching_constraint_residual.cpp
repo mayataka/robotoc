@@ -1,4 +1,4 @@
-#include "robotoc/ocp/switching_constraint_residual.hpp"
+#include "robotoc/core/switching_constraint_residual.hpp"
 
 
 namespace robotoc {

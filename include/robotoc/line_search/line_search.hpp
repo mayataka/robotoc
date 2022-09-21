@@ -11,9 +11,9 @@
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/ocp/ocp.hpp"
-#include "robotoc/ocp/solution.hpp"
-#include "robotoc/ocp/direction.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
+#include "robotoc/core/solution.hpp"
+#include "robotoc/core/direction.hpp"
+#include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
 

@@ -1,7 +1,3 @@
-add_robotoc_test(split_solution_test)
-add_robotoc_test(split_direction_test)
-add_robotoc_test(split_kkt_residual_test)
-add_robotoc_test(split_kkt_matrix_test)
 add_robotoc_test(state_equation_test)
 add_robotoc_test(terminal_state_equation_test)
 add_robotoc_test(contact_dynamics_data_test)

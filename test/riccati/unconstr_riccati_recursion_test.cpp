@@ -4,8 +4,8 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/riccati/unconstr_riccati_factorizer.hpp"
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"

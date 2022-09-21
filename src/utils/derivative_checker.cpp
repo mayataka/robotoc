@@ -1,8 +1,8 @@
 #include "robotoc/utils/derivative_checker.hpp"
 
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_solution.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 #include <cmath>

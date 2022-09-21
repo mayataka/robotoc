@@ -7,17 +7,16 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_direction.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/impulse/impulse_state_equation.hpp"
 #include "robotoc/impulse/impulse_dynamics.hpp"
-#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 

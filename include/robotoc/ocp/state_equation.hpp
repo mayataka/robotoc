@@ -5,11 +5,10 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3_jacobian_inverse.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_solution.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_direction.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 
 
 namespace robotoc {

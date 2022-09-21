@@ -6,8 +6,8 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/ocp/ocp.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
 
 
 namespace robotoc {

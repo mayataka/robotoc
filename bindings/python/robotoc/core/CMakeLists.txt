@@ -1,0 +1,7 @@
+pybind11_add_robotoc_module(split_solution)
+pybind11_add_robotoc_module(split_direction)
+pybind11_add_robotoc_module(split_kkt_residual)
+pybind11_add_robotoc_module(split_kkt_matrix)
+pybind11_add_robotoc_module(solution)
+
+install_robotoc_pybind_module(core)

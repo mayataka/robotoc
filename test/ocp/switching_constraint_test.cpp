@@ -2,10 +2,10 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/switching_constraint_residual.hpp"
-#include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/switching_constraint_residual.hpp"
+#include "robotoc/core/switching_constraint_jacobian.hpp"
 #include "robotoc/ocp/switching_constraint.hpp"
 
 #include "robot_factory.hpp"

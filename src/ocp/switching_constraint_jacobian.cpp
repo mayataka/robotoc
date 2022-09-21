@@ -1,4 +1,4 @@
-#include "robotoc/ocp/switching_constraint_jacobian.hpp"
+#include "robotoc/core/switching_constraint_jacobian.hpp"
 
 
 namespace robotoc {

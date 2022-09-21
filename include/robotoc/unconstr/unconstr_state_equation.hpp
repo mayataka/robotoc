@@ -3,9 +3,9 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 
 
 namespace robotoc {

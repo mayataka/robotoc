@@ -1,8 +1,8 @@
 #ifndef ROBOTOC_DWELL_TIME_LOWER_BOUND_HPP_
 #define ROBOTOC_DWELL_TIME_LOWER_BOUND_HPP_
 
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 
 
 namespace robotoc {

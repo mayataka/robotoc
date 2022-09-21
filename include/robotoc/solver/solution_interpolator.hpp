@@ -1,7 +1,7 @@
 #ifndef ROBOTOC_SOLUTION_INTERPOLATOR_HPP_
 #define ROBOTOC_SOLUTION_INTERPOLATOR_HPP_
 
-#include "robotoc/ocp/solution.hpp"
+#include "robotoc/core/solution.hpp"
 #include "robotoc/hybrid/time_discretization.hpp"
 
 

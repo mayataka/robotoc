@@ -6,8 +6,8 @@
 #include "Eigen/Core"
 
 #include "robotoc/ocp/ocp.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
 #include "robotoc/hybrid/time_discretization.hpp"
 #include "robotoc/hybrid/sto_cost_function.hpp"

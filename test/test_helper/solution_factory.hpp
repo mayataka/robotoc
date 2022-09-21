@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/ocp/solution.hpp"
+#include "robotoc/core/solution.hpp"
 
 
 namespace robotoc {

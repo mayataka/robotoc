@@ -11,9 +11,9 @@
 #include "robotoc/riccati/lqr_policy.hpp"
 #include "robotoc/riccati/riccati_factorizer.hpp"
 #include "robotoc/ocp/ocp.hpp"
-#include "robotoc/ocp/direction.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
+#include "robotoc/core/direction.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
 
 
 namespace robotoc {
