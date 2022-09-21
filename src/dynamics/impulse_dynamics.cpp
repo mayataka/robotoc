@@ -1,4 +1,4 @@
-#include "robotoc/impulse/impulse_dynamics.hpp"
+#include "robotoc/dynamics/impulse_dynamics.hpp"
 
 #include <cassert>
 

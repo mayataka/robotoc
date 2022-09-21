@@ -6,7 +6,7 @@
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/switching_constraint_residual.hpp"
 #include "robotoc/core/switching_constraint_jacobian.hpp"
-#include "robotoc/ocp/switching_constraint.hpp"
+#include "robotoc/dynamics/switching_constraint.hpp"
 
 #include "robot_factory.hpp"
 

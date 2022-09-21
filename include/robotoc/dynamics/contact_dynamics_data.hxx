@@ -1,7 +1,7 @@
 #ifndef ROBOTOC_CONTACT_DYNAMICS_DATA_HXX_
 #define ROBOTOC_CONTACT_DYNAMICS_DATA_HXX_
 
-#include "robotoc/ocp/contact_dynamics_data.hpp"
+#include "robotoc/dynamics/contact_dynamics_data.hpp"
 
 namespace robotoc {
 

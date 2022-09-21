@@ -1,7 +1,7 @@
 #ifndef ROBOTOC_IMPULSE_DYNAMICS_DATA_HXX_
 #define ROBOTOC_IMPULSE_DYNAMICS_DATA_HXX_
 
-#include "robotoc/impulse/impulse_dynamics_data.hpp"
+#include "robotoc/dynamics/impulse_dynamics_data.hpp"
 
 namespace robotoc {
 

@@ -1,4 +1,4 @@
-#include "robotoc/ocp/state_equation.hpp"
+#include "robotoc/dynamics/state_equation.hpp"
 
 #include <cassert>
 

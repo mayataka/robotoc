@@ -1,8 +1,9 @@
 from .robot import *
 from .core import *
-from .ocp import *
 from .cost import *
 from .constraints import *
+# from .dynamics import *
+from .ocp import *
 from .unconstr import *
 from .riccati import *
 from .hybrid import *

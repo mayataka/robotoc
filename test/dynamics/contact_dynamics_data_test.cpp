@@ -3,7 +3,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/ocp/contact_dynamics_data.hpp"
+#include "robotoc/dynamics/contact_dynamics_data.hpp"
 
 #include "robot_factory.hpp"
 

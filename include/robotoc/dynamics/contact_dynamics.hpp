@@ -13,7 +13,7 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/switching_constraint_residual.hpp"
 #include "robotoc/core/switching_constraint_jacobian.hpp"
-#include "robotoc/ocp/contact_dynamics_data.hpp"
+#include "robotoc/dynamics/contact_dynamics_data.hpp"
 
 
 namespace robotoc {

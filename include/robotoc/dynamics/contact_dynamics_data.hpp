@@ -170,6 +170,6 @@ private:
 
 } // namespace robotoc 
 
-#include "robotoc/ocp/contact_dynamics_data.hxx"
+#include "robotoc/dynamics/contact_dynamics_data.hxx"
 
 #endif // ROBOTOC_CONTACT_DYNAMICS_DATA_HPP_ 

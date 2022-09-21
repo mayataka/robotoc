@@ -9,7 +9,7 @@
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_dynamics_data.hpp"
+#include "robotoc/dynamics/impulse_dynamics_data.hpp"
 
 
 namespace robotoc {

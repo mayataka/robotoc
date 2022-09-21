@@ -1,4 +1,4 @@
-#include "robotoc/impulse/impulse_split_ocp.hpp"
+#include "robotoc/ocp/impulse_split_ocp.hpp"
 
 #include <cassert>
 

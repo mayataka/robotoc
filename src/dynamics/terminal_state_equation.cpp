@@ -1,4 +1,4 @@
-#include "robotoc/ocp/terminal_state_equation.hpp"
+#include "robotoc/dynamics/terminal_state_equation.hpp"
 
 #include <cassert>
 

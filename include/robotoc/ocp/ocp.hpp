@@ -7,7 +7,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/split_ocp.hpp"
-#include "robotoc/impulse/impulse_split_ocp.hpp"
+#include "robotoc/ocp/impulse_split_ocp.hpp"
 #include "robotoc/ocp/terminal_ocp.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"

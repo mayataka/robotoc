@@ -1,0 +1,8 @@
+add_robotoc_test(state_equation_test)
+add_robotoc_test(terminal_state_equation_test)
+add_robotoc_test(contact_dynamics_data_test)
+add_robotoc_test(contact_dynamics_test)
+add_robotoc_test(switching_constraint_test)
+add_robotoc_test(impulse_state_equation_test)
+add_robotoc_test(impulse_dynamics_data_test)
+add_robotoc_test(impulse_dynamics_test)

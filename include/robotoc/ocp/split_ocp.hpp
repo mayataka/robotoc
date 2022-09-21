@@ -17,9 +17,9 @@
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/ocp/state_equation.hpp"
-#include "robotoc/ocp/contact_dynamics.hpp"
-#include "robotoc/ocp/switching_constraint.hpp"
+#include "robotoc/dynamics/state_equation.hpp"
+#include "robotoc/dynamics/contact_dynamics.hpp"
+#include "robotoc/dynamics/switching_constraint.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 

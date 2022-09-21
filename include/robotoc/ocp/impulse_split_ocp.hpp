@@ -15,8 +15,8 @@
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/impulse/impulse_state_equation.hpp"
-#include "robotoc/impulse/impulse_dynamics.hpp"
+#include "robotoc/dynamics/impulse_state_equation.hpp"
+#include "robotoc/dynamics/impulse_dynamics.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 

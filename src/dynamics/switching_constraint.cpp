@@ -1,4 +1,4 @@
-#include "robotoc/ocp/switching_constraint.hpp"
+#include "robotoc/dynamics/switching_constraint.hpp"
 
 #include <cassert>
 

@@ -6,12 +6,12 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_split_ocp.hpp"
+#include "robotoc/ocp/impulse_split_ocp.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_dynamics.hpp"
+#include "robotoc/dynamics/impulse_dynamics.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 

@@ -1,4 +1,4 @@
-#include "robotoc/impulse/impulse_state_equation.hpp"
+#include "robotoc/dynamics/impulse_state_equation.hpp"
 
 #include <cassert>
 

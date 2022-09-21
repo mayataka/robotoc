@@ -4,7 +4,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_dynamics_data.hpp"
+#include "robotoc/dynamics/impulse_dynamics_data.hpp"
 
 #include "robot_factory.hpp"
 

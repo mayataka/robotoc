@@ -1,4 +1,4 @@
-#include "robotoc/ocp/contact_dynamics.hpp"
+#include "robotoc/dynamics/contact_dynamics.hpp"
 
 #include <cassert>
 

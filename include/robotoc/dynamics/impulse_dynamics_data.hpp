@@ -128,6 +128,6 @@ private:
 
 } // namespace robotoc 
 
-#include "robotoc/impulse/impulse_dynamics_data.hxx"
+#include "robotoc/dynamics/impulse_dynamics_data.hxx"
 
 #endif // ROBOTOC_IMPULSE_DYNAMICS_DATA_HPP_ 
