@@ -36,14 +36,14 @@ ImpulseSplitOCP::~ImpulseSplitOCP() {
 
 bool ImpulseSplitOCP::isFeasible(Robot& robot, 
                                  const ImpulseStatus& impulse_status,
-                                 const ImpulseSplitSolution& s) {
+                                 const SplitSolution& s) {
   return constraints_->isFeasible(robot, impulse_status, constraints_data_, s);
 }
 
 
 void ImpulseSplitOCP::initConstraints(Robot& robot,
                                       const ImpulseStatus& impulse_status,
-                                      const ImpulseSplitSolution& s) { 
+                                      const SplitSolution& s) { 
   constraints_data_ = constraints_->createConstraintsData(robot, -1);
   constraints_->setSlackAndDual(robot, impulse_status, constraints_data_, s);
 }
@@ -61,7 +61,7 @@ const ConstraintsData& ImpulseSplitOCP::constraintsData() const {
 
 void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status, 
                               const GridInfo& grid_info, 
-                              const ImpulseSplitSolution& s, 
+                              const SplitSolution& s, 
                               const Eigen::VectorXd& q_next, 
                               const Eigen::VectorXd& v_next, 
                               SplitKKTResidual& kkt_residual) {
@@ -82,7 +82,7 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
 
 void ImpulseSplitOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const GridInfo& grid_info, 
-    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
+    const Eigen::VectorXd& q_prev, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -108,7 +108,7 @@ void ImpulseSplitOCP::computeKKTResidual(
 
 void ImpulseSplitOCP::computeKKTSystem(
     Robot& robot, const ImpulseStatus& impulse_status, const GridInfo& grid_info,
-    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
+    const Eigen::VectorXd& q_prev, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -166,7 +166,7 @@ double ImpulseSplitOCP::maxDualStepSize() {
 void ImpulseSplitOCP::updatePrimal(const Robot& robot, 
                                    const double primal_step_size, 
                                    const ImpulseSplitDirection& d, 
-                                   ImpulseSplitSolution& s) {
+                                   SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);

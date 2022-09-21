@@ -202,7 +202,7 @@ void TaskSpace6DCostTest::testImpulseCostConstRef(Robot& robot, const int frame_
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
   cost->set_const_ref(position_ref, rotation_ref);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const SE3 placement = robot.framePlacement(frame_id);
   const SE3 diff_x6d = x6d_ref.inverse() * placement;
@@ -358,7 +358,7 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   cost->set_weight(weight.tail(3), weight.head(3));
   cost->set_weight_terminal(weight_terminal.tail(3), weight_terminal.head(3));
   cost->set_weight_impulse(weight_impulse.tail(3), weight_impulse.head(3));
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
   const auto impulse_status = robot.createImpulseStatus();

@@ -171,7 +171,7 @@ void CoMCostTest::testImpulseCostConstRef(Robot& robot) const {
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
   cost->set_const_ref(const_ref);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const Eigen::Vector3d q_diff = robot.CoM() - const_ref;
   const double l_ref = 0.5 * q_diff.transpose() * weight_impulse.asDiagonal() * q_diff;
@@ -311,7 +311,7 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
   const auto impulse_status = robot.createImpulseStatus();

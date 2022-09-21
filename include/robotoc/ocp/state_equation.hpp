@@ -9,7 +9,7 @@
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 
 
 namespace robotoc {
@@ -89,23 +89,6 @@ public:
                                      SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the state equation. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] dt Time step. 
-  /// @param[in] q_prev Configuration at the previous time stage. 
-  /// @param[in] s Solution at the current stage. 
-  /// @param[in] s_next Solution at the next time stage. 
-  /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
-  /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
-  ///
-  static void linearizeStateEquation(const Robot& robot, const double dt, 
-                                     const Eigen::VectorXd& q_prev, 
-                                     const SplitSolution& s, 
-                                     const ImpulseSplitSolution& s_next, 
-                                     SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual);
-
-  ///
   /// @brief Corrects the linearized state equation using the Jacobian of the 
   /// Lie group. 
   /// @param[in] robot Robot model. 
@@ -118,22 +101,6 @@ public:
   void correctLinearizedStateEquation(const Robot& robot, const double dt, 
                                       const SplitSolution& s, 
                                       const SplitSolution& s_next, 
-                                      SplitKKTMatrix& kkt_matrix, 
-                                      SplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Corrects the linearized state equation using the Jacobian of the 
-  /// Lie group. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] dt Time step. 
-  /// @param[in] s Solution at the current stage. 
-  /// @param[in] s_next Solution at the next time stage. 
-  /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
-  /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
-  ///
-  void correctLinearizedStateEquation(const Robot& robot, const double dt, 
-                                      const SplitSolution& s, 
-                                      const ImpulseSplitSolution& s_next, 
                                       SplitKKTMatrix& kkt_matrix, 
                                       SplitKKTResidual& kkt_residual);
 

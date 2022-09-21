@@ -195,7 +195,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(impulse_status);
   kkt_mat.setContactStatus(impulse_status);
-  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
+  SplitSolution s = SplitSolution::Random(robot, impulse_status);
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0);
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
   cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);

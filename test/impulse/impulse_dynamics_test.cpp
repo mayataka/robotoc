@@ -6,7 +6,7 @@
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/impulse/impulse_dynamics_data.hpp"
 #include "robotoc/impulse/impulse_dynamics.hpp"
@@ -32,7 +32,7 @@ protected:
 
 
 void ImpulseDynamicsTest::test_computeResidual(Robot& robot, const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
   id.evalImpulseDynamics(robot, impulse_status, s);
@@ -51,7 +51,7 @@ void ImpulseDynamicsTest::test_computeResidual(Robot& robot, const ImpulseStatus
 
 
 void ImpulseDynamicsTest::test_linearize(Robot& robot, const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
   auto kkt_residual = SplitKKTResidual::Random(robot, impulse_status);
@@ -81,7 +81,7 @@ void ImpulseDynamicsTest::test_linearize(Robot& robot, const ImpulseStatus& impu
 
 
 void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamics id(robot);
   auto kkt_residual = SplitKKTResidual::Random(robot, impulse_status);

@@ -11,7 +11,7 @@
 #include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/constraints/constraint_component_base.hpp"
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
@@ -120,7 +120,7 @@ public:
   /// @return true if s is feasible. false if not.
   ///
   bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
-                  ConstraintsData& data, const ImpulseSplitSolution& s) const;
+                  ConstraintsData& data, const SplitSolution& s) const;
 
   ///
   /// @brief Sets the slack and dual variables of each constraint components. 
@@ -142,7 +142,7 @@ public:
   ///
   void setSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status, 
                        ConstraintsData& data, 
-                       const ImpulseSplitSolution& s) const;
+                       const SplitSolution& s) const;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
@@ -166,7 +166,7 @@ public:
   ///
   void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
                       ConstraintsData& data, 
-                      const ImpulseSplitSolution& s) const;
+                      const SplitSolution& s) const;
 
   ///
   /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
@@ -191,7 +191,7 @@ public:
   /// @param[out] kkt_residual KKT residual.
   ///
   void linearizeConstraints(Robot& robot, const ImpulseStatus& impulse_status, 
-                            ConstraintsData& data, const ImpulseSplitSolution& s,
+                            ConstraintsData& data, const SplitSolution& s,
                             SplitKKTResidual& kkt_residual) const;
 
   ///

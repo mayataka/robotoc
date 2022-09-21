@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
@@ -63,7 +63,7 @@ public:
   /// @param[in] s Split solution of this impulse stage.
   ///
   void evalImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,
-                           const ImpulseSplitSolution& s);
+                           const SplitSolution& s);
 
   ///
   /// @brief Linearizes the impulse dynamics constraint. 
@@ -74,7 +74,7 @@ public:
   ///
   void linearizeImpulseDynamics(Robot& robot, 
                                 const ImpulseStatus& impulse_status, 
-                                const ImpulseSplitSolution& s, 
+                                const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual);
 
   ///

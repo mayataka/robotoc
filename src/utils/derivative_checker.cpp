@@ -335,7 +335,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
 bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost, 
     const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
+  const auto s = SplitSolution::Random(robot_, impulse_status);
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
   const int dimf = impulse_status.dimi();
@@ -404,7 +404,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
 bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost,
     const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
+  const auto s = SplitSolution::Random(robot_, impulse_status);
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
   const int dimf = impulse_status.dimi();

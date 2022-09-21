@@ -6,7 +6,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3_jacobian_inverse.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
@@ -67,7 +67,7 @@ public:
   /// impulse stage. 
   ///
   static void evalStateEquation(const Robot& robot, 
-                                const ImpulseSplitSolution& s, 
+                                const SplitSolution& s, 
                                 const Eigen::VectorXd& q_next, 
                                 const Eigen::VectorXd& v_next, 
                                 SplitKKTResidual& kkt_residual);
@@ -85,7 +85,7 @@ public:
   ///
   static void linearizeStateEquation(const Robot& robot, 
                                      const Eigen::VectorXd& q_prev, 
-                                     const ImpulseSplitSolution& s, 
+                                     const SplitSolution& s, 
                                      const SplitSolution& s_next, 
                                      SplitKKTMatrix& kkt_matrix, 
                                      SplitKKTResidual& kkt_residual);
@@ -102,7 +102,7 @@ public:
   /// impulse stage. 
   ///
   void correctLinearizedStateEquation(const Robot& robot, 
-                                      const ImpulseSplitSolution& s, 
+                                      const SplitSolution& s, 
                                       const SplitSolution& s_next, 
                                       SplitKKTMatrix& kkt_matrix, 
                                       SplitKKTResidual& kkt_residual);

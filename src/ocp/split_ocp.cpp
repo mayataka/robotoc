@@ -113,19 +113,6 @@ void SplitOCP::computeKKTResidual(Robot& robot,
                                   const GridInfo& grid_info, 
                                   const Eigen::VectorXd& q_prev, 
                                   const SplitSolution& s,
-                                  const ImpulseSplitSolution& s_next, 
-                                  SplitKKTMatrix& kkt_matrix,
-                                  SplitKKTResidual& kkt_residual) {
-  computeKKTResidual_impl(robot, contact_status, grid_info, 
-                          q_prev, s, s_next, kkt_matrix, kkt_residual);
-}
-
-
-void SplitOCP::computeKKTResidual(Robot& robot, 
-                                  const ContactStatus& contact_status, 
-                                  const GridInfo& grid_info, 
-                                  const Eigen::VectorXd& q_prev, 
-                                  const SplitSolution& s,
                                   const SplitSolution& s_next, 
                                   SplitKKTMatrix& kkt_matrix,
                                   SplitKKTResidual& kkt_residual,
@@ -150,19 +137,6 @@ void SplitOCP::computeKKTSystem(Robot& robot,
                                 const Eigen::VectorXd& q_prev, 
                                 const SplitSolution& s, 
                                 const SplitSolution& s_next,
-                                SplitKKTMatrix& kkt_matrix, 
-                                SplitKKTResidual& kkt_residual) {
-  computeKKTSystem_impl(robot, contact_status, grid_info, 
-                        q_prev, s, s_next, kkt_matrix, kkt_residual);
-}
-
-
-void SplitOCP::computeKKTSystem(Robot& robot, 
-                                const ContactStatus& contact_status,  
-                                const GridInfo& grid_info, 
-                                const Eigen::VectorXd& q_prev, 
-                                const SplitSolution& s, 
-                                const ImpulseSplitSolution& s_next,
                                 SplitKKTMatrix& kkt_matrix, 
                                 SplitKKTResidual& kkt_residual) {
   computeKKTSystem_impl(robot, contact_status, grid_info, 

@@ -7,7 +7,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_ocp.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
@@ -42,7 +42,7 @@ protected:
 void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot, 
                                                   const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s = SplitSolution::Random(robot, impulse_status);
   const auto s_next = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
@@ -84,7 +84,7 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
 void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot, 
                                                 const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s = SplitSolution::Random(robot, impulse_status);
   const auto s_next = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
@@ -144,7 +144,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
 
 void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s = SplitSolution::Random(robot, impulse_status);
   const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);

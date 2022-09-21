@@ -63,28 +63,9 @@ void StateEquation::linearizeStateEquation(const Robot& robot, const double dt,
 }
 
 
-void StateEquation::linearizeStateEquation(const Robot& robot, const double dt, 
-                                           const Eigen::VectorXd& q_prev, 
-                                           const SplitSolution& s, 
-                                           const ImpulseSplitSolution& s_next, 
-                                           SplitKKTMatrix& kkt_matrix, 
-                                           SplitKKTResidual& kkt_residual) {
-  linearizeStateEquation_impl(robot, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
-}
-
-
 void StateEquation::correctLinearizedStateEquation(
     const Robot& robot, const double dt, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  correctLinearizedStateEquation_impl(robot, dt, s, s_next, 
-                                      kkt_matrix, kkt_residual);
-}
-
-
-void StateEquation::correctLinearizedStateEquation(
-    const Robot& robot, const double dt, const SplitSolution& s, 
-    const ImpulseSplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   correctLinearizedStateEquation_impl(robot, dt, s, s_next, 
                                       kkt_matrix, kkt_residual);

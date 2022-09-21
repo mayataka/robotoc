@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/constraints/constraint_component_base.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
@@ -83,7 +83,7 @@ public:
   ///
   virtual bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
                           ConstraintComponentData& data, 
-                          const ImpulseSplitSolution& s) const = 0;
+                          const SplitSolution& s) const = 0;
 
   ///
   /// @brief Sets the slack variables of each constraint components. 
@@ -94,7 +94,7 @@ public:
   ///
   virtual void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
                         ConstraintComponentData& data, 
-                        const ImpulseSplitSolution& s) const = 0;
+                        const SplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
@@ -106,7 +106,7 @@ public:
   ///
   virtual void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
                               ConstraintComponentData& data, 
-                              const ImpulseSplitSolution& s) const = 0;
+                              const SplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the derivatives of the priaml residual, i.e., the 
@@ -121,7 +121,7 @@ public:
   ///
   virtual void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                ConstraintComponentData& data, 
-                               const ImpulseSplitSolution& s,
+                               const SplitSolution& s,
                                SplitKKTResidual& kkt_residual) const = 0;
 
   ///

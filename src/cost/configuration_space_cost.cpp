@@ -380,7 +380,7 @@ void ConfigurationSpaceCost::evalTerminalCostHessian(
 
 double ConfigurationSpaceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
+    const GridInfo& grid_info, const SplitSolution& s) const {
   double l = 0;
   if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     evalConfigDiff(robot, data, grid_info, s.q);
@@ -398,7 +398,7 @@ double ConfigurationSpaceCost::evalImpulseCost(
 
 void ConfigurationSpaceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
@@ -422,7 +422,7 @@ void ConfigurationSpaceCost::evalImpulseCostDerivatives(
 
 void ConfigurationSpaceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
   if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {

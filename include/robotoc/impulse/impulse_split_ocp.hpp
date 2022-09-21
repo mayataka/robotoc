@@ -7,7 +7,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
@@ -76,7 +76,7 @@ public:
   /// @param[in] s Split solution of this impulse stage.
   ///
   bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
-                  const ImpulseSplitSolution& s);
+                  const SplitSolution& s);
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
@@ -85,7 +85,7 @@ public:
   /// @param[in] s Split solution of this impulse stage.
   ///
   void initConstraints(Robot& robot, const ImpulseStatus& impulse_status, 
-                       const ImpulseSplitSolution& s);
+                       const SplitSolution& s);
 
   ///
   /// @brief Initializes the constraints, i.e., copies the slack and dual 
@@ -113,7 +113,7 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
-               const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+               const GridInfo& grid_info, const SplitSolution& s, 
                const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next,
                SplitKKTResidual& kkt_residual);
 
@@ -131,7 +131,7 @@ public:
   void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
                           const GridInfo& grid_info, 
                           const Eigen::VectorXd& q_prev, 
-                          const ImpulseSplitSolution& s, 
+                          const SplitSolution& s, 
                           const SplitSolution& s_next,
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
@@ -151,7 +151,7 @@ public:
   void computeKKTSystem(Robot& robot, const ImpulseStatus& impulse_status, 
                         const GridInfo& grid_info, 
                         const Eigen::VectorXd& q_prev, 
-                        const ImpulseSplitSolution& s, 
+                        const SplitSolution& s, 
                         const SplitSolution& s_next, 
                         SplitKKTMatrix& kkt_matrix, 
                         SplitKKTResidual& kkt_residual);
@@ -197,7 +197,7 @@ public:
   /// @param[in, out] s Split solution of this impulse stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
-                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
+                    const ImpulseSplitDirection& d, SplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.

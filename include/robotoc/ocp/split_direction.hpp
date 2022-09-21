@@ -124,6 +124,29 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> da() const;
 
   ///
+  /// @brief Stack of Newton direction of SplitSolution::a and SplitSolution::f. 
+  /// Size is Robot::dimv() + ContactStatus::dimf().
+  /// @return Reference to the Newton direction.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> ddvf();
+
+  ///
+  /// @brief const version of SplitDirection::ddvf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> ddvf() const;
+
+  ///
+  /// @brief Newton direction of SplitSolution::a. Size is Robot::dimv().
+  /// @return Reference to the Newton direction.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> ddv();
+
+  ///
+  /// @brief const version of SplitDirection::da().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> ddv() const;
+
+  ///
   /// @brief Newton direction of SplitSolution::f_stack(). Size is 
   /// ContactStatus::dimf().
   /// @return Reference to the Newton direction.

@@ -12,6 +12,7 @@ inline SplitSolution::SplitSolution(const Robot& robot)
   : q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     a(Eigen::VectorXd::Zero(robot.dimv())),
+    dv(Eigen::VectorXd::Zero(robot.dimv())),
     u(Eigen::VectorXd::Zero(robot.dimu())),
     f(robot.maxNumContacts(), Vector6d::Zero()),
     lmd(Eigen::VectorXd::Zero(robot.dimv())),
@@ -40,6 +41,7 @@ inline SplitSolution::SplitSolution()
   : q(),
     v(),
     a(),
+    dv(),
     u(),
     f(),
     lmd(),
@@ -79,6 +81,15 @@ inline void SplitSolution::setContactStatus(const SplitSolution& other) {
   has_active_contacts_ = other.hasActiveContacts();
   is_contact_active_ = other.isContactActive();
   dimf_ = other.dimf();
+}
+
+
+inline void SplitSolution::setContactStatus(
+    const ImpulseStatus& contact_status) {
+  assert(contact_status.maxNumContacts() == is_contact_active_.size());
+  has_active_contacts_ = contact_status.hasActiveImpulse();
+  is_contact_active_ = contact_status.isImpulseActive();
+  dimf_ = contact_status.dimi();
 }
 
 
@@ -258,6 +269,7 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
   robot.integrateConfiguration(d.dq(), step_size, q);
   v.noalias() += step_size * d.dv();
   a.noalias() += step_size * d.da();
+  dv.setZero();
   u.noalias() += step_size * d.du;
   lmd.noalias() += step_size * d.dlmd();
   gmm.noalias() += step_size * d.dgmm();
@@ -278,11 +290,37 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
 }
 
 
+inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
+                                     const ImpulseSplitDirection& d) {
+  assert(f_stack().size() == d.df().size());
+  assert(mu_stack().size() == d.dmu().size());
+  robot.integrateConfiguration(d.dq(), step_size, q);
+  v.noalias() += step_size * d.dv();
+  a.setZero();
+  dv.noalias() += step_size * d.ddv();
+  u.setZero();
+  lmd.noalias() += step_size * d.dlmd();
+  gmm.noalias() += step_size * d.dgmm();
+  beta.noalias() += step_size * d.dbeta();
+  if (has_floating_base_) {
+    nu_passive.setZero();
+  }
+  if (has_active_contacts_) {
+    f_stack().noalias() += step_size * d.df();
+    set_f_vector();
+    mu_stack().noalias() += step_size * d.dmu();
+    set_mu_vector();
+  }
+  xi_stack_.setZero();
+}
+
+
 inline void SplitSolution::copyPrimal(const SplitSolution& other) {
   setContactStatus(other);
   q = other.q;
   v = other.v;
   a = other.a;
+  dv = other.dv;
   u = other.u;
   for (int i=0; i<f.size(); ++i) {
     f[i] = other.f[i];
@@ -327,6 +365,9 @@ inline bool SplitSolution::isApprox(const SplitSolution& other) const {
     return false;
   }
   if (!a.isApprox(other.a)) {
+    return false;
+  }
+  if (!dv.isApprox(other.dv)) {
     return false;
   }
   if (!u.isApprox(other.u)) {
@@ -386,6 +427,7 @@ inline void SplitSolution::setRandom(const Robot& robot) {
   robot.normalizeConfiguration(q);
   v.setRandom();
   a.setRandom(); 
+  dv.setRandom(); 
   u.setRandom(); 
   lmd.setRandom();
   gmm.setRandom(); 
@@ -411,6 +453,7 @@ inline void SplitSolution::setRandom(const Robot& robot,
 
 inline void SplitSolution::setRandom(const Robot& robot, 
                                      const ImpulseStatus& impulse_status) {
+  setContactStatus(impulse_status);
   setImpulseStatus(impulse_status);
   setRandom(robot);
   if (impulse_status.hasActiveImpulse()) {

@@ -9,7 +9,7 @@
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 
 #include "robotoc/utils/derivative_checker.hpp"
 
@@ -257,7 +257,7 @@ void ConfigurationSpaceCostTest::testImpulseCostConstRef(Robot& robot) const {
   cost->set_dv_weight_impulse(dv_weight_impulse);
   cost->set_q_ref(q_ref);
   cost->set_v_ref(v_ref);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref, q_diff);
@@ -440,7 +440,7 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   CostFunctionData data(robot);
   cost->set_q_weight_impulse(q_weight_impulse);
 
-  const auto s = ImpulseSplitSolution::Random(robot);
+  const auto s = SplitSolution::Random(robot);
   const auto impulse_status = robot.createImpulseStatus();
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info0, s), 0);
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_infof, s), 0);

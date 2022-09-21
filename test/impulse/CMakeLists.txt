@@ -1,4 +1,3 @@
-add_robotoc_test(impulse_split_solution_test)
 add_robotoc_test(impulse_split_direction_test)
 add_robotoc_test(impulse_state_equation_test)
 add_robotoc_test(impulse_dynamics_data_test)

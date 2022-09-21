@@ -168,7 +168,7 @@ void LocalContactForceCost::evalTerminalCostHessian(
 
 double LocalContactForceCost::evalImpulseCost(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
+    const GridInfo& grid_info, const SplitSolution& s) const {
   double l = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -183,7 +183,7 @@ double LocalContactForceCost::evalImpulseCost(
 
 void LocalContactForceCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -208,7 +208,7 @@ void LocalContactForceCost::evalImpulseCostDerivatives(
 
 void LocalContactForceCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {

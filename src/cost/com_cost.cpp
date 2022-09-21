@@ -174,7 +174,7 @@ void CoMCost::evalTerminalCostHessian(Robot& robot, CostFunctionData& data,
 double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
                                 CostFunctionData& data, 
                                 const GridInfo& grid_info,
-                                const ImpulseSplitSolution& s) const {
+                                const SplitSolution& s) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_impulse_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -188,7 +188,7 @@ double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_statu
 
 void CoMCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_3d.setZero();
@@ -203,7 +203,7 @@ void CoMCost::evalImpulseCostHessian(Robot& robot,
                                      const ImpulseStatus& impulse_status, 
                                      CostFunctionData& data, 
                                      const GridInfo& grid_info,
-                                     const ImpulseSplitSolution& s, 
+                                     const SplitSolution& s, 
                                      SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()

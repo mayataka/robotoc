@@ -10,7 +10,7 @@
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 
@@ -162,7 +162,7 @@ public:
                                  const ImpulseStatus& impulse_status,
                                  CostFunctionData& data, 
                                  const GridInfo& grid_info, 
-                                 const ImpulseSplitSolution& s) const = 0;
+                                 const SplitSolution& s) const = 0;
 
   ///
   /// @brief Computes the first-order partial derivatives of the impulse cost. 
@@ -179,7 +179,7 @@ public:
                                           const ImpulseStatus& impulse_status, 
                                           CostFunctionData& data,  
                                           const GridInfo& grid_info, 
-                                          const ImpulseSplitSolution& s, 
+                                          const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual) const = 0;
 
   ///
@@ -198,7 +198,7 @@ public:
                                       const ImpulseStatus& impulse_status, 
                                       CostFunctionData& data,  
                                       const GridInfo& grid_info, 
-                                      const ImpulseSplitSolution& s, 
+                                      const SplitSolution& s, 
                                       SplitKKTMatrix& kkt_matrix) const = 0; 
 
 };

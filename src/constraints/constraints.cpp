@@ -124,7 +124,7 @@ bool Constraints::isFeasible(Robot& robot, const ContactStatus& contact_status,
 
 bool Constraints::isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
                              ConstraintsData& data, 
-                             const ImpulseSplitSolution& s) const {
+                             const SplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
     if (!constraintsimpl::isFeasible(impulse_level_constraints_, robot, 
                                      impulse_status, 
@@ -161,7 +161,7 @@ void Constraints::setSlackAndDual(Robot& robot,
 void Constraints::setSlackAndDual(Robot& robot, 
                                   const ImpulseStatus& impulse_status,
                                   ConstraintsData& data, 
-                                  const ImpulseSplitSolution& s) const {
+                                  const SplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::setSlackAndDual(impulse_level_constraints_, robot,
                                      impulse_status, 
@@ -192,7 +192,7 @@ void Constraints::evalConstraint(Robot& robot,
 void Constraints::evalConstraint(Robot& robot, 
                                  const ImpulseStatus& impulse_status, 
                                  ConstraintsData& data, 
-                                 const ImpulseSplitSolution& s) const {
+                                 const SplitSolution& s) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::evalConstraint(impulse_level_constraints_, robot, 
                                     impulse_status, data.impulse_level_data, s);
@@ -229,7 +229,7 @@ void Constraints::linearizeConstraints(Robot& robot,
 void Constraints::linearizeConstraints(Robot& robot, 
                                        const ImpulseStatus& impulse_status, 
                                        ConstraintsData& data, 
-                                       const ImpulseSplitSolution& s, 
+                                       const SplitSolution& s, 
                                        SplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::linearizeConstraints(impulse_level_constraints_, robot, 

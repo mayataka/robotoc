@@ -21,7 +21,7 @@ ImpulseDynamics::~ImpulseDynamics() {
 
 void ImpulseDynamics::evalImpulseDynamics(Robot& robot, 
                                           const ImpulseStatus& impulse_status, 
-                                          const ImpulseSplitSolution& s) {
+                                          const SplitSolution& s) {
   data_.setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data_.ImD());
@@ -31,7 +31,7 @@ void ImpulseDynamics::evalImpulseDynamics(Robot& robot,
 
 void ImpulseDynamics::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
-    const ImpulseSplitSolution& s, SplitKKTResidual& kkt_residual) {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
   evalImpulseDynamics(robot, impulse_status, s);
   robot.RNEAImpulseDerivatives(s.q, s.dv, data_.dImDdq(), data_.dImDddv);
   robot.computeImpulseVelocityDerivatives(impulse_status, data_.dCdq(), 

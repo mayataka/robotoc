@@ -107,6 +107,28 @@ SplitDirection::da() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::ddvf() {
+  return daf();
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::ddvf() const {
+  return daf();
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::ddv() {
+  return da();
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::ddv() const {
+  return da();
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::df() {
   return daf_full_.segment(dimv_, dimf_);
 }

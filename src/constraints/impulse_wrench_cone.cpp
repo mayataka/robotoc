@@ -81,7 +81,7 @@ void ImpulseWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
 bool ImpulseWrenchCone::isFeasible(Robot& robot, 
                                    const ImpulseStatus& impulse_status,
                                    ConstraintComponentData& data, 
-                                   const ImpulseSplitSolution& s) const {
+                                   const SplitSolution& s) const {
   data.residual.setZero();
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -113,7 +113,7 @@ bool ImpulseWrenchCone::isFeasible(Robot& robot,
 void ImpulseWrenchCone::setSlack(Robot& robot, 
                                  const ImpulseStatus& impulse_status,
                                  ConstraintComponentData& data, 
-                                 const ImpulseSplitSolution& s) const {
+                                 const SplitSolution& s) const {
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
@@ -139,7 +139,7 @@ void ImpulseWrenchCone::setSlack(Robot& robot,
 void ImpulseWrenchCone::evalConstraint(Robot& robot, 
                                        const ImpulseStatus& impulse_status,
                                        ConstraintComponentData& data, 
-                                       const ImpulseSplitSolution& s) const {
+                                       const SplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -169,7 +169,7 @@ void ImpulseWrenchCone::evalConstraint(Robot& robot,
 void ImpulseWrenchCone::evalDerivatives(Robot& robot, 
                                         const ImpulseStatus& impulse_status, 
                                         ConstraintComponentData& data, 
-                                        const ImpulseSplitSolution& s, 
+                                        const SplitSolution& s, 
                                         SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   int c_begin = 0;

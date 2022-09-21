@@ -6,7 +6,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/impulse/impulse_state_equation.hpp"
 
@@ -30,7 +30,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   const double dt = 0.001;
   const auto robot = testhelper::CreateRobotManipulator(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
-  const auto s = ImpulseSplitSolution::Random(robot);
+  const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
@@ -64,7 +64,7 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   const double dt = 0.001;
   const auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);

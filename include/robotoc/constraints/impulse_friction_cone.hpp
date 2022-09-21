@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
@@ -65,19 +65,19 @@ public:
 
   bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
                   ConstraintComponentData& data, 
-                  const ImpulseSplitSolution& s) const override;
+                  const SplitSolution& s) const override;
 
   void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
                 ConstraintComponentData& data, 
-                const ImpulseSplitSolution& s) const override;
+                const SplitSolution& s) const override;
 
   void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
                       ConstraintComponentData& data, 
-                      const ImpulseSplitSolution& s) const override;
+                      const SplitSolution& s) const override;
 
   void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                        ConstraintComponentData& data, 
-                       const ImpulseSplitSolution& s,
+                       const SplitSolution& s,
                        SplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(const ImpulseStatus& impulse_status,

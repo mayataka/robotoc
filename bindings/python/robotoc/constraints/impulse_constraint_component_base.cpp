@@ -23,7 +23,7 @@ public:
 
   bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
                   ConstraintComponentData& data, 
-                  const ImpulseSplitSolution& s) const override {
+                  const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(bool, ImpulseConstraintComponentBase, 
                            isFeasible, 
                            robot, impulse_status, data, s);
@@ -31,7 +31,7 @@ public:
 
   void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
                 ConstraintComponentData& data, 
-                const ImpulseSplitSolution& s) const override {
+                const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            setSlack, 
                            robot, impulse_status, data, s);
@@ -39,7 +39,7 @@ public:
 
   void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
                       ConstraintComponentData& data, 
-                      const ImpulseSplitSolution& s) const override {
+                      const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            evalConstraint, 
                            robot, impulse_status, data, s);
@@ -47,7 +47,7 @@ public:
 
   void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                        ConstraintComponentData& data,
-                       const ImpulseSplitSolution& s,
+                       const SplitSolution& s,
                        SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            evalDerivatives, 

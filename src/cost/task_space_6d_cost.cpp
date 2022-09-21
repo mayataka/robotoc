@@ -249,7 +249,7 @@ double TaskSpace6DCost::evalImpulseCost(Robot& robot,
                                         const ImpulseStatus& impulse_status,
                                         CostFunctionData& data, 
                                         const GridInfo& grid_info, 
-                                        const ImpulseSplitSolution& s) const {
+                                        const SplitSolution& s) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_impulse_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
@@ -263,7 +263,7 @@ double TaskSpace6DCost::evalImpulseCost(Robot& robot,
 
 void TaskSpace6DCost::evalImpulseCostDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     data.J_66.setZero();
@@ -279,7 +279,7 @@ void TaskSpace6DCost::evalImpulseCostDerivatives(
 
 void TaskSpace6DCost::evalImpulseCostHessian(
     Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
+    const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_impulse_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()

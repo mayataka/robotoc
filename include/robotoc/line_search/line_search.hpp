@@ -139,11 +139,11 @@ private:
   }
 
   static void computeSolutionTrial(const Robot& robot, 
-                                   const ImpulseSplitSolution& s, 
+                                   const SplitSolution& s, 
                                    const ImpulseSplitDirection& d, 
                                    const double step_size, 
-                                   ImpulseSplitSolution& s_trial) {
-    s_trial.setImpulseStatus(s);
+                                   SplitSolution& s_trial) {
+    s_trial.setContactStatus(s);
     robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
     s_trial.v  = s.v  + step_size * d.dv();
     s_trial.dv = s.dv + step_size * d.ddv();

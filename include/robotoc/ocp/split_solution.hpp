@@ -9,6 +9,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/ocp/split_direction.hpp"
+#include "robotoc/impulse/impulse_split_direction.hpp"
 
 
 namespace robotoc {
@@ -70,6 +71,12 @@ public:
   void setContactStatus(const SplitSolution& other);
 
   ///
+  /// @brief Set contact status, i.e., set the dimension of the contacts.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setContactStatus(const ImpulseStatus& contact_status);
+
+  ///
   /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
@@ -101,6 +108,12 @@ public:
   /// Size is Robot::dimv().
   ///
   Eigen::VectorXd a;
+
+  ///
+  /// @brief Generalized acceleration. 
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd dv;
 
   ///
   /// @brief Control input torques. Size is Robot::dimu().
@@ -194,14 +207,14 @@ public:
   ///
   /// @brief Stack of the Lagrange multipliers w.r.t. the switching constraints
   /// that is active at the future impulse status. Size is 
-  /// ImpulseSplitSolution::dimf().
+  /// SplitSolution::dimf().
   /// @return Reference to the stack of the Lagrange multipliers w.r.t. the
   /// switching constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
 
   ///
-  /// @brief const version of ImpulseSplitSolution::xi_stack().
+  /// @brief const version of SplitSolution::xi_stack().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
 
@@ -252,6 +265,15 @@ public:
   ///
   void integrate(const Robot& robot, const double step_size, 
                  const SplitDirection& d);
+
+  ///
+  /// @brief Integrates the solution based on step size and direction. 
+  /// @param[in] robot Robot model.
+  /// @param[in] step_size Step size.
+  /// @param[in] d Split direction.
+  ///
+  void integrate(const Robot& robot, const double step_size, 
+                 const ImpulseSplitDirection& d);
 
   ///
   /// @brief Copies the primal solution from another solution. 

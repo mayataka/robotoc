@@ -20,7 +20,7 @@
 #include "robotoc/ocp/switching_constraint.hpp"
 #include "robotoc/ocp/switching_constraint_residual.hpp"
 #include "robotoc/ocp/switching_constraint_jacobian.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/impulse/impulse_split_direction.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
@@ -162,24 +162,6 @@ public:
                           SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the KKT residual of this time stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
-  ///
-  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
-                          const GridInfo& grid_info, 
-                          const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                          const ImpulseSplitSolution& s_next,
-                          SplitKKTMatrix& kkt_matrix, 
-                          SplitKKTResidual& kkt_residual);
-
-  ///
   /// @brief Computes the KKT residual of this time stage including the 
   /// switching constraint.
   /// @param[in] robot Robot model. 
@@ -222,25 +204,6 @@ public:
                         const GridInfo& grid_info, 
                         const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                         const SplitSolution& s_next, 
-                        SplitKKTMatrix& kkt_matrix,
-                        SplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Computes the KKT system of this time stage, i.e., the condensed
-  /// KKT matrix and KKT residual of this time stage for Newton's method.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
-  ///
-  void computeKKTSystem(Robot& robot, const ContactStatus& contact_status, 
-                        const GridInfo& grid_info, 
-                        const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                        const ImpulseSplitSolution& s_next, 
                         SplitKKTMatrix& kkt_matrix,
                         SplitKKTResidual& kkt_residual);
 

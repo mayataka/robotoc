@@ -11,7 +11,7 @@
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
+#include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/cost/configuration_space_ref_base.hpp"
 
 
@@ -243,16 +243,16 @@ public:
 
   double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
                          CostFunctionData& data, const GridInfo& grid_info, 
-                         const ImpulseSplitSolution& s) const override;
+                         const SplitSolution& s) const override;
 
   void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
                                   CostFunctionData& data, const GridInfo& grid_info, 
-                                  const ImpulseSplitSolution& s, 
+                                  const SplitSolution& s, 
                                   SplitKKTResidual& kkt_residual) const override;
 
   void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
                               CostFunctionData& data, const GridInfo& grid_info, 
-                              const ImpulseSplitSolution& s, 
+                              const SplitSolution& s, 
                               SplitKKTMatrix& kkt_matrix) const override;
 
 private:

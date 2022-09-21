@@ -79,7 +79,7 @@ void ImpulseFrictionCone::allocateExtraData(
 bool ImpulseFrictionCone::isFeasible(Robot& robot, 
                                      const ImpulseStatus& impulse_status,
                                      ConstraintComponentData& data, 
-                                     const ImpulseSplitSolution& s) const {
+                                     const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<max_num_contacts_; ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -102,7 +102,7 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
 void ImpulseFrictionCone::setSlack(Robot& robot, 
                                    const ImpulseStatus& impulse_status,
                                    ConstraintComponentData& data, 
-                                   const ImpulseSplitSolution& s) const {
+                                   const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<max_num_contacts_; ++i) {
     const int idx = 5*i;
@@ -121,7 +121,7 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
 void ImpulseFrictionCone::evalConstraint(Robot& robot, 
                                          const ImpulseStatus& impulse_status,
                                          ConstraintComponentData& data, 
-                                         const ImpulseSplitSolution& s) const {
+                                         const SplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -146,7 +146,7 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
 
 void ImpulseFrictionCone::evalDerivatives(
     Robot& robot, const ImpulseStatus& impulse_status,
-    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+    ConstraintComponentData& data, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {

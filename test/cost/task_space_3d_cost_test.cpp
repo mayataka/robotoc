@@ -183,7 +183,7 @@ void TaskSpace3DCostTest::testImpulseCostConstRef(Robot& robot, const int frame_
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
   cost->set_const_ref(q_ref);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
@@ -325,7 +325,7 @@ void TaskSpace3DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
   cost->set_weight_impulse(weight_impulse);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
   const auto impulse_status = robot.createImpulseStatus();

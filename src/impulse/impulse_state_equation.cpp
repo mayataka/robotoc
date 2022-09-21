@@ -40,7 +40,7 @@ ImpulseStateEquation::~ImpulseStateEquation() {
 
 
 void ImpulseStateEquation::evalStateEquation(
-    const Robot& robot, const ImpulseSplitSolution& s, 
+    const Robot& robot, const SplitSolution& s, 
     const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
     SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
@@ -52,7 +52,7 @@ void ImpulseStateEquation::evalStateEquation(
 
 void ImpulseStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::VectorXd& q_prev, 
-    const ImpulseSplitSolution& s, const SplitSolution& s_next, 
+    const SplitSolution& s, const SplitSolution& s_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   evalStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
@@ -78,7 +78,7 @@ void ImpulseStateEquation::linearizeStateEquation(
 
 
 void ImpulseStateEquation::correctLinearizedStateEquation(
-    const Robot& robot, const ImpulseSplitSolution& s, 
+    const Robot& robot, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   if (has_floating_base_) {
