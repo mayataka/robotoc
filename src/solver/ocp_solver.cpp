@@ -537,17 +537,17 @@ void OCPSolver::discretizeSolution() {
     s_[i].setContactStatus(
         contact_sequence_->contactStatus(ocp_.timeDiscretization().contactPhase(i)));
     s_[i].set_f_stack();
-    s_[i].setImpulseStatus();
+    s_[i].setSwitchingConstraint();
   }
   for (int i=0; i<ocp_.timeDiscretization().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_->contactStatus(
             ocp_.timeDiscretization().contactPhaseAfterLift(i)));
     s_.lift[i].set_f_stack();
-    s_.lift[i].setImpulseStatus();
+    s_.lift[i].setSwitchingConstraint();
   }
   for (int i=0; i<ocp_.timeDiscretization().N_impulse(); ++i) {
-    s_.impulse[i].setImpulseStatus(contact_sequence_->impulseStatus(i));
+    s_.impulse[i].setContactStatus(contact_sequence_->impulseStatus(i));
     s_.impulse[i].set_f_stack();
     s_.aux[i].setContactStatus(
         contact_sequence_->contactStatus(
@@ -556,7 +556,7 @@ void OCPSolver::discretizeSolution() {
     const int time_stage_before_impulse 
         = ocp_.timeDiscretization().timeStageBeforeImpulse(i);
     if (time_stage_before_impulse-1 >= 0) {
-      s_[time_stage_before_impulse-1].setImpulseStatus(
+      s_[time_stage_before_impulse-1].setSwitchingConstraint(
           contact_sequence_->impulseStatus(i));
     }
   }

@@ -21,14 +21,15 @@ PYBIND11_MODULE(split_solution, m) {
     .def("set_contact_status", 
           static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setContactStatus),
           py::arg("other"))
-    .def("set_impulse_status", 
-          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setImpulseStatus),
+    .def("set_switching_constraint", 
+          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setSwitchingConstraint),
           py::arg("impulse_status"))
-    .def("set_impulse_status", 
-          static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setImpulseStatus),
+    .def("set_switching_constraint", 
+          static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setSwitchingConstraint),
           py::arg("other"))
-    .def("set_impulse_status", 
-          static_cast<void (SplitSolution::*)()>(&SplitSolution::setImpulseStatus))
+    .def("set_switching_constraint", 
+          static_cast<void (SplitSolution::*)(const int)>(&SplitSolution::setSwitchingConstraint),
+          py::arg("dims"))
     .def("set_f_stack", &SplitSolution::set_f_stack)
     .def("set_f_vector", &SplitSolution::set_f_vector)
     .def("set_mu_stack", &SplitSolution::set_mu_stack)
@@ -44,8 +45,9 @@ PYBIND11_MODULE(split_solution, m) {
           static_cast<std::vector<bool> (SplitSolution::*)() const>(&SplitSolution::isContactActive))
     .def_readwrite("q", &SplitSolution::q)
     .def_readwrite("v", &SplitSolution::v)
-    .def_readwrite("a", &SplitSolution::a)
     .def_readwrite("u", &SplitSolution::u)
+    .def_readwrite("a", &SplitSolution::a)
+    .def_readwrite("dv", &SplitSolution::dv)
     .def_readwrite("f", &SplitSolution::f)
     .def_readwrite("lmd", &SplitSolution::lmd)
     .def_readwrite("gmm", &SplitSolution::gmm)

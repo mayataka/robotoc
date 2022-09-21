@@ -178,7 +178,7 @@ private:
     s.setContactStatus(s1);
     s.set_f_stack();
     s.set_mu_stack();
-    s.setImpulseStatus(s1);
+    s.setSwitchingConstraint(s1);
     if (s.hasActiveImpulse()) {
       s.xi_stack() = s1.xi_stack();
     }
@@ -207,7 +207,7 @@ private:
     s.setContactStatus(s1);
     s.set_f_stack();
     s.set_mu_stack();
-    s.setImpulseStatus(s1);
+    s.setSwitchingConstraint(s1);
     if (s.hasActiveImpulse()) {
       s.xi_stack() = s1.xi_stack();
     }

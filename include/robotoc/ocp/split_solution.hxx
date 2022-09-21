@@ -93,22 +93,22 @@ inline void SplitSolution::setContactStatus(
 }
 
 
-inline void SplitSolution::setImpulseStatus(
+inline void SplitSolution::setSwitchingConstraint(
     const ImpulseStatus& impulse_status) {
   has_active_impulse_ = impulse_status.hasActiveImpulse();
   dimi_ = impulse_status.dimi();
 }
 
 
-inline void SplitSolution::setImpulseStatus(const SplitSolution& other) {
+inline void SplitSolution::setSwitchingConstraint(const SplitSolution& other) {
   has_active_impulse_ = other.hasActiveImpulse();
   dimi_ = other.dimi();
 }
 
 
-inline void SplitSolution::setImpulseStatus() {
-  has_active_impulse_ = false;
-  dimi_ = 0;
+inline void SplitSolution::setSwitchingConstraint(const int dims) {
+  has_active_impulse_ = (dims > 0);
+  dimi_ = std::max(dims, 0);
 }
 
 
@@ -331,7 +331,7 @@ inline void SplitSolution::copyPrimal(const SplitSolution& other) {
 
 inline void SplitSolution::copyDual(const SplitSolution& other) {
   setContactStatus(other);
-  setImpulseStatus(other);
+  setSwitchingConstraint(other);
   lmd = other.lmd;
   gmm = other.gmm;
   beta = other.beta;
@@ -454,7 +454,7 @@ inline void SplitSolution::setRandom(const Robot& robot,
 inline void SplitSolution::setRandom(const Robot& robot, 
                                      const ImpulseStatus& impulse_status) {
   setContactStatus(impulse_status);
-  setImpulseStatus(impulse_status);
+  setSwitchingConstraint(impulse_status);
   setRandom(robot);
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
@@ -466,7 +466,7 @@ inline void SplitSolution::setRandom(const Robot& robot,
                                      const ContactStatus& contact_status,
                                      const ImpulseStatus& impulse_status) {
   setRandom(robot, contact_status);
-  setImpulseStatus(impulse_status);
+  setSwitchingConstraint(impulse_status);
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
   }
