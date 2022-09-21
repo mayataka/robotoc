@@ -233,7 +233,7 @@ void ImpulseWrenchCone::condenseSlackAndDual(const ImpulseStatus& impulse_status
 
 void ImpulseWrenchCone::expandSlackAndDual(const ImpulseStatus& impulse_status, 
                                            ConstraintComponentData& data, 
-                                           const ImpulseSplitDirection& d) const {
+                                           const SplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
   // determined by the fraction-to-boundary-rule.

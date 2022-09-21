@@ -8,7 +8,7 @@
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/switching_constraint_jacobian.hpp"
 #include "robotoc/ocp/switching_constraint_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
@@ -225,24 +225,6 @@ public:
   ///
   /// @brief Performs the forward Riccati recursion and computes the state 
   /// direction. 
-  /// @param[in] kkt_matrix Split KKT matrix of this stage. 
-  /// @param[in] kkt_residual Split KKT residual of this stage. 
-  /// @param[in] lqr_policy LQR policy of this stage. 
-  /// @param[in] d Split direction of this stage. 
-  /// @param[in, out] d_next Split direction of the next stage. 
-  /// @param[in] sto If true, the STO sensitivities are also considered. 
-  /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
-  /// phase involving the STO problem.
-  ///
-  void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
-                               const SplitKKTResidual& kkt_residual,
-                               const LQRPolicy& lqr_policy, SplitDirection& d, 
-                               ImpulseSplitDirection& d_next, const bool sto,
-                               const bool has_next_sto_phase) const;
-
-  ///
-  /// @brief Performs the forward Riccati recursion and computes the state 
-  /// direction. 
   /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
   /// @param[in] kkt_residual Split KKT residual of this impulse stage. 
   /// @param[in] d Split direction of this impulse stage. 
@@ -250,7 +232,7 @@ public:
   ///
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
-                               const ImpulseSplitDirection& d, 
+                               const SplitDirection& d, 
                                SplitDirection& d_next) const;
 
   ///
@@ -272,7 +254,7 @@ public:
   /// @param[in] sto If true, the STO sensitivities are also considered. 
   ///
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
-                                      ImpulseSplitDirection& d, const bool sto);
+                                      SplitDirection& d, const bool sto);
 
   ///
   /// @brief Computes the Newton direction of the Lagrange multiplier with 

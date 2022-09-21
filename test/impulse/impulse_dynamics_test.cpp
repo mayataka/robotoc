@@ -7,7 +7,7 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/impulse/impulse_dynamics_data.hpp"
 #include "robotoc/impulse/impulse_dynamics.hpp"
 
@@ -128,13 +128,13 @@ void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impul
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
-  auto d = ImpulseSplitDirection::Random(robot, impulse_status);
+  auto d = SplitDirection::Random(robot, impulse_status);
   auto d_ref = d;
   id.expandPrimal(d);
   d_ref.ddvf() = - data.MJtJinv() * (data.dImDCdqv() * d_ref.dx + data.ImDC());
   d_ref.df().array() *= -1;
   EXPECT_TRUE(d.isApprox(d_ref));
-  const auto d_next = ImpulseSplitDirection::Random(robot);
+  const auto d_next = SplitDirection::Random(robot);
   id.expandDual(d_next, d);
   d_ref.dbetamu() = - data.MJtJinv() * (data.Qdvfqv() * d.dx 
                                          + OOIO_mat.transpose() * d_next.dlmdgmm

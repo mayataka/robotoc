@@ -6,7 +6,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
@@ -93,7 +93,7 @@ public:
 
   void expandSlackAndDual(const ImpulseStatus& impulse_status, 
                           ConstraintComponentData& data, 
-                          const ImpulseSplitDirection& d) const override; 
+                          const SplitDirection& d) const override; 
 
   int dimc() const override;
 

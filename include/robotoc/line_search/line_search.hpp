@@ -126,29 +126,22 @@ private:
   static void computeSolutionTrial(const Robot& robot, const SplitSolution& s, 
                                    const SplitDirection& d, 
                                    const double step_size, 
-                                   SplitSolution& s_trial) {
+                                   SplitSolution& s_trial,
+                                   const bool impulse=false) {
     s_trial.setContactStatus(s);
     robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
     s_trial.v = s.v + step_size * d.dv();
-    s_trial.a = s.a + step_size * d.da();
-    s_trial.u = s.u + step_size * d.du;
+    if (!impulse) {
+      s_trial.a = s.a + step_size * d.da();
+      s_trial.u = s.u + step_size * d.du;
+    }
+    else {
+      s_trial.dv = s.dv + step_size * d.ddv();
+    }
     if (s.hasActiveContacts()) {
       s_trial.f_stack() = s.f_stack() + step_size * d.df();
       s_trial.set_f_vector();
     }
-  }
-
-  static void computeSolutionTrial(const Robot& robot, 
-                                   const SplitSolution& s, 
-                                   const ImpulseSplitDirection& d, 
-                                   const double step_size, 
-                                   SplitSolution& s_trial) {
-    s_trial.setContactStatus(s);
-    robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
-    s_trial.v  = s.v  + step_size * d.dv();
-    s_trial.dv = s.dv + step_size * d.ddv();
-    s_trial.f_stack() = s.f_stack() + step_size * d.df();
-    s_trial.set_f_vector();
   }
 
   void clearCosts() {

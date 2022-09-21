@@ -25,7 +25,6 @@ macro(install_robotoc_pybind_module CURRENT_MODULE_DIR)
 endmacro()
 
 add_subdirectory(robot)
-add_subdirectory(impulse)
 add_subdirectory(ocp)
 add_subdirectory(cost)
 add_subdirectory(constraints)

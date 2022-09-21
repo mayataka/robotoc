@@ -7,7 +7,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/constraints/pdipm.hpp"
@@ -285,7 +285,7 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   constr.evalDerivatives(robot, impulse_status, data, s, kkt_res);
   constr.condenseSlackAndDual(impulse_status, data, kkt_mat, kkt_res);
   auto data_ref = data;
-  const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
+  const auto d = SplitDirection::Random(robot, impulse_status);
   constr.expandSlackAndDual(impulse_status, data, d);
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);

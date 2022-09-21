@@ -5,7 +5,7 @@
 
 #include "robotoc/hybrid/hybrid_container.hpp"
 #include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 
 
 namespace robotoc {
@@ -15,7 +15,7 @@ namespace robotoc {
 /// @brief Newton direction of the solution to the (hybrid) optimal control 
 /// problem. 
 ///
-using Direction = hybrid_container<SplitDirection, ImpulseSplitDirection>;
+using Direction = hybrid_container<SplitDirection, SplitDirection>;
 
 std::ostream& operator<<(std::ostream& os, const Direction& d);
 

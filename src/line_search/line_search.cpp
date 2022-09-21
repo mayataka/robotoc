@@ -224,7 +224,7 @@ void LineSearch::computeSolutionTrial(const OCP& ocp,
       const int impulse_index  = i - (N+1+N_impulse);
       computeSolutionTrial(robots[omp_get_thread_num()], s.aux[impulse_index], 
                            d.aux[impulse_index], step_size, 
-                           s_trial_.aux[impulse_index]);
+                           s_trial_.aux[impulse_index], true);
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);

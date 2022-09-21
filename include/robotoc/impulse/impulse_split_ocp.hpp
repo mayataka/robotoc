@@ -8,7 +8,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -163,7 +163,7 @@ public:
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   void expandPrimal(const ImpulseStatus& impulse_status, 
-                    ImpulseSplitDirection& d);
+                    SplitDirection& d);
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
@@ -171,7 +171,7 @@ public:
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void expandDual(const SplitDirection& d_next, ImpulseSplitDirection& d);
+  void expandDual(const SplitDirection& d_next, SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -197,7 +197,7 @@ public:
   /// @param[in, out] s Split solution of this impulse stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
-                    const ImpulseSplitDirection& d, SplitSolution& s);
+                    const SplitDirection& d, SplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.

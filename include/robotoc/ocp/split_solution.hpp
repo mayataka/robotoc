@@ -9,7 +9,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 
 
 namespace robotoc {
@@ -264,16 +264,16 @@ public:
   /// @param[in] d Split direction.
   ///
   void integrate(const Robot& robot, const double step_size, 
-                 const SplitDirection& d);
+                 const SplitDirection& d, const bool impulse=false);
 
-  ///
-  /// @brief Integrates the solution based on step size and direction. 
-  /// @param[in] robot Robot model.
-  /// @param[in] step_size Step size.
-  /// @param[in] d Split direction.
-  ///
-  void integrate(const Robot& robot, const double step_size, 
-                 const ImpulseSplitDirection& d);
+  // ///
+  // /// @brief Integrates the solution based on step size and direction. 
+  // /// @param[in] robot Robot model.
+  // /// @param[in] step_size Step size.
+  // /// @param[in] d Split direction.
+  // ///
+  // void integrate(const Robot& robot, const double step_size, 
+  //                const SplitDirection& d);
 
   ///
   /// @brief Copies the primal solution from another solution. 

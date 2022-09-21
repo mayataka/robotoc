@@ -205,16 +205,8 @@ void SplitOCP::expandPrimal(const ContactStatus& contact_status,
   constraints_->expandSlackAndDual(contact_status, constraints_data_, d);
 }
 
-
 void SplitOCP::expandDual(const GridInfo& grid_info, 
                           const SplitDirection& d_next, 
-                          SplitDirection& d, const double dts) {
-  expandDual_impl(grid_info, d_next, d, dts);
-}
-
-
-void SplitOCP::expandDual(const GridInfo& grid_info, 
-                          const ImpulseSplitDirection& d_next, 
                           SplitDirection& d, const double dts) {
   expandDual_impl(grid_info, d_next, d, dts);
 }

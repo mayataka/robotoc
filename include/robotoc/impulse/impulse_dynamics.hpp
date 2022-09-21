@@ -6,7 +6,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_dynamics_data.hpp"
@@ -95,7 +95,7 @@ public:
   /// the impulse forces f) of this impulse stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void expandPrimal(ImpulseSplitDirection& d) const {
+  void expandPrimal(SplitDirection& d) const {
     d.ddvf().noalias()  = - data_.MJtJinv_dImDCdqv() * d.dx;
     d.ddvf().noalias() -= data_.MJtJinv_ImDC();
     d.df().array()     *= -1;
@@ -109,7 +109,7 @@ public:
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   template <typename SplitDirectionType>
-  void expandDual(const SplitDirectionType& d_next, ImpulseSplitDirection& d) {
+  void expandDual(const SplitDirectionType& d_next, SplitDirection& d) {
     data_.ldvf().noalias() += data_.Qdvfqv() * d.dx;
     data_.ldv().noalias()  += d_next.dgmm();
     d.dbetamu().noalias()   = - data_.MJtJinv() * data_.ldvf();

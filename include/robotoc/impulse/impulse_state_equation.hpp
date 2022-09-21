@@ -7,7 +7,7 @@
 #include "robotoc/robot/se3_jacobian_inverse.hpp"
 #include "robotoc/ocp/split_solution.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 
@@ -111,7 +111,7 @@ public:
   /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
   /// @param[in, out] d Split direction. 
   ///
-  void correctCostateDirection(ImpulseSplitDirection& d) {
+  void correctCostateDirection(SplitDirection& d) {
     if (has_floating_base_) {
       Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
       d.dlmdgmm.template head<6>() = - Fq_tmp_;

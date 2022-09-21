@@ -8,7 +8,7 @@
 #include "robotoc/robot/impulse_status.hpp"
 #include "robotoc/impulse/impulse_split_ocp.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/impulse/impulse_dynamics.hpp"
@@ -119,7 +119,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   kkt_residual.kkt_error = 0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
+  SplitDirection d = SplitDirection::Random(robot, impulse_status);
   auto d_ref = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
   ocp.expandPrimal(impulse_status, d);
@@ -136,7 +136,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   auto s_updated = s;
   auto s_updated_ref = s;
   ocp.updatePrimal(robot, step_size, d, s_updated);
-  s_updated_ref.integrate(robot, step_size, d);
+  s_updated_ref.integrate(robot, step_size, d, true);
   constraints->updateSlack(constraints_data, step_size);
   EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
 }
@@ -145,7 +145,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
 void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impulse_status) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = SplitSolution::Random(robot, impulse_status);
-  const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
+  const auto d = SplitDirection::Random(robot, impulse_status);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);

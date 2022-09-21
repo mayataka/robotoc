@@ -139,15 +139,15 @@ void ImpulseSplitOCP::computeKKTSystem(
 
 
 void ImpulseSplitOCP::expandPrimal(const ImpulseStatus& impulse_status, 
-                                   ImpulseSplitDirection& d) {
-  d.setImpulseStatus(impulse_status);
+                                   SplitDirection& d) {
+  d.setContactStatus(impulse_status);
   impulse_dynamics_.expandPrimal(d);
   constraints_->expandSlackAndDual(impulse_status, constraints_data_, d);
 }
 
 
 void ImpulseSplitOCP::expandDual(const SplitDirection& d_next, 
-                                 ImpulseSplitDirection& d) {
+                                 SplitDirection& d) {
   impulse_dynamics_.expandDual(d_next, d);
   state_equation_.correctCostateDirection(d);
 }
@@ -165,11 +165,11 @@ double ImpulseSplitOCP::maxDualStepSize() {
 
 void ImpulseSplitOCP::updatePrimal(const Robot& robot, 
                                    const double primal_step_size, 
-                                   const ImpulseSplitDirection& d, 
+                                   const SplitDirection& d, 
                                    SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  s.integrate(robot, primal_step_size, d);
+  s.integrate(robot, primal_step_size, d, true);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }
 

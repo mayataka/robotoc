@@ -53,6 +53,12 @@ inline void SplitDirection::setContactStatus(
 }
 
 
+inline void SplitDirection::setContactStatus(
+    const ImpulseStatus& impulse_status) {
+  dimf_ = impulse_status.dimi();
+}
+
+
 inline void SplitDirection::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimi();
@@ -299,7 +305,7 @@ inline void SplitDirection::setRandom(const ContactStatus& contact_status) {
 
 
 inline void SplitDirection::setRandom(const ImpulseStatus& impulse_status) {
-  setImpulseStatus(impulse_status);
+  setContactStatus(impulse_status);
   setRandom();
 }
 

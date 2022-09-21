@@ -7,7 +7,7 @@
 #include "robotoc/ocp/split_kkt_residual.hpp"
 #include "robotoc/ocp/split_kkt_matrix.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/impulse/impulse_state_equation.hpp"
 
 #include "robot_factory.hpp"
@@ -53,7 +53,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isIdentity());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  auto d = ImpulseSplitDirection::Random(robot);
+  auto d = SplitDirection::Random(robot);
   auto d_ref = d;
   state_equation.correctCostateDirection(d);
   EXPECT_TRUE(d.isApprox(d_ref));
@@ -99,7 +99,7 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Fqq_ref));
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_TRUE(kkt_residual.Fq().isApprox((Fq_ref)));
-  auto d = ImpulseSplitDirection::Random(robot);
+  auto d = SplitDirection::Random(robot);
   auto d_ref = d;
   state_equation.correctCostateDirection(d);
   d_ref.dlmd().head(6) 

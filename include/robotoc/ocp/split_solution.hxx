@@ -263,18 +263,25 @@ inline std::vector<bool> SplitSolution::isContactActive() const {
 
 
 inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
-                                     const SplitDirection& d) {
+                                     const SplitDirection& d, const bool impulse) {
   assert(f_stack().size() == d.df().size());
   assert(mu_stack().size() == d.dmu().size());
   robot.integrateConfiguration(d.dq(), step_size, q);
   v.noalias() += step_size * d.dv();
-  a.noalias() += step_size * d.da();
-  dv.setZero();
-  u.noalias() += step_size * d.du;
+  if (!impulse) {
+    a.noalias() += step_size * d.da();
+    dv.setZero();
+    u.noalias() += step_size * d.du;
+  }
+  else {
+    a.setZero();
+    dv.noalias() += step_size * d.ddv();
+    u.setZero();
+  }
   lmd.noalias() += step_size * d.dlmd();
   gmm.noalias() += step_size * d.dgmm();
   beta.noalias() += step_size * d.dbeta();
-  if (has_floating_base_) {
+  if (has_floating_base_ && !impulse) {
     nu_passive.noalias() += step_size * d.dnu_passive;
   }
   if (has_active_contacts_) {
@@ -283,36 +290,36 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
     mu_stack().noalias() += step_size * d.dmu();
     set_mu_vector();
   }
-  if (has_active_impulse_) {
+  if (has_active_impulse_ && !impulse) {
     assert(xi_stack().size() == d.dxi().size());
     xi_stack().noalias() += step_size * d.dxi();
   }
 }
 
 
-inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
-                                     const ImpulseSplitDirection& d) {
-  assert(f_stack().size() == d.df().size());
-  assert(mu_stack().size() == d.dmu().size());
-  robot.integrateConfiguration(d.dq(), step_size, q);
-  v.noalias() += step_size * d.dv();
-  a.setZero();
-  dv.noalias() += step_size * d.ddv();
-  u.setZero();
-  lmd.noalias() += step_size * d.dlmd();
-  gmm.noalias() += step_size * d.dgmm();
-  beta.noalias() += step_size * d.dbeta();
-  if (has_floating_base_) {
-    nu_passive.setZero();
-  }
-  if (has_active_contacts_) {
-    f_stack().noalias() += step_size * d.df();
-    set_f_vector();
-    mu_stack().noalias() += step_size * d.dmu();
-    set_mu_vector();
-  }
-  xi_stack_.setZero();
-}
+// inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
+//                                      const SplitDirection& d) {
+//   assert(f_stack().size() == d.df().size());
+//   assert(mu_stack().size() == d.dmu().size());
+//   robot.integrateConfiguration(d.dq(), step_size, q);
+//   v.noalias() += step_size * d.dv();
+//   a.setZero();
+//   dv.noalias() += step_size * d.ddv();
+//   u.setZero();
+//   lmd.noalias() += step_size * d.dlmd();
+//   gmm.noalias() += step_size * d.dgmm();
+//   beta.noalias() += step_size * d.dbeta();
+//   if (has_floating_base_) {
+//     nu_passive.setZero();
+//   }
+//   if (has_active_contacts_) {
+//     f_stack().noalias() += step_size * d.df();
+//     set_f_vector();
+//     mu_stack().noalias() += step_size * d.dmu();
+//     set_mu_vector();
+//   }
+//   xi_stack_.setZero();
+// }
 
 
 inline void SplitSolution::copyPrimal(const SplitSolution& other) {

@@ -251,18 +251,9 @@ void RiccatiFactorizer::forwardRiccatiRecursion(
 
 
 void RiccatiFactorizer::forwardRiccatiRecursion(
-    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const LQRPolicy& lqr_policy, SplitDirection& d, ImpulseSplitDirection& d_next, 
-    const bool sto, const bool has_next_sto_phase) const {
-  forwardRiccatiRecursion_impl(kkt_matrix, kkt_residual, lqr_policy, d, d_next, 
-                               sto, has_next_sto_phase);
-}
-
-
-void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, 
-    const ImpulseSplitDirection& d, SplitDirection& d_next) const {
+    const SplitDirection& d, SplitDirection& d_next) const {
   d_next.dx = kkt_residual.Fx;
   d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;
   d_next.dts = d.dts;
@@ -284,7 +275,7 @@ void RiccatiFactorizer::computeCostateDirection(
 
 
 void RiccatiFactorizer::computeCostateDirection(
-    const SplitRiccatiFactorization& riccati, ImpulseSplitDirection& d,
+    const SplitRiccatiFactorization& riccati, SplitDirection& d,
     const bool sto) {
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
   if (sto) {

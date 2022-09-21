@@ -15,10 +15,10 @@ PYBIND11_MODULE(split_direction, m) {
   py::class_<SplitDirection>(m, "SplitDirection")
     .def(py::init<const Robot&>())
     .def(py::init<>())
-    .def("set_contact_status", &SplitDirection::setContactStatus,
-          py::arg("contact_status"))
-    .def("set_impulse_status", &SplitDirection::setImpulseStatus,
-          py::arg("impulse_status"))
+//     .def("set_contact_status", &SplitDirection::setContactStatus,
+//           py::arg("contact_status"))
+//     .def("set_impulse_status", &SplitDirection::setImpulseStatus,
+//           py::arg("impulse_status"))
     .def("is_dimension_consistent", &SplitDirection::isDimensionConsistent)
     .def("dimf", &SplitDirection::dimf)
     .def("dimi", &SplitDirection::dimi)

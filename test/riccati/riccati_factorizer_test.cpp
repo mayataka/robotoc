@@ -386,7 +386,7 @@ TEST_P(RiccatiFactorizerTest, forwardRecursionImpulse) {
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  auto d = ImpulseSplitDirection::Random(robot);
+  auto d = SplitDirection::Random(robot);
   auto d_next = SplitDirection::Random(robot);
   auto d_next_ref = d_next;
   factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d, d_next);

@@ -300,7 +300,7 @@ void Constraints::expandSlackAndDual(const ContactStatus& contact_status,
 
 void Constraints::expandSlackAndDual(const ImpulseStatus& impulse_status, 
                                      ConstraintsData& data, 
-                                     const ImpulseSplitDirection& d) const {
+                                     const SplitDirection& d) const {
   if (data.isImpulseLevelValid()) {
     constraintsimpl::expandSlackAndDual(impulse_level_constraints_, 
                                         impulse_status, 

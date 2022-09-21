@@ -21,7 +21,7 @@
 #include "robotoc/ocp/switching_constraint_residual.hpp"
 #include "robotoc/ocp/switching_constraint_jacobian.hpp"
 #include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/impulse/impulse_split_direction.hpp"
+#include "robotoc/ocp/split_direction.hpp"
 #include "robotoc/hybrid/grid_info.hpp"
 
 
@@ -267,18 +267,6 @@ public:
   /// stage. 
   /// 
   void expandDual(const GridInfo& grid_info, const SplitDirection& d_next, 
-                  SplitDirection& d, const double dts);
-
-  ///
-  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
-  /// direction of the condensed dual variables of this stage.
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in] d_next Split direction of the next time stage.
-  /// @param[in, out] d Split direction of this time stage.
-  /// @param[in] dts Direction of the switching time regarding of this time 
-  /// stage. 
-  /// 
-  void expandDual(const GridInfo& grid_info, const ImpulseSplitDirection& d_next, 
                   SplitDirection& d, const double dts);
 
   ///

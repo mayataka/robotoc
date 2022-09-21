@@ -65,7 +65,7 @@ public:
 
   void expandSlackAndDual(const ImpulseStatus& impulse_status, 
                           ConstraintComponentData& data, 
-                          const ImpulseSplitDirection& d) const override {
+                          const SplitDirection& d) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            expandSlackAndDual, 
                            impulse_status, data, d);

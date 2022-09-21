@@ -1,3 +1,0 @@
-pybind11_add_robotoc_module(impulse_split_direction)
-
-install_robotoc_pybind_module(impulse)
