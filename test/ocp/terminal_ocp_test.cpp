@@ -11,6 +11,7 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
+#include "robotoc/dynamics/terminal_state_equation.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"

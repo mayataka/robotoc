@@ -14,7 +14,7 @@
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/dynamics/terminal_state_equation.hpp"
+#include "robotoc/dynamics/state_equation_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 
 
@@ -192,7 +192,7 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  TerminalStateEquation state_equation_;
+  StateEquationData state_equation_data_;
   double terminal_cost_, barrier_cost_;
 
 };

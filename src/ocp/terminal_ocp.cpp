@@ -1,4 +1,5 @@
 #include "robotoc/ocp/terminal_ocp.hpp"
+#include "robotoc/dynamics/terminal_state_equation.hpp"
 
 #include <cassert>
 
@@ -12,7 +13,7 @@ TerminalOCP::TerminalOCP(const Robot& robot,
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(),
-    state_equation_(robot),
+    state_equation_data_(robot),
     terminal_cost_(0),
     barrier_cost_(0) {
 }
@@ -23,7 +24,7 @@ TerminalOCP::TerminalOCP()
     cost_data_(),
     constraints_(),
     constraints_data_(),
-    state_equation_(),
+    state_equation_data_(),
     terminal_cost_(0),
     barrier_cost_(0) {
 }
@@ -63,8 +64,8 @@ void TerminalOCP::computeKKTResidual(Robot& robot, const GridInfo& grid_info,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, grid_info, s, 
                                                 kkt_residual);
-  state_equation_.linearizeStateEquation(robot, q_prev, s, 
-                                         kkt_matrix, kkt_residual);
+  TerminalStateEquation::linearize(robot, state_equation_data_, q_prev, s, 
+                                   kkt_matrix, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
@@ -79,10 +80,10 @@ void TerminalOCP::computeKKTSystem(Robot& robot, const GridInfo& grid_info,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, grid_info, s, 
                                                  kkt_residual, kkt_matrix);
-  state_equation_.linearizeStateEquation(robot, q_prev, s, 
-                                         kkt_matrix, kkt_residual);
+  TerminalStateEquation::linearize(robot, state_equation_data_, q_prev, s, 
+                                   kkt_matrix, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
-  state_equation_.correctLinearizedStateEquation(kkt_matrix);
+  TerminalStateEquation::correctLinearize(state_equation_data_, kkt_matrix);
 }
 
  
@@ -105,7 +106,7 @@ void TerminalOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
 
 void TerminalOCP::expandDual(SplitDirection& d) {
   // TODO: add inequality constraints at the terminal OCP.
-  state_equation_.correctCostateDirection(d);
+  TerminalStateEquation::correctCostateDirection(state_equation_data_, d);
 }
 
 
