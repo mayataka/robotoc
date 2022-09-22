@@ -11,10 +11,10 @@
 #include "robotoc/ocp/terminal_ocp.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/hybrid/sto_cost_function.hpp"
-#include "robotoc/hybrid/sto_constraints.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/time_discretization.hpp"
+#include "robotoc/sto/sto_cost_function.hpp"
+#include "robotoc/sto/sto_constraints.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
 
 
 namespace robotoc {

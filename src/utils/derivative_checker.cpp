@@ -3,7 +3,7 @@
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/split_solution.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 #include <cmath>
 

@@ -17,7 +17,7 @@
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/dynamics/impulse_state_equation.hpp"
 #include "robotoc/dynamics/impulse_dynamics.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {

@@ -13,9 +13,9 @@
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/time_discretization.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {

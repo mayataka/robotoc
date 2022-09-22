@@ -6,7 +6,7 @@
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/local_contact_force_cost.hpp"

@@ -1,6 +1,6 @@
 #include "solution_factory.hpp"
 
-#include "robotoc/hybrid/time_discretization.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
 
 
 namespace robotoc {

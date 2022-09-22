@@ -15,7 +15,7 @@
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/dynamics/terminal_state_equation.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {

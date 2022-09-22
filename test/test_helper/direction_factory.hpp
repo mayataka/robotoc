@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/core/direction.hpp"
 
 

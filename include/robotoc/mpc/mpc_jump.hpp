@@ -10,7 +10,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/ocp_solver.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"

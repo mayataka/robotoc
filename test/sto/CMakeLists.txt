@@ -1,0 +1,3 @@
+add_robotoc_test(dwell_time_lower_bound_test)
+add_robotoc_test(sto_constraints_test)
+add_robotoc_test(sto_cost_function_test)

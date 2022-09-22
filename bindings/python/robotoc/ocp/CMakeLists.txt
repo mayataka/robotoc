@@ -1,3 +1,5 @@
+pybind11_add_robotoc_module(grid_info)
+pybind11_add_robotoc_module(time_discretization)
 pybind11_add_robotoc_module(ocp)
 
 install_robotoc_pybind_module(ocp)

@@ -2,7 +2,7 @@
 #define ROBOTOC_SOLUTION_INTERPOLATOR_HPP_
 
 #include "robotoc/core/solution.hpp"
-#include "robotoc/hybrid/time_discretization.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
 
 
 namespace robotoc {

@@ -7,7 +7,7 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
-#include "robotoc/hybrid/hybrid_container.hpp"
+#include "robotoc/ocp/hybrid_container.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"

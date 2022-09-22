@@ -9,7 +9,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/configuration_space_ref_base.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 

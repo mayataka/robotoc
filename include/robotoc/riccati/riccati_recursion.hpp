@@ -3,8 +3,8 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/contact_sequence.hpp"
-#include "robotoc/hybrid/hybrid_container.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
+#include "robotoc/ocp/hybrid_container.hpp"
 #include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"

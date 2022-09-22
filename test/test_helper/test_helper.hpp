@@ -3,7 +3,7 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/hybrid_container.hpp"
+#include "robotoc/ocp/hybrid_container.hpp"
 
 
 namespace robotoc {

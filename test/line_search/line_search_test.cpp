@@ -5,7 +5,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"

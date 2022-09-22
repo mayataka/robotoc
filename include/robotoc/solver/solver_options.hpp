@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "robotoc/hybrid/discretization_method.hpp"
+#include "robotoc/ocp/discretization_method.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
 
 

@@ -20,7 +20,7 @@
 #include "robotoc/dynamics/state_equation.hpp"
 #include "robotoc/dynamics/contact_dynamics.hpp"
 #include "robotoc/dynamics/switching_constraint.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {

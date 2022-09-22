@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {

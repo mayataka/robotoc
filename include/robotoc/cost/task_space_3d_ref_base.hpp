@@ -3,7 +3,7 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {

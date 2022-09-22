@@ -1,6 +1,6 @@
 #include "contact_sequence_factory.hpp"
 
-#include "robotoc/hybrid/discrete_event.hpp"
+#include "robotoc/planner/discrete_event.hpp"
 
 
 namespace robotoc {

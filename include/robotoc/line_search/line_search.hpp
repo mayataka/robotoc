@@ -9,7 +9,7 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/core/solution.hpp"
 #include "robotoc/core/direction.hpp"
