@@ -345,7 +345,7 @@ TEST_P(RiccatiRecursionTest, computeDirection) {
         const int impulse_index = ocp_ref.timeDiscretization().impulseIndexAfterTimeStage(i+1);
         const bool sto = ocp.timeDiscretization().isSTOEnabledImpulse(impulse_index);
         const bool sto_next = false;
-        d_ref[i].setImpulseStatus(contact_sequence->impulseStatus(impulse_index));
+        d_ref[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index));
         RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization.switching[impulse_index], 
                                                               d_ref[i], sto, sto_next);
       }

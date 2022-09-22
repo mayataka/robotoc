@@ -52,7 +52,7 @@ inline SplitConstrainedRiccatiFactorization::
 }
 
 
-inline void SplitConstrainedRiccatiFactorization::setImpulseStatus(
+inline void SplitConstrainedRiccatiFactorization::setConstraintDimension(
     const int dimi) {
   dimi_ = dimi;
 }

@@ -71,7 +71,7 @@ public:
   /// @brief Sets the impulse status, i.e., set the dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
-  void setImpulseStatus(const ImpulseStatus& impulse_status);
+  void setSwitchingConstraintDimension(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Stack of the Newton directions of SplitSolution::q and 

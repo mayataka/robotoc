@@ -19,7 +19,7 @@ inline void SplitDirection::setContactStatus(
 }
 
 
-inline void SplitDirection::setImpulseStatus(
+inline void SplitDirection::setSwitchingConstraintDimension(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimi();
 }

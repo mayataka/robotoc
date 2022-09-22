@@ -17,7 +17,7 @@ PYBIND11_MODULE(split_direction, m) {
     .def(py::init<>())
 //     .def("set_contact_status", &SplitDirection::setContactStatus,
 //           py::arg("contact_status"))
-//     .def("set_impulse_status", &SplitDirection::setImpulseStatus,
+//     .def("set_switching_constraint_dimension", &SplitDirection::setSwitchingConstraintDimension,
 //           py::arg("impulse_status"))
     .def("is_dimension_consistent", &SplitDirection::isDimensionConsistent)
     .def("dimf", &SplitDirection::dimf)

@@ -133,7 +133,7 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
   // Schur complement
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
-  c_riccati.setImpulseStatus(sc_jacobian.dimi());
+  c_riccati.setConstraintDimension(sc_jacobian.dimi());
   c_riccati.Ginv.noalias() = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
   c_riccati.DGinv().transpose().noalias() = llt_.solve(sc_jacobian.Phiu().transpose());
   c_riccati.S().noalias() = c_riccati.DGinv() * sc_jacobian.Phiu().transpose();

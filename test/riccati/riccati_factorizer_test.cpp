@@ -351,10 +351,10 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
     impulse_status.activateImpulse(0);
   }
   SplitConstrainedRiccatiFactorization c_riccati(robot);
-  c_riccati.setImpulseStatus(impulse_status.dimi());
+  c_riccati.setConstraintDimension(impulse_status.dimi());
   c_riccati.M().setRandom();
   c_riccati.m().setRandom();
-  d.setImpulseStatus(impulse_status);
+  d.setSwitchingConstraintDimension(impulse_status);
   d.dxi().setRandom();
   d_ref = d;
   sto = false;

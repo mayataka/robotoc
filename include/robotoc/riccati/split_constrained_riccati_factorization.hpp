@@ -57,7 +57,7 @@ public:
   SplitConstrainedRiccatiFactorization& operator=(
       SplitConstrainedRiccatiFactorization&&) noexcept = default;
 
-  void setImpulseStatus(const int dimi=0);
+  void setConstraintDimension(const int dimi=0);
 
   int dimi() const;
 
