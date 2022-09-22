@@ -137,8 +137,8 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   auto kkt_residual_ref = kkt_residual;
   SwitchingConstraintJacobian sc_jacobian(robot);
   SwitchingConstraintResidual sc_residual(robot);
-  sc_jacobian.setImpulseStatus(impulse_status);
-  sc_residual.setImpulseStatus(impulse_status);
+  sc_jacobian.setDimension(impulse_status);
+  sc_residual.setDimension(impulse_status);
   sc_jacobian.Phix().setRandom();
   sc_jacobian.Phia().setRandom();
   sc_jacobian.Phiu().setRandom();

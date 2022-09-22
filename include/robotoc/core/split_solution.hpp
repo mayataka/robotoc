@@ -79,18 +79,18 @@ public:
   /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
-  void setSwitchingConstraint(const ImpulseStatus& impulse_status);
+  void setSwitchingConstraintDimension(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] other Other split solution.
   ///
-  void setSwitchingConstraint(const SplitSolution& other);
+  void setSwitchingConstraintDimension(const SplitSolution& other);
 
   ///
   /// @brief Set impulse status zero.
   ///
-  void setSwitchingConstraint(const int dims=0);
+  void setSwitchingConstraintDimension(const int dims=0);
 
   ///
   /// @brief Configuration. Size is Robot::dimq().

@@ -91,7 +91,7 @@ void SplitSolutionTest::test(const Robot& robot,
 void SplitSolutionTest::test(const Robot& robot, 
                              const ImpulseStatus& impulse_status) {
   SplitSolution s(robot);
-  s.setSwitchingConstraint(impulse_status);
+  s.setSwitchingConstraintDimension(impulse_status);
   EXPECT_EQ(s.q.size(), robot.dimq());
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
@@ -119,7 +119,7 @@ void SplitSolutionTest::test(const Robot& robot,
                              const ImpulseStatus& impulse_status) { 
   SplitSolution s(robot);
   s.setContactStatus(contact_status);
-  s.setSwitchingConstraint(impulse_status);
+  s.setSwitchingConstraintDimension(impulse_status);
   EXPECT_EQ(s.q.size(), robot.dimq());
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());

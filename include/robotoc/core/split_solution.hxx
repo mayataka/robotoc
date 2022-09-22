@@ -33,20 +33,20 @@ inline void SplitSolution::setContactStatus(
 }
 
 
-inline void SplitSolution::setSwitchingConstraint(
+inline void SplitSolution::setSwitchingConstraintDimension(
     const ImpulseStatus& impulse_status) {
   has_active_impulse_ = impulse_status.hasActiveImpulse();
   dimi_ = impulse_status.dimi();
 }
 
 
-inline void SplitSolution::setSwitchingConstraint(const SplitSolution& other) {
+inline void SplitSolution::setSwitchingConstraintDimension(const SplitSolution& other) {
   has_active_impulse_ = other.hasActiveImpulse();
   dimi_ = other.dimi();
 }
 
 
-inline void SplitSolution::setSwitchingConstraint(const int dims) {
+inline void SplitSolution::setSwitchingConstraintDimension(const int dims) {
   has_active_impulse_ = (dims > 0);
   dimi_ = std::max(dims, 0);
 }

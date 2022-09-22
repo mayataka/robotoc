@@ -22,13 +22,13 @@ PYBIND11_MODULE(split_solution, m) {
           static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setContactStatus),
           py::arg("other"))
     .def("set_switching_constraint", 
-          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setSwitchingConstraint),
+          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setSwitchingConstraintDimension),
           py::arg("impulse_status"))
     .def("set_switching_constraint", 
-          static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setSwitchingConstraint),
+          static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setSwitchingConstraintDimension),
           py::arg("other"))
     .def("set_switching_constraint", 
-          static_cast<void (SplitSolution::*)(const int)>(&SplitSolution::setSwitchingConstraint),
+          static_cast<void (SplitSolution::*)(const int)>(&SplitSolution::setSwitchingConstraintDimension),
           py::arg("dims"))
     .def("set_f_stack", &SplitSolution::set_f_stack)
     .def("set_f_vector", &SplitSolution::set_f_vector)

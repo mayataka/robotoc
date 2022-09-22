@@ -59,12 +59,12 @@ public:
   /// @brief Set impulse status, i.e., set dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
-  void setImpulseStatus(const ImpulseStatus& impulse_status);
+  void setDimension(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
   ///
-  void setImpulseStatus();
+  void setDimension();
 
   ///
   /// @brief Residual in the switching constraint.

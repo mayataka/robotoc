@@ -8,13 +8,13 @@
 
 namespace robotoc {
 
-inline void SwitchingConstraintJacobian::setImpulseStatus(
+inline void SwitchingConstraintJacobian::setDimension(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimi();
 }
 
 
-inline void SwitchingConstraintJacobian::setImpulseStatus() {
+inline void SwitchingConstraintJacobian::setDimension() {
   dimi_ = 0;
 }
 

@@ -86,7 +86,7 @@ KKTMatrix CreateKKTMatrix(const Robot& robot,
     kkt_matrix.lift[i] = CreateSplitKKTMatrix(robot, dt);
   }
   for (int i=0; i<num_impulse; ++i) {
-    kkt_matrix.switching[i].setImpulseStatus(contact_sequence->impulseStatus(i));
+    kkt_matrix.switching[i].setDimension(contact_sequence->impulseStatus(i));
     kkt_matrix.switching[i].Pq().setRandom();
     kkt_matrix.switching[i].Phix().setRandom();
     kkt_matrix.switching[i].Phia().setRandom();
@@ -114,7 +114,7 @@ KKTResidual CreateKKTResidual(const Robot& robot,
     kkt_residual.lift[i] = CreateSplitKKTResidual(robot);
   }
   for (int i=0; i<num_impulse; ++i) {
-    kkt_residual.switching[i].setImpulseStatus(contact_sequence->impulseStatus(i));
+    kkt_residual.switching[i].setDimension(contact_sequence->impulseStatus(i));
     kkt_residual.switching[i].P().setRandom();
   }
   return kkt_residual;

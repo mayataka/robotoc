@@ -8,13 +8,13 @@
 
 namespace robotoc {
 
-inline void SwitchingConstraintResidual::setImpulseStatus(
+inline void SwitchingConstraintResidual::setDimension(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimi();
 }
 
 
-inline void SwitchingConstraintResidual::setImpulseStatus() {
+inline void SwitchingConstraintResidual::setDimension() {
   dimi_ = 0;
 }
 

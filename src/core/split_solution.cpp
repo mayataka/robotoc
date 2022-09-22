@@ -110,7 +110,7 @@ void SplitSolution::copyPrimal(const SplitSolution& other) {
 
 void SplitSolution::copyDual(const SplitSolution& other) {
   setContactStatus(other);
-  setSwitchingConstraint(other);
+  setSwitchingConstraintDimension(other);
   lmd = other.lmd;
   gmm = other.gmm;
   beta = other.beta;
@@ -235,7 +235,7 @@ void SplitSolution::setRandom(const Robot& robot,
 void SplitSolution::setRandom(const Robot& robot, 
                               const ImpulseStatus& impulse_status) {
   setContactStatus(impulse_status);
-  setSwitchingConstraint(impulse_status);
+  setSwitchingConstraintDimension(impulse_status);
   setRandom(robot);
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
@@ -247,7 +247,7 @@ void SplitSolution::setRandom(const Robot& robot,
                               const ContactStatus& contact_status,
                               const ImpulseStatus& impulse_status) {
   setRandom(robot, contact_status);
-  setSwitchingConstraint(impulse_status);
+  setSwitchingConstraintDimension(impulse_status);
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
   }
