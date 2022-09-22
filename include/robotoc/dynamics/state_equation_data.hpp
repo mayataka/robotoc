@@ -63,7 +63,10 @@ public:
 
   SE3JacobianInverse se3_jac_inverse;
 
-  bool has_floating_base;
+  bool hasFloatingBase() const { return has_floating_base_; }
+
+private:
+  bool has_floating_base_;
 };
 
 } // namespace robotoc 

@@ -5,21 +5,19 @@
 namespace robotoc {
 
 ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
-  : data_(robot),
-    has_floating_base_(robot.hasFloatingBase()) {
+  : data_(robot) {
 }
 
 
 ImpulseStateEquation::ImpulseStateEquation()
-  : data_(),
-    has_floating_base_(false) {
+  : data_() {
 }
 
 
-void ImpulseStateEquation::evalStateEquation(
-    const Robot& robot, const SplitSolution& s, 
-    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
-    SplitKKTResidual& kkt_residual) {
+void ImpulseStateEquation::eval(const Robot& robot, const SplitSolution& s, 
+                                const Eigen::VectorXd& q_next, 
+                                const Eigen::VectorXd& v_next, 
+                                SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
@@ -27,21 +25,23 @@ void ImpulseStateEquation::evalStateEquation(
 }
 
 
-void ImpulseStateEquation::linearizeStateEquation(
-    const Robot& robot, const Eigen::VectorXd& q_prev, 
-    const SplitSolution& s, const SplitSolution& s_next, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+void ImpulseStateEquation::linearize(const Robot& robot, StateEquationData& data, 
+                                     const Eigen::VectorXd& q_prev, 
+                                     const SplitSolution& s, 
+                                     const SplitSolution& s_next, 
+                                     SplitKKTMatrix& kkt_matrix, 
+                                     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
-  evalStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
+  eval(robot, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
-    data_.Fqq_prev.setZero();
-    robot.dSubtractConfiguration_dq0(q_prev, s.q, data_.Fqq_prev);
+    data.Fqq_prev.setZero();
+    robot.dSubtractConfiguration_dq0(q_prev, s.q, data.Fqq_prev);
     kkt_residual.lq().template head<6>().noalias() 
         += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
               * s_next.lmd.template head<6>();
     kkt_residual.lq().template head<6>().noalias() 
-        += data_.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
+        += data.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
               * s.lmd.template head<6>();
     kkt_residual.lq().tail(robot.dimv()-6).noalias() 
         += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
@@ -55,27 +55,59 @@ void ImpulseStateEquation::linearizeStateEquation(
 }
 
 
+void ImpulseStateEquation::correctLinearize(const Robot& robot, 
+                                            StateEquationData& data, 
+                                            const SplitSolution& s, 
+                                            const SplitSolution& s_next, 
+                                            SplitKKTMatrix& kkt_matrix, 
+                                            SplitKKTResidual& kkt_residual) {
+  if (!data.hasFloatingBase()) return;
+
+  data.se3_jac_inverse.compute(data.Fqq_prev, data.Fqq_prev_inv);
+  robot.dSubtractConfiguration_dq0(s.q, s_next.q, data.Fqq_prev);
+  data.se3_jac_inverse.compute(data.Fqq_prev, data.Fqq_inv);
+  data.Fqq_tmp = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+  data.Fq_tmp  = kkt_residual.Fq().template head<6>();
+  kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - data.Fqq_inv * data.Fqq_tmp;
+  kkt_residual.Fq().template head<6>().noalias() = - data.Fqq_inv * data.Fq_tmp;
+}
+
+
+void ImpulseStateEquation::correctCostateDirection(StateEquationData& data, 
+                                                   SplitDirection& d) {
+  if (!data.hasFloatingBase()) return;
+
+  data.Fq_tmp.noalias() = data.Fqq_prev_inv.transpose() * d.dlmdgmm.template head<6>();
+  d.dlmdgmm.template head<6>() = - data.Fq_tmp;
+}
+
+
+void ImpulseStateEquation::evalStateEquation(
+    const Robot& robot, const SplitSolution& s, 
+    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
+    SplitKKTResidual& kkt_residual) {
+  eval(robot, s, q_next, v_next, kkt_residual);
+}
+
+
+void ImpulseStateEquation::linearizeStateEquation(
+    const Robot& robot, const Eigen::VectorXd& q_prev, 
+    const SplitSolution& s, const SplitSolution& s_next, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+  linearize(robot, data_, q_prev, s, s_next, kkt_matrix, kkt_residual);
+}
+
+
 void ImpulseStateEquation::correctLinearizedStateEquation(
     const Robot& robot, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  if (!has_floating_base_) return;
-
-  data_.se3_jac_inverse.compute(data_.Fqq_prev, data_.Fqq_prev_inv);
-  robot.dSubtractConfiguration_dq0(s.q, s_next.q, data_.Fqq_prev);
-  data_.se3_jac_inverse.compute(data_.Fqq_prev, data_.Fqq_inv);
-  data_.Fqq_tmp = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-  data_.Fq_tmp  = kkt_residual.Fq().template head<6>();
-  kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - data_.Fqq_inv * data_.Fqq_tmp;
-  kkt_residual.Fq().template head<6>().noalias() = - data_.Fqq_inv * data_.Fq_tmp;
+  correctLinearize(robot, data_, s, s_next, kkt_matrix, kkt_residual);
 }
 
 
 void ImpulseStateEquation::correctCostateDirection(SplitDirection& d) {
-  if (!has_floating_base_) return;
-
-  data_.Fq_tmp.noalias() = data_.Fqq_prev_inv.transpose() * d.dlmdgmm.template head<6>();
-  d.dlmdgmm.template head<6>() = - data_.Fq_tmp;
+  correctCostateDirection(data_, d);
 }
 
 } // namespace robotoc 

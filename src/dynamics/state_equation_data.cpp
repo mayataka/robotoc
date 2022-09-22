@@ -10,7 +10,7 @@ StateEquationData::StateEquationData(const Robot& robot)
     Fqq_tmp(),
     Fq_tmp(),
     se3_jac_inverse(),
-    has_floating_base(robot.hasFloatingBase()) {
+    has_floating_base_(robot.hasFloatingBase()) {
   if (robot.hasFloatingBase()) {
     Fqq_inv.resize(6, 6);
     Fqq_inv.setZero();
@@ -31,7 +31,7 @@ StateEquationData::StateEquationData()
     Fqq_tmp(),
     Fq_tmp(),
     se3_jac_inverse(),
-    has_floating_base(false) {
+    has_floating_base_(false) {
 }
 
 } // namespace robotoc 

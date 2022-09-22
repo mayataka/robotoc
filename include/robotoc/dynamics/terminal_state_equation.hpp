@@ -65,6 +65,31 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
+  static void linearize(const Robot& robot, StateEquationData& data, 
+                        const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                        SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Corrects the linearized state equation using the Jacobian of the 
+  /// Lie group. 
+  /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
+  ///
+  static void correctLinearize(StateEquationData& data, SplitKKTMatrix& kkt_matrix);
+
+  ///
+  /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
+  /// @param[in, out] d Split direction at the terminal stage. 
+  ///
+  static void correctCostateDirection(StateEquationData& data, SplitDirection& d);
+
+  ///
+  /// @brief Linearizes the state equation at the teminal stage. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] q_prev Configuration at the previous time stage. 
+  /// @param[in] s Solution at the current stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
+  /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
+  ///
   void linearizeStateEquation(const Robot& robot, const Eigen::VectorXd& q_prev, 
                               const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
                               SplitKKTResidual& kkt_residual);
@@ -84,7 +109,6 @@ public:
 
 private:
   StateEquationData data_;
-  bool has_floating_base_;
 
 };
 
