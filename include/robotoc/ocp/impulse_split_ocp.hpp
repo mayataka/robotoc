@@ -16,7 +16,7 @@
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/dynamics/impulse_state_equation.hpp"
-#include "robotoc/dynamics/impulse_dynamics.hpp"
+#include "robotoc/dynamics/contact_dynamics_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 
 
@@ -240,7 +240,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ImpulseStateEquation state_equation_;
-  ImpulseDynamics impulse_dynamics_;
+  ContactDynamicsData contact_dynamics_data_;
   double stage_cost_, barrier_cost_;
 
 };

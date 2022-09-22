@@ -1,4 +1,5 @@
 #include "robotoc/ocp/split_ocp.hpp"
+#include "robotoc/dynamics/contact_dynamics.hpp"
 
 #include <cassert>
 
@@ -12,7 +13,7 @@ SplitOCP::SplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     state_equation_(robot),
-    contact_dynamics_(robot),
+    contact_dynamics_data_(robot),
     switching_constraint_(robot),
     stage_cost_(0),
     barrier_cost_(0) {
@@ -25,7 +26,7 @@ SplitOCP::SplitOCP()
     constraints_(),
     constraints_data_(),
     state_equation_(),
-    contact_dynamics_(),
+    contact_dynamics_data_(),
     switching_constraint_(),
     stage_cost_(0),
     barrier_cost_(0) {
@@ -76,7 +77,7 @@ void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
   barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.evalStateEquation(robot, grid_info.dt, s, q_next, v_next, 
                                     kkt_residual);
-  contact_dynamics_.evalContactDynamics(robot, contact_status, s);
+  ContactDynamics::eval(robot, contact_status, contact_dynamics_data_, s);
 }
 
 
@@ -115,8 +116,7 @@ void SplitOCP::computeKKTResidual(Robot& robot,
   barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, s, 
-                                             kkt_residual);
+  ContactDynamics::linearize(robot, contact_status, contact_dynamics_data_, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
@@ -167,13 +167,12 @@ void SplitOCP::computeKKTSystem(Robot& robot,
   barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
-                                             kkt_residual);
+  ContactDynamics::linearize(robot, contact_status, contact_dynamics_data_, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
   constraints_->condenseSlackAndDual(contact_status, constraints_data_, 
                                      kkt_matrix, kkt_residual);
-  contact_dynamics_.condenseContactDynamics(robot, contact_status, grid_info.dt, 
-                                            kkt_matrix, kkt_residual);
+  ContactDynamics::condense(robot, contact_status, contact_dynamics_data_, 
+                            grid_info.dt, kkt_matrix, kkt_residual);
   state_equation_.correctLinearizedStateEquation(robot, grid_info.dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
 }
@@ -206,8 +205,7 @@ void SplitOCP::computeKKTSystem(Robot& robot,
   barrier_cost_ = constraints_data_.logBarrier();
   state_equation_.linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
                                          kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, s,
-                                             kkt_residual);
+  ContactDynamics::linearize(robot, contact_status, contact_dynamics_data_, s, kkt_residual);
   switching_constraint_.linearizeSwitchingConstraint(robot, impulse_status, 
                                                      grid_info.dt, grid_info_next.dt, 
                                                      s, kkt_matrix, kkt_residual, 
@@ -215,10 +213,9 @@ void SplitOCP::computeKKTSystem(Robot& robot,
   kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual);
   constraints_->condenseSlackAndDual(contact_status, constraints_data_, 
                                      kkt_matrix, kkt_residual);
-  contact_dynamics_.condenseContactDynamics(robot, contact_status, grid_info.dt, 
-                                            kkt_matrix, kkt_residual);
-  contact_dynamics_.condenseSwitchingConstraint(sc_jacobian, sc_residual, 
-                                                kkt_matrix);
+  ContactDynamics::condense(robot, contact_status, contact_dynamics_data_, 
+                            grid_info.dt, kkt_matrix, kkt_residual);
+  ContactDynamics::condense(contact_dynamics_data_, sc_jacobian, sc_residual, kkt_matrix);
   state_equation_.correctLinearizedStateEquation(robot, grid_info.dt, s, s_next, 
                                                  kkt_matrix, kkt_residual);
 }
@@ -236,15 +233,16 @@ void SplitOCP::computeInitialStateDirection(const Robot& robot,
 void SplitOCP::expandPrimal(const ContactStatus& contact_status, 
                             SplitDirection& d) {
   d.setContactStatus(contact_status);
-  contact_dynamics_.expandPrimal(d);
+  ContactDynamics::expandPrimal(contact_dynamics_data_, d);
   constraints_->expandSlackAndDual(contact_status, constraints_data_, d);
 }
+
 
 void SplitOCP::expandDual(const GridInfo& grid_info, 
                           const SplitDirection& d_next, 
                           SplitDirection& d, const double dts) {
   assert(grid_info.dt > 0);
-  contact_dynamics_.expandDual(grid_info.dt, dts, d_next, d);
+  ContactDynamics::expandDual(contact_dynamics_data_, grid_info.dt, dts, d_next, d);
   state_equation_.correctCostateDirection(d);
 }
 
@@ -254,7 +252,7 @@ void SplitOCP::expandDual(const GridInfo& grid_info,
                           const SwitchingConstraintJacobian& sc_jacobian,
                           SplitDirection& d, const double dts) {
   assert(grid_info.dt > 0);
-  contact_dynamics_.expandDual(grid_info.dt, dts, d_next, sc_jacobian, d);
+  ContactDynamics::expandDual(contact_dynamics_data_, grid_info.dt, dts, d_next, sc_jacobian, d);
   state_equation_.correctCostateDirection(d);
 }
 
@@ -288,7 +286,7 @@ void SplitOCP::updateDual(const double dual_step_size) {
 double SplitOCP::KKTError(const SplitKKTResidual& kkt_residual) const {
   double err = 0;
   err += kkt_residual.KKTError();
-  err += contact_dynamics_.KKTError();
+  err += contact_dynamics_data_.KKTError();
   err += constraints_data_.KKTError();
   return err;
 }
@@ -318,7 +316,7 @@ double SplitOCP::constraintViolation(
     const SplitKKTResidual& kkt_residual) const {
   double vio = 0;
   vio += kkt_residual.constraintViolation();
-  vio += contact_dynamics_.constraintViolation();
+  vio += contact_dynamics_data_.constraintViolation();
   vio += constraints_data_.constraintViolation();
   return vio;
 }

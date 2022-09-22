@@ -53,6 +53,18 @@ public:
 
   void setContactDimension(const int dimf);
 
+  int dimv() const;
+
+  int dimu() const;
+
+  int dimf() const;
+
+  int dimvf() const;
+
+  int dim_passive() const;
+
+  bool hasFloatingBase() const;
+
   Eigen::MatrixXd Qxu_passive;
 
   Eigen::MatrixXd Quu_passive_topRight;
@@ -171,12 +183,22 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> hf() const;
 
+  double KKTError() const {
+    return (IDC().squaredNorm() + lu_passive.squaredNorm());
+  }
+
+  template <int p=1>
+  double constraintViolation() const {
+    return IDC().template lpNorm<p>();
+  }
+
 private:
   Eigen::MatrixXd dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 
                   Qafu_full_full_;
   Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_full_, haf_full_;
   int dimv_, dimu_, dimf_, dimvf_, dim_passive_;
+  bool has_floating_base_;
 
 };
 

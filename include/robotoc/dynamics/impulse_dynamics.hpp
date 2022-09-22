@@ -61,6 +61,55 @@ public:
   /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in] s Split solution of this impulse stage.
   ///
+  static void eval(Robot& robot, const ImpulseStatus& impulse_status,
+                   ContactDynamicsData& data, const SplitSolution& s);
+
+  ///
+  /// @brief Linearizes the impulse dynamics constraint. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
+  ///
+  static void linearize(Robot& robot, const ImpulseStatus& impulse_status, 
+                        ContactDynamicsData& data, const SplitSolution& s, 
+                        SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Condenses the inverse dynamics constraint. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
+  ///
+  static void condense(Robot& robot, const ImpulseStatus& impulse_status,
+                       ContactDynamicsData& data, SplitKKTMatrix& kkt_matrix, 
+                       SplitKKTResidual& kkt_residual);
+
+  ///
+  /// @brief Expands the primal variables, i.e., computes the Newton direction 
+  /// of the condensed primal variables (impulse change in the velocity dv and 
+  /// the impulse forces f) of this impulse stage.
+  /// @param[in, out] d Split direction of this impulse stage.
+  /// 
+  static void expandPrimal(const ContactDynamicsData& data, SplitDirection& d);
+
+  ///
+  /// @brief Expands the dual variables, i.e., computes the Newton direction 
+  /// of the condensed dual variables (Lagrange multipliers) of this impulse 
+  /// stage.
+  /// @param[in] d_next Split direction of the next stage.
+  /// @param[in, out] d Split direction of this impulse stage.
+  /// 
+  static void expandDual(ContactDynamicsData& data, const SplitDirection& d_next, 
+                         SplitDirection& d);
+
+  ///
+  /// @brief Computes the residual in the impulse dynamics constraint. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  ///
   void evalImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,
                            const SplitSolution& s);
 

@@ -13,6 +13,36 @@ inline void ContactDynamicsData::setContactDimension(const int dimf) {
 }
 
 
+inline int ContactDynamicsData::dimv() const {
+  return dimv_;
+}
+
+
+inline int ContactDynamicsData::dimu() const {
+  return dimu_;
+}
+
+
+inline int ContactDynamicsData::dimf() const {
+  return dimf_;
+}
+
+
+inline int ContactDynamicsData::dimvf() const {
+  return dimvf_;
+}
+
+
+inline int ContactDynamicsData::dim_passive() const {
+  return dim_passive_;
+}
+
+
+inline bool ContactDynamicsData::hasFloatingBase() const {
+  return has_floating_base_;
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> ContactDynamicsData::dCda() {
   return dCda_full_.topLeftCorner(dimf_, dimv_);
 }

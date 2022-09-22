@@ -27,7 +27,8 @@ ContactDynamicsData::ContactDynamicsData(const Robot& robot)
     dimu_(robot.dimu()),
     dimf_(0),
     dimvf_(robot.dimv()),
-    dim_passive_(robot.dim_passive()) {
+    dim_passive_(robot.dim_passive()),
+    has_floating_base_(robot.hasFloatingBase()) {
 }
 
 
@@ -50,7 +51,8 @@ ContactDynamicsData::ContactDynamicsData()
     dimu_(0),
     dimf_(0),
     dimvf_(0),
-    dim_passive_(0) {
+    dim_passive_(0),
+    has_floating_base_(false) {
 }
 
 } // namespace robotoc 
