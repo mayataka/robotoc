@@ -18,7 +18,7 @@ SplitDirection::SplitDirection(const Robot& robot)
     dimu_(robot.dimu()), 
     dim_passive_(robot.dim_passive()), 
     dimf_(0), 
-    dimi_(0) {
+    dims_(0) {
 }
 
 
@@ -36,7 +36,7 @@ SplitDirection::SplitDirection()
     dimu_(0), 
     dim_passive_(0), 
     dimf_(0), 
-    dimi_(0) {
+    dims_(0) {
 }
 
 
@@ -53,7 +53,7 @@ bool SplitDirection::isApprox(const SplitDirection& other) const {
   assert(isDimensionConsistent());
   assert(other.isDimensionConsistent());
   assert(dimf()==other.dimf());
-  assert(dimi()==other.dimi());
+  assert(dims()==other.dims());
   if (!dx.isApprox(other.dx)) {
     return false;
   }
@@ -114,7 +114,7 @@ void SplitDirection::setRandom(const ImpulseStatus& impulse_status) {
 void SplitDirection::setRandom(const ContactStatus& contact_status, 
                                const ImpulseStatus& impulse_status) {
   setContactStatus(contact_status);
-  setSwitchingConstraintDimension(impulse_status);
+  setSwitchingConstraintDimension(impulse_status.dimi());
   setRandom();
 }
 
@@ -166,7 +166,7 @@ void SplitDirection::disp(std::ostream& os) const {
   if (dimf_ > 0) {
     os << "  dmu      = " << dmu().transpose() << std::endl;
   }
-  if (dimi_ > 0) {
+  if (dims_ > 0) {
     os << "  dxi      = " << dxi().transpose() << std::flush;
   }
 }

@@ -13,7 +13,7 @@ SwitchingConstraintJacobian::SwitchingConstraintJacobian(const Robot& robot)
     dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
-    dimi_(0) {
+    dims_(0) {
 }
 
 
@@ -27,13 +27,13 @@ SwitchingConstraintJacobian::SwitchingConstraintJacobian()
     dimv_(0),
     dimx_(0),
     dimu_(0),
-    dimi_(0) {
+    dims_(0) {
 }
 
 
 bool SwitchingConstraintJacobian::isApprox(
     const SwitchingConstraintJacobian& other) const {
-  assert(dimi() == other.dimi());
+  assert(dims() == other.dims());
   if (!Pq().isApprox(other.Pq())) return false;
   if (!Phix().isApprox(other.Phix())) return false;
   if (!Phia().isApprox(other.Phia())) return false;

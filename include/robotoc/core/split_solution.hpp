@@ -76,21 +76,10 @@ public:
   void setContactStatus(const ImpulseStatus& contact_status);
 
   ///
-  /// @brief Set impulse status, i.e., set the dimension of the impulse.
-  /// @param[in] impulse_status Impulse status.
+  /// @brief Sets the dimension of the switching constraint.
+  /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
   ///
-  void setSwitchingConstraintDimension(const ImpulseStatus& impulse_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set the dimension of the impulse.
-  /// @param[in] other Other split solution.
-  ///
-  void setSwitchingConstraintDimension(const SplitSolution& other);
-
-  ///
-  /// @brief Set impulse status zero.
-  ///
-  void setSwitchingConstraintDimension(const int dims=0);
+  void setSwitchingConstraintDimension(const int dims);
 
   ///
   /// @brief Configuration. Size is Robot::dimq().
@@ -224,11 +213,10 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the 
-  /// current impulse status.
-  /// @return Dimension of the impulse forces.
+  /// @brief Returns the dimension of the switching constraint.
+  /// @return Dimension of the switching constraint.
   ///
-  int dimi() const;
+  int dims() const;
 
   ///
   /// @brief Return true if there are active contacts and false if not.
@@ -378,7 +366,7 @@ private:
   bool has_floating_base_, has_active_contacts_, has_active_impulse_;
   std::vector<ContactType> contact_types_;
   std::vector<bool> is_contact_active_;
-  int dimf_, dimi_, max_num_contacts_;
+  int dimf_, dims_, max_num_contacts_;
 
 };
 

@@ -25,7 +25,7 @@ SplitSolution::SplitSolution(const Robot& robot)
     contact_types_(robot.contactTypes()),
     is_contact_active_(robot.maxNumContacts(), false),
     dimf_(0),
-    dimi_(0),
+    dims_(0),
     max_num_contacts_(robot.maxNumContacts()) {
   if (robot.hasFloatingBase()) {
     q.coeffRef(6) = 1.0;
@@ -54,7 +54,7 @@ SplitSolution::SplitSolution()
     contact_types_(),
     is_contact_active_(),
     dimf_(0),
-    dimi_(0),
+    dims_(0),
     max_num_contacts_(0) {
 }
 
@@ -110,7 +110,7 @@ void SplitSolution::copyPrimal(const SplitSolution& other) {
 
 void SplitSolution::copyDual(const SplitSolution& other) {
   setContactStatus(other);
-  setSwitchingConstraintDimension(other);
+  setSwitchingConstraintDimension(other.dims());
   lmd = other.lmd;
   gmm = other.gmm;
   beta = other.beta;
@@ -133,7 +133,7 @@ double SplitSolution::lagrangeMultiplierLinfNorm() const {
   const double beta_linf = beta.template lpNorm<Eigen::Infinity>();
   const double nu_passive_linf = (has_floating_base_ ? nu_passive.template lpNorm<Eigen::Infinity>() : 0);
   const double mu_linf = ((dimf_ > 0) ? mu_stack().template lpNorm<Eigen::Infinity>() : 0);
-  const double xi_linf = ((dimi_ > 0) ? xi_stack().template lpNorm<Eigen::Infinity>() : 0);
+  const double xi_linf = ((dims_ > 0) ? xi_stack().template lpNorm<Eigen::Infinity>() : 0);
   return std::max({lmd_linf, gmm_linf, beta_linf, nu_passive_linf, mu_linf, xi_linf});
 }
 
@@ -235,7 +235,7 @@ void SplitSolution::setRandom(const Robot& robot,
 void SplitSolution::setRandom(const Robot& robot, 
                               const ImpulseStatus& impulse_status) {
   setContactStatus(impulse_status);
-  setSwitchingConstraintDimension(impulse_status);
+  setSwitchingConstraintDimension(impulse_status.dimi());
   setRandom(robot);
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
@@ -247,7 +247,7 @@ void SplitSolution::setRandom(const Robot& robot,
                               const ContactStatus& contact_status,
                               const ImpulseStatus& impulse_status) {
   setRandom(robot, contact_status);
-  setSwitchingConstraintDimension(impulse_status);
+  setSwitchingConstraintDimension(impulse_status.dimi());
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
   }
@@ -301,7 +301,7 @@ void SplitSolution::disp(std::ostream& os) const {
   if (dimf_ > 0) {
     os << "  mu = " << mu_stack().transpose() << std::endl;
   }
-  if (dimi_ > 0) {
+  if (dims_ > 0) {
     os << "  xi = " << xi_stack().transpose() << std::flush;
   }
 }

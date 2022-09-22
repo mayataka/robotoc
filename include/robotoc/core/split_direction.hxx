@@ -19,9 +19,10 @@ inline void SplitDirection::setContactStatus(
 }
 
 
-inline void SplitDirection::setSwitchingConstraintDimension(
-    const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimi();
+inline void SplitDirection::setSwitchingConstraintDimension(const int dims) {
+  assert(dims >= 0);
+  assert(dims <= dxi_full_.size());
+  dims_ = dims;
 }
 
 
@@ -166,13 +167,13 @@ SplitDirection::dmu() const {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dxi() {
-  return dxi_full_.head(dimi_);
+  return dxi_full_.head(dims_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitDirection::dxi() const {
-  return dxi_full_.head(dimi_);
+  return dxi_full_.head(dims_);
 }
 
 
@@ -194,8 +195,8 @@ inline int SplitDirection::dimf() const {
 }
 
 
-inline int SplitDirection::dimi() const {
-  return dimi_;
+inline int SplitDirection::dims() const {
+  return dims_;
 }
 
 } // namespace robotoc 

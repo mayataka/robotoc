@@ -137,8 +137,8 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   auto kkt_residual_ref = kkt_residual;
   SwitchingConstraintJacobian sc_jacobian(robot);
   SwitchingConstraintResidual sc_residual(robot);
-  sc_jacobian.setDimension(impulse_status);
-  sc_residual.setDimension(impulse_status);
+  sc_jacobian.setDimension(impulse_status.dimi());
+  sc_residual.setDimension(impulse_status.dimi());
   sc_jacobian.Phix().setRandom();
   sc_jacobian.Phia().setRandom();
   sc_jacobian.Phiu().setRandom();
@@ -354,7 +354,7 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
   c_riccati.setConstraintDimension(impulse_status.dimi());
   c_riccati.M().setRandom();
   c_riccati.m().setRandom();
-  d.setSwitchingConstraintDimension(impulse_status);
+  d.setSwitchingConstraintDimension(impulse_status.dimi());
   d.dxi().setRandom();
   d_ref = d;
   sto = false;

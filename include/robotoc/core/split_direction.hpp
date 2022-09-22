@@ -68,10 +68,10 @@ public:
   void setContactStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Sets the impulse status, i.e., set the dimension of the impulse.
-  /// @param[in] impulse_status Impulse status.
+  /// @brief Sets the dimension of the switching constraint.
+  /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
   ///
-  void setSwitchingConstraintDimension(const ImpulseStatus& impulse_status);
+  void setSwitchingConstraintDimension(const int dims);
 
   ///
   /// @brief Stack of the Newton directions of SplitSolution::q and 
@@ -130,7 +130,7 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> da() const;
 
   ///
-  /// @brief Stack of Newton direction of SplitSolution::a and SplitSolution::f. 
+  /// @brief Stack of Newton direction of SplitSolution::dv and SplitSolution::f. 
   /// Size is Robot::dimv() + ContactStatus::dimf().
   /// @return Reference to the Newton direction.
   ///
@@ -142,13 +142,13 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> ddvf() const;
 
   ///
-  /// @brief Newton direction of SplitSolution::a. Size is Robot::dimv().
+  /// @brief Newton direction of SplitSolution::dv. Size is Robot::dimv().
   /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> ddv();
 
   ///
-  /// @brief const version of SplitDirection::da().
+  /// @brief const version of SplitDirection::ddv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> ddv() const;
 
@@ -235,7 +235,7 @@ public:
 
   ///
   /// @brief Newton direction of SplitSolution::xi_stack(). Size is 
-  /// SplitSolution::dimi().
+  /// SplitSolution::dims().
   /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dxi();
@@ -267,10 +267,10 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Returns the dimension of the impulse.
-  /// @return Dimension of the impulses.
+  /// @brief Returns the dimension of the switching constraint.
+  /// @return Dimension of the switching constraint.
   ///
-  int dimi() const;
+  int dims() const;
 
   ///
   /// @brief Checks dimensional consistency of each component. 
@@ -357,7 +357,7 @@ public:
 
 private:
   Eigen::VectorXd daf_full_, dbetamu_full_, dxi_full_;
-  int dimv_, dimu_, dim_passive_, dimf_, dimi_;
+  int dimv_, dimu_, dim_passive_, dimf_, dims_;
 
 };
 

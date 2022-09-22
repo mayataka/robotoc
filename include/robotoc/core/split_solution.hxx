@@ -33,22 +33,11 @@ inline void SplitSolution::setContactStatus(
 }
 
 
-inline void SplitSolution::setSwitchingConstraintDimension(
-    const ImpulseStatus& impulse_status) {
-  has_active_impulse_ = impulse_status.hasActiveImpulse();
-  dimi_ = impulse_status.dimi();
-}
-
-
-inline void SplitSolution::setSwitchingConstraintDimension(const SplitSolution& other) {
-  has_active_impulse_ = other.hasActiveImpulse();
-  dimi_ = other.dimi();
-}
-
-
 inline void SplitSolution::setSwitchingConstraintDimension(const int dims) {
+  assert(dims >= 0);
+  assert(dims <= xi_stack_.size());
   has_active_impulse_ = (dims > 0);
-  dimi_ = std::max(dims, 0);
+  dims_ = std::max(dims, 0);
 }
 
 
@@ -159,13 +148,13 @@ inline void SplitSolution::set_mu_vector() {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::xi_stack() {
-  return xi_stack_.head(dimi_);
+  return xi_stack_.head(dims_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitSolution::xi_stack() const {
-  return xi_stack_.head(dimi_);
+  return xi_stack_.head(dims_);
 }
 
 
@@ -174,8 +163,8 @@ inline int SplitSolution::dimf() const {
 }
 
 
-inline int SplitSolution::dimi() const {
-  return dimi_;
+inline int SplitSolution::dims() const {
+  return dims_;
 }
 
 

@@ -8,7 +8,7 @@ SwitchingConstraintResidual::SwitchingConstraintResidual(
   : P_full_(robot.max_dimf()),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
-    dimi_(0) {
+    dims_(0) {
 }
 
 
@@ -16,12 +16,12 @@ SwitchingConstraintResidual::SwitchingConstraintResidual()
   : P_full_(),
     dimq_(0),
     dimv_(0), 
-    dimi_(0) {
+    dims_(0) {
 }
 
 bool SwitchingConstraintResidual::isApprox(
     const SwitchingConstraintResidual& other) const {
-  assert(dimi() == other.dimi());
+  assert(dims() == other.dims());
   if (P().isApprox(other.P())) 
     return true;
   else 

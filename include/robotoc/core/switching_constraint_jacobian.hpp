@@ -6,7 +6,6 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/impulse_status.hpp"
 
 
 namespace robotoc {
@@ -56,15 +55,10 @@ public:
       SwitchingConstraintJacobian&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulses.
-  /// @param[in] impulse_status Impulse status.
+  /// @brief Sets the dimension of the switching constraint.
+  /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
   ///
-  void setDimension(const ImpulseStatus& impulse_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
-  ///
-  void setDimension();
+  void setDimension(const int dims);
 
   ///
   /// @brief Jacobian of the original contact position constraint w.r.t. q. 
@@ -156,11 +150,10 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the current 
-  /// impulse status.
-  /// @return Dimension of the stack of impulse forces.
+  /// @brief Returns the dimension of the switching constraint.
+  /// @return Dimension of the switching constraint.
   ///
-  int dimi() const;
+  int dims() const;
 
   ///
   /// @brief Checks the equivalence of two SwitchingConstraintJacobian.
@@ -187,7 +180,7 @@ private:
   Eigen::MatrixXd Pq_full_, Phix_full_, Phia_full_, Phiu_full_;
   Eigen::VectorXd Phit_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dimi_;
+  int dimv_, dimx_, dimu_, dims_;
 
 };
 

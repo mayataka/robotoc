@@ -59,7 +59,7 @@ public:
 
   void setConstraintDimension(const int dimi=0);
 
-  int dimi() const;
+  int dims() const;
 
   Eigen::Block<Eigen::MatrixXd> DGinv();
 

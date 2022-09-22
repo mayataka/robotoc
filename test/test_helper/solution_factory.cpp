@@ -40,7 +40,7 @@ Solution CreateSolution(const Robot& robot,
     for (int i=0; i<num_impulse; ++i) {
       const int time_stage_before_impulse = time_discretization.timeStageBeforeImpulse(i);
       if (time_stage_before_impulse-1 >= 0) {
-        s[time_stage_before_impulse-1].setSwitchingConstraintDimension(contact_sequence->impulseStatus(i));
+        s[time_stage_before_impulse-1].setSwitchingConstraintDimension(contact_sequence->impulseStatus(i).dimi());
         s[time_stage_before_impulse-1].xi_stack().setRandom();
       }
     }

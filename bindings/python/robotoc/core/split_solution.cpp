@@ -21,21 +21,14 @@ PYBIND11_MODULE(split_solution, m) {
     .def("set_contact_status", 
           static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setContactStatus),
           py::arg("other"))
-    .def("set_switching_constraint", 
-          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setSwitchingConstraintDimension),
-          py::arg("impulse_status"))
-    .def("set_switching_constraint", 
-          static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setSwitchingConstraintDimension),
-          py::arg("other"))
-    .def("set_switching_constraint", 
-          static_cast<void (SplitSolution::*)(const int)>(&SplitSolution::setSwitchingConstraintDimension),
+    .def("set_switching_constraint_dimension", &SplitSolution::setSwitchingConstraintDimension,
           py::arg("dims"))
     .def("set_f_stack", &SplitSolution::set_f_stack)
     .def("set_f_vector", &SplitSolution::set_f_vector)
     .def("set_mu_stack", &SplitSolution::set_mu_stack)
     .def("set_mu_vector", &SplitSolution::set_mu_vector)
     .def("dimf", &SplitSolution::dimf)
-    .def("dimi", &SplitSolution::dimi)
+    .def("dims", &SplitSolution::dims)
     .def("has_active_contacts", &SplitSolution::hasActiveContacts)
     .def("has_active_impulse", &SplitSolution::hasActiveImpulse)
     .def("is_contact_active", 

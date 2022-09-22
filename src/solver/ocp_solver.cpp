@@ -537,14 +537,14 @@ void OCPSolver::discretizeSolution() {
     s_[i].setContactStatus(
         contact_sequence_->contactStatus(ocp_.timeDiscretization().contactPhase(i)));
     s_[i].set_f_stack();
-    s_[i].setSwitchingConstraintDimension();
+    s_[i].setSwitchingConstraintDimension(0);
   }
   for (int i=0; i<ocp_.timeDiscretization().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_->contactStatus(
             ocp_.timeDiscretization().contactPhaseAfterLift(i)));
     s_.lift[i].set_f_stack();
-    s_.lift[i].setSwitchingConstraintDimension();
+    s_.lift[i].setSwitchingConstraintDimension(0);
   }
   for (int i=0; i<ocp_.timeDiscretization().N_impulse(); ++i) {
     s_.impulse[i].setContactStatus(contact_sequence_->impulseStatus(i));
@@ -557,7 +557,7 @@ void OCPSolver::discretizeSolution() {
         = ocp_.timeDiscretization().timeStageBeforeImpulse(i);
     if (time_stage_before_impulse-1 >= 0) {
       s_[time_stage_before_impulse-1].setSwitchingConstraintDimension(
-          contact_sequence_->impulseStatus(i));
+          contact_sequence_->impulseStatus(i).dimi());
     }
   }
 }

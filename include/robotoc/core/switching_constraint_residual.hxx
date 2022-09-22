@@ -8,25 +8,21 @@
 
 namespace robotoc {
 
-inline void SwitchingConstraintResidual::setDimension(
-    const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimi();
-}
-
-
-inline void SwitchingConstraintResidual::setDimension() {
-  dimi_ = 0;
+inline void SwitchingConstraintResidual::setDimension(const int dims) {
+  assert(dims >= 0);
+  assert(dims <= P_full_.size());
+  dims_ = dims;
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> SwitchingConstraintResidual::P() {
-  return P_full_.head(dimi_);
+  return P_full_.head(dims_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SwitchingConstraintResidual::P() const {
-  return P_full_.head(dimi_);
+  return P_full_.head(dims_);
 }
 
 
@@ -46,8 +42,8 @@ inline void SwitchingConstraintResidual::setZero() {
 }
 
 
-inline int SwitchingConstraintResidual::dimi() const {
-  return dimi_;
+inline int SwitchingConstraintResidual::dims() const {
+  return dims_;
 }
 
 } // namespace robotoc 

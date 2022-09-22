@@ -56,9 +56,9 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_EQ(d.dnu_passive.size(), dim_passive);
   EXPECT_EQ(d.dxi().size(), 0);
   EXPECT_EQ(d.dimf(), 0);
-  EXPECT_EQ(d.dimi(), 0);
+  EXPECT_EQ(d.dims(), 0);
   d.setContactStatus(contact_status);
-  d.setSwitchingConstraintDimension(impulse_status);
+  d.setSwitchingConstraintDimension(impulse_status.dimi());
   EXPECT_EQ(d.dx.size(), dimx);
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);
@@ -75,7 +75,7 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_EQ(d.dnu_passive.size(), dim_passive);
   EXPECT_EQ(d.dxi().size(), dimi);
   EXPECT_EQ(d.dimf(), dimf);
-  EXPECT_EQ(d.dimi(), dimi);
+  EXPECT_EQ(d.dims(), dimi);
   d.setRandom();
   EXPECT_FALSE(d.dx.isZero());
   EXPECT_FALSE(d.daf().isZero());

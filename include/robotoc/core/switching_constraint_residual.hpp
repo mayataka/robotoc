@@ -6,7 +6,6 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/impulse_status.hpp"
 
 
 namespace robotoc {
@@ -56,15 +55,10 @@ public:
       SwitchingConstraintResidual&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
-  /// @param[in] impulse_status Impulse status.
+  /// @brief Sets the dimension of the switching constraint.
+  /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
   ///
-  void setDimension(const ImpulseStatus& impulse_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
-  ///
-  void setDimension();
+  void setDimension(const int dims);
 
   ///
   /// @brief Residual in the switching constraint.
@@ -102,11 +96,10 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the current 
-  /// impulse status.
-  /// @return Dimension of the stack of impulse forces.
+  /// @brief Returns the dimension of the switching constraint.
+  /// @return Dimension of the switching constraint.
   ///
-  int dimi() const;
+  int dims() const;
 
   ///
   /// @brief Checks the equivalence of two SwitchingConstraintResidual.
@@ -131,7 +124,7 @@ public:
 
 private:
   Eigen::VectorXd P_full_;
-  int dimq_, dimv_, dimi_;
+  int dimq_, dimv_, dims_;
 
 };
 

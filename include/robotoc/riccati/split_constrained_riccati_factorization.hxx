@@ -58,7 +58,7 @@ inline void SplitConstrainedRiccatiFactorization::setConstraintDimension(
 }
 
 
-inline int SplitConstrainedRiccatiFactorization::dimi() const {
+inline int SplitConstrainedRiccatiFactorization::dims() const {
   return dimi_;
 }
 
@@ -160,7 +160,7 @@ SplitConstrainedRiccatiFactorization::mt_next() const {
 
 inline bool SplitConstrainedRiccatiFactorization::isApprox(
     const SplitConstrainedRiccatiFactorization& other) const {
-  if (dimi() != other.dimi()) return false;
+  if (dims() != other.dims()) return false;
   if (!DGinv().isApprox(other.DGinv())) return false;
   if (!S().isApprox(other.S())) return false;
   if (!Sinv().isApprox(other.Sinv())) return false;
