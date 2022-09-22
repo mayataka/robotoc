@@ -33,7 +33,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~StateEquation();
+  ~StateEquation() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -107,12 +107,7 @@ public:
   /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
   /// @param[in, out] d Split direction. 
   ///
-  void correctCostateDirection(SplitDirection& d)  {
-    if (has_floating_base_) {
-      Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
-      d.dlmdgmm.template head<6>() = - Fq_tmp_;
-    }
-  }
+  void correctCostateDirection(SplitDirection& d);
 
   ///
   /// @brief Computes the initial state direction using the result of  
@@ -134,65 +129,6 @@ private:
   Eigen::VectorXd Fq_tmp_;
   SE3JacobianInverse se3_jac_inverse_;
   bool has_floating_base_;
-
-  template <typename SplitSolutionType>
-  static void linearizeStateEquation_impl(const Robot& robot, const double dt, 
-                                          const Eigen::VectorXd& q_prev, 
-                                          const SplitSolution& s, 
-                                          const SplitSolutionType& s_next, 
-                                          SplitKKTMatrix& kkt_matrix, 
-                                          SplitKKTResidual& kkt_residual) {
-    assert(dt > 0);
-    assert(q_prev.size() == robot.dimq());
-    evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual);
-    if (robot.hasFloatingBase()) {
-      robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
-      robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
-      kkt_residual.lq().template head<6>().noalias() 
-          += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
-                * s_next.lmd.template head<6>();
-      kkt_residual.lq().template head<6>().noalias() 
-          += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
-                * s.lmd.template head<6>();
-      kkt_residual.lq().tail(robot.dimv()-6).noalias() 
-          += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
-    }
-    else {
-      kkt_matrix.Fqq().diagonal().fill(1.);
-      kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
-    }
-    kkt_matrix.Fqv().diagonal().fill(dt);
-    kkt_residual.lv().noalias() += dt * s_next.lmd + s_next.gmm - s.gmm;
-    kkt_residual.la.noalias() += dt * s_next.gmm;
-    // STO sensitivities
-    kkt_residual.h += s_next.lmd.dot(s.v);
-    kkt_residual.h += s_next.gmm.dot(s.a);
-    kkt_matrix.hv().noalias() += s_next.lmd;
-    kkt_matrix.ha.noalias()   += s_next.gmm;
-    kkt_matrix.fq() = s.v;
-    kkt_matrix.fv() = s.a;
-  }
-
-  template <typename SplitSolutionType>
-  void correctLinearizedStateEquation_impl(const Robot& robot, const double dt, 
-                                           const SplitSolution& s, 
-                                           const SplitSolutionType& s_next, 
-                                           SplitKKTMatrix& kkt_matrix, 
-                                           SplitKKTResidual& kkt_residual) {
-    if (has_floating_base_) {
-      assert(dt > 0);
-      se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
-      robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);
-      se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_inv_);
-      Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-      kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
-      kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * Fqq_inv_;
-      Fq_tmp_  = kkt_residual.Fq().template head<6>();
-      kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
-      Fq_tmp_ = kkt_matrix.fq().template head<6>();
-      kkt_matrix.fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
-    }
-  }
 
 };
 

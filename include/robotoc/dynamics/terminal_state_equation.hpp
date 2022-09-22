@@ -34,7 +34,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~TerminalStateEquation();
+  ~TerminalStateEquation() = default;
 
   ///
   /// @brief Default copy constructor. 

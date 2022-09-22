@@ -32,9 +32,9 @@ public:
   ImpulseDynamics();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ImpulseDynamics();
+  ~ImpulseDynamics() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -95,11 +95,7 @@ public:
   /// the impulse forces f) of this impulse stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void expandPrimal(SplitDirection& d) const {
-    d.ddvf().noalias()  = - data_.MJtJinv_dImDCdqv() * d.dx;
-    d.ddvf().noalias() -= data_.MJtJinv_ImDC();
-    d.df().array()     *= -1;
-  }
+  void expandPrimal(SplitDirection& d) const;
 
   ///
   /// @brief Expands the dual variables, i.e., computes the Newton direction 
@@ -108,12 +104,7 @@ public:
   /// @param[in] d_next Split direction of the next stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  template <typename SplitDirectionType>
-  void expandDual(const SplitDirectionType& d_next, SplitDirection& d) {
-    data_.ldvf().noalias() += data_.Qdvfqv() * d.dx;
-    data_.ldv().noalias()  += d_next.dgmm();
-    d.dbetamu().noalias()   = - data_.MJtJinv() * data_.ldvf();
-  }
+  void expandDual(const SplitDirection& d_next, SplitDirection& d);
 
   ///
   /// @brief Returns the squared norm of the KKT residual, that is, 

@@ -31,9 +31,9 @@ public:
   SwitchingConstraint();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SwitchingConstraint();
+  ~SwitchingConstraint() = default;
 
   ///
   /// @brief Default copy constructor. 

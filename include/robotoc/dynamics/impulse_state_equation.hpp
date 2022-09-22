@@ -34,7 +34,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseStateEquation();
+  ~ImpulseStateEquation() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -110,12 +110,7 @@ public:
   /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
   /// @param[in, out] d Split direction. 
   ///
-  void correctCostateDirection(SplitDirection& d) {
-    if (has_floating_base_) {
-      Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
-      d.dlmdgmm.template head<6>() = - Fq_tmp_;
-    }
-  }
+  void correctCostateDirection(SplitDirection& d);
 
 private:
   Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_, Fqq_tmp_;  

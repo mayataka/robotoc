@@ -25,10 +25,6 @@ ContactDynamics::ContactDynamics()
 }
 
 
-ContactDynamics::~ContactDynamics() {
-}
-
-
 void ContactDynamics::evalContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const SplitSolution& s) {
   data_.setContactStatus(contact_status);
@@ -177,6 +173,63 @@ void ContactDynamics::condenseSwitchingConstraint(
       -= sc_jacobian.Phia() * data_.MJtJinv_IDC().head(dimv_);
   sc_residual.P().noalias() 
       -= sc_jacobian.Phia() * data_.MJtJinv_IDC().head(dimv_);
+}
+
+
+void ContactDynamics::expandPrimal(SplitDirection& d) const {
+  d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx;
+  d.daf().noalias() 
+      += data_.MJtJinv().middleCols(dim_passive_, dimu_) * d.du;
+  d.daf().noalias() -= data_.MJtJinv_IDC();
+  d.df().array()    *= -1;
+}
+
+
+void ContactDynamics::expandDual(const double dt, const double dts, 
+                                 const SplitDirection& d_next, 
+                                 SplitDirection& d) {
+  assert(dt > 0);
+  if (has_floating_base_) {
+    d.dnu_passive            = - data_.lu_passive;
+    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive.noalias() 
+        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+              * d_next.dgmm();
+  }
+  data_.laf().noalias() += data_.Qafqv() * d.dx;
+  data_.laf().noalias() += data_.Qafu() * d.du;
+  data_.la().noalias()  += dt * d_next.dgmm();
+  constexpr double eps = std::numeric_limits<double>::epsilon();
+  if (dts < - eps || dts > eps) {
+    data_.laf().noalias() += dts * data_.haf();
+  }
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
+}
+
+
+void ContactDynamics::expandDual(const double dt, const double dts, 
+                                 const SplitDirection& d_next, 
+                                 const SwitchingConstraintJacobian& sc_jacobian,
+                                 SplitDirection& d) {
+  assert(dt > 0);
+  if (has_floating_base_) {
+    d.dnu_passive            = - data_.lu_passive;
+    d.dnu_passive.noalias() -= data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() -= data_.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive.noalias() 
+        -= dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
+              * d_next.dgmm();
+  }
+  data_.laf().noalias() += data_.Qafqv() * d.dx;
+  data_.laf().noalias() += data_.Qafu() * d.du;
+  data_.la().noalias()  += dt * d_next.dgmm();
+  data_.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
+  constexpr double eps = std::numeric_limits<double>::epsilon();
+  if (dts < - eps || dts > eps) {
+    data_.laf().noalias() += dts * data_.haf();
+  }
+  d.dbetamu().noalias()  = - data_.MJtJinv() * data_.laf();
 }
 
 } // namespace robotoc 

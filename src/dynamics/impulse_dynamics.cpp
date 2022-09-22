@@ -15,10 +15,6 @@ ImpulseDynamics::ImpulseDynamics()
 }
 
 
-ImpulseDynamics::~ImpulseDynamics() {
-}
-
-
 void ImpulseDynamics::evalImpulseDynamics(Robot& robot, 
                                           const ImpulseStatus& impulse_status, 
                                           const SplitSolution& s) {
@@ -88,6 +84,20 @@ void ImpulseDynamics::condenseImpulseDynamics(
   kkt_matrix.Fvv() = Eigen::MatrixXd::Identity(dimv, dimv) 
                     - data_.MJtJinv_dImDCdqv().topRightCorner(dimv, dimv);
   kkt_residual.Fv().noalias() -= data_.MJtJinv_ImDC().head(dimv);
+}
+
+
+void ImpulseDynamics::expandPrimal(SplitDirection& d) const {
+  d.ddvf().noalias()  = - data_.MJtJinv_dImDCdqv() * d.dx;
+  d.ddvf().noalias() -= data_.MJtJinv_ImDC();
+  d.df().array()     *= -1;
+}
+
+
+void ImpulseDynamics::expandDual(const SplitDirection& d_next, SplitDirection& d) {
+  data_.ldvf().noalias() += data_.Qdvfqv() * d.dx;
+  data_.ldv().noalias()  += d_next.dgmm();
+  d.dbetamu().noalias()   = - data_.MJtJinv() * data_.ldvf();
 }
 
 } // namespace robotoc 

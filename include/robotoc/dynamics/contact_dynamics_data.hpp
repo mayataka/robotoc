@@ -29,9 +29,9 @@ public:
   ContactDynamicsData();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ContactDynamicsData();
+  ~ContactDynamicsData() = default;
 
   ///
   /// @brief Default copy constructor. 

@@ -26,10 +26,6 @@ TerminalStateEquation::TerminalStateEquation()
 }
 
 
-TerminalStateEquation::~TerminalStateEquation() {
-}
-
-
 void TerminalStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::VectorXd& q_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
@@ -52,17 +48,17 @@ void TerminalStateEquation::linearizeStateEquation(
 
 void TerminalStateEquation::correctLinearizedStateEquation(
     SplitKKTMatrix& kkt_matrix) {
-  if (has_floating_base_) {
-    se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
-  }
+  if (!has_floating_base_) return;
+
+  se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
 }
 
 
 void TerminalStateEquation::correctCostateDirection(SplitDirection& d) {
-  if (has_floating_base_) {
-    Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
-    d.dlmdgmm.template head<6>() = - Fq_tmp_;
-  }
+  if (!has_floating_base_) return;
+
+  Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
+  d.dlmdgmm.template head<6>() = - Fq_tmp_;
 }
 
 } // namespace robotoc 

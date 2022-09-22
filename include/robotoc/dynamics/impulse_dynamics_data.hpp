@@ -26,9 +26,9 @@ public:
   ImpulseDynamicsData();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ImpulseDynamicsData();
+  ~ImpulseDynamicsData() = default;
 
   ///
   /// @brief Default copy constructor. 

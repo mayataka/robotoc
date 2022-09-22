@@ -20,10 +20,6 @@ SwitchingConstraint::SwitchingConstraint()
 }
 
 
-SwitchingConstraint::~SwitchingConstraint() {
-}
-
-
 void SwitchingConstraint::evalSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, 
