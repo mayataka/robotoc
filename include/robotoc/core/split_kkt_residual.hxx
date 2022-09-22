@@ -16,7 +16,7 @@ inline void SplitKKTResidual::setContactStatus(
 
 inline void SplitKKTResidual::setContactStatus(
     const ImpulseStatus& contact_status) {
-  dimf_ = contact_status.dimi();
+  dimf_ = contact_status.dimf();
 }
 
 

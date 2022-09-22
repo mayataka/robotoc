@@ -68,7 +68,7 @@ inline bool ImpulseStatus::hasActiveImpulse() const {
 }
 
 
-inline int ImpulseStatus::dimi() const {
+inline int ImpulseStatus::dimf() const {
   return contact_status_.dimf();
 }
 

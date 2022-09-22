@@ -91,7 +91,7 @@ void SplitSolutionTest::test(const Robot& robot,
 void SplitSolutionTest::test(const Robot& robot, 
                              const ImpulseStatus& impulse_status) {
   SplitSolution s(robot);
-  s.setSwitchingConstraintDimension(impulse_status.dimi());
+  s.setSwitchingConstraintDimension(impulse_status.dimf());
   EXPECT_EQ(s.q.size(), robot.dimq());
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
@@ -104,9 +104,9 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.nu_passive.size(), robot.dim_passive());
   EXPECT_EQ(s.f_stack().size(), 0);
   EXPECT_EQ(s.mu_stack().size(), 0);
-  EXPECT_EQ(s.xi_stack().size(), impulse_status.dimi());
+  EXPECT_EQ(s.xi_stack().size(), impulse_status.dimf());
   EXPECT_EQ(s.dimf(), 0);
-  EXPECT_EQ(s.dims(), impulse_status.dimi());
+  EXPECT_EQ(s.dims(), impulse_status.dimf());
 
   EXPECT_NO_THROW(
     std::cout << s << std::endl;
@@ -119,7 +119,7 @@ void SplitSolutionTest::test(const Robot& robot,
                              const ImpulseStatus& impulse_status) { 
   SplitSolution s(robot);
   s.setContactStatus(contact_status);
-  s.setSwitchingConstraintDimension(impulse_status.dimi());
+  s.setSwitchingConstraintDimension(impulse_status.dimf());
   EXPECT_EQ(s.q.size(), robot.dimq());
   EXPECT_EQ(s.v.size(), robot.dimv());
   EXPECT_EQ(s.u.size(), robot.dimu());
@@ -132,9 +132,9 @@ void SplitSolutionTest::test(const Robot& robot,
   EXPECT_EQ(s.nu_passive.size(), robot.dim_passive());
   EXPECT_EQ(s.f_stack().size(), contact_status.dimf());
   EXPECT_EQ(s.mu_stack().size(), contact_status.dimf());
-  EXPECT_EQ(s.xi_stack().size(), impulse_status.dimi());
+  EXPECT_EQ(s.xi_stack().size(), impulse_status.dimf());
   EXPECT_EQ(s.dimf(), contact_status.dimf());
-  EXPECT_EQ(s.dims(), impulse_status.dimi());
+  EXPECT_EQ(s.dims(), impulse_status.dimf());
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
     EXPECT_EQ(s.isContactActive()[i], contact_status.isContactActive(i));

@@ -58,8 +58,8 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
     std::cout << jac << std::endl;
     std::cout << res << std::endl;
   );
-  jac_ref.setDimension(impulse_status.dimi());
-  res_ref.setDimension(impulse_status.dimi());
+  jac_ref.setDimension(impulse_status.dimf());
+  res_ref.setDimension(impulse_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
@@ -111,7 +111,7 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   SwitchingConstraintResidual res(robot);
   auto res_ref = res;
   sc.evalSwitchingConstraint(robot, impulse_status, dt1, dt2, s, res);
-  res_ref.setDimension(impulse_status.dimi());
+  res_ref.setDimension(impulse_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);

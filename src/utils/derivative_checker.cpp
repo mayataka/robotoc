@@ -338,7 +338,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
   const auto s = SplitSolution::Random(robot_, impulse_status);
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
-  const int dimf = impulse_status.dimi();
+  const int dimf = impulse_status.dimf();
   SplitKKTResidual kkt_residual(robot_);
   kkt_residual.setContactStatus(impulse_status);
   CostFunctionData data(robot_);
@@ -407,7 +407,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
   const auto s = SplitSolution::Random(robot_, impulse_status);
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
-  const int dimf = impulse_status.dimi();
+  const int dimf = impulse_status.dimf();
   SplitKKTMatrix kkt_matrix(robot_);
   kkt_matrix.setContactStatus(impulse_status);
   SplitKKTResidual kkt_residual0(robot_);

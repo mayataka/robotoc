@@ -23,7 +23,7 @@ SplitConstrainedRiccatiFactorization(const Robot& robot)
     dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
-    dimi_(0) { 
+    dims_(0) { 
 }
 
 
@@ -43,7 +43,7 @@ SplitConstrainedRiccatiFactorization()
     dimv_(0),
     dimx_(0),
     dimu_(0),
-    dimi_(0) { 
+    dims_(0) { 
 }
 
 
@@ -54,107 +54,107 @@ inline SplitConstrainedRiccatiFactorization::
 
 inline void SplitConstrainedRiccatiFactorization::setConstraintDimension(
     const int dimi) {
-  dimi_ = dimi;
+  dims_ = dimi;
 }
 
 
 inline int SplitConstrainedRiccatiFactorization::dims() const {
-  return dimi_;
+  return dims_;
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::DGinv() {
-  return DGinv_full_.topLeftCorner(dimi_, dimu_);
+  return DGinv_full_.topLeftCorner(dims_, dimu_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::DGinv() const {
-  return DGinv_full_.topLeftCorner(dimi_, dimu_);
+  return DGinv_full_.topLeftCorner(dims_, dimu_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::S() {
-  return S_full_.topLeftCorner(dimi_, dimi_);
+  return S_full_.topLeftCorner(dims_, dims_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::S() const {
-  return S_full_.topLeftCorner(dimi_, dimi_);
+  return S_full_.topLeftCorner(dims_, dims_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::Sinv() {
-  return Sinv_full_.topLeftCorner(dimi_, dimi_);
+  return Sinv_full_.topLeftCorner(dims_, dims_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::Sinv() const {
-  return Sinv_full_.topLeftCorner(dimi_, dimi_);
+  return Sinv_full_.topLeftCorner(dims_, dims_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::SinvDGinv() {
-  return SinvDGinv_full_.topLeftCorner(dimi_, dimu_);
+  return SinvDGinv_full_.topLeftCorner(dims_, dimu_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::SinvDGinv() const {
-  return SinvDGinv_full_.topLeftCorner(dimi_, dimu_);
+  return SinvDGinv_full_.topLeftCorner(dims_, dimu_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::M() {
-  return M_full_.topLeftCorner(dimi_, dimx_);
+  return M_full_.topLeftCorner(dims_, dimx_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 SplitConstrainedRiccatiFactorization::M() const {
-  return M_full_.topLeftCorner(dimi_, dimx_);
+  return M_full_.topLeftCorner(dims_, dimx_);
 }
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
 SplitConstrainedRiccatiFactorization::m() {
-  return m_full_.head(dimi_);
+  return m_full_.head(dims_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitConstrainedRiccatiFactorization::m() const {
-  return m_full_.head(dimi_);
+  return m_full_.head(dims_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
 SplitConstrainedRiccatiFactorization::mt() {
-  return mt_full_.head(dimi_);
+  return mt_full_.head(dims_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitConstrainedRiccatiFactorization::mt() const {
-  return mt_full_.head(dimi_);
+  return mt_full_.head(dims_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
 SplitConstrainedRiccatiFactorization::mt_next() {
-  return mt_next_full_.head(dimi_);
+  return mt_next_full_.head(dims_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitConstrainedRiccatiFactorization::mt_next() const {
-  return mt_next_full_.head(dimi_);
+  return mt_next_full_.head(dims_);
 }
 
 

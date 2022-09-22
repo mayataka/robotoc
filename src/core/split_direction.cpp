@@ -114,7 +114,7 @@ void SplitDirection::setRandom(const ImpulseStatus& impulse_status) {
 void SplitDirection::setRandom(const ContactStatus& contact_status, 
                                const ImpulseStatus& impulse_status) {
   setContactStatus(contact_status);
-  setSwitchingConstraintDimension(impulse_status.dimi());
+  setSwitchingConstraintDimension(impulse_status.dimf());
   setRandom();
 }
 

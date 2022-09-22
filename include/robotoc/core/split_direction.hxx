@@ -15,7 +15,7 @@ inline void SplitDirection::setContactStatus(
 
 inline void SplitDirection::setContactStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimi();
+  dimf_ = impulse_status.dimf();
 }
 
 

@@ -29,7 +29,7 @@ inline void SplitSolution::setContactStatus(
   assert(contact_status.maxNumContacts() == is_contact_active_.size());
   has_active_contacts_ = contact_status.hasActiveImpulse();
   is_contact_active_ = contact_status.isImpulseActive();
-  dimf_ = contact_status.dimi();
+  dimf_ = contact_status.dimf();
 }
 
 

@@ -35,7 +35,7 @@ TEST_F(ImpulseStatusTest, constructor) {
   ContactStatus contact_status(contact_types, contact_frame_names);
   EXPECT_EQ(contact_status.maxNumContacts(), impulse_status.maxNumContacts());
   EXPECT_FALSE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(impulse_status.dimi(), 0);
+  EXPECT_EQ(impulse_status.dimf(), 0);
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
@@ -72,7 +72,7 @@ TEST_F(ImpulseStatusTest, activate) {
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 3);
-  EXPECT_EQ(contact_status.dimf(), impulse_status.dimi());
+  EXPECT_EQ(contact_status.dimf(), impulse_status.dimf());
   for (int i=0; i<3; ++i) {
     EXPECT_FALSE(contact_status.isContactActive(i));
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
@@ -88,7 +88,7 @@ TEST_F(ImpulseStatusTest, activate) {
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 9);
-  EXPECT_EQ(contact_status.dimf(), impulse_status.dimi());
+  EXPECT_EQ(contact_status.dimf(), impulse_status.dimf());
   for (int i=0; i<3; ++i) {
     EXPECT_FALSE(contact_status.isContactActive(i));
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
@@ -123,7 +123,7 @@ TEST_F(ImpulseStatusTest, deactivate) {
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 3*max_num_contacts);
-  EXPECT_EQ(impulse_status.dimi(), 3*max_num_contacts);
+  EXPECT_EQ(impulse_status.dimf(), 3*max_num_contacts);
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     EXPECT_TRUE(contact_status.isContactActive(i));
     EXPECT_TRUE(impulse_status.isImpulseActive(i));
@@ -133,7 +133,7 @@ TEST_F(ImpulseStatusTest, deactivate) {
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 3*max_num_contacts-3);
-  EXPECT_EQ(impulse_status.dimi(), 3*max_num_contacts-3);
+  EXPECT_EQ(impulse_status.dimf(), 3*max_num_contacts-3);
   for (int i=0; i<3; ++i) {
     EXPECT_TRUE(contact_status.isContactActive(i));
     EXPECT_TRUE(impulse_status.isImpulseActive(i));
@@ -149,7 +149,7 @@ TEST_F(ImpulseStatusTest, deactivate) {
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 3*max_num_contacts-9);
-  EXPECT_EQ(impulse_status.dimi(), 3*max_num_contacts-9);
+  EXPECT_EQ(impulse_status.dimf(), 3*max_num_contacts-9);
   for (int i=0; i<3; ++i) {
     EXPECT_TRUE(contact_status.isContactActive(i));
     EXPECT_TRUE(impulse_status.isImpulseActive(i));

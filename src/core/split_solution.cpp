@@ -235,7 +235,7 @@ void SplitSolution::setRandom(const Robot& robot,
 void SplitSolution::setRandom(const Robot& robot, 
                               const ImpulseStatus& impulse_status) {
   setContactStatus(impulse_status);
-  setSwitchingConstraintDimension(impulse_status.dimi());
+  setSwitchingConstraintDimension(impulse_status.dimf());
   setRandom(robot);
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
@@ -247,7 +247,7 @@ void SplitSolution::setRandom(const Robot& robot,
                               const ContactStatus& contact_status,
                               const ImpulseStatus& impulse_status) {
   setRandom(robot, contact_status);
-  setSwitchingConstraintDimension(impulse_status.dimi());
+  setSwitchingConstraintDimension(impulse_status.dimf());
   if (impulse_status.hasActiveImpulse()) {
     xi_stack().setRandom();
   }

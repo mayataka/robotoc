@@ -366,7 +366,7 @@ template <typename VectorType>
 inline void Robot::computeImpulseVelocityResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
-  assert(velocity_residual.size() == impulse_status.dimi());
+  assert(velocity_residual.size() == impulse_status.dimf());
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   int dimf = 0;
@@ -388,7 +388,7 @@ inline void Robot::computeImpulseVelocityResidual(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impulse_status.dimf());
 }
 
 
@@ -397,9 +397,9 @@ inline void Robot::computeImpulseVelocityDerivatives(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
-  assert(velocity_partial_dq.rows() == impulse_status.dimi());
+  assert(velocity_partial_dq.rows() == impulse_status.dimf());
   assert(velocity_partial_dq.cols() == dimv_);
-  assert(velocity_partial_dv.rows() == impulse_status.dimi());
+  assert(velocity_partial_dv.rows() == impulse_status.dimf());
   assert(velocity_partial_dv.cols() == dimv_);
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
@@ -426,7 +426,7 @@ inline void Robot::computeImpulseVelocityDerivatives(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impulse_status.dimf());
 }
 
 
@@ -434,7 +434,7 @@ template <typename VectorType>
 inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& position_residual) {
-  assert(position_residual.size() == impulse_status.dimi());
+  assert(position_residual.size() == impulse_status.dimf());
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   int dimf = 0;
@@ -456,7 +456,7 @@ inline void Robot::computeContactPositionResidual(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impulse_status.dimf());
 }
 
 
@@ -464,7 +464,7 @@ template <typename MatrixType>
 inline void Robot::computeContactPositionDerivative(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& position_partial_dq) {
-  assert(position_partial_dq.rows() == impulse_status.dimi());
+  assert(position_partial_dq.rows() == impulse_status.dimf());
   assert(position_partial_dq.cols() == dimv_);
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
@@ -487,7 +487,7 @@ inline void Robot::computeContactPositionDerivative(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impulse_status.dimf());
 }
 
 

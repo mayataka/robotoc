@@ -264,7 +264,7 @@ void RiccatiRecursion::computeDirection(
       ocp[i].expandPrimal(contact_sequence->contactStatus(phase), d[i]);
       if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.timeDiscretization().impulseIndexAfterTimeStage(i+1);
-        d[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimi());
+        d[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization.switching[impulse_index], d[i], sto, sto_next);
       }

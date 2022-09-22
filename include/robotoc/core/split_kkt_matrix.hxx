@@ -16,7 +16,7 @@ inline void SplitKKTMatrix::setContactStatus(
 
 inline void SplitKKTMatrix::setContactStatus(
     const ImpulseStatus& contact_status) {
-  dimf_ = contact_status.dimi();
+  dimf_ = contact_status.dimf();
 }
 
 

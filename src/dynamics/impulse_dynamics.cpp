@@ -48,7 +48,7 @@ void ImpulseDynamics::condenseImpulseDynamics(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
   const int dimv = robot.dimv();
-  const int dimf = impulse_status.dimi();
+  const int dimf = impulse_status.dimf();
   data_.MJtJinv_dImDCdqv().leftCols(dimv).noalias() 
       = data_.MJtJinv() * data_.dImDCdq();
   data_.MJtJinv_dImDCdqv().topRightCorner(dimv, dimv).noalias() 

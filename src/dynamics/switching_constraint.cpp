@@ -26,7 +26,7 @@ void SwitchingConstraint::evalSwitchingConstraint(
     SwitchingConstraintResidual& sc_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
-  sc_residual.setDimension(impulse_status.dimi());
+  sc_residual.setDimension(impulse_status.dimf());
   dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, dq_, 1.0, q_);
   robot.updateKinematics(q_);
@@ -41,8 +41,8 @@ void SwitchingConstraint::linearizeSwitchingConstraint(
     SwitchingConstraintResidual& sc_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
-  sc_residual.setDimension(impulse_status.dimi());
-  sc_jacobian.setDimension(impulse_status.dimi());
+  sc_residual.setDimension(impulse_status.dimf());
+  sc_jacobian.setDimension(impulse_status.dimf());
   sc_residual.setZero();
   sc_jacobian.setZero();
   evalSwitchingConstraint(robot, impulse_status, dt1, dt2, s, sc_residual);

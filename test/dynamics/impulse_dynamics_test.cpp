@@ -94,7 +94,7 @@ void ImpulseDynamicsTest::test_condense(Robot& robot, const ImpulseStatus& impul
   robot.RNEAImpulseDerivatives(s.q, s.dv, data.dImDdq(), data.dImDddv);
   robot.computeImpulseVelocityDerivatives(impulse_status, data.dCdq(), data.dCdv());
   const int dimv = robot.dimv();
-  const int dimf = impulse_status.dimi();
+  const int dimf = impulse_status.dimf();
   // auto kkt_matrix = SplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_matrix = SplitKKTMatrix(robot);
   kkt_matrix.setContactStatus(impulse_status);

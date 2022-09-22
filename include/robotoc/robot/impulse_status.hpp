@@ -110,7 +110,7 @@ public:
   /// @brief Returns the dimension of the active impulse forces.
   /// @return Dimension of the active impulse forces.  
   ///
-  int dimi() const;
+  int dimf() const;
 
   ///
   /// @brief Returns the maximum number of the contacts.

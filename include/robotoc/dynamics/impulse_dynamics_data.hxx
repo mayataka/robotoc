@@ -7,7 +7,7 @@ namespace robotoc {
 
 inline void ImpulseDynamicsData::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimi();
+  dimf_ = impulse_status.dimf();
   dimvf_ = dimv_ + dimf_;
 }
 

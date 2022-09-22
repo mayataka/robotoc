@@ -438,7 +438,7 @@ TEST_P(RobotTest, impulseVelocity) {
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeImpulseVelocityResidual(impulse_status, residual.head(impulse_status.dimi()));
+  robot.computeImpulseVelocityResidual(impulse_status, residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -461,8 +461,8 @@ TEST_P(RobotTest, impulseVelocity) {
 
   Eigen::MatrixXd velocity_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd velocity_partial_v = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeImpulseVelocityDerivatives(impulse_status, velocity_partial_q.topRows(impulse_status.dimi()), 
-                                          velocity_partial_v.topRows(impulse_status.dimi()));
+  robot.computeImpulseVelocityDerivatives(impulse_status, velocity_partial_q.topRows(impulse_status.dimf()), 
+                                          velocity_partial_v.topRows(impulse_status.dimf()));
   Eigen::MatrixXd velocity_partial_q_ref = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd velocity_partial_v_ref = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   dimf = 0;
@@ -518,7 +518,7 @@ TEST_P(RobotTest, contactPosition) {
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeContactPositionResidual(impulse_status, residual.head(impulse_status.dimi()));
+  robot.computeContactPositionResidual(impulse_status, residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -542,7 +542,7 @@ TEST_P(RobotTest, contactPosition) {
   EXPECT_TRUE(residual.isApprox(residual_ref));
 
   Eigen::MatrixXd contact_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeContactPositionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimi()));
+  robot.computeContactPositionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
 
   Eigen::MatrixXd contact_partial_q_ref = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   dimf = 0;

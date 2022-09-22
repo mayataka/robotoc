@@ -114,7 +114,7 @@ public:
 private:
   Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_, M_full_;
   Eigen::VectorXd m_full_, mt_full_, mt_next_full_;
-  int dimv_, dimx_, dimu_, dimi_;
+  int dimv_, dimx_, dimu_, dims_;
 
 };
 

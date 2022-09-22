@@ -129,7 +129,7 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   }
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const int dimi = impulse_status.dimi();
+  const int dimi = impulse_status.dimf();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
   auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
@@ -137,8 +137,8 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   auto kkt_residual_ref = kkt_residual;
   SwitchingConstraintJacobian sc_jacobian(robot);
   SwitchingConstraintResidual sc_residual(robot);
-  sc_jacobian.setDimension(impulse_status.dimi());
-  sc_residual.setDimension(impulse_status.dimi());
+  sc_jacobian.setDimension(impulse_status.dimf());
+  sc_residual.setDimension(impulse_status.dimf());
   sc_jacobian.Phix().setRandom();
   sc_jacobian.Phia().setRandom();
   sc_jacobian.Phiu().setRandom();
@@ -351,10 +351,10 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
     impulse_status.activateImpulse(0);
   }
   SplitConstrainedRiccatiFactorization c_riccati(robot);
-  c_riccati.setConstraintDimension(impulse_status.dimi());
+  c_riccati.setConstraintDimension(impulse_status.dimf());
   c_riccati.M().setRandom();
   c_riccati.m().setRandom();
-  d.setSwitchingConstraintDimension(impulse_status.dimi());
+  d.setSwitchingConstraintDimension(impulse_status.dimf());
   d.dxi().setRandom();
   d_ref = d;
   sto = false;

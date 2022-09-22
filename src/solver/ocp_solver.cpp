@@ -557,7 +557,7 @@ void OCPSolver::discretizeSolution() {
         = ocp_.timeDiscretization().timeStageBeforeImpulse(i);
     if (time_stage_before_impulse-1 >= 0) {
       s_[time_stage_before_impulse-1].setSwitchingConstraintDimension(
-          contact_sequence_->impulseStatus(i).dimi());
+          contact_sequence_->impulseStatus(i).dimf());
     }
   }
 }
