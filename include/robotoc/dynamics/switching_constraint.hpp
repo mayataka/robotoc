@@ -8,6 +8,7 @@
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/switching_constraint_residual.hpp"
 #include "robotoc/core/switching_constraint_jacobian.hpp"
+#include "robotoc/dynamics/switching_constraint_data.hpp"
 
 
 namespace robotoc {
@@ -95,7 +96,7 @@ public:
       SwitchingConstraintResidual& sc_residual);
 
 private:
-  Eigen::VectorXd q_, dq_, PqT_xi_;
+  SwitchingConstraintData data_;
   bool has_floating_base_;
 
 };

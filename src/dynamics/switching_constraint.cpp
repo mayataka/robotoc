@@ -5,17 +5,13 @@
 namespace robotoc {
 
 SwitchingConstraint::SwitchingConstraint(const Robot& robot)
-  : q_(Eigen::VectorXd::Zero(robot.dimq())),
-    dq_(Eigen::VectorXd::Zero(robot.dimv())),
-    PqT_xi_(Eigen::VectorXd::Zero(robot.dimv())),
+  : data_(robot),
     has_floating_base_(robot.hasFloatingBase()) {
 }
 
 
 SwitchingConstraint::SwitchingConstraint()
-  : q_(),
-    dq_(),
-    PqT_xi_(),
+  : data_(),
     has_floating_base_(false) {
 }
 
@@ -27,9 +23,9 @@ void SwitchingConstraint::evalSwitchingConstraint(
   assert(dt1 > 0);
   assert(dt2 > 0);
   sc_residual.setDimension(impulse_status.dimf());
-  dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
-  robot.integrateConfiguration(s.q, dq_, 1.0, q_);
-  robot.updateKinematics(q_);
+  data_.dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
+  robot.integrateConfiguration(s.q, data_.dq, 1.0, data_.q);
+  robot.updateKinematics(data_.q);
   robot.computeContactPositionResidual(impulse_status, sc_residual.P());
 }
 
@@ -48,8 +44,8 @@ void SwitchingConstraint::linearizeSwitchingConstraint(
   evalSwitchingConstraint(robot, impulse_status, dt1, dt2, s, sc_residual);
   robot.computeContactPositionDerivative(impulse_status, sc_jacobian.Pq());
   if (has_floating_base_) {
-    robot.dIntegrateTransport_dq(s.q, dq_, sc_jacobian.Pq(), sc_jacobian.Phiq());
-    robot.dIntegrateTransport_dv(s.q, dq_, sc_jacobian.Pq(), sc_jacobian.Phiv());
+    robot.dIntegrateTransport_dq(s.q, data_.dq, sc_jacobian.Pq(), sc_jacobian.Phiq());
+    robot.dIntegrateTransport_dv(s.q, data_.dq, sc_jacobian.Pq(), sc_jacobian.Phiv());
     sc_jacobian.Phia() = (dt1*dt2) * sc_jacobian.Phiv();
     sc_jacobian.Phiv().array() *= (dt1+dt2);
   }
@@ -62,13 +58,13 @@ void SwitchingConstraint::linearizeSwitchingConstraint(
   kkt_residual.la.noalias() += sc_jacobian.Phia().transpose() * s.xi_stack();
   // STO sensitivities
   // Note that in computing the STO sensitivities, we always assume that dt1 = dt2.
-  dq_ = 2.0 * (s.v + dt1 * s.a);
-  sc_jacobian.Phit().noalias() = sc_jacobian.Pq() * dq_;
+  data_.dq = 2.0 * (s.v + dt1 * s.a);
+  sc_jacobian.Phit().noalias() = sc_jacobian.Pq() * data_.dq;
   kkt_residual.h += s.xi_stack().dot(sc_jacobian.Phit());
-  PqT_xi_.noalias() = sc_jacobian.Pq().transpose() * s.xi_stack();
-  kkt_matrix.Qtt += 2.0 * PqT_xi_.dot(s.a);
-  kkt_matrix.hv().noalias() += 2.0 * PqT_xi_;
-  kkt_matrix.ha.noalias() += (2.0*dt1) * PqT_xi_;
+  data_.PqT_xi.noalias() = sc_jacobian.Pq().transpose() * s.xi_stack();
+  kkt_matrix.Qtt += 2.0 * data_.PqT_xi.dot(s.a);
+  kkt_matrix.hv().noalias() += 2.0 * data_.PqT_xi;
+  kkt_matrix.ha.noalias() += (2.0*dt1) * data_.PqT_xi;
 }
 
 } // namespace robotoc
