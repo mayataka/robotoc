@@ -4,7 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/riccati/lqr_policy.hpp"
-#include "robotoc/ocp/hybrid_container.hpp"
+#include "robotoc/core/hybrid_container.hpp"
 
 
 namespace robotoc {

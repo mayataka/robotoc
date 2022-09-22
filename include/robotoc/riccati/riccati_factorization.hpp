@@ -4,9 +4,9 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/hybrid_container.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
+#include "robotoc/core/hybrid_container.hpp"
 
 
 namespace robotoc {

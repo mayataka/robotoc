@@ -3,9 +3,8 @@
 
 #include <iostream>
 
-#include "robotoc/ocp/hybrid_container.hpp"
 #include "robotoc/core/split_solution.hpp"
-#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/hybrid_container.hpp"
 
 
 namespace robotoc {

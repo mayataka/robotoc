@@ -4,12 +4,12 @@
 #include "Eigen/Core"
 
 #include "robotoc/planner/contact_sequence.hpp"
-#include "robotoc/ocp/hybrid_container.hpp"
 #include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 #include "robotoc/riccati/riccati_factorizer.hpp"
+#include "robotoc/core/hybrid_container.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_matrix.hpp"

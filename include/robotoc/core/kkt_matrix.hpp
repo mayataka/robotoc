@@ -3,9 +3,9 @@
 
 #include <iostream>
 
-#include "robotoc/ocp/hybrid_container.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/switching_constraint_jacobian.hpp"
+#include "robotoc/core/hybrid_container.hpp"
 
 
 namespace robotoc {
