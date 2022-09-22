@@ -11,11 +11,10 @@ namespace robotoc {
 namespace internal {
 
 struct ComputeKKTResidual {
-  template <typename SplitSolutionType>
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
                          const ContactStatus& contact_status, 
                          const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, const SplitSolutionType& s_next, 
+                         const SplitSolution& s, const SplitSolution& s_next, 
                          SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual) {
     split_ocp.computeKKTResidual(robot, contact_status, grid_info, q_prev, 
@@ -56,11 +55,10 @@ struct ComputeKKTResidual {
 
 
 struct ComputeKKTSystem {
-  template <typename SplitSolutionType>
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
                          const ContactStatus& contact_status, 
                          const GridInfo& grid_info, const Eigen::VectorXd& q_prev, 
-                         const SplitSolution& s, const SplitSolutionType& s_next, 
+                         const SplitSolution& s, const SplitSolution& s_next, 
                          SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual) {
     split_ocp.computeKKTSystem(robot, contact_status, grid_info, q_prev, 

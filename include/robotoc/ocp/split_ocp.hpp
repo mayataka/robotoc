@@ -387,30 +387,8 @@ private:
   SwitchingConstraint switching_constraint_;
   double stage_cost_, barrier_cost_;
 
-  template <typename SplitSolutionType>
-  void computeKKTResidual_impl(Robot& robot, const ContactStatus& contact_status, 
-                               const GridInfo& grid_info, 
-                               const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                               const SplitSolutionType& s_next, 
-                               SplitKKTMatrix& kkt_matrix,
-                               SplitKKTResidual& kkt_residual);
-
-  template <typename SplitSolutionType>
-  void computeKKTSystem_impl(Robot& robot, const ContactStatus& contact_status, 
-                             const GridInfo& grid_info, 
-                             const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                             const SplitSolutionType& s_next, 
-                             SplitKKTMatrix& kkt_matrix,
-                             SplitKKTResidual& kkt_residual);
-
-  template <typename SplitDirectionType>
-  void expandDual_impl(const GridInfo& grid_info, const SplitDirectionType& d_next, 
-                       SplitDirection& d, const double dts);
-
 };
 
 } // namespace robotoc
-
-#include "robotoc/ocp/split_ocp.hxx"
 
 #endif // ROBOTOC_SPLIT_OCP_HPP_

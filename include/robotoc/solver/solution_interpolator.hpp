@@ -184,9 +184,8 @@ private:
     }
   }
 
-  template <typename SplitSolutionType>
   static void interpolatePartial(const Robot& robot, const SplitSolution& s1, 
-                                 const SplitSolutionType& s2, const double alpha, 
+                                 const SplitSolution& s2, const double alpha, 
                                  SplitSolution& s) {
     assert(alpha >= 0.0);
     assert(alpha <= 1.0);
