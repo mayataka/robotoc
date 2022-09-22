@@ -29,9 +29,9 @@ public:
   SwitchingConstraintResidual();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SwitchingConstraintResidual();
+  ~SwitchingConstraintResidual() = default;
 
   ///
   /// @brief Default copy constructor. 

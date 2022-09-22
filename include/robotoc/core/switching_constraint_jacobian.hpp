@@ -29,9 +29,9 @@ public:
   SwitchingConstraintJacobian();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SwitchingConstraintJacobian();
+  ~SwitchingConstraintJacobian() = default;
 
   ///
   /// @brief Default copy constructor. 

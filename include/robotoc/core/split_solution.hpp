@@ -9,7 +9,6 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/core/split_direction.hpp"
-#include "robotoc/core/split_direction.hpp"
 
 
 namespace robotoc {
@@ -34,9 +33,9 @@ public:
   SplitSolution();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SplitSolution();
+  ~SplitSolution() = default;
 
   ///
   /// @brief Default copy constructor. 

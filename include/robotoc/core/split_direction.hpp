@@ -31,9 +31,9 @@ public:
   SplitDirection();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SplitDirection();
+  ~SplitDirection() = default;
 
   ///
   /// @brief Default copy constructor. 

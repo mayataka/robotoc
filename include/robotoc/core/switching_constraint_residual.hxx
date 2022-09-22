@@ -8,27 +8,6 @@
 
 namespace robotoc {
 
-inline SwitchingConstraintResidual::SwitchingConstraintResidual(
-    const Robot& robot)
-  : P_full_(robot.max_dimf()),
-    dimq_(robot.dimq()),
-    dimv_(robot.dimv()),
-    dimi_(0) {
-}
-
-
-inline SwitchingConstraintResidual::SwitchingConstraintResidual() 
-  : P_full_(),
-    dimq_(0),
-    dimv_(0), 
-    dimi_(0) {
-}
-
-
-inline SwitchingConstraintResidual::~SwitchingConstraintResidual() {
-}
-
-
 inline void SwitchingConstraintResidual::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimi();
@@ -69,24 +48,6 @@ inline void SwitchingConstraintResidual::setZero() {
 
 inline int SwitchingConstraintResidual::dimi() const {
   return dimi_;
-}
-
-
-inline bool SwitchingConstraintResidual::isApprox(
-    const SwitchingConstraintResidual& other) const {
-  assert(dimi() == other.dimi());
-  if (P().isApprox(other.P())) 
-    return true;
-  else 
-    return false;
-}
-
-
-inline bool SwitchingConstraintResidual::hasNaN() const {
-  if (P().hasNaN()) 
-    return true;
-  else 
-    return false;
 }
 
 } // namespace robotoc 

@@ -29,9 +29,9 @@ public:
   SplitKKTMatrix();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SplitKKTMatrix();
+  ~SplitKKTMatrix() = default;
 
   ///
   /// @brief Default copy constructor. 

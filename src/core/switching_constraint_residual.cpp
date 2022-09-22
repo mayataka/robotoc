@@ -3,8 +3,42 @@
 
 namespace robotoc {
 
+SwitchingConstraintResidual::SwitchingConstraintResidual(
+    const Robot& robot)
+  : P_full_(robot.max_dimf()),
+    dimq_(robot.dimq()),
+    dimv_(robot.dimv()),
+    dimi_(0) {
+}
+
+
+SwitchingConstraintResidual::SwitchingConstraintResidual() 
+  : P_full_(),
+    dimq_(0),
+    dimv_(0), 
+    dimi_(0) {
+}
+
+bool SwitchingConstraintResidual::isApprox(
+    const SwitchingConstraintResidual& other) const {
+  assert(dimi() == other.dimi());
+  if (P().isApprox(other.P())) 
+    return true;
+  else 
+    return false;
+}
+
+
+bool SwitchingConstraintResidual::hasNaN() const {
+  if (P().hasNaN()) 
+    return true;
+  else 
+    return false;
+}
+
+
 void SwitchingConstraintResidual::disp(std::ostream& os) const {
-  os << "switching constraint residual:" << std::endl;
+  os << "SwitchingConstraintResidual:" << std::endl;
   os << "  P = " << P().transpose() << std::flush;
 }
 

@@ -29,9 +29,9 @@ public:
   SplitKKTResidual();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SplitKKTResidual();
+  ~SplitKKTResidual() = default;
 
   ///
   /// @brief Default copy constructor. 
