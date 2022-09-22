@@ -27,7 +27,7 @@ ContactDynamics::ContactDynamics()
 
 void ContactDynamics::evalContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const SplitSolution& s) {
-  data_.setContactStatus(contact_status);
+  data_.setContactDimension(contact_status.dimf());
   has_active_contacts_ = contact_status.hasActiveContacts();
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data_.ID_full());

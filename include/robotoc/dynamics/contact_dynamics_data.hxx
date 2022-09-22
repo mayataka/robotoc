@@ -5,9 +5,10 @@
 
 namespace robotoc {
 
-inline void ContactDynamicsData::setContactStatus(
-    const ContactStatus& contact_status) {
-  dimf_ = contact_status.dimf();
+inline void ContactDynamicsData::setContactDimension(const int dimf) {
+  assert(dimf >= 0);
+  assert(dimf + dimv_ <= IDC_full_.size());
+  dimf_ = dimf;
   dimvf_ = dimv_ + dimf_;
 }
 

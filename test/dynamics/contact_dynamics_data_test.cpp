@@ -32,7 +32,7 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
   ContactDynamicsData data(robot);
-  data.setContactStatus(contact_status);
+  data.setContactDimension(contact_status.dimf());
   EXPECT_EQ(data.Qxu_passive.rows(), dimx);
   EXPECT_EQ(data.Qxu_passive.cols(), dim_passive);
   EXPECT_EQ(data.Quu_passive_topRight.rows(), dim_passive );

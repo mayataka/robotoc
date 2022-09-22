@@ -3,8 +3,6 @@
 
 #include "Eigen/Core"
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
 
 
 namespace robotoc {
@@ -53,7 +51,7 @@ public:
   ///
   ContactDynamicsData& operator=(ContactDynamicsData&&) noexcept = default;
 
-  void setContactStatus(const ContactStatus& contact_status);
+  void setContactDimension(const int dimf);
 
   Eigen::MatrixXd Qxu_passive;
 
@@ -62,6 +60,8 @@ public:
   Eigen::VectorXd lu_passive;
 
   Eigen::MatrixXd dIDda;
+
+  Eigen::MatrixXd dIDddv;
 
   Eigen::Block<Eigen::MatrixXd> dCda();
 
@@ -98,6 +98,10 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qafqv();
 
   const Eigen::Block<const Eigen::MatrixXd> Qafqv() const;
+
+  Eigen::Block<Eigen::MatrixXd> Qdvfqv() { return Qafqv(); }
+
+  const Eigen::Block<const Eigen::MatrixXd> Qdvfqv() const { return Qafqv(); }
 
   Eigen::Block<Eigen::MatrixXd> Qafu_full();
 
@@ -142,6 +146,14 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> la();
 
   const Eigen::VectorBlock<const Eigen::VectorXd> la() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> ldvf() { return laf(); }
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> ldvf() const { return laf(); }
+
+  Eigen::VectorBlock<Eigen::VectorXd> ldv() { return la(); }
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> ldv() const { return la(); }
 
   Eigen::VectorBlock<Eigen::VectorXd> lf();
 

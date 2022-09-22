@@ -9,7 +9,7 @@
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
-#include "robotoc/dynamics/impulse_dynamics_data.hpp"
+#include "robotoc/dynamics/contact_dynamics_data.hpp"
 
 
 namespace robotoc {
@@ -113,7 +113,7 @@ public:
   /// constraint.
   ///
   double KKTError() const {
-    return data_.ImDC().squaredNorm();
+    return data_.IDC().squaredNorm();
   }
 
   ///
@@ -126,11 +126,11 @@ public:
   ///
   template <int p=1>
   double constraintViolation() const {
-    return data_.ImDC().template lpNorm<p>();
+    return data_.IDC().template lpNorm<p>();
   }
 
 private:
-  ImpulseDynamicsData data_;
+  ContactDynamicsData data_;
 
 };
 

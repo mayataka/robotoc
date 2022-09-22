@@ -42,7 +42,7 @@ void ContactDynamicsTest::test_computeResidual(Robot& robot, const ContactStatus
   const double l1norm = cd.constraintViolation();
   const double squarednorm = cd.KKTError();
   ContactDynamicsData data(robot);
-  data.setContactStatus(contact_status);
+  data.setContactDimension(contact_status.dimf());
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
@@ -64,7 +64,7 @@ void ContactDynamicsTest::test_linearize(Robot& robot, const ContactStatus& cont
   const double l1norm = cd.constraintViolation();
   const double squarednorm = cd.KKTError();
   ContactDynamicsData data(robot);
-  data.setContactStatus(contact_status);
+  data.setContactDimension(contact_status.dimf());
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
@@ -100,7 +100,7 @@ void ContactDynamicsTest::test_condense(Robot& robot, const ContactStatus& conta
   auto kkt_residual = SplitKKTResidual::Random(robot, contact_status);
   cd.linearizeContactDynamics(robot, contact_status, s, kkt_residual);
   ContactDynamicsData data(robot);
-  data.setContactStatus(contact_status);
+  data.setContactDimension(contact_status.dimf());
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
