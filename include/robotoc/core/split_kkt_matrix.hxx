@@ -205,7 +205,6 @@ inline void SplitKKTMatrix::setZero() {
   Quu.setZero();
   Qff().setZero();
   Qqf().setZero();
-  Fqq_prev.setZero();
   fx.setZero();
   Qtt = 0;
   Qtt_prev = 0;

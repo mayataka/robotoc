@@ -243,13 +243,6 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqf() const;
 
   ///
-  /// @brief Jacobian of the state equation (w.r.t. q) w.r.t. q_prev.
-  /// If Robot::hasFloatingBase() is true, size is Robot::dimv() x Robot::dimv().
-  /// Otherwise, 0 x 0.
-  ///
-  Eigen::MatrixXd Fqq_prev;
-
-  ///
   /// @brief Derivative of the discrete time state equation w.r.t. the 
   /// length of the time interval. 
   ///

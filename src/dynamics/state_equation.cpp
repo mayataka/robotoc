@@ -6,31 +6,13 @@
 namespace robotoc {
 
 StateEquation::StateEquation(const Robot& robot)
-  : Fqq_inv_(),
-    Fqq_prev_inv_(),
-    Fqq_tmp_(),
-    Fq_tmp_(),
-    se3_jac_inverse_(),
+  : data_(robot),
     has_floating_base_(robot.hasFloatingBase()) {
-  if (robot.hasFloatingBase()) {
-    Fqq_inv_.resize(6, 6);
-    Fqq_inv_.setZero();
-    Fqq_prev_inv_.resize(6, 6);
-    Fqq_prev_inv_.setZero();
-    Fqq_tmp_.resize(6, 6);
-    Fqq_tmp_.setZero();
-    Fq_tmp_.resize(6);
-    Fq_tmp_.setZero();
-  }
 }
 
 
 StateEquation::StateEquation()
-  : Fqq_inv_(),
-    Fqq_prev_inv_(),
-    Fqq_tmp_(),
-    Fq_tmp_(),
-    se3_jac_inverse_(),
+  : data_(),
     has_floating_base_(false) {
 }
 
@@ -60,12 +42,13 @@ void StateEquation::linearizeStateEquation(const Robot& robot, const double dt,
   evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
-    robot.dSubtractConfiguration_dq0(q_prev, s.q, kkt_matrix.Fqq_prev);
+    data_.Fqq_prev.setZero();
+    robot.dSubtractConfiguration_dq0(q_prev, s.q, data_.Fqq_prev);
     kkt_residual.lq().template head<6>().noalias() 
         += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
               * s_next.lmd.template head<6>();
     kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
+        += data_.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
               * s.lmd.template head<6>();
     kkt_residual.lq().tail(robot.dimv()-6).noalias() 
         += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
@@ -94,24 +77,24 @@ void StateEquation::correctLinearizedStateEquation(
   assert(dt > 0);
   if (!has_floating_base_) return;
 
-  se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_prev_inv_);
-  robot.dSubtractConfiguration_dq0(s.q, s_next.q, kkt_matrix.Fqq_prev);
-  se3_jac_inverse_.compute(kkt_matrix.Fqq_prev, Fqq_inv_);
-  Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-  kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
-  kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * Fqq_inv_;
-  Fq_tmp_  = kkt_residual.Fq().template head<6>();
-  kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
-  Fq_tmp_ = kkt_matrix.fq().template head<6>();
-  kkt_matrix.fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
+  data_.se3_jac_inverse.compute(data_.Fqq_prev, data_.Fqq_prev_inv);
+  robot.dSubtractConfiguration_dq0(s.q, s_next.q, data_.Fqq_prev);
+  data_.se3_jac_inverse.compute(data_.Fqq_prev, data_.Fqq_inv);
+  data_.Fqq_tmp = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+  kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - data_.Fqq_inv * data_.Fqq_tmp;
+  kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * data_.Fqq_inv;
+  data_.Fq_tmp  = kkt_residual.Fq().template head<6>();
+  kkt_residual.Fq().template head<6>().noalias() = - data_.Fqq_inv * data_.Fq_tmp;
+  data_.Fq_tmp = kkt_matrix.fq().template head<6>();
+  kkt_matrix.fq().template head<6>().noalias() = - data_.Fqq_inv * data_.Fq_tmp;
 }
 
 
 void StateEquation::correctCostateDirection(SplitDirection& d)  {
   if (!has_floating_base_) return;
 
-  Fq_tmp_.noalias() = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
-  d.dlmdgmm.template head<6>() = - Fq_tmp_;
+  data_.Fq_tmp.noalias() = data_.Fqq_prev_inv.transpose() * d.dlmdgmm.template head<6>();
+  d.dlmdgmm.template head<6>() = - data_.Fq_tmp;
 }
 
 
@@ -123,7 +106,7 @@ void StateEquation::computeInitialStateDirection(const Robot& robot,
   robot.subtractConfiguration(q0, s0.q, d0.dq());
   if (robot.hasFloatingBase()) {
     d0.dq().template head<6>().noalias() 
-        = - Fqq_prev_inv_ * d0.dq().template head<6>();
+        = - data_.Fqq_prev_inv * d0.dq().template head<6>();
   }
   d0.dv() = v0 - s0.v;
 }

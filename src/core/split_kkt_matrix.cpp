@@ -12,7 +12,6 @@ SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Qdvdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Qxu(Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimu())),
     Quu(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())),
-    Fqq_prev(),
     fx(Eigen::VectorXd::Zero(2*robot.dimv())),
     Qtt(0),
     Qtt_prev(0),
@@ -27,10 +26,6 @@ SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     dimx_(2*robot.dimv()), 
     dimu_(robot.dimu()), 
     dimf_(0) {
-  if (robot.hasFloatingBase()) {
-    Fqq_prev.resize(robot.dimv(), robot.dimv());
-    Fqq_prev.setZero();
-  }
 }
 
 
@@ -42,7 +37,6 @@ SplitKKTMatrix::SplitKKTMatrix()
     Qdvdv(),
     Qxu(),
     Quu(),
-    Fqq_prev(),
     fx(),
     Qtt(0),
     Qtt_prev(0),
@@ -75,10 +69,6 @@ bool SplitKKTMatrix::isDimensionConsistent() const {
   if (Qxu.cols() != dimu_) return false;
   if (Quu.rows() != dimu_) return false;
   if (Quu.cols() != dimu_) return false;
-  if (has_floating_base_) {
-    if (Fqq_prev.rows() != dimv_) return false;
-    if (Fqq_prev.cols() != dimv_) return false;
-  }
   if (fx.size() != 2*dimv_) return false;
   if (hx.size() != 2*dimv_) return false;
   if (ha.size() != dimv_) return false;
@@ -97,7 +87,6 @@ bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
   if (!Quu.isApprox(other.Quu)) return false;
   if (!Qff().isApprox(other.Qff())) return false;
   if (!Qqf().isApprox(other.Qqf())) return false;
-  if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
   if (!fx.isApprox(other.fx)) return false;
   Eigen::VectorXd vec(2), other_vec(2);
   vec << Qtt, Qtt_prev;
@@ -121,7 +110,6 @@ bool SplitKKTMatrix::hasNaN() const {
   if (Quu.hasNaN()) return true;
   if (Qff().hasNaN()) return true;
   if (Qqf().hasNaN()) return true;
-  if (Fqq_prev.hasNaN()) return true;
   if (fx.hasNaN()) return true;
   Eigen::VectorXd vec(2);
   vec << Qtt, Qtt_prev;
@@ -148,7 +136,6 @@ void SplitKKTMatrix::setRandom() {
   Qdvdv = Qaa;
   Qff() = Qaaff.bottomRightCorner(dimf_, dimf_);
   Qqf().setRandom();
-  Fqq_prev.setRandom();
   fx.setRandom();
   Qtt = Eigen::VectorXd::Random(1)[0];
   Qtt_prev = Eigen::VectorXd::Random(1)[0];
@@ -183,7 +170,6 @@ void SplitKKTMatrix::disp(std::ostream& os) const {
   os << "SplitKKTMatrix:" << std::endl;
   os << "  Fxx = " << Fxx << std::endl;
   os << "  Fvu = " << Fvu << std::endl;
-  os << "  Fqq_prev = " << Fqq_prev << std::endl;
   os << "  Qxx = " << Qxx << std::endl;
   os << "  Qxu = " << Qxu << std::endl;
   os << "  Quu = " << Quu << std::endl;

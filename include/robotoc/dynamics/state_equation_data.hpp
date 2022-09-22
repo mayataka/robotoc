@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/se3_jacobian_inverse.hpp"
 
 
 namespace robotoc {

@@ -44,8 +44,7 @@ public:
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseDynamics& operator=(const ImpulseDynamics&) 
-      = default;
+  ImpulseDynamics& operator=(const ImpulseDynamics&) = default;
 
   ///
   /// @brief Default move constructor. 

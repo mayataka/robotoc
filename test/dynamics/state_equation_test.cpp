@@ -96,7 +96,6 @@ TEST_F(StateEquationTest, floatingBase) {
   kkt_matrix_ref.fv() = s.a;
   kkt_matrix_ref.Fqq() = dsubtract_dq;
   kkt_matrix_ref.Fqv() = dt * Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
-  kkt_matrix_ref.Fqq_prev = dsubtract_dq_prev;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, 
@@ -113,7 +112,6 @@ TEST_F(StateEquationTest, floatingBase) {
   Fq_ref.head(6) = - dsubtract_dq_inv.topLeftCorner(6, 6) * (qdiff+dt*s.v).head(6);
   kkt_matrix_ref.Fqq() = Fqq_ref;
   kkt_matrix_ref.Fqv() = Fqv_ref;
-  kkt_matrix_ref.Fqq_prev = dsubtract_dq_prev;
   kkt_residual_ref.Fq() = Fq_ref;
   const Eigen::VectorXd fq_tmp = kkt_matrix_ref.fq().head(6);
   kkt_matrix_ref.fq().head(6) = - dsubtract_dq_inv.topLeftCorner(6, 6) * fq_tmp;

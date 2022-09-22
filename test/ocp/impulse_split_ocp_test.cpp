@@ -67,7 +67,7 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   constraints->linearizeConstraints(robot, impulse_status, constraints_data, s, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
-  ImpulseStateEquation::linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref);

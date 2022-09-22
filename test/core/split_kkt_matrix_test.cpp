@@ -77,15 +77,6 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_EQ(kkt_mat.Qqf().rows(), dimv);
   EXPECT_EQ(kkt_mat.Qqf().cols(), dimf);
 
-  if (robot.hasFloatingBase()) {
-    EXPECT_EQ(kkt_mat.Fqq_prev.rows(), dimv);
-    EXPECT_EQ(kkt_mat.Fqq_prev.cols(), dimv);
-  }
-  else {
-    EXPECT_EQ(kkt_mat.Fqq_prev.rows(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_prev.cols(), 0);
-  }
-
   EXPECT_TRUE(kkt_mat.Fxx.isZero());
   EXPECT_TRUE(kkt_mat.Fvu.isZero());
   EXPECT_TRUE(kkt_mat.Qxx.isZero());
@@ -94,7 +85,6 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_TRUE(kkt_mat.Qaa.isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   EXPECT_TRUE(kkt_mat.Qqf().isZero());
-  EXPECT_TRUE(kkt_mat.Fqq_prev.isZero());
 
   kkt_mat.Fxx.setRandom();
   kkt_mat.Qxx.setRandom();

@@ -24,7 +24,6 @@ PYBIND11_MODULE(split_kkt_matrix, m) {
     .def_readwrite("Qxu", &SplitKKTMatrix::Qxu)
     .def_readwrite("Quu", &SplitKKTMatrix::Quu)
     .def_readwrite("Qaa", &SplitKKTMatrix::Qaa)
-    .def_readwrite("Fqq_prev", &SplitKKTMatrix::Fqq_prev)
     .def_property("Fqq", static_cast<const Eigen::Block<const Eigen::MatrixXd> (SplitKKTMatrix::*)() const>(&SplitKKTMatrix::Fqq),
                          static_cast<Eigen::Block<Eigen::MatrixXd> (SplitKKTMatrix::*)()>(&SplitKKTMatrix::Fqq))
     .def_property("Fqv", static_cast<const Eigen::Block<const Eigen::MatrixXd> (SplitKKTMatrix::*)() const>(&SplitKKTMatrix::Fqv),

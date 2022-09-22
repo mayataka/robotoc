@@ -9,6 +9,7 @@
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/dynamics/state_equation_data.hpp"
 
 
 namespace robotoc {
@@ -80,12 +81,12 @@ public:
   /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
   /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
   ///
-  static void linearizeStateEquation(const Robot& robot, const double dt, 
-                                     const Eigen::VectorXd& q_prev, 
-                                     const SplitSolution& s, 
-                                     const SplitSolution& s_next, 
-                                     SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual);
+  void linearizeStateEquation(const Robot& robot, const double dt, 
+                              const Eigen::VectorXd& q_prev, 
+                              const SplitSolution& s, 
+                              const SplitSolution& s_next, 
+                              SplitKKTMatrix& kkt_matrix, 
+                              SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Corrects the linearized state equation using the Jacobian of the 
@@ -125,9 +126,7 @@ public:
                                     SplitDirection& d0) const;
 
 private:
-  Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_, Fqq_tmp_;  
-  Eigen::VectorXd Fq_tmp_;
-  SE3JacobianInverse se3_jac_inverse_;
+  StateEquationData data_;
   bool has_floating_base_;
 
 };
