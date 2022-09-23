@@ -19,7 +19,7 @@
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/dynamics/state_equation_data.hpp"
 #include "robotoc/dynamics/contact_dynamics_data.hpp"
-#include "robotoc/dynamics/switching_constraint.hpp"
+#include "robotoc/dynamics/switching_constraint_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 
 
@@ -384,7 +384,7 @@ private:
   ConstraintsData constraints_data_;
   StateEquationData state_equation_data_;
   ContactDynamicsData contact_dynamics_data_;
-  SwitchingConstraint switching_constraint_;
+  SwitchingConstraintData switching_constraint_data_;
   double stage_cost_, barrier_cost_;
 
 };
