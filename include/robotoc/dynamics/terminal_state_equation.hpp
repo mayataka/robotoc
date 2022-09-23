@@ -15,6 +15,28 @@
 namespace robotoc {
 
 ///
+/// @brief Linearizes the state equation at the teminal stage. 
+/// @param[in] robot Robot model. 
+/// @param[in] q_prev Configuration at the previous time stage. 
+/// @param[in] s Solution at the current stage. 
+/// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
+/// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
+///
+void linearizeTerminalStateEquation(const Robot& robot, StateEquationData& data, 
+                                    const Eigen::VectorXd& q_prev, 
+                                    const SplitSolution& s, 
+                                    SplitKKTMatrix& kkt_matrix, 
+                                    SplitKKTResidual& kkt_residual);
+
+///
+/// @brief Corrects the linearized state equation using the Jacobian of the 
+/// Lie group. 
+/// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
+///
+void correctLinearizeTerminalStateEquation(StateEquationData& data, 
+                                           SplitKKTMatrix& kkt_matrix);
+
+///
 /// @class TerminalStateEquation
 /// @brief State equation at the terminal stage. Only represent kinematic relation
 /// between stages.

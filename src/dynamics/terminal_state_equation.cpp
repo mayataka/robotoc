@@ -1,25 +1,16 @@
 #include "robotoc/dynamics/terminal_state_equation.hpp"
+#include "robotoc/dynamics/state_equation.hpp"
 
 #include <cassert>
 
 namespace robotoc {
 
-TerminalStateEquation::TerminalStateEquation(const Robot& robot)
-  : data_(robot) {
-}
-
-
-TerminalStateEquation::TerminalStateEquation()
-  : data_() {
-}
-
-
-void TerminalStateEquation::linearize(const Robot& robot, 
-                                      StateEquationData& data, 
-                                      const Eigen::VectorXd& q_prev, 
-                                      const SplitSolution& s, 
-                                      SplitKKTMatrix& kkt_matrix, 
-                                      SplitKKTResidual& kkt_residual) {
+void linearizeTerminalStateEquation(const Robot& robot, 
+                                    StateEquationData& data, 
+                                    const Eigen::VectorXd& q_prev, 
+                                    const SplitSolution& s, 
+                                    SplitKKTMatrix& kkt_matrix, 
+                                    SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   if (robot.hasFloatingBase()) {
     data.Fqq_prev.setZero();
@@ -37,12 +28,23 @@ void TerminalStateEquation::linearize(const Robot& robot,
 }
 
 
-void TerminalStateEquation::correctLinearize(StateEquationData& data, 
-                                             SplitKKTMatrix& kkt_matrix) {
+void correctLinearizeTerminalStateEquation(StateEquationData& data, 
+                                           SplitKKTMatrix& kkt_matrix) {
   if (!data.hasFloatingBase()) return;
 
   data.se3_jac_inverse.compute(data.Fqq_prev, data.Fqq_prev_inv);
 }
+
+
+TerminalStateEquation::TerminalStateEquation(const Robot& robot)
+  : data_(robot) {
+}
+
+
+TerminalStateEquation::TerminalStateEquation()
+  : data_() {
+}
+
 
 
 void TerminalStateEquation::correctCostateDirection(StateEquationData& data, 
@@ -58,18 +60,18 @@ void TerminalStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::VectorXd& q_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  linearize(robot, data_, q_prev, s, kkt_matrix, kkt_residual);
+  linearizeTerminalStateEquation(robot, data_, q_prev, s, kkt_matrix, kkt_residual);
 }
 
 
 void TerminalStateEquation::correctLinearizedStateEquation(
     SplitKKTMatrix& kkt_matrix) {
-  correctLinearize(data_, kkt_matrix);
+  correctLinearizeTerminalStateEquation(data_, kkt_matrix);
 }
 
 
 void TerminalStateEquation::correctCostateDirection(SplitDirection& d) {
-  correctCostateDirection(data_, d);
+  ::robotoc::correctCostateDirection(data_, d);
 }
 
 } // namespace robotoc 

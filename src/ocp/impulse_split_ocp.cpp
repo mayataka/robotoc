@@ -1,5 +1,6 @@
 #include "robotoc/ocp/impulse_split_ocp.hpp"
 #include "robotoc/dynamics/impulse_state_equation.hpp"
+#include "robotoc/dynamics/state_equation.hpp"
 #include "robotoc/dynamics/impulse_dynamics.hpp"
 
 #include <cassert>
@@ -76,7 +77,7 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
                                        grid_info, s);
   constraints_->evalConstraint(robot, impulse_status, constraints_data_, s);
   barrier_cost_ = constraints_data_.logBarrier();
-  ImpulseStateEquation::eval(robot, s, q_next, v_next, kkt_residual);
+  evalImpulseStateEquation(robot, s, q_next, v_next, kkt_residual);
   evalImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s);
 }
 
@@ -97,8 +98,8 @@ void ImpulseSplitOCP::computeKKTResidual(
   constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
                                      s, kkt_residual);
   barrier_cost_ = constraints_data_.logBarrier();
-  ImpulseStateEquation::linearize(robot, state_equation_data_, q_prev, 
-                                  s, s_next, kkt_matrix, kkt_residual);
+  linearizeImpulseStateEquation(robot, state_equation_data_, q_prev, 
+                                s, s_next, kkt_matrix, kkt_residual);
   linearizeImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
 }
@@ -120,15 +121,15 @@ void ImpulseSplitOCP::computeKKTSystem(
   constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
                                      s, kkt_residual);
   barrier_cost_ = constraints_data_.logBarrier();
-  ImpulseStateEquation::linearize(robot, state_equation_data_, q_prev, 
-                                  s, s_next, kkt_matrix, kkt_residual);
+  linearizeImpulseStateEquation(robot, state_equation_data_, q_prev, 
+                                s, s_next, kkt_matrix, kkt_residual);
   linearizeImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
   constraints_->condenseSlackAndDual(impulse_status, constraints_data_, 
                                      kkt_matrix, kkt_residual);
   condenseImpulseDynamics(robot, impulse_status, contact_dynamics_data_, kkt_matrix, kkt_residual);
-  ImpulseStateEquation::correctLinearize(robot, state_equation_data_,  
-                                         s, s_next, kkt_matrix, kkt_residual);
+  correctLinearizeImpulseStateEquation(robot, state_equation_data_,  
+                                       s, s_next, kkt_matrix, kkt_residual);
 }
 
 
@@ -143,7 +144,7 @@ void ImpulseSplitOCP::expandPrimal(const ImpulseStatus& impulse_status,
 void ImpulseSplitOCP::expandDual(const SplitDirection& d_next, 
                                  SplitDirection& d) {
   expandImpulseDynamicsDual(contact_dynamics_data_, d_next, d);
-  ImpulseStateEquation::correctCostateDirection(state_equation_data_, d);
+  correctCostateDirection(state_equation_data_, d);
 }
 
 
