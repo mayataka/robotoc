@@ -18,7 +18,8 @@
 #include "robotoc/dynamics/state_equation_data.hpp"
 #include "robotoc/dynamics/contact_dynamics_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
-#include "robotoc/ocp/split_ocp_data.hpp"
+#include "robotoc/ocp/ocp_data.hpp"
+#include "robotoc/ocp/ocp_def.hpp"
 
 
 namespace robotoc {
@@ -236,9 +237,8 @@ public:
   double constraintViolation(const SplitKKTResidual& kkt_residual) const;
 
 private:
-  std::shared_ptr<CostFunction> cost_;
-  std::shared_ptr<Constraints> constraints_;
-  SplitOCPData data_;
+  OCPDef ocp_;
+  OCPData data_;
 };
 
 } // namespace robotoc

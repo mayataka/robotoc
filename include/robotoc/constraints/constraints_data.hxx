@@ -152,25 +152,58 @@ inline double ConstraintsData::logBarrier() const {
 
 template <int p>
 inline double ConstraintsData::constraintViolation() const {
+  return primalFeasibility<p>();
+}
+
+
+template <int p>
+inline double ConstraintsData::primalFeasibility() const {
   double vio = 0.0;
   if (isPositionLevelValid()) {
     for (const auto& data : position_level_data) {
-      vio += data.constraintViolation<p>();
+      vio += data.template primalFeasibility<p>();
     }
   }
   if (isVelocityLevelValid()) {
     for (const auto& data : velocity_level_data) {
-      vio += data.constraintViolation<p>();
+      vio += data.template primalFeasibility<p>();
     }
   }
   if (isAccelerationLevelValid()) {
     for (const auto& data : acceleration_level_data) {
-      vio += data.constraintViolation<p>();
+      vio += data.template primalFeasibility<p>();
     }
   }
   if (isImpulseLevelValid()) {
     for (const auto& data : impulse_level_data) {
-      vio += data.constraintViolation<p>();
+      vio += data.template primalFeasibility<p>();
+    }
+  }
+  return vio;
+}
+
+
+template <int p>
+inline double ConstraintsData::dualFeasibility() const {
+  double vio = 0.0;
+  if (isPositionLevelValid()) {
+    for (const auto& data : position_level_data) {
+      vio += data.template dualFeasibility<p>();
+    }
+  }
+  if (isVelocityLevelValid()) {
+    for (const auto& data : velocity_level_data) {
+      vio += data.template dualFeasibility<p>();
+    }
+  }
+  if (isAccelerationLevelValid()) {
+    for (const auto& data : acceleration_level_data) {
+      vio += data.template dualFeasibility<p>();
+    }
+  }
+  if (isImpulseLevelValid()) {
+    for (const auto& data : impulse_level_data) {
+      vio += data.template dualFeasibility<p>();
     }
   }
   return vio;

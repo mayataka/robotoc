@@ -189,6 +189,23 @@ public:
   template <int p=1>
   double constraintViolation() const;
 
+  template <int p=1>
+  double primalFeasibility() const {
+    return Fx.template lpNorm<p>();
+  }
+
+  template <int p=1>
+  double dualFeasibility() const {
+    double feasibility = 0;
+    feasibility += lx.template lpNorm<p>();
+    feasibility += la.template lpNorm<p>();
+    feasibility += ldv.template lpNorm<p>();
+    if (lf().size() > 0)
+      feasibility += lf().template lpNorm<p>();
+    feasibility += lu.template lpNorm<p>();
+    return feasibility;
+  }
+
   ///
   /// @brief Sets the split KKT residual zero.
   ///

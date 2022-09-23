@@ -101,6 +101,13 @@ public:
   template <int p=1>
   double constraintViolation() const;
 
+
+  template <int p=1>
+  double primalFeasibility() const;
+
+  template <int p=1>
+  double dualFeasibility() const;
+
   ///
   /// @brief The collection of the position-level constraints data. 
   ///

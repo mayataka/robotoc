@@ -9,9 +9,9 @@ namespace robotoc {
 
 TerminalOCP::TerminalOCP(const Robot& robot, 
                          const std::shared_ptr<CostFunction>& cost, 
-                         const std::shared_ptr<Constraints>& constraints) 
-  : cost_(cost),
-    constraints_(constraints) {
+                         const std::shared_ptr<Constraints>& constraints) {
+  ocp_.cost = cost;
+  ocp_.constraints = constraints;
   data_.cost_data = cost->createCostFunctionData(robot);
   data_.constraints_data = constraints->createConstraintsData(robot, 0);
   data_.state_equation_data = StateEquationData(robot);
@@ -21,8 +21,7 @@ TerminalOCP::TerminalOCP(const Robot& robot,
 
 
 TerminalOCP::TerminalOCP() 
-  : cost_(),
-    constraints_(),
+  : ocp_(),
     data_() {
 }
 
@@ -48,7 +47,7 @@ void TerminalOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
                           const SplitSolution& s, 
                           SplitKKTResidual& kkt_residual) {
   robot.updateKinematics(s.q, s.v);
-  data_.performance_index.cost = cost_->evalTerminalCost(robot, data_.cost_data, grid_info, s);
+  data_.performance_index.cost = ocp_.cost->evalTerminalCost(robot, data_.cost_data, grid_info, s);
 }
 
 
@@ -59,7 +58,7 @@ void TerminalOCP::computeKKTResidual(Robot& robot, const GridInfo& grid_info,
                                      SplitKKTResidual& kkt_residual) {
   robot.updateKinematics(s.q, s.v);
   kkt_residual.lx.setZero();
-  data_.performance_index.cost = cost_->linearizeTerminalCost(robot, data_.cost_data, grid_info, s, 
+  data_.performance_index.cost = ocp_.cost->linearizeTerminalCost(robot, data_.cost_data, grid_info, s, 
                                                 kkt_residual);
   linearizeTerminalStateEquation(robot, data_.state_equation_data, q_prev, s, 
                                  kkt_matrix, kkt_residual);
@@ -75,7 +74,7 @@ void TerminalOCP::computeKKTSystem(Robot& robot, const GridInfo& grid_info,
   robot.updateKinematics(s.q, s.v);
   kkt_matrix.Qxx.setZero();
   kkt_residual.lx.setZero();
-  data_.performance_index.cost = cost_->quadratizeTerminalCost(robot, data_.cost_data, grid_info, s, 
+  data_.performance_index.cost = ocp_.cost->quadratizeTerminalCost(robot, data_.cost_data, grid_info, s, 
                                                  kkt_residual, kkt_matrix);
   linearizeTerminalStateEquation(robot, data_.state_equation_data, q_prev, s, 
                                  kkt_matrix, kkt_residual);

@@ -13,7 +13,8 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/ocp/grid_info.hpp"
-#include "robotoc/ocp/split_ocp_data.hpp"
+#include "robotoc/ocp/ocp_data.hpp"
+#include "robotoc/ocp/ocp_def.hpp"
 
 
 namespace robotoc {
@@ -186,9 +187,8 @@ public:
   double terminalCost(const bool include_cost_barrier=true) const;
 
 private:
-  std::shared_ptr<CostFunction> cost_;
-  std::shared_ptr<Constraints> constraints_;
-  SplitOCPData data_;
+  OCPDef ocp_;
+  OCPData data_;
 };
 
 } // namespace robotoc

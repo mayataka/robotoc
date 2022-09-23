@@ -90,6 +90,19 @@ public:
   template <int p=1>
   double constraintViolation() const;
 
+  template <int p=1>
+  double primalFeasibility() const {
+    if (P().size() > 0)
+      P().template lpNorm<p>();
+    else
+      return 0.0;
+  }
+
+  template <int p=1>
+  static double dualFeasibility() {
+    return 0.0;
+  }
+
   ///
   /// @brief Sets the split KKT residual zero.
   ///

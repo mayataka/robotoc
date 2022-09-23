@@ -128,6 +128,16 @@ public:
   ///
   double KKTError() const;
 
+  template <int p=1>
+  double primalFeasibility() const {
+    return residual.template lpNorm<p>();
+  }
+
+  template <int p=1>
+  double dualFeasibility() const {
+    return cmpl.template lpNorm<p>();
+  }
+
   ///
   /// @brief Returns the lp norm of the constraint violation, that is,
   /// the primal residual in the constraint. Default norm is l1-norm.

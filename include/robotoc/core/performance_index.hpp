@@ -33,6 +33,16 @@ struct PerformanceIndex {
   double kkt_error = 0.0;
 
   ///
+  /// @brief Overload the operator.
+  ///
+  PerformanceIndex& operator+=(const PerformanceIndex& other);
+
+  ///
+  /// @brief Overload the operator.
+  ///
+  PerformanceIndex operator+(const PerformanceIndex& other) const;
+
+  ///
   /// @brief Displays the performance index onto a ostream.
   ///
   void disp(std::ostream& os) const;
