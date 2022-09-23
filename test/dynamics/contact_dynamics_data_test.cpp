@@ -32,10 +32,16 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
   ContactDynamicsData data(robot);
+  EXPECT_EQ(data.hasFloatingBase(), robot.hasFloatingBase());
+  EXPECT_EQ(data.dimv(), robot.dimv());
+  EXPECT_EQ(data.dimvf(), robot.dimv());
+  EXPECT_EQ(data.dimu(), robot.dimu());
   data.setContactDimension(contact_status.dimf());
+  EXPECT_EQ(data.dimf(), contact_status.dimf());
+  EXPECT_EQ(data.dimvf(), robot.dimv()+contact_status.dimf());
   EXPECT_EQ(data.Qxu_passive.rows(), dimx);
   EXPECT_EQ(data.Qxu_passive.cols(), dim_passive);
-  EXPECT_EQ(data.Quu_passive_topRight.rows(), dim_passive );
+  EXPECT_EQ(data.Quu_passive_topRight.rows(), dim_passive);
   EXPECT_EQ(data.Quu_passive_topRight.cols(), dimu);
   EXPECT_EQ(data.lu_passive.size(), dim_passive);
   EXPECT_EQ(data.dIDda.rows(), dimv);
@@ -108,6 +114,7 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   EXPECT_TRUE(data.MJtJinv().isApprox(MJtJinv_ref));
   EXPECT_TRUE(data.MJtJinv_dIDCdqv().isApprox(MJtJinv_dIDCdqv_ref));
   EXPECT_TRUE(data.Qafqv().isApprox(Qafqv_ref));
+  EXPECT_TRUE(data.Qafqv().isApprox(data.Qdvfqv()));
   EXPECT_TRUE(data.Qafu_full().isApprox(Qafu_full_ref));
   EXPECT_TRUE(data.Qafu_passive().isApprox(Qafu_full_ref.leftCols(dim_passive)));
   EXPECT_TRUE(data.Qafu().isApprox(Qafu_full_ref.rightCols(dimu)));
@@ -120,6 +127,8 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
   EXPECT_TRUE(data.laf().isApprox(laf_ref));
   EXPECT_TRUE(data.la().isApprox(laf_ref.head(dimv)));
   EXPECT_TRUE(data.lf().isApprox(laf_ref.tail(dimf)));
+  EXPECT_TRUE(data.laf().isApprox(data.ldvf()));
+  EXPECT_TRUE(data.la().isApprox(data.ldv()));
   EXPECT_TRUE(data.haf().isApprox(haf_ref));
   EXPECT_TRUE(data.ha().isApprox(haf_ref.head(dimv)));
   EXPECT_TRUE(data.hf().isApprox(haf_ref.tail(dimf)));
