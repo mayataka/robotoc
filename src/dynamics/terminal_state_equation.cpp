@@ -6,9 +6,9 @@
 namespace robotoc {
 
 void linearizeTerminalStateEquation(const Robot& robot, 
-                                    StateEquationData& data, 
                                     const Eigen::VectorXd& q_prev, 
                                     const SplitSolution& s, 
+                                    StateEquationData& data, 
                                     SplitKKTMatrix& kkt_matrix, 
                                     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -60,7 +60,7 @@ void TerminalStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::VectorXd& q_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  linearizeTerminalStateEquation(robot, data_, q_prev, s, kkt_matrix, kkt_residual);
+  linearizeTerminalStateEquation(robot, q_prev, s, data_, kkt_matrix, kkt_residual);
 }
 
 

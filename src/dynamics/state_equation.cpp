@@ -19,11 +19,10 @@ void evalStateEquation(const Robot& robot, const double dt,
 }
 
 
-void linearizeStateEquation(const Robot& robot, StateEquationData& data,
-                            const double dt, const Eigen::VectorXd& q_prev, 
-                            const SplitSolution& s, 
-                            const SplitSolution& s_next, 
-                            SplitKKTMatrix& kkt_matrix, 
+void linearizeStateEquation(const Robot& robot, const double dt, 
+                            const Eigen::VectorXd& q_prev, 
+                            const SplitSolution& s, const SplitSolution& s_next, 
+                            StateEquationData& data, SplitKKTMatrix& kkt_matrix, 
                             SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
@@ -58,9 +57,10 @@ void linearizeStateEquation(const Robot& robot, StateEquationData& data,
 }
 
 
-void correctLinearizeStateEquation(const Robot& robot, StateEquationData& data,
-                                   const double dt, const SplitSolution& s, 
+void correctLinearizeStateEquation(const Robot& robot, const double dt, 
+                                   const SplitSolution& s, 
                                    const SplitSolution& s_next, 
+                                   StateEquationData& data, 
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
@@ -87,11 +87,11 @@ void correctCostateDirection(StateEquationData& data, SplitDirection& d)  {
 }
 
 
-void computeInitialStateDirection(const Robot& robot, 
-                                  const StateEquationData& data, 
-                                  const Eigen::VectorXd& q0, 
+void computeInitialStateDirection(const Robot& robot, const Eigen::VectorXd& q0, 
                                   const Eigen::VectorXd& v0, 
-                                  const SplitSolution& s0, SplitDirection& d0) {
+                                  const SplitSolution& s0, 
+                                  const StateEquationData& data, 
+                                  SplitDirection& d0) {
   robot.subtractConfiguration(q0, s0.q, d0.dq());
   if (robot.hasFloatingBase()) {
     d0.dq().template head<6>().noalias() 
@@ -127,7 +127,7 @@ void StateEquation::linearizeStateEquation(const Robot& robot, const double dt,
                                            const SplitSolution& s_next, 
                                            SplitKKTMatrix& kkt_matrix, 
                                            SplitKKTResidual& kkt_residual) {
-  ::robotoc::linearizeStateEquation(robot, data_, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  ::robotoc::linearizeStateEquation(robot, dt, q_prev, s, s_next, data_, kkt_matrix, kkt_residual);
 }
 
 
@@ -135,7 +135,7 @@ void StateEquation::correctLinearizedStateEquation(
     const Robot& robot, const double dt, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  ::robotoc::correctLinearizeStateEquation(robot, data_, dt, s, s_next, kkt_matrix, kkt_residual);
+  ::robotoc::correctLinearizeStateEquation(robot, dt, s, s_next, data_, kkt_matrix, kkt_residual);
 }
 
 
@@ -149,7 +149,7 @@ void StateEquation::computeInitialStateDirection(const Robot& robot,
                                                  const Eigen::VectorXd& v0, 
                                                  const SplitSolution& s0, 
                                                  SplitDirection& d0) const {
-  ::robotoc::computeInitialStateDirection(robot, data_, q0, v0, s0, d0);
+  ::robotoc::computeInitialStateDirection(robot, q0, v0, s0, data_, d0);
 }
 
 } // namespace robotoc 

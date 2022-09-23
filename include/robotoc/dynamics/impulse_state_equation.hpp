@@ -39,10 +39,11 @@ void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s,
 /// @param[in, out] kkt_residual Impulse split KKT residual at the current 
 /// impulse stage. 
 ///
-void linearizeImpulseStateEquation(const Robot& robot, StateEquationData& data, 
+void linearizeImpulseStateEquation(const Robot& robot,  
                                    const Eigen::VectorXd& q_prev, 
                                    const SplitSolution& s, 
                                    const SplitSolution& s_next, 
+                                   StateEquationData& data, 
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual);
 
@@ -58,9 +59,9 @@ void linearizeImpulseStateEquation(const Robot& robot, StateEquationData& data,
 /// impulse stage. 
 ///
 void correctLinearizeImpulseStateEquation(const Robot& robot, 
-                                          StateEquationData& data,
                                           const SplitSolution& s, 
                                           const SplitSolution& s_next, 
+                                          StateEquationData& data,
                                           SplitKKTMatrix& kkt_matrix, 
                                           SplitKKTResidual& kkt_residual);
 

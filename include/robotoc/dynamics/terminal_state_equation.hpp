@@ -22,9 +22,10 @@ namespace robotoc {
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
-void linearizeTerminalStateEquation(const Robot& robot, StateEquationData& data, 
+void linearizeTerminalStateEquation(const Robot& robot,  
                                     const Eigen::VectorXd& q_prev, 
                                     const SplitSolution& s, 
+                                    StateEquationData& data,
                                     SplitKKTMatrix& kkt_matrix, 
                                     SplitKKTResidual& kkt_residual);
 

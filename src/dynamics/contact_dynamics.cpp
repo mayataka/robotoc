@@ -10,7 +10,7 @@ namespace {
 } 
 
 void evalContactDynamics(Robot& robot, const ContactStatus& contact_status, 
-                         ContactDynamicsData& data, const SplitSolution& s) {
+                         const SplitSolution& s, ContactDynamicsData& data) {
   data.setContactDimension(contact_status.dimf());
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
@@ -20,10 +20,10 @@ void evalContactDynamics(Robot& robot, const ContactStatus& contact_status,
 
 
 void linearizeContactDynamics(Robot& robot, const ContactStatus& contact_status, 
-                              ContactDynamicsData& data, 
                               const SplitSolution& s, 
+                              ContactDynamicsData& data, 
                               SplitKKTResidual& kkt_residual) { 
-  evalContactDynamics(robot, contact_status, data, s);
+  evalContactDynamics(robot, contact_status, s, data);
   robot.RNEADerivatives(s.q, s.v, s.a, data.dIDdq(), data.dIDdv(), data.dIDda);
   robot.computeBaumgarteDerivatives(contact_status, data.dCdq(), data.dCdv(), 
                                     data.dCda());
@@ -53,7 +53,7 @@ void linearizeContactDynamics(Robot& robot, const ContactStatus& contact_status,
 
 
 void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status, 
-                             ContactDynamicsData& data, const double dt, 
+                             const double dt, ContactDynamicsData& data, 
                              SplitKKTMatrix& kkt_matrix, 
                              SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
@@ -148,8 +148,7 @@ void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status,
 
 void condenseContactDynamics(const ContactDynamicsData& data,
                              SwitchingConstraintJacobian& sc_jacobian,
-                             SwitchingConstraintResidual& sc_residual,
-                             SplitKKTMatrix& kkt_matrix) {
+                             SwitchingConstraintResidual& sc_residual) {
   sc_jacobian.Phix().noalias() 
       -= sc_jacobian.Phia() * data.MJtJinv_dIDCdqv().topRows(data.dimv());
   sc_jacobian.Phiu().noalias()  
@@ -171,8 +170,9 @@ void expandContactDynamicsPrimal(const ContactDynamicsData& data,
 }
 
 
-void expandContactDynamicsDual(ContactDynamicsData& data, const double dt, 
-                               const double dts, const SplitDirection& d_next, 
+void expandContactDynamicsDual(const double dt, const double dts, 
+                               ContactDynamicsData& data, 
+                               const SplitDirection& d_next, 
                                SplitDirection& d) {
   assert(dt > 0);
   if (data.hasFloatingBase()) {
@@ -194,10 +194,10 @@ void expandContactDynamicsDual(ContactDynamicsData& data, const double dt,
 }
 
 
-void expandContactDynamicsDual(ContactDynamicsData& data, const double dt, 
-                               const double dts, const SplitDirection& d_next, 
+void expandContactDynamicsDual(const double dt, const double dts, 
+                               ContactDynamicsData& data, 
                                const SwitchingConstraintJacobian& sc_jacobian,
-                               SplitDirection& d) {
+                               const SplitDirection& d_next, SplitDirection& d) {
   assert(dt > 0);
   if (data.hasFloatingBase()) {
     d.dnu_passive            = - data.lu_passive;
@@ -231,21 +231,21 @@ ContactDynamics::ContactDynamics()
 
 void ContactDynamics::evalContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const SplitSolution& s) {
-  ::robotoc::evalContactDynamics(robot, contact_status, data_, s);
+  ::robotoc::evalContactDynamics(robot, contact_status, s, data_);
 }
 
 
 void ContactDynamics::linearizeContactDynamics(
     Robot& robot, const ContactStatus& contact_status, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) { 
-  ::robotoc::linearizeContactDynamics(robot, contact_status, data_, s, kkt_residual);
+  ::robotoc::linearizeContactDynamics(robot, contact_status, s, data_, kkt_residual);
 }
 
 
 void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dt,
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  ::robotoc::condenseContactDynamics(robot, contact_status, data_, dt, kkt_matrix, kkt_residual);
+  ::robotoc::condenseContactDynamics(robot, contact_status, dt, data_, kkt_matrix, kkt_residual);
 }
 
 
@@ -253,7 +253,7 @@ void ContactDynamics::condenseSwitchingConstraint(
     SwitchingConstraintJacobian& sc_jacobian,
     SwitchingConstraintResidual& sc_residual,
     SplitKKTMatrix& kkt_matrix) const {
-  ::robotoc::condenseContactDynamics(data_, sc_jacobian, sc_residual, kkt_matrix);
+  ::robotoc::condenseContactDynamics(data_, sc_jacobian, sc_residual);
 }
 
 
@@ -265,7 +265,7 @@ void ContactDynamics::expandPrimal(SplitDirection& d) const {
 void ContactDynamics::expandDual(const double dt, const double dts, 
                                  const SplitDirection& d_next, 
                                  SplitDirection& d) {
-  ::robotoc::expandContactDynamicsDual(data_, dt, dts, d_next, d);
+  ::robotoc::expandContactDynamicsDual(dt, dts, data_, d_next, d);
 }
 
 
@@ -273,7 +273,7 @@ void ContactDynamics::expandDual(const double dt, const double dts,
                                  const SplitDirection& d_next, 
                                  const SwitchingConstraintJacobian& sc_jacobian,
                                  SplitDirection& d) {
-  ::robotoc::expandContactDynamicsDual(data_, dt, dts, d_next, sc_jacobian, d);
+  ::robotoc::expandContactDynamicsDual(dt, dts, data_, sc_jacobian, d_next, d);
 }
 
 } // namespace robotoc 

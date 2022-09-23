@@ -25,7 +25,7 @@ namespace robotoc {
 /// @param[in] s Split solution of this time stage.
 ///
 void evalContactDynamics(Robot& robot, const ContactStatus& contact_status,
-                         ContactDynamicsData& data, const SplitSolution& s);
+                         const SplitSolution& s, ContactDynamicsData& data);
 
 ///
 /// @brief Computes the residual and derivatives of the contact dynamics  
@@ -36,7 +36,8 @@ void evalContactDynamics(Robot& robot, const ContactStatus& contact_status,
 /// @param[in, out] kkt_residual Split KKT residual of this time stage.
 ///
 void linearizeContactDynamics(Robot& robot, const ContactStatus& contact_status, 
-                              ContactDynamicsData& data, const SplitSolution& s, 
+                              const SplitSolution& s, 
+                              ContactDynamicsData& data,
                               SplitKKTResidual& kkt_residual);
 
 ///
@@ -49,7 +50,7 @@ void linearizeContactDynamics(Robot& robot, const ContactStatus& contact_status,
 /// @param[in, out] kkt_residual Split KKT residual of this time stage.
 ///
 void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status, 
-                             ContactDynamicsData& data, const double dt, 
+                             const double dt, ContactDynamicsData& data,
                              SplitKKTMatrix& kkt_matrix, 
                              SplitKKTResidual& kkt_residual);
 
@@ -61,8 +62,7 @@ void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status,
 ///
 void condenseContactDynamics(const ContactDynamicsData& data, 
                              SwitchingConstraintJacobian& sc_jacobian,
-                             SwitchingConstraintResidual& sc_residual,
-                             SplitKKTMatrix& kkt_matrix);
+                             SwitchingConstraintResidual& sc_residual);
 
 ///
 /// @brief Expands the primal variables, i.e., computes the Newton direction 
@@ -80,8 +80,8 @@ void expandContactDynamicsPrimal(const ContactDynamicsData& data, SplitDirection
 /// @param[in] d_next Split direction of the next stage.
 /// @param[in, out] d Split direction of this time stage.
 /// 
-void expandContactDynamicsDual(ContactDynamicsData& data, 
-                               const double dt, const double dts, 
+void expandContactDynamicsDual(const double dt, const double dts, 
+                               ContactDynamicsData& data,
                                const SplitDirection& d_next, SplitDirection& d);
 
 ///
@@ -93,10 +93,10 @@ void expandContactDynamicsDual(ContactDynamicsData& data,
 /// @param[in] sc_jacobian Jacobian of the switching constraint. 
 /// @param[in, out] d Split direction of this time stage.
 /// 
-void expandContactDynamicsDual(ContactDynamicsData& data, 
-                               const double dt, const double dts, 
-                               const SplitDirection& d_next, 
+void expandContactDynamicsDual(const double dt, const double dts, 
+                               ContactDynamicsData& data, 
                                const SwitchingConstraintJacobian& sc_jacobian,
+                               const SplitDirection& d_next, 
                                SplitDirection& d);
 
 ///

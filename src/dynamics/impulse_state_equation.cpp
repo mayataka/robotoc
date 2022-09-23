@@ -16,10 +16,11 @@ void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s,
 }
 
 
-void linearizeImpulseStateEquation(const Robot& robot, StateEquationData& data, 
+void linearizeImpulseStateEquation(const Robot& robot, 
                                    const Eigen::VectorXd& q_prev, 
                                    const SplitSolution& s, 
                                    const SplitSolution& s_next, 
+                                   StateEquationData& data, 
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -47,9 +48,9 @@ void linearizeImpulseStateEquation(const Robot& robot, StateEquationData& data,
 
 
 void correctLinearizeImpulseStateEquation(const Robot& robot, 
-                                          StateEquationData& data, 
                                           const SplitSolution& s, 
                                           const SplitSolution& s_next, 
+                                          StateEquationData& data, 
                                           SplitKKTMatrix& kkt_matrix, 
                                           SplitKKTResidual& kkt_residual) {
   if (!data.hasFloatingBase()) return;
@@ -86,7 +87,8 @@ void ImpulseStateEquation::linearizeStateEquation(
     const Robot& robot, const Eigen::VectorXd& q_prev, 
     const SplitSolution& s, const SplitSolution& s_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  linearizeImpulseStateEquation(robot, data_, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  linearizeImpulseStateEquation(robot, q_prev, s, s_next, data_, 
+                                kkt_matrix, kkt_residual);
 }
 
 
@@ -94,7 +96,8 @@ void ImpulseStateEquation::correctLinearizedStateEquation(
     const Robot& robot, const SplitSolution& s, 
     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  correctLinearizeImpulseStateEquation(robot, data_, s, s_next, kkt_matrix, kkt_residual);
+  correctLinearizeImpulseStateEquation(robot, s, s_next, data_, 
+                                       kkt_matrix, kkt_residual);
 }
 
 

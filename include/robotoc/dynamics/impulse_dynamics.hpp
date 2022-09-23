@@ -21,7 +21,7 @@ namespace robotoc {
 /// @param[in] s Split solution of this impulse stage.
 ///
 void evalImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,
-                         ContactDynamicsData& data, const SplitSolution& s);
+                         const SplitSolution& s, ContactDynamicsData& data);
 
 ///
 /// @brief Linearizes the impulse dynamics constraint. 
@@ -31,7 +31,7 @@ void evalImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,
 /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
 ///
 void linearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, 
-                              ContactDynamicsData& data, const SplitSolution& s, 
+                              const SplitSolution& s, ContactDynamicsData& data, 
                               SplitKKTResidual& kkt_residual);
 
 ///

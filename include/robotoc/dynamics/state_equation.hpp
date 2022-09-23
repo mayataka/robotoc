@@ -39,10 +39,10 @@ void evalStateEquation(const Robot& robot, const double dt,
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
-void linearizeStateEquation(const Robot& robot, StateEquationData& data,
-                            const double dt, const Eigen::VectorXd& q_prev, 
+void linearizeStateEquation(const Robot& robot, const double dt, 
+                            const Eigen::VectorXd& q_prev, 
                             const SplitSolution& s, const SplitSolution& s_next, 
-                            SplitKKTMatrix& kkt_matrix, 
+                            StateEquationData& data, SplitKKTMatrix& kkt_matrix, 
                             SplitKKTResidual& kkt_residual);
 
 ///
@@ -55,9 +55,10 @@ void linearizeStateEquation(const Robot& robot, StateEquationData& data,
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
-void correctLinearizeStateEquation(const Robot& robot, StateEquationData& data,
-                                   const double dt, const SplitSolution& s, 
+void correctLinearizeStateEquation(const Robot& robot, const double dt, 
+                                   const SplitSolution& s, 
                                    const SplitSolution& s_next, 
+                                   StateEquationData& data, 
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual);
 
@@ -77,10 +78,11 @@ void correctCostateDirection(StateEquationData& data, SplitDirection& d);
 /// @param[in, out] d0 Split direction at the initial stage. 
 ///
 void computeInitialStateDirection(const Robot& robot, 
-                                  const StateEquationData& data,
                                   const Eigen::VectorXd& q0, 
                                   const Eigen::VectorXd& v0, 
-                                  const SplitSolution& s0, SplitDirection& d0);
+                                  const SplitSolution& s0, 
+                                  const StateEquationData& data,
+                                  SplitDirection& d0);
 
 ///
 /// @class StateEquation
