@@ -6,8 +6,6 @@
 #include "Eigen/Core"
 
 #include "robotoc/core/performance_index.hpp"
-#include "robotoc/core/kkt_residual.hpp"
-#include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/dynamics/state_equation_data.hpp"
@@ -23,8 +21,6 @@ namespace robotoc {
 ///
 struct SplitOCPData {
   PerformanceIndex performance_index;
-  SplitKKTResidual kkt_residual; 
-  SplitKKTMatrix kkt_matrix;
   CostFunctionData cost_data;
   ConstraintsData constraints_data;
   StateEquationData state_equation_data;

@@ -11,23 +11,19 @@ TerminalOCP::TerminalOCP(const Robot& robot,
                          const std::shared_ptr<CostFunction>& cost, 
                          const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
-    cost_data_(cost->createCostFunctionData(robot)),
-    constraints_(constraints),
-    constraints_data_(),
-    state_equation_data_(robot),
-    terminal_cost_(0),
-    barrier_cost_(0) {
+    constraints_(constraints) {
+  data_.cost_data = cost->createCostFunctionData(robot);
+  data_.constraints_data = constraints->createConstraintsData(robot, 0);
+  data_.state_equation_data = StateEquationData(robot);
+  data_.contact_dynamics_data = ContactDynamicsData(robot);
+  data_.switching_constraint_data = SwitchingConstraintData(robot);
 }
 
 
 TerminalOCP::TerminalOCP() 
   : cost_(),
-    cost_data_(),
     constraints_(),
-    constraints_data_(),
-    state_equation_data_(),
-    terminal_cost_(0),
-    barrier_cost_(0) {
+    data_() {
 }
 
 
@@ -52,7 +48,7 @@ void TerminalOCP::evalOCP(Robot& robot, const GridInfo& grid_info,
                           const SplitSolution& s, 
                           SplitKKTResidual& kkt_residual) {
   robot.updateKinematics(s.q, s.v);
-  terminal_cost_ = cost_->evalTerminalCost(robot, cost_data_, grid_info, s);
+  data_.performance_index.cost = cost_->evalTerminalCost(robot, data_.cost_data, grid_info, s);
 }
 
 
@@ -63,9 +59,9 @@ void TerminalOCP::computeKKTResidual(Robot& robot, const GridInfo& grid_info,
                                      SplitKKTResidual& kkt_residual) {
   robot.updateKinematics(s.q, s.v);
   kkt_residual.lx.setZero();
-  terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, grid_info, s, 
+  data_.performance_index.cost = cost_->linearizeTerminalCost(robot, data_.cost_data, grid_info, s, 
                                                 kkt_residual);
-  linearizeTerminalStateEquation(robot, state_equation_data_, q_prev, s, 
+  linearizeTerminalStateEquation(robot, data_.state_equation_data, q_prev, s, 
                                  kkt_matrix, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
 }
@@ -79,12 +75,12 @@ void TerminalOCP::computeKKTSystem(Robot& robot, const GridInfo& grid_info,
   robot.updateKinematics(s.q, s.v);
   kkt_matrix.Qxx.setZero();
   kkt_residual.lx.setZero();
-  terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, grid_info, s, 
+  data_.performance_index.cost = cost_->quadratizeTerminalCost(robot, data_.cost_data, grid_info, s, 
                                                  kkt_residual, kkt_matrix);
-  linearizeTerminalStateEquation(robot, state_equation_data_, q_prev, s, 
+  linearizeTerminalStateEquation(robot, data_.state_equation_data, q_prev, s, 
                                  kkt_matrix, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
-  correctLinearizeTerminalStateEquation(state_equation_data_, kkt_matrix);
+  correctLinearizeTerminalStateEquation(data_.state_equation_data, kkt_matrix);
 }
 
  
@@ -107,7 +103,7 @@ void TerminalOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
 
 void TerminalOCP::expandDual(SplitDirection& d) {
   // TODO: add inequality constraints at the terminal OCP.
-  correctCostateDirection(state_equation_data_, d);
+  correctCostateDirection(data_.state_equation_data, d);
 }
 
 
@@ -138,7 +134,7 @@ double TerminalOCP::KKTError(const SplitKKTResidual& kkt_residual) {
 
 
 double TerminalOCP::terminalCost(const bool) const {
-  return terminal_cost_;
+  return data_.performance_index.cost;
 }
 
 } // namespace robotoc

@@ -11,25 +11,19 @@ ImpulseSplitOCP::ImpulseSplitOCP(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
-    cost_data_(cost->createCostFunctionData(robot)),
-    constraints_(constraints),
-    constraints_data_(constraints->createConstraintsData(robot, -1)),
-    state_equation_data_(robot),
-    contact_dynamics_data_(robot),
-    stage_cost_(0),
-    barrier_cost_(0) {
+    constraints_(constraints) {
+  data_.cost_data = cost->createCostFunctionData(robot);
+  data_.constraints_data = constraints->createConstraintsData(robot, 0);
+  data_.state_equation_data = StateEquationData(robot);
+  data_.contact_dynamics_data = ContactDynamicsData(robot);
+  data_.switching_constraint_data = SwitchingConstraintData(robot);
 }
 
 
 ImpulseSplitOCP::ImpulseSplitOCP() 
   : cost_(),
-    cost_data_(),
     constraints_(),
-    constraints_data_(),
-    state_equation_data_(),
-    contact_dynamics_data_(),
-    stage_cost_(0),
-    barrier_cost_(0) {
+    data_() {
 }
 
 
@@ -40,25 +34,25 @@ ImpulseSplitOCP::~ImpulseSplitOCP() {
 bool ImpulseSplitOCP::isFeasible(Robot& robot, 
                                  const ImpulseStatus& impulse_status,
                                  const SplitSolution& s) {
-  return constraints_->isFeasible(robot, impulse_status, constraints_data_, s);
+  return constraints_->isFeasible(robot, impulse_status, data_.constraints_data, s);
 }
 
 
 void ImpulseSplitOCP::initConstraints(Robot& robot,
                                       const ImpulseStatus& impulse_status,
                                       const SplitSolution& s) { 
-  constraints_data_ = constraints_->createConstraintsData(robot, -1);
-  constraints_->setSlackAndDual(robot, impulse_status, constraints_data_, s);
+  data_.constraints_data = constraints_->createConstraintsData(robot, -1);
+  constraints_->setSlackAndDual(robot, impulse_status, data_.constraints_data, s);
 }
 
 
 void ImpulseSplitOCP::initConstraints(const ImpulseSplitOCP& other) { 
-  constraints_data_.copySlackAndDual(other.constraintsData());
+  data_.constraints_data.copySlackAndDual(other.constraintsData());
 }
 
 
 const ConstraintsData& ImpulseSplitOCP::constraintsData() const {
-  return constraints_data_;
+  return data_.constraints_data;
 }
 
 
@@ -73,12 +67,12 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
   kkt_residual.setContactStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
-  stage_cost_ = cost_->evalImpulseCost(robot, impulse_status, cost_data_, 
+  data_.performance_index.cost = cost_->evalImpulseCost(robot, impulse_status, data_.cost_data, 
                                        grid_info, s);
-  constraints_->evalConstraint(robot, impulse_status, constraints_data_, s);
-  barrier_cost_ = constraints_data_.logBarrier();
+  constraints_->evalConstraint(robot, impulse_status, data_.constraints_data, s);
+  data_.performance_index.cost_barrier = data_.constraints_data.logBarrier();
   evalImpulseStateEquation(robot, s, q_next, v_next, kkt_residual);
-  evalImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s);
+  evalImpulseDynamics(robot, impulse_status, data_.contact_dynamics_data, s);
 }
 
 
@@ -93,14 +87,14 @@ void ImpulseSplitOCP::computeKKTResidual(
   kkt_residual.setContactStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->linearizeImpulseCost(robot, impulse_status, cost_data_, 
+  data_.performance_index.cost = cost_->linearizeImpulseCost(robot, impulse_status, data_.cost_data, 
                                             grid_info, s, kkt_residual);
-  constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
+  constraints_->linearizeConstraints(robot, impulse_status, data_.constraints_data, 
                                      s, kkt_residual);
-  barrier_cost_ = constraints_data_.logBarrier();
-  linearizeImpulseStateEquation(robot, state_equation_data_, q_prev, 
+  data_.performance_index.cost_barrier = data_.constraints_data.logBarrier();
+  linearizeImpulseStateEquation(robot, data_.state_equation_data, q_prev, 
                                 s, s_next, kkt_matrix, kkt_residual);
-  linearizeImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
+  linearizeImpulseDynamics(robot, impulse_status, data_.contact_dynamics_data, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
@@ -116,19 +110,19 @@ void ImpulseSplitOCP::computeKKTSystem(
   kkt_residual.setContactStatus(impulse_status);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  stage_cost_ = cost_->quadratizeImpulseCost(robot, impulse_status, cost_data_,  
+  data_.performance_index.cost = cost_->quadratizeImpulseCost(robot, impulse_status, data_.cost_data,  
                                              grid_info, s, kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, impulse_status, constraints_data_, 
+  constraints_->linearizeConstraints(robot, impulse_status, data_.constraints_data, 
                                      s, kkt_residual);
-  barrier_cost_ = constraints_data_.logBarrier();
-  linearizeImpulseStateEquation(robot, state_equation_data_, q_prev, 
+  data_.performance_index.cost_barrier = data_.constraints_data.logBarrier();
+  linearizeImpulseStateEquation(robot, data_.state_equation_data, q_prev, 
                                 s, s_next, kkt_matrix, kkt_residual);
-  linearizeImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
+  linearizeImpulseDynamics(robot, impulse_status, data_.contact_dynamics_data, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
-  constraints_->condenseSlackAndDual(impulse_status, constraints_data_, 
+  constraints_->condenseSlackAndDual(impulse_status, data_.constraints_data, 
                                      kkt_matrix, kkt_residual);
-  condenseImpulseDynamics(robot, impulse_status, contact_dynamics_data_, kkt_matrix, kkt_residual);
-  correctLinearizeImpulseStateEquation(robot, state_equation_data_,  
+  condenseImpulseDynamics(robot, impulse_status, data_.contact_dynamics_data, kkt_matrix, kkt_residual);
+  correctLinearizeImpulseStateEquation(robot, data_.state_equation_data,  
                                        s, s_next, kkt_matrix, kkt_residual);
 }
 
@@ -136,25 +130,25 @@ void ImpulseSplitOCP::computeKKTSystem(
 void ImpulseSplitOCP::expandPrimal(const ImpulseStatus& impulse_status, 
                                    SplitDirection& d) {
   d.setContactStatus(impulse_status);
-  expandImpulseDynamicsPrimal(contact_dynamics_data_, d);
-  constraints_->expandSlackAndDual(impulse_status, constraints_data_, d);
+  expandImpulseDynamicsPrimal(data_.contact_dynamics_data, d);
+  constraints_->expandSlackAndDual(impulse_status, data_.constraints_data, d);
 }
 
 
 void ImpulseSplitOCP::expandDual(const SplitDirection& d_next, 
                                  SplitDirection& d) {
-  expandImpulseDynamicsDual(contact_dynamics_data_, d_next, d);
-  correctCostateDirection(state_equation_data_, d);
+  expandImpulseDynamicsDual(data_.contact_dynamics_data, d_next, d);
+  correctCostateDirection(data_.state_equation_data, d);
 }
 
 
 double ImpulseSplitOCP::maxPrimalStepSize() {
-  return constraints_->maxSlackStepSize(constraints_data_);
+  return constraints_->maxSlackStepSize(data_.constraints_data);
 }
 
 
 double ImpulseSplitOCP::maxDualStepSize() {
-  return constraints_->maxDualStepSize(constraints_data_);
+  return constraints_->maxDualStepSize(data_.constraints_data);
 }
 
 
@@ -165,14 +159,14 @@ void ImpulseSplitOCP::updatePrimal(const Robot& robot,
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d, true);
-  constraints_->updateSlack(constraints_data_, primal_step_size);
+  constraints_->updateSlack(data_.constraints_data, primal_step_size);
 }
 
 
 void ImpulseSplitOCP::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
-  constraints_->updateDual(constraints_data_, dual_step_size);
+  constraints_->updateDual(data_.constraints_data, dual_step_size);
 }
 
 
@@ -180,18 +174,18 @@ double ImpulseSplitOCP::KKTError(
     const SplitKKTResidual& kkt_residual) const {
   double err = 0;
   err += kkt_residual.KKTError();
-  err += contact_dynamics_data_.KKTError();
-  err += constraints_data_.KKTError();
+  err += data_.contact_dynamics_data.KKTError();
+  err += data_.constraints_data.KKTError();
   return err;
 }
 
 
 double ImpulseSplitOCP::stageCost(const bool include_cost_barrier) const {
   if (include_cost_barrier) {
-    return stage_cost_ + barrier_cost_; 
+    return data_.performance_index.cost + data_.performance_index.cost_barrier; 
   }
   else {
-    return stage_cost_;
+    return data_.performance_index.cost;
   }
 }
 
@@ -200,8 +194,8 @@ double ImpulseSplitOCP::constraintViolation(
     const SplitKKTResidual& kkt_residual) const {
   double vio = 0;
   vio += kkt_residual.constraintViolation();
-  vio += constraints_data_.constraintViolation();
-  vio += contact_dynamics_data_.constraintViolation();
+  vio += data_.constraints_data.constraintViolation();
+  vio += data_.contact_dynamics_data.constraintViolation();
   return vio;
 }
 

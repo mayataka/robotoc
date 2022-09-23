@@ -11,11 +11,9 @@
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
-#include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/dynamics/state_equation_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
+#include "robotoc/ocp/split_ocp_data.hpp"
 
 
 namespace robotoc {
@@ -189,12 +187,8 @@ public:
 
 private:
   std::shared_ptr<CostFunction> cost_;
-  CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
-  ConstraintsData constraints_data_;
-  StateEquationData state_equation_data_;
-  double terminal_cost_, barrier_cost_;
-
+  SplitOCPData data_;
 };
 
 } // namespace robotoc

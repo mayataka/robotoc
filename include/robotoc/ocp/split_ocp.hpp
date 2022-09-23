@@ -14,13 +14,9 @@
 #include "robotoc/core/switching_constraint_residual.hpp"
 #include "robotoc/core/switching_constraint_jacobian.hpp"
 #include "robotoc/cost/cost_function.hpp"
-#include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/dynamics/state_equation_data.hpp"
-#include "robotoc/dynamics/contact_dynamics_data.hpp"
-#include "robotoc/dynamics/switching_constraint_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
+#include "robotoc/ocp/split_ocp_data.hpp"
 
 
 namespace robotoc {
@@ -379,14 +375,8 @@ public:
 
 private:
   std::shared_ptr<CostFunction> cost_;
-  CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
-  ConstraintsData constraints_data_;
-  StateEquationData state_equation_data_;
-  ContactDynamicsData contact_dynamics_data_;
-  SwitchingConstraintData switching_constraint_data_;
-  double stage_cost_, barrier_cost_;
-
+  SplitOCPData data_;
 };
 
 } // namespace robotoc
