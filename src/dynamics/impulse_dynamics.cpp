@@ -5,18 +5,8 @@
 
 namespace robotoc {
 
-ImpulseDynamics::ImpulseDynamics(const Robot& robot) 
-  : data_(robot) {
-}
-
-
-ImpulseDynamics::ImpulseDynamics() 
-  : data_() {
-}
-
-
-void ImpulseDynamics::eval(Robot& robot, const ImpulseStatus& impulse_status, 
-                           ContactDynamicsData& data, const SplitSolution& s) {
+void evalImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, 
+                         ContactDynamicsData& data, const SplitSolution& s) {
   data.setContactDimension(impulse_status.dimf());
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data.ID_full());
@@ -24,12 +14,10 @@ void ImpulseDynamics::eval(Robot& robot, const ImpulseStatus& impulse_status,
 }
 
 
-void ImpulseDynamics::linearize(Robot& robot, 
-                                const ImpulseStatus& impulse_status,  
-                                ContactDynamicsData& data, 
-                                const SplitSolution& s, 
-                                SplitKKTResidual& kkt_residual) {
-  eval(robot, impulse_status, data, s);
+void linearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,  
+                              ContactDynamicsData& data, const SplitSolution& s, 
+                              SplitKKTResidual& kkt_residual) {
+  evalImpulseDynamics(robot, impulse_status, data, s);
   robot.RNEAImpulseDerivatives(s.q, s.dv, data.dIDdq(), data.dIDddv);
   robot.computeImpulseVelocityDerivatives(impulse_status, data.dCdq(), 
                                           data.dCdv());
@@ -44,11 +32,10 @@ void ImpulseDynamics::linearize(Robot& robot,
 }
 
 
-void ImpulseDynamics::condense(Robot& robot, 
-                               const ImpulseStatus& impulse_status, 
-                               ContactDynamicsData& data, 
-                               SplitKKTMatrix& kkt_matrix, 
-                               SplitKKTResidual& kkt_residual) {
+void condenseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, 
+                             ContactDynamicsData& data, 
+                             SplitKKTMatrix& kkt_matrix, 
+                             SplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data.dIDddv, data.dCdv(), data.MJtJinv());
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -90,51 +77,60 @@ void ImpulseDynamics::condense(Robot& robot,
 }
 
 
-void ImpulseDynamics::expandPrimal(const ContactDynamicsData& data, 
-                                   SplitDirection& d) {
+void expandImpulseDynamicsPrimal(const ContactDynamicsData& data, 
+                                 SplitDirection& d) {
   d.ddvf().noalias()  = - data.MJtJinv_dIDCdqv() * d.dx;
   d.ddvf().noalias() -= data.MJtJinv_IDC();
   d.df().array()     *= -1;
 }
 
 
-void ImpulseDynamics::expandDual(ContactDynamicsData& data, 
-                                 const SplitDirection& d_next, 
-                                 SplitDirection& d) {
+void expandImpulseDynamicsDual(ContactDynamicsData& data, 
+                               const SplitDirection& d_next, SplitDirection& d) {
   data.ldvf().noalias() += data.Qdvfqv() * d.dx;
   data.ldv().noalias()  += d_next.dgmm();
   d.dbetamu().noalias()   = - data.MJtJinv() * data.ldvf();
 }
 
 
+ImpulseDynamics::ImpulseDynamics(const Robot& robot) 
+  : data_(robot) {
+}
+
+
+ImpulseDynamics::ImpulseDynamics() 
+  : data_() {
+}
+
+
 void ImpulseDynamics::evalImpulseDynamics(Robot& robot, 
                                           const ImpulseStatus& impulse_status, 
                                           const SplitSolution& s) {
-  eval(robot, impulse_status, data_, s);
+  ::robotoc::evalImpulseDynamics(robot, impulse_status, data_, s);
 }
 
 
 void ImpulseDynamics::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
     const SplitSolution& s, SplitKKTResidual& kkt_residual) {
-  linearize(robot, impulse_status, data_, s, kkt_residual);
+  ::robotoc::linearizeImpulseDynamics(robot, impulse_status, data_, s, kkt_residual);
 }
 
 
 void ImpulseDynamics::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  condense(robot, impulse_status, data_, kkt_matrix, kkt_residual);
+  ::robotoc::condenseImpulseDynamics(robot, impulse_status, data_, kkt_matrix, kkt_residual);
 }
 
 
 void ImpulseDynamics::expandPrimal(SplitDirection& d) const {
-  expandPrimal(data_, d);
+  ::robotoc::expandImpulseDynamicsPrimal(data_, d);
 }
 
 
 void ImpulseDynamics::expandDual(const SplitDirection& d_next, SplitDirection& d) {
-  expandDual(data_, d_next, d);
+  ::robotoc::expandImpulseDynamicsDual(data_, d_next, d);
 }
 
 } // namespace robotoc 

@@ -77,7 +77,7 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
   constraints_->evalConstraint(robot, impulse_status, constraints_data_, s);
   barrier_cost_ = constraints_data_.logBarrier();
   ImpulseStateEquation::eval(robot, s, q_next, v_next, kkt_residual);
-  ImpulseDynamics::eval(robot, impulse_status, contact_dynamics_data_, s);
+  evalImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s);
 }
 
 
@@ -99,7 +99,7 @@ void ImpulseSplitOCP::computeKKTResidual(
   barrier_cost_ = constraints_data_.logBarrier();
   ImpulseStateEquation::linearize(robot, state_equation_data_, q_prev, 
                                   s, s_next, kkt_matrix, kkt_residual);
-  ImpulseDynamics::linearize(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
+  linearizeImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
@@ -122,11 +122,11 @@ void ImpulseSplitOCP::computeKKTSystem(
   barrier_cost_ = constraints_data_.logBarrier();
   ImpulseStateEquation::linearize(robot, state_equation_data_, q_prev, 
                                   s, s_next, kkt_matrix, kkt_residual);
-  ImpulseDynamics::linearize(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
+  linearizeImpulseDynamics(robot, impulse_status, contact_dynamics_data_, s, kkt_residual);
   kkt_residual.kkt_error = KKTError(kkt_residual);
   constraints_->condenseSlackAndDual(impulse_status, constraints_data_, 
                                      kkt_matrix, kkt_residual);
-  ImpulseDynamics::condense(robot, impulse_status, contact_dynamics_data_, kkt_matrix, kkt_residual);
+  condenseImpulseDynamics(robot, impulse_status, contact_dynamics_data_, kkt_matrix, kkt_residual);
   ImpulseStateEquation::correctLinearize(robot, state_equation_data_,  
                                          s, s_next, kkt_matrix, kkt_residual);
 }
@@ -135,14 +135,14 @@ void ImpulseSplitOCP::computeKKTSystem(
 void ImpulseSplitOCP::expandPrimal(const ImpulseStatus& impulse_status, 
                                    SplitDirection& d) {
   d.setContactStatus(impulse_status);
-  ImpulseDynamics::expandPrimal(contact_dynamics_data_, d);
+  expandImpulseDynamicsPrimal(contact_dynamics_data_, d);
   constraints_->expandSlackAndDual(impulse_status, constraints_data_, d);
 }
 
 
 void ImpulseSplitOCP::expandDual(const SplitDirection& d_next, 
                                  SplitDirection& d) {
-  ImpulseDynamics::expandDual(contact_dynamics_data_, d_next, d);
+  expandImpulseDynamicsDual(contact_dynamics_data_, d_next, d);
   ImpulseStateEquation::correctCostateDirection(state_equation_data_, d);
 }
 

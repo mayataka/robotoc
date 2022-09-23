@@ -183,6 +183,16 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> hf() const;
 
+  template <int p=1>
+  double primalFeasibility() const {
+    return IDC().template lpNorm<p>();
+  }
+
+  template <int p=1>
+  double dualFeasibility() const {
+    return lu_passive.template lpNorm<p>();
+  }
+
   double KKTError() const {
     return (IDC().squaredNorm() + lu_passive.squaredNorm());
   }
