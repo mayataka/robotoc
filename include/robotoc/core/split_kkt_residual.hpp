@@ -66,6 +66,12 @@ public:
   void setContactStatus(const ImpulseStatus& contact_status);
 
   ///
+  /// @brief Sets the dimension of the switching constraint.
+  /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
+  ///
+  void setSwitchingConstraintDimension(const int dims);
+
+  ///
   /// @brief Residual in the state equation. Size is 2 * Robot::dimv().
   ///
   Eigen::VectorXd Fx;
@@ -93,6 +99,18 @@ public:
   /// @brief const version of SplitKKTResidual::Fq().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
+
+  ///
+  /// @brief Residual in the switching constraint.
+  /// @return Reference to the residual in the switching constraints. 
+  /// Size is SplitKKTResidual::dims().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> P();
+
+  ///
+  /// @brief const version of SplitKKTResidual::P().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
 
   ///
   /// @brief KKT Residual w.r.t. the state x. Size is 2 * Robot::dimv().
@@ -219,6 +237,13 @@ public:
   int dimf() const;
 
   ///
+  /// @brief Returns the dimension of the stack of the contact forces at the 
+  /// current contact status.
+  /// @return Dimension of the stack of the contact forces.
+  ///
+  int dims() const;
+
+  ///
   /// @brief Checks dimensional consistency of each component. 
   /// @return true if the dimension is consistent. false if not.
   ///
@@ -288,8 +313,8 @@ public:
                                   const SplitKKTResidual& kkt_residual);
 
 private:
-  Eigen::VectorXd lf_full_;
-  int dimv_, dimu_, dimf_;
+  Eigen::VectorXd P_full_, lf_full_;
+  int dimv_, dimu_, dimf_, dims_;
 
 };
 

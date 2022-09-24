@@ -20,6 +20,13 @@ inline void SplitKKTResidual::setContactStatus(
 }
 
 
+inline void SplitKKTResidual::setSwitchingConstraintDimension(const int dims) {
+  assert(dims >= 0);
+  assert(dims <= P_full_.size());
+  dims_ = dims;
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::Fq() {
   return Fx.head(dimv_);
 }
@@ -39,6 +46,16 @@ inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::Fv() {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitKKTResidual::Fv() const {
   return Fx.tail(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::P() {
+  return P_full_.head(dims_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTResidual::P() const {
+  return P_full_.head(dims_);
 }
 
 
@@ -78,6 +95,7 @@ SplitKKTResidual::lf() const {
 inline double SplitKKTResidual::KKTError() const {
   double err = 0;
   err += Fx.squaredNorm();
+  err += P().squaredNorm();
   err += lx.squaredNorm();
   err += lu.squaredNorm();
   err += la.squaredNorm();
@@ -95,6 +113,7 @@ inline double SplitKKTResidual::constraintViolation() const {
 
 inline void SplitKKTResidual::setZero() {
   Fx.setZero();
+  P().setZero();
   lx.setZero();
   la.setZero();
   ldv.setZero();
@@ -109,6 +128,11 @@ inline void SplitKKTResidual::setZero() {
 
 inline int SplitKKTResidual::dimf() const {
   return dimf_;
+}
+
+
+inline int SplitKKTResidual::dims() const {
+  return dims_;
 }
 
 } // namespace robotoc 

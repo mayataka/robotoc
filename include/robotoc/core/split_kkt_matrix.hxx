@@ -20,6 +20,13 @@ inline void SplitKKTMatrix::setContactStatus(
 }
 
 
+inline void SplitKKTMatrix::setSwitchingConstraintDimension(const int dims) {
+  assert(dims >= 0);
+  assert(dims <= Phit_full_.size());
+  dims_ = dims;
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fqq() {
   return Fxx.topLeftCorner(dimv_, dimv_);
 }
@@ -57,6 +64,86 @@ inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fvv() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fvv() const {
   return Fxx.bottomRightCorner(dimv_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::fq() {
+  return fx.head(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTMatrix::fq() const {
+  return fx.head(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::fv() {
+  return fx.tail(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTMatrix::fv() const {
+  return fx.tail(dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Phix() {
+  return Phix_full_.topLeftCorner(dims_, dimx_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Phix() const {
+  return Phix_full_.topLeftCorner(dims_, dimx_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Phiq() {
+  return Phix_full_.topLeftCorner(dims_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Phiq() const {
+  return Phix_full_.topLeftCorner(dims_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Phiv() {
+  return Phix_full_.topRightCorner(dims_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Phiv() const {
+  return Phix_full_.topRightCorner(dims_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Phia() {
+  return Phia_full_.topLeftCorner(dims_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Phia() const {
+  return Phia_full_.topLeftCorner(dims_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Phiu() {
+  return Phiu_full_.topLeftCorner(dims_, dimu_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Phiu() const {
+  return Phiu_full_.topLeftCorner(dims_, dimu_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::Phit() {
+  return Phit_full_.head(dims_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTMatrix::Phit() const {
+  return Phit_full_.head(dims_);
 }
 
 
@@ -140,35 +227,12 @@ inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqf() const {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::fq() {
-  return fx.head(dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitKKTMatrix::fq() const {
-  return fx.head(dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::fv() {
-  return fx.tail(dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitKKTMatrix::fv() const {
-  return fx.tail(dimv_);
-}
-
-
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::hq() {
   return hx.head(dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitKKTMatrix::hq() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTMatrix::hq() const {
   return hx.head(dimv_);
 }
 
@@ -178,8 +242,7 @@ inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::hv() {
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitKKTMatrix::hv() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTMatrix::hv() const {
   return hx.tail(dimv_);
 }
 
@@ -189,8 +252,7 @@ inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTMatrix::hf() {
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitKKTMatrix::hf() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitKKTMatrix::hf() const {
   return hf_full_.head(dimf_);
 }
 
@@ -198,6 +260,11 @@ SplitKKTMatrix::hf() const {
 inline void SplitKKTMatrix::setZero() {
   Fxx.setZero();
   Fvu.setZero();
+  fx.setZero();
+  Phix().setZero();
+  Phia().setZero();
+  Phiu().setZero();
+  Phit().setZero();
   Qxx.setZero();
   Qaa.setZero();
   Qdvdv.setZero();
@@ -205,7 +272,6 @@ inline void SplitKKTMatrix::setZero() {
   Quu.setZero();
   Qff().setZero();
   Qqf().setZero();
-  fx.setZero();
   Qtt = 0;
   Qtt_prev = 0;
   hx.setZero();
@@ -217,6 +283,11 @@ inline void SplitKKTMatrix::setZero() {
 
 inline int SplitKKTMatrix::dimf() const {
   return dimf_;
+}
+
+
+inline int SplitKKTMatrix::dims() const {
+  return dims_;
 }
 
 } // namespace robotoc 

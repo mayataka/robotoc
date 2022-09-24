@@ -12,8 +12,15 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(grid_info, m) {
+  py::enum_<GridType>(m, "GridType", py::arithmetic())
+    .value("Intermediate",  GridType::Intermediate)
+    .value("Impulse",  GridType::Impulse)
+    .value("Terminal",  GridType::Terminal)
+    .export_values();
+
   py::class_<GridInfo>(m, "GridInfo")
     .def(py::init<>())
+    .def_readwrite("type", &GridInfo::type)
     .def_readwrite("t0", &GridInfo::t0)
     .def_readwrite("t", &GridInfo::t)
     .def_readwrite("dt", &GridInfo::dt)

@@ -14,10 +14,12 @@ SplitKKTResidual::SplitKKTResidual(const Robot& robot)
     kkt_error(0.0),
     cost(0.0),
     constraint_violation(0.0),
+    P_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()),
-    dimf_(0) {
+    dimf_(0),
+    dims_(0) {
 }
 
 
@@ -31,10 +33,12 @@ SplitKKTResidual::SplitKKTResidual()
     kkt_error(0.0),
     cost(0.0),
     constraint_violation(0.0),
+    P_full_(),
     lf_full_(),
     dimv_(0), 
     dimu_(0),
-    dimf_(0) {
+    dimf_(0),
+    dims_(0) {
 }
 
 
@@ -52,11 +56,16 @@ bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   assert(isDimensionConsistent());
   assert(other.isDimensionConsistent());
   if (!Fx.isApprox(other.Fx)) return false;
+  if (dims_ > 0) {
+    assert(dims() == other.dims());
+    if (!P().isApprox(other.P())) return false;
+  }
   if (!lx.isApprox(other.lx)) return false;
   if (!la.isApprox(other.la)) return false;
   if (!ldv.isApprox(other.ldv)) return false;
   if (!lu.isApprox(other.lu)) return false;
   if (dimf_ > 0) {
+    assert(dimf() == other.dimf());
     if (!lf().isApprox(other.lf())) return false;
   }
   Eigen::VectorXd vec(4), other_vec(4);
@@ -70,11 +79,16 @@ bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
 bool SplitKKTResidual::hasNaN() const {
   assert(isDimensionConsistent());
   if (Fx.hasNaN()) return true;
+  if (dims() > 0) {
+    if (P().hasNaN()) return true;
+  }
   if (lx.hasNaN()) return true;
   if (la.hasNaN()) return true;
   if (ldv.hasNaN()) return true;
   if (lu.hasNaN()) return true;
-  if (lf().hasNaN()) return true;
+  if (dimf() > 0) {
+    if (lf().hasNaN()) return true;
+  }
   Eigen::VectorXd vec(4), other_vec(4);
   vec << h, kkt_error, cost, constraint_violation;
   if (vec.hasNaN()) return true;
@@ -84,6 +98,7 @@ bool SplitKKTResidual::hasNaN() const {
 
 void SplitKKTResidual::setRandom() {
   Fx.setRandom();
+  P().setRandom();
   lx.setRandom();
   la.setRandom();
   ldv.setRandom();
@@ -136,6 +151,9 @@ void SplitKKTResidual::disp(std::ostream& os) const {
   os << "SplitKKTResidual:" << std::endl;
   os << "  Fq = " << Fq().transpose() << std::endl;
   os << "  Fv = " << Fv().transpose() << std::endl;
+  if (dims_ > 0) {
+    os << "  P = " << P().transpose() << std::endl;
+  }
   os << "  lq = " << lq().transpose() << std::endl;
   os << "  lv = " << lv().transpose() << std::endl;
   os << "  lu = " << lu.transpose() << std::endl;

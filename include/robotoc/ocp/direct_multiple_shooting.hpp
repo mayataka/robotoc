@@ -186,6 +186,7 @@ private:
                    KKTResidual& kkt_residual) const;
 
   int nthreads_;
+  aligned_vector<OCPData> ocp_data_;
 };
 
 } // namespace robotoc 

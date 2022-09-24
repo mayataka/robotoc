@@ -7,10 +7,25 @@
 namespace robotoc {
 
 /// 
+/// @enum GridType
+/// @brief Type of the grid.
+///
+enum class GridType {
+  Intermediate,
+  Impulse,
+  Terminal,
+};
+
+/// 
 /// @class GridInfo
 /// @brief Grid information.
 ///
 struct GridInfo {
+  ///
+  /// @brief Type of the grid.
+  ///
+  GridType type = GridType::Intermediate;
+
   ///
   /// @brief Initial time of the horizon.
   ///
@@ -57,6 +72,11 @@ struct GridInfo {
   /// @brief Total number of grids in the contact phase that contains this grid. 
   ///
   int N_phase = 0;
+
+  ///
+  /// @brief Flag if the switching constraint is enable or not. 
+  ///
+  bool switching_constraint = false;
 
   ///
   /// @brief Sets random. 

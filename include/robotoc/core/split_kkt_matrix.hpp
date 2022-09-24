@@ -66,6 +66,12 @@ public:
   void setContactStatus(const ImpulseStatus& contact_status);
 
   ///
+  /// @brief Sets the dimension of the switching constraint.
+  /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
+  ///
+  void setSwitchingConstraintDimension(const int dims);
+
+  ///
   /// @brief Jacobian of the state equation w.r.t. the state x.
   ///
   Eigen::MatrixXd Fxx;
@@ -122,6 +128,109 @@ public:
   /// @brief Jacobian of the state equation (w.r.t. v) w.r.t. u. 
   ///
   Eigen::MatrixXd Fvu;
+
+  ///
+  /// @brief Derivative of the discrete time state equation w.r.t. the 
+  /// length of the time interval. 
+  ///
+  Eigen::VectorXd fx;
+
+  ///
+  /// @brief Derivative of the discrete-time state equation w.r.t. the 
+  /// configuration q w.r.t. the length of the time interval. 
+  /// @return Reference to the vector. Size is Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> fq();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::fq().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> fq() const;
+
+  ///
+  /// @brief Derivative of the discrete-time state equation w.r.t. the 
+  /// velocity v w.r.t. the length of the time interval. 
+  /// @return Reference to the vector. Size is Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> fv();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::fv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> fv() const;
+
+  ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. x. 
+  /// @return Reference to the Jacobian. 
+  /// Size is ImpulseStatus::dimf() x 2 * Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Phix();
+
+  ///
+  /// @brief const version of SwitchingConstraintJacobian::Phix().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Phix() const;
+
+  ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. q. 
+  /// @return Reference to the Jacobian. 
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Phiq();
+
+  ///
+  /// @brief const version of SwitchingConstraintJacobian::Phiq().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Phiq() const;
+
+  ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. v. 
+  /// @return Reference to the Jacobian. 
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Phiv();
+
+  ///
+  /// @brief const version of SwitchingConstraintJacobian::Phiv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Phiv() const;
+
+  ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. a. 
+  /// @return Reference to the Jacobian. 
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Phia();
+
+  ///
+  /// @brief const version of SwitchingConstraintJacobian::Phia().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Phia() const;
+
+  ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. u. 
+  /// @return Reference to the Jacobian. 
+  /// Size is ImpulseStatus::dimf() x Robot::dimu().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Phiu();
+
+  ///
+  /// @brief const version of SwitchingConstraintJacobian::Phiu().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Phiu() const;
+
+  ///
+  /// @brief Jacobian of the swithcing constraint w.r.t. the switching time. 
+  /// @return Reference to the time Jacobian vector. 
+  /// Size is ImpulseStatus::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> Phit();
+
+  ///
+  /// @brief const version of SwitchingConstraintJacobian::Phit().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Phit() const;
+
 
   ///
   /// @brief Hessian w.r.t. to the state x and state x.
@@ -243,36 +352,6 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqf() const;
 
   ///
-  /// @brief Derivative of the discrete time state equation w.r.t. the 
-  /// length of the time interval. 
-  ///
-  Eigen::VectorXd fx;
-
-  ///
-  /// @brief Derivative of the discrete-time state equation w.r.t. the 
-  /// configuration q w.r.t. the length of the time interval. 
-  /// @return Reference to the vector. Size is Robot::dimv().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> fq();
-
-  ///
-  /// @brief const version of SplitKKTMatrix::fq().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> fq() const;
-
-  ///
-  /// @brief Derivative of the discrete-time state equation w.r.t. the 
-  /// velocity v w.r.t. the length of the time interval. 
-  /// @return Reference to the vector. Size is Robot::dimv().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> fv();
-
-  ///
-  /// @brief const version of SplitKKTMatrix::fv().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> fv() const;
-
-  ///
   /// @brief Hessian of the Lagrangian w.r.t. the switching time. 
   ///
   double Qtt;
@@ -345,6 +424,14 @@ public:
   int dimf() const;
 
   ///
+  /// @brief Returns the dimension of the stack of the contact forces at the 
+  /// current contact status.
+  /// @return Dimension of the stack of the contact forces.
+  ///
+  int dims() const;
+
+
+  ///
   /// @brief Checks dimensional consistency of each component. 
   /// @return true if the dimension is consistent. false if not.
   ///
@@ -399,10 +486,12 @@ public:
                                   const SplitKKTMatrix& kkt_matrix);
 
 private:
+  Eigen::MatrixXd Phix_full_, Phia_full_, Phiu_full_;
+  Eigen::VectorXd Phit_full_;
   Eigen::MatrixXd Qff_full_, Qqf_full_;
   Eigen::VectorXd hf_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dimf_;
+  int dimv_, dimx_, dimu_, dimf_, dims_;
 
 };
 
