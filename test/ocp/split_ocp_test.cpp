@@ -104,8 +104,8 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   kkt_residual_ref.h = (1.0/dt) * stage_cost;
   constraints->linearizeConstraints(robot, contact_status,constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
-  StateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  linearizeStateEquation(robot, dt, s_prev.q, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamicsData cd_data(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   linearizeContactDynamics(robot, contact_status, s, cd_data, kkt_residual_ref);
@@ -186,8 +186,8 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   EXPECT_FALSE(kkt_matrix_ref.hu.isZero());
   constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
   stage_cost += constraints_data.logBarrier();
-  StateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  linearizeStateEquation(robot, dt, s_prev.q, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamicsData cd_data(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   linearizeContactDynamics(robot, contact_status, s, cd_data, kkt_residual_ref);
@@ -201,7 +201,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
     constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
     condenseContactDynamics(robot, contact_status, dt, cd_data, kkt_matrix_ref, kkt_residual_ref);
     condenseContactDynamics(cd_data, switch_jac_ref, switch_res_ref);
-    state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+    correctLinearizeStateEquation(robot, dt, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
     std::cout << switch_jac << std::endl;
     std::cout << switch_jac_ref << std::endl;
     // correct STO sensitivities
@@ -218,7 +218,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   else {
     constraints->condenseSlackAndDual(contact_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
     condenseContactDynamics(robot, contact_status, dt, cd_data, kkt_matrix_ref, kkt_residual_ref);
-    state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+    correctLinearizeStateEquation(robot, dt, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
     // correct STO sensitivities
     kkt_residual_ref.h *= (1.0 / N_phase);
     kkt_matrix_ref.hx *= (1.0 / N_phase);
@@ -257,7 +257,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
     ocp.expandDual(grid_info, d_next, d, dts);
     expandContactDynamicsDual(dt, dts, cd_data, d_next, d_ref);
   }
-  state_equation.correctCostateDirection(d_ref);
+  correctCostateDirection(state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   auto s_updated = s;
@@ -320,8 +320,8 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   constraints->evalConstraint(robot, contact_status, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
-  StateEquation state_equation(robot);
-  state_equation.evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual_ref);
   ContactDynamicsData cd_data(robot);
   evalContactDynamics(robot, contact_status, s, cd_data);
   double switch_violation_ref = 0;

@@ -1,6 +1,5 @@
 #include "robotoc/ocp/impulse_split_ocp.hpp"
 #include "robotoc/dynamics/impulse_state_equation.hpp"
-#include "robotoc/dynamics/state_equation.hpp"
 #include "robotoc/dynamics/impulse_dynamics.hpp"
 
 #include <cassert>

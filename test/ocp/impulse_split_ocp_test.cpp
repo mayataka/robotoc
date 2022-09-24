@@ -67,8 +67,8 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   double impulse_cost = cost->linearizeImpulseCost(robot, impulse_status, cost_data, grid_info, s, kkt_residual_ref);
   constraints->linearizeConstraints(robot, impulse_status, constraints_data, s, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
-  ImpulseStateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  linearizeImpulseStateEquation(robot, s_prev.q, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamicsData id_data(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   linearizeImpulseDynamics(robot, impulse_status, s, id_data, kkt_residual_ref);
@@ -109,9 +109,9 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   constraints->linearizeConstraints(robot, impulse_status, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(impulse_status, constraints_data, kkt_matrix_ref, kkt_residual_ref);
   impulse_cost += constraints_data.logBarrier();
-  ImpulseStateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  state_equation.correctLinearizedStateEquation(robot, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  linearizeImpulseStateEquation(robot, s_prev.q, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
+  correctLinearizeImpulseStateEquation(robot, s, s_next, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamicsData id_data(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   linearizeImpulseDynamics(robot, impulse_status, s, id_data, kkt_residual_ref );
@@ -131,7 +131,7 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
   ocp.expandDual(d_next, d);
   expandImpulseDynamicsDual(id_data, d_next, d_ref);
-  state_equation.correctCostateDirection(d_ref);
+  correctCostateDirection(state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   auto s_updated = s;
@@ -169,7 +169,8 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   constraints->evalConstraint(robot, impulse_status, constraints_data, s);
   impulse_cost_ref +=  constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);
-  ImpulseStateEquation::evalStateEquation(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  evalImpulseStateEquation(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
   ContactDynamicsData id_data(robot);
   evalImpulseDynamics(robot, impulse_status, s, id_data);
   double constraint_violation_ref = 0;

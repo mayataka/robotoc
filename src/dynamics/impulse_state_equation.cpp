@@ -64,45 +64,4 @@ void correctLinearizeImpulseStateEquation(const Robot& robot,
   kkt_residual.Fq().template head<6>().noalias() = - data.Fqq_inv * data.Fq_tmp;
 }
 
-
-ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
-  : data_(robot) {
-}
-
-
-ImpulseStateEquation::ImpulseStateEquation()
-  : data_() {
-}
-
-
-void ImpulseStateEquation::evalStateEquation(
-    const Robot& robot, const SplitSolution& s, 
-    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
-    SplitKKTResidual& kkt_residual) {
-  evalImpulseStateEquation(robot, s, q_next, v_next, kkt_residual);
-}
-
-
-void ImpulseStateEquation::linearizeStateEquation(
-    const Robot& robot, const Eigen::VectorXd& q_prev, 
-    const SplitSolution& s, const SplitSolution& s_next, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  linearizeImpulseStateEquation(robot, q_prev, s, s_next, data_, 
-                                kkt_matrix, kkt_residual);
-}
-
-
-void ImpulseStateEquation::correctLinearizedStateEquation(
-    const Robot& robot, const SplitSolution& s, 
-    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  correctLinearizeImpulseStateEquation(robot, s, s_next, data_, 
-                                       kkt_matrix, kkt_residual);
-}
-
-
-void ImpulseStateEquation::correctCostateDirection(SplitDirection& d) {
-  ::robotoc::correctCostateDirection(data_, d);
-}
-
 } // namespace robotoc 

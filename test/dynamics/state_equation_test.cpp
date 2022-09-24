@@ -33,13 +33,12 @@ TEST_F(StateEquationTest, fixedbase) {
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
+  StateEquationData data(robot);
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
-  StateEquation state_equation(robot);
   auto kkt_residual_ref = kkt_residual;
   auto kkt_matrix_ref = kkt_matrix;
-  state_equation.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
-                                        kkt_matrix, kkt_residual);
+  linearizeStateEquation(robot, dt, q_prev, s, s_next, data, kkt_matrix, kkt_residual);
   kkt_residual_ref.Fq() = s.q + dt * s.v - s_next.q;
   kkt_residual_ref.Fv() = s.v + dt * s.a - s_next.v;
   kkt_residual_ref.lq() = s_next.lmd - s.lmd;
@@ -54,13 +53,12 @@ TEST_F(StateEquationTest, fixedbase) {
   kkt_matrix_ref.Fqv() = dt * Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
-  state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, 
-                                                kkt_matrix, kkt_residual);
+  correctLinearizeStateEquation(robot, dt, s, s_next, data, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
-  state_equation.correctCostateDirection(d);
+  correctCostateDirection(data, d);
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
@@ -72,11 +70,10 @@ TEST_F(StateEquationTest, floatingBase) {
   const auto s_next = SplitSolution::Random(robot);
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
-  StateEquation state_equation(robot);
+  StateEquationData data(robot);
   auto kkt_residual_ref = kkt_residual;
   auto kkt_matrix_ref = kkt_matrix;
-  state_equation.linearizeStateEquation(robot, dt, q_prev, s, s_next, 
-                                        kkt_matrix, kkt_residual);
+  linearizeStateEquation(robot, dt, q_prev, s, s_next, data, kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -98,8 +95,7 @@ TEST_F(StateEquationTest, floatingBase) {
   kkt_matrix_ref.Fqv() = dt * Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
-  state_equation.correctLinearizedStateEquation(robot, dt, s, s_next, 
-                                                kkt_matrix, kkt_residual);
+  correctLinearizeStateEquation(robot, dt, s, s_next, data, kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   const Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
@@ -119,7 +115,7 @@ TEST_F(StateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
-  state_equation.correctCostateDirection(d);
+  correctCostateDirection(data, d);
   d_ref.dlmd().head(6) 
       = - dsubtract_dq_prev_inv.topLeftCorner(6, 6).transpose() * d_ref.dlmd().head(6);
   EXPECT_TRUE(d.isApprox(d_ref));

@@ -11,6 +11,7 @@
 #include "robotoc/dynamics/contact_dynamics.hpp"
 
 #include "robot_factory.hpp"
+#include "contact_status_factory.hpp"
 
 
 namespace robotoc {
@@ -200,20 +201,6 @@ TEST_P(ContactDynamicsTest, condense) {
 }
 
 
-auto createActiveContactStatus = [](const Robot& robot) {
-  auto contact_status = robot.createContactStatus();
-  for (int i=0; i<robot.contactFrames().size(); ++i) {
-    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
-    contact_status.setContactPlacement(i, SE3::Random());
-  }
-  contact_status.setRandom();
-  if (!contact_status.hasActiveContacts()) {
-    contact_status.activateContact(0);
-  }
-  return contact_status;
-};
-
-
 constexpr double dt = 0.01;
 
 INSTANTIATE_TEST_SUITE_P(
@@ -221,11 +208,11 @@ INSTANTIATE_TEST_SUITE_P(
   ::testing::Values(std::make_pair(testhelper::CreateRobotManipulator(dt), 
                                    testhelper::CreateRobotManipulator(dt).createContactStatus()), 
                     std::make_pair(testhelper::CreateRobotManipulator(dt), 
-                                   createActiveContactStatus(testhelper::CreateRobotManipulator(dt))),
+                                   testhelper::CreateActiveContactStatus(testhelper::CreateRobotManipulator(dt), dt)),
                     std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
                                    testhelper::CreateQuadrupedalRobot(dt).createContactStatus()), 
                     std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
-                                   createActiveContactStatus(testhelper::CreateQuadrupedalRobot(dt))))
+                                   testhelper::CreateActiveContactStatus(testhelper::CreateQuadrupedalRobot(dt), dt)))
 );
 
 } // namespace robotoc

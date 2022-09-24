@@ -1,6 +1,5 @@
 #include "robotoc/ocp/terminal_ocp.hpp"
 #include "robotoc/dynamics/terminal_state_equation.hpp"
-#include "robotoc/dynamics/state_equation.hpp"
 
 #include <cassert>
 

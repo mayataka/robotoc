@@ -52,8 +52,8 @@ TEST_P(TerminalOCPTest, computeKKTResidual) {
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, grid_info, s, kkt_residual_ref);
-  TerminalStateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  linearizeTerminalStateEquation(robot, s_prev.q, s, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
   double KKT_ref = 0;
   KKT_ref += kkt_residual_ref.lx.squaredNorm();
@@ -78,17 +78,17 @@ TEST_P(TerminalOCPTest, computeKKTSystem) {
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
-  TerminalStateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  StateEquationData state_equation_data(robot);
+  linearizeTerminalStateEquation(robot, s_prev.q, s, state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   // kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual_ref);
   kkt_residual.kkt_error = 0;
-  state_equation.correctLinearizedStateEquation(kkt_matrix_ref);
+  correctLinearizeTerminalStateEquation(state_equation_data, kkt_matrix_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
   ocp.expandDual(d);
-  state_equation.correctCostateDirection(d_ref);
+  correctCostateDirection(state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 

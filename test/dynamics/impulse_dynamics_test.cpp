@@ -12,6 +12,7 @@
 #include "robotoc/dynamics/impulse_dynamics.hpp"
 
 #include "robot_factory.hpp"
+#include "contact_status_factory.hpp"
 
 
 namespace robotoc {
@@ -135,20 +136,6 @@ TEST_P(ImpulseDynamicsTest, condense) {
 }
 
 
-auto createActiveImpulseStatus = [](const Robot& robot) {
-  auto impulse_status = robot.createImpulseStatus();
-  for (int i=0; i<robot.contactFrames().size(); ++i) {
-    impulse_status.setContactPlacement(i, Eigen::Vector3d::Random());
-    impulse_status.setContactPlacement(i, SE3::Random());
-  }
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
-  }
-  return impulse_status;
-};
-
-
 constexpr double dt = 0.01;
 
 INSTANTIATE_TEST_SUITE_P(
@@ -156,11 +143,11 @@ INSTANTIATE_TEST_SUITE_P(
   ::testing::Values(std::make_pair(testhelper::CreateRobotManipulator(dt), 
                                    testhelper::CreateRobotManipulator(dt).createImpulseStatus()), 
                     std::make_pair(testhelper::CreateRobotManipulator(dt), 
-                                   createActiveImpulseStatus(testhelper::CreateRobotManipulator(dt))),
+                                   testhelper::CreateActiveImpulseStatus(testhelper::CreateRobotManipulator(dt), dt)),
                     std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
                                    testhelper::CreateQuadrupedalRobot(dt).createImpulseStatus()), 
                     std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
-                                   createActiveImpulseStatus(testhelper::CreateQuadrupedalRobot(dt))))
+                                   testhelper::CreateActiveImpulseStatus(testhelper::CreateQuadrupedalRobot(dt), dt)))
 );
 
 } // namespace robotoc
