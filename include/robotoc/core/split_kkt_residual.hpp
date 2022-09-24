@@ -250,7 +250,7 @@ public:
 
   ///
   /// @brief Set by random value. Contact status is reset.
-  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Contact status.
   ///
   void setRandom(const ImpulseStatus& impulse_status);
 
@@ -274,7 +274,7 @@ public:
   /// @brief Generates split KKT residual filled randomly.
   /// @return Split KKT residual filled randomly.
   /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Contact status.
   ///
   static SplitKKTResidual Random(const Robot& robot, 
                                  const ImpulseStatus& impulse_status);

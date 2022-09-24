@@ -36,6 +36,7 @@ void evalStateEquation(const Robot& robot, const double dt,
 /// @param[in] q_prev Configuration at the previous time stage. 
 /// @param[in] s Solution at the current stage. 
 /// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] data Data structure for the state equation.
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
@@ -52,6 +53,7 @@ void linearizeStateEquation(const Robot& robot, const double dt,
 /// @param[in] dt Time step. 
 /// @param[in] s Solution at the current stage. 
 /// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] data Data structure for the state equation.
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 /// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
 ///
@@ -64,6 +66,7 @@ void correctLinearizeStateEquation(const Robot& robot, const double dt,
 
 ///
 /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
+/// @param[in, out] data Data structure for the state equation.
 /// @param[in, out] d Split direction. 
 ///
 void correctCostateDirection(StateEquationData& data, SplitDirection& d);
@@ -75,6 +78,7 @@ void correctCostateDirection(StateEquationData& data, SplitDirection& d);
 /// @param[in] q0 Initial configuration. 
 /// @param[in] v0 Initial generalized velocity. 
 /// @param[in] s0 Split solution at the initial stage. 
+/// @param[in] data Data structure for the state equation.
 /// @param[in, out] d0 Split direction at the initial stage. 
 ///
 void computeInitialStateDirection(const Robot& robot, 

@@ -63,7 +63,7 @@ public:
 
   ///
   /// @brief Sets contact status, i.e., set dimension of the contact forces.
-  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Contact status.
   ///
   void setContactStatus(const ImpulseStatus& impulse_status);
 

@@ -249,18 +249,10 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
   /// @param[in] d Split direction.
+  /// @param[in] impulse Flaf if this is impulse stage or not.
   ///
   void integrate(const Robot& robot, const double step_size, 
                  const SplitDirection& d, const bool impulse=false);
-
-  // ///
-  // /// @brief Integrates the solution based on step size and direction. 
-  // /// @param[in] robot Robot model.
-  // /// @param[in] step_size Step size.
-  // /// @param[in] d Split direction.
-  // ///
-  // void integrate(const Robot& robot, const double step_size, 
-  //                const SplitDirection& d);
 
   ///
   /// @brief Copies the primal solution from another solution. 

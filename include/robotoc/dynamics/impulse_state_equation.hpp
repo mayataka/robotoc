@@ -35,6 +35,7 @@ void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s,
 /// @param[in] q_prev Configuration at the previous time stage. 
 /// @param[in] s Solution at the current impulse stage. 
 /// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] data Data structure for the state equation.
 /// @param[in, out] kkt_matrix Impulse split KKT matrix at the current impulse 
 /// stage. 
 /// @param[in, out] kkt_residual Impulse split KKT residual at the current 
@@ -54,6 +55,7 @@ void linearizeImpulseStateEquation(const Robot& robot,
 /// @param[in] robot Robot model. 
 /// @param[in] s Solution at the current impulse stage. 
 /// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] data Data structure for the state equation.
 /// @param[in, out] kkt_matrix Impulse split KKT matrix at the current impulse 
 /// stage. 
 /// @param[in, out] kkt_residual Impulse split KKT residual at the current 
@@ -68,6 +70,7 @@ void correctLinearizeImpulseStateEquation(const Robot& robot,
 
 ///
 /// @brief Corrects the costate direction using the Jacobian of the Lie group. 
+/// @param[in, out] data Data structure for the state equation.
 /// @param[in, out] d Split direction. 
 ///
 void correctCostateDirection(StateEquationData& data, SplitDirection& d);
