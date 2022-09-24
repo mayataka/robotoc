@@ -69,12 +69,12 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   impulse_cost += constraints_data.logBarrier();
   ImpulseStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  ImpulseDynamics id(robot);
+  ContactDynamicsData id_data(robot);
   robot.updateKinematics(s.q, v_after_impulse);
-  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref);
+  linearizeImpulseDynamics(robot, impulse_status, s, id_data, kkt_residual_ref);
   kkt_residual_ref.kkt_error = ocp.KKTError(kkt_residual);
   const double kkt_error_ref = kkt_residual_ref.KKTError()
-                                + id.KKTError() + constraints_data.KKTError();
+                                + id_data.KKTError() + constraints_data.KKTError();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   EXPECT_DOUBLE_EQ(impulse_cost, ocp.stageCost());
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
@@ -112,10 +112,10 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   ImpulseStateEquation state_equation(robot);
   state_equation.linearizeStateEquation(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   state_equation.correctLinearizedStateEquation(robot, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  ImpulseDynamics id(robot);
+  ContactDynamicsData id_data(robot);
   robot.updateKinematics(s.q, v_after_impulse);
-  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref );
-  id.condenseImpulseDynamics(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
+  linearizeImpulseDynamics(robot, impulse_status, s, id_data, kkt_residual_ref );
+  condenseImpulseDynamics(robot, impulse_status, id_data, kkt_matrix_ref, kkt_residual_ref);
 
   kkt_residual.kkt_error = 0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
@@ -124,13 +124,13 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   auto d_ref = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
   ocp.expandPrimal(impulse_status, d);
-  id.expandPrimal(d_ref);
+  expandImpulseDynamicsPrimal(id_data, d_ref);
   constraints->expandSlackAndDual(impulse_status, constraints_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
   ocp.expandDual(d_next, d);
-  id.expandDual(d_next, d_ref);
+  expandImpulseDynamicsDual(id_data, d_next, d_ref);
   state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -170,12 +170,12 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   impulse_cost_ref +=  constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(impulse_cost, impulse_cost_ref);
   ImpulseStateEquation::evalStateEquation(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
-  ImpulseDynamics id(robot);
-  id.evalImpulseDynamics(robot, impulse_status, s);
+  ContactDynamicsData id_data(robot);
+  evalImpulseDynamics(robot, impulse_status, s, id_data);
   double constraint_violation_ref = 0;
   constraint_violation_ref += kkt_residual_ref.constraintViolation();
   constraint_violation_ref += constraints_data.constraintViolation();
-  constraint_violation_ref += id.constraintViolation();
+  constraint_violation_ref += id_data.constraintViolation();
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }
 

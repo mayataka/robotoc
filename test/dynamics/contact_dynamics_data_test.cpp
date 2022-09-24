@@ -10,7 +10,7 @@
 
 namespace robotoc {
 
-class ContactDynamicsDataTest : public ::testing::Test {
+class ContactDynamicsDataTest : public ::testing::TestWithParam<std::pair<Robot, ContactStatus>> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -19,13 +19,12 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testSize(const Robot& robot, const ContactStatus& contact_status);
-
 };
 
 
-void ContactDynamicsDataTest::testSize(const Robot& robot, 
-                                       const ContactStatus& contact_status) {
+TEST_P(ContactDynamicsDataTest, test) {
+  const auto robot = GetParam().first;
+  const auto contact_status = GetParam().second;
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
@@ -135,24 +134,32 @@ void ContactDynamicsDataTest::testSize(const Robot& robot,
 }
 
 
-TEST_F(ContactDynamicsDataTest, fixedBase) {
-  const double dt = 0.01;
-  auto robot = testhelper::CreateRobotManipulator(dt);
+auto createActiveContactStatus = [](const Robot& robot) {
   auto contact_status = robot.createContactStatus();
-  testSize(robot, contact_status);
-  contact_status.activateContact(0);
-  testSize(robot, contact_status);
-}
-
-
-TEST_F(ContactDynamicsDataTest, floatingBase) {
-  const double dt = 0.01;
-  auto robot = testhelper::CreateQuadrupedalRobot(dt);
-  auto contact_status = robot.createContactStatus();
-  testSize(robot, contact_status);
+  for (int i=0; i<robot.contactFrames().size(); ++i) {
+    contact_status.setContactPlacement(i, Eigen::Vector3d::Random());
+    contact_status.setContactPlacement(i, SE3::Random());
+  }
   contact_status.setRandom();
-  testSize(robot, contact_status);
-}
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  return contact_status;
+};
+
+constexpr double dt = 0.01;
+
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, ContactDynamicsDataTest, 
+  ::testing::Values(std::make_pair(testhelper::CreateRobotManipulator(dt), 
+                                   testhelper::CreateRobotManipulator(dt).createContactStatus()), 
+                    std::make_pair(testhelper::CreateRobotManipulator(dt), 
+                                   createActiveContactStatus(testhelper::CreateRobotManipulator(dt))),
+                    std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
+                                   testhelper::CreateQuadrupedalRobot(dt).createContactStatus()), 
+                    std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
+                                   createActiveContactStatus(testhelper::CreateQuadrupedalRobot(dt))))
+);
 
 } // namespace robotoc
 
