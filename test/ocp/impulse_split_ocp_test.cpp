@@ -56,9 +56,9 @@ void ImpulseSplitOCPTest::test_computeKKTResidual(Robot& robot,
   ocp.computeKKTResidual(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   const double kkt_error = ocp.KKTError(kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setContactStatus(impulse_status);
+  kkt_matrix_ref.setContactDimension(impulse_status.dimf());
   SplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setContactStatus(impulse_status);
+  kkt_residual_ref.setContactDimension(impulse_status.dimf());
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, -1);
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
@@ -97,9 +97,9 @@ void ImpulseSplitOCPTest::test_computeKKTSystem(Robot& robot,
   SplitKKTResidual kkt_residual(robot);
   ocp.computeKKTSystem(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setContactStatus(impulse_status);
+  kkt_matrix_ref.setContactDimension(impulse_status.dimf());
   SplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setContactStatus(impulse_status);
+  kkt_residual_ref.setContactDimension(impulse_status.dimf());
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, -1);
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);
@@ -159,7 +159,7 @@ void ImpulseSplitOCPTest::test_evalOCP(Robot& robot, const ImpulseStatus& impuls
   const double constraint_violation = ocp.constraintViolation(kkt_residual);
 
   SplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setContactStatus(impulse_status);
+  kkt_residual_ref.setContactDimension(impulse_status.dimf());
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, -1);
   constraints->setSlackAndDual(robot, impulse_status, constraints_data, s);

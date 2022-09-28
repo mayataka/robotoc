@@ -94,8 +94,8 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   const double kkt_error = ocp.KKTError(kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
-  kkt_matrix_ref.setContactStatus(contact_status);
-  kkt_residual_ref.setContactStatus(contact_status);
+  kkt_matrix_ref.setContactDimension(contact_status.dimf());
+  kkt_residual_ref.setContactDimension(contact_status.dimf());
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, contact_status,constraints_data, s);
@@ -171,8 +171,8 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   }
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
-  kkt_matrix_ref.setContactStatus(contact_status);
-  kkt_residual_ref.setContactStatus(contact_status);
+  kkt_matrix_ref.setContactDimension(contact_status.dimf());
+  kkt_residual_ref.setContactDimension(contact_status.dimf());
   SwitchingConstraintJacobian switch_jac_ref(robot);
   SwitchingConstraintResidual switch_res_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -309,9 +309,9 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   const double stage_cost = ocp.stageCost();
 
   SplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setContactStatus(contact_status);
+  kkt_matrix_ref.setContactDimension(contact_status.dimf());
   SplitKKTResidual kkt_residual_ref(robot);
-  kkt_residual_ref.setContactStatus(contact_status);
+  kkt_residual_ref.setContactDimension(contact_status.dimf());
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, contact_status, constraints_data, s);

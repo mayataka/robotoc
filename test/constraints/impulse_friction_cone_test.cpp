@@ -209,7 +209,7 @@ void ImpulseFrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   data.cmpl.setRandom();
   // auto kkt_mat = SplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_mat = SplitKKTMatrix(robot);
-  kkt_mat.setContactStatus(impulse_status);
+  kkt_mat.setContactDimension(impulse_status.dimf());
   kkt_mat.setRandom();
   auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, impulse_status, data, s);
@@ -278,7 +278,7 @@ void ImpulseFrictionConeTest::test_expandSlackAndDual(Robot& robot, const Impuls
   data.ddual.setRandom();
   // auto kkt_mat = SplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_mat = SplitKKTMatrix(robot);
-  kkt_mat.setContactStatus(impulse_status);
+  kkt_mat.setContactDimension(impulse_status.dimf());
   kkt_mat.setRandom();
   auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, impulse_status, data, s);

@@ -57,8 +57,8 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   }
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   auto s = SplitSolution::Random(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0);
   cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
@@ -76,8 +76,8 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
     }
   }
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0.5*dt*l_ref);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
@@ -146,8 +146,8 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   }
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   auto s = SplitSolution::Random(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), 0);
   cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
@@ -157,8 +157,8 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   contact_status.setRandom();
   s.setRandom(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), 0);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
@@ -193,8 +193,8 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   }
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(impulse_status);
-  kkt_mat.setContactStatus(impulse_status);
+  kkt_res.setContactDimension(impulse_status.dimf());
+  kkt_mat.setContactDimension(impulse_status.dimf());
   SplitSolution s = SplitSolution::Random(robot, impulse_status);
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0);
   cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
@@ -212,8 +212,8 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
     }
   }
   EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0.5*l_ref);
-  kkt_res.setContactStatus(impulse_status);
-  kkt_mat.setContactStatus(impulse_status);
+  kkt_res.setContactDimension(impulse_status.dimf());
+  kkt_mat.setContactDimension(impulse_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;

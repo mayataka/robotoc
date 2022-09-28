@@ -57,15 +57,9 @@ public:
 
   ///
   /// @brief Sets contact status, i.e., set dimension of the contact forces.
-  /// @param[in] contact_status Contact status.
+  /// @param[in] dimf The dimension of the contact. Must be non-negative.
   ///
-  void setContactStatus(const ContactStatus& contact_status);
-
-  ///
-  /// @brief Sets contact status, i.e., set dimension of the contact forces.
-  /// @param[in] impulse_status Contact status.
-  ///
-  void setContactStatus(const ImpulseStatus& impulse_status);
+  void setContactDimension(const int dimf);
 
   ///
   /// @brief Sets the dimension of the switching constraint.

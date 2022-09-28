@@ -29,7 +29,7 @@ protected:
 
 void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
@@ -75,7 +75,7 @@ void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact
 
 void SplitKKTResidualTest::test_isApprox(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
   kkt_res.Fx.setRandom();
   kkt_res.lx.setRandom();
   kkt_res.la.setRandom();

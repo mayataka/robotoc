@@ -62,7 +62,7 @@ void ImpulseSplitOCP::evalOCP(Robot& robot, const ImpulseStatus& impulse_status,
                               SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
-  kkt_residual.setContactStatus(impulse_status);
+  kkt_residual.setContactDimension(impulse_status.dimf());
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
   data_.performance_index.cost = ocp_.cost->evalImpulseCost(robot, impulse_status, data_.cost_data, 
@@ -81,8 +81,8 @@ void ImpulseSplitOCP::computeKKTResidual(
     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setContactStatus(impulse_status);
-  kkt_residual.setContactStatus(impulse_status);
+  kkt_matrix.setContactDimension(impulse_status.dimf());
+  kkt_residual.setContactDimension(impulse_status.dimf());
   kkt_matrix.setZero();
   kkt_residual.setZero();
   data_.performance_index.cost = ocp_.cost->linearizeImpulseCost(robot, impulse_status, data_.cost_data, 
@@ -104,8 +104,8 @@ void ImpulseSplitOCP::computeKKTSystem(
     SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setContactStatus(impulse_status);
-  kkt_residual.setContactStatus(impulse_status);
+  kkt_matrix.setContactDimension(impulse_status.dimf());
+  kkt_residual.setContactDimension(impulse_status.dimf());
   kkt_matrix.setZero();
   kkt_residual.setZero();
   data_.performance_index.cost = ocp_.cost->quadratizeImpulseCost(robot, impulse_status, data_.cost_data,  
@@ -127,7 +127,7 @@ void ImpulseSplitOCP::computeKKTSystem(
 
 void ImpulseSplitOCP::expandPrimal(const ImpulseStatus& impulse_status, 
                                    SplitDirection& d) {
-  d.setContactStatus(impulse_status);
+  d.setContactDimension(impulse_status.dimf());
   expandImpulseDynamicsPrimal(data_.contact_dynamics_data, d);
   ocp_.constraints->expandSlackAndDual(impulse_status, data_.constraints_data, d);
 }

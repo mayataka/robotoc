@@ -15,8 +15,10 @@ PYBIND11_MODULE(split_kkt_residual, m) {
   py::class_<SplitKKTResidual>(m, "SplitKKTResidual")
     .def(py::init<const Robot&>())
     .def(py::init<>())
-    // .def("set_contact_status", &SplitKKTResidual::setContactStatus,
-    //       py::arg("contact_status"))
+    .def("set_contact_status", &SplitKKTResidual::setContactDimension,
+          py::arg("dimf"))
+    .def("set_switching_constraint_dimension", &SplitKKTResidual::setSwitchingConstraintDimension,
+          py::arg("dims"))
     .def("is_dimension_consistent", &SplitKKTResidual::isDimensionConsistent)
     .def_readwrite("Fx", &SplitKKTResidual::Fx)
     .def_property("Fq", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitKKTResidual::*)() const>(&SplitKKTResidual::Fq),

@@ -8,15 +8,10 @@
 
 namespace robotoc {
 
-inline void SplitKKTResidual::setContactStatus(
-    const ContactStatus& contact_status) {
-  dimf_ = contact_status.dimf();
-}
-
-
-inline void SplitKKTResidual::setContactStatus(
-    const ImpulseStatus& contact_status) {
-  dimf_ = contact_status.dimf();
+inline void SplitKKTResidual::setContactDimension(const int dimf) {
+  assert(dimf >= 0);
+  assert(dimf <= P_full_.size());
+  dimf_ = dimf;
 }
 
 

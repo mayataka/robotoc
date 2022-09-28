@@ -54,16 +54,10 @@ public:
   SplitKKTResidual& operator=(SplitKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Set contact status, i.e., set dimension of the contact.
-  /// @param[in] contact_status Contact status.
+  /// @brief Sets contact status, i.e., set dimension of the contact forces.
+  /// @param[in] dimf The dimension of the contact. Must be non-negative.
   ///
-  void setContactStatus(const ContactStatus& contact_status);
-
-  ///
-  /// @brief Set contact status, i.e., set dimension of the contact.
-  /// @param[in] contact_status Contact status.
-  ///
-  void setContactStatus(const ImpulseStatus& contact_status);
+  void setContactDimension(const int dimf);
 
   ///
   /// @brief Sets the dimension of the switching constraint.

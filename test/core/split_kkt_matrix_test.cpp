@@ -29,7 +29,7 @@ protected:
 
 void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTMatrix kkt_mat(robot);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_mat.setContactDimension(contact_status.dimf());
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();
@@ -108,7 +108,7 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
 
 void SplitKKTMatrixTest::test_isApprox(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTMatrix kkt_mat(robot);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_mat.setContactDimension(contact_status.dimf());
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();

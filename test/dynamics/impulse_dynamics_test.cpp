@@ -90,7 +90,7 @@ TEST_P(ImpulseDynamicsTest, condense) {
   const int dimf = impulse_status.dimf();
   // auto kkt_matrix = SplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_matrix = SplitKKTMatrix(robot);
-  kkt_matrix.setContactStatus(impulse_status);
+  kkt_matrix.setContactDimension(impulse_status.dimf());
   kkt_matrix.setRandom();
   kkt_matrix.Fxx.setZero();
   kkt_matrix.Qdvdv.setZero();

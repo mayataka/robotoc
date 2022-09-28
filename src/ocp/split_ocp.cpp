@@ -62,7 +62,7 @@ void SplitOCP::evalOCP(Robot& robot, const ContactStatus& contact_status,
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   robot.updateKinematics(s.q, s.v, s.a);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_residual.setContactDimension(contact_status.dimf());
   kkt_residual.setZero();
   data_.performance_index.cost 
       = ocp_.cost->evalStageCost(robot, contact_status, data_.cost_data, grid_info, s);
@@ -96,8 +96,8 @@ void SplitOCP::computeKKTResidual(Robot& robot,
                                   SplitKKTMatrix& kkt_matrix,
                                   SplitKKTResidual& kkt_residual) {
   robot.updateKinematics(s.q, s.v, s.a);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
+  kkt_residual.setContactDimension(contact_status.dimf());
   kkt_residual.setZero();
   data_.performance_index.cost 
       = ocp_.cost->linearizeStageCost(robot, contact_status, data_.cost_data, 
@@ -145,8 +145,8 @@ void SplitOCP::computeKKTSystem(Robot& robot,
                                 SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   robot.updateKinematics(s.q, s.v, s.a);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
+  kkt_residual.setContactDimension(contact_status.dimf());
   kkt_matrix.setZero();
   kkt_residual.setZero();
   data_.performance_index.cost = ocp_.cost->quadratizeStageCost(robot, contact_status, data_.cost_data,  
@@ -185,8 +185,8 @@ void SplitOCP::computeKKTSystem(Robot& robot,
                                 SwitchingConstraintResidual& sc_residual) {
   assert(q_prev.size() == robot.dimq());
   robot.updateKinematics(s.q, s.v, s.a);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
+  kkt_residual.setContactDimension(contact_status.dimf());
   kkt_matrix.setZero();
   kkt_residual.setZero();
   data_.performance_index.cost = ocp_.cost->quadratizeStageCost(robot, contact_status, data_.cost_data,  
@@ -226,7 +226,7 @@ void SplitOCP::computeInitialStateDirection(const Robot& robot,
 
 void SplitOCP::expandPrimal(const ContactStatus& contact_status, 
                             SplitDirection& d) {
-  d.setContactStatus(contact_status);
+  d.setContactDimension(contact_status.dimf());
   expandContactDynamicsPrimal(data_.contact_dynamics_data, d);
   ocp_.constraints->expandSlackAndDual(contact_status, data_.constraints_data, d);
 }

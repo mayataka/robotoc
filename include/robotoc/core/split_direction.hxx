@@ -7,15 +7,10 @@
 
 namespace robotoc {
 
-inline void SplitDirection::setContactStatus(
-    const ContactStatus& contact_status) {
-  dimf_ = contact_status.dimf();
-}
-
-
-inline void SplitDirection::setContactStatus(
-    const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimf();
+inline void SplitDirection::setContactDimension(const int dimf) {
+  assert(dimf >= 0);
+  assert(dimf <= dxi_full_.size());
+  dimf_ = dimf;
 }
 
 

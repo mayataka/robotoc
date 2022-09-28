@@ -15,8 +15,10 @@ PYBIND11_MODULE(split_kkt_matrix, m) {
   py::class_<SplitKKTMatrix>(m, "SplitKKTMatrix")
     .def(py::init<const Robot&>())
     .def(py::init<>())
-    // .def("set_contact_status", &SplitKKTMatrix::setContactStatus,
-    //       py::arg("contact_status"))
+    .def("set_contact_status", &SplitKKTMatrix::setContactDimension,
+          py::arg("dimf"))
+    .def("set_switching_constraint_dimension", &SplitKKTMatrix::setSwitchingConstraintDimension,
+          py::arg("dims"))
     .def("is_dimension_consistent", &SplitKKTMatrix::isDimensionConsistent)
     .def_readwrite("Fxx", &SplitKKTMatrix::Fxx)
     .def_property("Fqq", static_cast<const Eigen::Block<const Eigen::MatrixXd> (SplitKKTMatrix::*)() const>(&SplitKKTMatrix::Fqq),

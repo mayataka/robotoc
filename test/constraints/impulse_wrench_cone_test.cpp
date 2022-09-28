@@ -219,7 +219,7 @@ void ImpulseWrenchConeTest::test_condenseSlackAndDual(Robot& robot, const Impuls
   data.cmpl.setRandom();
   // auto kkt_mat = SplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_mat = SplitKKTMatrix(robot);
-  kkt_mat.setContactStatus(impulse_status);
+  kkt_mat.setContactDimension(impulse_status.dimf());
   kkt_mat.setRandom();
   auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, impulse_status, data, s);
@@ -276,7 +276,7 @@ void ImpulseWrenchConeTest::test_expandSlackAndDual(Robot& robot, const ImpulseS
   data.ddual.setRandom();
   // auto kkt_mat = SplitKKTMatrix::Random(robot, impulse_status);
   auto kkt_mat = SplitKKTMatrix(robot);
-  kkt_mat.setContactStatus(impulse_status);
+  kkt_mat.setContactDimension(impulse_status.dimf());
   kkt_mat.setRandom();
   auto kkt_res = SplitKKTResidual::Random(robot, impulse_status);
   constr.evalConstraint(robot, impulse_status, data, s);

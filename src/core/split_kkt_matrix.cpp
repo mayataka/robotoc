@@ -179,7 +179,7 @@ void SplitKKTMatrix::setRandom() {
 
 
 void SplitKKTMatrix::setRandom(const ContactStatus& contact_status) {
-  setContactStatus(contact_status);
+  setContactDimension(contact_status.dimf());
   setRandom();
 }
 
