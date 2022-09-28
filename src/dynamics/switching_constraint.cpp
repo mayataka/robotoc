@@ -29,6 +29,7 @@ void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status,
   if (impulse_status.dimf() == 0) return;
 
   kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
+  kkt_residual.P().setZero();
   data.dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, data.dq, 1.0, data.q);
   robot.updateKinematics(data.q);
@@ -47,6 +48,8 @@ void linearizeSwitchingConstraint(Robot& robot,
                                   SwitchingConstraintResidual& sc_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
+  kkt_matrix.setSwitchingConstraintDimension(0);
+  kkt_residual.setSwitchingConstraintDimension(0);
   sc_residual.setDimension(impulse_status.dimf());
   sc_jacobian.setDimension(impulse_status.dimf());
   sc_residual.setZero();
@@ -91,8 +94,8 @@ void linearizeSwitchingConstraint(Robot& robot,
 
   kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
   kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
-  data.setDimension(impulse_status.dimf());
   evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_residual);
+  data.setDimension(impulse_status.dimf());
   data.Pq().setZero();
   robot.computeContactPositionDerivative(impulse_status, data.Pq());
   if (robot.hasFloatingBase()) {

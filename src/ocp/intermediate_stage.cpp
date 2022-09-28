@@ -135,12 +135,15 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
                           data.contact_dynamics_data, kkt_matrix, kkt_residual);
   correctLinearizeStateEquation(robot, grid_info.dt, s, s_next, 
                                 data.state_equation_data, kkt_matrix, kkt_residual);
-  kkt_residual.h        *= (1.0 / grid_info.N_phase);
-  kkt_matrix.hx.array() *= (1.0 / grid_info.N_phase);
-  kkt_matrix.hu.array() *= (1.0 / grid_info.N_phase);
-  kkt_matrix.fx.array() *= (1.0 / grid_info.N_phase);
-  kkt_matrix.Qtt        *= 1.0 / (grid_info.N_phase * grid_info.N_phase);
+  kkt_residual.h        *= (1.0/grid_info.N_phase);
+  kkt_matrix.hx.array() *= (1.0/grid_info.N_phase);
+  kkt_matrix.hu.array() *= (1.0/grid_info.N_phase);
+  kkt_matrix.fx.array() *= (1.0/grid_info.N_phase);
+  kkt_matrix.Qtt        *= (1.0/(grid_info.N_phase*grid_info.N_phase));
   kkt_matrix.Qtt_prev    = - kkt_matrix.Qtt;
+  if (grid_info.switching_constraint) {
+    kkt_matrix.Phit().array() *= (1.0/grid_info.N_phase);
+  }
 }
 
 

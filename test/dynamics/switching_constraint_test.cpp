@@ -29,6 +29,39 @@ protected:
 };
 
 
+TEST_P(SwitchingConstraintTest, eval) {
+  auto robot = GetParam();
+  auto impulse_status = robot.createImpulseStatus();
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  const SplitSolution s = SplitSolution::Random(robot, impulse_status);
+  robot.updateKinematics(s.q);
+  SwitchingConstraintData data(robot);
+  SwitchingConstraintResidual res(robot);
+  auto res_ref = res;
+  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, res);
+  res_ref.setDimension(impulse_status.dimf());
+  const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.integrateConfiguration(s.q, dq, 1.0, q);
+  robot.updateKinematics(q);
+  robot.computeContactPositionResidual(impulse_status, res_ref.P());
+  EXPECT_TRUE(res.isApprox(res_ref));
+  const double l2 = res.KKTError();
+  const double l2_ref = res.P().squaredNorm();
+  EXPECT_DOUBLE_EQ(l2, l2_ref);
+  const double l1 = res.constraintViolation();
+  const double l1_ref = res.P().lpNorm<1>();
+  EXPECT_DOUBLE_EQ(l1, l1_ref);
+
+  SplitKKTResidual kkt_res(robot);
+  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_res);
+  EXPECT_TRUE(kkt_res.P().isApprox(res.P()));
+}
+
+
 TEST_P(SwitchingConstraintTest, linearize) {
   auto robot = GetParam();
   auto impulse_status = robot.createImpulseStatus();
@@ -95,35 +128,18 @@ TEST_P(SwitchingConstraintTest, linearize) {
   const double l1 = res.constraintViolation();
   const double l1_ref = res.P().lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1, l1_ref);
-}
 
-
-TEST_P(SwitchingConstraintTest, eval) {
-  auto robot = GetParam();
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
-  }
-  const SplitSolution s = SplitSolution::Random(robot, impulse_status);
-  robot.updateKinematics(s.q);
-  SwitchingConstraintData data(robot);
-  SwitchingConstraintResidual res(robot);
-  auto res_ref = res;
-  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, res);
-  res_ref.setDimension(impulse_status.dimf());
-  const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  robot.integrateConfiguration(s.q, dq, 1.0, q);
-  robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, res_ref.P());
-  EXPECT_TRUE(res.isApprox(res_ref));
-  const double l2 = res.KKTError();
-  const double l2_ref = res.P().squaredNorm();
-  EXPECT_DOUBLE_EQ(l2, l2_ref);
-  const double l1 = res.constraintViolation();
-  const double l1_ref = res.P().lpNorm<1>();
-  EXPECT_DOUBLE_EQ(l1, l1_ref);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
+  linearizeSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_mat, kkt_res);
+  EXPECT_TRUE(kkt_res.P().isApprox(res.P()));
+  EXPECT_TRUE(kkt_mat.Phix().isApprox(jac.Phix()));
+  EXPECT_TRUE(kkt_mat.Phiq().isApprox(jac.Phiq()));
+  EXPECT_TRUE(kkt_mat.Phiv().isApprox(jac.Phiv()));
+  EXPECT_TRUE(kkt_mat.Phia().isApprox(jac.Phia()));
+  EXPECT_TRUE(kkt_mat.Phia().isApprox(jac.Phia()));
+  EXPECT_TRUE(kkt_mat.Phiu().isApprox(jac.Phiu()));
+  EXPECT_TRUE(kkt_mat.Phit().isApprox(jac.Phit()));
 }
 
 

@@ -102,7 +102,11 @@ inline double SplitKKTResidual::KKTError() const {
 
 template <int p>
 inline double SplitKKTResidual::constraintViolation() const {
-  return Fx.template lpNorm<p>();
+  double vio = Fx.template lpNorm<p>();
+  if (dims_ > 0) {
+    vio += P().template lpNorm<p>();
+  }
+  return vio;
 }
 
 

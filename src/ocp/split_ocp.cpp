@@ -206,6 +206,8 @@ void SplitOCP::computeKKTSystem(Robot& robot,
   kkt_residual.kkt_error = KKTError(kkt_residual, sc_residual);
   ocp_.constraints->condenseSlackAndDual(contact_status, data_.constraints_data, 
                                      kkt_matrix, kkt_residual);
+  kkt_matrix.setSwitchingConstraintDimension(0);
+  kkt_residual.setSwitchingConstraintDimension(0);
   condenseContactDynamics(robot, contact_status, grid_info.dt, 
                           data_.contact_dynamics_data, kkt_matrix, kkt_residual);
   condenseContactDynamics(data_.contact_dynamics_data, sc_jacobian, sc_residual);

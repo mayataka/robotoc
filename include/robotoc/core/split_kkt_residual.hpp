@@ -203,7 +203,11 @@ public:
 
   template <int p=1>
   double primalFeasibility() const {
-    return Fx.template lpNorm<p>();
+    double feasibility = Fx.template lpNorm<p>();
+    if (dims_ > 0) {
+      feasibility += P().template lpNorm<p>();
+    }
+    return feasibility;
   }
 
   template <int p=1>
