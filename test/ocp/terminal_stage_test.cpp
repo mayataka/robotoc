@@ -23,6 +23,9 @@ class TerminalStageTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     grid_info = GridInfo::Random();
+    grid_info.type = GridType::Terminal;
+    grid_info.switching_constraint = false;
+    grid_info.dt = 0.;
     N = 10;
     max_num_impulse = 10;
     t0 = 0.0;
@@ -41,19 +44,21 @@ protected:
 
 TEST_P(TerminalStageTest, evalOCP) {
   auto robot = GetParam();
-  const SplitSolution s = SplitSolution::Random(robot);
-  const SplitSolution s_prev = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
+  const SplitSolution s = SplitSolution::Random(robot);
+
   TerminalStage stage(cost, constraints, contact_sequence);
   auto data = stage.createData(robot);
   SplitKKTResidual kkt_residual(robot);  
+  stage.initConstraints(robot, grid_info, s, data);
   stage.evalOCP(robot, grid_info, s, data, kkt_residual);
 
-  robot.updateKinematics(s.q, s.v);
   SplitKKTResidual kkt_residual_ref(robot);  
   auto data_ref = stage.createData(robot);
+  stage.initConstraints(robot, grid_info, s, data_ref);
+
   robot.updateKinematics(s.q, s.v);
   data_ref.performance_index.cost = cost->evalTerminalCost(robot, data_ref.cost_data, grid_info, s);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -63,21 +68,24 @@ TEST_P(TerminalStageTest, evalOCP) {
 
 TEST_P(TerminalStageTest, evalKKT) {
   auto robot = GetParam();
-  const SplitSolution s = SplitSolution::Random(robot);
-  const SplitSolution s_prev = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
+  const SplitSolution s = SplitSolution::Random(robot);
+  const SplitSolution s_prev = SplitSolution::Random(robot);
+
   TerminalStage stage(cost, constraints, contact_sequence);
   auto data = stage.createData(robot);
   SplitKKTResidual kkt_residual(robot);  
   SplitKKTMatrix kkt_matrix(robot);  
+  stage.initConstraints(robot, grid_info, s, data);
   stage.evalKKT(robot, grid_info, s_prev.q, s, data, kkt_matrix, kkt_residual);
 
-  robot.updateKinematics(s.q, s.v);
   SplitKKTResidual kkt_residual_ref(robot);  
   SplitKKTMatrix kkt_matrix_ref(robot);  
   auto data_ref = stage.createData(robot);
+  stage.initConstraints(robot, grid_info, s, data_ref);
+
   robot.updateKinematics(s.q, s.v);
   data_ref.performance_index.cost = cost->quadratizeTerminalCost(robot, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   linearizeTerminalStateEquation(robot, s_prev.q, s, data_ref.state_equation_data, kkt_matrix_ref, kkt_residual_ref);
@@ -87,6 +95,7 @@ TEST_P(TerminalStageTest, evalKKT) {
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(data.performance_index.isApprox(data_ref.performance_index));
+
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
   stage.expandPrimal(grid_info, data, d);
@@ -98,7 +107,9 @@ TEST_P(TerminalStageTest, evalKKT) {
 
 INSTANTIATE_TEST_SUITE_P(
   TestWithMultipleRobots, TerminalStageTest, 
-  ::testing::Values(testhelper::CreateRobotManipulator(0.01),
+  ::testing::Values(testhelper::CreateRobotManipulator(),
+                    testhelper::CreateRobotManipulator(0.01),
+                    testhelper::CreateQuadrupedalRobot(),
                     testhelper::CreateQuadrupedalRobot(0.01))
 );
 

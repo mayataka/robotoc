@@ -30,6 +30,19 @@ void evalStateEquation(const Robot& robot, const double dt,
                        SplitKKTResidual& kkt_residual);
 
 ///
+/// @brief Computes the residual in the state equation. 
+/// @param[in] robot Robot model. 
+/// @param[in] dt Time step. 
+/// @param[in] s Solution at the current time stage. 
+/// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] kkt_residual Split KKT residual at the current time stage. 
+///
+void evalStateEquation(const Robot& robot, const double dt, 
+                       const SplitSolution& s, 
+                       const SplitSolution& s_next, 
+                       SplitKKTResidual& kkt_residual);
+
+///
 /// @brief Linearizes the state equation. 
 /// @param[in] robot Robot model. 
 /// @param[in] dt Time step. 

@@ -185,6 +185,23 @@ private:
   std::shared_ptr<ContactSequence> contact_sequence_;
 };
 
+///
+/// @brief Computes the initial state direction using the result of  
+/// IntermediateStage::evalKKT().
+/// @param[in] robot Robot model. 
+/// @param[in] q0 Initial configuration. 
+/// @param[in] v0 Initial generalized velocity. 
+/// @param[in] s0 Split solution at the initial stage. 
+/// @param[in] data Data structure for the optimal control problem.
+/// @param[in, out] d0 Split direction at the initial stage. 
+///
+void computeInitialStateDirection(const Robot& robot, 
+                                  const Eigen::VectorXd& q0, 
+                                  const Eigen::VectorXd& v0, 
+                                  const SplitSolution& s0, 
+                                  const OCPData& data,
+                                  SplitDirection& d0);
+
 } // namespace robotoc
 
 #endif // ROBOTOC_INTERMEDIATE_STAGE_HPP_

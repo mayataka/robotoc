@@ -19,6 +19,14 @@ void evalStateEquation(const Robot& robot, const double dt,
 }
 
 
+void evalStateEquation(const Robot& robot, const double dt, 
+                       const SplitSolution& s, 
+                       const SplitSolution& s_next, 
+                       SplitKKTResidual& kkt_residual) {
+  evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual);
+}
+
+
 void linearizeStateEquation(const Robot& robot, const double dt, 
                             const Eigen::VectorXd& q_prev, 
                             const SplitSolution& s, const SplitSolution& s_next, 
@@ -26,7 +34,7 @@ void linearizeStateEquation(const Robot& robot, const double dt,
                             SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
-  evalStateEquation(robot, dt, s, s_next.q, s_next.v, kkt_residual);
+  evalStateEquation(robot, dt, s, s_next, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
     data.Fqq_prev.setZero();

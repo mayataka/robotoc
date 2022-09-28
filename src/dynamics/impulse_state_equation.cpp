@@ -16,6 +16,13 @@ void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s,
 }
 
 
+void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s, 
+                              const SplitSolution& s_next, 
+                              SplitKKTResidual& kkt_residual) {
+  evalImpulseStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
+}
+
+
 void linearizeImpulseStateEquation(const Robot& robot, 
                                    const Eigen::VectorXd& q_prev, 
                                    const SplitSolution& s, 
@@ -24,7 +31,7 @@ void linearizeImpulseStateEquation(const Robot& robot,
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
-  evalImpulseStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
+  evalImpulseStateEquation(robot, s, s_next, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
     data.Fqq_prev.setZero();

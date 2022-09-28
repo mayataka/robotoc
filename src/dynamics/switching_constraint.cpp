@@ -91,6 +91,7 @@ void linearizeSwitchingConstraint(Robot& robot,
 
   kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
   kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
+  data.setDimension(impulse_status.dimf());
   evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_residual);
   data.Pq().setZero();
   robot.computeContactPositionDerivative(impulse_status, data.Pq());

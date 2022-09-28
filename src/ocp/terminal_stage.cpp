@@ -36,6 +36,7 @@ OCPData TerminalStage::createData(const Robot& robot) const {
 
 bool TerminalStage::isFeasible(Robot& robot, const GridInfo& grid_info, 
                                const SplitSolution& s, OCPData& data) const {
+  assert(grid_info.type == GridType::Terminal);
   // TODO: add inequality constraints at the terminal OCP.
   return true;
 }
@@ -43,6 +44,7 @@ bool TerminalStage::isFeasible(Robot& robot, const GridInfo& grid_info,
 
 void TerminalStage::initConstraints(Robot& robot, const GridInfo& grid_info, 
                                     const SplitSolution& s, OCPData& data) const {
+  assert(grid_info.type == GridType::Terminal);
   // TODO: add inequality constraints at the terminal OCP.
 }
 
@@ -50,9 +52,11 @@ void TerminalStage::initConstraints(Robot& robot, const GridInfo& grid_info,
 void TerminalStage::evalOCP(Robot& robot, const GridInfo& grid_info,
                             const SplitSolution& s, OCPData& data,
                             SplitKKTResidual& kkt_residual) const {
+  assert(grid_info.type == GridType::Terminal);
   // setup computation
   robot.updateKinematics(s.q, s.v);
   kkt_residual.setContactDimension(0);
+  kkt_residual.setSwitchingConstraintDimension(0);
   kkt_residual.setZero();
   // eval cost and constraints
   data.performance_index.cost = cost_->evalTerminalCost(robot, data.cost_data, grid_info, s);
@@ -68,10 +72,14 @@ void TerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
                             const SplitSolution& s, OCPData& data, 
                             SplitKKTMatrix& kkt_matrix, 
                             SplitKKTResidual& kkt_residual) const {
+  assert(grid_info.type == GridType::Terminal);
+  assert(q_prev.size() == robot.dimq());
   // setup computation
   robot.updateKinematics(s.q, s.v);
   kkt_matrix.setContactDimension(0);
+  kkt_matrix.setSwitchingConstraintDimension(0);
   kkt_residual.setContactDimension(0);
+  kkt_residual.setSwitchingConstraintDimension(0);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   // eval cost and constraints
@@ -98,6 +106,7 @@ void TerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
 
 void TerminalStage::expandPrimal(const GridInfo& grid_info, OCPData& data, 
                                  SplitDirection& d) const {
+  assert(grid_info.type == GridType::Terminal);
   // const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
   // d.setContactDimension(contact_status.dimf());
   d.setContactDimension(0);
@@ -108,6 +117,7 @@ void TerminalStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
 
 void TerminalStage::expandDual(const GridInfo& grid_info, OCPData& data,
                                SplitDirection& d) const {
+  assert(grid_info.type == GridType::Terminal);
   correctCostateDirection(data.state_equation_data, d);
 }
 

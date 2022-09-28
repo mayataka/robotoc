@@ -30,6 +30,18 @@ void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s,
                               SplitKKTResidual& kkt_residual);
 
 ///
+/// @brief Computes the residual in the impulse state equation. 
+/// @param[in] robot Robot model. 
+/// @param[in] s Solution at the current impulse stage. 
+/// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] kkt_residual Impulse split KKT residual at the current 
+/// impulse stage. 
+///
+void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s, 
+                              const SplitSolution& s_next, 
+                              SplitKKTResidual& kkt_residual);
+
+///
 /// @brief Linearizes the impulse state equation. 
 /// @param[in] robot Robot model. 
 /// @param[in] q_prev Configuration at the previous time stage. 

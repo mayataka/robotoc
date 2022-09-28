@@ -36,14 +36,16 @@ OCPData ImpactStage::createData(const Robot& robot) const {
 
 
 bool ImpactStage::isFeasible(Robot& robot, const GridInfo& grid_info, 
-                                   const SplitSolution& s, OCPData& data) const {
+                             const SplitSolution& s, OCPData& data) const {
+  assert(grid_info.type == GridType::Impulse);
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   return constraints_->isFeasible(robot, impulse_status, data.constraints_data, s);
 }
 
 
 void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info, 
-                                        const SplitSolution& s, OCPData& data) const {
+                                  const SplitSolution& s, OCPData& data) const {
+  assert(grid_info.type == GridType::Impulse);
   data.constraints_data.setTimeStage(-1);
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   constraints_->setSlackAndDual(robot, impulse_status, data.constraints_data, s);
@@ -53,10 +55,12 @@ void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info,
 void ImpactStage::evalOCP(Robot& robot, const GridInfo& grid_info, 
                           const SplitSolution& s, const SplitSolution& s_next, 
                           OCPData& data, SplitKKTResidual& kkt_residual) const {
+  assert(grid_info.type == GridType::Impulse);
   // setup computation
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   robot.updateKinematics(s.q, s.v+s.dv);
   kkt_residual.setContactDimension(impulse_status.dimf());
+  kkt_residual.setSwitchingConstraintDimension(0);
   kkt_residual.setZero();
   // eval cost and constraints
   data.performance_index.cost 
@@ -64,7 +68,7 @@ void ImpactStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   constraints_->evalConstraint(robot, impulse_status, data.constraints_data, s);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
-  evalImpulseStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
+  evalImpulseStateEquation(robot, s, s_next, kkt_residual);
   evalImpulseDynamics(robot, impulse_status, s, data.contact_dynamics_data);
   // summarize evaluations
   data.performance_index.primal_feasibility 
@@ -77,12 +81,15 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
                           const SplitSolution& s_next, OCPData& data, 
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual) const {
+  assert(grid_info.type == GridType::Impulse);
   assert(q_prev.size() == robot.dimq());
   // setup computation
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   robot.updateKinematics(s.q, s.v+s.dv);
   kkt_matrix.setContactDimension(impulse_status.dimf());
+  kkt_matrix.setSwitchingConstraintDimension(0);
   kkt_residual.setContactDimension(impulse_status.dimf());
+  kkt_residual.setSwitchingConstraintDimension(0);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   // eval cost and constraints
@@ -115,8 +122,10 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
 
 void ImpactStage::expandPrimal(const GridInfo& grid_info, OCPData& data, 
                                SplitDirection& d) const {
+  assert(grid_info.type == GridType::Impulse);
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   d.setContactDimension(impulse_status.dimf());
+  d.setSwitchingConstraintDimension(0);
   expandImpulseDynamicsPrimal(data.contact_dynamics_data, d);
   constraints_->expandSlackAndDual(impulse_status, data.constraints_data, d);
 }
@@ -125,6 +134,7 @@ void ImpactStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
 void ImpactStage::expandDual(const GridInfo& grid_info, OCPData& data,
                              const SplitDirection& d_next, 
                              SplitDirection& d) const {
+  assert(grid_info.type == GridType::Impulse);
   expandImpulseDynamicsDual(data.contact_dynamics_data, d_next, d);
   correctCostateDirection(data.state_equation_data, d);
 }
