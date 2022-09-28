@@ -68,7 +68,7 @@ void IntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   evalStateEquation(robot, grid_info.dt, s, s_next.q, s_next.v, kkt_residual);
   evalContactDynamics(robot, contact_status, s, data.contact_dynamics_data);
   if (grid_info.switching_constraint) {
-    const auto& impulse_status = contact_sequence_->contactStatus(grid_info.next_impulse_index);
+    const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index+1);
     evalSwitchingConstraint(robot, impulse_status, data.switching_constraint_data,
                             grid_info.dt, grid_info.dt_next, s, kkt_residual);
   }
@@ -105,11 +105,11 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
   linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
-                         data_.state_equation_data, kkt_matrix, kkt_residual);
+                         data.state_equation_data, kkt_matrix, kkt_residual);
   linearizeContactDynamics(robot, contact_status, s, 
                            data.contact_dynamics_data, kkt_residual);
   if (grid_info.switching_constraint) {
-    const auto& impulse_status = contact_sequence_->contactStatus(grid_info.next_impulse_index);
+    const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index+1);
     kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
     kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
     linearizeSwitchingConstraint(robot, impulse_status, data.switching_constraint_data,
@@ -125,10 +125,10 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
       = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();
   data.performance_index.dual_feasibility 
       = data.dualFeasibility<1>() + kkt_residual.dualFeasibility<1>();
-  data.kkt_error = data.KKTError() + kkt_residual.KKTError();
+  data.performance_index.kkt_error = data.KKTError() + kkt_residual.KKTError();
   // Forms linear system
-  constraints->condenseSlackAndDual(contact_status, data.constraints_data, 
-                                    kkt_matrix, kkt_residual);
+  constraints_->condenseSlackAndDual(contact_status, data.constraints_data, 
+                                     kkt_matrix, kkt_residual);
   condenseContactDynamics(robot, contact_status, grid_info.dt, 
                           data.contact_dynamics_data, kkt_matrix, kkt_residual);
   correctLinearizeStateEquation(robot, grid_info.dt, s, s_next, 
@@ -157,7 +157,7 @@ void IntermediateStage::expandDual(const GridInfo& grid_info, OCPData& data,
   assert(grid_info.dt > 0);
   expandContactDynamicsDual(grid_info.dt, dts, data.contact_dynamics_data, 
                             d_next, d);
-  correctCostateDirection(data_.state_equation_data, d);
+  correctCostateDirection(data.state_equation_data, d);
 }
 
 
@@ -173,9 +173,8 @@ double IntermediateStage::maxDualStepSize(const OCPData& data) const {
 
 void IntermediateStage::updatePrimal(const Robot& robot, 
                                      const double primal_step_size, 
-                                     OCPData& data,
                                      const SplitDirection& d, 
-                                     SplitSolution& s) const {
+                                     SplitSolution& s, OCPData& data) const {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);
@@ -183,7 +182,8 @@ void IntermediateStage::updatePrimal(const Robot& robot,
 }
 
 
-void IntermediateStage::updateDual(const double dual_step_size) const {
+void IntermediateStage::updateDual(const double dual_step_size, 
+                                   OCPData& data) const {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(data.constraints_data, dual_step_size);

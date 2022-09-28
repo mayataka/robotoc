@@ -25,7 +25,7 @@
 
 namespace robotoc {
 
-class SplitOCPTest : public ::testing::Test {
+class IntermediateStageTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     grid_info = GridInfo::Random();
@@ -53,7 +53,7 @@ protected:
 };
 
 
-void SplitOCPTest::test_computeKKTResidual(Robot& robot, 
+void IntermediateStageTest::test_computeKKTResidual(Robot& robot, 
                                            const ContactStatus& contact_status, 
                                            const bool switching_constraint) const {
   ImpulseStatus impulse_status;
@@ -76,7 +76,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
   const auto s_next = SplitSolution::Random(robot, contact_status);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  SplitOCP ocp(robot, cost, constraints);
+  IntermediateStage ocp(robot, cost, constraints);
   ocp.initConstraints(robot, contact_status,10, s);
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
@@ -130,7 +130,7 @@ void SplitOCPTest::test_computeKKTResidual(Robot& robot,
 }
 
 
-void SplitOCPTest::test_computeKKTSystem(Robot& robot, 
+void IntermediateStageTest::test_computeKKTSystem(Robot& robot, 
                                          const ContactStatus& contact_status, 
                                          const bool switching_constraint) const {
   ImpulseStatus impulse_status;
@@ -153,7 +153,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   const auto s_next = SplitSolution::Random(robot, contact_status);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  SplitOCP ocp(robot, cost, constraints);
+  IntermediateStage ocp(robot, cost, constraints);
   ocp.initConstraints(robot, contact_status,10, s);
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
@@ -181,7 +181,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->quadratizeStageCost(robot, contact_status, cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   kkt_residual_ref.h = (1.0/dt) * stage_cost;
-  SplitOCP::setHamiltonianDerivatives(dt, kkt_matrix_ref, kkt_residual_ref);
+  IntermediateStage::setHamiltonianDerivatives(dt, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_FALSE(kkt_matrix_ref.hx.isZero());
   EXPECT_FALSE(kkt_matrix_ref.hu.isZero());
   constraints->linearizeConstraints(robot, contact_status, constraints_data, s, kkt_residual_ref);
@@ -269,7 +269,7 @@ void SplitOCPTest::test_computeKKTSystem(Robot& robot,
 }
 
 
-void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_status, 
+void IntermediateStageTest::test_evalOCP(Robot& robot, const ContactStatus& contact_status, 
                                 const bool switching_constraint) const {
   ImpulseStatus impulse_status;
   if (switching_constraint) {
@@ -291,7 +291,7 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
   const auto s_next = SplitSolution::Random(robot, contact_status);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  SplitOCP ocp(robot, cost, constraints);
+  IntermediateStage ocp(robot, cost, constraints);
   const double step_size = 0.3;
   ocp.initConstraints(robot, contact_status, 10, s);
   SplitKKTResidual kkt_residual(robot);
@@ -342,7 +342,7 @@ void SplitOCPTest::test_evalOCP(Robot& robot, const ContactStatus& contact_statu
 }
 
 
-TEST_F(SplitOCPTest, fixedBase) {
+TEST_F(IntermediateStageTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);
   auto contact_status = robot.createContactStatus();
   test_computeKKTResidual(robot, contact_status);
@@ -361,7 +361,7 @@ TEST_F(SplitOCPTest, fixedBase) {
 }
 
 
-TEST_F(SplitOCPTest, floatingBase) {
+TEST_F(IntermediateStageTest, floatingBase) {
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
   auto contact_status = robot.createContactStatus();
   test_computeKKTResidual(robot, contact_status);
@@ -380,7 +380,7 @@ TEST_F(SplitOCPTest, floatingBase) {
 }
 
 
-TEST_F(SplitOCPTest, humanoidRobot) {
+TEST_F(IntermediateStageTest, humanoidRobot) {
   auto robot = testhelper::CreateHumanoidRobot(dt);
   auto contact_status = robot.createContactStatus();
   test_computeKKTResidual(robot, contact_status);

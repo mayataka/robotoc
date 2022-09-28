@@ -46,18 +46,20 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
   auto kkt_residual_ref = kkt_residual;
   SplitKKTMatrix kkt_matrix(robot);
   auto kkt_matrix_ref = kkt_matrix;
-  SwitchingConstraint sc(robot);
+  SwitchingConstraintData data(robot);
   SwitchingConstraintJacobian jac(robot);
   SwitchingConstraintResidual res(robot);
+  auto data_ref = data;
   auto jac_ref = jac;
   auto res_ref = res;
   robot.updateKinematics(s.q);
-  sc.linearizeSwitchingConstraint(robot, impulse_status, dt1, dt2,
-                                  s, kkt_matrix, kkt_residual, jac, res);
+  linearizeSwitchingConstraint(robot, impulse_status, data, dt1, dt2,
+                               s, kkt_matrix, kkt_residual, jac, res);
   EXPECT_NO_THROW(
     std::cout << jac << std::endl;
     std::cout << res << std::endl;
   );
+  data_ref.setDimension(impulse_status.dimf());
   jac_ref.setDimension(impulse_status.dimf());
   res_ref.setDimension(impulse_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
@@ -107,10 +109,10 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
   }
   const SplitSolution s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  SwitchingConstraint sc(robot);
+  SwitchingConstraintData data(robot);
   SwitchingConstraintResidual res(robot);
   auto res_ref = res;
-  sc.evalSwitchingConstraint(robot, impulse_status, dt1, dt2, s, res);
+  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, res);
   res_ref.setDimension(impulse_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());

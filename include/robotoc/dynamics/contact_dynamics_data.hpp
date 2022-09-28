@@ -53,6 +53,8 @@ public:
 
   void setContactDimension(const int dimf);
 
+  void setSwitchingConstraintDimension(const int dims);
+
   int dimv() const;
 
   int dimu() const;
@@ -60,6 +62,8 @@ public:
   int dimf() const;
 
   int dimvf() const;
+
+  int dims() const;
 
   int dim_passive() const;
 
@@ -151,6 +155,10 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> MJtJinv_IDC() const;
 
+  Eigen::Block<Eigen::MatrixXd> Phia();
+
+  const Eigen::Block<const Eigen::MatrixXd> Phia() const;
+
   Eigen::VectorBlock<Eigen::VectorXd> laf();
 
   const Eigen::VectorBlock<const Eigen::VectorXd> laf() const;
@@ -205,9 +213,9 @@ public:
 private:
   Eigen::MatrixXd dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 
-                  Qafu_full_full_;
+                  Qafu_full_full_, Phia_full_;
   Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_full_, haf_full_;
-  int dimv_, dimu_, dimf_, dimvf_, dim_passive_;
+  int dimv_, dimu_, dimf_, dimvf_, dims_, dim_passive_;
   bool has_floating_base_;
 
 };

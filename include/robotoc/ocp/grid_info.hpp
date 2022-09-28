@@ -42,6 +42,11 @@ struct GridInfo {
   double dt = 0;
 
   ///
+  /// @brief Time step of the next.
+  ///
+  double dt_next = 0;
+
+  ///
   /// @brief Contact phase of this grid.
   ///
   int contact_phase = 0;

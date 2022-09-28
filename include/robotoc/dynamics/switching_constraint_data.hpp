@@ -58,7 +58,10 @@ public:
   /// @brief Sets the dimension of the switching constraint.
   /// @param[in] dims The dimension of the switching constraint. Must be non-negative.
   ///
-  void setDimension(const int dims);
+  void setDimension(const int dims) {
+    assert(dims >= 0);
+    dims_ = dims;
+  }
 
   Eigen::VectorXd q;
 

@@ -21,12 +21,14 @@ ContactDynamicsData::ContactDynamicsData(const Robot& robot)
                                           robot.dimv())), 
     IDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     MJtJinv_IDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
+    Phia_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     laf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     haf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
     dimf_(0),
     dimvf_(robot.dimv()),
+    dims_(0),
     dim_passive_(robot.dim_passive()),
     has_floating_base_(robot.hasFloatingBase()) {
 }
@@ -45,12 +47,14 @@ ContactDynamicsData::ContactDynamicsData()
     Qafu_full_full_(), 
     IDC_full_(),
     MJtJinv_IDC_full_(),
+    Phia_full_(),
     laf_full_(),
     haf_full_(),
     dimv_(0),
     dimu_(0),
     dimf_(0),
     dimvf_(0),
+    dims_(0),
     dim_passive_(0),
     has_floating_base_(false) {
 }

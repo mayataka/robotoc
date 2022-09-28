@@ -118,33 +118,4 @@ void linearizeSwitchingConstraint(Robot& robot,
   kkt_matrix.ha.noalias() += (2.0*dt1) * data.PqT_xi;
 }
 
-
-SwitchingConstraint::SwitchingConstraint(const Robot& robot)
-  : data_(robot) {
-}
-
-
-SwitchingConstraint::SwitchingConstraint()
-  : data_() {
-}
-
-
-void SwitchingConstraint::evalSwitchingConstraint(
-    Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
-    const double dt2, const SplitSolution& s, 
-    SwitchingConstraintResidual& sc_residual) {
-  ::robotoc::evalSwitchingConstraint(robot, impulse_status, data_, dt1, dt2, s, sc_residual);
-}
-
-
-void SwitchingConstraint::linearizeSwitchingConstraint(
-    Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
-    const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual, SwitchingConstraintJacobian& sc_jacobian,
-    SwitchingConstraintResidual& sc_residual) {
-  ::robotoc::linearizeSwitchingConstraint(robot, impulse_status, data_, dt1, dt2,
-                                          s, kkt_matrix, kkt_residual, 
-                                          sc_jacobian, sc_residual);
-}
-
 } // namespace robotoc

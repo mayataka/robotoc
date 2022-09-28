@@ -13,6 +13,12 @@ inline void ContactDynamicsData::setContactDimension(const int dimf) {
 }
 
 
+inline void ContactDynamicsData::setSwitchingConstraintDimension(const int dims) {
+  assert(dims >= 0);
+  dims_ = dims;
+}
+
+
 inline int ContactDynamicsData::dimv() const {
   return dimv_;
 }
@@ -30,6 +36,11 @@ inline int ContactDynamicsData::dimf() const {
 
 inline int ContactDynamicsData::dimvf() const {
   return dimvf_;
+}
+
+
+inline int ContactDynamicsData::dims() const {
+  return dims_;
 }
 
 
@@ -238,6 +249,16 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamicsData::MJtJinv_IDC() {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ContactDynamicsData::MJtJinv_IDC() const {
   return MJtJinv_IDC_full_.head(dimvf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> ContactDynamicsData::Phia() {
+  return Phia_full_.topLeftCorner(dims_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> ContactDynamicsData::Phia() const {
+  return Phia_full_.topLeftCorner(dims_, dimv_);
 }
 
 

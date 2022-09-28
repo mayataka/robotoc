@@ -134,6 +134,24 @@ void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status,
   kkt_matrix.Fvu = dt * data.MJtJinv().block(0, dim_passive, dimv, dimu);
   kkt_residual.Fv().noalias() -= dt * data.MJtJinv_IDC().head(dimv);
 
+  // Switching constraint
+  if (kkt_matrix.dims() > 0) {
+    assert(kkt_matrix.dims() == kkt_residual.dims());
+    data.setSwitchingConstraintDimension(kkt_matrix.dims());
+    data.Phia() = kkt_matrix.Phia();
+    kkt_matrix.Phix().noalias() 
+        -= data.Phia() * data.MJtJinv_dIDCdqv().topRows(data.dimv());
+    kkt_matrix.Phiu().noalias()  
+        = data.Phia() * data.MJtJinv().block(0, data.dim_passive(), data.dimv(), data.dimu());
+    kkt_matrix.Phit().noalias() 
+        -= data.Phia() * data.MJtJinv_IDC().head(data.dimv());
+    kkt_residual.P().noalias() 
+        -= data.Phia() * data.MJtJinv_IDC().head(data.dimv());
+  }
+  else {
+    data.setSwitchingConstraintDimension(0);
+  }
+
   // STO sensitivities
   data.ha() = kkt_matrix.ha;
   data.hf() = - kkt_matrix.hf();
@@ -186,6 +204,10 @@ void expandContactDynamicsDual(const double dt, const double dts,
   data.laf().noalias() += data.Qafqv() * d.dx;
   data.laf().noalias() += data.Qafu() * d.du;
   data.la().noalias()  += dt * d_next.dgmm();
+  if (data.dims() > 0) {
+    assert(data.dims() == d.dims());
+    data.la().noalias()  += data.Phia().transpose() * d.dxi();
+  }
   constexpr double eps = std::numeric_limits<double>::epsilon();
   if (dts < - eps || dts > eps) {
     data.laf().noalias() += dts * data.haf();
