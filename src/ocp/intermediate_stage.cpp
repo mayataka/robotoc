@@ -159,9 +159,13 @@ void IntermediateStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
 
 void IntermediateStage::expandDual(const GridInfo& grid_info, OCPData& data,
                                    const SplitDirection& d_next, 
-                                   SplitDirection& d, const double dts) const {
+                                   SplitDirection& d) const {
   assert(grid_info.type == GridType::Intermediate);
   assert(grid_info.dt > 0);
+  double dts = 0.0;
+  if (grid_info.N_phase > 0) {
+    dts = (d.dts_next - d.dts) / grid_info.N_phase;
+  }
   expandContactDynamicsDual(grid_info.dt, dts, data.contact_dynamics_data, 
                             d_next, d);
   correctCostateDirection(data.state_equation_data, d);

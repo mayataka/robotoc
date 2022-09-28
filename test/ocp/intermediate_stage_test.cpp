@@ -37,8 +37,7 @@ protected:
     grid_info.contact_phase = 0;
     grid_info.impulse_index = -1;
     grid_info.N_phase = 15;
-    grid_info.dt_next = grid_info.dt;
-    grid_info_next.dt = grid_info.dt;
+    grid_info.dt_next = grid_info_next.dt;
 
     N = 10;
     max_num_impulse = 10;
@@ -196,12 +195,14 @@ TEST_P(IntermediateStageTest, evalKKT) {
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   d.setSwitchingConstraintDimension(kkt_residual.dims());
   d.dxi().setRandom();
+  d.dts_next = Eigen::VectorXd::Random(1)[0];
+  d.dts = Eigen::VectorXd::Random(1)[0];
   auto d_ref = d;
   auto d_ocp = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
-  const double dts = 0.01;
+  const double dts = (d.dts_next - d.dts) / grid_info.N_phase;
   stage.expandPrimal(grid_info, data, d);
-  stage.expandDual(grid_info, data, d_next, d, dts);
+  stage.expandDual(grid_info, data, d_next, d);
   d_ref.setContactDimension(contact_status.dimf());
   expandContactDynamicsPrimal(data_ref.contact_dynamics_data, d_ref);
   constraints->expandSlackAndDual(contact_status, data_ref.constraints_data, d_ref);

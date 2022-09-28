@@ -14,6 +14,7 @@
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
+#include "robotoc/ocp/ocp_def.hpp"
 
 
 namespace robotoc {

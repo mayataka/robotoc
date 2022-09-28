@@ -16,9 +16,12 @@ namespace robotoc {
 /// @brief A definition of an optimal control problem.
 ///
 struct OCPDef {
+  Robot robot;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
   std::shared_ptr<ContactSequence> contact_sequence;
+  double T;
+  int N;
 };
 
 } // namespace robotoc

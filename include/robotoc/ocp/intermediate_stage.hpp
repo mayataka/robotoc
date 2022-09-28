@@ -144,8 +144,7 @@ public:
   /// stage. 
   /// 
   void expandDual(const GridInfo& grid_info, OCPData& data, 
-                  const SplitDirection& d_next, 
-                  SplitDirection& d, const double dts) const;
+                  const SplitDirection& d_next, SplitDirection& d) const;
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
