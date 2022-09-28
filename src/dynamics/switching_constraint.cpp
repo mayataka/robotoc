@@ -26,6 +26,8 @@ void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status,
                              SplitKKTResidual& kkt_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
+  if (impulse_status.dimf() == 0) return;
+
   kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
   data.dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, data.dq, 1.0, data.q);
@@ -85,6 +87,8 @@ void linearizeSwitchingConstraint(Robot& robot,
                                   SplitKKTResidual& kkt_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
+  if (impulse_status.dimf() == 0) return;
+
   kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
   kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
   evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_residual);

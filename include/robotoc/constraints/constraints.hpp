@@ -95,7 +95,7 @@ public:
   /// @return Constraints data.
   ///
   ConstraintsData createConstraintsData(const Robot& robot, 
-                                        const int time_stage) const;
+                                        const int time_stage=-1) const;
 
   ///
   /// @brief Checks whether the current split solution s is feasible or not. 

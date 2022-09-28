@@ -81,9 +81,11 @@ void ConstraintsTest::timeStage0(Robot& robot,
   const int time_stage = 0;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
-  EXPECT_TRUE(data.position_level_data.empty());
-  EXPECT_TRUE(data.velocity_level_data.empty());
+  EXPECT_FALSE(data.position_level_data.empty());
+  EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
+  EXPECT_EQ(data.position_level_data.size(), 2);
+  EXPECT_EQ(data.velocity_level_data.size(), 2);
   EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
@@ -121,9 +123,10 @@ void ConstraintsTest::timeStage1(Robot& robot,
   const int time_stage = 1;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
-  EXPECT_TRUE(data.position_level_data.empty());
+  EXPECT_FALSE(data.position_level_data.empty());
   EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
+  EXPECT_EQ(data.position_level_data.size(), 2);
   EXPECT_EQ(data.velocity_level_data.size(), 2);
   EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);

@@ -22,34 +22,50 @@
 
 namespace robotoc {
 
-void setHamiltonianDerivatives(const double dt, SplitKKTMatrix& kkt_matrix,
-                               const SplitKKTResidual& kkt_residual);
+// void setHamiltonianDerivatives(const double dt, SplitKKTMatrix& kkt_matrix,
+//                                const SplitKKTResidual& kkt_residual);
 
-void correctSTOSensitivities(SplitKKTMatrix& kkt_matrix,
-                             SplitKKTResidual& kkt_residual,
-                             const int N_phase);
+// void correctSTOSensitivities(SplitKKTMatrix& kkt_matrix,
+//                              SplitKKTResidual& kkt_residual,
+//                              const int N_phase);
 
-void correctSTOSensitivities(SplitKKTMatrix& kkt_matrix, 
-                             SplitKKTResidual& kkt_residual,
-                             SwitchingConstraintJacobian& sc_jacobian, 
-                             const int N_phase);
+// void correctSTOSensitivities(SplitKKTMatrix& kkt_matrix, 
+//                              SplitKKTResidual& kkt_residual,
+//                              SwitchingConstraintJacobian& sc_jacobian, 
+//                              const int N_phase);
+
+// ///
+// /// @brief Computes the initial state direction using the result of  
+// /// IntermediateStage::computeKKTSystem().
+// /// @param[in] robot Robot model. 
+// /// @param[in] q0 Initial configuration. 
+// /// @param[in] v0 Initial generalized velocity. 
+// /// @param[in] s0 Split solution at the initial stage. 
+// /// @param[in] d0 Split direction at the initial stage. 
+// ///
+// static void computeInitialStateDirection(const Robot& robot, 
+//                                          const Eigen::VectorXd& q0, 
+//                                          const Eigen::VectorXd& v0, 
+//                                          const SplitSolution& s0, 
+//                                          const OCPData& data
+//                                          SplitDirection& d0);
 
 
-///
-/// @brief Returns maximum stap size of the primal variables that satisfies 
-/// the inequality constraints.
-/// @return Maximum stap size of the primal variables that satisfies 
-/// the inequality constraints.
-///
-double maxPrimalStepSize(OCPData& data);
+// ///
+// /// @brief Returns maximum stap size of the primal variables that satisfies 
+// /// the inequality constraints.
+// /// @return Maximum stap size of the primal variables that satisfies 
+// /// the inequality constraints.
+// ///
+// double maxPrimalStepSize(OCPData& data);
 
-///
-/// @brief Returns maximum stap size of the dual variables that satisfies 
-/// the inequality constraints.
-/// @return Maximum stap size of the dual variables that satisfies 
-/// the inequality constraints.
-///
-double maxDualStepSize(OCPData& data);
+// ///
+// /// @brief Returns maximum stap size of the dual variables that satisfies 
+// /// the inequality constraints.
+// /// @return Maximum stap size of the dual variables that satisfies 
+// /// the inequality constraints.
+// ///
+// double maxDualStepSize(OCPData& data);
 
 ///
 /// @class IntermediateStage
@@ -76,7 +92,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~IntermediateStage();
+  ~IntermediateStage() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -101,11 +117,17 @@ public:
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
   /// @param[in] robot Robot model. 
+  ///
+  OCPData createData(const Robot& robot) const;
+
+  ///
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] s Split solution of this time stage.
   ///
   bool isFeasible(Robot& robot, const GridInfo& grid_info,
-                  const SplitSolution& s, OCPData& data);
+                  const SplitSolution& s, OCPData& data) const;
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
@@ -115,7 +137,7 @@ public:
   /// @param[in] s Split solution of this time stage.
   ///
   void initConstraints(Robot& robot, const GridInfo& grid_info, 
-                       const SplitSolution& s, OCPData& data);
+                       const SplitSolution& s, OCPData& data) const;
 
   ///
   /// @brief Computes the stage cost and constraint violation.
@@ -130,7 +152,7 @@ public:
   ///
   void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
                const SplitSolution& s_next, OCPData& data,
-               SplitKKTResidual& kkt_residual);
+               SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -146,23 +168,7 @@ public:
   void evalKKT(Robot& robot, const GridInfo& grid_info, 
                const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                const SplitSolution& s_next, OCPData& data,
-                SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Computes the initial state direction using the result of  
-  /// IntermediateStage::computeKKTSystem().
-  /// @param[in] robot Robot model. 
-  /// @param[in] q0 Initial configuration. 
-  /// @param[in] v0 Initial generalized velocity. 
-  /// @param[in] s0 Split solution at the initial stage. 
-  /// @param[in] d0 Split direction at the initial stage. 
-  ///
-  static void computeInitialStateDirection(const Robot& robot, 
-                                           const Eigen::VectorXd& q0, 
-                                           const Eigen::VectorXd& v0, 
-                                           const SplitSolution& s0, 
-                                           const OCPData& data
-                                           SplitDirection& d0);
+               SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
@@ -185,20 +191,6 @@ public:
                   SplitDirection& d, const double dts);
 
   ///
-  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
-  /// direction of the condensed dual variables of this stage.
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in] d_next Split direction of the next time stage.
-  /// @param[in] sc_jacobian Jacobian of the switching constraint. 
-  /// @param[in, out] d Split direction of this time stage.
-  /// @param[in] dts Direction of the switching time regarding of this time 
-  /// stage. 
-  /// 
-  void expandDual(const GridInfo& grid_info, const SplitDirection& d_next, 
-                  const SwitchingConstraintJacobian& sc_jacobian,
-                  SplitDirection& d, const double dts);
-
-  ///
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. 
   /// @param[in] primal_step_size Primal step size. 
@@ -215,7 +207,9 @@ public:
   void updateDual(const double dual_step_size);
 
 private:
-  OCPDef ocp_;
+  std::shared_ptr<CostFunction> cost_;
+  std::shared_ptr<Constraints> constraints_;
+  std::shared_ptr<ContactSequence> contact_sequence_;
 };
 
 } // namespace robotoc

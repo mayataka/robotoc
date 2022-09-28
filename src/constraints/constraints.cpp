@@ -74,22 +74,14 @@ void Constraints::clear() {
 ConstraintsData Constraints::createConstraintsData(const Robot& robot, 
                                                    const int time_stage) const {
   ConstraintsData data(time_stage);
-  if (data.isPositionLevelValid()) {
-    constraintsimpl::createConstraintsData(position_level_constraints_, 
-                                           data.position_level_data);
-  }
-  if (data.isVelocityLevelValid()) {
-    constraintsimpl::createConstraintsData(velocity_level_constraints_, 
-                                           data.velocity_level_data);
-  }
-  if (data.isAccelerationLevelValid()) {
-    constraintsimpl::createConstraintsData(acceleration_level_constraints_, 
-                                           data.acceleration_level_data);
-  }
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::createConstraintsData(impulse_level_constraints_, 
-                                           data.impulse_level_data);
-  }
+  constraintsimpl::createConstraintsData(position_level_constraints_, 
+                                         data.position_level_data);
+  constraintsimpl::createConstraintsData(velocity_level_constraints_, 
+                                         data.velocity_level_data);
+  constraintsimpl::createConstraintsData(acceleration_level_constraints_, 
+                                         data.acceleration_level_data);
+  constraintsimpl::createConstraintsData(impulse_level_constraints_, 
+                                         data.impulse_level_data);
   return data;
 }
 
