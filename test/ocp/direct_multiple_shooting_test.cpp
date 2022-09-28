@@ -56,7 +56,7 @@ Solution DirectMultipleShootingTest::createSolution(const Robot& robot,
 
 
 std::shared_ptr<ContactSequence> DirectMultipleShootingTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, t, 3*dt);
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
 }
 
 

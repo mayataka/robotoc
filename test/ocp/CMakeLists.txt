@@ -1,4 +1,6 @@
 add_robotoc_test(time_discretization_test)
+# add_robotoc_test(intermediate_stage_test)
+add_robotoc_test(terminal_stage_test)
 add_robotoc_test(split_ocp_test)
 add_robotoc_test(terminal_ocp_test)
 add_robotoc_test(impulse_split_ocp_test)

@@ -13,7 +13,7 @@
 
 namespace robotoc {
 
-class SwitchingConstraintTest : public ::testing::Test {
+class SwitchingConstraintTest  : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -25,15 +25,12 @@ protected:
 
   virtual void TearDown() {
   }
-
-  void test_linearizeSwitchingConstraint(Robot& robot) const;
-  void test_evalSwitchingConstraint(Robot& robot) const;
-
   double dt1, dt2, dt;
 };
 
 
-void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) const {
+TEST_P(SwitchingConstraintTest, linearize) {
+  auto robot = GetParam();
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -101,7 +98,8 @@ void SwitchingConstraintTest::test_linearizeSwitchingConstraint(Robot& robot) co
 }
 
 
-void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
+TEST_P(SwitchingConstraintTest, eval) {
+  auto robot = GetParam();
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -129,25 +127,11 @@ void SwitchingConstraintTest::test_evalSwitchingConstraint(Robot& robot) const {
 }
 
 
-TEST_F(SwitchingConstraintTest, fixedbase) {
-  auto robot = testhelper::CreateRobotManipulator(dt);
-  test_linearizeSwitchingConstraint(robot);
-  test_evalSwitchingConstraint(robot);
-}
-
-
-TEST_F(SwitchingConstraintTest, floatingBase) {
-  auto robot = testhelper::CreateQuadrupedalRobot(dt);
-  test_linearizeSwitchingConstraint(robot);
-  test_evalSwitchingConstraint(robot);
-}
-
-
-TEST_F(SwitchingConstraintTest, humanoidRobot) {
-  auto robot = testhelper::CreateHumanoidRobot(dt);
-  test_linearizeSwitchingConstraint(robot);
-  test_evalSwitchingConstraint(robot);
-}
+INSTANTIATE_TEST_SUITE_P(
+  TestWithMultipleRobots, SwitchingConstraintTest, 
+  ::testing::Values(testhelper::CreateRobotManipulator(0.01),
+                    testhelper::CreateQuadrupedalRobot(0.01))
+);
 
 } // namespace robotoc
 

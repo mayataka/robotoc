@@ -59,7 +59,7 @@ void TerminalStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   // constraints_->evalConstraint(robot, contact_status, data.constraints_data, s);
   // data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // summarize evaluations
-  data.performance_index.primal_feasibility = data.primalFeasibility<1>();
+  // data.performance_index.primal_feasibility = data.primalFeasibility<1>();
 }
 
 
@@ -85,7 +85,7 @@ void TerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   linearizeTerminalStateEquation(robot, q_prev, s, data.state_equation_data, 
                                  kkt_matrix, kkt_residual);
   // summarize evaluations
-  data.performance_index.primal_feasibility = data.primalFeasibility<1>();
+  // data.performance_index.primal_feasibility = data.primalFeasibility<1>();
   data.performance_index.dual_feasibility 
       = data.dualFeasibility<1>() + kkt_residual.dualFeasibility<1>();
   data.performance_index.kkt_error = data.KKTError() + kkt_residual.KKTError();
@@ -101,13 +101,13 @@ void TerminalStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
   // const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
   // d.setContactDimension(contact_status.dimf());
   d.setContactDimension(0);
+  d.setSwitchingConstraintDimension(0);
   // constraints_->expandSlackAndDual(contact_status, data.constraints_data, d);
 }
 
 
 void TerminalStage::expandDual(const GridInfo& grid_info, OCPData& data,
-                               SplitDirection& d, const double dts) const {
-  // assert(grid_info.dt > 0);
+                               SplitDirection& d) const {
   correctCostateDirection(data.state_equation_data, d);
 }
 

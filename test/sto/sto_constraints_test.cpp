@@ -29,7 +29,7 @@ protected:
 
     const double dt = T / N;
     contact_sequence 
-        = testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, 0, 3*dt);
+        = testhelper::CreateContactSequence(robot, N, max_num_impulse, 0, 3*dt);
 
     time_discretization = TimeDiscretization(T, N, 2*max_num_impulse);
     time_discretization.discretize(contact_sequence, t);

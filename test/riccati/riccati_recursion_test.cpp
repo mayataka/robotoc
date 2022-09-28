@@ -57,7 +57,7 @@ protected:
 
 
 std::shared_ptr<ContactSequence > RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequenceSharedPtr(robot, N, max_num_impulse, t, 3*dt);
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
 }
 
 

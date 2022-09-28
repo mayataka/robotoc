@@ -1,5 +1,7 @@
 #include "robotoc/core/performance_index.hpp"
 
+#include "Eigen/Core"
+
 #include <iostream>
 
 
@@ -19,6 +21,15 @@ PerformanceIndex PerformanceIndex::operator+(const PerformanceIndex& other) cons
   PerformanceIndex ret = *this;
   ret += other;
   return ret;
+}
+
+
+bool PerformanceIndex::isApprox(const PerformanceIndex& other) const {
+  Eigen::VectorXd values(5);
+  values << cost, cost_barrier, primal_feasibility, dual_feasibility, kkt_error;
+  Eigen::VectorXd other_values(5);
+  other_values << other.cost, other.cost_barrier, other.primal_feasibility, other.dual_feasibility, other.kkt_error;
+  return values.isApprox(other_values);
 }
 
 

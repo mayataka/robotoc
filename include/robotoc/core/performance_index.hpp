@@ -47,6 +47,13 @@ struct PerformanceIndex {
   PerformanceIndex operator+(const PerformanceIndex& other) const;
 
   ///
+  /// @brief Checks the equivalence of two PerformanceIndex.
+  /// @param[in] other Other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
+  bool isApprox(const PerformanceIndex& other) const;
+
+  ///
   /// @brief Displays the performance index onto a ostream.
   ///
   void disp(std::ostream& os) const;

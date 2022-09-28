@@ -10,13 +10,8 @@
 namespace robotoc {
 namespace testhelper {
 
-ContactSequence CreateContactSequence(const Robot& robot, const int N, 
-                                      const int max_num_impulse,
-                                      const double t0,
-                                      const double event_period);
-
-std::shared_ptr<ContactSequence> CreateContactSequenceSharedPtr(
-    const Robot& robot, const int N, const int max_num_impulse, 
+std::shared_ptr<ContactSequence> CreateContactSequence(
+    const Robot& robot, const int N, const int max_num_impulse,
     const double t0, const double event_period);
 
 } // namespace testhelper
