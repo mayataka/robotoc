@@ -51,22 +51,6 @@ namespace robotoc {
 //                                          SplitDirection& d0);
 
 
-// ///
-// /// @brief Returns maximum stap size of the primal variables that satisfies 
-// /// the inequality constraints.
-// /// @return Maximum stap size of the primal variables that satisfies 
-// /// the inequality constraints.
-// ///
-// double maxPrimalStepSize(OCPData& data);
-
-// ///
-// /// @brief Returns maximum stap size of the dual variables that satisfies 
-// /// the inequality constraints.
-// /// @return Maximum stap size of the dual variables that satisfies 
-// /// the inequality constraints.
-// ///
-// double maxDualStepSize(OCPData& data);
-
 ///
 /// @class IntermediateStage
 /// @brief An optimal control problem for Riccati recursion algorithm split
@@ -187,8 +171,25 @@ public:
   /// @param[in] dts Direction of the switching time regarding of this time 
   /// stage. 
   /// 
-  void expandDual(const GridInfo& grid_info, const SplitDirection& d_next, 
+  void expandDual(const GridInfo& grid_info, OCPData& data, 
+                  const SplitDirection& d_next, 
                   SplitDirection& d, const double dts);
+
+  ///
+  /// @brief Returns maximum stap size of the primal variables that satisfies 
+  /// the inequality constraints.
+  /// @return Maximum stap size of the primal variables that satisfies 
+  /// the inequality constraints.
+  ///
+  double maxPrimalStepSize(const OCPData& data) const;
+
+  ///
+  /// @brief Returns maximum stap size of the dual variables that satisfies 
+  /// the inequality constraints.
+  /// @return Maximum stap size of the dual variables that satisfies 
+  /// the inequality constraints.
+  ///
+  double maxDualStepSize(const OCPData& data) const;
 
   ///
   /// @brief Updates primal variables of this stage.

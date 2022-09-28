@@ -39,7 +39,7 @@ bool SplitOCP::isFeasible(Robot& robot, const ContactStatus& contact_status,
 void SplitOCP::initConstraints(Robot& robot, const ContactStatus& contact_status, 
                                const int time_step, const SplitSolution& s) { 
   assert(time_step >= 0);
-  data_.constraints_data = ocp_.constraints->createConstraintsData(robot, time_step);
+  data_.constraints_data.setTimeStage(time_step);
   ocp_.constraints->setSlackAndDual(robot, contact_status, data_.constraints_data, s);
 }
 

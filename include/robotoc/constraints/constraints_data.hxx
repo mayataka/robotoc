@@ -11,6 +11,23 @@ inline ConstraintsData::ConstraintsData(const int time_stage)
     is_velocity_level_valid_(false),
     is_acceleration_level_valid_(false),
     is_impulse_level_valid_(false) {
+  setTimeStage(time_stage);
+}
+
+
+inline ConstraintsData::ConstraintsData()
+  : is_position_level_valid_(false), 
+    is_velocity_level_valid_(false),
+    is_acceleration_level_valid_(false),
+    is_impulse_level_valid_(false) {
+}
+
+
+inline ConstraintsData::~ConstraintsData() {
+}
+
+
+inline void ConstraintsData::setTimeStage(const int time_stage) {
   if (time_stage >= 2) {
     is_position_level_valid_     = true;
     is_velocity_level_valid_     = true;
@@ -35,18 +52,6 @@ inline ConstraintsData::ConstraintsData(const int time_stage)
     is_acceleration_level_valid_ = false;
     is_impulse_level_valid_      = true;
   }
-}
-
-
-inline ConstraintsData::ConstraintsData()
-  : is_position_level_valid_(false), 
-    is_velocity_level_valid_(false),
-    is_acceleration_level_valid_(false),
-    is_impulse_level_valid_(false) {
-}
-
-
-inline ConstraintsData::~ConstraintsData() {
 }
 
 

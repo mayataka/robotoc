@@ -44,6 +44,8 @@ public:
   ///
   ConstraintsData& operator=(ConstraintsData&&) noexcept = default;
 
+  void setTimeStage(const int time_stage);
+
   ///
   /// @brief Checks wheather the position-level constraints are valid or not. 
   /// @return true if the position-level constraints are valid. false otherwise. 
