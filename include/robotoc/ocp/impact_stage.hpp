@@ -1,15 +1,18 @@
-#ifndef ROBOTOC_TERMINAL_STAGE_HPP_
-#define ROBOTOC_TERMINAL_STAGE_HPP_
+#ifndef ROBOTOC_IMPACT_STAGE_HPP_
+#define ROBOTOC_IMPACT_STAGE_HPP_
 
 #include <memory>
 
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/robot/contact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/switching_constraint_residual.hpp"
+#include "robotoc/core/switching_constraint_jacobian.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/planner/contact_sequence.hpp"
@@ -21,11 +24,11 @@
 namespace robotoc {
 
 ///
-/// @class TerminalStage 
+/// @class ImpactStage
 /// @brief An optimal control problem for Riccati recursion algorithm split
-/// into a terminal stage. 
+/// into a time stage. 
 ///
-class TerminalStage {
+class ImpactStage {
 public:
   ///
   /// @brief Constructs a split optimal control problem.
@@ -33,39 +36,39 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  TerminalStage(const std::shared_ptr<CostFunction>& cost,
-                const std::shared_ptr<Constraints>& constraints,
-                const std::shared_ptr<ContactSequence>& contact_sequence);
+  ImpactStage(const std::shared_ptr<CostFunction>& cost,
+              const std::shared_ptr<Constraints>& constraints,
+              const std::shared_ptr<ContactSequence>& contact_sequence);
 
   ///
   /// @brief Default constructor.  
   ///
-  TerminalStage();
-  
+  ImpactStage();
+
   ///
   /// @brief Default destructor. 
   ///
-  ~TerminalStage() = default;
+  ~ImpactStage() = default;
 
   ///
   /// @brief Default copy constructor. 
   ///
-  TerminalStage(const TerminalStage&) = default;
+  ImpactStage(const ImpactStage&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  TerminalStage& operator=(const TerminalStage&) = default;
+  ImpactStage& operator=(const ImpactStage&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  TerminalStage(TerminalStage&&) noexcept = default;
+  ImpactStage(ImpactStage&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  TerminalStage& operator=(TerminalStage&&) noexcept = default;
+  ImpactStage& operator=(ImpactStage&&) noexcept = default;
 
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
@@ -99,10 +102,13 @@ public:
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] s Split solution of this time stage.
+  /// @param[in] q_next Configuration at the next time stage.
+  /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
-               OCPData& data, SplitKKTResidual& kkt_residual) const;
+               const SplitSolution& s_next, OCPData& data,
+               SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the KKT residual of this time stage.
@@ -111,13 +117,14 @@ public:
   /// @param[in] grid_info Grid info of this time stage.
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void evalKKT(Robot& robot, const GridInfo& grid_info, 
                const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-               OCPData& data, SplitKKTMatrix& kkt_matrix, 
-               SplitKKTResidual& kkt_residual) const;
+               const SplitSolution& s_next, OCPData& data,
+               SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
@@ -131,12 +138,14 @@ public:
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
   /// @param[in] grid_info Grid info of this time stage.
+  /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// @param[in] dts Direction of the switching time regarding of this time 
   /// stage. 
   /// 
   void expandDual(const GridInfo& grid_info, OCPData& data, 
-                  SplitDirection& d, const double dts) const;
+                  const SplitDirection& d_next, 
+                  SplitDirection& d) const;
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -178,4 +187,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_TERMINAL_STAGE_HPP_
+#endif // ROBOTOC_IMPACT_STAGE_HPP_
