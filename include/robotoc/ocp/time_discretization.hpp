@@ -414,7 +414,7 @@ public:
   void discretizeGrid(const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
 
   const std::vector<GridInfo>& getGrid() const {
-    return grid_info_;
+    return grid_;
   }
 
 private:
