@@ -240,6 +240,122 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
 }
 
 
+TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint2) {
+  const auto robot = GetParam();
+  auto impulse_status = robot.createImpulseStatus();
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const int dimi = impulse_status.dimf();
+  const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
+  auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
+  auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
+  kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
+  kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
+  kkt_matrix.Phix().setRandom();
+  kkt_matrix.Phia().setRandom();
+  kkt_matrix.Phiu().setRandom();
+  kkt_matrix.Phit().setRandom();
+  kkt_residual.P().setRandom();
+  auto kkt_matrix_ref = kkt_matrix;
+  auto kkt_residual_ref = kkt_residual;
+
+  RiccatiFactorizer factorizer(robot);
+  LQRPolicy lqr_policy(robot), lqr_policy_ref(robot);
+  BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
+  auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
+  auto riccati_ref = riccati;
+  bool sto = true;
+  bool has_next_sto_phase = true;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
+                                      riccati, lqr_policy, sto, has_next_sto_phase);
+  backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref, kkt_residual_ref);
+
+  Eigen::MatrixXd GDtD = Eigen::MatrixXd::Zero(dimu+dimi, dimu+dimi);
+  GDtD.topLeftCorner(dimu, dimu) = kkt_matrix_ref.Quu;
+  GDtD.topRightCorner(dimu, dimi) = kkt_matrix_ref.Phiu().transpose();
+  GDtD.bottomLeftCorner(dimi, dimu) = kkt_matrix_ref.Phiu();
+  const Eigen::MatrixXd GDtDinv = GDtD.inverse();
+  Eigen::MatrixXd HtC = Eigen::MatrixXd::Zero(dimu+dimi, 2*dimv);
+  HtC.topRows(dimu) = kkt_matrix_ref.Qxu.transpose();
+  HtC.bottomRows(dimi) = kkt_matrix_ref.Phix();
+  Eigen::VectorXd htc = Eigen::VectorXd::Zero(dimu+dimi);
+  htc.head(dimu) = kkt_residual_ref.lu;
+  htc.tail(dimi) = kkt_residual_ref.P();
+  const Eigen::MatrixXd KM = - GDtDinv * HtC;
+  const Eigen::VectorXd km = - GDtDinv * htc;
+  lqr_policy_ref.K = KM.topRows(dimu);
+  lqr_policy_ref.k = km.head(dimu);
+  backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, lqr_policy_ref, riccati_ref);
+  Eigen::MatrixXd ODtD = GDtD;
+  ODtD.topLeftCorner(dimu, dimu).setZero();
+  const Eigen::MatrixXd MtKtODtDKM = KM.transpose() * ODtD * KM;
+  riccati_ref.P -= MtKtODtDKM;
+  riccati_ref.s -= kkt_matrix.Phix().transpose() * km.tail(dimi);
+  backward_recursion_ref.factorizeHamiltonian(riccati_next, kkt_matrix_ref, riccati_ref,
+                                              has_next_sto_phase);
+  Eigen::VectorXd psict = Eigen::VectorXd::Zero(dimu+dimi);
+  psict.head(dimu) = riccati_ref.psi_u;
+  psict.tail(dimi) = kkt_matrix_ref.Phit();
+  const Eigen::VectorXd Tmt = - GDtDinv * psict;
+  Eigen::VectorXd phict = Eigen::VectorXd::Zero(dimu+dimi);
+  phict.head(dimu) = riccati_ref.phi_u;
+  const Eigen::VectorXd Wmt_next = - GDtDinv * phict;
+  lqr_policy_ref.T = Tmt.head(dimu);
+  lqr_policy_ref.W = Wmt_next.head(dimu);
+  const Eigen::MatrixXd M_ref = KM.bottomRows(dimi);
+  const Eigen::VectorXd m_ref = km.tail(dimi);
+  const Eigen::VectorXd mt_ref = Tmt.tail(dimi);
+  const Eigen::VectorXd mt_next_ref = Wmt_next.tail(dimi);
+
+  EXPECT_TRUE(riccati.M().isApprox(M_ref));
+  EXPECT_TRUE(riccati.m().isApprox(m_ref));
+  EXPECT_TRUE(riccati.mt().isApprox(mt_ref));
+  EXPECT_TRUE(riccati.mt_next().isApprox(mt_next_ref));
+
+  backward_recursion_ref.factorizeSTOFactorization(riccati_next, kkt_matrix, 
+                                                   kkt_residual, lqr_policy_ref, 
+                                                   riccati_ref, has_next_sto_phase);
+  riccati_ref.Psi += M_ref.transpose() * kkt_matrix_ref.Phit();
+  riccati_ref.xi += mt_ref.dot(kkt_matrix_ref.Phit());
+  if (has_next_sto_phase) {
+    riccati_ref.chi += mt_next_ref.dot(kkt_matrix_ref.Phit());
+  }
+  else {
+    riccati_ref.chi = 0.0;
+  }
+  riccati_ref.eta += m_ref.dot(kkt_matrix_ref.Phit());
+  riccati_ref.setConstraintDimension(kkt_matrix_ref.dims());
+  riccati_ref.M() = M_ref;
+  riccati_ref.m() = m_ref;
+  riccati_ref.mt() = mt_ref;
+  riccati_ref.mt_next() = mt_next_ref;
+
+  EXPECT_TRUE(riccati.isApprox(riccati_ref));
+  EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
+  EXPECT_TRUE(kkt_matrix.Quu.isApprox(kkt_matrix.Quu.transpose()));
+  EXPECT_TRUE(lqr_policy_ref.K.isApprox(lqr_policy.K));
+  EXPECT_TRUE(lqr_policy_ref.k.isApprox(lqr_policy.k));
+  if (!lqr_policy_ref.T.isZero()) {
+    EXPECT_TRUE(lqr_policy_ref.T.isApprox(lqr_policy.T)); // if near zero, approx does not work well
+  }
+  if (!lqr_policy_ref.W.isZero()) {
+    EXPECT_TRUE(lqr_policy_ref.W.isApprox(lqr_policy.W)); // if near zero, approx does not work well
+  }
+  std::cout << "impulse_status: " << impulse_status << std::endl;
+
+  // Tests when has_next_sto_phase = false
+  has_next_sto_phase = false;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
+                                      riccati, lqr_policy, sto, has_next_sto_phase);
+  EXPECT_TRUE(lqr_policy.W.isZero());
+  EXPECT_TRUE(riccati.mt_next().isZero());
+}
+
+
 TEST_P(RiccatiFactorizerTest, backwardRecursionImpulse) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();

@@ -411,6 +411,12 @@ public:
     return grid_info_[i];
   }
 
+  void discretizeGrid(const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
+
+  const std::vector<GridInfo>& getGrid() const {
+    return grid_info_;
+  }
+
 private:
   double T_, dt_ideal_, max_dt_, eps_;
   int N_, N_ideal_, N_impulse_, N_lift_, reserved_num_discrete_events_;
@@ -425,6 +431,7 @@ private:
   DiscretizationMethod discretization_method_;
 
   std::vector<GridInfo> grid_info_;
+  int N_grids_;
 
   void countDiscreteEvents(
       const std::shared_ptr<ContactSequence>& contact_sequence, const double t,

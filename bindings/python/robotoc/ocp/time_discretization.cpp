@@ -103,6 +103,9 @@ PYBIND11_MODULE(time_discretization, m) {
     .def("time_points", &TimeDiscretization::timePoints)
     .def("is_formulation_tractable", &TimeDiscretization::isFormulationTractable)
     .def("is_switching_time_consistent", &TimeDiscretization::isSwitchingTimeConsistent)
+    .def("discretizeGrid", &TimeDiscretization::discretizeGrid,
+          py::arg("contact_sequence"), py::arg("t")) 
+    .def("getGrid", &TimeDiscretization::getGrid) 
     .def("__str__", [](const TimeDiscretization& self) {
         std::stringstream ss;
         ss << self;

@@ -105,18 +105,6 @@ public:
                                const KKTResidual& kkt_residual, 
                                Direction& d) const;
 
-
-  ///
-  /// @brief Performs the backward Riccati recursion. 
-  /// @param[in] ocp Optimal control problem.
-  /// @param[in, out] kkt_matrix KKT matrix. 
-  /// @param[in, out] kkt_residual KKT residual. 
-  /// @param[in, out] factorization Riccati factorization. 
-  ///
-  void backwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
-                                KKTMatrix& kkt_matrix, 
-                                KKTResidual& kkt_residual, 
-                                RiccatiFactorization& factorization);
   ///
   /// @brief Compute the Newton direction in parallel from the Riccati 
   /// factorization factorized by 
@@ -148,6 +136,30 @@ public:
   /// @return const reference to the LQR policies.
   ///
   const hybrid_container<LQRPolicy>& getLQRPolicy() const;
+
+  ///
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] ocp Optimal control problem.
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
+  /// @param[in, out] factorization Riccati factorization. 
+  ///
+  void backwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
+                                KKTMatrix& kkt_matrix, 
+                                KKTResidual& kkt_residual, 
+                                RiccatiFactorization& factorization);
+
+  ///
+  /// @brief Performs the forward Riccati recursion.
+  /// @param[in] ocp Optimal control problem.
+  /// @param[in] kkt_matrix KKT matrix. 
+  /// @param[in] kkt_residual KKT residual. 
+  /// @param[in, out] d Direction. d[0].dx is assumed to be computed. 
+  ///
+  void forwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
+                               const KKTMatrix& kkt_matrix, 
+                               const KKTResidual& kkt_residual, 
+                               Direction& d) const;
 
 private:
   int nthreads_, N_all_;

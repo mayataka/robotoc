@@ -246,6 +246,13 @@ public:
 
   PerformanceIndex getEval(const TimeDiscretization& time_discretization) const;
 
+  void computeStepSizes(const TimeDiscretization& time_discretization,
+                        Direction& d);
+
+  double maxPrimalStepSize() const;
+
+  double maxDualStepSize() const;
+
   void integrateSolution(const aligned_vector<Robot>& robots,
                          const TimeDiscretization& time_discretization, 
                          const double primal_step_size,
@@ -266,6 +273,7 @@ private:
   IntermediateStage intermediate_stage_;
   ImpactStage impact_stage_;
   TerminalStage terminal_stage_;
+  Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 };
 
 } // namespace robotoc 

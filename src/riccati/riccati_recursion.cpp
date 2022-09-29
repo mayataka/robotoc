@@ -343,57 +343,56 @@ const hybrid_container<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
 }
 
 
-// void RiccatiRecursion::backwardRiccatiRecursion(
-//     const TimeDiscretization& time_discretization, KKTMatrix& kkt_matrix, 
-//     KKTResidual& kkt_residual, RiccatiFactorization& factorization) {
-//   const int N = time_discretization.N();
-//   factorization[N].P = kkt_matrix[N].Qxx;
-//   factorization[N].s = - kkt_residual[N].lx;
-//   for (int i=N-1; i>=0; --i) {
-//     const auto& grid = time_discretization.gridInfo(i);
-//     if (grid.type == GridType::Impulse) {
-//       if (grid.sto || grid.sto_next) {
-//         factorizer_.backwardRiccatiRecursionPhaseTransition(
-//             factorization[i+1], factorization_m_,
-//             sto_policy_[i], time_discretization.gridInfo(i+1).sto_next);
-//         factorizer_.backwardRiccatiRecursion(factorization_m_, kkt_matrix[i], 
-//                                              kkt_residual[i], factorization[i],
-//                                              grid.sto_next);
-//       }
-//       else {
-//         factorizer_.backwardRiccatiRecursion(factorization[i+1], kkt_matrix[i], 
-//                                              kkt_residual[i], factorization[i],
-//                                              grid.sto_next);
-//       }
-//     }
-//     else if (grid.type == GridType::Lift) {
-//       if (grid.sto || grid.sto_next) {
-//         factorizer_.backwardRiccatiRecursionPhaseTransition(
-//             factorization[i+1], factorization_m_,
-//             sto_policy_[i], time_discretization.gridInfo(i+1).sto_next);
-//         factorizer_.backwardRiccatiRecursion(factorization_m_, kkt_matrix[i], 
-//                                              kkt_residual[i], factorization[i],
-//                                              lqr_policy_[i], grid.sto_next);
-//       }
-//       else {
-//         factorizer_.backwardRiccatiRecursion(factorization[i+1], kkt_matrix[i], 
-//                                              kkt_residual[i], factorization[i],
-//                                              lqr_policy_[i], grid.sto_next);
-//       }
-//     }
-//     else {
-//       factorizer_.backwardRiccatiRecursion(factorization[i+1], kkt_matrix[i], 
-//                                            kkt_residual[i], factorization[i], 
-//                                            lqr_policy_[i], grid.sto, grid.sto_next);
-//     }
-//   }
-//   const auto& grid = time_discretization.gridInfo(0);
-//   if (grid.sto) {
-//     factorizer_.backwardRiccatiRecursionPhaseTransition(factorization[0], 
-//                                                         factorization_m_,
-//                                                         sto_policy_[0], grid.sto_next);
-//   }
-// }
+void RiccatiRecursion::backwardRiccatiRecursion(
+    const TimeDiscretization& time_discretization, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual, RiccatiFactorization& factorization) {
+  const int N = time_discretization.N();
+  factorization[N].P = kkt_matrix[N].Qxx;
+  factorization[N].s = - kkt_residual[N].lx;
+  for (int i=N-1; i>=0; --i) {
+    const auto& grid = time_discretization.grid(i);
+    if (grid.type == GridType::Impulse) {
+      if (grid.sto || grid.sto_next) {
+        factorizer_.backwardRiccatiRecursionPhaseTransition(
+            factorization[i+1], factorization_m_,
+            sto_policy_[i], time_discretization.grid(i+1).sto_next);
+        factorizer_.backwardRiccatiRecursion(factorization_m_, kkt_matrix[i], 
+                                             kkt_residual[i], factorization[i],
+                                             grid.sto_next);
+      }
+      else {
+        factorizer_.backwardRiccatiRecursion(factorization[i+1], kkt_matrix[i], 
+                                             kkt_residual[i], factorization[i],
+                                             grid.sto_next);
+      }
+    }
+    else if (grid.type == GridType::Lift) {
+      if (grid.sto || grid.sto_next) {
+        factorizer_.backwardRiccatiRecursionPhaseTransition(
+            factorization[i+1], factorization_m_,
+            sto_policy_[i], time_discretization.grid(i+1).sto_next);
+        factorizer_.backwardRiccatiRecursion(factorization_m_, kkt_matrix[i], 
+                                             kkt_residual[i], factorization[i],
+                                             lqr_policy_[i], grid.sto, grid.sto_next);
+      }
+      else {
+        factorizer_.backwardRiccatiRecursion(factorization[i+1], kkt_matrix[i], 
+                                             kkt_residual[i], factorization[i],
+                                             lqr_policy_[i], grid.sto, grid.sto_next);
+      }
+    }
+    else {
+      factorizer_.backwardRiccatiRecursion(factorization[i+1], kkt_matrix[i], 
+                                           kkt_residual[i], factorization[i], 
+                                           lqr_policy_[i], grid.sto, grid.sto_next);
+    }
+  }
+  const auto& grid = time_discretization.grid(0);
+  if (grid.sto) {
+    factorizer_.backwardRiccatiRecursionPhaseTransition(
+        factorization[0], factorization_m_, sto_policy_[0], grid.sto_next);
+  }
+}
 
 
 // void RiccatiRecursion::forwardRiccatiRecursion(
@@ -402,10 +401,32 @@ const hybrid_container<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
 //   const int N = time_discretization.N();
 //   d[0].dts = 0.0;
 //   d[0].dts_next = 0.0;
-//   if (time_discretization.gridInfo(0).sto) {
+//   if (time_discretization.grid(0).sto) {
 //     factorizer_.computeSwitchingTimeDirection(sto_policy_[0], d[0], false);
 //   }
 //   for (int i=0; i<N; ++i) {
+//     const auto& grid = time_discretization.grid(i);
+//     if (grid.type == GridType::Impulse) {
+//       if (grid.sto_next) {
+//         factorizer_.computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto_next);
+//       }
+//     }
+//     else if (grid.type == GridType::Lift) {
+//       if (grid.sto_next) {
+//         factorizer_.computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto_next);
+//       }
+//       else {
+//         d[i].dts_next = 0.0;
+//       }
+//       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], 
+//                                           lqr_policy_[i], d[i], d[i+1], 
+//                                           grid.sto, grid.sto_next);
+//     }
+//     else {
+//       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
+//                                           lqr_policy_[i], d[i], d[i+1], 
+//                                           grid.sto, grid.sto_next);
+//     }
 //   }
 //   //   if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i)) {
 //   //     assert(!ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1));

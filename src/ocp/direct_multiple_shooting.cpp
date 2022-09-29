@@ -13,6 +13,8 @@ DirectMultipleShooting::DirectMultipleShooting(const int nthreads)
     intermediate_stage_(),
     impact_stage_(),
     terminal_stage_(),
+    max_primal_step_sizes_(), 
+    max_dual_step_sizes_(),
     nthreads_(nthreads) {
   if (nthreads <= 0) {
     throw std::out_of_range("[DirectMultipleShooting] invalid argument: 'nthreads' must be positive!");
@@ -25,6 +27,8 @@ DirectMultipleShooting::DirectMultipleShooting(const OCPDef& ocp, const int nthr
     intermediate_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     impact_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     terminal_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
+    max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.num_reserved_discrete_events)), 
+    max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.num_reserved_discrete_events)),
     nthreads_(nthreads) {
   ocp_data_.resize(ocp.N+1+ocp.num_reserved_discrete_events);
   for (int i=0; i<=ocp.N+ocp.num_reserved_discrete_events; ++i) {
@@ -38,6 +42,8 @@ DirectMultipleShooting::DirectMultipleShooting()
     intermediate_stage_(),
     impact_stage_(),
     terminal_stage_(),
+    max_primal_step_sizes_(), 
+    max_dual_step_sizes_(),
     nthreads_(0) {
 }
 
@@ -412,6 +418,48 @@ PerformanceIndex DirectMultipleShooting::getEval(
     performance_index += ocp_data_[i].performance_index;
   }
   return performance_index;
+}
+
+
+void DirectMultipleShooting::computeStepSizes(
+    const TimeDiscretization& time_discretization, Direction& d) {
+  const int N = time_discretization.N();
+  assert(ocp_data_.size() >= N+1);
+  if (max_primal_step_sizes_.size() < N+1) {
+    max_primal_step_sizes_.resize(N+1);
+    max_dual_step_sizes_.resize(N+1);
+  }
+  max_primal_step_sizes_.fill(1.0);
+  max_dual_step_sizes_.fill(1.0);
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization.grid(i);
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = terminal_stage_.maxPrimalStepSize(ocp_data_[i]);
+      max_dual_step_sizes_.coeffRef(i) = terminal_stage_.maxDualStepSize(ocp_data_[i]);
+    }
+    else if (grid.type == GridType::Impulse) {
+      impact_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = impact_stage_.maxPrimalStepSize(ocp_data_[i]);
+      max_dual_step_sizes_.coeffRef(i) = impact_stage_.maxDualStepSize(ocp_data_[i]);
+    }
+    else {
+      intermediate_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = intermediate_stage_.maxPrimalStepSize(ocp_data_[i]);
+      max_dual_step_sizes_.coeffRef(i) = intermediate_stage_.maxDualStepSize(ocp_data_[i]);
+    }
+  }
+}
+
+
+double DirectMultipleShooting::maxPrimalStepSize() const {
+  return max_primal_step_sizes_.minCoeff();
+}
+
+
+double DirectMultipleShooting::maxDualStepSize() const {
+  return max_dual_step_sizes_.minCoeff();
 }
 
 
