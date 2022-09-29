@@ -966,7 +966,7 @@ inline void TimeDiscretization::discretizeGrid(
   for (int i=0; i<N_grids_; ++i) {
     if (grid_[i].type == GridType::Impulse) {
       for (int j=phase_start_stage; j<i; ++j) {
-        grid_[j].N_phase = grid_count_in_phase + 1;
+        grid_[j].N_phase = grid_count_in_phase;
       }
       grid_[i].grid_count_in_phase = 0;
       grid_[i].N_phase = 0;
@@ -976,7 +976,7 @@ inline void TimeDiscretization::discretizeGrid(
     }
     else if (grid_[i].type == GridType::Lift) {
       for (int j=phase_start_stage; j<i; ++j) {
-        grid_[j].N_phase = grid_count_in_phase + 1;
+        grid_[j].N_phase = grid_count_in_phase;
       }
       grid_count_in_phase = 0;
       phase_start_stage = i;
