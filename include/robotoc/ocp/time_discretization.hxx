@@ -2,6 +2,7 @@
 #define ROBOTOC_TIME_DISCRETIZATION_HXX_ 
 
 #include "robotoc/ocp/time_discretization.hpp"
+#include "robotoc/utils/numerics.hpp"
 
 #include <stdexcept>
 #include <cassert>
@@ -902,6 +903,9 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
         grid_[stage].type = GridType::Intermediate;
+        if (numerics::isApprox(ti+dt, next_impulse_time, eps)) {
+          ti += dt;
+        }
       }
     }
     if (has_next_lift) {
@@ -917,6 +921,9 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
         grid_[stage].type = GridType::Lift;
+        if (numerics::isApprox(ti+dt, next_lift_time, eps)) {
+          ti += dt;
+        }
       }
     }
     ++stage;
