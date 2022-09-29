@@ -905,6 +905,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].type = GridType::Intermediate;
         if (numerics::isApprox(ti+dt, next_impulse_time, eps)) {
           ti += dt;
+          grid_[stage].dt = ti - next_impulse_time;
         }
       }
     }
@@ -923,6 +924,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].type = GridType::Lift;
         if (numerics::isApprox(ti+dt, next_lift_time, eps)) {
           ti += dt;
+          grid_[stage].dt = ti - next_lift_time;
         }
       }
     }
@@ -984,6 +986,10 @@ inline void TimeDiscretization::discretizeGrid(
     grid_[i].grid_count_in_phase = grid_count_in_phase;
     ++grid_count_in_phase;
   }
+  for (int j=phase_start_stage; j<=N_grids_; ++j) {
+    grid_[j].N_phase = grid_count_in_phase;
+  }
+  grid_[N_grids_].grid_count_in_phase = grid_count_in_phase;
 }
 
 
