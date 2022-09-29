@@ -848,6 +848,21 @@ inline void TimeDiscretization::setInitialTime(const double t) {
   }
 }
 
+
+// inline void TimeDiscretization::discretizeGrid(
+//     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
+//   const int N = N_ + contact_sequence->numLiftEvents() + 2 * contact_sequence->numImpulseEvents();
+//   if (grid_.size() <=N) {
+//     grid_.resize(N);
+//   }
+//   const double dt = T_ / N_;
+//   for (int i=0; i<N) {
+//     grid_[i] = 
+//     ti += dt;
+//   }
+// }
+
+
 } // namespace robotoc
 
 #endif // ROBOTOC_TIME_DISCRETIZATION_HXX_ 

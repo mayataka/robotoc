@@ -184,17 +184,6 @@ public:
   static double dts_lift(const OCP& ocp, const Direction& d, const int lift_index);
 
   ///
-  /// @brief Checks whether the solution is feasible under inequality constraints.
-  /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
-  /// @param[in] s Solution. 
-  ///
-  bool isFeasible(aligned_vector<Robot>& robots, 
-                  const TimeDiscretization& time_discretization, 
-                  const Solution& s);
-
-  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   /// @param[in, out] ocp Optimal control problem.
@@ -205,6 +194,17 @@ public:
   void initConstraints(aligned_vector<Robot>& robots,
                        const TimeDiscretization& time_discretization, 
                        const Solution& s);
+
+  ///
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in, out] ocp Optimal control problem.
+  /// @param[in] robots aligned_vector of Robot.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in] s Solution. 
+  ///
+  bool isFeasible(aligned_vector<Robot>& robots, 
+                  const TimeDiscretization& time_discretization, 
+                  const Solution& s);
 
   ///
   /// @brief Computes the KKT residual of optimal control problem in parallel. 
@@ -244,7 +244,7 @@ public:
                                     const Eigen::VectorXd& v0, 
                                     const Solution& s, Direction& d) const;
 
-  PerformanceIndex getEval() const;
+  PerformanceIndex getEval(const TimeDiscretization& time_discretization) const;
 
   void integrateSolution(const aligned_vector<Robot>& robots,
                          const TimeDiscretization& time_discretization, 

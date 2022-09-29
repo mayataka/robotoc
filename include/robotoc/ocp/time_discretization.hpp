@@ -405,6 +405,12 @@ public:
   friend std::ostream& operator<<(std::ostream& os, 
                                   const TimeDiscretization& discretization);
 
+  const GridInfo& grid(const int i) const {
+    assert(i >= 0);
+    assert(i <= N_+2*N_impulse_+N_lift_);
+    return grid_info_[i];
+  }
+
 private:
   double T_, dt_ideal_, max_dt_, eps_;
   int N_, N_ideal_, N_impulse_, N_lift_, reserved_num_discrete_events_;
@@ -417,6 +423,8 @@ private:
   std::vector<GridInfo> grid_, grid_impulse_, grid_lift_;
   std::vector<DiscreteEventType> event_types_;
   DiscretizationMethod discretization_method_;
+
+  std::vector<GridInfo> grid_info_;
 
   void countDiscreteEvents(
       const std::shared_ptr<ContactSequence>& contact_sequence, const double t,

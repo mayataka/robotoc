@@ -13,7 +13,8 @@ RiccatiFactorizer::RiccatiFactorizer(const Robot& robot, const double max_dts0)
     eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     llt_(robot.dimu()),
     llt_s_(),
-    backward_recursion_(robot) {
+    backward_recursion_(robot),
+    c_riccati_(robot) {
 }
 
 
@@ -25,7 +26,8 @@ RiccatiFactorizer::RiccatiFactorizer()
     eps_(0),
     llt_(),
     llt_s_(),
-    backward_recursion_() {
+    backward_recursion_(),
+    c_riccati_() {
 }
 
 
@@ -43,10 +45,10 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
     const SplitRiccatiFactorization& riccati_next,  
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy) {
-  backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, 
-                                         kkt_residual);
+  backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
+  assert(kkt_matrix.dims() == kkt_residual.dims());
   lqr_policy.K.noalias() = - llt_.solve(kkt_matrix.Qxu.transpose());
   lqr_policy.k.noalias() = - llt_.solve(kkt_residual.lu);
   assert(!lqr_policy.K.hasNaN());
@@ -133,6 +135,8 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
   // Schur complement
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
+  c_riccati_.setConstraintDimension(sc_jacobian.dims());
+  riccati.setConstraintDimension(sc_jacobian.dims());
   c_riccati.setConstraintDimension(sc_jacobian.dims());
   c_riccati.Ginv.noalias() = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
   c_riccati.DGinv().transpose().noalias() = llt_.solve(sc_jacobian.Phiu().transpose());
@@ -149,6 +153,10 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
   c_riccati.M().noalias() -= c_riccati.SinvDGinv() * kkt_matrix.Qxu.transpose();
   c_riccati.m().noalias()  = llt_s_.solve(sc_residual.P());
   c_riccati.m().noalias() -= c_riccati.SinvDGinv() * kkt_residual.lu;
+  // riccati.M().noalias()  = llt_s_.solve(sc_jacobian.Phix());
+  // riccati.M().noalias() -= c_riccati.SinvDGinv() * kkt_matrix.Qxu.transpose();
+  // riccati.m().noalias()  = llt_s_.solve(sc_residual.P());
+  // riccati.m().noalias() -= c_riccati.SinvDGinv() * kkt_residual.lu;
   assert(!lqr_policy.K.hasNaN());
   assert(!lqr_policy.k.hasNaN());
   assert(!c_riccati.M().hasNaN());
@@ -245,8 +253,22 @@ void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirection& d_next, 
     const bool sto, const bool has_next_sto_phase) const {
-  forwardRiccatiRecursion_impl(kkt_matrix, kkt_residual, lqr_policy, d, d_next, 
-                               sto, has_next_sto_phase);
+  d.du.noalias()  = lqr_policy.K * d.dx;
+  d.du.noalias() += lqr_policy.k;
+  if (sto) {
+      d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
+      if (has_next_sto_phase) {
+      d.du.noalias() -= lqr_policy.W * d.dts_next;
+      }
+  }
+  d_next.dx = kkt_residual.Fx;
+  d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
+  d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
+  if (sto) {
+      d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
+  }
+  d_next.dts = d.dts;
+  d_next.dts_next = d.dts_next;
 }
 
 

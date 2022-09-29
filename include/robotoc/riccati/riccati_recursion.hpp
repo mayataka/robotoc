@@ -105,6 +105,18 @@ public:
                                const KKTResidual& kkt_residual, 
                                Direction& d) const;
 
+
+  ///
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] ocp Optimal control problem.
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
+  /// @param[in, out] factorization Riccati factorization. 
+  ///
+  void backwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
+                                KKTMatrix& kkt_matrix, 
+                                KKTResidual& kkt_residual, 
+                                RiccatiFactorization& factorization);
   ///
   /// @brief Compute the Newton direction in parallel from the Riccati 
   /// factorization factorized by 

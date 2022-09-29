@@ -13,6 +13,7 @@ namespace robotoc {
 enum class GridType {
   Intermediate,
   Impulse,
+  Lift,
   Terminal,
 };
 
@@ -77,6 +78,10 @@ struct GridInfo {
   /// @brief Total number of grids in the contact phase that contains this grid. 
   ///
   int N_phase = 0;
+
+  bool sto = false;
+
+  bool sto_next = false;
 
   ///
   /// @brief Flag if the switching constraint is enable or not. 

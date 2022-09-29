@@ -276,29 +276,7 @@ private:
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
   LQRPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
-
-  template <typename SplitDirectionType>
-  void forwardRiccatiRecursion_impl(
-      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-      const LQRPolicy& lqr_policy, SplitDirection& d, SplitDirectionType& d_next, 
-      const bool sto, const bool has_next_sto_phase) const {
-    d.du.noalias()  = lqr_policy.K * d.dx;
-    d.du.noalias() += lqr_policy.k;
-    if (sto) {
-        d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
-        if (has_next_sto_phase) {
-        d.du.noalias() -= lqr_policy.W * d.dts_next;
-        }
-    }
-    d_next.dx = kkt_residual.Fx;
-    d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
-    d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
-    if (sto) {
-        d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
-    }
-    d_next.dts = d.dts;
-    d_next.dts_next = d.dts_next;
-  }
+  SplitConstrainedRiccatiFactorization c_riccati_;
 
 };
 

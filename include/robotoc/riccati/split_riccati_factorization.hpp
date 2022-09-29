@@ -173,6 +173,26 @@ public:
   ///
   double iota;
 
+  void setConstraintDimension(const int dims=0);
+
+  int dims() const;
+
+  Eigen::Block<Eigen::MatrixXd> M();
+
+  const Eigen::Block<const Eigen::MatrixXd> M() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> m();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> m() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> mt();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> mt() const;
+
+    Eigen::VectorBlock<Eigen::VectorXd> mt_next();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> mt_next() const;
+
   void setZero();
 
   void setRandom();
@@ -201,8 +221,9 @@ public:
                                   const SplitRiccatiFactorization& riccati);
 
 private:
-  int dimv_, dimx_;
-
+  Eigen::MatrixXd M_full_;
+  Eigen::VectorXd m_full_, mt_full_, mt_next_full_;
+  int dimv_, dimx_, dims_;
 };
 
 } // namespace robotoc 
