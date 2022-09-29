@@ -879,7 +879,7 @@ inline void TimeDiscretization::discretizeGrid(
     grid_[stage].contact_phase = next_impulse_index + next_lift_index;
     grid_[stage].impulse_index = next_impulse_index - 1;
     grid_[stage].lift_index = next_lift_index - 1;
-    grid_[stage].type == GridType::Intermediate;
+    grid_[stage].type = GridType::Intermediate;
     if (has_next_impulse) {
       const double next_impulse_time = contact_sequence->impulseTime(next_impulse_index);
       if (next_impulse_time <= ti+dt+eps && (next_impulse_time+margin < t+T_)) {
@@ -891,7 +891,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].contact_phase = next_impulse_index + next_lift_index;
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
-        grid_[stage].type == GridType::Impulse;
+        grid_[stage].type = GridType::Impulse;
         grid_[stage].dt = next_impulse_time - ti;
         ++stage;
         ++next_impulse_index;
@@ -901,7 +901,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].contact_phase = next_impulse_index + next_lift_index;
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
-        grid_[stage].type == GridType::Intermediate;
+        grid_[stage].type = GridType::Intermediate;
       }
     }
     if (has_next_lift) {
@@ -916,7 +916,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].contact_phase = next_impulse_index + next_lift_index;
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
-        grid_[stage].type == GridType::Lift;
+        grid_[stage].type = GridType::Lift;
       }
     }
     ++stage;
@@ -928,7 +928,7 @@ inline void TimeDiscretization::discretizeGrid(
   grid_[stage].contact_phase = next_impulse_index + next_lift_index;
   grid_[stage].impulse_index = next_impulse_index - 1;
   grid_[stage].lift_index = next_lift_index - 1;
-  grid_[stage].type == GridType::Terminal;
+  grid_[stage].type = GridType::Terminal;
   N_grids_ = stage;
 
   // set dt_next
