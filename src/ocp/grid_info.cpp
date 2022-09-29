@@ -55,7 +55,7 @@ void GridInfo::disp(std::ostream& os) const {
   os << "  t0:      " << t0 << std::endl;
   os << "  t:       " << t << std::endl;
   os << "  dt:      " << dt << std::endl;
-  os << "  dt_next: " << dt << std::endl;
+  os << "  dt_next: " << dt_next << std::endl;
   os << "  stage:   " << time_stage << std::endl;
   os << "  phase:   " << contact_phase << std::endl;
   os << "  impulse_index: " << impulse_index << std::endl;

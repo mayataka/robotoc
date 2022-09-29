@@ -17,9 +17,9 @@ dt = 0.02
 step_length = np.array([0.15, 0, 0])
 step_height = 0.1
 swing_time = 0.5
-double_support_time = 0.04
+double_support_time = 0.05
 t0 = double_support_time 
-cycle = 3
+cycle = 1
 
 # Create the cost function
 cost = robotoc.CostFunction()
@@ -200,6 +200,13 @@ print(ocp_solver.get_solver_statistics())
 
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
+
+disc = robotoc.TimeDiscretization(T, N, 10)
+disc.discretizeGrid(contact_sequence, t)
+disc.discretizePhase(contact_sequence, t)
+grids = disc.getGrid()
+for e in grids:
+    print(e)
 
 viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
 viewer.set_contact_info(mu=mu)

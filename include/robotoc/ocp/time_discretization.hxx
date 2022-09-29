@@ -852,7 +852,7 @@ inline void TimeDiscretization::setInitialTime(const double t) {
 
 inline void TimeDiscretization::discretizeGrid(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
-  const int N = N_ + contact_sequence->numLiftEvents() + 2 * contact_sequence->numImpulseEvents();
+  const int N = N_ + contact_sequence->numLiftEvents() + 2 * contact_sequence->numImpulseEvents() + 1;
   if (grid_.size() <=N) {
     grid_.resize(N);
   }
@@ -893,7 +893,6 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
         grid_[stage].type = GridType::Impulse;
-        grid_[stage].dt = next_impulse_time - ti;
         ++stage;
         ++next_impulse_index;
         grid_[stage].t = next_impulse_time;
@@ -905,7 +904,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].type = GridType::Intermediate;
         if (numerics::isApprox(ti+dt, next_impulse_time, eps)) {
           ti += dt;
-          grid_[stage].dt = ti - next_impulse_time;
+          grid_[stage].dt = ti + dt - next_impulse_time;
         }
       }
     }
@@ -924,7 +923,7 @@ inline void TimeDiscretization::discretizeGrid(
         grid_[stage].type = GridType::Lift;
         if (numerics::isApprox(ti+dt, next_lift_time, eps)) {
           ti += dt;
-          grid_[stage].dt = ti - next_lift_time;
+          grid_[stage].dt = ti + dt - next_lift_time;
         }
       }
     }
@@ -986,27 +985,91 @@ inline void TimeDiscretization::discretizeGrid(
     grid_[i].grid_count_in_phase = grid_count_in_phase;
     ++grid_count_in_phase;
   }
-  for (int j=phase_start_stage; j<=N_grids_; ++j) {
+  for (int j=phase_start_stage; j<N_grids_; ++j) {
     grid_[j].N_phase = grid_count_in_phase;
   }
-  grid_[N_grids_].grid_count_in_phase = grid_count_in_phase;
+  grid_[N_grids_].grid_count_in_phase = 0;
+  grid_[N_grids_].N_phase = 0;
 }
 
 
-// inline void TimeDiscretization::discretizePhase(
-//     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
-//   double prev_event_time = t;
-//   for (int i=0; i<N_grids_; ++i) {
-//     if (grid_[i+1].type == GridType::Impulse) {
-//       const double dt = (grid_[i+1].t - prev_event_time) / grid_[i].N_phase;
-//       for (int j=i-grid_[i].N_phase+1; j<=i; ++j) {
-//         grid_[i].t = prev_event_time + (j-grid_[i].event_index);
-//       }
-//     }
-//     else if (grid_[i+1].type == GridType::Lift) {
-//     }
-//   }
-// }
+inline void TimeDiscretization::discretizePhase(
+    const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
+  int prev_event_stage = 0;
+  double prev_event_time = t;
+  for (int i=0; i<N_grids_; ++i) {
+    if (grid_[i].type == GridType::Impulse) {
+      const double event_time = contact_sequence->impulseTime(grid_[i+1].impulse_index);
+      const double dt = (event_time - prev_event_time) / grid_[i-1].N_phase;
+      for (int j=prev_event_stage; j<=i-1; ++j) {
+        grid_[j].t = prev_event_time + (j-prev_event_stage) * dt;
+        grid_[j].dt = dt;
+      }
+      grid_[i].t = event_time; 
+      grid_[i].dt = 0.0; 
+      prev_event_time = event_time;
+      prev_event_stage = i+1;
+      ++i;
+    }
+    else if (grid_[i+1].type == GridType::Lift) {
+      const double event_time = contact_sequence->liftTime(grid_[i+1].lift_index);
+      const double dt = (event_time - prev_event_time) / grid_[i].N_phase;
+      for (int j=prev_event_stage; j<=i; ++j) {
+        grid_[j].t = prev_event_time + (j-prev_event_stage) * dt;
+        grid_[j].dt = dt;
+      }
+      prev_event_time = event_time;
+      prev_event_stage = i+1;
+    }
+    else if (grid_[i+1].type == GridType::Terminal) {
+      const double dt = (t + T_ - prev_event_time) / grid_[i].N_phase;
+      for (int j=prev_event_stage; j<=i; ++j) {
+        grid_[j].t = prev_event_time + (j-prev_event_stage) * dt;
+        grid_[j].dt = dt;
+      }
+    }
+  }
+  grid_[N_grids_].t = t + T_;
+  grid_[N_grids_].dt = 0;
+
+  // set dt_next
+  for (int i=0; i<N_grids_; ++i) {
+    grid_[i].dt_next = grid_[i+1].dt;
+  }
+  grid_[N_grids_].dt_next = 0.0;
+
+  // set sto
+  std::vector<bool> sto_event;
+  sto_event.reserve(grid_[N_grids_].contact_phase-grid_[N_grids_].contact_phase);
+  for (int i=0; i<N_grids_; ++i) {
+    if (grid_[i].type == GridType::Impulse) {
+      sto_event.push_back(
+          contact_sequence->isSTOEnabledImpulse(grid_[i+1].impulse_index));
+    }
+    else if (grid_[i].type == GridType::Lift) {
+      sto_event.push_back(
+          contact_sequence->isSTOEnabledLift(grid_[i+1].lift_index));
+    }
+  }
+  if (sto_event.empty()) return;
+
+  std::vector<bool> sto_phase;
+  sto_phase.reserve(grid_[N_grids_].contact_phase-grid_[N_grids_].contact_phase+2);
+  sto_phase.push_back(sto_event.front());
+  for (int i=1; i<sto_event.size(); ++i) {
+    sto_phase.push_back(sto_event[i-1] || sto_event[i]);
+  }
+  sto_phase.push_back(sto_event.back());
+  sto_phase.push_back(false);
+
+  for (int i=0; i<N_grids_; ++i) {
+    const int phase = grid_[i].contact_phase - grid_[0].contact_phase;
+    grid_[i].sto = sto_phase[phase];
+    grid_[i].sto_next = sto_phase[phase+1];
+  }
+  grid_[N_grids_].sto = false;
+  grid_[N_grids_].sto_next = false;
+}
 
 } // namespace robotoc
 

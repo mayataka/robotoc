@@ -405,7 +405,7 @@ public:
   friend std::ostream& operator<<(std::ostream& os, 
                                   const TimeDiscretization& discretization);
 
-  const GridInfo& grid(const int i) const {
+  inline const GridInfo& grid(const int i) const {
     assert(i >= 0);
     assert(i <= N_+2*N_impulse_+N_lift_);
     return grid_info_[i];
@@ -413,8 +413,14 @@ public:
 
   void discretizeGrid(const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
 
-  const std::vector<GridInfo>& getGrid() const {
+  void discretizePhase(const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
+
+  inline const std::vector<GridInfo>& getGrid() const {
     return grid_;
+  }
+
+  inline int N_grids() const {
+    return N_grids_;
   }
 
 private:
