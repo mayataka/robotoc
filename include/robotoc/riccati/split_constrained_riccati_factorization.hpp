@@ -77,22 +77,6 @@ public:
 
   const Eigen::Block<const Eigen::MatrixXd> SinvDGinv() const; 
 
-  Eigen::Block<Eigen::MatrixXd> M();
-
-  const Eigen::Block<const Eigen::MatrixXd> M() const;
-
-  Eigen::VectorBlock<Eigen::VectorXd> m();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> m() const;
-
-  Eigen::VectorBlock<Eigen::VectorXd> mt();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> mt() const;
-
-    Eigen::VectorBlock<Eigen::VectorXd> mt_next();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> mt_next() const;
-
   Eigen::MatrixXd Ginv;
 
   Eigen::MatrixXd DtM;
@@ -112,8 +96,7 @@ public:
       std::ostream& os, const SplitConstrainedRiccatiFactorization& c_riccati);
 
 private:
-  Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_, M_full_;
-  Eigen::VectorXd m_full_, mt_full_, mt_next_full_;
+  Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_;
   int dimv_, dimx_, dimu_, dims_;
 
 };

@@ -16,8 +16,7 @@ namespace robotoc {
 /// @brief Riccati factorization matices of the LQR subproblem. 
 ///
 using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, 
-                                              SplitRiccatiFactorization, 
-                                              SplitConstrainedRiccatiFactorization>;
+                                              SplitRiccatiFactorization>;
 
 std::ostream& operator<<(std::ostream& os, const RiccatiFactorization& riccati);
 

@@ -129,8 +129,7 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const SwitchingConstraintJacobian& sc_jacobian,
     const SwitchingConstraintResidual& sc_residual, 
-    SplitRiccatiFactorization& riccati,
-    SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy) {
+    SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
   // Schur complement
   llt_.compute(kkt_matrix.Quu);
@@ -172,11 +171,10 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const SwitchingConstraintJacobian& sc_jacobian,
     const SwitchingConstraintResidual& sc_residual, 
-    SplitRiccatiFactorization& riccati,
-    SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy,
+    SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy,
     const bool sto, const bool has_next_sto_phase) {
   backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, sc_jacobian, 
-                           sc_residual, riccati, c_riccati, lqr_policy);
+                           sc_residual, riccati, lqr_policy);
   if (sto) {
     backward_recursion_.factorizeHamiltonian(riccati_next, kkt_matrix, riccati,
                                              has_next_sto_phase);
@@ -297,20 +295,6 @@ void RiccatiFactorizer::computeCostateDirection(
   d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
   if (sto) {
     d.dlmdgmm.noalias() -= riccati.Phi * d.dts_next;
-  }
-}
-
-
-void RiccatiFactorizer::computeLagrangeMultiplierDirection(
-    const SplitConstrainedRiccatiFactorization& c_riccati, 
-    SplitDirection& d, const bool sto, const bool has_next_sto_phase) {
-  d.dxi().noalias()  = c_riccati.M() * d.dx;
-  d.dxi().noalias() += c_riccati.m();
-  if (sto) {
-    d.dxi().noalias() += c_riccati.mt() * (d.dts_next-d.dts);
-    if (has_next_sto_phase) {
-      d.dxi().noalias() -= c_riccati.mt_next() * d.dts_next;
-    }
   }
 }
 

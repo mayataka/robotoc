@@ -111,7 +111,6 @@ void RiccatiRecursion::backwardRiccatiRecursion(
                                              kkt_matrix.switching[impulse_index], 
                                              kkt_residual.switching[impulse_index], 
                                              factorization[i-1], 
-                                             factorization.switching[impulse_index], 
                                              lqr_policy_[i-1], sto, sto_next);
       }
     }
@@ -265,8 +264,6 @@ void RiccatiRecursion::computeDirection(
       if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.timeDiscretization().impulseIndexAfterTimeStage(i+1);
         d[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
-        // RiccatiFactorizer::computeLagrangeMultiplierDirection(
-        //     factorization.switching[impulse_index], d[i], sto, sto_next);
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization[i], d[i], sto, sto_next);
       }

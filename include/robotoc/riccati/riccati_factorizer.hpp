@@ -130,8 +130,6 @@ public:
   /// @param[in] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in] sc_residual Residual of the switching constraint. 
   /// @param[in, out] riccati Riccati factorization of this stage. 
-  /// @param[in, out] c_riccati Riccati factorization for the switching 
-  /// constraint. 
   /// @param[in, out] lqr_policy LQR policy of this stage. 
   ///
   void backwardRiccatiRecursion(
@@ -139,8 +137,7 @@ public:
       SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
       const SwitchingConstraintJacobian& sc_jacobian, 
       const SwitchingConstraintResidual& sc_residual, 
-      SplitRiccatiFactorization& riccati, 
-      SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy);
+      SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy);
 
   ///
   /// @brief Performs the backward Riccati recursion with the switching 
@@ -151,8 +148,6 @@ public:
   /// @param[in] sc_jacobian Jacobian of the switching constraint. 
   /// @param[in] sc_residual Residual of the switching constraint. 
   /// @param[in, out] riccati Riccati factorization of this stage. 
-  /// @param[in, out] c_riccati Riccati factorization for the switching 
-  /// constraint. 
   /// @param[in, out] lqr_policy LQR policy of this stage. 
   /// @param[in] sto If true, the STO sensitivities are also considered. 
   /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
@@ -163,8 +158,7 @@ public:
       SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
       const SwitchingConstraintJacobian& sc_jacobian, 
       const SwitchingConstraintResidual& sc_residual, 
-      SplitRiccatiFactorization& riccati, 
-      SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy,
+      SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy,
       const bool sto, const bool has_next_sto_phase);
 
   ///
@@ -259,16 +253,12 @@ public:
   ///
   /// @brief Computes the Newton direction of the Lagrange multiplier with 
   /// respect to the switching constraint. 
-  /// @param[in] c_riccati Riccati factorization for the switching constraint.
+  /// @param[in] riccati Riccati factorization.
   /// @param[in, out] d Split direction of the this stage. 
   /// @param[in] sto If true, the STO sensitivities are also considered. 
   /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
   /// phase involving the STO problem.
   ///
-  static void computeLagrangeMultiplierDirection(
-      const SplitConstrainedRiccatiFactorization& c_riccati, SplitDirection& d,
-      const bool sto, const bool has_next_sto_phase);
-
   static void computeLagrangeMultiplierDirection(
       const SplitRiccatiFactorization& riccati, SplitDirection& d,
       const bool sto, const bool has_next_sto_phase);

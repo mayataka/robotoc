@@ -133,7 +133,7 @@ TEST_P(RiccatiRecursionTest, riccatiRecursion) {
         factorizer.backwardRiccatiRecursion(
             factorization_ref[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
             kkt_matrix_ref.switching[impulse_index], kkt_residual_ref.switching[impulse_index], 
-            factorization_ref.lift[lift_index], factorization_ref.switching[impulse_index], lqr_policy.lift[lift_index]);
+            factorization_ref.lift[lift_index], lqr_policy.lift[lift_index]);
       }
       else {
         factorizer.backwardRiccatiRecursion(
@@ -151,7 +151,7 @@ TEST_P(RiccatiRecursionTest, riccatiRecursion) {
         factorizer.backwardRiccatiRecursion(
             factorization_ref[i+1], kkt_matrix_ref[i], kkt_residual_ref[i], 
             kkt_matrix_ref.switching[impulse_index], kkt_residual_ref.switching[impulse_index], 
-            factorization_ref[i], factorization_ref.switching[impulse_index], lqr_policy[i]);
+            factorization_ref[i], lqr_policy[i]);
       }
       else {
         factorizer.backwardRiccatiRecursion(
@@ -347,8 +347,6 @@ TEST_P(RiccatiRecursionTest, computeDirection) {
         const bool sto_next = false;
         d_ref[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
         RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization[i], d_ref[i], sto, sto_next);
-        // RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization.switching[impulse_index], 
-        //                                                       d_ref[i], sto, sto_next);
       }
     }
   }

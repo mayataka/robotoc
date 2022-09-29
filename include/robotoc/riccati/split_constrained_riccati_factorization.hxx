@@ -16,10 +16,6 @@ SplitConstrainedRiccatiFactorization(const Robot& robot)
     S_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     Sinv_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     SinvDGinv_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimu())),
-    M_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
-    m_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    mt_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    mt_next_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
@@ -36,10 +32,6 @@ SplitConstrainedRiccatiFactorization()
     S_full_(),
     Sinv_full_(),
     SinvDGinv_full_(),
-    M_full_(),
-    m_full_(),
-    mt_full_(),
-    mt_next_full_(),
     dimv_(0),
     dimx_(0),
     dimu_(0),
@@ -111,53 +103,6 @@ SplitConstrainedRiccatiFactorization::SinvDGinv() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> 
-SplitConstrainedRiccatiFactorization::M() {
-  return M_full_.topLeftCorner(dims_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitConstrainedRiccatiFactorization::M() const {
-  return M_full_.topLeftCorner(dims_, dimx_);
-}
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-SplitConstrainedRiccatiFactorization::m() {
-  return m_full_.head(dims_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitConstrainedRiccatiFactorization::m() const {
-  return m_full_.head(dims_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-SplitConstrainedRiccatiFactorization::mt() {
-  return mt_full_.head(dims_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitConstrainedRiccatiFactorization::mt() const {
-  return mt_full_.head(dims_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-SplitConstrainedRiccatiFactorization::mt_next() {
-  return mt_next_full_.head(dims_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitConstrainedRiccatiFactorization::mt_next() const {
-  return mt_next_full_.head(dims_);
-}
-
-
 inline bool SplitConstrainedRiccatiFactorization::isApprox(
     const SplitConstrainedRiccatiFactorization& other) const {
   if (dims() != other.dims()) return false;
@@ -165,10 +110,6 @@ inline bool SplitConstrainedRiccatiFactorization::isApprox(
   if (!S().isApprox(other.S())) return false;
   if (!Sinv().isApprox(other.Sinv())) return false;
   if (!SinvDGinv().isApprox(other.SinvDGinv())) return false;
-  if (!M().isApprox(other.M())) return false;
-  if (!m().isApprox(other.m())) return false;
-  if (!mt().isApprox(other.mt())) return false;
-  if (!mt_next().isApprox(other.mt_next())) return false;
   if (!Ginv.isApprox(other.Ginv)) return false;
   if (!DtM.isApprox(other.DtM)) return false;
   if (!KtDtM.isApprox(other.KtDtM)) return false;
@@ -181,10 +122,6 @@ inline bool SplitConstrainedRiccatiFactorization::hasNaN() const {
   if (S().hasNaN()) return true;
   if (Sinv().hasNaN()) return true;
   if (SinvDGinv().hasNaN()) return true;
-  if (M().hasNaN()) return true;
-  if (m().hasNaN()) return true;
-  if (mt().hasNaN()) return true;
-  if (mt_next().hasNaN()) return true;
   if (Ginv.hasNaN()) return true;
   if (DtM.hasNaN()) return true;
   if (KtDtM.hasNaN()) return true;

@@ -150,12 +150,11 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   auto riccati = testhelper::CreateSplitRiccatiFactorization(robot);
   auto riccati_ref = riccati;
-  SplitConstrainedRiccatiFactorization c_riccati(robot);
   bool sto = true;
   bool has_next_sto_phase = true;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
                                       sc_jacobian, sc_residual, 
-                                      riccati, c_riccati, lqr_policy, sto, has_next_sto_phase);
+                                      riccati, lqr_policy, sto, has_next_sto_phase);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref, kkt_residual_ref);
 
   Eigen::MatrixXd GDtD = Eigen::MatrixXd::Zero(dimu+dimi, dimu+dimi);
@@ -235,7 +234,7 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   has_next_sto_phase = false;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, 
                                       sc_jacobian, sc_residual, 
-                                      riccati, c_riccati, lqr_policy, sto, has_next_sto_phase);
+                                      riccati, lqr_policy, sto, has_next_sto_phase);
   EXPECT_TRUE(lqr_policy.W.isZero());
   EXPECT_TRUE(riccati.mt_next().isZero());
 }
@@ -355,25 +354,24 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  SplitConstrainedRiccatiFactorization c_riccati(robot);
-  c_riccati.setConstraintDimension(impulse_status.dimf());
-  c_riccati.M().setRandom();
-  c_riccati.m().setRandom();
+  riccati.setConstraintDimension(impulse_status.dimf());
+  riccati.M().setRandom();
+  riccati.m().setRandom();
   d.setSwitchingConstraintDimension(impulse_status.dimf());
   d.dxi().setRandom();
   d_ref = d;
   sto = false;
   sto_next = false;
-  factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
-  d_ref.dxi() = c_riccati.M() * d.dx + c_riccati.m();
+  factorizer.computeLagrangeMultiplierDirection(riccati, d, sto, sto_next);
+  d_ref.dxi() = riccati.M() * d.dx + riccati.m();
   EXPECT_TRUE(d.isApprox(d_ref));
   sto = true;
-  factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
-  d_ref.dxi() += c_riccati.mt() * (d_ref.dts_next-d_ref.dts);
+  factorizer.computeLagrangeMultiplierDirection(riccati, d, sto, sto_next);
+  d_ref.dxi() += riccati.mt() * (d_ref.dts_next-d_ref.dts);
   EXPECT_TRUE(d.isApprox(d_ref));
   sto_next = true;
-  factorizer.computeLagrangeMultiplierDirection(c_riccati, d, sto, sto_next);
-  d_ref.dxi() -= c_riccati.mt_next() * d_ref.dts_next;
+  factorizer.computeLagrangeMultiplierDirection(riccati, d, sto, sto_next);
+  d_ref.dxi() -= riccati.mt_next() * d_ref.dts_next;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
