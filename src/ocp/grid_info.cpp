@@ -30,16 +30,41 @@ GridInfo GridInfo::Random() {
 
 
 void GridInfo::disp(std::ostream& os) const {
+  auto gridTypeToString = [](const GridType& type) {
+    switch (type)
+    {
+    case GridType::Intermediate:
+      return "Intermediate";
+      break;
+    case GridType::Impulse:
+      return "Impulse";
+      break;
+    case GridType::Lift:
+      return "Lift";
+      break;
+    case GridType::Terminal:
+      return "Terminal";
+      break;
+    default:
+      return "";
+      break;
+    }
+  };
   os << "GridInfo: " << std::endl;
-  os << "t0:  " << t0 << std::endl;
-  os << "t:  " << t << std::endl;
-  os << "dt: " << dt << std::endl;
-  os << "contact_phase: " << contact_phase << std::endl;
-  os << "time_stage: " << time_stage << std::endl;
-  os << "impulse_index: " << impulse_index << std::endl;
-  os << "lift_index: " << lift_index << std::endl;
-  os << "grid_count_in_phase: " << grid_count_in_phase << std::endl;
-  os << "N_phase: " << N_phase << std::endl;
+  os << "  type: " << gridTypeToString(type) << std::endl;
+  os << "  t0:      " << t0 << std::endl;
+  os << "  t:       " << t << std::endl;
+  os << "  dt:      " << dt << std::endl;
+  os << "  dt_next: " << dt << std::endl;
+  os << "  time_stage:    " << time_stage << std::endl;
+  os << "  contact_phase: " << contact_phase << std::endl;
+  os << "  impulse_index: " << impulse_index << std::endl;
+  os << "  lift_index:    " << lift_index << std::endl;
+  os << "  grid_count_in_phase: " << grid_count_in_phase << std::endl;
+  os << "  N_phase:             " << N_phase << std::endl;
+  os << "  sto:      " << std::boolalpha << sto << std::endl;
+  os << "  sto_next: " << std::boolalpha << sto_next << std::endl;
+  os << "  switching_constraint: " << std::boolalpha << switching_constraint << std::endl;
 }
 
 
