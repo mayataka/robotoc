@@ -269,6 +269,10 @@ public:
       const SplitConstrainedRiccatiFactorization& c_riccati, SplitDirection& d,
       const bool sto, const bool has_next_sto_phase);
 
+  static void computeLagrangeMultiplierDirection(
+      const SplitRiccatiFactorization& riccati, SplitDirection& d,
+      const bool sto, const bool has_next_sto_phase);
+
 private:
   bool has_floating_base_;
   int dimv_, dimu_;

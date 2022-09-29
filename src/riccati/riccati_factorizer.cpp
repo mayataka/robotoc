@@ -135,40 +135,35 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
   // Schur complement
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
-  c_riccati_.setConstraintDimension(sc_jacobian.dims());
   riccati.setConstraintDimension(sc_jacobian.dims());
-  c_riccati.setConstraintDimension(sc_jacobian.dims());
-  c_riccati.Ginv.noalias() = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
-  c_riccati.DGinv().transpose().noalias() = llt_.solve(sc_jacobian.Phiu().transpose());
-  c_riccati.S().noalias() = c_riccati.DGinv() * sc_jacobian.Phiu().transpose();
-  llt_s_.compute(c_riccati.S());
+  c_riccati_.setConstraintDimension(sc_jacobian.dims());
+  c_riccati_.Ginv.noalias() = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
+  c_riccati_.DGinv().transpose().noalias() = llt_.solve(sc_jacobian.Phiu().transpose());
+  c_riccati_.S().noalias() = c_riccati_.DGinv() * sc_jacobian.Phiu().transpose();
+  llt_s_.compute(c_riccati_.S());
   assert(llt_s_.info() == Eigen::Success);
-  c_riccati.SinvDGinv().noalias() = llt_s_.solve(c_riccati.DGinv());
-  c_riccati.Ginv.noalias() -= c_riccati.SinvDGinv().transpose() * c_riccati.DGinv();
-  lqr_policy.K.noalias()  = - c_riccati.Ginv * kkt_matrix.Qxu.transpose();
-  lqr_policy.K.noalias() -= c_riccati.SinvDGinv().transpose() * sc_jacobian.Phix();
-  lqr_policy.k.noalias()  = - c_riccati.Ginv * kkt_residual.lu;
-  lqr_policy.k.noalias() -= c_riccati.SinvDGinv().transpose() * sc_residual.P();
-  c_riccati.M().noalias()  = llt_s_.solve(sc_jacobian.Phix());
-  c_riccati.M().noalias() -= c_riccati.SinvDGinv() * kkt_matrix.Qxu.transpose();
-  c_riccati.m().noalias()  = llt_s_.solve(sc_residual.P());
-  c_riccati.m().noalias() -= c_riccati.SinvDGinv() * kkt_residual.lu;
-  // riccati.M().noalias()  = llt_s_.solve(sc_jacobian.Phix());
-  // riccati.M().noalias() -= c_riccati.SinvDGinv() * kkt_matrix.Qxu.transpose();
-  // riccati.m().noalias()  = llt_s_.solve(sc_residual.P());
-  // riccati.m().noalias() -= c_riccati.SinvDGinv() * kkt_residual.lu;
+  c_riccati_.SinvDGinv().noalias() = llt_s_.solve(c_riccati_.DGinv());
+  c_riccati_.Ginv.noalias() -= c_riccati_.SinvDGinv().transpose() * c_riccati_.DGinv();
+  lqr_policy.K.noalias()  = - c_riccati_.Ginv * kkt_matrix.Qxu.transpose();
+  lqr_policy.K.noalias() -= c_riccati_.SinvDGinv().transpose() * sc_jacobian.Phix();
+  lqr_policy.k.noalias()  = - c_riccati_.Ginv * kkt_residual.lu;
+  lqr_policy.k.noalias() -= c_riccati_.SinvDGinv().transpose() * sc_residual.P();
+  riccati.M().noalias()  = llt_s_.solve(sc_jacobian.Phix());
+  riccati.M().noalias() -= c_riccati_.SinvDGinv() * kkt_matrix.Qxu.transpose();
+  riccati.m().noalias()  = llt_s_.solve(sc_residual.P());
+  riccati.m().noalias() -= c_riccati_.SinvDGinv() * kkt_residual.lu;
   assert(!lqr_policy.K.hasNaN());
   assert(!lqr_policy.k.hasNaN());
-  assert(!c_riccati.M().hasNaN());
-  assert(!c_riccati.m().hasNaN());
+  assert(!riccati.M().hasNaN());
+  assert(!riccati.m().hasNaN());
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, lqr_policy,
                                                     riccati);
-  c_riccati.DtM.noalias()   = sc_jacobian.Phiu().transpose() * c_riccati.M();
-  c_riccati.KtDtM.noalias() = lqr_policy.K.transpose() * c_riccati.DtM;
-  riccati.P.noalias() -= c_riccati.KtDtM;
-  riccati.P.noalias() -= c_riccati.KtDtM.transpose();
-  riccati.s.noalias() -= sc_jacobian.Phix().transpose() * c_riccati.m();
+  c_riccati_.DtM.noalias()   = sc_jacobian.Phiu().transpose() * riccati.M();
+  c_riccati_.KtDtM.noalias() = lqr_policy.K.transpose() * c_riccati_.DtM;
+  riccati.P.noalias() -= c_riccati_.KtDtM;
+  riccati.P.noalias() -= c_riccati_.KtDtM.transpose();
+  riccati.s.noalias() -= sc_jacobian.Phix().transpose() * riccati.m();
 }
 
 
@@ -185,34 +180,34 @@ void RiccatiFactorizer::backwardRiccatiRecursion(
   if (sto) {
     backward_recursion_.factorizeHamiltonian(riccati_next, kkt_matrix, riccati,
                                              has_next_sto_phase);
-    lqr_policy.T.noalias()  = - c_riccati.Ginv * riccati.psi_u;
-    lqr_policy.T.noalias() -= c_riccati.SinvDGinv().transpose() * sc_jacobian.Phit();
+    lqr_policy.T.noalias()  = - c_riccati_.Ginv * riccati.psi_u;
+    lqr_policy.T.noalias() -= c_riccati_.SinvDGinv().transpose() * sc_jacobian.Phit();
     if (has_next_sto_phase) {
-      lqr_policy.W.noalias()  = - c_riccati.Ginv * riccati.phi_u;
+      lqr_policy.W.noalias()  = - c_riccati_.Ginv * riccati.phi_u;
     }
     else {
       lqr_policy.W.setZero();
     }
-    c_riccati.mt().noalias()  = llt_s_.solve(sc_jacobian.Phit());
-    c_riccati.mt().noalias() -= c_riccati.SinvDGinv() * riccati.psi_u;
+    riccati.mt().noalias()  = llt_s_.solve(sc_jacobian.Phit());
+    riccati.mt().noalias() -= c_riccati_.SinvDGinv() * riccati.psi_u;
     if (has_next_sto_phase) {
-      c_riccati.mt_next().noalias() = - c_riccati.SinvDGinv() * riccati.phi_u;
+      riccati.mt_next().noalias() = - c_riccati_.SinvDGinv() * riccati.phi_u;
     }
     else {
-      c_riccati.mt_next().setZero();
+      riccati.mt_next().setZero();
     }
     backward_recursion_.factorizeSTOFactorization(riccati_next, kkt_matrix, 
                                                   kkt_residual, lqr_policy, 
                                                   riccati, has_next_sto_phase);
-    riccati.Psi.noalias() += c_riccati.M().transpose() * sc_jacobian.Phit();
-    riccati.xi += c_riccati.mt().dot(sc_jacobian.Phit());
+    riccati.Psi.noalias() += riccati.M().transpose() * sc_jacobian.Phit();
+    riccati.xi += riccati.mt().dot(sc_jacobian.Phit());
     if (has_next_sto_phase) {
-      riccati.chi += c_riccati.mt_next().dot(sc_jacobian.Phit());
+      riccati.chi += riccati.mt_next().dot(sc_jacobian.Phit());
     }
     else {
       riccati.chi = 0.0;
     }
-    riccati.eta += c_riccati.m().dot(sc_jacobian.Phit());
+    riccati.eta += riccati.m().dot(sc_jacobian.Phit());
   }
 }
 
@@ -315,6 +310,20 @@ void RiccatiFactorizer::computeLagrangeMultiplierDirection(
     d.dxi().noalias() += c_riccati.mt() * (d.dts_next-d.dts);
     if (has_next_sto_phase) {
       d.dxi().noalias() -= c_riccati.mt_next() * d.dts_next;
+    }
+  }
+}
+
+
+void RiccatiFactorizer::computeLagrangeMultiplierDirection(
+    const SplitRiccatiFactorization& riccati, 
+    SplitDirection& d, const bool sto, const bool has_next_sto_phase) {
+  d.dxi().noalias()  = riccati.M() * d.dx;
+  d.dxi().noalias() += riccati.m();
+  if (sto) {
+    d.dxi().noalias() += riccati.mt() * (d.dts_next-d.dts);
+    if (has_next_sto_phase) {
+      d.dxi().noalias() -= riccati.mt_next() * d.dts_next;
     }
   }
 }

@@ -265,8 +265,10 @@ void RiccatiRecursion::computeDirection(
       if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.timeDiscretization().impulseIndexAfterTimeStage(i+1);
         d[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
+        // RiccatiFactorizer::computeLagrangeMultiplierDirection(
+        //     factorization.switching[impulse_index], d[i], sto, sto_next);
         RiccatiFactorizer::computeLagrangeMultiplierDirection(
-            factorization.switching[impulse_index], d[i], sto, sto_next);
+            factorization[i], d[i], sto, sto_next);
       }
       max_primal_step_sizes_.coeffRef(i) = ocp[i].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) = ocp[i].maxDualStepSize();

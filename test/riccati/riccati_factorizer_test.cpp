@@ -195,10 +195,10 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   const Eigen::VectorXd mt_ref = Tmt.tail(dimi);
   const Eigen::VectorXd mt_next_ref = Wmt_next.tail(dimi);
 
-  EXPECT_TRUE(c_riccati.M().isApprox(M_ref));
-  EXPECT_TRUE(c_riccati.m().isApprox(m_ref));
-  EXPECT_TRUE(c_riccati.mt().isApprox(mt_ref));
-  EXPECT_TRUE(c_riccati.mt_next().isApprox(mt_next_ref));
+  EXPECT_TRUE(riccati.M().isApprox(M_ref));
+  EXPECT_TRUE(riccati.m().isApprox(m_ref));
+  EXPECT_TRUE(riccati.mt().isApprox(mt_ref));
+  EXPECT_TRUE(riccati.mt_next().isApprox(mt_next_ref));
 
   backward_recursion_ref.factorizeSTOFactorization(riccati_next, kkt_matrix, 
                                                    kkt_residual, lqr_policy_ref, 
@@ -212,6 +212,11 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
     riccati_ref.chi = 0.0;
   }
   riccati_ref.eta += m_ref.dot(sc_jacobian.Phit());
+  riccati_ref.setConstraintDimension(sc_jacobian.dims());
+  riccati_ref.M() = M_ref;
+  riccati_ref.m() = m_ref;
+  riccati_ref.mt() = mt_ref;
+  riccati_ref.mt_next() = mt_next_ref;
 
   EXPECT_TRUE(riccati.isApprox(riccati_ref));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
@@ -232,7 +237,7 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
                                       sc_jacobian, sc_residual, 
                                       riccati, c_riccati, lqr_policy, sto, has_next_sto_phase);
   EXPECT_TRUE(lqr_policy.W.isZero());
-  EXPECT_TRUE(c_riccati.mt_next().isZero());
+  EXPECT_TRUE(riccati.mt_next().isZero());
 }
 
 
