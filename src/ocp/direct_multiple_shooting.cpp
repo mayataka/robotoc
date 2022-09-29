@@ -1,4 +1,5 @@
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
+#include "robotoc/riccati/riccati_factorizer.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -467,25 +468,34 @@ void DirectMultipleShooting::integrateSolution(
     const aligned_vector<Robot>& robots, 
     const TimeDiscretization& time_discretization, 
     const double primal_step_size, const double dual_step_size, 
-    const KKTMatrix& kkt_matrix, Direction& d, Solution& s) {
+    const KKTMatrix& kkt_matrix, const RiccatiFactorization& riccati,
+    Direction& d, Solution& s) {
   const int N = time_discretization.N();
   assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     const auto& grid = time_discretization.grid(i);
     if (grid.type == GridType::Terminal) {
+      constexpr bool sto = false;
+      constexpr bool sto_next = false;
+      RiccatiFactorizer::computeCostateDirection(riccati[i], d[i], sto, sto_next);
       terminal_stage_.expandDual(grid, ocp_data_[i], d[i]);
       terminal_stage_.updatePrimal(robots[omp_get_thread_num()], 
                                    primal_step_size, d[i], s[i], ocp_data_[i]);
       terminal_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
     else if (grid.type == GridType::Impulse) {
+      RiccatiFactorizer::computeCostateDirection(riccati[i], d[i], grid.sto);
       impact_stage_.expandDual(grid, ocp_data_[i], d[i+1], d[i]);
       impact_stage_.updatePrimal(robots[omp_get_thread_num()], 
                                  primal_step_size, d[i], s[i], ocp_data_[i]);
       impact_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
     else {
+      RiccatiFactorizer::computeCostateDirection(riccati[i], d[i], grid.sto, grid.sto_next);
+      if (grid.switching_constraint) {
+        RiccatiFactorizer::computeLagrangeMultiplierDirection(riccati[i], d[i], grid.sto, grid.sto_next);
+      }
       intermediate_stage_.expandDual(grid, ocp_data_[i], d[i+1], d[i]);
       intermediate_stage_.updatePrimal(robots[omp_get_thread_num()], 
                                        primal_step_size, d[i], s[i], ocp_data_[i]);

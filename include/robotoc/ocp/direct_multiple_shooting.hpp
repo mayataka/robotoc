@@ -20,6 +20,7 @@
 #include "robotoc/ocp/impact_stage.hpp"
 #include "robotoc/ocp/terminal_stage.hpp"
 #include "robotoc/ocp/ocp_def.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
 
 
 namespace robotoc {
@@ -258,6 +259,7 @@ public:
                          const double primal_step_size,
                          const double dual_step_size,
                          const KKTMatrix& kkt_matrix,
+                         const RiccatiFactorization& riccati,
                          Direction& d, Solution& s);
 
 private:
