@@ -23,6 +23,7 @@ auto createOCPDef = [](const OCP& ocp) {
   return def;
 };
 
+
 OCPSolver::OCPSolver(const OCP& ocp, 
                      const SolverOptions& solver_options, const int nthreads)
   : robots_(nthreads, ocp.robot()),
@@ -48,16 +49,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
   for (auto& e : s_.impulse) { ocp.robot().normalizeConfiguration(e.q); }
   for (auto& e : s_.aux)     { ocp.robot().normalizeConfiguration(e.q); }
   for (auto& e : s_.lift)    { ocp.robot().normalizeConfiguration(e.q); }
-
-  // OCPDef def{ocp.robot(), ocp.cost(), ocp.constraints(), ocp.contact_sequence(), ocp.T(), ocp.N(), ocp.reservedNumDiscreteEvents()};
-  // def.robot = ocp.robot();
-  // def.cost = ocp.cost();
-  // def.constraints = ocp.constraints();
-  // def.contact_sequence = ocp.contact_sequence();
-  // def.N = ocp.N();
-  // def.T = ocp.T();
-  // def.num_reserved_discrete_events = ocp.reservedNumDiscreteEvents();
-  // dms_ = DirectMultipleShooting(def, nthreads);
+  time_discretization_.setDiscretizationMethod(solver_options.discretization_method);
 }
 
 
@@ -71,34 +63,25 @@ OCPSolver::~OCPSolver() {
 
 void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
   solver_options_ = solver_options;
+  time_discretization_.setDiscretizationMethod(solver_options.discretization_method);
   riccati_recursion_.setRegularization(solver_options.max_dts_riccati);
 }
 
 
 void OCPSolver::meshRefinement(const double t) {
   time_discretization_.discretizeGrid(contact_sequence_, t);
-  // ocp_.meshRefinement(t);
-  if (ocp_.timeDiscretization().discretizationMethod() == DiscretizationMethod::PhaseBased) {
+  if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
+    std::cout << "solver_options_.discretization_method == PhaseBased" << std::endl;
     time_discretization_.discretizePhase(contact_sequence_, t);
     reserveData();
     discretizeSolution();
-    dms_.initConstraints(robots_, time_discretization_, s_);
-    // reserveData();
-    // discretizeSolution();
-    // dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
-    // sto_.initConstraints(ocp_);
   }
 }
 
 
 void OCPSolver::initConstraints(const double t) {
-  time_discretization_.discretizeGrid(contact_sequence_, t);
-  // ocp_.discretize(t);
-  reserveData();
-  discretizeSolution();
+  meshRefinement(t);
   dms_.initConstraints(robots_, time_discretization_, s_);
-  // dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
-  // sto_.initConstraints(ocp_);
 }
 
 
@@ -106,11 +89,9 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_.discretize(t);
-  time_discretization_.discretizeGrid(contact_sequence_, t);
-  reserveData();
-  discretizeSolution();
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
+  // sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
+  // sto_.applyRegularization(ocp_, kkt_matrix_);
   riccati_recursion_.backwardRiccatiRecursion(time_discretization_, 
                                               kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
@@ -119,23 +100,13 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                              kkt_matrix_, kkt_residual_, 
                                              riccati_factorization_, d_);
   dms_.computeStepSizes(time_discretization_, d_);
+  // sto_.computeDirection(ocp_, d_);
+  // double primal_step_size = std::min(dms_.maxPrimalStepSize(), 
+  //                                    sto_.maxPrimalStepSize());
+  // const double dual_step_size = std::min(dms_.maxDualStepSize(),
+  //                                        sto_.maxDualStepSize());
   double primal_step_size = dms_.maxPrimalStepSize();
   const double dual_step_size = dms_.maxDualStepSize();
-  // dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
-  //                       kkt_matrix_, kkt_residual_);
-  // sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
-  // sto_.applyRegularization(ocp_, kkt_matrix_);
-  // riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
-  //                                             riccati_factorization_);
-  // dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
-  // riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
-  // riccati_recursion_.computeDirection(ocp_, contact_sequence_, 
-  //                                     riccati_factorization_, d_);
-  // sto_.computeDirection(ocp_, d_);
-  // double primal_step_size = std::min(riccati_recursion_.maxPrimalStepSize(), 
-  //                                    sto_.maxPrimalStepSize());
-  // const double dual_step_size = std::min(riccati_recursion_.maxDualStepSize(),
-  //                                        sto_.maxDualStepSize());
   // if (solver_options_.enable_line_search) {
   //   const double max_primal_step_size = primal_step_size;
   //   primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
@@ -165,9 +136,10 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   }
   if (init_solver) {
     meshRefinement(t);
-    if (solver_options_.enable_solution_interpolation) 
-      // solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
-    initConstraints(t);
+    if (solver_options_.enable_solution_interpolation) {
+      solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
+    }
+    dms_.initConstraints(robots_, time_discretization_, s_);
     line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
@@ -186,12 +158,15 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
     if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
-      if (ocp_.timeDiscretization().dt_max() > solver_options_.max_dt_mesh) {
-        if (solver_options_.enable_solution_interpolation) 
-          solution_interpolator_.store(ocp_.timeDiscretization(), s_);
+      if (time_discretization_.dt_max() > solver_options_.max_dt_mesh) {
+        if (solver_options_.enable_solution_interpolation) {
+          solution_interpolator_.store(time_discretization_, s_);
+        }
         meshRefinement(t);
-        if (solver_options_.enable_solution_interpolation) 
-          // solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
+        if (solver_options_.enable_solution_interpolation) {
+          solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
+        }
+        dms_.initConstraints(robots_, time_discretization_, s_);
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }
@@ -210,8 +185,9 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   if (!solver_statistics_.convergence) {
     solver_statistics_.iter = solver_options_.max_iter;
   }
-  if (solver_options_.enable_solution_interpolation) 
-    solution_interpolator_.store(ocp_.timeDiscretization(), s_);
+  if (solver_options_.enable_solution_interpolation) {
+    solution_interpolator_.store(time_discretization_, s_);
+  }
   if (solver_options_.enable_benchmark) {
     timer_.tock();
     solver_statistics_.cpu_time = timer_.ms();
@@ -231,7 +207,7 @@ const Solution& OCPSolver::getSolution() const {
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= ocp_.timeDiscretization().N());
+  assert(stage <= time_discretization_.N());
   return s_[stage];
 }
 
@@ -541,7 +517,13 @@ double OCPSolver::KKTError() const {
 
 
 double OCPSolver::cost(const bool include_cost_barrier) const {
-  return dms_.totalCost(ocp_, include_cost_barrier);
+  if (include_cost_barrier) {
+    const auto eval = dms_.getEval(time_discretization_);
+    return eval.cost + eval.cost_barrier;
+  }
+  else {
+    return dms_.getEval(time_discretization_).cost;
+  }
 }
 
 
@@ -549,14 +531,12 @@ bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
   // ocp_.discretize(t);
   // reserveData();
   // discretizeSolution();
-  // return dms_.isFeasible(ocp_, robots_, contact_sequence_, s_);
   return dms_.isFeasible(robots_, time_discretization_, s_);
 }
 
 
 const TimeDiscretization& OCPSolver::getTimeDiscretization() const {
   return time_discretization_;
-  // return ocp_.timeDiscretization();
 }
 
 

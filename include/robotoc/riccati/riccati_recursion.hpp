@@ -47,8 +47,8 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~RiccatiRecursion();
- 
+  ~RiccatiRecursion() = default;
+
   ///
   /// @brief Default copy constructor. 
   ///
@@ -90,60 +90,6 @@ public:
   /// @param[in, out] kkt_residual KKT residual. 
   /// @param[in, out] factorization Riccati factorization. 
   ///
-  void backwardRiccatiRecursion(const OCP& ocp, KKTMatrix& kkt_matrix, 
-                                KKTResidual& kkt_residual, 
-                                RiccatiFactorization& factorization);
-
-  ///
-  /// @brief Performs the forward Riccati recursion.
-  /// @param[in] ocp Optimal control problem.
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] kkt_residual KKT residual. 
-  /// @param[in, out] d Direction. d[0].dx is assumed to be computed. 
-  ///
-  void forwardRiccatiRecursion(const OCP& ocp, const KKTMatrix& kkt_matrix, 
-                               const KKTResidual& kkt_residual, 
-                               Direction& d) const;
-
-  ///
-  /// @brief Compute the Newton direction in parallel from the Riccati 
-  /// factorization factorized by 
-  /// RiccatiRecursion::backwardRiccatiRecursion() and 
-  /// RiccatiRecursion::forwardRiccatiRecursion().
-  /// @param[in] ocp Optimal control problem.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
-  /// @param[in] factorization Riccati factorization. 
-  /// @param[in, out] d Direction. 
-  ///
-  void computeDirection(OCP& ocp, 
-                        const std::shared_ptr<ContactSequence>& contact_sequence, 
-                        const RiccatiFactorization& factorization, Direction& d);
-
-  ///
-  /// @brief Returns max primal step size.
-  /// @return max primal step size.
-  /// 
-  double maxPrimalStepSize() const;
-
-  ///
-  /// @brief Returns max dual step size.
-  /// @return max dual step size.
-  /// 
-  double maxDualStepSize() const;
-
-  ///
-  /// @brief Gets of the LQR policies over the horizon. 
-  /// @return const reference to the LQR policies.
-  ///
-  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
-
-  ///
-  /// @brief Performs the backward Riccati recursion. 
-  /// @param[in] ocp Optimal control problem.
-  /// @param[in, out] kkt_matrix KKT matrix. 
-  /// @param[in, out] kkt_residual KKT residual. 
-  /// @param[in, out] factorization Riccati factorization. 
-  ///
   void backwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
                                 KKTMatrix& kkt_matrix, 
                                 KKTResidual& kkt_residual, 
@@ -161,6 +107,12 @@ public:
                                const KKTResidual& kkt_residual, 
                                const RiccatiFactorization& factorization,
                                Direction& d) const;
+
+  ///
+  /// @brief Gets of the LQR policies over the horizon. 
+  /// @return const reference to the LQR policies.
+  ///
+  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
 
 private:
   int nthreads_, N_all_;

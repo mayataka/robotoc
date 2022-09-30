@@ -51,8 +51,6 @@ struct OCPData {
 
   double KKTError() const {
     double error = 0;
-    std::cout << "contact dynamics KKT: " << contact_dynamics_data.KKTError() << std::endl;
-    std::cout << "constraints KKT: " << constraints_data.KKTError() << std::endl;
     error += contact_dynamics_data.KKTError();
     error += constraints_data.KKTError();
     return error;

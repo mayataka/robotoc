@@ -180,8 +180,11 @@ N = math.floor(T/dt)
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   contact_sequence=contact_sequence, T=T, N=N)
 solver_options = robotoc.SolverOptions()
+solver_options.discretization_method = robotoc.DiscretizationMethod.PhaseBased
 # solver_options.max_iter = 1
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=1)
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+
+print(solver_options)
 
 # Initial time and intial state 
 t = 0.
@@ -199,10 +202,10 @@ ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
-# time_discretization = ocp_solver.get_time_discretization()
-# N_grids = time_discretization.N_grids()
-# for i in range(N_grids+1):
-#     print(time_discretization.getGrid()[i])
+time_discretization = ocp_solver.get_time_discretization()
+N_grids = time_discretization.N_grids()
+for i in range(N_grids+1):
+    print(time_discretization.getGrid()[i])
 
 
 # num_iteration = 1000
