@@ -123,22 +123,7 @@ private:
                                    const SplitDirection& d, 
                                    const double step_size, 
                                    SplitSolution& s_trial,
-                                   const bool impulse=false) {
-    s_trial.setContactStatus(s);
-    robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
-    s_trial.v = s.v + step_size * d.dv();
-    if (!impulse) {
-      s_trial.a = s.a + step_size * d.da();
-      s_trial.u = s.u + step_size * d.du;
-    }
-    else {
-      s_trial.dv = s.dv + step_size * d.ddv();
-    }
-    if (s.hasActiveContacts()) {
-      s_trial.f_stack() = s.f_stack() + step_size * d.df();
-      s_trial.set_f_vector();
-    }
-  }
+                                   const bool impulse=false);
 
   double lineSearchFilterMethod(
       DirectMultipleShooting& dms, aligned_vector<Robot>& robots,

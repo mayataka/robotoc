@@ -551,4 +551,14 @@ int STOConstraints::reservedNumSwitches() const {
   return reserved_num_switches_;
 }
 
+
+
+
+// ConstraintComponentData STOConstraints::createConstraintsData(
+//     const TimeDiscretization& time_discretization) const {
+//   const int num_phases = time_discretization.grid(time_discretization.N_grids()).contact_phase 
+//                           - time_discretization.grid(0).contact_phase;
+//   return ConstraintComponentData(num_phases, 0.001);
+// }
+
 } // namespace robotoc

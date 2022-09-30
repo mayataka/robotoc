@@ -24,15 +24,6 @@ PerformanceIndex PerformanceIndex::operator+(const PerformanceIndex& other) cons
 }
 
 
-bool PerformanceIndex::isApprox(const PerformanceIndex& other) const {
-  Eigen::VectorXd values(5);
-  values << cost, cost_barrier, primal_feasibility, dual_feasibility, kkt_error;
-  Eigen::VectorXd other_values(5);
-  other_values << other.cost, other.cost_barrier, other.primal_feasibility, other.dual_feasibility, other.kkt_error;
-  return values.isApprox(other_values);
-}
-
-
 void PerformanceIndex::setZero() {
   cost = 0.0;
   cost_barrier = 0.0;
@@ -42,9 +33,18 @@ void PerformanceIndex::setZero() {
 }
 
 
+bool PerformanceIndex::isApprox(const PerformanceIndex& other) const {
+  Eigen::VectorXd values(5);
+  values << cost, cost_barrier, primal_feasibility, dual_feasibility, kkt_error;
+  Eigen::VectorXd other_values(5);
+  other_values << other.cost, other.cost_barrier, other.primal_feasibility, other.dual_feasibility, other.kkt_error;
+  return values.isApprox(other_values);
+}
+
+
 void PerformanceIndex::disp(std::ostream& os) const {
   os << "PerformanceIndex:" << std::endl;
-  os << "  cost =             = " << cost << std::endl;
+  os << "  cost               = " << cost << std::endl;
   os << "  cost_barrier       = " << cost_barrier << std::endl;
   os << "  primal_feasibility = " << primal_feasibility << std::endl;
   os << "  dual_feasibility   = " << dual_feasibility << std::endl;

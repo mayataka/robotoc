@@ -47,13 +47,16 @@ struct PerformanceIndex {
   PerformanceIndex operator+(const PerformanceIndex& other) const;
 
   ///
+  /// @brief Sets the all member variables zero.
+  ///
+  void setZero();
+
+  ///
   /// @brief Checks the equivalence of two PerformanceIndex.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const PerformanceIndex& other) const;
-
-  void setZero();
 
   ///
   /// @brief Displays the performance index onto a ostream.

@@ -155,6 +155,9 @@ private:
   Eigen::VectorXd h_phase_;
   int reserved_num_switches_;
   bool is_sto_enabled_;
+
+  Eigen::VectorXd lt_;
+  Eigen::VectorXd Qtt_;
 };
 
 } // namespace robotoc

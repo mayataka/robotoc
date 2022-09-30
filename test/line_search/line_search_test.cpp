@@ -93,14 +93,13 @@ void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
-  // auto ocp = OCP(robot, cost, constraints, contact_sequence, T, N);
   OCPDef ocp;
   ocp.robot = robot;
   ocp.cost = cost;
   ocp.constraints = constraints;
+  ocp.contact_sequence = contact_sequence;
   ocp.N = N;
   ocp.T = T;
-  // ocp.discretize(t);
   DirectMultipleShooting dms(ocp, nthreads);
   dms.initConstraints(ocp, robots, contact_sequence, s);
   LineSearch line_search(ocp, nthreads, settings);

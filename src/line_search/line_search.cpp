@@ -57,6 +57,29 @@ bool LineSearch::isFilterEmpty() const {
   return filter_.isEmpty();
 }
 
+
+void LineSearch::computeSolutionTrial(const Robot& robot, const SplitSolution& s, 
+                                      const SplitDirection& d, 
+                                      const double step_size, 
+                                      SplitSolution& s_trial,
+                                      const bool impulse) {
+  s_trial.setContactStatus(s);
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
+  s_trial.v = s.v + step_size * d.dv();
+  if (!impulse) {
+    s_trial.a = s.a + step_size * d.da();
+    s_trial.u = s.u + step_size * d.du;
+  }
+  else {
+    s_trial.dv = s.dv + step_size * d.ddv();
+  }
+  if (s.hasActiveContacts()) {
+    s_trial.f_stack() = s.f_stack() + step_size * d.df();
+    s_trial.set_f_vector();
+  }
+}
+
+
 void LineSearch::computeSolutionTrial(const aligned_vector<Robot>& robots, 
                                       const TimeDiscretization& time_discretization, 
                                       const Solution& s, const Direction& d, 
@@ -149,8 +172,8 @@ void LineSearch::set(const LineSearchSettings& settings) {
 
 
 void LineSearch::reserve(const TimeDiscretization& time_discretization) {
-  if (s_trial_.data.size() < time_discretization.N_grids()+1) {
-    s_trial_.data.resize(time_discretization.N_grids()+1);
+  while (s_trial_.data.size() < time_discretization.N_grids()+1) {
+    s_trial_.data.push_back(s_trial_.data.back());
   }
 }
 

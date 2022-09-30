@@ -71,9 +71,8 @@ public:
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
-  /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] s Solution. 
   ///
   void initConstraints(aligned_vector<Robot>& robots,
@@ -82,9 +81,8 @@ public:
 
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
-  /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] s Solution. 
   ///
   bool isFeasible(aligned_vector<Robot>& robots, 
@@ -92,14 +90,12 @@ public:
                   const Solution& s);
 
   ///
-  /// @brief Computes the KKT residual of optimal control problem in parallel. 
-  /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @brief Computes the cost and constraint violations. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
-  /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
   ///
   void evalOCP(aligned_vector<Robot>& robots, 
@@ -108,10 +104,9 @@ public:
                const Solution& s, KKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the KKT residual of optimal control problem in parallel. 
-  /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @brief Computes the KKT residual and matrix. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
@@ -124,20 +119,55 @@ public:
                const Solution& s, KKTMatrix& kkt_matrix, 
                KKTResidual& kkt_residual);
 
+  ///
+  /// @brief Computes the initial state direction. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] q Initial configuration.
+  /// @param[in] v Initial generalized velocity.
+  /// @param[in] s Solution. 
+  /// @param[in, out] d Direction. 
+  ///
   void computeInitialStateDirection(const Robot& robot,  
-                                    const Eigen::VectorXd& q0, 
-                                    const Eigen::VectorXd& v0, 
+                                    const Eigen::VectorXd& q, 
+                                    const Eigen::VectorXd& v, 
                                     const Solution& s, Direction& d) const;
 
+  ///
+  /// @brief Gets the performance index of the evaluation. 
+  /// @return const reference to the performance index.
+  ///
   const PerformanceIndex& getEval() const;
 
+  ///
+  /// @brief Computes the step sizes via the fraction-to-boundary-rule.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in, out] d Direction. 
+  ///
   void computeStepSizes(const TimeDiscretization& time_discretization,
                         Direction& d);
 
+  ///
+  /// @brief Gets the maximum primal step size of the fraction-to-boundary-rule.
+  /// @return The primal step size of the fraction-to-boundary-rule.
+  ///
   double maxPrimalStepSize() const;
 
+  ///
+  /// @brief Gets the maximum dual step size of the fraction-to-boundary-rule.
+  /// @return The dual step size of the fraction-to-boundary-rule.
+  ///
   double maxDualStepSize() const;
 
+  ///
+  /// @brief Computes the initial state direction. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in] primal_step_size Primal step size.
+  /// @param[in] dual_step_size Dual step size.
+  /// @param[in] kkt_matrix KKT matrix. 
+  /// @param[in, out] d Direction. 
+  /// @param[in, out] s Solution. 
+  ///
   void integrateSolution(const aligned_vector<Robot>& robots,
                          const TimeDiscretization& time_discretization, 
                          const double primal_step_size,

@@ -12,6 +12,7 @@
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/sto/dwell_time_lower_bound.hpp"
+#include "robotoc/constraints/constraint_component_data.hpp"
 
 
 namespace robotoc {
@@ -222,6 +223,30 @@ public:
   /// @brief Returns reserved size of container of each discrete events.
   ///
   int reservedNumSwitches() const;
+
+
+
+
+  // ConstraintComponentData createConstraintsData(
+  //     const TimeDiscretization& time_discretization) const;
+
+  // void setSlackAndDual(const TimeDiscretization& time_discretization,
+  //                      ConstraintsData& data);
+
+  // void evalConstraint(const TimeDiscretization& time_discretization, 
+  //                     ConstraintsData& data) const;
+
+  // void linearizeConstraints(const TimeDiscretization& time_discretization, const std::shared_ptr<ContactSequence>& contact_sequence, 
+  //                           ConstraintsData& data, Eigen::VectorXd& lt) const;
+
+  // void condenseSlackAndDual(ConstraintsData& data, Eigen::VectorXd& lt,
+  //                           Eigen::MatrixXd& Qtt) const;
+
+  // void expandSlackAndDual(ConstraintsData& data, Eigen::VectorXd& dts) const;
+
+  // double maxSlackStepSize(const ConstraintsData& data) const;
+
+  // double maxDualStepSize(const ConstraintsData& data) const;
 
 private:
   std::vector<DwellTimeLowerBound> dtlb_;
