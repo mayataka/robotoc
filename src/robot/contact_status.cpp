@@ -4,8 +4,8 @@
 namespace robotoc {
 
 void ContactStatus::disp(std::ostream& os) const {
-  os << "ContactStatus:" << std::endl;
-  os << "  contact mode id: " << contact_mode_id_ << std::endl;
+  os << "ContactStatus:" << "\n";
+  os << "  contact mode id: " << contact_mode_id_ << "\n";
   os << "  active contacts: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     if (isContactActive(i)) {
@@ -15,29 +15,29 @@ void ContactStatus::disp(std::ostream& os) const {
   if (isContactActive(maxNumContacts()-1)) {
     os << maxNumContacts()-1;
   }
-  os << "]" << std::endl;
+  os << "]" << "\n";
   os << "  contact positions: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     os << "[" << contactPosition(i).transpose() << "], ";
   }
   os << "[" << contactPosition(maxNumContacts()-1).transpose() << "]";
-  os << "]" << std::endl;
+  os << "]" << "\n";
   os << "  contact surfaces rotations: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     os << "[" << contactRotation(i).row(0) << "]  ";
   }
-  os << "[" << contactRotation(maxNumContacts()-1).row(0) << "]" << std::endl;
+  os << "[" << contactRotation(maxNumContacts()-1).row(0) << "]" << "\n";
   os << "                               ";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     os << "[" << contactRotation(i).row(1) << "]  ";
   }
-  os << "[" << contactRotation(maxNumContacts()-1).row(1) << "]" << std::endl;
+  os << "[" << contactRotation(maxNumContacts()-1).row(1) << "]" << "\n";
   os << "                               ";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     os << "[" << contactRotation(i).row(2) << "], ";
   }
   os << "[" << contactRotation(maxNumContacts()-1).row(2) << "]";
-  os << "]" << std::endl;
+  os << "]" << "\n";
   os << "  friction coefficients: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     os << "[" << frictionCoefficient(i) << "], ";

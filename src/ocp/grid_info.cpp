@@ -50,21 +50,21 @@ void GridInfo::disp(std::ostream& os) const {
       break;
     }
   };
-  os << "GridInfo: " << std::endl;
-  os << "  type: " << gridTypeToString(type) << std::endl;
-  os << "  t0:      " << t0 << std::endl;
-  os << "  t:       " << t << std::endl;
-  os << "  dt:      " << dt << std::endl;
-  os << "  dt_next: " << dt_next << std::endl;
-  os << "  stage:   " << time_stage << std::endl;
-  os << "  phase:   " << contact_phase << std::endl;
-  os << "  impulse_index: " << impulse_index << std::endl;
-  os << "  lift_index:    " << lift_index << std::endl;
-  os << "  grid_count_in_phase: " << grid_count_in_phase << std::endl;
-  os << "  N_phase:             " << N_phase << std::endl;
-  os << "  sto:      " << std::boolalpha << sto << std::endl;
-  os << "  sto_next: " << std::boolalpha << sto_next << std::endl;
-  os << "  switching_constraint: " << std::boolalpha << switching_constraint << std::endl;
+  os << "GridInfo: " << "\n";
+  os << "  type: " << gridTypeToString(type) << "\n";
+  os << "  t0:      " << t0 << "\n";
+  os << "  t:       " << t << "\n";
+  os << "  dt:      " << dt << "\n";
+  os << "  dt_next: " << dt_next << "\n";
+  os << "  stage:   " << time_stage << "\n";
+  os << "  phase:   " << contact_phase << "\n";
+  os << "  impulse_index: " << impulse_index << "\n";
+  os << "  lift_index:    " << lift_index << "\n";
+  os << "  grid_count_in_phase: " << grid_count_in_phase << "\n";
+  os << "  N_phase:             " << N_phase << "\n";
+  os << "  sto:      " << std::boolalpha << sto << "\n";
+  os << "  sto_next: " << std::boolalpha << sto_next << "\n";
+  os << "  switching_constraint: " << std::boolalpha << switching_constraint << std::flush;
 }
 
 

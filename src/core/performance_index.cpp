@@ -43,11 +43,11 @@ bool PerformanceIndex::isApprox(const PerformanceIndex& other) const {
 
 
 void PerformanceIndex::disp(std::ostream& os) const {
-  os << "PerformanceIndex:" << std::endl;
-  os << "  cost               = " << cost << std::endl;
-  os << "  cost_barrier       = " << cost_barrier << std::endl;
-  os << "  primal_feasibility = " << primal_feasibility << std::endl;
-  os << "  dual_feasibility   = " << dual_feasibility << std::endl;
+  os << "PerformanceIndex:" << "\n";
+  os << "  cost               = " << cost << "\n";
+  os << "  cost_barrier       = " << cost_barrier << "\n";
+  os << "  primal_feasibility = " << primal_feasibility << "\n";
+  os << "  dual_feasibility   = " << dual_feasibility << "\n";
   os << "  kkt_error          = " << kkt_error << std::flush;
 }
 

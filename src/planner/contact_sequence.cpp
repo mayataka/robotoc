@@ -48,24 +48,24 @@ ContactSequence::~ContactSequence() {
 void ContactSequence::disp(std::ostream& os) const {
   int impulse_index = 0;
   int lift_index = 0;
-  os << "contact sequence:" << std::endl;
+  os << "contact sequence:" << "\n";
   for (int event_index=0; event_index<numDiscreteEvents(); ++event_index) {
-    os << "  contact phase: " << event_index << std::endl;
-    os << contactStatus(event_index) << std::endl;
+    os << "  contact phase: " << event_index << "\n";
+    os << contactStatus(event_index) << "\n";
     os << "  event index: " << event_index << ", type: ";
     if (eventType(event_index) == DiscreteEventType::Impulse) {
       os << "impulse, time: " << impulseTime(impulse_index) 
-         << ", sto: " << std::boolalpha << isSTOEnabledImpulse(impulse_index) <<  std::endl;
-      os << impulseStatus(impulse_index) << std::endl;
+         << ", sto: " << std::boolalpha << isSTOEnabledImpulse(impulse_index) <<  "\n";
+      os << impulseStatus(impulse_index) << "\n";
       ++impulse_index;
     }
     else {
       os << "lift, time: " << liftTime(lift_index) 
-         << ", sto: " << std::boolalpha << isSTOEnabledLift(lift_index) << std::endl;
+         << ", sto: " << std::boolalpha << isSTOEnabledLift(lift_index) << "\n";
       ++lift_index;
     }
   }
-  os << "  contact phase: " << numDiscreteEvents() << std::endl;
+  os << "  contact phase: " << numDiscreteEvents() << "\n";
   os << contactStatus(numDiscreteEvents()) << std::flush;
 }
 

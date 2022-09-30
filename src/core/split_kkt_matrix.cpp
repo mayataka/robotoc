@@ -200,22 +200,22 @@ SplitKKTMatrix SplitKKTMatrix::Random(const Robot& robot,
 
 void SplitKKTMatrix::disp(std::ostream& os) const {
   os << "SplitKKTMatrix:" << "\n";
-  os << "  Fxx = " << Fxx << "\n";
-  os << "  Fvu = " << Fvu << "\n";
+  os << "  Fxx = " << "\n" << Fxx << "\n";
+  os << "  Fvu = " << "\n" << Fvu << "\n"; 
   os << "  fx = " << fx.transpose() << "\n";
   if (dims() > 0) {
-    os << "  Phix = " << Phix() << "\n";
-    os << "  Phia = " << Phia() << "\n";
-    os << "  Phiu = " << Phiu() << "\n";
+    os << "  Phix = " << "\n" << Phix() << "\n";
+    os << "  Phia = " << "\n" << Phia() << "\n";
+    os << "  Phiu = " << "\n" << Phiu() << "\n";
     os << "  Phit = " << Phit().transpose() << "\n";
   }
-  os << "  Qxx = " << Qxx << "\n";
-  os << "  Qxu = " << Qxu << "\n";
-  os << "  Quu = " << Quu << "\n";
-  os << "  Qaa = " << Qaa << "\n";
+  os << "  Qxx = " << "\n" << Qxx << "\n";
+  os << "  Qxu = " << "\n" << Qxu << "\n";
+  os << "  Quu = " << "\n" << Quu << "\n";
+  os << "  Qaa = " << "\n" << Qaa << "\n";
   if (dimf() > 0) {
-    os << "  Qff = " << Qff() << "\n";
-    os << "  Qqf = " << Qqf() << "\n";
+    os << "  Qff = " << "\n" << Qff() << "\n";
+    os << "  Qqf = " << "\n" << Qqf() << "\n";
   }
   os << "  Qtt = " << Qtt << "\n";
   os << "  Qtt_prev = " << Qtt_prev << "\n";
