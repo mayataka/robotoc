@@ -27,12 +27,10 @@ public:
   ///
   /// @brief Construct a line search.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
-  /// @param[in] line_search_settings Line search settings.
+  /// @param[in] settings Line search settings.
   ///
   LineSearch(const OCPDef& ocp, 
-             const LineSearchSettings& line_search_settings=LineSearchSettings());
+             const LineSearchSettings& settings=LineSearchSettings());
 
   ///
   /// @brief Default constructor. 
@@ -66,9 +64,9 @@ public:
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
-  /// @param[in, out] ocp optimal control problem.
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] contact_sequence Shared ptr to the contact sequence. 
+  /// @param[in, out] dms Direct multiple shooting structure.
+  /// @param[in, out] robots aligned_vector of Robot for parallel computing.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
@@ -91,15 +89,16 @@ public:
   /// @return true if the filter is empty. false if not.
   ///
   bool isFilterEmpty() const;
-  
+
   ///
   /// @brief Set line search settings.
+  /// @param[in] settings Line search settings. 
   ///
   void set(const LineSearchSettings& settings);
 
   ///
   /// @brief Reserve the internal data. 
-  /// @param[in] ocp Optimal control problem.
+  /// @param[in] time_discretization Time discretization. 
   ///
   void reserve(const TimeDiscretization& time_discretization);
 

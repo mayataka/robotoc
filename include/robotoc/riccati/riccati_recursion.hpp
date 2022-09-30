@@ -85,7 +85,7 @@ public:
 
   ///
   /// @brief Performs the backward Riccati recursion. 
-  /// @param[in] ocp Optimal control problem.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
   /// @param[in, out] factorization Riccati factorization. 
@@ -96,11 +96,12 @@ public:
                                 RiccatiFactorization& factorization);
 
   ///
-  /// @brief Performs the forward Riccati recursion.
-  /// @param[in] ocp Optimal control problem.
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
-  /// @param[in, out] d Direction. d[0].dx is assumed to be computed. 
+  /// @param[in, out] factorization Riccati factorization. 
+  /// @param[in] d Direction. 
   ///
   void forwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
                                const KKTMatrix& kkt_matrix, 

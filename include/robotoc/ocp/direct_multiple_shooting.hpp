@@ -33,6 +33,7 @@ class DirectMultipleShooting {
 public:
   ///
   /// @brief Construct the direct multiple shooting method.
+  /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
@@ -121,7 +122,7 @@ public:
 
   ///
   /// @brief Computes the initial state direction. 
-  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] robot Robot model.
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
