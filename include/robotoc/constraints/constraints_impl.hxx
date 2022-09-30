@@ -71,6 +71,8 @@ inline void evalConstraint(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
+    data[i].residual.setZero();
+    data[i].cmpl.setZero();
     constraints[i]->evalConstraint(robot, contact_status, data[i], s);
   }
 }
@@ -86,6 +88,8 @@ inline void linearizeConstraints(
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
+    data[i].residual.setZero();
+    data[i].cmpl.setZero();
     constraints[i]->evalConstraint(robot, contact_status, data[i], s);
     constraints[i]->evalDerivatives(robot, contact_status, data[i], s, 
                                     kkt_residual);

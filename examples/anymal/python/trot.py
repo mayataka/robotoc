@@ -180,7 +180,8 @@ N = math.floor(T/dt)
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   contact_sequence=contact_sequence, T=T, N=N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+# solver_options.max_iter = 1
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=1)
 
 # Initial time and intial state 
 t = 0.
@@ -193,23 +194,29 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.init_constraints(t)
-print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
+print("Initial KKT error: ", math.sqrt(ocp_solver.KKT_error(t, q, v)))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
+# time_discretization = ocp_solver.get_time_discretization()
+# N_grids = time_discretization.N_grids()
+# for i in range(N_grids+1):
+#     print(time_discretization.getGrid()[i])
+
+
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
-disc = robotoc.TimeDiscretization(T, N, 10)
-disc.discretizeGrid(contact_sequence, t)
-disc.discretizePhase(contact_sequence, t)
-grids = disc.getGrid()
-for e in grids:
-    print(e)
+# disc = robotoc.TimeDiscretization(T, N, 10)
+# disc.discretizeGrid(contact_sequence, t)
+# disc.discretizePhase(contact_sequence, t)
+# grids = disc.getGrid()
+# for e in grids:
+#     print(e)
 
-viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
-viewer.set_contact_info(mu=mu)
-time_discretization = ocp_solver.get_time_discretization()
-viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
-               ocp_solver.get_solution('f', 'WORLD'))
+# viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
+# viewer.set_contact_info(mu=mu)
+# time_discretization = ocp_solver.get_time_discretization()
+# viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
+#                ocp_solver.get_solution('f', 'WORLD'))

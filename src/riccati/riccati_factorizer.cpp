@@ -356,6 +356,7 @@ void RiccatiFactorizer::computeCostateDirection(
 void RiccatiFactorizer::computeLagrangeMultiplierDirection(
     const SplitRiccatiFactorization& riccati, 
     SplitDirection& d, const bool sto, const bool has_next_sto_phase) {
+  d.setSwitchingConstraintDimension(riccati.dims());
   d.dxi().noalias()  = riccati.M() * d.dx;
   d.dxi().noalias() += riccati.m();
   if (sto) {

@@ -408,7 +408,7 @@ public:
   inline const GridInfo& grid(const int i) const {
     assert(i >= 0);
     assert(i <= N_+2*N_impulse_+N_lift_);
-    return grid_info_[i];
+    return grid_[i];
   }
 
   void discretizeGrid(const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
@@ -436,7 +436,6 @@ private:
   std::vector<DiscreteEventType> event_types_;
   DiscretizationMethod discretization_method_;
 
-  std::vector<GridInfo> grid_info_;
   int N_grids_;
 
   void countDiscreteEvents(

@@ -108,6 +108,7 @@ PYBIND11_MODULE(time_discretization, m) {
     .def("discretizePhase", &TimeDiscretization::discretizePhase,
           py::arg("contact_sequence"), py::arg("t")) 
     .def("getGrid", &TimeDiscretization::getGrid) 
+    .def("N_grids", &TimeDiscretization::N_grids) 
     .def("__str__", [](const TimeDiscretization& self) {
         std::stringstream ss;
         ss << self;

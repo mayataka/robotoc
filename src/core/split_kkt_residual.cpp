@@ -158,6 +158,7 @@ void SplitKKTResidual::disp(std::ostream& os) const {
   os << "  lv = " << lv().transpose() << std::endl;
   os << "  lu = " << lu.transpose() << std::endl;
   os << "  la = " << la.transpose() << std::endl;
+  os << "  ldv = " << ldv.transpose() << std::endl;
   if (dimf_ > 0) {
     os << "  lf = " << lf().transpose() << std::endl;
   }

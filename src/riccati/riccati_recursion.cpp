@@ -12,7 +12,7 @@ RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads,
   : nthreads_(nthreads),
     N_all_(ocp.N()+1),
     factorizer_(ocp.robot(), max_dts0),
-    lqr_policy_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    lqr_policy_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
     sto_policy_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, 
                 STOPolicy(ocp.robot())),
     factorization_m_(ocp.robot()),
@@ -346,7 +346,7 @@ const hybrid_container<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
 void RiccatiRecursion::backwardRiccatiRecursion(
     const TimeDiscretization& time_discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual, RiccatiFactorization& factorization) {
-  const int N = time_discretization.N();
+  const int N = time_discretization.N_grids();
   factorization[N].P = kkt_matrix[N].Qxx;
   factorization[N].s = - kkt_residual[N].lx;
   for (int i=N-1; i>=0; --i) {
@@ -395,8 +395,9 @@ void RiccatiRecursion::backwardRiccatiRecursion(
 
 void RiccatiRecursion::forwardRiccatiRecursion(
     const TimeDiscretization& time_discretization, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, Direction& d) const {
-  const int N = time_discretization.N();
+    const KKTResidual& kkt_residual, const RiccatiFactorization& factorization,
+    Direction& d) const {
+  const int N = time_discretization.N_grids();
   d[0].dts = 0.0;
   d[0].dts_next = 0.0;
   if (time_discretization.grid(0).sto) {
@@ -407,32 +408,42 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     const auto& grid = time_discretization.grid(i);
     if (grid.type == GridType::Impulse) {
       d[i].dts = d[i-1].dts_next;
+      d[i].dts_next = 0.0;
       if (grid.sto_next) {
         factorizer_.computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
       }
-      else {
-        d[i].dts_next = 0.0;
-      }
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], d[i], d[i+1]);
+      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], grid.sto);
     }
     else if (grid.type == GridType::Lift) {
       d[i].dts = d[i-1].dts_next;
+      d[i].dts_next = 0.0;
       if (grid.sto_next) {
         factorizer_.computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
-      }
-      else {
-        d[i].dts_next = 0.0;
       }
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], 
                                           lqr_policy_[i], d[i], d[i+1], 
                                           grid.sto, grid.sto_next);
+      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
+      if (grid.switching_constraint) {
+        RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization[i], d[i], 
+                                                              grid.sto, grid.sto_next);
+      }
     }
     else {
       factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
                                           lqr_policy_[i], d[i], d[i+1], 
                                           grid.sto, grid.sto_next);
+      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
+      if (grid.switching_constraint) {
+        RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization[i], d[i], 
+                                                              grid.sto, grid.sto_next);
+      }
     }
   }
+  constexpr bool sto = false; 
+  constexpr bool sto_next = false; 
+  RiccatiFactorizer::computeCostateDirection(factorization[N], d[N], sto, sto_next);
 }
 
 } // namespace robotoc

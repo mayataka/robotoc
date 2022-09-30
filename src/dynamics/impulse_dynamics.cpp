@@ -29,6 +29,9 @@ void linearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status,
   kkt_residual.lq().noalias() += data.dCdq().transpose() * s.mu_stack();
   kkt_residual.lv().noalias() += data.dCdv().transpose() * s.mu_stack();
   kkt_residual.ldv.noalias()  += data.dCdv().transpose() * s.mu_stack();
+  if (data.hasFloatingBase()) {
+    data.lu_passive.setZero();
+  }
 }
 
 

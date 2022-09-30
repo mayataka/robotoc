@@ -159,6 +159,7 @@ public:
   void forwardRiccatiRecursion(const TimeDiscretization& time_discretization, 
                                const KKTMatrix& kkt_matrix, 
                                const KKTResidual& kkt_residual, 
+                               const RiccatiFactorization& factorization,
                                Direction& d) const;
 
 private:

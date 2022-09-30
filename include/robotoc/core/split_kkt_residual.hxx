@@ -90,12 +90,16 @@ SplitKKTResidual::lf() const {
 inline double SplitKKTResidual::KKTError() const {
   double err = 0;
   err += Fx.squaredNorm();
-  err += P().squaredNorm();
+  if (P().size() > 0) {
+    err += P().squaredNorm();
+  }
   err += lx.squaredNorm();
   err += lu.squaredNorm();
   err += la.squaredNorm();
   err += ldv.squaredNorm();
-  err += lf().squaredNorm();
+  if (lf().size() > 0) {
+    err += lf().squaredNorm();
+  }
   return err;
 }
 
@@ -103,7 +107,7 @@ inline double SplitKKTResidual::KKTError() const {
 template <int p>
 inline double SplitKKTResidual::constraintViolation() const {
   double vio = Fx.template lpNorm<p>();
-  if (dims_ > 0) {
+  if (P().size() > 0) {
     vio += P().template lpNorm<p>();
   }
   return vio;
@@ -112,12 +116,16 @@ inline double SplitKKTResidual::constraintViolation() const {
 
 inline void SplitKKTResidual::setZero() {
   Fx.setZero();
-  P().setZero();
+  if (P().size() > 0) {
+    P().setZero();
+  }
   lx.setZero();
   la.setZero();
   ldv.setZero();
   lu.setZero();
-  lf().setZero();
+  if (lf().size() > 0) {
+    lf().setZero();
+  }
   h = 0.0;
   kkt_error = 0.0;
   cost = 0.0;

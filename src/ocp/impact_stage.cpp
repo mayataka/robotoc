@@ -155,7 +155,7 @@ void ImpactStage::updatePrimal(const Robot& robot, const double primal_step_size
                                OCPData& data) const {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  s.integrate(robot, primal_step_size, d);
+  s.integrate(robot, primal_step_size, d, true);
   constraints_->updateSlack(data.constraints_data, primal_step_size);
 }
 

@@ -249,6 +249,7 @@ public:
 private:
   aligned_vector<Robot> robots_;
   std::shared_ptr<ContactSequence> contact_sequence_;
+  TimeDiscretization time_discretization_;
   DirectMultipleShooting dms_;
   SwitchingTimeOptimization sto_;
   RiccatiRecursion riccati_recursion_;
