@@ -79,8 +79,14 @@ struct GridInfo {
   ///
   int N_phase = 0;
 
+  ///
+  /// @brief Flag if the STO is enabled in the current phase. 
+  ///
   bool sto = false;
 
+  ///
+  /// @brief Flag if the STO is enabled in the next phase. 
+  ///
   bool sto_next = false;
 
   ///

@@ -232,7 +232,7 @@ double UnconstrParNMPCSolver::KKTError(const double t, const Eigen::VectorXd& q,
 double UnconstrParNMPCSolver::KKTError() const {
   double kkt_error = 0;
   for (int i=0; i<N_; ++i) {
-    kkt_error += kkt_residual_[i].kkt_error;
+    kkt_error += kkt_residual_[i].KKTError();
   }
   return std::sqrt(kkt_error);
 }

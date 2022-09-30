@@ -169,21 +169,6 @@ public:
   double h;
 
   ///
-  /// @brief The squared norm of the KKT residual.
-  ///
-  double kkt_error;
-
-  ///
-  /// @brief The value of the stage cost.
-  ///
-  double cost;
-
-  ///
-  /// @brief Some norm of the constraint violation.
-  ///
-  double constraint_violation;
-
-  ///
   /// @brief Returns the squared norm of the KKT residual, that is, 
   /// the primal and dual residual. 
   /// @return The squared norm of the KKT residual.
@@ -201,26 +186,25 @@ public:
   template <int p=1>
   double constraintViolation() const;
 
+  ///
+  /// @brief Returns the lp norm of the primal feasibility, i.e., the constraint 
+  /// violation. Default norm is l1-norm. You can also specify l-infty norm by 
+  /// passing Eigen::Infinity as the template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the primal feasibility.
+  ///
   template <int p=1>
-  double primalFeasibility() const {
-    double feasibility = Fx.template lpNorm<p>();
-    if (dims_ > 0) {
-      feasibility += P().template lpNorm<p>();
-    }
-    return feasibility;
-  }
+  double primalFeasibility() const;
 
+  ///
+  /// @brief Returns the lp norm of the dual feasibility. Default norm is 
+  /// l1-norm. You can also specify l-infty norm by passing Eigen::Infinity as 
+  /// the template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the dual feasibility.
+  ///
   template <int p=1>
-  double dualFeasibility() const {
-    double feasibility = 0;
-    feasibility += lx.template lpNorm<p>();
-    feasibility += la.template lpNorm<p>();
-    feasibility += ldv.template lpNorm<p>();
-    if (lf().size() > 0)
-      feasibility += lf().template lpNorm<p>();
-    feasibility += lu.template lpNorm<p>();
-    return feasibility;
-  }
+  double dualFeasibility() const;
 
   ///
   /// @brief Sets the split KKT residual zero.

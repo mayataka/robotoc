@@ -15,11 +15,10 @@ PYBIND11_MODULE(split_kkt_residual, m) {
   py::class_<SplitKKTResidual>(m, "SplitKKTResidual")
     .def(py::init<const Robot&>())
     .def(py::init<>())
-    .def("set_contact_status", &SplitKKTResidual::setContactDimension,
+    .def("set_contact_dimension", &SplitKKTResidual::setContactDimension,
           py::arg("dimf"))
     .def("set_switching_constraint_dimension", &SplitKKTResidual::setSwitchingConstraintDimension,
           py::arg("dims"))
-    .def("is_dimension_consistent", &SplitKKTResidual::isDimensionConsistent)
     .def_readwrite("Fx", &SplitKKTResidual::Fx)
     .def_property("Fq", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitKKTResidual::*)() const>(&SplitKKTResidual::Fq),
                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitKKTResidual::*)()>(&SplitKKTResidual::Fq))
@@ -35,9 +34,10 @@ PYBIND11_MODULE(split_kkt_residual, m) {
     .def_readwrite("la", &SplitKKTResidual::la)
     .def_readwrite("lu", &SplitKKTResidual::lu)
     .def_readwrite("h", &SplitKKTResidual::h)
-    .def_readwrite("cost", &SplitKKTResidual::cost)
     .def_property("lf", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitKKTResidual::*)() const>(&SplitKKTResidual::lf),
                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitKKTResidual::*)()>(&SplitKKTResidual::lf))
+    .def("dimf", &SplitKKTResidual::dimf)
+    .def("dims", &SplitKKTResidual::dims)
     .def("__str__", [](const SplitKKTResidual& self) {
         std::stringstream ss;
         ss << self;

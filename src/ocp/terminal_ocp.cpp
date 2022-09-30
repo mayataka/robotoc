@@ -61,7 +61,6 @@ void TerminalOCP::computeKKTResidual(Robot& robot, const GridInfo& grid_info,
                                                 kkt_residual);
   linearizeTerminalStateEquation(robot, q_prev, s, data_.state_equation_data, 
                                  kkt_matrix, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual);
 }
 
 
@@ -77,7 +76,6 @@ void TerminalOCP::computeKKTSystem(Robot& robot, const GridInfo& grid_info,
                                                  kkt_residual, kkt_matrix);
   linearizeTerminalStateEquation(robot, q_prev, s, data_.state_equation_data, 
                                  kkt_matrix, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual);
   correctLinearizeTerminalStateEquation(data_.state_equation_data, kkt_matrix);
 }
 

@@ -22,16 +22,15 @@ namespace robotoc {
 
 ///
 /// @class TerminalStage 
-/// @brief An optimal control problem for Riccati recursion algorithm split
-/// into a terminal stage. 
+/// @brief Terminal stage computations for optimal control problems.
 ///
 class TerminalStage {
 public:
   ///
-  /// @brief Constructs a split optimal control problem.
-  /// @param[in] robot Robot model. 
+  /// @brief Constructs the impact stage.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] contact_sequence Shared ptr to the contact sequence.
   ///
   TerminalStage(const std::shared_ptr<CostFunction>& cost,
                 const std::shared_ptr<Constraints>& constraints,
@@ -68,51 +67,51 @@ public:
   TerminalStage& operator=(TerminalStage&&) noexcept = default;
 
   ///
-  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @brief Creates the data.
   /// @param[in] robot Robot model. 
   ///
   OCPData createData(const Robot& robot) const;
 
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] robot Robot model. 
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   bool isFeasible(Robot& robot, const GridInfo& grid_info,
                   const SplitSolution& s, OCPData& data) const;
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] time_stage Time stage.
-  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] robot Robot model. 
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   void initConstraints(Robot& robot, const GridInfo& grid_info, 
                        const SplitSolution& s, OCPData& data) const;
 
   ///
   /// @brief Computes the stage cost and constraint violation.
-  /// Used in the line search.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in, out] robot Robot model. 
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_residual KKT residual of this stage. 
   ///
   void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
                OCPData& data, SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the KKT residual of this time stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in] q_prev Configuration at the previous time stage.
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @brief Computes the KKT residual and matrix of this stage.
+  /// @param[in, out] robot Robot model. 
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in] q_prev Configuration at the previous stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_matrix KKT matrix of this stage. 
+  /// @param[in, out] kkt_residual KKT residual of this stage. 
   ///
   void evalKKT(Robot& robot, const GridInfo& grid_info, 
                const Eigen::VectorXd& q_prev, const SplitSolution& s, 
@@ -122,25 +121,25 @@ public:
   ///
   /// @brief Expands the condensed primal variables, i.e., computes the Newton 
   /// direction of the condensed primal variables of this stage.
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in, out] d Split direction of this time stage.
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] d Split direction of this stage.
   /// 
   void expandPrimal(const GridInfo& grid_info, OCPData& data, SplitDirection& d) const;
 
   ///
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
-  /// @param[in] grid_info Grid info of this time stage.
-  /// @param[in, out] d Split direction of this time stage.
-  /// @param[in] dts Direction of the switching time regarding of this time 
-  /// stage. 
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] d Split direction of this stage.
   /// 
-  void expandDual(const GridInfo& grid_info, OCPData& data, 
-                  SplitDirection& d) const;
+  void expandDual(const GridInfo& grid_info, OCPData& data, SplitDirection& d) const;
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
   /// the inequality constraints.
+  /// @param[in] data Data of this stage. 
   /// @return Maximum stap size of the primal variables that satisfies 
   /// the inequality constraints.
   ///
@@ -149,6 +148,7 @@ public:
   ///
   /// @brief Returns maximum stap size of the dual variables that satisfies 
   /// the inequality constraints.
+  /// @param[in] data Data of this stage. 
   /// @return Maximum stap size of the dual variables that satisfies 
   /// the inequality constraints.
   ///
@@ -160,13 +160,15 @@ public:
   /// @param[in] primal_step_size Primal step size. 
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const SplitDirection& d, SplitSolution& s, OCPData& data) const;
 
   ///
-  /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] dual_step_size Dula step size. 
+  /// @brief Updates dual variables of this stage.
+  /// @param[in] dual_step_size Dual step size. 
+  /// @param[in, out] data Data of this stage. 
   ///
   void updateDual(const double dual_step_size, OCPData& data) const;
 

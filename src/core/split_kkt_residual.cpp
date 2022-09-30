@@ -11,9 +11,6 @@ SplitKKTResidual::SplitKKTResidual(const Robot& robot)
     ldv(Eigen::VectorXd::Zero(robot.dimv())),
     lu(Eigen::VectorXd::Zero(robot.dimu())),
     h(0.0),
-    kkt_error(0.0),
-    cost(0.0),
-    constraint_violation(0.0),
     P_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -30,9 +27,6 @@ SplitKKTResidual::SplitKKTResidual()
     ldv(),
     lu(),
     h(0.0),
-    kkt_error(0.0),
-    cost(0.0),
-    constraint_violation(0.0),
     P_full_(),
     lf_full_(),
     dimv_(0), 
@@ -68,9 +62,9 @@ bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
     assert(dimf() == other.dimf());
     if (!lf().isApprox(other.lf())) return false;
   }
-  Eigen::VectorXd vec(4), other_vec(4);
-  vec << h, kkt_error, cost, constraint_violation;
-  other_vec << other.h, other.kkt_error, other.cost, other.constraint_violation;
+  Eigen::VectorXd vec(1), other_vec(1);
+  vec << h;
+  other_vec << other.h;
   if (!vec.isApprox(other_vec)) return false;
   return true;
 }
@@ -89,8 +83,8 @@ bool SplitKKTResidual::hasNaN() const {
   if (dimf() > 0) {
     if (lf().hasNaN()) return true;
   }
-  Eigen::VectorXd vec(4), other_vec(4);
-  vec << h, kkt_error, cost, constraint_violation;
+  Eigen::VectorXd vec(1);
+  vec << h;
   if (vec.hasNaN()) return true;
   return false;
 }
@@ -104,11 +98,8 @@ void SplitKKTResidual::setRandom() {
   ldv.setRandom();
   lu.setRandom();
   lf().setRandom();
-  const Eigen::VectorXd vec = Eigen::VectorXd::Random(4);
+  const Eigen::VectorXd vec = Eigen::VectorXd::Random(1);
   h = vec.coeff(0);
-  kkt_error = std::abs(vec.coeff(1));
-  cost = std::abs(vec.coeff(2));
-  constraint_violation = std::abs(vec.coeff(3));
 }
 
 
@@ -148,22 +139,21 @@ SplitKKTResidual SplitKKTResidual::Random(const Robot& robot,
 
 
 void SplitKKTResidual::disp(std::ostream& os) const {
-  os << "SplitKKTResidual:" << std::endl;
-  os << "  Fq = " << Fq().transpose() << std::endl;
-  os << "  Fv = " << Fv().transpose() << std::endl;
-  if (dims_ > 0) {
-    os << "  P = " << P().transpose() << std::endl;
+  os << "SplitKKTResidual:" << "\n";
+  os << "  Fq = " << Fq().transpose() << "\n";
+  os << "  Fv = " << Fv().transpose() << "\n";
+  if (dims() > 0) {
+    os << "  P = " << P().transpose() << "\n";
   }
-  os << "  lq = " << lq().transpose() << std::endl;
-  os << "  lv = " << lv().transpose() << std::endl;
-  os << "  lu = " << lu.transpose() << std::endl;
-  os << "  la = " << la.transpose() << std::endl;
-  os << "  ldv = " << ldv.transpose() << std::endl;
-  if (dimf_ > 0) {
-    os << "  lf = " << lf().transpose() << std::endl;
+  os << "  lq = " << lq().transpose() << "\n";
+  os << "  lv = " << lv().transpose() << "\n";
+  os << "  lu = " << lu.transpose() << "\n";
+  os << "  la = " << la.transpose() << "\n";
+  os << "  ldv = " << ldv.transpose() << "\n";
+  if (dimf() > 0) {
+    os << "  lf = " << lf().transpose() << "\n";
   }
-  os << "  h = " << h << std::endl;
-  os << "  kkt_error = " << kkt_error << std::flush;
+  os << "  h = " << h << "\n";
 }
 
 

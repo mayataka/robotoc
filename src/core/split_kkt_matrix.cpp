@@ -199,32 +199,32 @@ SplitKKTMatrix SplitKKTMatrix::Random(const Robot& robot,
 }
 
 void SplitKKTMatrix::disp(std::ostream& os) const {
-  os << "SplitKKTMatrix:" << std::endl;
-  os << "  Fxx = " << Fxx << std::endl;
-  os << "  Fvu = " << Fvu << std::endl;
-  os << "  fx = " << fx.transpose() << std::endl;
-  if (dims_ > 0) {
-    os << "  Phix = " << Phix() << std::endl;
-    os << "  Phia = " << Phia() << std::endl;
-    os << "  Phiu = " << Phiu() << std::endl;
-    os << "  Phit = " << Phit().transpose() << std::endl;
+  os << "SplitKKTMatrix:" << "\n";
+  os << "  Fxx = " << Fxx << "\n";
+  os << "  Fvu = " << Fvu << "\n";
+  os << "  fx = " << fx.transpose() << "\n";
+  if (dims() > 0) {
+    os << "  Phix = " << Phix() << "\n";
+    os << "  Phia = " << Phia() << "\n";
+    os << "  Phiu = " << Phiu() << "\n";
+    os << "  Phit = " << Phit().transpose() << "\n";
   }
-  os << "  Qxx = " << Qxx << std::endl;
-  os << "  Qxu = " << Qxu << std::endl;
-  os << "  Quu = " << Quu << std::endl;
-  os << "  Qaa = " << Qaa << std::endl;
-  if (dimf_ > 0) {
-    os << "  Qff = " << Qff() << std::endl;
-    os << "  Qqf = " << Qqf() << std::endl;
+  os << "  Qxx = " << Qxx << "\n";
+  os << "  Qxu = " << Qxu << "\n";
+  os << "  Quu = " << Quu << "\n";
+  os << "  Qaa = " << Qaa << "\n";
+  if (dimf() > 0) {
+    os << "  Qff = " << Qff() << "\n";
+    os << "  Qqf = " << Qqf() << "\n";
   }
-  os << "  Qtt = " << Qtt << std::endl;
-  os << "  Qtt_prev = " << Qtt_prev << std::endl;
-  os << "  hq = " << hq().transpose() << std::endl;
-  os << "  hv = " << hv().transpose() << std::endl;
-  os << "  hu = " << hu.transpose() << std::endl;
+  os << "  Qtt = " << Qtt << "\n";
+  os << "  Qtt_prev = " << Qtt_prev << "\n";
+  os << "  hq = " << hq().transpose() << "\n";
+  os << "  hv = " << hv().transpose() << "\n";
+  os << "  hu = " << hu.transpose() << "\n";
   os << "  ha = " << ha.transpose() << std::flush;
-  if (dimf_ > 0) {
-    os << std::endl;
+  if (dimf() > 0) {
+    os << "\n";
     os << "  hf = " << hf().transpose() << std::flush;
   }
 }

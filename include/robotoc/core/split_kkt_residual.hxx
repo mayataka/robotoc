@@ -106,11 +106,30 @@ inline double SplitKKTResidual::KKTError() const {
 
 template <int p>
 inline double SplitKKTResidual::constraintViolation() const {
-  double vio = Fx.template lpNorm<p>();
-  if (P().size() > 0) {
-    vio += P().template lpNorm<p>();
+  return primalFeasibility<p>();
+}
+
+
+template <int p=1>
+inline double SplitKKTResidual::primalFeasibility() const {
+  double feasibility = Fx.template lpNorm<p>();
+  if (dims_ > 0) {
+    feasibility += P().template lpNorm<p>();
   }
-  return vio;
+  return feasibility;
+}
+
+
+template <int p=1>
+inline double SplitKKTResidual::dualFeasibility() const {
+  double feasibility = 0;
+  feasibility += lx.template lpNorm<p>();
+  feasibility += la.template lpNorm<p>();
+  feasibility += ldv.template lpNorm<p>();
+  if (lf().size() > 0)
+    feasibility += lf().template lpNorm<p>();
+  feasibility += lu.template lpNorm<p>();
+  return feasibility;
 }
 
 
@@ -127,9 +146,6 @@ inline void SplitKKTResidual::setZero() {
     lf().setZero();
   }
   h = 0.0;
-  kkt_error = 0.0;
-  cost = 0.0;
-  constraint_violation = 0.0;
 }
 
 

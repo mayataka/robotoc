@@ -157,14 +157,14 @@ void SplitSolutionTest::test_isApprox(const Robot& robot,
   EXPECT_FALSE(s.lmd.isZero());
   EXPECT_FALSE(s.gmm.isZero());
   EXPECT_FALSE(s.beta.isZero());
-  if (s.hasActiveContacts()) {
+  if (s.dimf() > 0) {
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
   }
   if (robot.hasFloatingBase()) {
     EXPECT_FALSE(s.nu_passive.isZero());
   }
-  if (s.hasActiveImpulse()) {
+  if (s.dims() > 0) {
     EXPECT_FALSE(s.xi_stack().isZero());
   }
   auto s_ref = s;
@@ -207,7 +207,7 @@ void SplitSolutionTest::test_isApprox(const Robot& robot,
     s_ref.nu_passive.setRandom();
     EXPECT_TRUE(s.isApprox(s_ref));
   }
-  if (s.hasActiveContacts()) {
+  if (s.dimf() > 0) {
     s_ref.f_stack().setRandom();
     EXPECT_FALSE(s.isApprox(s_ref));
     s_ref.f_stack() = s.f_stack();
@@ -226,7 +226,7 @@ void SplitSolutionTest::test_isApprox(const Robot& robot,
     s_ref.set_mu_vector();
     EXPECT_TRUE(s.isApprox(s_ref));
   }
-  if (s.hasActiveImpulse()) {
+  if (s.dims() > 0) {
     s_ref.xi_stack().setRandom();
     EXPECT_FALSE(s.isApprox(s_ref));
     s_ref.xi_stack() = s.xi_stack();

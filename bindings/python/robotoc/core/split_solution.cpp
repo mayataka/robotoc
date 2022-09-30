@@ -19,6 +19,9 @@ PYBIND11_MODULE(split_solution, m) {
           static_cast<void (SplitSolution::*)(const ContactStatus&)>(&SplitSolution::setContactStatus),
           py::arg("contact_status"))
     .def("set_contact_status", 
+          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setContactStatus),
+          py::arg("contact_status"))
+    .def("set_contact_status", 
           static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setContactStatus),
           py::arg("other"))
     .def("set_switching_constraint_dimension", &SplitSolution::setSwitchingConstraintDimension,
@@ -29,8 +32,6 @@ PYBIND11_MODULE(split_solution, m) {
     .def("set_mu_vector", &SplitSolution::set_mu_vector)
     .def("dimf", &SplitSolution::dimf)
     .def("dims", &SplitSolution::dims)
-    .def("has_active_contacts", &SplitSolution::hasActiveContacts)
-    .def("has_active_impulse", &SplitSolution::hasActiveImpulse)
     .def("is_contact_active", 
           static_cast<bool (SplitSolution::*)(const int) const>(&SplitSolution::isContactActive),
           py::arg("contact_index"))
@@ -53,6 +54,8 @@ PYBIND11_MODULE(split_solution, m) {
                              static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitSolution::*)()>(&SplitSolution::mu_stack))
     .def_property("xi_stack", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitSolution::*)() const>(&SplitSolution::xi_stack),
                              static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitSolution::*)()>(&SplitSolution::xi_stack))
+    .def("dimf", &SplitSolution::dimf)
+    .def("dims", &SplitSolution::dims)
     .def("__str__", [](const SplitSolution& self) {
         std::stringstream ss;
         ss << self;

@@ -20,8 +20,6 @@ SplitSolution::SplitSolution(const Robot& robot)
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     xi_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
-    has_active_contacts_(false),
-    has_active_impulse_(false),
     contact_types_(robot.contactTypes()),
     is_contact_active_(robot.maxNumContacts(), false),
     dimf_(0),
@@ -49,8 +47,6 @@ SplitSolution::SplitSolution()
     mu_stack_(),
     xi_stack_(),
     has_floating_base_(false),
-    has_active_contacts_(false),
-    has_active_impulse_(false),
     contact_types_(),
     is_contact_active_(),
     dimf_(0),
@@ -81,13 +77,13 @@ void SplitSolution::integrate(const Robot& robot, const double step_size,
   if (has_floating_base_ && !impulse) {
     nu_passive.noalias() += step_size * d.dnu_passive;
   }
-  if (has_active_contacts_) {
+  if (dimf() > 0) {
     f_stack().noalias() += step_size * d.df();
     set_f_vector();
     mu_stack().noalias() += step_size * d.dmu();
     set_mu_vector();
   }
-  if (has_active_impulse_ && !impulse) {
+  if ((dims() > 0) && !impulse) {
     assert(xi_stack().size() == d.dxi().size());
     xi_stack().noalias() += step_size * d.dxi();
   }
@@ -121,7 +117,7 @@ void SplitSolution::copyDual(const SplitSolution& other) {
     mu[i] = other.mu[i];
   }
   set_mu_stack();
-  if (has_active_impulse_) {
+  if (dims() > 0) {
     xi_stack() = other.xi_stack();
   }
 }
@@ -168,7 +164,7 @@ bool SplitSolution::isApprox(const SplitSolution& other) const {
       return false;
     }
   }
-  if (has_active_contacts_) {
+  if (dimf() > 0) {
     if (!f_stack().isApprox(other.f_stack())) {
       return false;
     }
@@ -194,7 +190,7 @@ bool SplitSolution::isApprox(const SplitSolution& other) const {
       }
     }
   }
-  if (has_active_impulse_) {
+  if (dims() > 0) {
     if (!xi_stack().isApprox(other.xi_stack())) {
       return false;
     }
@@ -287,21 +283,21 @@ SplitSolution SplitSolution::Random(const Robot& robot,
 
 
 void SplitSolution::disp(std::ostream& os) const {
-  os << "SplitSolution:" << std::endl;
-  os << "  q = " << q.transpose() << std::endl;
-  os << "  v = " << v.transpose() << std::endl;
-  os << "  u = " << u.transpose() << std::endl;
-  os << "  a = " << a.transpose() << std::endl;
-  if (dimf_ > 0) {
-    os << "  f = " << f_stack().transpose() << std::endl;
+  os << "SplitSolution:" << "\n";
+  os << "  q = " << q.transpose() << "\n";
+  os << "  v = " << v.transpose() << "\n";
+  os << "  u = " << u.transpose() << "\n";
+  os << "  a = " << a.transpose() << "\n";
+  if (dimf() > 0) {
+    os << "  f = " << f_stack().transpose() << "\n";
   }
-  os << "  lmd = " << lmd.transpose() << std::endl;
-  os << "  gmm = " << gmm.transpose() << std::endl;
-  os << "  beta = " << beta.transpose() << std::endl;
-  if (dimf_ > 0) {
-    os << "  mu = " << mu_stack().transpose() << std::endl;
+  os << "  lmd = " << lmd.transpose() << "\n";
+  os << "  gmm = " << gmm.transpose() << "\n";
+  os << "  beta = " << beta.transpose() << "\n";
+  if (dimf() > 0) {
+    os << "  mu = " << mu_stack().transpose() << "\n";
   }
-  if (dims_ > 0) {
+  if (dims() > 0) {
     os << "  xi = " << xi_stack().transpose() << std::flush;
   }
 }

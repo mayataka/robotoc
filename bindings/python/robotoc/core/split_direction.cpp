@@ -15,11 +15,10 @@ PYBIND11_MODULE(split_direction, m) {
   py::class_<SplitDirection>(m, "SplitDirection")
     .def(py::init<const Robot&>())
     .def(py::init<>())
-    .def("set_contact_status", &SplitDirection::setContactDimension,
+    .def("set_contact_dimension", &SplitDirection::setContactDimension,
           py::arg("dimf"))
     .def("set_switching_constraint_dimension", &SplitDirection::setSwitchingConstraintDimension,
           py::arg("dims"))
-    .def("is_dimension_consistent", &SplitDirection::isDimensionConsistent)
     .def("dimf", &SplitDirection::dimf)
     .def("dims", &SplitDirection::dims)
     .def_readwrite("dx", &SplitDirection::dx)
@@ -34,6 +33,8 @@ PYBIND11_MODULE(split_direction, m) {
                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::daf))
     .def_property("da", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitDirection::*)() const>(&SplitDirection::da),
                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::da))
+    .def_property("ddv", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitDirection::*)() const>(&SplitDirection::ddv),
+                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::ddv))
     .def_property("df", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitDirection::*)() const>(&SplitDirection::df),
                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::df))
     .def_property("dlmd", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitDirection::*)() const>(&SplitDirection::dlmd),
@@ -48,6 +49,8 @@ PYBIND11_MODULE(split_direction, m) {
                          static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::dmu))
     .def_property("dxi", static_cast<const Eigen::VectorBlock<const Eigen::VectorXd> (SplitDirection::*)() const>(&SplitDirection::dxi),
                          static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::dxi))
+    .def("dimf", &SplitDirection::dimf)
+    .def("dims", &SplitDirection::dims)
     .def("__str__", [](const SplitDirection& self) {
         std::stringstream ss;
         ss << self;

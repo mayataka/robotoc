@@ -65,15 +65,15 @@ public:
 
   ///
   /// @brief Set contact status, i.e., set the dimension of the contacts.
-  /// @param[in] other Other split solution.
-  ///
-  void setContactStatus(const SplitSolution& other);
-
-  ///
-  /// @brief Set contact status, i.e., set the dimension of the contacts.
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ImpulseStatus& contact_status);
+
+  ///
+  /// @brief Set contact status, i.e., set the dimension of the contacts.
+  /// @param[in] other Other split solution.
+  ///
+  void setContactStatus(const SplitSolution& other);
 
   ///
   /// @brief Sets the dimension of the switching constraint.
@@ -219,19 +219,6 @@ public:
   int dims() const;
 
   ///
-  /// @brief Return true if there are active contacts and false if not.
-  /// @return true if there are active contacts and false if not. 
-  ///
-  bool hasActiveContacts() const;
-
-  ///
-  /// @brief Returns true if there are active impulse constraints and false if 
-  /// not.
-  /// @return true if there are active impulse constraints and false if not. 
-  ///
-  bool hasActiveImpulse() const;
-
-  ///
   /// @brief Return true if contact is active and false if not.
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return true if a contact is active and false if not. 
@@ -355,7 +342,7 @@ public:
 
 private:
   Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;
-  bool has_floating_base_, has_active_contacts_, has_active_impulse_;
+  bool has_floating_base_;
   std::vector<ContactType> contact_types_;
   std::vector<bool> is_contact_active_;
   int dimf_, dims_, max_num_contacts_;

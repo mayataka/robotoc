@@ -179,7 +179,7 @@ private:
     s.set_f_stack();
     s.set_mu_stack();
     s.setSwitchingConstraintDimension(s1.dims());
-    if (s.hasActiveImpulse()) {
+    if (s.dims() > 0) {
       s.xi_stack() = s1.xi_stack();
     }
   }
@@ -207,7 +207,7 @@ private:
     s.set_f_stack();
     s.set_mu_stack();
     s.setSwitchingConstraintDimension(s1.dims());
-    if (s.hasActiveImpulse()) {
+    if (s.dims() > 0) {
       s.xi_stack() = s1.xi_stack();
     }
   }

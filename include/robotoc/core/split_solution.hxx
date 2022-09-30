@@ -10,33 +10,29 @@ namespace robotoc {
 inline void SplitSolution::setContactStatus(
     const ContactStatus& contact_status) {
   assert(contact_status.maxNumContacts() == is_contact_active_.size());
-  has_active_contacts_ = contact_status.hasActiveContacts();
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
-}
-
-
-inline void SplitSolution::setContactStatus(const SplitSolution& other) {
-  assert(other.isContactActive().size() == is_contact_active_.size());
-  has_active_contacts_ = other.hasActiveContacts();
-  is_contact_active_ = other.isContactActive();
-  dimf_ = other.dimf();
 }
 
 
 inline void SplitSolution::setContactStatus(
     const ImpulseStatus& contact_status) {
   assert(contact_status.maxNumContacts() == is_contact_active_.size());
-  has_active_contacts_ = contact_status.hasActiveImpulse();
   is_contact_active_ = contact_status.isImpulseActive();
   dimf_ = contact_status.dimf();
+}
+
+
+inline void SplitSolution::setContactStatus(const SplitSolution& other) {
+  assert(other.isContactActive().size() == is_contact_active_.size());
+  is_contact_active_ = other.isContactActive();
+  dimf_ = other.dimf();
 }
 
 
 inline void SplitSolution::setSwitchingConstraintDimension(const int dims) {
   assert(dims >= 0);
   assert(dims <= xi_stack_.size());
-  has_active_impulse_ = (dims > 0);
   dims_ = std::max(dims, 0);
 }
 
@@ -165,16 +161,6 @@ inline int SplitSolution::dimf() const {
 
 inline int SplitSolution::dims() const {
   return dims_;
-}
-
-
-inline bool SplitSolution::hasActiveContacts() const {
-  return has_active_contacts_;
-}
-
-
-inline bool SplitSolution::hasActiveImpulse() const {
-  return has_active_impulse_;
 }
 
 

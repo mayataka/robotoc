@@ -73,7 +73,7 @@ void LineSearch::computeSolutionTrial(const Robot& robot, const SplitSolution& s
   else {
     s_trial.dv = s.dv + step_size * d.ddv();
   }
-  if (s.hasActiveContacts()) {
+  if (s.dimf() > 0) {
     s_trial.f_stack() = s.f_stack() + step_size * d.df();
     s_trial.set_f_vector();
   }

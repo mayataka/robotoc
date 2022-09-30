@@ -87,7 +87,7 @@ void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot,
   unconstr::stateequation::linearizeBackwardEuler(grid_info.dt, q_prev, v_prev, 
                                                   s, s_next, kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
+  // kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
 }
 
 
@@ -112,7 +112,7 @@ void SplitUnconstrParNMPC::computeKKTSystem(Robot& robot,
   unconstr::stateequation::linearizeBackwardEuler(grid_info.dt, q_prev, v_prev, 
                                                   s, s_next, kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
-  kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
+  // kkt_residual.kkt_error = KKTError(kkt_residual, grid_info.dt);
   constraints_->condenseSlackAndDual(contact_status_, constraints_data_, 
                                      kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
