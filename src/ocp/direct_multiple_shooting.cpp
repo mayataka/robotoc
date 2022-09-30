@@ -13,6 +13,7 @@ DirectMultipleShooting::DirectMultipleShooting(const OCPDef& ocp, const int nthr
     intermediate_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     impact_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     terminal_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
+    performance_index_(),
     max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+3*ocp.num_reserved_discrete_events)), 
     max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+3*ocp.num_reserved_discrete_events)),
     nthreads_(nthreads) {
@@ -28,6 +29,7 @@ DirectMultipleShooting::DirectMultipleShooting()
     intermediate_stage_(),
     impact_stage_(),
     terminal_stage_(),
+    performance_index_(),
     max_primal_step_sizes_(), 
     max_dual_step_sizes_(),
     nthreads_(0) {
@@ -111,6 +113,10 @@ void DirectMultipleShooting::evalOCP(
                                   ocp_data_[i], kkt_residual[i]);
     }
   }
+  performance_index_.setZero();
+  for (int i=0; i<=N; ++i) {
+    performance_index_ += ocp_data_[i].performance_index;
+  }
 }
 
 
@@ -140,6 +146,10 @@ void DirectMultipleShooting::evalKKT(
                                   ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
     }
   }
+  performance_index_.setZero();
+  for (int i=0; i<=N; ++i) {
+    performance_index_ += ocp_data_[i].performance_index;
+  }
 }
 
 
@@ -150,15 +160,8 @@ void DirectMultipleShooting::computeInitialStateDirection(
 }
 
 
-PerformanceIndex DirectMultipleShooting::getEval(
-    const TimeDiscretization& time_discretization) const {
-  const int N = time_discretization.N_grids();
-  assert(ocp_data_.size() >= N+1);
-  PerformanceIndex performance_index;
-  for (int i=0; i<=N; ++i) {
-    performance_index += ocp_data_[i].performance_index;
-  }
-  return performance_index;
+const PerformanceIndex& DirectMultipleShooting::getEval() const {
+  return performance_index_;
 }
 
 

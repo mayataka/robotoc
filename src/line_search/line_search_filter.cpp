@@ -21,10 +21,6 @@ LineSearchFilter::LineSearchFilter(const double cost_reduction_rate,
 }
 
 
-LineSearchFilter::~LineSearchFilter() {
-}
-
-
 bool LineSearchFilter::isAccepted(const double cost, 
                                   const double constraint_violation) {
   assert(constraint_violation >= 0);
@@ -67,12 +63,7 @@ void LineSearchFilter::clear() {
 
 
 bool LineSearchFilter::isEmpty() const {
-  if (filter_.empty()) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return filter_.empty();
 }
 
 } // namespace robotoc

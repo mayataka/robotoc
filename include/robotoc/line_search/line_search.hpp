@@ -7,13 +7,11 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
-#include "robotoc/cost/cost_function.hpp"
-#include "robotoc/constraints/constraints.hpp"
-#include "robotoc/planner/contact_sequence.hpp"
-#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/core/solution.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_residual.hpp"
+#include "robotoc/ocp/ocp_def.hpp"
+#include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
 
@@ -33,7 +31,7 @@ public:
   /// problem. Must be positive. Default is 1.
   /// @param[in] line_search_settings Line search settings.
   ///
-  LineSearch(const OCP& ocp, const int nthreads=1, 
+  LineSearch(const OCPDef& ocp, 
              const LineSearchSettings& line_search_settings=LineSearchSettings());
 
   ///
@@ -42,9 +40,9 @@ public:
   LineSearch();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~LineSearch();
+  ~LineSearch() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -78,8 +76,8 @@ public:
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
   double computeStepSize(
-      OCP& ocp, aligned_vector<Robot>& robots,
-      const std::shared_ptr<ContactSequence>& contact_sequence, 
+      DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
+      const TimeDiscretization& time_discretization,
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
       const Direction& d, const double max_primal_step_size);
 
@@ -103,14 +101,11 @@ public:
   /// @brief Reserve the internal data. 
   /// @param[in] ocp Optimal control problem.
   ///
-  void reserve(const OCP& ocp);
+  void reserve(const TimeDiscretization& time_discretization);
 
 private:
   LineSearchFilter filter_;
   LineSearchSettings settings_;
-  int nthreads_;
-  Eigen::VectorXd costs_, costs_impulse_, costs_aux_, costs_lift_, violations_, 
-                  violations_impulse_, violations_aux_, violations_lift_; 
   Solution s_trial_;
   KKTResidual kkt_residual_;
 
@@ -119,7 +114,8 @@ private:
       const std::shared_ptr<ContactSequence>& contact_sequence, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s);
 
-  void computeSolutionTrial(const OCP& ocp, const aligned_vector<Robot>& robots, 
+  void computeSolutionTrial(const aligned_vector<Robot>& robots, 
+                            const TimeDiscretization& time_discretization,
                             const Solution& s, const Direction& d, 
                             const double step_size);
 
@@ -144,49 +140,24 @@ private:
     }
   }
 
-  void clearCosts() {
-    costs_.setZero();
-    costs_impulse_.setZero();
-    costs_aux_.setZero();
-    costs_lift_.setZero();
-  }
-
-  void clearViolations() {
-    violations_.setZero();
-    violations_impulse_.setZero();
-    violations_aux_.setZero();
-    violations_lift_.setZero();
-  }
-
-  double totalCosts() const {
-    return (costs_.sum()+costs_impulse_.sum()+costs_aux_.sum()
-            +costs_lift_.sum());
-  }
-
-  double totalViolations() const {
-    return (violations_.sum()+violations_impulse_.sum()+violations_aux_.sum()
-            +violations_lift_.sum());
-  }
-
   double lineSearchFilterMethod(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Direction& d, const double initial_primal_step_size);
+      DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
+      const TimeDiscretization& time_discretization,
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+      const Direction& d, const double max_primal_step_size);
 
   double meritBacktrackingLineSearch(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Direction& d, const double initial_primal_step_size);
+      DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
+      const TimeDiscretization& time_discretization,
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+      const Direction& d, const double max_primal_step_size);
 
   bool armijoCond(const double merit_now, const double merit_next, 
                   const double dd, const double step_size, 
                   const double armijo_control_rate) const;
 
-  double merit(const double penalty_param) const;
-
-  double penaltyParam(const OCP& ocp, const Solution& s) const;
+  double penaltyParam(const TimeDiscretization time_discretization, 
+                      const Solution& s) const;
 
 };
 

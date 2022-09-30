@@ -53,6 +53,8 @@ struct PerformanceIndex {
   ///
   bool isApprox(const PerformanceIndex& other) const;
 
+  void setZero();
+
   ///
   /// @brief Displays the performance index onto a ostream.
   ///

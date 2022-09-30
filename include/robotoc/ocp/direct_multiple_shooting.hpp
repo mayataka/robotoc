@@ -129,7 +129,7 @@ public:
                                     const Eigen::VectorXd& v0, 
                                     const Solution& s, Direction& d) const;
 
-  PerformanceIndex getEval(const TimeDiscretization& time_discretization) const;
+  const PerformanceIndex& getEval() const;
 
   void computeStepSizes(const TimeDiscretization& time_discretization,
                         Direction& d);
@@ -151,6 +151,7 @@ private:
   IntermediateStage intermediate_stage_;
   ImpactStage impact_stage_;
   TerminalStage terminal_stage_;
+  PerformanceIndex performance_index_; 
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 };
 

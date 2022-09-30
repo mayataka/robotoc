@@ -32,7 +32,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
     time_discretization_(ocp.T(), ocp.N(), ocp.reservedNumDiscreteEvents()),
     sto_(ocp),
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
-    line_search_(ocp, nthreads),
+    line_search_(createOCPDef(ocp)),
     ocp_(ocp),
     riccati_factorization_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
     kkt_matrix_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
@@ -520,17 +520,17 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
 
 
 double OCPSolver::KKTError() const {
-  return dms_.getEval(time_discretization_).kkt_error;
+  return dms_.getEval().kkt_error;
 }
 
 
 double OCPSolver::cost(const bool include_cost_barrier) const {
   if (include_cost_barrier) {
-    const auto eval = dms_.getEval(time_discretization_);
+    const auto& eval = dms_.getEval();
     return eval.cost + eval.cost_barrier;
   }
   else {
-    return dms_.getEval(time_discretization_).cost;
+    return dms_.getEval().cost;
   }
 }
 
@@ -562,13 +562,14 @@ void OCPSolver::reserveData() {
   d_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
   riccati_factorization_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
   riccati_recursion_.reserve(ocp_);
-  line_search_.reserve(ocp_);
+  line_search_.reserve(time_discretization_);
 
-  kkt_matrix_.data.resize(ocp_.N()+1+3*ocp_.reservedNumDiscreteEvents());
-  kkt_residual_.data.resize(ocp_.N()+1+3*ocp_.reservedNumDiscreteEvents());
-  s_.data.resize(ocp_.N()+1+3*ocp_.reservedNumDiscreteEvents());
-  d_.data.resize(ocp_.N()+1+3*ocp_.reservedNumDiscreteEvents());
-  riccati_factorization_.data.resize(ocp_.N()+1+3*ocp_.reservedNumDiscreteEvents());
+  const int size = time_discretization_.N_grids() + 1;
+  kkt_matrix_.data.resize(size);
+  kkt_residual_.data.resize(size);
+  s_.data.resize(size);
+  d_.data.resize(size);
+  riccati_factorization_.data.resize(size);
 }
 
 
