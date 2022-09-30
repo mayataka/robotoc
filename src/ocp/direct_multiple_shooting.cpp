@@ -13,11 +13,11 @@ DirectMultipleShooting::DirectMultipleShooting(const OCPDef& ocp, const int nthr
     intermediate_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     impact_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     terminal_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
-    max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.num_reserved_discrete_events)), 
-    max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.num_reserved_discrete_events)),
+    max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+3*ocp.num_reserved_discrete_events)), 
+    max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+3*ocp.num_reserved_discrete_events)),
     nthreads_(nthreads) {
-  ocp_data_.resize(ocp.N+1+ocp.num_reserved_discrete_events);
-  for (int i=0; i<=ocp.N+ocp.num_reserved_discrete_events; ++i) {
+  ocp_data_.resize(ocp.N+1+3*ocp.num_reserved_discrete_events);
+  for (int i=0; i<=ocp.N+3*ocp.num_reserved_discrete_events; ++i) {
     ocp_data_[i] = intermediate_stage_.createData(ocp.robot);
   }
 }

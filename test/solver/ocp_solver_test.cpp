@@ -103,9 +103,9 @@ TEST_F(OCPSolverTest, test) {
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
   const std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
-                                                       robot.framePosition(LH_foot_id),
-                                                       robot.framePosition(RF_foot_id),
-                                                       robot.framePosition(RH_foot_id)};
+                                                          robot.framePosition(LH_foot_id),
+                                                          robot.framePosition(RF_foot_id),
+                                                          robot.framePosition(RH_foot_id)};
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->init(contact_status_standing);
 
@@ -131,7 +131,6 @@ TEST_F(OCPSolverTest, test) {
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, 0.2);
 
-  ocp_solver.initConstraints(t);
   ocp_solver.solve(t, q, v);
   const auto result = ocp_solver.getSolverStatistics();
   EXPECT_TRUE(result.convergence);

@@ -118,7 +118,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
   d[0].dts_next = 0.0;
   if (time_discretization.grid(0).sto) {
     constexpr bool sto_prev = false;
-    factorizer_.computeSwitchingTimeDirection(sto_policy_[0], d[0], sto_prev);
+    ::robotoc::computeSwitchingTimeDirection(sto_policy_[0], d[0], sto_prev);
   }
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization.grid(i);
@@ -126,40 +126,36 @@ void RiccatiRecursion::forwardRiccatiRecursion(
       d[i].dts = d[i-1].dts_next;
       d[i].dts_next = 0.0;
       if (grid.sto_next) {
-        factorizer_.computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
+        ::robotoc::computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
       }
-      factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], d[i], d[i+1]);
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], grid.sto);
+      ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], d[i], d[i+1]);
+      ::robotoc::computeCostateDirection(factorization[i], d[i], grid.sto);
     }
     else if (grid.type == GridType::Lift) {
       d[i].dts = d[i-1].dts_next;
       d[i].dts_next = 0.0;
       if (grid.sto_next) {
-        factorizer_.computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
+        ::robotoc::computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
       }
-      factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], 
-                                          lqr_policy_[i], d[i], d[i+1], 
-                                          grid.sto, grid.sto_next);
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
+      ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], lqr_policy_[i], 
+                                         d[i], d[i+1], grid.sto, grid.sto_next);
+      ::robotoc::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
       if (grid.switching_constraint) {
-        RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization[i], d[i], 
-                                                              grid.sto, grid.sto_next);
+        ::robotoc::computeLagrangeMultiplierDirection(factorization[i], d[i], grid.sto, grid.sto_next);
       }
     }
     else {
-      factorizer_.forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  
-                                          lqr_policy_[i], d[i], d[i+1], 
-                                          grid.sto, grid.sto_next);
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
+      ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  lqr_policy_[i], 
+                                         d[i], d[i+1], grid.sto, grid.sto_next);
+      ::robotoc::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
       if (grid.switching_constraint) {
-        RiccatiFactorizer::computeLagrangeMultiplierDirection(factorization[i], d[i], 
-                                                              grid.sto, grid.sto_next);
+        ::robotoc::computeLagrangeMultiplierDirection(factorization[i], d[i], grid.sto, grid.sto_next);
       }
     }
   }
   constexpr bool sto = false; 
   constexpr bool sto_next = false; 
-  RiccatiFactorizer::computeCostateDirection(factorization[N], d[N], sto, sto_next);
+  ::robotoc::computeCostateDirection(factorization[N], d[N], sto, sto_next);
 }
 
 
