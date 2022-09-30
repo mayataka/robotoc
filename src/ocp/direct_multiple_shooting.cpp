@@ -300,7 +300,6 @@ void DirectMultipleShooting::initConstraints(
   while (ocp_data_.size() < N+1) {
     ocp_data_.push_back(ocp_data_.back());
   }
-  std::vector<bool> is_feasible(N, true);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     const auto& grid = time_discretization.grid(i);
@@ -325,7 +324,7 @@ bool DirectMultipleShooting::isFeasible(
     const Solution& s) {
   const int N = time_discretization.N();
   assert(ocp_data_.size() >= N+1);
-  std::vector<bool> is_feasible(N, true);
+  std::vector<bool> is_feasible(N+1, true);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     const auto& grid = time_discretization.grid(i);
