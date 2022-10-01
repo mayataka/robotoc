@@ -96,26 +96,6 @@ void SwitchingTimeOptimization::computeDirection(const OCP& ocp,
 }
 
 
-// double SwitchingTimeOptimization::maxPrimalStepSize() const {
-//   if (is_sto_enabled_) {
-//     return sto_constraints_->maxPrimalStepSize();
-//   }
-//   else {
-//     return 1.0;
-//   }
-// }
-
-
-// double SwitchingTimeOptimization::maxDualStepSize() const {
-//   if (is_sto_enabled_) {
-//     return sto_constraints_->maxDualStepSize();
-//   }
-//   else {
-//     return 1.0;
-//   }
-// }
-
-
 double SwitchingTimeOptimization::KKTError() const {
   return kkt_error_;
 }
@@ -295,11 +275,7 @@ void SwitchingTimeOptimization::computeStepSizes(
   int event_index = 0;
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization.grid(i);
-    if (grid.type == GridType::Impulse) {
-      dts_.coeffRef(event_index) = d[i+1].dts;
-      ++event_index;
-    }
-    else if (grid.type == GridType::Lift) {
+    if (grid.type == GridType::Impulse || grid.type == GridType::Lift) {
       dts_.coeffRef(event_index) = d[i].dts;
       ++event_index;
     }
@@ -310,8 +286,8 @@ void SwitchingTimeOptimization::computeStepSizes(
 
 
 double SwitchingTimeOptimization::maxPrimalStepSize() const {
-  if (dts_.size() > 0) {
-    return sto_constraints_->maxPrimalStepSize();
+  if (is_sto_enabled_) {
+    return sto_constraints_->maxSlackStepSize(constraint_data_);
   }
   else {
     return 1.0;
@@ -320,8 +296,8 @@ double SwitchingTimeOptimization::maxPrimalStepSize() const {
 
 
 double SwitchingTimeOptimization::maxDualStepSize() const {
-  if (dts_.size() > 0) {
-    return sto_constraints_->maxDualStepSize();
+  if (is_sto_enabled_) {
+    return sto_constraints_->maxDualStepSize(constraint_data_);
   }
   else {
     return 1.0;
@@ -343,12 +319,12 @@ void SwitchingTimeOptimization::integrateSolution(
     if (grid.type == GridType::Impulse) {
       const int impulse_index = grid.impulse_index;
       const double ts = contact_sequence_->impulseTime(impulse_index) 
-                          + primal_step_size * d[i+1].dts;
+                          + primal_step_size * d[i].dts;
       contact_sequence_->setImpulseTime(impulse_index, ts);
     }
     else if (grid.type == GridType::Lift) {
       const int lift_index = grid.lift_index;
-      const double ts = contact_sequence_->impulseTime(lift_index)  
+      const double ts = contact_sequence_->liftTime(lift_index)  
                           + primal_step_size * d[i].dts;
       contact_sequence_->setLiftTime(lift_index, ts);
     }

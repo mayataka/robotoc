@@ -158,9 +158,6 @@ void RiccatiFactorizer::backwardRiccatiRecursionPhaseTransition(
   if (has_next_sto_phase) {
     double sgm = riccati.xi - 2.0 * riccati.chi + riccati.rho;
     if ((sgm*max_dts0_) < std::abs(riccati.eta-riccati.iota) || sgm < eps_) {
-      // std::cout << "sgm reg ! sgm = " << sgm << std::endl;
-      // std::cout << "sgm * max_dts0_ = " << sgm*max_dts0_ << std::endl;
-      // std::cout << "std::abs(riccati.eta-riccati.iota) = " << std::abs(riccati.eta-riccati.iota) << std::endl;
       sgm = std::abs(sgm) + std::abs(riccati.eta-riccati.iota) / max_dts0_;
     }
     sto_policy.dtsdx  = - (1.0/sgm) * (riccati.Psi-riccati.Phi);
@@ -208,16 +205,16 @@ void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix,
   d.du.noalias()  = lqr_policy.K * d.dx;
   d.du.noalias() += lqr_policy.k;
   if (sto) {
-      d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
-      if (has_next_sto_phase) {
+    d.du.noalias() += lqr_policy.T * (d.dts_next-d.dts);
+    if (has_next_sto_phase) {
       d.du.noalias() -= lqr_policy.W * d.dts_next;
-      }
+    }
   }
   d_next.dx = kkt_residual.Fx;
   d_next.dx.noalias()   += kkt_matrix.Fxx * d.dx;
   d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
   if (sto) {
-      d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
+    d_next.dx.noalias() += kkt_matrix.fx * (d.dts_next-d.dts);
   }
   d_next.dts = d.dts;
   d_next.dts_next = d.dts_next;

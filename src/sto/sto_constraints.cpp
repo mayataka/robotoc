@@ -604,9 +604,8 @@ void STOConstraints::setSlackAndDual(
 
   data.resize(num_phases);
   data.slack = - (minimum_dwell_times_ - data.r[0]);
-  // pdipm::setSlackAndDualPositive(barrier_, data);
   for (int i=0; i<data.slack.size(); ++i) {
-    if (data.slack.coeff(i) < 0.0) {
+    if (data.slack.coeff(i) <= 0.0) {
       data.slack.coeffRef(i) = std::sqrt(barrier_);
     }
   }
@@ -618,6 +617,7 @@ void STOConstraints::evalConstraint(
     const TimeDiscretization& time_discretization, 
     ConstraintComponentData& data) const {
   computeDwellTimes(time_discretization, data.r[0]);
+
   data.residual = minimum_dwell_times_ - data.r[0] + data.slack;
   pdipm::computeComplementarySlackness(barrier_, data);
   data.log_barrier = pdipm::logBarrier(barrier_, data.slack);
@@ -651,7 +651,7 @@ void STOConstraints::expandSlackAndDual(ConstraintComponentData& data,
 
 
 double STOConstraints::maxSlackStepSize(const ConstraintComponentData& data) const {
-  return pdipm::fractionToBoundaryDual(fraction_to_boundary_rule_, data);
+  return pdipm::fractionToBoundarySlack(fraction_to_boundary_rule_, data);
 }
 
 

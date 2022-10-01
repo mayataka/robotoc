@@ -89,7 +89,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
+  if ((solver_options_.discretization_method == DiscretizationMethod::PhaseBased)
+       || ocp_.isSTOEnabled()) {
     time_discretization_.discretizePhase(contact_sequence_, t);
   }
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
@@ -513,7 +514,7 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
 
 
 double OCPSolver::KKTError() const {
-  return dms_.getEval().kkt_error + sto_.getEval().kkt_error;
+  return std::sqrt(dms_.getEval().kkt_error + sto_.getEval().kkt_error);
 }
 
 

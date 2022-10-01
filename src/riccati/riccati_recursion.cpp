@@ -81,10 +81,10 @@ void RiccatiRecursion::backwardRiccatiRecursion(
                                              grid.sto);
       }
     }
-    else if (grid.type == GridType::Lift) {
-      if (time_discretization.grid(i-1).sto || grid.sto) {
+    else if (time_discretization.grid(i+1).type == GridType::Lift) {
+      if (grid.sto || grid.sto_next) {
         factorizer_.backwardRiccatiRecursionPhaseTransition(
-            factorization[i+1], factorization_m_, sto_policy_[i], grid.sto_next);
+            factorization[i+1], factorization_m_, sto_policy_[i+1], grid.sto_next);
         factorizer_.backwardRiccatiRecursion(factorization_m_, kkt_matrix[i], 
                                              kkt_residual[i], factorization[i],
                                              lqr_policy_[i], grid.sto, grid.sto_next);
@@ -125,10 +125,14 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     if (grid.type == GridType::Impulse) {
       d[i].dts = d[i-1].dts_next;
       d[i].dts_next = 0.0;
-      if (grid.sto_next) {
-        ::robotoc::computeSwitchingTimeDirection(sto_policy_[i], d[i], grid.sto);
-      }
       ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], d[i], d[i+1]);
+      if (grid.sto_next) {
+        d[i+1].dts = d[i-1].dts_next;
+        d[i+1].dts_next = 0.0;
+        ::robotoc::computeSwitchingTimeDirection(sto_policy_[i], d[i+1], grid.sto);
+        d[i].dts = d[i+1].dts;
+        d[i].dts_next = d[i+1].dts_next;
+      }
       ::robotoc::computeCostateDirection(factorization[i], d[i], grid.sto);
     }
     else if (grid.type == GridType::Lift) {
@@ -140,17 +144,14 @@ void RiccatiRecursion::forwardRiccatiRecursion(
       ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], lqr_policy_[i], 
                                          d[i], d[i+1], grid.sto, grid.sto_next);
       ::robotoc::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
-      if (grid.switching_constraint) {
-        ::robotoc::computeLagrangeMultiplierDirection(factorization[i], d[i], grid.sto, grid.sto_next);
-      }
     }
     else {
       ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i],  lqr_policy_[i], 
                                          d[i], d[i+1], grid.sto, grid.sto_next);
       ::robotoc::computeCostateDirection(factorization[i], d[i], grid.sto, grid.sto_next);
-      if (grid.switching_constraint) {
-        ::robotoc::computeLagrangeMultiplierDirection(factorization[i], d[i], grid.sto, grid.sto_next);
-      }
+    }
+    if (grid.switching_constraint) {
+      ::robotoc::computeLagrangeMultiplierDirection(factorization[i], d[i], grid.sto, grid.sto_next);
     }
   }
   constexpr bool sto = false; 

@@ -93,14 +93,14 @@ contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
-contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
+contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3-0.05, sto=True)
 
 contact_positions['LF_FOOT'] += jump_length
 contact_positions['LH_FOOT'] += jump_length
 contact_positions['RF_FOOT'] += jump_length
 contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time+0.05, sto=True)
 
 # you can check the contact sequence via 
 # print(contact_sequence)
@@ -122,7 +122,7 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-solver_options.max_iter = 100
+solver_options.max_iter = 40
 solver_options.discretization_method = robotoc.DiscretizationMethod.PhaseBased
 ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
@@ -140,9 +140,8 @@ ocp_solver.mesh_refinement(t)
 ocp_solver.init_constraints(t)
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
-# print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
-
 
 # time_discretization = ocp_solver.get_time_discretization()
 # N_grids = time_discretization.N_grids()
