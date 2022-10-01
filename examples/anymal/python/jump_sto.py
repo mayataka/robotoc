@@ -100,7 +100,7 @@ contact_positions['LH_FOOT'] += jump_length
 contact_positions['RF_FOOT'] += jump_length
 contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
 
 # you can check the contact sequence via 
 # print(contact_sequence)
@@ -122,7 +122,8 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-solver_options.max_iter = 200
+solver_options.max_iter = 100
+solver_options.discretization_method = robotoc.DiscretizationMethod.PhaseBased
 ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
@@ -136,29 +137,37 @@ f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
 ocp_solver.mesh_refinement(t)
+ocp_solver.init_constraints(t)
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
-print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
+# print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
 
-# Plot results
-kkt_data = ocp_solver.get_solver_statistics().kkt_error + [ocp_solver.KKT_error()] # append KKT after convergence
-ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
+# time_discretization = ocp_solver.get_time_discretization()
+# N_grids = time_discretization.N_grids()
+# for i in range(N_grids+1):
+#     print(time_discretization.getGrid()[i])
 
-plot_ts = robotoc.utils.PlotConvergence()
-plot_ts.ylim = [0., 1.5]
-plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto', 
-             save_dir='jump_sto_log')
 
-plot_f = robotoc.utils.PlotContactForce(mu=mu)
-plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
-            t=ocp_solver.get_time_discretization().time_points(), 
-            fig_name='jump_sto_f', save_dir='jump_sto_log')
 
-# Display results
-viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
-viewer.set_contact_info(mu=mu)
-time_discretization = ocp_solver.get_time_discretization()
-viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
-               ocp_solver.get_solution('f', 'WORLD'))
+# # Plot results
+# kkt_data = ocp_solver.get_solver_statistics().kkt_error + [ocp_solver.KKT_error()] # append KKT after convergence
+# ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
+
+# plot_ts = robotoc.utils.PlotConvergence()
+# plot_ts.ylim = [0., 1.5]
+# plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto', 
+#              save_dir='jump_sto_log')
+
+# plot_f = robotoc.utils.PlotContactForce(mu=mu)
+# plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+#             t=ocp_solver.get_time_discretization().time_points(), 
+#             fig_name='jump_sto_f', save_dir='jump_sto_log')
+
+# # Display results
+# viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
+# viewer.set_contact_info(mu=mu)
+# time_discretization = ocp_solver.get_time_discretization()
+# viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
+#                ocp_solver.get_solution('f', 'WORLD'))

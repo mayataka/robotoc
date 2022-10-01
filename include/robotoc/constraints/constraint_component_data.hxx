@@ -72,6 +72,18 @@ inline double ConstraintComponentData::constraintViolation() const {
 }
 
 
+inline void ConstraintComponentData::resize(const int dimc) {
+  assert(dimc >= 0);
+  slack.conservativeResize(dimc);
+  dual.conservativeResize(dimc);
+  residual.resize(dimc);
+  cmpl.resize(dimc);
+  dslack.resize(dimc);
+  ddual.resize(dimc);
+  cond.resize(dimc);
+}
+
+
 inline int ConstraintComponentData::dimc() const {
   return dimc_;
 }

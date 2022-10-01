@@ -160,6 +160,12 @@ public:
   double complementarityResidual() const;
 
   ///
+  /// @brief Resizes the constraint. 
+  /// @param[in] dimc The new size. 
+  ///
+  void resize(const int dimc);
+
+  ///
   /// @brief Dimension of the constraint. 
   /// @return Dimension of the constraint. 
   ///

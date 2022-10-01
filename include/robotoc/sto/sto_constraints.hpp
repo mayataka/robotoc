@@ -227,33 +227,54 @@ public:
 
 
 
-  // ConstraintComponentData createConstraintsData(
-  //     const TimeDiscretization& time_discretization) const;
+  ConstraintComponentData createConstraintsData(
+      const TimeDiscretization& time_discretization) const;
 
-  // void setSlackAndDual(const TimeDiscretization& time_discretization,
-  //                      ConstraintsData& data);
+  bool isFeasible(const TimeDiscretization& time_discretization,
+                  ConstraintComponentData& data) const;
 
-  // void evalConstraint(const TimeDiscretization& time_discretization, 
-  //                     ConstraintsData& data) const;
+  void setSlackAndDual(const TimeDiscretization& time_discretization,
+                       ConstraintComponentData& data) const;
 
-  // void linearizeConstraints(const TimeDiscretization& time_discretization, const std::shared_ptr<ContactSequence>& contact_sequence, 
-  //                           ConstraintsData& data, Eigen::VectorXd& lt) const;
+  void evalConstraint(const TimeDiscretization& time_discretization, 
+                      ConstraintComponentData& data) const;
 
-  // void condenseSlackAndDual(ConstraintsData& data, Eigen::VectorXd& lt,
-  //                           Eigen::MatrixXd& Qtt) const;
+  void linearizeConstraints(const TimeDiscretization& time_discretization, 
+                            ConstraintComponentData& data, 
+                            Eigen::VectorXd& lt) const;
 
-  // void expandSlackAndDual(ConstraintsData& data, Eigen::VectorXd& dts) const;
+  void condenseSlackAndDual(ConstraintComponentData& data, Eigen::VectorXd& lt,
+                            Eigen::MatrixXd& Qtt) const;
 
-  // double maxSlackStepSize(const ConstraintsData& data) const;
+  void expandSlackAndDual(ConstraintComponentData& data, Eigen::VectorXd& dts) const;
 
-  // double maxDualStepSize(const ConstraintsData& data) const;
+  double maxSlackStepSize(const ConstraintComponentData& data) const;
+
+  double maxDualStepSize(const ConstraintComponentData& data) const;
+
+  ///
+  /// @brief Updates the slack variable according to the step size.
+  /// @param[in] step_size Step size. 
+  ///
+  void updateSlack(ConstraintComponentData& data, const double step_size) const;
+
+  ///
+  /// @brief Updates the dual variable according to the step size.
+  /// @param[in] step_size Step size. 
+  ///
+  void updateDual(ConstraintComponentData& data, const double step_size) const;
+
+  static void computeDwellTimes(const TimeDiscretization& time_discretization,
+                                Eigen::VectorXd& dwell_times);
 
 private:
   std::vector<DwellTimeLowerBound> dtlb_;
   std::vector<double> min_dt_;
   double barrier_, fraction_to_boundary_rule_, eps_;
   int reserved_num_switches_, num_switches_;
+
   Eigen::VectorXd primal_step_size_, dual_step_size_;
+  Eigen::VectorXd minimum_dwell_times_;
 
 };
 

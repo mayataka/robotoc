@@ -103,17 +103,17 @@ public:
   ///
   void computeDirection(const OCP& ocp, const Direction& d);
 
-  ///
-  /// @brief Returns max primal step size.
-  /// @return max primal step size.
-  /// 
-  double maxPrimalStepSize() const;
+  // ///
+  // /// @brief Returns max primal step size.
+  // /// @return max primal step size.
+  // /// 
+  // double maxPrimalStepSize() const;
 
-  ///
-  /// @brief Returns max dual step size.
-  /// @return max dual step size.
-  /// 
-  double maxDualStepSize() const;
+  // ///
+  // /// @brief Returns max dual step size.
+  // /// @return max dual step size.
+  // /// 
+  // double maxDualStepSize() const;
 
   ///
   /// @brief Returns the l2-norm of the KKT residual of STO problem.
@@ -148,16 +148,90 @@ public:
                          const double dual_step_size,
                          const Direction& d) const;
 
+
+
+
+  ///
+  /// @brief Initializes the priaml-dual interior point method for inequality 
+  /// constraints. 
+  /// @param[in] time_discretization Time discretization. 
+  ///
+  void initConstraints(const TimeDiscretization& time_discretization);
+
+  ///
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in] time_discretization Time discretization. 
+  ///
+  bool isFeasible(const TimeDiscretization& time_discretization);
+
+  ///
+  /// @brief Computes the cost and constraint violations. 
+  /// @param[in] time_discretization Time discretization. 
+  ///
+  void evalSTO(const TimeDiscretization& time_discretization);
+
+  ///
+  /// @brief Computes the KKT residual and matrix. 
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
+  ///
+  void evalKKT(const TimeDiscretization& time_discretization, 
+               KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+
+  ///
+  /// @brief Gets the performance index of the evaluation. 
+  /// @return const reference to the performance index.
+  ///
+  const PerformanceIndex& getEval() const;
+
+  ///
+  /// @brief Computes the step sizes via the fraction-to-boundary-rule.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in, out] d Direction. 
+  ///
+  void computeStepSizes(const TimeDiscretization& time_discretization,
+                        Direction& d);
+
+  ///
+  /// @brief Gets the maximum primal step size of the fraction-to-boundary-rule.
+  /// @return The primal step size of the fraction-to-boundary-rule.
+  ///
+  double maxPrimalStepSize() const;
+
+  ///
+  /// @brief Gets the maximum dual step size of the fraction-to-boundary-rule.
+  /// @return The dual step size of the fraction-to-boundary-rule.
+  ///
+  double maxDualStepSize() const;
+
+  ///
+  /// @brief Computes the initial state direction. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in] primal_step_size Primal step size.
+  /// @param[in] dual_step_size Dual step size.
+  /// @param[in] kkt_matrix KKT matrix. 
+  /// @param[in, out] d Direction. 
+  /// @param[in, out] s Solution. 
+  ///
+  void integrateSolution(const TimeDiscretization& time_discretization, 
+                         const double primal_step_size,
+                         const double dual_step_size, const Direction& d);
+
 private:
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
+  std::shared_ptr<ContactSequence> contact_sequence_;
   double sto_reg_, kkt_error_, cost_val_;
   Eigen::VectorXd h_phase_;
   int reserved_num_switches_;
   bool is_sto_enabled_;
 
-  Eigen::VectorXd lt_;
-  Eigen::VectorXd Qtt_;
+  PerformanceIndex performance_index_;
+  Eigen::VectorXd lt_, h_, dts_;
+  Eigen::MatrixXd Qtt_;
+  ConstraintComponentData constraint_data_;
 };
 
 } // namespace robotoc
