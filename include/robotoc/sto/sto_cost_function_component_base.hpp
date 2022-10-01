@@ -60,20 +60,20 @@ public:
   /// @brief Computes the derivative of the cost on the switching times. 
   /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
-  /// @param[out] lts Derivative of the cost w.r.t. the switching times.
+  /// @param[out] lt Derivative of the cost w.r.t. the switching times.
   ///
   virtual void evalCostDerivatives(const TimeDiscretization& time_discretization,
-                                   Eigen::VectorXd& lts) const = 0;
+                                   Eigen::VectorXd& lt) const = 0;
 
   ///
   /// @brief Computes the twice-time derivative (Hessian) of the cost on the 
   /// switching times. 
   /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
-  /// @param[out] Qts Hessian of the cost w.r.t. the switching times.
+  /// @param[out] Qtt Hessian of the cost w.r.t. the switching times.
   ///
   virtual void evalCostHessian(const TimeDiscretization& time_discretization,
-                               Eigen::MatrixXd& Qts) const = 0;
+                               Eigen::MatrixXd& Qtt) const = 0;
 
 };
 

@@ -31,9 +31,9 @@ public:
   STOCostFunction();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~STOCostFunction();
+  ~STOCostFunction() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -73,43 +73,29 @@ public:
   /// control problem.
   /// @return Cost on the switching times.
   ///
-  double evalCost(const TimeDiscretization& time_discretization);
+  double evalCost(const TimeDiscretization& time_discretization) const;
 
   ///
-  /// @brief Computes the cost on the switching times and its first-order 
-  /// partial derivatives. 
+  /// @brief Computes the cost and its derivative on the switching times. 
   /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
-  /// @param[in, out] kkt_residual KKT residual. The partial derivatives 
-  /// are added to this object.
-  /// @return Cost on the switching times.
+  /// @param[out] lt Derivative of the cost w.r.t. the switching times.
   ///
   double linearizeCost(const TimeDiscretization& time_discretization,
-                       KKTResidual& kkt_residual); 
+                       Eigen::VectorXd& lt) const;
 
   ///
-  /// @brief Computes the cost, its first-order partial derivatives, and 
-  /// its Hessian, i.e., its second-order partial derivatives. 
+  /// @brief Computes the cost and its derivative on the switching times. 
   /// @param[in] time_discretization Time discretization of the hybrid optimal 
   /// control problem.
-  /// @param[out] kkt_matrix KKT matrix.
-  /// @param[out] kkt_residual KKT residual.
-  /// @return Cost on the switching times.
+  /// @param[out] lt Derivative of the cost w.r.t. the switching times.
+  /// @param[out] Qtt Hessian of the cost w.r.t. the switching times.
   ///
   double quadratizeCost(const TimeDiscretization& time_discretization,
-                        KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+                        Eigen::VectorXd& lt, Eigen::MatrixXd& Qtt) const;
 
 private:
   std::vector<STOCostFunctionComponentBasePtr> costs_;
-  Eigen::VectorXd lts_;
-  Eigen::MatrixXd Qts_;
-
-  void setToKKT(const TimeDiscretization& time_discretization,
-                KKTResidual& kkt_residual);
-
-  void setToKKT(const TimeDiscretization& time_discretization,
-                KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
-
 };
 
 } // namespace robotoc

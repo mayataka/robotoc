@@ -57,6 +57,7 @@ void SwitchingTimeOptimization::evalSTO(
     const TimeDiscretization& time_discretization) {
   if (!is_sto_enabled_) return;
 
+  performance_index_.cost = sto_cost_->evalCost(time_discretization);
   sto_constraints_->evalConstraint(time_discretization, constraint_data_);
   performance_index_.cost_barrier = constraint_data_.log_barrier;
   performance_index_.primal_feasibility = constraint_data_.primalFeasibility();
@@ -75,8 +76,8 @@ void SwitchingTimeOptimization::evalKKT(
   lt_.setZero(num_discrete_events);
   Qtt_.setZero(num_discrete_events, num_discrete_events);
   Qtt_.diagonal().fill(sto_reg_);
-  sto_constraints_->linearizeConstraints(time_discretization, 
-                                         constraint_data_, lt_);
+  performance_index_.cost = sto_cost_->quadratizeCost(time_discretization, lt_, Qtt_);
+  sto_constraints_->linearizeConstraints(time_discretization, constraint_data_, lt_);
   performance_index_.cost_barrier = constraint_data_.log_barrier;
   performance_index_.primal_feasibility = constraint_data_.primalFeasibility();
   performance_index_.dual_feasibility = constraint_data_.dualFeasibility();
