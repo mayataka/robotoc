@@ -11,7 +11,6 @@
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/direction.hpp"
-#include "robotoc/sto/dwell_time_lower_bound.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
 
 
@@ -60,9 +59,9 @@ public:
   STOConstraints();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~STOConstraints();
+  ~STOConstraints() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -83,87 +82,6 @@ public:
   /// @brief Default move assign operator. 
   ///
   STOConstraints& operator=(STOConstraints&&) noexcept = default;
-
-  ///
-  /// @brief Sets the slack variables. 
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  ///
-  void setSlack(const TimeDiscretization& time_discretization);
-
-  ///
-  /// @brief Computes the primal residual, residual in the complementary 
-  /// slackness, and the log-barrier function of the slack varible.
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  ///
-  void evalConstraint(const TimeDiscretization& time_discretization);
-
-  ///
-  /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
-  /// the products of the Jacobian of the constraints and Lagrange multipliers.
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  /// @param[out] kkt_residual KKT residual.
-  ///
-  void linearizeConstraints(const TimeDiscretization& time_discretization,
-                            KKTResidual& kkt_residual); 
-
-  ///
-  /// @brief Linearizes the constraints (i.e., calls linearizeConstraints())
-  /// and condense the slack and dual variables.
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  /// @param[out] kkt_matrix KKT matrix.
-  /// @param[out] kkt_residual KKT residual.
-  ///
-  void condenseSlackAndDual(const TimeDiscretization& time_discretization,
-                            KKTMatrix& kkt_matrix, 
-                            KKTResidual& kkt_residual);
-
-  ///
-  /// @brief Expands the slack and dual, i.e., computes the directions of the 
-  /// slack and dual variables from the directions of the primal variables.
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  /// @param[in] d Newton direction.
-  ///
-  void expandSlackAndDual(const TimeDiscretization& time_discretization, 
-                          const Direction& d); 
-
-  ///
-  /// @brief Computes and returns the maximum step size by applying 
-  /// fraction-to-boundary-rule to the direction of the slack variable.
-  /// @return Maximum step size regarding the slack variable.
-  ///
-  double maxPrimalStepSize() const;
-
-  ///
-  /// @brief Computes and returns the maximum step size by applying 
-  /// fraction-to-boundary-rule to the direction of the dual variable.
-  /// @param[in] data Constraint data. 
-  /// @return Maximum step size regarding the dual variable.
-  ///
-  double maxDualStepSize() const;
-
-  ///
-  /// @brief Updates the slack variable according to the step size.
-  /// @param[in] step_size Step size. 
-  ///
-  void updateSlack(const double step_size);
-
-  ///
-  /// @brief Updates the dual variable according to the step size.
-  /// @param[in] step_size Step size. 
-  ///
-  void updateDual(const double step_size);
-
-  ///
-  /// @brief Returns the sum of the squared norm of the KKT error 
-  /// (primal residual and complementary slackness) of all the constraints. 
-  /// @return KKT error. 
-  ///
-  double KKTError() const;
 
   ///
   /// @brief Sets the minimum dwell times. 
@@ -213,20 +131,6 @@ public:
   ///
   double getFractionToBoundaryRule() const;
 
-  ///
-  /// @brief Reserves the number of switches to avoid dynamic memory allocation.
-  /// @param[in] reserved_num_switches The reserved size.
-  ///
-  void reserve(const int reserved_num_switches);
-
-  ///
-  /// @brief Returns reserved size of container of each discrete events.
-  ///
-  int reservedNumSwitches() const;
-
-
-
-
   ConstraintComponentData createConstraintsData(
       const TimeDiscretization& time_discretization) const;
 
@@ -268,7 +172,6 @@ public:
                                 Eigen::VectorXd& dwell_times);
 
 private:
-  std::vector<DwellTimeLowerBound> dtlb_;
   std::vector<double> min_dt_;
   double barrier_, fraction_to_boundary_rule_, eps_;
   int reserved_num_switches_, num_switches_;

@@ -208,7 +208,7 @@ const Solution& OCPSolver::getSolution() const {
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= time_discretization_.N());
+  assert(stage <= time_discretization_.N_grids());
   return s_[stage];
 }
 
@@ -217,47 +217,27 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name, const std::string& option) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<=time_discretization_.N_grids(); ++i) {
+      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
       sol.push_back(s_[i].q);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].q);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].q);
-      }
     }
   }
   else if (name == "v") {
-    for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<=time_discretization_.N_grids(); ++i) {
+      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
       sol.push_back(s_[i].v);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].v);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].v);
-      }
     }
   }
   else if (name == "a") {
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<time_discretization_.N_grids(); ++i) {
+      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
       sol.push_back(s_[i].a);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].a);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].a);
-      }
     }
   }
   else if (name == "f" && option == "WORLD") {
     Robot robot = robots_[0];
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<time_discretization_.N_grids(); ++i) {
+      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       robot.updateFrameKinematics(s_[i].q);
       for (int j=0; j<robot.maxNumContacts(); ++j) {
@@ -268,39 +248,12 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         }
       }
       sol.push_back(f);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        robot.updateFrameKinematics(s_.aux[impulse_index].q);
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.aux[impulse_index].isContactActive(j)) {
-            const int contact_frame = robot.contactFrames()[j];
-            robot.transformFromLocalToWorld(contact_frame, 
-                                            s_.aux[impulse_index].f[j].template head<3>(),
-                                            f.template segment<3>(3*j));
-          }
-        }
-        sol.push_back(f);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        robot.updateFrameKinematics(s_.lift[lift_index].q);
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.lift[lift_index].isContactActive(j)) {
-            const int contact_frame = robot.contactFrames()[j];
-            robot.transformFromLocalToWorld(contact_frame, 
-                                            s_.lift[lift_index].f[j].template head<3>(), 
-                                            f.template segment<3>(3*j));
-          }
-        }
-        sol.push_back(f);
-      }
     }
   }
   else if (name == "f") {
     Robot robot = robots_[0];
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<time_discretization_.N_grids(); ++i) {
+      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       for (int j=0; j<robot.maxNumContacts(); ++j) {
         if (s_[i].isContactActive(j)) {
@@ -308,57 +261,13 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
         }
       }
       sol.push_back(f);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.aux[impulse_index].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_.aux[impulse_index].f[j].template head<3>();
-          }
-        }
-        sol.push_back(f);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.lift[lift_index].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_.lift[lift_index].f[j].template head<3>();
-          }
-        }
-        sol.push_back(f);
-      }
     }
   }
   else if (name == "u") {
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<time_discretization_.N_grids(); ++i) {
+      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
       sol.push_back(s_[i].u);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].u);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].u);
-      }
     }
-  }
-  else if (name == "ts") {
-    const int num_events = ocp_.timeDiscretization().N_impulse()+ocp_.timeDiscretization().N_lift();
-    int impulse_index = 0;
-    int lift_index = 0;
-    Eigen::VectorXd ts(num_events);
-    for (int event_index=0; event_index<num_events; ++event_index) {
-      if (ocp_.timeDiscretization().eventType(event_index) == DiscreteEventType::Impulse) {
-        ts.coeffRef(event_index) = contact_sequence_->impulseTime(impulse_index);
-        ++impulse_index;
-      }
-      else {
-        ts.coeffRef(event_index) = contact_sequence_->liftTime(lift_index);
-        ++lift_index;
-      }
-    }
-    sol.push_back(ts);
   }
   return sol;
 }
@@ -376,24 +285,9 @@ const RiccatiFactorization& OCPSolver::getRiccatiFactorization() const {
 
 void OCPSolver::setSolution(const Solution& s) {
   assert(s.data.size() == s_.data.size());
-  assert(s.lift.size() == s_.lift.size());
-  assert(s.aux.size() == s_.aux.size());
-  assert(s.impulse.size() == s_.impulse.size());
   if (s.data.size() != s_.data.size()) {
     throw std::out_of_range(
         "[OCPSolver] invalid argument: s.data.size() must be " + std::to_string(s_.data.size()) + "!");
-  }
-  if (s.lift.size() != s_.lift.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.lift.size() must be " + std::to_string(s_.lift.size()) + "!");
-  }
-  if (s.aux.size() != s_.aux.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.aux.size() must be " + std::to_string(s_.aux.size()) + "!");
-  }
-  if (s.impulse.size() != s_.impulse.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.impulse.size() must be " + std::to_string(s_.impulse.size()) + "!");
   }
   s_ = s;
 }
@@ -407,9 +301,6 @@ void OCPSolver::setSolution(const std::string& name,
           "[OCPSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
     }
     for (auto& e : s_.data)    { e.q = value; }
-    for (auto& e : s_.impulse) { e.q = value; }
-    for (auto& e : s_.aux)     { e.q = value; }
-    for (auto& e : s_.lift)    { e.q = value; }
   }
   else if (name == "v") {
     if (value.size() != robots_[0].dimv()) {
@@ -417,9 +308,6 @@ void OCPSolver::setSolution(const std::string& name,
           "[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
     for (auto& e : s_.data)    { e.v = value; }
-    for (auto& e : s_.impulse) { e.v = value; }
-    for (auto& e : s_.aux)     { e.v = value; }
-    for (auto& e : s_.lift)    { e.v = value; }
   }
   else if (name == "a") {
     if (value.size() != robots_[0].dimv()) {
@@ -427,9 +315,6 @@ void OCPSolver::setSolution(const std::string& name,
           "[OCPSolver] invalid argument: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
     for (auto& e : s_.data)    { e.a  = value; }
-    for (auto& e : s_.impulse) { e.dv = value; }
-    for (auto& e : s_.aux)     { e.a  = value; }
-    for (auto& e : s_.lift)    { e.a  = value; }
   }
   else if (name == "f") {
     if (value.size() == 6) {
@@ -437,42 +322,9 @@ void OCPSolver::setSolution(const std::string& name,
         for (auto& ef : e.f) { ef = value.template head<6>(); } 
         e.set_f_stack(); 
       }
-      for (auto& e : s_.aux) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.lift) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
     }
     else if (value.size() == 3) {
       for (auto& e : s_.data) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.aux) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.lift) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-    }
-    else {
-      throw std::out_of_range("[OCPSolver] invalid argument: f.size() must be 3 or 6!");
-    }
-  }
-  else if (name == "lmd") {
-    if (value.size() != 6) {
-      for (auto& e : s_.impulse) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
-    }
-    else if (value.size() != 3) {
-      for (auto& e : s_.impulse) { 
         for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
         e.set_f_stack(); 
       }
@@ -487,8 +339,6 @@ void OCPSolver::setSolution(const std::string& name,
           "[OCPSolver] invalid argument: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
     }
     for (auto& e : s_.data)    { e.u = value; }
-    for (auto& e : s_.aux)     { e.u = value; }
-    for (auto& e : s_.lift)    { e.u = value; }
   }
   else {
     throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, f, or u!");

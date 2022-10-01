@@ -29,10 +29,7 @@ PYBIND11_MODULE(sto_constraints, m) {
     .def("set_fraction_to_boundary_rule", &STOConstraints::setFractionToBoundaryRule,
           py::arg("fraction_to_boundary_rule"))
     .def("get_barrier_param", &STOConstraints::getBarrierParam)
-    .def("get_fraction_to_boundary_rule", &STOConstraints::getFractionToBoundaryRule)
-    .def("reserve", &STOConstraints::reserve,
-         py::arg("reserved_num_switches"))
-    .def("reserved_num_switches", &STOConstraints::reservedNumSwitches);
+    .def("get_fraction_to_boundary_rule", &STOConstraints::getFractionToBoundaryRule);
 }
 
 } // namespace python
