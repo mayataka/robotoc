@@ -12,7 +12,6 @@
 #include "robotoc/core/solution.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_residual.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/unconstr/unconstr_parnmpc.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
 

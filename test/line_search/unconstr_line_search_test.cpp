@@ -6,7 +6,6 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/unconstr/unconstr_parnmpc.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
