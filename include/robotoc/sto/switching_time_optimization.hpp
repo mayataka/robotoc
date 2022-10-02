@@ -6,6 +6,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/ocp/ocp.hpp"
+#include "robotoc/core/performance_index.hpp"
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/planner/contact_sequence.hpp"
@@ -136,11 +137,8 @@ private:
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
   std::shared_ptr<ContactSequence> contact_sequence_;
-  double sto_reg_, kkt_error_, cost_val_;
-  Eigen::VectorXd h_phase_;
-  int reserved_num_switches_;
+  double sto_reg_;
   bool is_sto_enabled_;
-
   PerformanceIndex performance_index_;
   Eigen::VectorXd lt_, h_, dts_;
   Eigen::MatrixXd Qtt_;

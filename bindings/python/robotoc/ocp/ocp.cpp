@@ -16,27 +16,28 @@ PYBIND11_MODULE(ocp, m) {
                   const std::shared_ptr<STOCostFunction>&, 
                   const std::shared_ptr<STOConstraints>&, 
                   const std::shared_ptr<ContactSequence>&, 
-                  const double, const int>(),
+                  const double, const int, const int>(),
           py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
           py::arg("sto_cost"), py::arg("sto_constraints"),  
-          py::arg("contact_sequence"), py::arg("T"), py::arg("N"))
+          py::arg("contact_sequence"), py::arg("T"), py::arg("N"), 
+          py::arg("reserved_num_discrete_events")=0)
     .def(py::init<const Robot&, const std::shared_ptr<CostFunction>&,
                   const std::shared_ptr<Constraints>&, 
                   const std::shared_ptr<ContactSequence>&, 
-                  const double, const int>(),
+                  const double, const int, const int>(),
           py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
-          py::arg("contact_sequence"), py::arg("T"), py::arg("N"))
+          py::arg("contact_sequence"), py::arg("T"), py::arg("N"),
+          py::arg("reserved_num_discrete_events")=0)
     .def(py::init<>())
-    .def("robot", &OCP::robot)
-    .def("cost", &OCP::cost)
-    .def("constraints", &OCP::constraints)
-    .def("sto_cost", &OCP::sto_cost)
-    .def("sto_constraints", &OCP::sto_constraints)
-    .def("contact_sequence", &OCP::contact_sequence)
-    .def("T", &OCP::T)
-    .def("N", &OCP::N)
-    .def("reserved_num_discrete_events", &OCP::reservedNumDiscreteEvents)
-    .def("is_sto_enabled", &OCP::isSTOEnabled)
+    .def_readwrite("robot", &OCP::robot)
+    .def_readwrite("cost", &OCP::cost)
+    .def_readwrite("constraints", &OCP::constraints)
+    .def_readwrite("sto_cost", &OCP::sto_cost)
+    .def_readwrite("sto_constraints", &OCP::sto_constraints)
+    .def_readwrite("contact_sequence", &OCP::contact_sequence)
+    .def_readwrite("T", &OCP::T)
+    .def_readwrite("N", &OCP::N)
+    .def_readwrite("reserved_num_discrete_events", &OCP::reserved_num_discrete_events)
     .def("__str__", [](const OCP& self) {
         std::stringstream ss;
         ss << self;

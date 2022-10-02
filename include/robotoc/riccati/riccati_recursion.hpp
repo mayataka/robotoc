@@ -78,12 +78,6 @@ public:
   void setRegularization(const double max_dts0);
 
   ///
-  /// @brief Reserve the internal data. 
-  /// @param[in] ocp Optimal control problem.
-  ///
-  void reserve(const OCP& ocp);
-
-  ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] time_discretization Time discretization. 
   /// @param[in, out] kkt_matrix KKT matrix. 
@@ -115,13 +109,17 @@ public:
   ///
   const aligned_vector<LQRPolicy>& getLQRPolicy() const;
 
+  ///
+  /// @brief Resizes the internal data. 
+  /// @param[in] time_discretization Time discretization. 
+  ///
+  void resizeData(const TimeDiscretization& time_discretization);
+
 private:
-  int nthreads_, N_all_;
   RiccatiFactorizer factorizer_;
   aligned_vector<LQRPolicy> lqr_policy_;
   aligned_vector<STOPolicy> sto_policy_;
   SplitRiccatiFactorization factorization_m_;
-  Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
 

@@ -63,7 +63,7 @@ public:
   void reserve(const Robot& robot, const TimeDiscretization& time_discretization);
 
   ///
-  /// @brief Stores the current time-discretization and solution. 
+  /// @brief Stores the current time discretization and solution. 
   /// @param[in] time_discretization Time discretization. 
   /// @param[out] solution Solution. 
   ///
@@ -80,6 +80,10 @@ public:
                    const TimeDiscretization& time_discretization, 
                    Solution& solution) const;
 
+  ///
+  /// @brief Check if this has a stored solution. 
+  /// @return true if this has a stored solution. 
+  ///
   bool hasStoredSolution() const { return has_stored_solution_; }
 
 private:

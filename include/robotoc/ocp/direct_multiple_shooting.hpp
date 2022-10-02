@@ -14,12 +14,12 @@
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/planner/contact_sequence.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 #include "robotoc/ocp/time_discretization.hpp"
 #include "robotoc/ocp/intermediate_stage.hpp"
 #include "robotoc/ocp/impact_stage.hpp"
 #include "robotoc/ocp/terminal_stage.hpp"
-#include "robotoc/ocp/ocp_def.hpp"
 
 
 namespace robotoc {
@@ -37,7 +37,7 @@ public:
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  DirectMultipleShooting(const OCPDef& ocp, const int nthreads);
+  DirectMultipleShooting(const OCP& ocp, const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -175,6 +175,12 @@ public:
                          const double dual_step_size,
                          const KKTMatrix& kkt_matrix,
                          Direction& d, Solution& s);
+
+  ///
+  /// @brief Resizes the internal data. 
+  /// @param[in] time_discretization Time discretization. 
+  ///
+  void resizeData(const TimeDiscretization& time_discretization);
 
 private:
   int nthreads_;

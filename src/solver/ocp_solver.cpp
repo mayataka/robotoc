@@ -7,46 +7,47 @@
 
 namespace robotoc {
 
-auto createOCPDef = [](const OCP& ocp) {
-  OCPDef def;
-  auto robot = ocp.robot();
-  auto cost = ocp.cost();
-  auto constraints = ocp.constraints();
-  auto contact_sequence = ocp.contact_sequence();
-  def.robot = robot;
-  def.cost = cost;
-  def.constraints = constraints;
-  def.contact_sequence = contact_sequence;
-  def.T = ocp.T();
-  def.N = ocp.N();
-  def.num_reserved_discrete_events = 3*ocp.reservedNumDiscreteEvents();
-  return def;
-};
-
-
 OCPSolver::OCPSolver(const OCP& ocp, 
                      const SolverOptions& solver_options, const int nthreads)
-  : robots_(nthreads, ocp.robot()),
-    contact_sequence_(ocp.contact_sequence()),
-    dms_(createOCPDef(ocp), nthreads),
-    time_discretization_(ocp.T(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+  : robots_(nthreads, ocp.robot),
+    contact_sequence_(ocp.contact_sequence),
+    dms_(ocp, nthreads),
+    time_discretization_(ocp.T, ocp.N, ocp.reserved_num_discrete_events),
     sto_(ocp),
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
-    line_search_(createOCPDef(ocp)),
+    line_search_(ocp),
     ocp_(ocp),
-    riccati_factorization_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitRiccatiFactorization(ocp.robot())),
-    kkt_matrix_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitKKTMatrix(ocp.robot())),
-    kkt_residual_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitKKTResidual(ocp.robot())),
-    s_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitSolution(ocp.robot())),
-    d_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitDirection(ocp.robot())),
-    solution_interpolator_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
+    riccati_factorization_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitRiccatiFactorization(ocp.robot)),
+    kkt_matrix_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitKKTMatrix(ocp.robot)),
+    kkt_residual_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitKKTResidual(ocp.robot)),
+    s_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitSolution(ocp.robot)),
+    d_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitDirection(ocp.robot)),
+    solution_interpolator_(ocp.robot, ocp.N+3*ocp.reserved_num_discrete_events+1, ocp.reserved_num_discrete_events),
     solver_options_(solver_options),
     solver_statistics_() {
+  if (!ocp.cost) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.cost should not be nullptr!");
+  }
+  if (!ocp.constraints) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.constraints should not be nullptr!");
+  }
+  if (!ocp.contact_sequence) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.contact_sequence should not be nullptr!");
+  }
+  if (ocp.T <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.T must be positive!");
+  }
+  if (ocp.N <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.N must be positive!");
+  }
+  if (ocp.reserved_num_discrete_events< 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.reserved_num_discrete_events must be non-negative!");
+  }
   if (nthreads <= 0) {
     throw std::out_of_range("[OCPSolver] invalid argument: nthreads must be positive!");
   }
-  for (auto& e : s_)  { ocp.robot().normalizeConfiguration(e.q); }
-  if (ocp_.isSTOEnabled()) {
+  for (auto& e : s_)  { ocp.robot.normalizeConfiguration(e.q); }
+  if (ocp.sto_cost && ocp.sto_constraints) {
     solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
   time_discretization_.setDiscretizationMethod(solver_options_.discretization_method);
@@ -63,7 +64,7 @@ OCPSolver::~OCPSolver() {
 
 void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
   solver_options_ = solver_options;
-  if (ocp_.isSTOEnabled()) {
+  if (ocp_.sto_cost && ocp_.sto_constraints) {
     solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
   time_discretization_.setDiscretizationMethod(solver_options_.discretization_method);
@@ -92,7 +93,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   if ((solver_options_.discretization_method == DiscretizationMethod::PhaseBased)
-       || ocp_.isSTOEnabled()) {
+       || (ocp_.sto_cost && ocp_.sto_constraints)) {
     time_discretization_.discretizePhase(contact_sequence_, t);
   }
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
@@ -148,7 +149,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   solver_statistics_.clear(); 
   int inner_iter = 0;
   for (int iter=0; iter<solver_options_.max_iter; ++iter, ++inner_iter) {
-    if (ocp_.isSTOEnabled()) {
+    if (ocp_.sto_cost && ocp_.sto_constraints) {
       if (inner_iter < solver_options_.initial_sto_reg_iter) {
         sto_.setRegularization(solver_options_.initial_sto_reg);
       }
@@ -160,7 +161,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     updateSolution(t, q, v);
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
-    if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
+    if ((ocp_.sto_cost && ocp_.sto_constraints) && (kkt_error < solver_options_.kkt_tol_mesh)) {
       if (time_discretization_.dt_max() > solver_options_.max_dt_mesh) {
         if (solver_options_.enable_solution_interpolation) {
           solution_interpolator_.store(time_discretization_, s_);
@@ -425,7 +426,9 @@ void OCPSolver::resizeData() {
       s_[i].setSwitchingConstraintDimension(0);
     }
   }
-  line_search_.reserve(time_discretization_);
+  dms_.resizeData(time_discretization_);
+  riccati_recursion_.resizeData(time_discretization_);
+  line_search_.resizeData(time_discretization_);
 }
 
 

@@ -22,7 +22,7 @@ struct OCPDef {
   std::shared_ptr<ContactSequence> contact_sequence;
   double T;
   int N;
-  int num_reserved_discrete_events = 10;
+  int reserved_num_discrete_events = 10;
 };
 
 } // namespace robotoc

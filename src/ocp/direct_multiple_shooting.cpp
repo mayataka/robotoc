@@ -8,17 +8,17 @@
 
 namespace robotoc{
 
-DirectMultipleShooting::DirectMultipleShooting(const OCPDef& ocp, const int nthreads)
+DirectMultipleShooting::DirectMultipleShooting(const OCP& ocp, const int nthreads)
   : ocp_data_(),
     intermediate_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     impact_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     terminal_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
     performance_index_(),
-    max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+3*ocp.num_reserved_discrete_events)), 
-    max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+3*ocp.num_reserved_discrete_events)),
+    max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.reserved_num_discrete_events)), 
+    max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.reserved_num_discrete_events)),
     nthreads_(nthreads) {
-  ocp_data_.resize(ocp.N+1+3*ocp.num_reserved_discrete_events);
-  for (int i=0; i<=ocp.N+3*ocp.num_reserved_discrete_events; ++i) {
+  ocp_data_.resize(ocp.N+1+ocp.reserved_num_discrete_events);
+  for (int i=0; i<ocp.N+1+ocp.reserved_num_discrete_events; ++i) {
     ocp_data_[i] = intermediate_stage_.createData(ocp.robot);
   }
 }
@@ -39,10 +39,8 @@ DirectMultipleShooting::DirectMultipleShooting()
 void DirectMultipleShooting::initConstraints(
     aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Solution& s) {
+  resizeData(time_discretization);
   const int N = time_discretization.size() - 1;
-  while (ocp_data_.size() < N+1) {
-    ocp_data_.push_back(ocp_data_.back());
-  }
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     const auto& grid = time_discretization[i];
@@ -169,10 +167,6 @@ void DirectMultipleShooting::computeStepSizes(
     const TimeDiscretization& time_discretization, Direction& d) {
   const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
-  if (max_primal_step_sizes_.size() < N+1) {
-    max_primal_step_sizes_.resize(N+1);
-    max_dual_step_sizes_.resize(N+1);
-  }
   max_primal_step_sizes_.fill(1.0);
   max_dual_step_sizes_.fill(1.0);
   #pragma omp parallel for num_threads(nthreads_)
@@ -235,6 +229,19 @@ void DirectMultipleShooting::integrateSolution(
                                        primal_step_size, d[i], s[i], ocp_data_[i]);
       intermediate_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
+  }
+}
+
+
+void DirectMultipleShooting::resizeData(
+    const TimeDiscretization& time_discretization) {
+  const int N = time_discretization.size() - 1;
+  while (ocp_data_.size() < N+1) {
+    ocp_data_.push_back(ocp_data_.back());
+  }
+  if (max_primal_step_sizes_.size() < N+1) {
+    max_primal_step_sizes_.resize(N+1);
+    max_dual_step_sizes_.resize(N+1);
   }
 }
 

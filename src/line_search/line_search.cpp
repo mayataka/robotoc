@@ -7,12 +7,12 @@
 
 namespace robotoc {
 
-LineSearch::LineSearch(const OCPDef& ocp, 
+LineSearch::LineSearch(const OCP& ocp, 
                        const LineSearchSettings& line_search_settings) 
   : filter_(),
     settings_(line_search_settings),
-    s_trial_(ocp.N+3*ocp.num_reserved_discrete_events+1, SplitSolution(ocp.robot)), 
-    kkt_residual_(ocp.N+3*ocp.num_reserved_discrete_events+1, SplitKKTResidual(ocp.robot)) {
+    s_trial_(ocp.N+1+ocp.reserved_num_discrete_events, SplitSolution(ocp.robot)), 
+    kkt_residual_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTResidual(ocp.robot)) {
 }
 
 
@@ -32,7 +32,7 @@ double LineSearch::computeStepSize(
   assert(max_primal_step_size > 0);
   assert(max_primal_step_size <= 1);
   double primal_step_size = max_primal_step_size;
-  reserve(time_discretization);
+  resizeData(time_discretization);
   if (settings_.line_search_method == LineSearchMethod::Filter) {
     primal_step_size = lineSearchFilterMethod(dms, robots, time_discretization, 
                                               q, v, s, d, primal_step_size);
@@ -171,7 +171,7 @@ void LineSearch::set(const LineSearchSettings& settings) {
 }
 
 
-void LineSearch::reserve(const TimeDiscretization& time_discretization) {
+void LineSearch::resizeData(const TimeDiscretization& time_discretization) {
   while (s_trial_.size() < time_discretization.size()) {
     s_trial_.push_back(s_trial_.back());
   }

@@ -9,31 +9,18 @@ namespace robotoc {
 
 RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads, 
                                    const double max_dts0)
-  : nthreads_(nthreads),
-    N_all_(ocp.N()+1),
-    factorizer_(ocp.robot(), max_dts0),
-    lqr_policy_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, LQRPolicy(ocp.robot())),
-    sto_policy_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, STOPolicy(ocp.robot())),
-    factorization_m_(ocp.robot()),
-    max_primal_step_sizes_(
-        Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.reservedNumDiscreteEvents())), 
-    max_dual_step_sizes_(
-        Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.reservedNumDiscreteEvents())) {
-  if (nthreads <= 0) {
-    throw std::out_of_range("[RiccatiRecursion] invalid argument: 'nthreads' must be positive!");
-  }
+  : factorizer_(ocp.robot, max_dts0),
+    lqr_policy_(ocp.N+1+ocp.reserved_num_discrete_events, LQRPolicy(ocp.robot)),
+    sto_policy_(ocp.N+1+ocp.reserved_num_discrete_events, STOPolicy(ocp.robot)),
+    factorization_m_(ocp.robot) {
 }
 
 
 RiccatiRecursion::RiccatiRecursion()
-  : nthreads_(0),
-    N_all_(0),
-    factorizer_(),
+  : factorizer_(),
     lqr_policy_(),
     sto_policy_(),
-    factorization_m_(),
-    max_primal_step_sizes_(), 
-    max_dual_step_sizes_() {
+    factorization_m_() {
 }
 
 
@@ -43,24 +30,10 @@ void RiccatiRecursion::setRegularization(const double max_dts0) {
 }
 
 
-void RiccatiRecursion::reserve(const OCP& ocp) {
-  // const int reserved_num_discrete_events = ocp.reservedNumDiscreteEvents();
-  // lqr_policy_.reserve(ocp.robot(), reserved_num_discrete_events);
-  // while (sto_policy_.size() < 2*reserved_num_discrete_events+1) {
-  //   sto_policy_.emplace_back(ocp.robot());
-  // }
-  // const int N = ocp.timeDiscretization().N();
-  // const int max_N_all = N + 1 + 3*reserved_num_discrete_events;
-  // if (max_N_all > max_primal_step_sizes_.size()) {
-  //   max_primal_step_sizes_.resize(max_N_all);
-  //   max_dual_step_sizes_.resize(max_N_all);
-  // }
-}
-
-
 void RiccatiRecursion::backwardRiccatiRecursion(
     const TimeDiscretization& time_discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual, RiccatiFactorization& factorization) {
+  resizeData(time_discretization);
   const int N = time_discretization.size() - 1;
   factorization[N].P = kkt_matrix[N].Qxx;
   factorization[N].s = - kkt_residual[N].lx;
@@ -161,6 +134,17 @@ void RiccatiRecursion::forwardRiccatiRecursion(
 
 const aligned_vector<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
   return lqr_policy_;
+}
+
+
+void RiccatiRecursion::resizeData(const TimeDiscretization& time_discretization) {
+  const int N = time_discretization.size() - 1;
+  while (lqr_policy_.size() < N+1) {
+    lqr_policy_.push_back(lqr_policy_.back());
+  }
+  while (sto_policy_.size() < N+1) {
+    sto_policy_.push_back(sto_policy_.back());
+  }
 }
 
 } // namespace robotoc

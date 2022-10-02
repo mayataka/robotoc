@@ -10,7 +10,7 @@
 #include "robotoc/core/solution.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_residual.hpp"
-#include "robotoc/ocp/ocp_def.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
@@ -29,7 +29,7 @@ public:
   /// @param[in] ocp Optimal control problem. 
   /// @param[in] settings Line search settings.
   ///
-  LineSearch(const OCPDef& ocp, 
+  LineSearch(const OCP& ocp, 
              const LineSearchSettings& settings=LineSearchSettings());
 
   ///
@@ -97,10 +97,10 @@ public:
   void set(const LineSearchSettings& settings);
 
   ///
-  /// @brief Reserve the internal data. 
+  /// @brief Resizes the internal data. 
   /// @param[in] time_discretization Time discretization. 
   ///
-  void reserve(const TimeDiscretization& time_discretization);
+  void resizeData(const TimeDiscretization& time_discretization);
 
 private:
   LineSearchFilter filter_;

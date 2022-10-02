@@ -6,15 +6,17 @@
 namespace robotoc {
 
 SwitchingTimeOptimization::SwitchingTimeOptimization(const OCP& ocp) 
-  : sto_cost_(ocp.sto_cost()), 
-    sto_constraints_(ocp.sto_constraints()),
-    contact_sequence_(ocp.contact_sequence()),
+  : sto_cost_(ocp.sto_cost), 
+    sto_constraints_(ocp.sto_constraints),
+    contact_sequence_(ocp.contact_sequence),
     sto_reg_(0),
-    kkt_error_(0),
-    cost_val_(0),
-    h_phase_(Eigen::VectorXd::Zero(2*ocp.reservedNumDiscreteEvents()+1)),
-    reserved_num_switches_(2*ocp.reservedNumDiscreteEvents()),
-    is_sto_enabled_(ocp.isSTOEnabled()) {
+    is_sto_enabled_((ocp.sto_cost && ocp.sto_constraints)),
+    performance_index_(),
+    lt_(),
+    h_(),
+    dts_(),
+    Qtt_(),
+    constraint_data_() {
 }
 
 
@@ -22,11 +24,13 @@ SwitchingTimeOptimization::SwitchingTimeOptimization()
   : sto_cost_(), 
     sto_constraints_(),
     sto_reg_(0),
-    kkt_error_(0),
-    cost_val_(0),
-    h_phase_(),
-    reserved_num_switches_(0),
-    is_sto_enabled_(false) {
+    is_sto_enabled_(false),
+    performance_index_(),
+    lt_(),
+    h_(),
+    dts_(),
+    Qtt_(),
+    constraint_data_() {
 }
 
 
