@@ -118,7 +118,7 @@ double STOConstraints::getFractionToBoundaryRule() const {
 
 ConstraintComponentData STOConstraints::createConstraintsData(
     const TimeDiscretization& time_discretization) const {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   const int num_discrete_events = time_discretization.grid(N).contact_phase 
                                     - time_discretization.grid(0).contact_phase;
   auto data = ConstraintComponentData(num_discrete_events+1, barrier_);
@@ -237,7 +237,7 @@ void STOConstraints::updateDual(ConstraintComponentData& data,
 
 void STOConstraints::computeDwellTimes(const TimeDiscretization& time_discretization,
                                        Eigen::VectorXd& dwell_times) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   const int num_discrete_events = time_discretization.grid(N).contact_phase 
                                     - time_discretization.grid(0).contact_phase;
   dwell_times.resize(num_discrete_events+1);
@@ -245,10 +245,10 @@ void STOConstraints::computeDwellTimes(const TimeDiscretization& time_discretiza
   int event_index = 0;
   double prev_event_time = time_discretization.grid(0).t;
   for (int i=0; i<N; ++i) {
-    if (time_discretization.grid(i).type == GridType::Impulse
-        || time_discretization.grid(i).type == GridType::Lift) {
-      dwell_times.coeffRef(event_index) = time_discretization.grid(i).t - prev_event_time;
-      prev_event_time = time_discretization.grid(i).t;
+    if (time_discretization[i].type == GridType::Impulse
+        || time_discretization[i].type == GridType::Lift) {
+      dwell_times.coeffRef(event_index) = time_discretization[i].t - prev_event_time;
+      prev_event_time = time_discretization[i].t;
       ++event_index;
     }
   }

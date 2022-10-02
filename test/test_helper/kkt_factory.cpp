@@ -76,11 +76,11 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const int N) {
 KKTMatrix CreateKKTMatrix(const Robot& robot,  
                           const std::shared_ptr<ContactSequence>& contact_sequence, 
                           const TimeDiscretization& time_discretization) {
-  KKTMatrix kkt_matrix(time_discretization.N_grids()+1, SplitKKTMatrix(robot));
-  for (int i=0; i<=time_discretization.N_grids(); ++i) {
+  KKTMatrix kkt_matrix(time_discretization.size(), SplitKKTMatrix(robot));
+  for (int i=0; i<time_discretization.size(); ++i) {
     kkt_matrix[i] = CreateSplitKKTMatrix(robot);
-    if (time_discretization.grid(i).switching_constraint) {
-      const int impulse_index = time_discretization.grid(i).impulse_index + 1;
+    if (time_discretization[i].switching_constraint) {
+      const int impulse_index = time_discretization[i].impulse_index + 1;
       kkt_matrix[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
       kkt_matrix[i].Phix().setRandom();
       kkt_matrix[i].Phia().setRandom();
@@ -102,11 +102,11 @@ KKTResidual CreateKKTResidual(const Robot& robot, const int N) {
 KKTResidual CreateKKTResidual(const Robot& robot,  
                               const std::shared_ptr<ContactSequence>& contact_sequence, 
                               const TimeDiscretization& time_discretization) {
-  KKTResidual kkt_residual(time_discretization.N_grids()+1, SplitKKTResidual(robot));
-  for (int i=0; i<=time_discretization.N_grids(); ++i) {
+  KKTResidual kkt_residual(time_discretization.size(), SplitKKTResidual(robot));
+  for (int i=0; i<time_discretization.size(); ++i) {
     kkt_residual[i] = CreateSplitKKTResidual(robot);
-    if (time_discretization.grid(i).switching_constraint) {
-      const int impulse_index = time_discretization.grid(i).impulse_index + 1;
+    if (time_discretization[i].switching_constraint) {
+      const int impulse_index = time_discretization[i].impulse_index + 1;
       kkt_residual[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
       kkt_residual[i].P().setRandom();
     }

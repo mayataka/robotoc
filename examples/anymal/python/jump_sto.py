@@ -122,8 +122,8 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-solver_options.max_iter = 80
-solver_options.discretization_method = robotoc.DiscretizationMethod.PhaseBased
+solver_options.max_iter = 250
+# solver_options.enable_solution_interpolation = False
 ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
@@ -143,7 +143,8 @@ ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
-# time_discretization = ocp_solver.get_time_discretization()
+# print(ocp_solver.get_time_discretization())
+
 # N_grids = time_discretization.N_grids()
 # for i in range(N_grids+1):
 #     print(time_discretization.getGrid()[i])

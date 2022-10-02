@@ -46,7 +46,10 @@ OCPSolver::OCPSolver(const OCP& ocp,
     throw std::out_of_range("[OCPSolver] invalid argument: nthreads must be positive!");
   }
   for (auto& e : s_)  { ocp.robot().normalizeConfiguration(e.q); }
-  time_discretization_.setDiscretizationMethod(solver_options.discretization_method);
+  if (ocp_.isSTOEnabled()) {
+    solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
+  }
+  time_discretization_.setDiscretizationMethod(solver_options_.discretization_method);
 }
 
 
@@ -60,8 +63,11 @@ OCPSolver::~OCPSolver() {
 
 void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
   solver_options_ = solver_options;
-  time_discretization_.setDiscretizationMethod(solver_options.discretization_method);
-  riccati_recursion_.setRegularization(solver_options.max_dts_riccati);
+  if (ocp_.isSTOEnabled()) {
+    solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
+  }
+  time_discretization_.setDiscretizationMethod(solver_options_.discretization_method);
+  riccati_recursion_.setRegularization(solver_options_.max_dts_riccati);
 }
 
 
@@ -70,8 +76,7 @@ void OCPSolver::meshRefinement(const double t) {
   if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
     time_discretization_.discretizePhase(contact_sequence_, t);
   }
-  reserveData();
-  discretizeSolution();
+  resizeData();
 }
 
 
@@ -205,7 +210,7 @@ const Solution& OCPSolver::getSolution() const {
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= time_discretization_.N_grids());
+  assert(stage < time_discretization_.size());
   return s_[stage];
 }
 
@@ -214,27 +219,27 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name, const std::string& option) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<=time_discretization_.N_grids(); ++i) {
-      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse) continue;
       sol.push_back(s_[i].q);
     }
   }
   else if (name == "v") {
-    for (int i=0; i<=time_discretization_.N_grids(); ++i) {
-      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse) continue;
       sol.push_back(s_[i].v);
     }
   }
   else if (name == "a") {
-    for (int i=0; i<time_discretization_.N_grids(); ++i) {
-      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse) continue;
       sol.push_back(s_[i].a);
     }
   }
   else if (name == "f" && option == "WORLD") {
     Robot robot = robots_[0];
-    for (int i=0; i<time_discretization_.N_grids(); ++i) {
-      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse) continue;
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       robot.updateFrameKinematics(s_[i].q);
       for (int j=0; j<robot.maxNumContacts(); ++j) {
@@ -249,8 +254,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
   }
   else if (name == "f") {
     Robot robot = robots_[0];
-    for (int i=0; i<time_discretization_.N_grids(); ++i) {
-      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse) continue;
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       for (int j=0; j<robot.maxNumContacts(); ++j) {
         if (s_[i].isContactActive(j)) {
@@ -261,8 +266,8 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     }
   }
   else if (name == "u") {
-    for (int i=0; i<time_discretization_.N_grids(); ++i) {
-      if (time_discretization_.grid(i).type == GridType::Impulse) continue;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse) continue;
       sol.push_back(s_[i].u);
     }
   }
@@ -346,8 +351,7 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
   if (v.size() != robots_[0].dimv()) {
     throw std::out_of_range("[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
   }
-  reserveData();
-  discretizeSolution();
+  resizeData();
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
   sto_.evalKKT(time_discretization_, kkt_matrix_, kkt_residual_);
   return KKTError();
@@ -371,8 +375,7 @@ double OCPSolver::cost(const bool include_cost_barrier) const {
 
 
 bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  reserveData();
-  discretizeSolution();
+  resizeData();
   return dms_.isFeasible(robots_, time_discretization_, s_);
 }
 
@@ -392,25 +395,20 @@ void OCPSolver::setRobotProperties(const RobotProperties& properties) {
 template <typename T>
 void conservativeReserve(const TimeDiscretization& time_discretization, 
                          aligned_vector<T>& data) {
-  while (data.size() < time_discretization.N_grids()+1) {
+  while (data.size() < time_discretization.size()) {
     data.push_back(data.back());
   }
 }
 
 
-void OCPSolver::reserveData() {
+void OCPSolver::resizeData() {
   conservativeReserve(time_discretization_, kkt_matrix_);
   conservativeReserve(time_discretization_, kkt_residual_);
   conservativeReserve(time_discretization_, s_);
   conservativeReserve(time_discretization_, d_);
   conservativeReserve(time_discretization_, riccati_factorization_);
-  line_search_.reserve(time_discretization_);
-}
-
-
-void OCPSolver::discretizeSolution() {
-  for (int i=0; i<=time_discretization_.N_grids(); ++i) {
-    const auto& grid = time_discretization_.grid(i);
+  for (int i=0; i<time_discretization_.size(); ++i) {
+    const auto& grid = time_discretization_[i];
     if (grid.type == GridType::Intermediate || grid.type == GridType::Lift) {
       s_[i].setContactStatus(contact_sequence_->contactStatus(grid.contact_phase));
       s_[i].set_f_stack();
@@ -427,6 +425,7 @@ void OCPSolver::discretizeSolution() {
       s_[i].setSwitchingConstraintDimension(0);
     }
   }
+  line_search_.reserve(time_discretization_);
 }
 
 

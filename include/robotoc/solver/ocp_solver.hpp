@@ -265,9 +265,7 @@ private:
   SolverStatistics solver_statistics_;
   Timer timer_;
 
-  void reserveData();
-  void discretizeSolution();
-  void interpolateSolution();
+  void resizeData();
 
 };
 

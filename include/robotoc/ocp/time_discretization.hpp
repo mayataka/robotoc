@@ -80,20 +80,60 @@ public:
   }
 
   ///
-  /// @brief Returns the grid info of the specified time stage. 
-  /// @param[in] time_stage Time stage of interest. 
-  /// @return Grid info of the time stage of interest.
+  /// @brief Returns the grid info of the specified stage. 
+  /// @param[in] i Stage of interest. 
+  /// @return const reference to the grid info of the stage of interest.
   ///
   inline const GridInfo& gridInfo(const int i) const {
     assert(i >= 0);
-    assert(i <= N_grids_);
+    assert(i <= N_grids());
     return grid_[i];
   }
 
+  ///
+  /// @brief Returns the grid info of the specified stage. 
+  /// @param[in] i Stage of interest. 
+  /// @return const reference to the grid info of the stage of interest.
+  ///
   inline const GridInfo& grid(const int i) const {
     assert(i >= 0);
-    assert(i <= N_grids_);
+    assert(i <= N_grids());
     return grid_[i];
+  }
+
+  ///
+  /// @brief Returns the grid info of the specified stage. 
+  /// @param[in] i Stage of interest. 
+  /// @return const reference to the grid info of the stage of interest.
+  ///
+  inline const GridInfo& operator[] (const int i) const {
+    assert(i >= 0);
+    assert(i <= N_grids());
+    return grid_[i];
+  }
+
+  ///
+  /// @brief Returns the grid info of the initial stage. 
+  /// @return const reference to the grid info of the intial stage.
+  ///
+  inline const GridInfo& front() const {
+    return grid_[0];
+  }
+
+  ///
+  /// @brief Returns the grid info of the terminal stage. 
+  /// @return const reference to the grid info of the terminal stage.
+  ///
+  inline const GridInfo& back() const {
+    return grid_[N_grids()];
+  }
+
+  ///
+  /// @brief Returns the number of grids. 
+  /// @return The number of grids..
+  ///
+  inline int size() const {
+    return N_grids() + 1;
   }
 
   ///
@@ -154,8 +194,6 @@ public:
     discretizeGrid(contact_sequence, t);
     discretizePhase(contact_sequence, t);
   }
-
-  void setSTO(const std::shared_ptr<ContactSequence>& contact_sequence, const double t);
 
   inline const std::vector<GridInfo>& getGrid() const {
     return grid_;

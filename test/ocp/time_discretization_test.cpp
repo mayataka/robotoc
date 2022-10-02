@@ -86,7 +86,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
   EXPECT_EQ(time_discretization.N(), N);
   EXPECT_EQ(time_discretization.N_grids(), N);
   for (int i=0; i<=N; ++i) {
-    EXPECT_EQ(time_discretization.grid(i).contact_phase, 0);
+    EXPECT_EQ(time_discretization[i].contact_phase, 0);
   }
 }
 

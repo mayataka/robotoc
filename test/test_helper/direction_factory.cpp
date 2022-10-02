@@ -20,9 +20,9 @@ Direction CreateDirection(const Robot& robot,
     return CreateDirection(robot, time_discretization.N());
   }
   else {
-    Direction d(time_discretization.N_grids()+1, SplitDirection(robot));
-    for (int i=0; i<time_discretization.N_grids(); ++i) {
-      const auto& grid = time_discretization.grid(i);
+    Direction d(time_discretization.size(), SplitDirection(robot));
+    for (int i=0; i<time_discretization.size()-1; ++i) {
+      const auto& grid = time_discretization[i];
       if (grid.type == GridType::Impulse) {
         d[i].setContactDimension(contact_sequence->impulseStatus(grid.impulse_index).dimf());
         d[i].setRandom();
@@ -38,7 +38,7 @@ Direction CreateDirection(const Robot& robot,
         d[i].setRandom();
       }
     }
-    d[time_discretization.N_grids()].setRandom();
+    d[time_discretization.size()-1].setRandom();
     return d;
   }
 }

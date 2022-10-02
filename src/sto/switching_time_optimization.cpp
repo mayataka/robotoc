@@ -69,7 +69,7 @@ void SwitchingTimeOptimization::evalKKT(
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   if (!is_sto_enabled_) return;
 
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   const int num_discrete_events = time_discretization.grid(N).contact_phase 
                                     - time_discretization.grid(0).contact_phase;
   performance_index_.setZero();
@@ -87,7 +87,7 @@ void SwitchingTimeOptimization::evalKKT(
 
   int event_index = 0;
   for (int i=0; i<N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impulse) {
       kkt_residual[i+1].h -= lt_.coeff(event_index);
       kkt_matrix[i+1].Qtt += Qtt_.coeff(event_index, event_index);
@@ -102,14 +102,14 @@ void SwitchingTimeOptimization::evalKKT(
 
   h_.setZero(num_discrete_events+1);
   for (int i=0; i<N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     h_.coeffRef(grid.contact_phase) += kkt_residual[i].h;
   }
 
   event_index = 0;
   for (int i=0; i<N; ++i) {
-    const auto& grid = time_discretization.grid(i);
-    if ((grid.type == GridType::Impulse && time_discretization.grid(i+1).sto)
+    const auto& grid = time_discretization[i];
+    if ((grid.type == GridType::Impulse && time_discretization[i+1].sto)
         || (grid.type == GridType::Lift && grid.sto)) {
       const double hdiff = h_.coeff(event_index) - h_.coeff(event_index+1);
       performance_index_.kkt_error = hdiff * hdiff;
@@ -123,13 +123,13 @@ void SwitchingTimeOptimization::computeStepSizes(
     const TimeDiscretization& time_discretization, Direction& d) {
   if (!is_sto_enabled_) return;
 
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   const int num_discrete_events = time_discretization.grid(N).contact_phase 
                                     - time_discretization.grid(0).contact_phase;
   dts_.resize(num_discrete_events);
   int event_index = 0;
   for (int i=0; i<N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impulse || grid.type == GridType::Lift) {
       dts_.coeffRef(event_index) = d[i].dts;
       ++event_index;
@@ -166,11 +166,11 @@ void SwitchingTimeOptimization::integrateSolution(
     const Direction& d) {
   if (!is_sto_enabled_) return;
 
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   const int num_discrete_events = time_discretization.grid(N).contact_phase 
                                     - time_discretization.grid(0).contact_phase;
   for (int i=0; i<N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impulse) {
       const int impulse_index = grid.impulse_index;
       const double ts = contact_sequence_->impulseTime(impulse_index) 

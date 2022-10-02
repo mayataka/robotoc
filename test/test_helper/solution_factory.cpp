@@ -21,9 +21,9 @@ Solution CreateSolution(const Robot& robot,
     return CreateSolution(robot, time_discretization.N());
   }
   else {
-    Solution s(time_discretization.N_grids()+1, SplitSolution(robot));
-    for (int i=0; i<time_discretization.N_grids(); ++i) {
-      const auto& grid = time_discretization.grid(i);
+    Solution s(time_discretization.size(), SplitSolution(robot));
+    for (int i=0; i<time_discretization.size()-1; ++i) {
+      const auto& grid = time_discretization[i];
       if (grid.type == GridType::Impulse) {
         s[i].setContactStatus(contact_sequence->impulseStatus(grid.impulse_index));
         s[i].setRandom(robot);
@@ -39,7 +39,7 @@ Solution CreateSolution(const Robot& robot,
         s[i].setRandom(robot);
       }
     }
-    s[time_discretization.N_grids()].setRandom(robot);
+    s[time_discretization.size()-1].setRandom(robot);
     return s;
   }
 }

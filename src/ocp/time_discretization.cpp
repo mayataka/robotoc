@@ -270,27 +270,45 @@ void TimeDiscretization::discretizePhase(
 
 
 void TimeDiscretization::disp(std::ostream& os) const {
+  auto gridTypeToString = [](const GridType& type) {
+    switch (type)
+    {
+    case GridType::Intermediate:
+      return "Intermediate";
+      break;
+    case GridType::Impulse:
+      return "     Impulse";
+      break;
+    case GridType::Lift:
+      return "        Lift";
+      break;
+    case GridType::Terminal:
+      return "    Terminal";
+      break;
+    default:
+      return "";
+      break;
+    }
+  };
   os << "Time discretization of optimal control problem (OCP):" << "\n";
   os << "  T: " << T_ << "\n";
   os << "  N: " << N() << "\n";
   os << "  N_grids: " << N_grids() << "\n";
-  os << " -----------------------------------------------------------------------" << "\n";
-  os << "  grid point | grid count |      t |     dt | phase |  sto  | sto_next |" << "\n";
-  os << " -----------------------------------------------------------------------" << "\n";
-  for (int i=0; i<N_grids(); ++i) {
-    os << "  stage: " << std::right << std::setw(3) << i << " | "
+  os << " -------------------------------------------------------------------------------------------------" << "\n";
+  os << "  stage |         type | grid count |      t |     dt | phase | impact | lift |  sto  | sto_next |" << "\n";
+  os << " -------------------------------------------------------------------------------------------------" << "\n";
+  for (int i=0; i<=N_grids(); ++i) {
+    os << "    " << std::right << std::setw(3) << i << " | "
+       << gridTypeToString(grid(i).type) << " | "
        << "       " << std::right << std::setw(3) << grid(i).grid_count_in_phase << " | " 
        << std::fixed << std::setprecision(4) << grid(i).t << " | " << grid(i).dt
        << " |   " << std::setw(3) << grid(i).contact_phase
+       << " |    " << std::setw(3) << grid(i).impulse_index
+       << " |  " << std::setw(3) << grid(i).lift_index
        << " | " << std::setw(5) << std::boolalpha << grid(i).sto
-       << " |   " << std::setw(5) << std::boolalpha << grid(i).sto_next
-       << "  |" << "\n";
+       << " |   " << std::setw(5) << std::boolalpha << grid(i).sto_next << "  |" << "\n";
   }
-  os << "  stage: " << std::right << std::setw(3) << N() << " | " 
-     << "       " << std::right << std::setw(3) << grid(N_grids()).grid_count_in_phase << " | " 
-     << std::fixed << std::setprecision(4) << grid(N_grids()).t
-     << " |        |       |       |          |" << "\n"; 
-  os << " -----------------------------------------------------------------------" << std::flush;
+  os << " -------------------------------------------------------------------------------------------------" << std::flush;
 }
 
 

@@ -39,13 +39,13 @@ DirectMultipleShooting::DirectMultipleShooting()
 void DirectMultipleShooting::initConstraints(
     aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Solution& s) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   while (ocp_data_.size() < N+1) {
     ocp_data_.push_back(ocp_data_.back());
   }
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Terminal) {
       terminal_stage_.initConstraints(robots[omp_get_thread_num()], 
                                       grid, s[i], ocp_data_[i]);
@@ -65,12 +65,12 @@ void DirectMultipleShooting::initConstraints(
 bool DirectMultipleShooting::isFeasible(
     aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Solution& s) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
   std::vector<bool> is_feasible(N+1, true);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Terminal) {
       is_feasible[i] = terminal_stage_.isFeasible(robots[omp_get_thread_num()], 
                                                   grid, s[i], ocp_data_[i]);
@@ -95,11 +95,11 @@ void DirectMultipleShooting::evalOCP(
     aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     KKTResidual& kkt_residual) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Terminal) {
       terminal_stage_.evalOCP(robots[omp_get_thread_num()], grid, s[i],  
                               ocp_data_[i], kkt_residual[i]);
@@ -124,11 +124,11 @@ void DirectMultipleShooting::evalKKT(
     aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Terminal) {
       terminal_stage_.evalKKT(robots[omp_get_thread_num()], grid, s[i-1].q, s[i], 
                               ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
@@ -167,7 +167,7 @@ const PerformanceIndex& DirectMultipleShooting::getEval() const {
 
 void DirectMultipleShooting::computeStepSizes(
     const TimeDiscretization& time_discretization, Direction& d) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
   if (max_primal_step_sizes_.size() < N+1) {
     max_primal_step_sizes_.resize(N+1);
@@ -177,7 +177,7 @@ void DirectMultipleShooting::computeStepSizes(
   max_dual_step_sizes_.fill(1.0);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Terminal) {
       terminal_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
       max_primal_step_sizes_.coeffRef(i) = terminal_stage_.maxPrimalStepSize(ocp_data_[i]);
@@ -212,11 +212,11 @@ void DirectMultipleShooting::integrateSolution(
     const TimeDiscretization& time_discretization, 
     const double primal_step_size, const double dual_step_size, 
     const KKTMatrix& kkt_matrix, Direction& d, Solution& s) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Terminal) {
       terminal_stage_.expandDual(grid, ocp_data_[i], d[i]);
       terminal_stage_.updatePrimal(robots[omp_get_thread_num()], 

@@ -1,5 +1,7 @@
 #include "robotoc/solver/solution_interpolator.hpp"
 
+#include <stdexcept>
+
 
 namespace robotoc {
 
@@ -20,7 +22,7 @@ SolutionInterpolator::SolutionInterpolator()
 
 void SolutionInterpolator::reserve(const Robot& robot, 
                                    const TimeDiscretization& time_discretization) {
-  while (stored_solution_.size() < time_discretization.N_grids()+1) {
+  while (stored_solution_.size() < time_discretization.size()) {
     stored_solution_.push_back(stored_solution_.back());
   }
 }
@@ -39,38 +41,32 @@ void SolutionInterpolator::interpolate(
     Solution& solution) const {
   if (!has_stored_solution_) return;
 
-  const int N = time_discretization.N_grids();
-  int next_impulse_index = time_discretization.grid(0).impulse_index + 1;
-  int next_lift_index = time_discretization.grid(0).lift_index + 1;
+  const int N = time_discretization.size() - 1;
   for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization.grid(i);
-    const auto& grid_next = time_discretization.grid(i+1);
-    if (grid.t <= stored_time_discretization_.grid(0).t) {
+    const auto& grid = time_discretization[i];
+    const auto& grid_next = time_discretization[i+1];
+    if (grid.t <= stored_time_discretization_.front().t) {
       solution[i] = stored_solution_[0];
-      continue;
     }
-    if (grid.t >= stored_time_discretization_.grid(N).t) {
-      solution[i] = stored_solution_[N];
-      continue;
+    else if (grid.t >= stored_time_discretization_.back().t) {
+      solution[i] = stored_solution_[stored_time_discretization_.size()-1];
     }
-    if (grid.type == GridType::Impulse) {
-      const int grid_index = findStoredGridIndexAtImpulse(grid.t);
+    else if (grid.type == GridType::Impulse) {
+      const int grid_index = findStoredGridIndexAtImpulseByIndex(grid.impulse_index);
       assert(grid_index >= 0);
       solution[i] = stored_solution_[grid_index];
-      continue;
     }
     else if (grid.type == GridType::Lift) {
-      const int grid_index = findStoredGridIndexAtLift(grid.t);
+      const int grid_index = findStoredGridIndexAtLiftByIndex(grid.lift_index);
       assert(grid_index >= 0);
       solution[i] = stored_solution_[grid_index];
-      continue;
     }
     else {
       const int grid_index = findStoredGridIndexBeforeTime(grid.t);
-      const double alpha = (grid.t - stored_time_discretization_.grid(grid_index).t) 
-                            / stored_time_discretization_.grid(grid_index).dt;
-      if ((stored_time_discretization_.grid(grid_index+1).type == GridType::Impulse)
-          || (stored_time_discretization_.grid(grid_index+1).type == GridType::Lift)) {
+      const double alpha = (grid.t - stored_time_discretization_[grid_index].t) 
+                            / stored_time_discretization_[grid_index].dt;
+      if ((stored_time_discretization_[grid_index+1].type == GridType::Impulse)
+          || (stored_time_discretization_[grid_index+1].type == GridType::Lift)) {
         interpolatePartial(robot, stored_solution_[grid_index],
                            stored_solution_[grid_index+1], alpha, solution[i]);
       }

@@ -86,10 +86,10 @@ void LineSearch::computeSolutionTrial(const aligned_vector<Robot>& robots,
                                       const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   for (int i=0; i<=N; ++i) {
     computeSolutionTrial(robots[0], s[i], d[i], step_size, s_trial_[i],
-                         (time_discretization.grid(i).type == GridType::Impulse));
+                         (time_discretization[i].type == GridType::Impulse));
   }
 }
 
@@ -157,7 +157,7 @@ bool LineSearch::armijoCond(const double merit_now, const double merit_next,
 
 double LineSearch::penaltyParam(const TimeDiscretization time_discretization, 
                                 const Solution& s) const {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   Eigen::VectorXd lagrangeMultiplierLinfNorms = Eigen::VectorXd::Zero(N+1);                                        
   for (int i=0; i<=N; ++i) {
     lagrangeMultiplierLinfNorms.coeffRef(i) = s[i].lagrangeMultiplierLinfNorm();
@@ -172,10 +172,10 @@ void LineSearch::set(const LineSearchSettings& settings) {
 
 
 void LineSearch::reserve(const TimeDiscretization& time_discretization) {
-  while (s_trial_.size() < time_discretization.N_grids()+1) {
+  while (s_trial_.size() < time_discretization.size()) {
     s_trial_.push_back(s_trial_.back());
   }
-  while (kkt_residual_.size() < time_discretization.N_grids()+1) {
+  while (kkt_residual_.size() < time_discretization.size()) {
     kkt_residual_.push_back(kkt_residual_.back());
   }
 }

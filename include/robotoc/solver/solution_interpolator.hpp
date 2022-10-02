@@ -87,22 +87,44 @@ private:
   Solution stored_solution_;
   bool has_stored_solution_;
 
-  int findStoredGridIndexAtImpulse(const double t) const {
-    const int N = stored_time_discretization_.N_grids();
+  int findStoredGridIndexAtImpulseByTime(const double t) const {
+    const int N = stored_time_discretization_.size() - 1;
     for (int i=1; i<N; ++i) {
-      if ((stored_time_discretization_.grid(i).type == GridType::Impulse)
-            && (numerics::isApprox(t, stored_time_discretization_.grid(i).t))) {
+      if ((stored_time_discretization_[i].type == GridType::Impulse)
+            && (numerics::isApprox(t, stored_time_discretization_[i].t))) {
         return i;
       }
     }
     return -1;
   }
 
-  int findStoredGridIndexAtLift(const double t) const {
-    const int N = stored_time_discretization_.N_grids();
+  int findStoredGridIndexAtLiftByTime(const double t) const {
+    const int N = stored_time_discretization_.size() - 1;
     for (int i=1; i<N; ++i) {
-      if ((stored_time_discretization_.grid(i).type == GridType::Lift)
-            && (numerics::isApprox(t, stored_time_discretization_.grid(i).t))) {
+      if ((stored_time_discretization_[i].type == GridType::Lift)
+            && (numerics::isApprox(t, stored_time_discretization_[i].t))) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  int findStoredGridIndexAtImpulseByIndex(const int impulse_index) const {
+    const int N = stored_time_discretization_.size() - 1;
+    for (int i=1; i<N; ++i) {
+      if ((stored_time_discretization_[i].type == GridType::Impulse)
+            && (impulse_index == stored_time_discretization_[i].impulse_index)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  int findStoredGridIndexAtLiftByIndex(const int lift_index) const {
+    const int N = stored_time_discretization_.size() - 1;
+    for (int i=1; i<N; ++i) {
+      if ((stored_time_discretization_[i].type == GridType::Lift)
+            && (lift_index == stored_time_discretization_[i].lift_index)) {
         return i;
       }
     }
@@ -110,10 +132,10 @@ private:
   }
 
   int findStoredGridIndexBeforeTime(const double t) const {
-    if (t < stored_time_discretization_.gridInfo(0).t) return -1;
-    const int N = stored_time_discretization_.N();
+    if (t < stored_time_discretization_[0].t) return -1;
+    const int N = stored_time_discretization_.size() - 1;
     for (int i=0; i<N; ++i) {
-      if (t < stored_time_discretization_.gridInfo(i+1).t) {
+      if (t < stored_time_discretization_[i+1].t) {
         return i;
       }
     }

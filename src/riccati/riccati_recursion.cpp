@@ -61,13 +61,13 @@ void RiccatiRecursion::reserve(const OCP& ocp) {
 void RiccatiRecursion::backwardRiccatiRecursion(
     const TimeDiscretization& time_discretization, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual, RiccatiFactorization& factorization) {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   factorization[N].P = kkt_matrix[N].Qxx;
   factorization[N].s = - kkt_residual[N].lx;
   for (int i=N-1; i>=0; --i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impulse) {
-      if (time_discretization.grid(i-1).sto || grid.sto) {
+      if (time_discretization[i-1].sto || grid.sto) {
         factorizer_.backwardRiccatiRecursionPhaseTransition(
             factorization[i+1], factorization_m_, sto_policy_[i], grid.sto_next);
         factorizer_.backwardRiccatiRecursion(factorization_m_, kkt_matrix[i], 
@@ -80,7 +80,7 @@ void RiccatiRecursion::backwardRiccatiRecursion(
                                              grid.sto);
       }
     }
-    else if (time_discretization.grid(i+1).type == GridType::Lift) {
+    else if (time_discretization[i+1].type == GridType::Lift) {
       if (grid.sto || grid.sto_next) {
         factorizer_.backwardRiccatiRecursionPhaseTransition(
             factorization[i+1], factorization_m_, sto_policy_[i+1], grid.sto_next);
@@ -112,7 +112,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     const TimeDiscretization& time_discretization, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, const RiccatiFactorization& factorization,
     Direction& d) const {
-  const int N = time_discretization.N_grids();
+  const int N = time_discretization.size() - 1;
   d[0].dts = 0.0;
   d[0].dts_next = 0.0;
   if (time_discretization.grid(0).sto) {
@@ -120,7 +120,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     ::robotoc::computeSwitchingTimeDirection(sto_policy_[0], d[0], sto_prev);
   }
   for (int i=0; i<N; ++i) {
-    const auto& grid = time_discretization.grid(i);
+    const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impulse) {
       d[i].dts = d[i-1].dts_next;
       d[i].dts_next = 0.0;
