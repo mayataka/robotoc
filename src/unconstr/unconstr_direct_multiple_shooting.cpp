@@ -11,14 +11,22 @@ namespace robotoc {
 UnconstrDirectMultipleShooting::UnconstrDirectMultipleShooting(const OCP& ocp, 
                                                                const int nthreads)
   : nthreads_(nthreads),
-    ocp_(ocp.N, SplitUnconstrOCP(ocp.robot, ocp.cost, ocp.constraints)),
-    terminal_ocp_(ocp.robot, ocp.cost, ocp.constraints),
+    // ocp_(ocp.N, SplitUnconstrOCP(ocp.robot, ocp.cost, ocp.constraints)),
+    // terminal_ocp_(ocp.robot, ocp.cost, ocp.constraints),
+    intermediate_stage_(ocp.robot, ocp.cost, ocp.constraints),
+    terminal_stage_(ocp.robot, ocp.cost, ocp.constraints),
+    data_(),
     performance_index_(),
     max_primal_step_sizes_(Eigen::VectorXd::Zero(ocp.N+1)), 
     max_dual_step_sizes_(Eigen::VectorXd::Zero(ocp.N+1)) {
   if (nthreads <= 0) {
     throw std::out_of_range("[UnconstrDirectMultipleShooting] invalid argument: nthreads must be positive!");
   }
+  data_.resize(ocp.N+1);
+  for (int i=0; i<ocp.N; ++i) {
+    data_[i] = intermediate_stage_.createData(ocp.robot);
+  }
+  data_[ocp.N] = terminal_stage_.createData(ocp.robot);
 }
 
 
@@ -33,12 +41,12 @@ void UnconstrDirectMultipleShooting::initConstraints(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     if (i < N) {
-      ocp_[i].initConstraints(robots[omp_get_thread_num()], 
-                              time_discretization[i], s[i]);
+      intermediate_stage_.initConstraints(robots[omp_get_thread_num()], 
+                                          time_discretization[i], s[i], data_[i]);
     }
     else {
-      terminal_ocp_.initConstraints(robots[omp_get_thread_num()], 
-                                    time_discretization[i], s[i]);
+      terminal_stage_.initConstraints(robots[omp_get_thread_num()], 
+                                      time_discretization[i], s[i], data_[i]);
     }
   }
 }
@@ -54,19 +62,20 @@ void UnconstrDirectMultipleShooting::evalOCP(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     if (i < N) {
-      ocp_[i].evalOCP(robots[omp_get_thread_num()], time_discretization[i],  
-                      s[i], s[i+1], kkt_residual[i]);
+      intermediate_stage_.evalOCP(robots[omp_get_thread_num()], 
+                                  time_discretization[i],  
+                                  s[i], s[i+1], data_[i], kkt_residual[i]);
     }
     else {
-      terminal_ocp_.evalOCP(robots[omp_get_thread_num()], time_discretization[i],  
-                            s[i], kkt_residual[i]);
+      terminal_stage_.evalOCP(robots[omp_get_thread_num()], 
+                              time_discretization[i], 
+                              s[i], data_[i], kkt_residual[i]);
     }
   }
   performance_index_.setZero();
-  for (int i=0; i<N; ++i) {
-    performance_index_ += ocp_[i].getEval();
+  for (int i=0; i<=N; ++i) {
+    performance_index_ += data_[i].performance_index;
   }
-  performance_index_ += terminal_ocp_.getEval();
 }
 
 
@@ -80,19 +89,20 @@ void UnconstrDirectMultipleShooting::evalKKT(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     if (i < N) {
-      ocp_[i].evalKKT(robots[omp_get_thread_num()], time_discretization[i],  
-                      s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
+      intermediate_stage_.evalKKT(robots[omp_get_thread_num()], 
+                                  time_discretization[i], s[i], s[i+1], 
+                                  data_[i], kkt_matrix[i], kkt_residual[i]);
     }
     else {
-      terminal_ocp_.evalKKT(robots[omp_get_thread_num()], time_discretization[i], 
-                            s[i], kkt_matrix[i], kkt_residual[i]);
+      terminal_stage_.evalKKT(robots[omp_get_thread_num()], 
+                              time_discretization[i], s[i], 
+                              data_[i], kkt_matrix[i], kkt_residual[i]);
     }
   }
   performance_index_.setZero();
-  for (int i=0; i<N; ++i) {
-    performance_index_ += ocp_[i].getEval();
+  for (int i=0; i<=N; ++i) {
+    performance_index_ += data_[i].performance_index;
   }
-  performance_index_ += terminal_ocp_.getEval();
 }
 
 
@@ -118,10 +128,13 @@ void UnconstrDirectMultipleShooting::computeStepSizes(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     if (i < N) {
-      ocp_[i].expandPrimalAndDual(time_discretization[i].dt, kkt_matrix[i], 
-                                  kkt_residual[i], d[i]);
-      max_primal_step_sizes_.coeffRef(i) = ocp_[i].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i)   = ocp_[i].maxDualStepSize();
+      intermediate_stage_.expandPrimalAndDual(time_discretization[i].dt, 
+                                              kkt_matrix[i], kkt_residual[i], 
+                                              data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) 
+          = intermediate_stage_.maxPrimalStepSize(data_[i]);
+      max_dual_step_sizes_.coeffRef(i)
+          = intermediate_stage_.maxDualStepSize(data_[i]);
     }
   }
 }
@@ -147,14 +160,14 @@ void UnconstrDirectMultipleShooting::integrateSolution(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     if (i < N) {
-      ocp_[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
-                           d[i], s[i]);
-      ocp_[i].updateDual(dual_step_size);
+      intermediate_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                       primal_step_size, d[i], s[i], data_[i]);
+      intermediate_stage_.updateDual(dual_step_size, data_[i]);
     }
     else {
-      terminal_ocp_.updatePrimal(robots[omp_get_thread_num()],  
-                                 primal_step_size, d[i], s[i]);
-      terminal_ocp_.updateDual(dual_step_size);
+      terminal_stage_.updatePrimal(robots[omp_get_thread_num()],  
+                                   primal_step_size, d[i], s[i], data_[i]);
+      terminal_stage_.updateDual(dual_step_size, data_[i]);
     }
   }
 }

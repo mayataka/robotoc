@@ -10,13 +10,15 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
 #include "robotoc/core/solution.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/grid_info.hpp"
+#include "robotoc/unconstr/unconstr_ocp_data.hpp"
+#include "robotoc/unconstr/unconstr_intermediate_stage.hpp"
+#include "robotoc/unconstr/unconstr_terminal_stage.hpp"
 
 
 namespace robotoc {
@@ -179,8 +181,11 @@ public:
 private:
   int nthreads_;
 //   UnconstrOCP ocp_;
-  aligned_vector<SplitUnconstrOCP> ocp_;
-  TerminalUnconstrOCP terminal_ocp_;
+//   aligned_vector<SplitUnconstrOCP> ocp_;
+//   TerminalUnconstrOCP terminal_ocp_;
+  UnconstrIntermediateStage intermediate_stage_;
+  UnconstrTerminalStage terminal_stage_;
+  aligned_vector<UnconstrOCPData> data_;
   PerformanceIndex performance_index_; 
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 };
