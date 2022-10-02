@@ -142,8 +142,7 @@ TEST_F(TerminalUnconstrParNMPCTest, evalOCP) {
   constraints->evalConstraint(robot, contact_status, constraints_data, s);
   stage_cost_ref += constraints_data.logBarrier();
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
-  unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,
-                                                        s, kkt_residual_ref);
+  unconstr::stateequation::evalBackwardEuler(dt, s_prev.q, s_prev.v, s, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.evalUnconstrDynamics(robot, s);
   double constraint_violation_ref = 0;

@@ -100,6 +100,11 @@ public:
                          const SplitKKTResidual& kkt_residual, 
                          SplitDirection& d);
 
+  template <int p=1>
+  double primalFeasibility() const {
+    return ID_.template lpNorm<p>();
+  }
+
   ///
   /// @brief Returns squared norm of the KKT residual, that is, the residual in 
   /// the unconstrained dynamics constraint. 

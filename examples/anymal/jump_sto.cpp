@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
-  ocp_solver.meshRefinement(t);
+  ocp_solver.discretize(t);
   ocp_solver.initConstraints(t);
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);

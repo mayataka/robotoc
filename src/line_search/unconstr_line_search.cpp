@@ -36,34 +36,34 @@ bool UnconstrLineSearch::isFilterEmpty() const {
 }
 
 
-void UnconstrLineSearch::computeCostAndViolation(UnconstrOCP& ocp, 
-                                                 aligned_vector<Robot>& robots, 
-                                                 const double t, 
-                                                 const Eigen::VectorXd& q, 
-                                                 const Eigen::VectorXd& v, 
-                                                 const Solution& s, 
-                                                 const double primal_step_size) {
-  assert(robots.size() == nthreads_);
-  assert(q.size() == robots[0].dimq());
-  assert(v.size() == robots[0].dimv());
-  clearCosts();
-  clearViolations();
-  ocp.discretize(t);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      ocp[i].evalOCP(robots[omp_get_thread_num()], ocp.gridInfo(i), s[i], 
-                     s[i+1].q, s[i+1].v, kkt_residual_[i]);
-      costs_.coeffRef(i) = ocp[i].stageCost();
-      violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], dt_);
-    }
-    else {
-      ocp.terminal.evalOCP(robots[omp_get_thread_num()], ocp.gridInfo(i),
-                           s[i], kkt_residual_[i]);
-      costs_.coeffRef(i) = ocp.terminal.terminalCost();
-    }
-  }
-}
+// void UnconstrLineSearch::computeCostAndViolation(UnconstrOCP& ocp, 
+//                                                  aligned_vector<Robot>& robots, 
+//                                                  const double t, 
+//                                                  const Eigen::VectorXd& q, 
+//                                                  const Eigen::VectorXd& v, 
+//                                                  const Solution& s, 
+//                                                  const double primal_step_size) {
+//   assert(robots.size() == nthreads_);
+//   assert(q.size() == robots[0].dimq());
+//   assert(v.size() == robots[0].dimv());
+//   clearCosts();
+//   clearViolations();
+//   ocp.discretize(t);
+//   #pragma omp parallel for num_threads(nthreads_)
+//   for (int i=0; i<=N_; ++i) {
+//     if (i < N_) {
+//       ocp[i].evalOCP(robots[omp_get_thread_num()], ocp.gridInfo(i), s[i], 
+//                      s[i+1].q, s[i+1].v, kkt_residual_[i]);
+//       costs_.coeffRef(i) = ocp[i].stageCost();
+//       violations_.coeffRef(i) = ocp[i].constraintViolation(kkt_residual_[i], dt_);
+//     }
+//     else {
+//       ocp.terminal.evalOCP(robots[omp_get_thread_num()], ocp.gridInfo(i),
+//                            s[i], kkt_residual_[i]);
+//       costs_.coeffRef(i) = ocp.terminal.terminalCost();
+//     }
+//   }
+// }
 
 
 void UnconstrLineSearch::computeCostAndViolation(UnconstrParNMPC& parnmpc, 

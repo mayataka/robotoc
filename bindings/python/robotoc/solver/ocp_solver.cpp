@@ -18,7 +18,7 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("nthreads")=1)
     .def("set_solver_options", &OCPSolver::setSolverOptions,
           py::arg("solver_options"))
-    .def("mesh_refinement", &OCPSolver::meshRefinement,
+    .def("discretize", &OCPSolver::discretize,
           py::arg("t"))
     .def("init_constraints", &OCPSolver::initConstraints,
           py::arg("t"))
@@ -48,10 +48,6 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (OCPSolver::*)() const>(&OCPSolver::KKTError))
-    .def("cost", &OCPSolver::cost,
-          py::arg("include_cost_barrier")=true)
-    .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
-          py::arg("verbose")=false)
     .def("get_time_discretization", &OCPSolver::getTimeDiscretization)
     .def("set_robot_properties", &OCPSolver::setRobotProperties,
           py::arg("properties"))

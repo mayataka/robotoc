@@ -7,11 +7,11 @@
 
 namespace robotoc {
 
-UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const UnconstrOCP& ocp)
-  : N_(ocp.N()),
-    dt_(ocp.T()/ocp.N()),
-    factorizer_(ocp.robot()),
-    lqr_policy_(ocp.N()+1, LQRPolicy(ocp.robot())) {
+UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const OCP& ocp)
+  : N_(ocp.N),
+    dt_(ocp.T/ocp.N),
+    factorizer_(ocp.robot),
+    lqr_policy_(ocp.N+1, LQRPolicy(ocp.robot)) {
 }
 
 
@@ -20,10 +20,6 @@ UnconstrRiccatiRecursion::UnconstrRiccatiRecursion()
     dt_(0),
     factorizer_(),
     lqr_policy_() {
-}
-
-
-UnconstrRiccatiRecursion::~UnconstrRiccatiRecursion() {
 }
 
 
@@ -41,11 +37,14 @@ void UnconstrRiccatiRecursion::backwardRiccatiRecursion(
 
 
 void UnconstrRiccatiRecursion::forwardRiccatiRecursion( 
-    const KKTResidual& kkt_residual, Direction& d) const {
+    const KKTResidual& kkt_residual, 
+    const UnconstrRiccatiFactorization& factorization, Direction& d) const {
   for (int i=0; i<N_; ++i) {
     factorizer_.forwardRiccatiRecursion(kkt_residual[i], dt_, lqr_policy_[i], 
                                         d[i], d[i+1]);
+    UnconstrRiccatiFactorizer::computeCostateDirection(factorization[i], d[i]);
   }
+  UnconstrRiccatiFactorizer::computeCostateDirection(factorization[N_], d[N_]);
 }
 
 

@@ -11,20 +11,21 @@ OCPSolver::OCPSolver(const OCP& ocp,
                      const SolverOptions& solver_options, const int nthreads)
   : robots_(nthreads, ocp.robot),
     contact_sequence_(ocp.contact_sequence),
-    dms_(ocp, nthreads),
     time_discretization_(ocp.T, ocp.N, ocp.reserved_num_discrete_events),
+    dms_(ocp, nthreads),
     sto_(ocp),
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
     line_search_(ocp),
     ocp_(ocp),
-    riccati_factorization_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitRiccatiFactorization(ocp.robot)),
-    kkt_matrix_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitKKTMatrix(ocp.robot)),
-    kkt_residual_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitKKTResidual(ocp.robot)),
-    s_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitSolution(ocp.robot)),
-    d_(ocp.N+3*ocp.reserved_num_discrete_events+1, SplitDirection(ocp.robot)),
-    solution_interpolator_(ocp.robot, ocp.N+3*ocp.reserved_num_discrete_events+1, ocp.reserved_num_discrete_events),
+    kkt_matrix_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTMatrix(ocp.robot)),
+    kkt_residual_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTResidual(ocp.robot)),
+    s_(ocp.N+1+ocp.reserved_num_discrete_events, SplitSolution(ocp.robot)),
+    d_(ocp.N+1+ocp.reserved_num_discrete_events, SplitDirection(ocp.robot)),
+    riccati_factorization_(ocp.N+1+ocp.reserved_num_discrete_events+1, SplitRiccatiFactorization(ocp.robot)),
+    solution_interpolator_(ocp.robot, ocp.N, ocp.reserved_num_discrete_events),
     solver_options_(solver_options),
-    solver_statistics_() {
+    solver_statistics_(),
+    timer_() {
   if (!ocp.cost) {
     throw std::out_of_range("[OCPSolver] invalid argument: ocp.cost should not be nullptr!");
   }
@@ -54,11 +55,24 @@ OCPSolver::OCPSolver(const OCP& ocp,
 }
 
 
-OCPSolver::OCPSolver() {
-}
-
-
-OCPSolver::~OCPSolver() {
+OCPSolver::OCPSolver()
+  : robots_(),
+    contact_sequence_(),
+    time_discretization_(),
+    dms_(),
+    sto_(),
+    riccati_recursion_(),
+    line_search_(),
+    ocp_(),
+    kkt_matrix_(),
+    kkt_residual_(),
+    s_(),
+    d_(),
+    riccati_factorization_(),
+    solution_interpolator_(),
+    solver_options_(),
+    solver_statistics_(),
+    timer_() {
 }
 
 
@@ -72,7 +86,7 @@ void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
 }
 
 
-void OCPSolver::meshRefinement(const double t) {
+void OCPSolver::discretize(const double t) {
   time_discretization_.discretizeGrid(contact_sequence_, t);
   if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
     time_discretization_.discretizePhase(contact_sequence_, t);
@@ -82,7 +96,7 @@ void OCPSolver::meshRefinement(const double t) {
 
 
 void OCPSolver::initConstraints(const double t) {
-  meshRefinement(t);
+  discretize(t);
   dms_.initConstraints(robots_, time_discretization_, s_);
   sto_.initConstraints(time_discretization_);
 }
@@ -138,9 +152,9 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     timer_.tick();
   }
   if (init_solver) {
-    meshRefinement(t);
+    discretize(t);
     if (solver_options_.enable_solution_interpolation) {
-      solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
+      solution_interpolator_.interpolateTimeBased(robots_[0], time_discretization_, s_);
     }
     dms_.initConstraints(robots_, time_discretization_, s_);
     sto_.initConstraints(time_discretization_);
@@ -166,9 +180,9 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
         if (solver_options_.enable_solution_interpolation) {
           solution_interpolator_.store(time_discretization_, s_);
         }
-        meshRefinement(t);
+        discretize(t);
         if (solver_options_.enable_solution_interpolation) {
-          solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
+          solution_interpolator_.interpolateEventBased(robots_[0], time_discretization_, s_);
         }
         dms_.initConstraints(robots_, time_discretization_, s_);
         inner_iter = 0;
@@ -361,23 +375,6 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
 
 double OCPSolver::KKTError() const {
   return std::sqrt(dms_.getEval().kkt_error + sto_.getEval().kkt_error);
-}
-
-
-double OCPSolver::cost(const bool include_cost_barrier) const {
-  if (include_cost_barrier) {
-    const auto& eval = dms_.getEval();
-    return eval.cost + eval.cost_barrier;
-  }
-  else {
-    return dms_.getEval().cost;
-  }
-}
-
-
-bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  resizeData();
-  return dms_.isFeasible(robots_, time_discretization_, s_);
 }
 
 

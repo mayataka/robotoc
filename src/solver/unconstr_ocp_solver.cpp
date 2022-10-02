@@ -8,7 +8,23 @@
 
 namespace robotoc {
 
-auto UnconstrOCPFromOCP = [](const OCP& ocp) {
+UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp, 
+                                     const SolverOptions& solver_options, 
+                                     const int nthreads)
+  : robots_(nthreads, ocp.robot),
+    time_discretization_(ocp.N+1, GridInfo()),
+    dms_(ocp, nthreads),
+    riccati_recursion_(ocp),
+    // line_search_(ocp, nthreads),
+    ocp_(ocp),
+    kkt_matrix_(ocp.N+1, SplitKKTMatrix(ocp.robot)),
+    kkt_residual_(ocp.N+1, SplitKKTResidual(ocp.robot)),
+    s_(ocp.N+1, SplitSolution(ocp.robot)),
+    d_(ocp.N+1, SplitDirection(ocp.robot)),
+    riccati_factorization_(ocp.N+1, SplitRiccatiFactorization(ocp.robot)),
+    solver_options_(solver_options),
+    solver_statistics_(),
+    timer_() {
   if (!ocp.cost) {
     throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.cost should not be nullptr!");
   }
@@ -21,39 +37,19 @@ auto UnconstrOCPFromOCP = [](const OCP& ocp) {
   if (ocp.N <= 0) {
     throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.N must be positive!");
   }
-  return UnconstrOCP(ocp.robot, ocp.cost, ocp.constraints, ocp.T, ocp.N);
-};
-
-
-UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp, 
-                                     const SolverOptions& solver_options, 
-                                     const int nthreads)
-  : UnconstrOCPSolver(UnconstrOCPFromOCP(ocp), solver_options, nthreads) {
-}
-
-
-UnconstrOCPSolver::UnconstrOCPSolver(const UnconstrOCP& ocp, 
-                                     const SolverOptions& solver_options, 
-                                     const int nthreads)
-  : robots_(nthreads, ocp.robot()),
-    ocp_(ocp),
-    riccati_recursion_(ocp),
-    line_search_(ocp, nthreads),
-    kkt_matrix_(ocp.N()+1, SplitKKTMatrix(ocp.robot())),
-    kkt_residual_(ocp.N()+1, SplitKKTResidual(ocp.robot())),
-    s_(ocp.N()+1, SplitSolution(ocp.robot())),
-    d_(ocp.N()+1, SplitDirection(ocp.robot())),
-    riccati_factorization_(ocp.N()+1, SplitRiccatiFactorization(ocp.robot())),
-    N_(ocp.N()),
-    nthreads_(nthreads),
-    T_(ocp.T()),
-    dt_(ocp.T()/ocp.N()),
-    primal_step_size_(Eigen::VectorXd::Zero(ocp.N())), 
-    dual_step_size_(Eigen::VectorXd::Zero(ocp.N())),
-    solver_options_(solver_options),
-    solver_statistics_() {
   if (nthreads <= 0) {
     throw std::out_of_range("[UnconstrOCPSolver] invalid argument: nthreads must be positive!");
+  }
+  const double dt = ocp.T / ocp.N;
+  for (int i=0; i<=ocp.N; ++i) {
+    time_discretization_[i].t = dt * i;
+    time_discretization_[i].dt = dt;
+    time_discretization_[i].contact_phase = -1;
+    time_discretization_[i].time_stage = i;
+    time_discretization_[i].impulse_index = -1;
+    time_discretization_[i].lift_index = -1;
+    time_discretization_[i].grid_count_in_phase = i;
+    time_discretization_[i].N_phase = ocp.N;
   }
   initConstraints();
 }
@@ -63,25 +59,13 @@ UnconstrOCPSolver::UnconstrOCPSolver() {
 }
 
 
-UnconstrOCPSolver::~UnconstrOCPSolver() {
-}
-
-
 void UnconstrOCPSolver::setSolverOptions(const SolverOptions& solver_options) {
   solver_options_ = solver_options;
 }
 
 
 void UnconstrOCPSolver::initConstraints() {
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      ocp_[i].initConstraints(robots_[omp_get_thread_num()], i, s_[i]);
-    }
-    else {
-      ocp_.terminal.initConstraints(robots_[omp_get_thread_num()], N_, s_[N_]);
-    }
-  }
+  dms_.initConstraints(robots_, time_discretization_, s_);
 }
 
 
@@ -89,61 +73,24 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                        const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_.discretize(t);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    if (i == 0) {
-      ocp_[0].computeKKTSystem(robots_[omp_get_thread_num()], ocp_.gridInfo(0),  
-                               s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
-    }
-    else if (i < N_) {
-      ocp_[i].computeKKTSystem(robots_[omp_get_thread_num()], ocp_.gridInfo(i),
-                               s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
-    }
-    else {
-      ocp_.terminal.computeKKTSystem(robots_[omp_get_thread_num()], 
-                                     ocp_.gridInfo(N_), s_[N_-1].q, s_[N_], 
-                                     kkt_matrix_[N_], kkt_residual_[N_]);
-    }
-  }
+  discretize(t);
+  dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
   riccati_recursion_.backwardRiccatiRecursion(kkt_matrix_, kkt_residual_,
                                               riccati_factorization_);
-  d_[0].dq() = q - s_[0].q;
-  d_[0].dv() = v - s_[0].v;
-  riccati_recursion_.forwardRiccatiRecursion(kkt_residual_, d_);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    UnconstrRiccatiFactorizer::computeCostateDirection(riccati_factorization_[i], 
-                                                       d_[i]);
-    if (i < N_) {
-      ocp_[i].expandPrimalAndDual(dt_, s_[i], kkt_matrix_[i], 
-                                  kkt_residual_[i], d_[i]);
-      primal_step_size_.coeffRef(i) = ocp_[i].maxPrimalStepSize();
-      dual_step_size_.coeffRef(i)   = ocp_[i].maxDualStepSize();
-    }
-  }
-  double primal_step_size = primal_step_size_.minCoeff();
-  const double dual_step_size   = dual_step_size_.minCoeff();
-  if (solver_options_.enable_line_search) {
-    const double max_primal_step_size = primal_step_size;
-    primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
-                                                    d_, max_primal_step_size);
-  }
+  dms_.computeInitialStateDirection(q, v, s_, d_);
+  riccati_recursion_.forwardRiccatiRecursion(kkt_residual_, riccati_factorization_, d_);
+  dms_.computeStepSizes(time_discretization_, kkt_matrix_, kkt_residual_, d_);
+  double primal_step_size = dms_.maxPrimalStepSize();
+  const double dual_step_size   = dms_.maxDualStepSize();
+  // if (solver_options_.enable_line_search) {
+  //   const double max_primal_step_size = primal_step_size;
+  //   primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
+  //                                                   d_, max_primal_step_size);
+  // }
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      ocp_[i].updatePrimal(robots_[omp_get_thread_num()], primal_step_size, 
-                           d_[i], s_[i]);
-      ocp_[i].updateDual(dual_step_size);
-    }
-    else {
-      ocp_.terminal.updatePrimal(robots_[omp_get_thread_num()],  
-                                 primal_step_size, d_[N_], s_[N_]);
-      ocp_.terminal.updateDual(dual_step_size);
-    }
-  }
+  dms_.integrateSolution(robots_, time_discretization_, 
+                         primal_step_size, dual_step_size, d_, s_);
 } 
 
 
@@ -161,7 +108,7 @@ void UnconstrOCPSolver::solve(const double t, const Eigen::VectorXd& q,
   }
   if (init_solver) {
     initConstraints();
-    line_search_.clearFilter();
+    // line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {
@@ -191,7 +138,7 @@ const SolverStatistics& UnconstrOCPSolver::getSolverStatistics() const {
 
 const SplitSolution& UnconstrOCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= N_);
+  assert(stage <= ocp_.N);
   return s_[stage];
 }
 
@@ -200,22 +147,22 @@ std::vector<Eigen::VectorXd> UnconstrOCPSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<=N_; ++i) {
+    for (int i=0; i<=ocp_.N; ++i) {
       sol.push_back(s_[i].q);
     }
   }
   if (name == "v") {
-    for (int i=0; i<=N_; ++i) {
+    for (int i=0; i<=ocp_.N; ++i) {
       sol.push_back(s_[i].v);
     }
   }
   if (name == "a") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.N; ++i) {
       sol.push_back(s_[i].a);
     }
   }
   if (name == "u") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.N; ++i) {
       sol.push_back(s_[i].u);
     }
   }
@@ -257,61 +204,28 @@ double UnconstrOCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
   if (v.size() != robots_[0].dimv()) {
     throw std::out_of_range("[UnconstrOCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
   }
-  ocp_.discretize(t);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    if (i == 0) {
-      ocp_[0].computeKKTResidual(robots_[omp_get_thread_num()], ocp_.gridInfo(0), 
-                                 s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
-    }
-    else if (i < N_) {
-      ocp_[i].computeKKTResidual(robots_[omp_get_thread_num()], ocp_.gridInfo(i),   
-                                 s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
-    }
-    else {
-      ocp_.terminal.computeKKTResidual(robots_[omp_get_thread_num()],  
-                                       ocp_.gridInfo(N_), s_[N_-1].q, s_[N_], 
-                                       kkt_matrix_[N_], kkt_residual_[N_]);
-    }
-  }
+  discretize(t);
+  dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
   return KKTError();
 }
 
 
 double UnconstrOCPSolver::KKTError() const {
-  double kkt_error = 0;
-  for (int i=0; i<=N_; ++i) {
-    kkt_error += kkt_residual_[i].KKTError();
-  }
-  return std::sqrt(kkt_error);
-}
-
-
-double UnconstrOCPSolver::cost() const {
-  double total_cost = 0;
-  for (int i=0; i<N_; ++i) {
-    total_cost += ocp_[i].stageCost();
-  }
-  total_cost += ocp_.terminal.terminalCost();
-  return total_cost;
-}
-
-
-bool UnconstrOCPSolver::isCurrentSolutionFeasible() {
-  for (int i=0; i<N_; ++i) {
-    const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at time stage " << i << std::endl;
-      return false;
-    }
-  }
-  return true;
+  return std::sqrt(dms_.getEval().kkt_error);
 }
 
 
 void UnconstrOCPSolver::setRobotProperties(const RobotProperties& properties) {
   for (auto& e : robots_) {
     e.setRobotProperties(properties);
+  }
+}
+
+
+void UnconstrOCPSolver::discretize(const double t) {
+  const double dt = ocp_.T / ocp_.N;
+  for (int i=0; i<=ocp_.N; ++i) {
+    time_discretization_[i].t = dt * i;
   }
 }
 

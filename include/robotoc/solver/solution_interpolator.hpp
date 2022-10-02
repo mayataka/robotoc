@@ -56,13 +56,6 @@ public:
   SolutionInterpolator& operator=(SolutionInterpolator&&) noexcept = default;
 
   ///
-  /// @brief Reserve the discrete-event data. 
-  /// @param[in] robot Robot model.
-  /// @param[in] time_discretization Time discretization.
-  ///
-  void reserve(const Robot& robot, const TimeDiscretization& time_discretization);
-
-  ///
   /// @brief Stores the current time discretization and solution. 
   /// @param[in] time_discretization Time discretization. 
   /// @param[out] solution Solution. 
@@ -76,9 +69,19 @@ public:
   /// @param[in] time_discretization Time discretization. 
   /// @param[out] solution Solution. 
   ///
-  void interpolate(const Robot& robot, 
-                   const TimeDiscretization& time_discretization, 
-                   Solution& solution) const;
+  void interpolateEventBased(const Robot& robot, 
+                             const TimeDiscretization& time_discretization, 
+                             Solution& solution) const;
+
+  ///
+  /// @brief Interpolates the solution. 
+  /// @param[in] robot Robot model.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[out] solution Solution. 
+  ///
+  void interpolateTimeBased(const Robot& robot, 
+                            const TimeDiscretization& time_discretization, 
+                            Solution& solution) const;
 
   ///
   /// @brief Check if this has a stored solution. 

@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_SPLIT_UNCONSTR_OCP_HPP_
-#define ROBOTOC_SPLIT_UNCONSTR_OCP_HPP_
+#ifndef ROBOTOC_TERMINAL_UNCONSTR_OCP_HPP_
+#define ROBOTOC_TERMINAL_UNCONSTR_OCP_HPP_
 
 #include <memory>
 
@@ -25,11 +25,11 @@
 namespace robotoc {
 
 ///
-/// @class SplitUnconstrOCP
+/// @class TerminalUnconstrOCP
 /// @brief An optimal control problem of unconstrained rigid-body systems for 
 /// Riccati recursion algorithm split into a time stage. 
 ///
-class SplitUnconstrOCP {
+class TerminalUnconstrOCP {
 public:
   ///
   /// @brief Constructs a split optimal control problem.
@@ -37,39 +37,39 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  SplitUnconstrOCP(const Robot& robot, 
-                   const std::shared_ptr<CostFunction>& cost,
-                   const std::shared_ptr<Constraints>& constraints);
+  TerminalUnconstrOCP(const Robot& robot, 
+                      const std::shared_ptr<CostFunction>& cost,
+                      const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor.  
   ///
-  SplitUnconstrOCP();
+  TerminalUnconstrOCP();
 
   ///
   /// @brief Default destructor. 
   ///
-  ~SplitUnconstrOCP() = default;
+  ~TerminalUnconstrOCP() = default;
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitUnconstrOCP(const SplitUnconstrOCP&) = default;
+  TerminalUnconstrOCP(const TerminalUnconstrOCP&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  SplitUnconstrOCP& operator=(const SplitUnconstrOCP&) = default;
+  TerminalUnconstrOCP& operator=(const TerminalUnconstrOCP&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitUnconstrOCP(SplitUnconstrOCP&&) noexcept = default;
+  TerminalUnconstrOCP(TerminalUnconstrOCP&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitUnconstrOCP& operator=(SplitUnconstrOCP&&) noexcept = default;
+  TerminalUnconstrOCP& operator=(TerminalUnconstrOCP&&) noexcept = default;
 
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
@@ -96,12 +96,10 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] grid_info Grid info. 
   /// @param[in] s Split solution of this time stage.
-  /// @param[in] q_next Configuration at the next time stage.
-  /// @param[in] v_next Generaized velocity at the next time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
-               const SplitSolution& s_next, SplitKKTResidual& kkt_residual);
+               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the KKT system of this time stage, i.e., the condensed
@@ -109,25 +107,19 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] grid_info Grid info. 
   /// @param[in] s Split solution of this time stage.
-  /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void evalKKT(Robot& robot, const GridInfo& grid_info, 
-               const SplitSolution& s, const SplitSolution& s_next, 
-               SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+               const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Expands the primal and dual variables, i.e., computes the Newton 
   /// direction of the condensed variables of this stage.
-  /// @param[in] dt Time step of this time stage.
-  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void expandPrimalAndDual(const double dt, const SplitKKTMatrix& kkt_matrix,
-                           const SplitKKTResidual& kkt_residual,
-                           SplitDirection& d);
+  void expandPrimalAndDual(SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -173,6 +165,7 @@ private:
 
 };
 
+
 } // namespace robotoc
 
-#endif // ROBOTOC_SPLIT_UNCONSTR_OCP_HPP_ 
+#endif // ROBOTOC_TERMINAL_UNCONSTR_OCP_HPP_

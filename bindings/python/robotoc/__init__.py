@@ -5,7 +5,6 @@ from .constraints import *
 # from .dynamics import *
 from .ocp import *
 from .sto import *
-from .unconstr import *
 from .riccati import *
 from .line_search import *
 from .planner import *

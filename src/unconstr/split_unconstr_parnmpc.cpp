@@ -61,8 +61,8 @@ void SplitUnconstrParNMPC::evalOCP(Robot& robot, const GridInfo& grid_info,
                                      grid_info, s);
   constraints_->evalConstraint(robot, contact_status_, constraints_data_, s);
   stage_cost_ += constraints_data_.logBarrier();
-  unconstr::stateequation::computeBackwardEulerResidual(grid_info.dt, q_prev, v_prev, 
-                                                        s, kkt_residual);
+  unconstr::stateequation::evalBackwardEuler(grid_info.dt, q_prev, v_prev, 
+                                             s, kkt_residual);
   unconstr_dynamics_.evalUnconstrDynamics(robot, s);
 }
 

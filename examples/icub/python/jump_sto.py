@@ -126,7 +126,7 @@ v = np.zeros(robot.dimv())
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 
-ocp_solver.mesh_refinement(t)
+ocp_solver.discretize(t)
 
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)

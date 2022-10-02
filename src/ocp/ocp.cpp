@@ -1,7 +1,6 @@
 #include "robotoc/ocp/ocp.hpp"
 
 #include <stdexcept>
-#include <cassert>
 
 
 namespace robotoc {
@@ -27,7 +26,7 @@ OCP::OCP(const Robot& _robot, const std::shared_ptr<CostFunction>& _cost,
   if (_N <= 0) {
     throw std::out_of_range("[OCP] invalid argument: 'N' must be positive!");
   }
-  if (_reserved_num_discrete_events< 0) {
+  if (_reserved_num_discrete_events < 0) {
     throw std::out_of_range("[OCP] invalid argument: 'reserved_num_discrete_events' must be non-negative!");
   }
 }
@@ -52,7 +51,7 @@ OCP::OCP(const Robot& _robot, const std::shared_ptr<CostFunction>& _cost,
   if (_N <= 0) {
     throw std::out_of_range("[OCP] invalid argument: 'N' must be positive!");
   }
-  if (_reserved_num_discrete_events< 0) {
+  if (_reserved_num_discrete_events < 0) {
     throw std::out_of_range("[OCP] invalid argument: 'reserved_num_discrete_events' must be non-negative!");
   }
 }

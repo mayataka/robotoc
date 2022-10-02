@@ -8,7 +8,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/unconstr/split_unconstr_ocp.hpp"
-#include "robotoc/ocp/terminal_ocp.hpp"
+#include "robotoc/unconstr/terminal_unconstr_ocp.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/ocp/grid_info.hpp"
@@ -35,7 +35,7 @@ public:
               const std::shared_ptr<Constraints>& constraints, 
               const double T, const int N) 
     : data(N, SplitUnconstrOCP(robot, cost, constraints)), 
-      terminal(TerminalOCP(robot, cost, constraints)),
+      terminal(TerminalUnconstrOCP(robot, cost, constraints)),
       robot_(robot),
       cost_(cost),
       constraints_(constraints),
@@ -180,7 +180,7 @@ public:
   ///
   /// @brief Split optimal control problem data for the terminal stage.
   ///
-  TerminalOCP terminal;
+  TerminalUnconstrOCP terminal;
 
   ///
   /// @brief Displays the optimal control problem onto a ostream.

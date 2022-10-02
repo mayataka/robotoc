@@ -10,7 +10,7 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/unconstr/split_unconstr_ocp.hpp"
+#include "robotoc/unconstr/terminal_unconstr_ocp.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
@@ -19,7 +19,7 @@
 
 namespace robotoc {
 
-class SplitUnconstrOCPTest : public ::testing::Test {
+class TerminalUnconstrOCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     robot = testhelper::CreateRobotManipulator();
@@ -41,15 +41,15 @@ protected:
 };
 
 
-TEST_F(SplitUnconstrOCPTest, evalOCP) {
+TEST_F(TerminalUnconstrOCPTest, evalOCP) {
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
-  SplitUnconstrOCP ocp(robot, cost, constraints);
+  TerminalUnconstrOCP ocp(robot, cost, constraints);
   ocp.initConstraints(robot, grid_info, s);
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  ocp.evalOCP(robot, grid_info, s, s_next, kkt_residual);
+  ocp.evalOCP(robot, grid_info, s, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   PerformanceIndex performance_index_ref;
@@ -58,28 +58,26 @@ TEST_F(SplitUnconstrOCPTest, evalOCP) {
   data.constraints_data = constraints->createConstraintsData(robot, grid_info.time_stage);
   data.unconstr_dynamics = UnconstrDynamics(robot);
   const auto contact_status = robot.createContactStatus();
-  constraints->setSlackAndDual(robot, contact_status, data.constraints_data, s);
+  // constraints->setSlackAndDual(robot, contact_status, data.constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->evalStageCost(robot, contact_status, data.cost_data, grid_info, s);
-  constraints->evalConstraint(robot, contact_status, data.constraints_data, s);
-  performance_index_ref.cost_barrier = data.constraints_data.logBarrier();
-  unconstr::stateequation::evalForwardEuler(grid_info.dt, s, s_next, kkt_residual_ref);
-  data.unconstr_dynamics.evalUnconstrDynamics(robot, s);
-  performance_index_ref.primal_feasibility 
-      = data.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
+  performance_index_ref.cost = cost->evalTerminalCost(robot, data.cost_data, grid_info, s);
+  // constraints->evalConstraint(robot, contact_status, data.constraints_data, s);
+  // performance_index_ref.cost_barrier = data.constraints_data.logBarrier();
+  // performance_index_ref.primal_feasibility 
+  //     = data.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
   EXPECT_TRUE(ocp.getEval().isApprox(performance_index_ref));
 }
 
 
-TEST_F(SplitUnconstrOCPTest, evalKKT) {
+TEST_F(TerminalUnconstrOCPTest, evalKKT) {
   const auto s = SplitSolution::Random(robot);
   const auto s_next = SplitSolution::Random(robot);
-  SplitUnconstrOCP ocp(robot, cost, constraints);
+  TerminalUnconstrOCP ocp(robot, cost, constraints);
   ocp.initConstraints(robot, grid_info, s);
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  ocp.evalKKT(robot, grid_info, s, s_next, kkt_matrix, kkt_residual);
+  ocp.evalKKT(robot, grid_info, s, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   PerformanceIndex performance_index_ref;
@@ -90,29 +88,27 @@ TEST_F(SplitUnconstrOCPTest, evalKKT) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, data.constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, data.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->linearizeConstraints(robot, contact_status, data.constraints_data, s, kkt_residual_ref);
+  performance_index_ref.cost = cost->quadratizeTerminalCost(robot, data.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
+  // constraints->linearizeConstraints(robot, contact_status, data.constraints_data, s, kkt_residual_ref);
   performance_index_ref.cost_barrier = data.constraints_data.logBarrier();
-  unconstr::stateequation::linearizeForwardEuler(grid_info.dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  data.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual_ref);
-  performance_index_ref.primal_feasibility 
-      = data.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
+  unconstr::stateequation::linearizeForwardEulerTerminal(s, kkt_residual_ref);
+  // data.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual_ref);
+  // performance_index_ref.primal_feasibility 
+  //     = data.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
   performance_index_ref.dual_feasibility
       = data.dualFeasibility<1>() + kkt_residual_ref.dualFeasibility<1>();
   performance_index_ref.kkt_error
       = data.KKTError() + kkt_residual_ref.KKTError();
-  constraints->condenseSlackAndDual(contact_status, data.constraints_data, kkt_matrix_ref, kkt_residual_ref);
-  data.unconstr_dynamics.condenseUnconstrDynamics(kkt_matrix_ref, kkt_residual_ref);
+  // constraints->condenseSlackAndDual(contact_status, data.constraints_data, kkt_matrix_ref, kkt_residual_ref);
+  // data.unconstr_dynamics.condenseUnconstrDynamics(kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(ocp.getEval().isApprox(performance_index_ref));
 
   SplitDirection d = SplitDirection::Random(robot);
   auto d_ref = d;
-  ocp.expandPrimalAndDual(grid_info.dt, kkt_matrix, kkt_residual, d);
-  constraints->expandSlackAndDual(contact_status, data.constraints_data, d_ref);
-  data.unconstr_dynamics.expandPrimal(d_ref);
-  data.unconstr_dynamics.expandDual(grid_info.dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
+  ocp.expandPrimalAndDual(d);
+  // constraints->expandSlackAndDual(contact_status, data.constraints_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(data.constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(data.constraints_data));

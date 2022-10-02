@@ -194,7 +194,7 @@ Eigen::Vector3d f_init;
 f_init << 0, 0, 0.25*robot.totalWeight();
 ocp_solver.setSolution("f", f_init); # set the initial guess of the solution.
 
-ocp_solver.meshRefinement(t);
+ocp_solver.discretize(t);
 ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)

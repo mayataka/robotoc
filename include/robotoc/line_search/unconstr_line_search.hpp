@@ -144,10 +144,10 @@ private:
   Solution s_trial_;
   KKTResidual kkt_residual_;
 
-  void computeCostAndViolation(UnconstrOCP& ocp, aligned_vector<Robot>& robots,
-                               const double t, const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, const Solution& s,
-                               const double primal_step_size_for_barrier=0);
+  // void computeCostAndViolation(UnconstrOCP& ocp, aligned_vector<Robot>& robots,
+  //                              const double t, const Eigen::VectorXd& q, 
+  //                              const Eigen::VectorXd& v, const Solution& s,
+  //                              const double primal_step_size_for_barrier=0);
 
   void computeCostAndViolation(UnconstrParNMPC& parnmpc, aligned_vector<Robot>& robots,
                                const double t, const Eigen::VectorXd& q, 

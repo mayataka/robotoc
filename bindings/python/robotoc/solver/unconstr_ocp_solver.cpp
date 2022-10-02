@@ -13,9 +13,6 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(unconstr_ocp_solver, m) {
   py::class_<UnconstrOCPSolver>(m, "UnconstrOCPSolver")
-    .def(py::init<const UnconstrOCP&, const SolverOptions&, const int>(),
-          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
-          py::arg("nthreads")=1)
     .def(py::init<const OCP&, const SolverOptions&, const int>(),
           py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
           py::arg("nthreads")=1)
@@ -39,7 +36,6 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (UnconstrOCPSolver::*)() const>(&UnconstrOCPSolver::KKTError))
-    .def("cost", &UnconstrOCPSolver::cost)
     .def("set_robot_properties", &UnconstrOCPSolver::setRobotProperties,
           py::arg("properties")); 
 }

@@ -59,9 +59,9 @@ public:
   OCPSolver();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~OCPSolver();
+  ~OCPSolver() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -90,12 +90,10 @@ public:
   void setSolverOptions(const SolverOptions& solver_options);
 
   ///
-  /// @brief Applies mesh refinement if the discretization method is   
-  /// DiscretizationMethod::PhaseBased. Also initializes the constraints 
-  /// if the mesh refiement is carried out.
+  /// @brief Discretizes the problem and reiszes the data structures.
   /// @param[in] t Initial time of the horizon. 
   ///
-  void meshRefinement(const double t);
+  void discretize(const double t);
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
@@ -117,12 +115,12 @@ public:
 
   ///
   /// @brief Solves the optimal control problem. Internally calls 
-  /// updateSolutio() and meshRefinement().
+  /// updateSolutio() and discretize().
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] init_solver If true, initializes the solver, that is, calls
-  /// meshRefinement(), initConstraints(), and clears the line search filter.
+  /// discretize(), initConstraints(), and clears the line search filter.
   /// Default is true.
   /// @remark The linear and angular velocities of the floating base are assumed
   /// to be expressed in the body local coordinate.
@@ -208,22 +206,6 @@ public:
   /// @return The l2-norm of the KKT residual.
   ///
   double KKTError() const;
-
-  ///
-  /// @brief Returns the value of the cost function.
-  /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
-  /// called.  
-  /// @param[in] include_cost_barrier If true, includes the cost due to the 
-  /// barrier function. Default is true.
-  /// @return The value of the cost function.
-  ///
-  double cost(const bool include_cost_barrier=true) const;
-
-  ///
-  /// @return true if the current solution is feasible subject to the 
-  /// inequality constraints. Return false if it is not feasible.
-  ///
-  bool isCurrentSolutionFeasible(const bool verbose=false);
 
   ///
   /// @brief OCP discretization. 

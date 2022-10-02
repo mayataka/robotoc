@@ -164,7 +164,7 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
-  ocp_solver_.meshRefinement(t);
+  ocp_solver_.discretize(t);
   ocp_solver_.solve(t, q, v, true);
   s_ = ocp_solver_.getSolution();
   const auto ts = contact_sequence_->eventTimes();

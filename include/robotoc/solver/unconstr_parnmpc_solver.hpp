@@ -18,6 +18,7 @@
 #include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
 #include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
 #include "robotoc/utils/timer.hpp"
@@ -200,6 +201,7 @@ public:
 
 private:
   aligned_vector<Robot> robots_;
+  TimeDiscretization time_discretization_;
   UnconstrParNMPC parnmpc_;
   UnconstrBackwardCorrection backward_correction_;
   UnconstrLineSearch line_search_;

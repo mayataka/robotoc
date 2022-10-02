@@ -3,18 +3,16 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/planner/contact_sequence.hpp"
-#include "robotoc/riccati/riccati_factorization.hpp"
-#include "robotoc/riccati/split_riccati_factorization.hpp"
-#include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
-#include "robotoc/riccati/lqr_policy.hpp"
-#include "robotoc/riccati/riccati_factorizer.hpp"
-#include "robotoc/utils/aligned_vector.hpp"
-#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
-#include "robotoc/ocp/ocp_def.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
+#include "robotoc/riccati/riccati_factorization.hpp"
+#include "robotoc/riccati/split_riccati_factorization.hpp"
+#include "robotoc/riccati/lqr_policy.hpp"
+#include "robotoc/riccati/riccati_factorizer.hpp"
+#include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -36,8 +34,7 @@ public:
   /// the switching time. Used in a heuristic regularization on the dynamic 
   /// programming recursion. Must be positive. Default is 0.1.
   ///
-  RiccatiRecursion(const OCP& ocp, const int nthreads, 
-                   const double max_dts0=0.1);
+  RiccatiRecursion(const OCP& ocp, const int nthreads, const double max_dts0=0.1);
 
   ///
   /// @brief Default constructor. 

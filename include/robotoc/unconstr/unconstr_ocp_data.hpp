@@ -1,21 +1,20 @@
-#ifndef ROBOTOC_OCP_DATA_HPP_
-#define ROBOTOC_OCP_DATA_HPP_
+#ifndef ROBOTOC_UNCONSTR_OCP_DATA_HPP_
+#define ROBOTOC_UNCONSTR_OCP_DATA_HPP_
 
 #include "robotoc/core/performance_index.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/dynamics/state_equation_data.hpp"
-#include "robotoc/dynamics/contact_dynamics_data.hpp"
-#include "robotoc/dynamics/switching_constraint_data.hpp"
+#include "robotoc/unconstr/unconstr_dynamics.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class OCPData
-/// @brief A data structure for an optimal control problem.
+/// @class UnconstrOCPData
+/// @brief Data structure for the optimal control problem of unconstrained 
+/// rigid-body systems.
 ///
-struct OCPData {
+struct UnconstrOCPData {
   ///
   /// @brief Performance index.
   ///
@@ -34,17 +33,7 @@ struct OCPData {
   ///
   /// @brief State equation data.
   ///
-  StateEquationData state_equation_data;
-
-  ///
-  /// @brief Contact dynamics data.
-  ///
-  ContactDynamicsData contact_dynamics_data;
-
-  ///
-  /// @brief Switching constraint data.
-  ///
-  SwitchingConstraintData switching_constraint_data;
+  UnconstrDynamics unconstr_dynamics;
 
   ///
   /// @brief Returns the lp norm of the primal feasibility, i.e., the constraint 
@@ -57,7 +46,7 @@ struct OCPData {
   double primalFeasibility() const {
     double feasibility = 0;
     feasibility += constraints_data.template primalFeasibility<p>();
-    feasibility += contact_dynamics_data.template primalFeasibility<p>();
+    feasibility += unconstr_dynamics.template primalFeasibility<p>();
     return feasibility;
   }
 
@@ -72,7 +61,6 @@ struct OCPData {
   double dualFeasibility() const {
     double feasibility = 0;
     feasibility += constraints_data.template dualFeasibility<p>();
-    feasibility += contact_dynamics_data.template dualFeasibility<p>();
     return feasibility;
   }
 
@@ -83,13 +71,12 @@ struct OCPData {
   ///
   double KKTError() const {
     double error = 0;
-    error += contact_dynamics_data.KKTError();
     error += constraints_data.KKTError();
+    error += unconstr_dynamics.KKTError();
     return error;
   }
-
 };
 
 } // namespace robotoc
 
-#endif // ROBOTOC_OCP_DATA_HPP_
+#endif // ROBOTOC_UNCONSTR_OCP_DATA_HPP_

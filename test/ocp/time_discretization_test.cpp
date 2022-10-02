@@ -362,7 +362,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   time_discretization.setDiscretizationMethod(DiscretizationMethod::PhaseBased);
 //   const auto robot = GetParam();
 //   const auto contact_sequence = createContactSequence(robot);
-//   time_discretization.meshRefinement(contact_sequence, t);
+//   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N);
 //   EXPECT_EQ(time_discretization.N_impulse(), contact_sequence->numImpulseEvents());
 //   EXPECT_EQ(time_discretization.N_lift(), contact_sequence->numLiftEvents());
@@ -518,7 +518,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   time_discretization.setDiscretizationMethod(DiscretizationMethod::PhaseBased);
 //   const auto robot = GetParam();
 //   const auto contact_sequence = createContactSequence(robot);
-//   time_discretization.meshRefinement(contact_sequence, t);
+//   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N);
 //   std::vector<double> t_impulse, t_lift;
 //   std::vector<int> time_stage_before_impulse, time_stage_before_lift;

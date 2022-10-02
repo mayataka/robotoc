@@ -232,7 +232,7 @@ Let's run the solver!
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init); // set the initial guess of the solution.
-  ocp_solver.meshRefinement(t);
+  ocp_solver.discretize(t);
   ocp_solver.initConstraints(t);
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
@@ -242,7 +242,7 @@ Let's run the solver!
   return 0;
 }
 ```
-@note `ocp_solver.meshRefinement(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased. This also initializes the slack and dual variables of the primal-dual interior point method.
+@note `ocp_solver.discretize(t)` discretizes the continuous-time optimal control problem with when the discretization method is set to DiscretizationMethod::PhaseBased. This also initializes the slack and dual variables of the primal-dual interior point method.
 
 @note We can check the formulation of the discretized optimal control problem 
 before running it via
