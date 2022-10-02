@@ -117,7 +117,7 @@ TEST_F(UnconstrTerminalStageTest, evalKKT) {
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   auto s_updated = s;
   auto s_updated_ref = s;
-  stage.updatePrimal(robot, step_size, d, s_updated);
+  stage.updatePrimal(robot, step_size, d, s_updated, data_ref);
   s_updated_ref.integrate(robot, step_size, d);
   constraints->updateSlack(data_ref.constraints_data, step_size);
   EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
