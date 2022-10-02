@@ -178,7 +178,9 @@ public:
 
 private:
   int nthreads_;
-  UnconstrOCP ocp_;
+//   UnconstrOCP ocp_;
+  aligned_vector<SplitUnconstrOCP> ocp_;
+  TerminalUnconstrOCP terminal_ocp_;
   PerformanceIndex performance_index_; 
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 };

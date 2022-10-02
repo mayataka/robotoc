@@ -8,27 +8,11 @@
 
 namespace robotoc {
 
-auto UnconstrOCPFromOCP = [](const OCP& ocp) {
-  if (!ocp.cost) {
-    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.cost should not be nullptr!");
-  }
-  if (!ocp.constraints) {
-    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.constraints should not be nullptr!");
-  }
-  if (ocp.T <= 0) {
-    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.T must be positive!");
-  }
-  if (ocp.N <= 0) {
-    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.N must be positive!");
-  }
-  return UnconstrOCP(ocp.robot, ocp.cost, ocp.constraints, ocp.T, ocp.N);
-};
-
-
 UnconstrDirectMultipleShooting::UnconstrDirectMultipleShooting(const OCP& ocp, 
                                                                const int nthreads)
-  : ocp_(UnconstrOCPFromOCP(ocp)),
-    nthreads_(nthreads),
+  : nthreads_(nthreads),
+    ocp_(ocp.N, SplitUnconstrOCP(ocp.robot, ocp.cost, ocp.constraints)),
+    terminal_ocp_(ocp.robot, ocp.cost, ocp.constraints),
     performance_index_(),
     max_primal_step_sizes_(Eigen::VectorXd::Zero(ocp.N+1)), 
     max_dual_step_sizes_(Eigen::VectorXd::Zero(ocp.N+1)) {
@@ -53,7 +37,7 @@ void UnconstrDirectMultipleShooting::initConstraints(
                               time_discretization[i], s[i]);
     }
     else {
-      ocp_.terminal.initConstraints(robots[omp_get_thread_num()], 
+      terminal_ocp_.initConstraints(robots[omp_get_thread_num()], 
                                     time_discretization[i], s[i]);
     }
   }
@@ -74,7 +58,7 @@ void UnconstrDirectMultipleShooting::evalOCP(
                       s[i], s[i+1], kkt_residual[i]);
     }
     else {
-      ocp_.terminal.evalOCP(robots[omp_get_thread_num()], time_discretization[i],  
+      terminal_ocp_.evalOCP(robots[omp_get_thread_num()], time_discretization[i],  
                             s[i], kkt_residual[i]);
     }
   }
@@ -82,7 +66,7 @@ void UnconstrDirectMultipleShooting::evalOCP(
   for (int i=0; i<N; ++i) {
     performance_index_ += ocp_[i].getEval();
   }
-  performance_index_ += ocp_.terminal.getEval();
+  performance_index_ += terminal_ocp_.getEval();
 }
 
 
@@ -100,7 +84,7 @@ void UnconstrDirectMultipleShooting::evalKKT(
                       s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
     }
     else {
-      ocp_.terminal.evalKKT(robots[omp_get_thread_num()], time_discretization[i], 
+      terminal_ocp_.evalKKT(robots[omp_get_thread_num()], time_discretization[i], 
                             s[i], kkt_matrix[i], kkt_residual[i]);
     }
   }
@@ -108,7 +92,7 @@ void UnconstrDirectMultipleShooting::evalKKT(
   for (int i=0; i<N; ++i) {
     performance_index_ += ocp_[i].getEval();
   }
-  performance_index_ += ocp_.terminal.getEval();
+  performance_index_ += terminal_ocp_.getEval();
 }
 
 
@@ -168,9 +152,9 @@ void UnconstrDirectMultipleShooting::integrateSolution(
       ocp_[i].updateDual(dual_step_size);
     }
     else {
-      ocp_.terminal.updatePrimal(robots[omp_get_thread_num()],  
+      terminal_ocp_.updatePrimal(robots[omp_get_thread_num()],  
                                  primal_step_size, d[i], s[i]);
-      ocp_.terminal.updateDual(dual_step_size);
+      terminal_ocp_.updateDual(dual_step_size);
     }
   }
 }
