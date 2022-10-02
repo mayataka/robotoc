@@ -27,11 +27,6 @@ PYBIND11_MODULE(ocp, m) {
           py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
           py::arg("contact_sequence"), py::arg("T"), py::arg("N"))
     .def(py::init<>())
-    .def("set_discretization_method", &OCP::setDiscretizationMethod, 
-          py::arg("discretization_method"))
-    .def("discretize", &OCP::discretize, py::arg("t"))
-    .def("mesh_refinement ", &OCP::meshRefinement, py::arg("t"))
-    .def("time_discretization", &OCP::timeDiscretization)
     .def("robot", &OCP::robot)
     .def("cost", &OCP::cost)
     .def("constraints", &OCP::constraints)

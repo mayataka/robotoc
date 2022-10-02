@@ -117,9 +117,6 @@ TEST_P(TerminalStageTest, evalKKT) {
   SplitKKTMatrix kkt_matrix_ocp(robot);
   SplitKKTResidual kkt_residual_ocp(robot);
   ocp.computeKKTSystem(robot, grid_info, s_prev.q, s, kkt_matrix_ocp, kkt_residual_ocp);
-  kkt_residual_ocp.kkt_error = 0.0;
-  kkt_residual_ocp.cost = 0.0;
-  kkt_residual_ocp.constraint_violation = 0.0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ocp));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ocp));
 

@@ -89,35 +89,6 @@ public:
   OCP& operator=(OCP&&) noexcept = default;
 
   ///
-  /// @brief Sets the discretization method of the optimal contro problem. 
-  /// @param[in] discretization_method The discretization method.
-  ///
-  void setDiscretizationMethod(const DiscretizationMethod discretization_method);
-
-  ///
-  /// @brief Discretizes the optimal control problem according to the 
-  /// input current contact sequence and intial time of the horizon.
-  /// @param[in] t Initial time of the horizon. 
-  ///
-  void discretize(const double t);
-
-  ///
-  /// @brief Performs mesh-refimenent while keeping the total number of the 
-  /// discretization grids over the horizon. This function does it only when
-  /// the discretization method is set to DiscretizationMethod::PhaseBased.
-  /// Otherwise, does nothing.
-  /// @param[in] t Initial time of the horizon. 
-  ///
-  void meshRefinement(const double t);
-
-  ///
-  /// @brief Returns the discrete-time formulation, that is, the discretization 
-  /// of the optimal control problem. 
-  /// @return The discretization of the optimal control problem. 
-  ///
-  const TimeDiscretization& timeDiscretization() const;
-
-  ///
   /// @return const reference to the Robot model. 
   ///
   const Robot& robot() const; 
@@ -230,7 +201,6 @@ private:
   std::shared_ptr<STOCostFunction> sto_cost_;
   std::shared_ptr<STOConstraints> sto_constraints_;
   std::shared_ptr<ContactSequence> contact_sequence_;
-  TimeDiscretization discretization_;
   double T_;
   int N_, reserved_num_discrete_events_;
   bool is_sto_enabled_;

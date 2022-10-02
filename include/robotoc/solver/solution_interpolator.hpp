@@ -3,6 +3,7 @@
 
 #include "robotoc/core/solution.hpp"
 #include "robotoc/ocp/time_discretization.hpp"
+#include "robotoc/utils/numerics.hpp"
 
 
 namespace robotoc {
@@ -30,9 +31,9 @@ public:
   SolutionInterpolator();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~SolutionInterpolator();
+  ~SolutionInterpolator() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -95,31 +96,23 @@ private:
   Solution stored_solution_;
   bool has_stored_solution_;
 
-  int findStoredImpulseIndexBeforeTime(const double t) const {
-    const int N = stored_time_discretization_.N();
-    for (int i=1; i<=N; ++i) {
-      if (stored_time_discretization_.isTimeStageAfterImpulse(i)) {
-        const int impulse_index 
-            = stored_time_discretization_.impulseIndexAfterTimeStage(i-1);
-        if (t > stored_time_discretization_.gridInfoImpulse(impulse_index).t 
-            && t < stored_time_discretization_.gridInfo(i).t) {
-          return impulse_index;
-        }
+  int findStoredGridIndexAtImpulse(const double t) const {
+    const int N = stored_time_discretization_.N_grids();
+    for (int i=1; i<N; ++i) {
+      if ((stored_time_discretization_.grid(i).type == GridType::Impulse)
+            && (numerics::isApprox(t, stored_time_discretization_.grid(i).t))) {
+        return i;
       }
     }
     return -1;
   }
 
-  int findStoredLiftIndexBeforeTime(const double t) const {
-    const int N = stored_time_discretization_.N();
-    for (int i=1; i<=N; ++i) {
-      if (stored_time_discretization_.isTimeStageAfterLift(i)) {
-        const int lift_index 
-            = stored_time_discretization_.liftIndexAfterTimeStage(i-1);
-        if (t > stored_time_discretization_.gridInfoLift(lift_index).t 
-            && t < stored_time_discretization_.gridInfo(i).t) {
-          return lift_index;
-        }
+  int findStoredGridIndexAtLift(const double t) const {
+    const int N = stored_time_discretization_.N_grids();
+    for (int i=1; i<N; ++i) {
+      if ((stored_time_discretization_.grid(i).type == GridType::Lift)
+            && (numerics::isApprox(t, stored_time_discretization_.grid(i).t))) {
+        return i;
       }
     }
     return -1;
@@ -129,21 +122,7 @@ private:
     if (t < stored_time_discretization_.gridInfo(0).t) return -1;
     const int N = stored_time_discretization_.N();
     for (int i=0; i<N; ++i) {
-      if (stored_time_discretization_.isTimeStageBeforeImpulse(i)) {
-        const int impulse_index 
-            = stored_time_discretization_.impulseIndexAfterTimeStage(i);
-        if (t < stored_time_discretization_.gridInfoImpulse(impulse_index).t) {
-          return i;
-        }
-      }
-      else if (stored_time_discretization_.isTimeStageBeforeLift(i)) {
-        const int lift_index 
-            = stored_time_discretization_.liftIndexAfterTimeStage(i);
-        if (t < stored_time_discretization_.gridInfoLift(lift_index).t) {
-          return i;
-        }
-      } 
-      else if (t < stored_time_discretization_.gridInfo(i+1).t) {
+      if (t < stored_time_discretization_.gridInfo(i+1).t) {
         return i;
       }
     }
@@ -152,66 +131,11 @@ private:
 
   static void interpolate(const Robot& robot, const SplitSolution& s1, 
                           const SplitSolution& s2, const double alpha, 
-                          SplitSolution& s) {
-    assert(alpha >= 0.0);
-    assert(alpha <= 1.0);
-    robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
-    s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
-    s.a = (1.0 - alpha) * s1.a + alpha * s2.a;
-    s.u = (1.0 - alpha) * s1.u + alpha * s2.u;
-    for (size_t i=0; i<s1.f.size(); ++i) {
-      if (s2.isContactActive(i)) 
-        s.f[i] = (1.0 - alpha) * s1.f[i] + alpha * s2.f[i];
-      else
-        s.f[i] = s1.f[i];
-    }
-    s.lmd  = (1.0 - alpha) * s1.lmd + alpha * s2.lmd;
-    s.gmm  = (1.0 - alpha) * s1.gmm + alpha * s2.gmm;
-    s.beta = (1.0 - alpha) * s1.beta + alpha * s2.beta;
-    for (size_t i=0; i<s1.mu.size(); ++i) {
-      if (s2.isContactActive(i)) 
-        s.mu[i] = (1.0 - alpha) * s1.mu[i] + alpha * s2.mu[i];
-      else
-        s.mu[i] = s1.mu[i];
-    }
-    s.nu_passive = (1.0 - alpha) * s1.nu_passive + alpha * s2.nu_passive;
-    s.setContactStatus(s1);
-    s.set_f_stack();
-    s.set_mu_stack();
-    s.setSwitchingConstraintDimension(s1.dims());
-    if (s.dims() > 0) {
-      s.xi_stack() = s1.xi_stack();
-    }
-  }
+                          SplitSolution& s);
 
   static void interpolatePartial(const Robot& robot, const SplitSolution& s1, 
                                  const SplitSolution& s2, const double alpha, 
-                                 SplitSolution& s) {
-    assert(alpha >= 0.0);
-    assert(alpha <= 1.0);
-    robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
-    s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
-    s.a = s1.a;
-    s.u = s1.u;
-    for (size_t i=0; i<s1.f.size(); ++i) {
-      s.f[i] = s1.f[i];
-    }
-    s.lmd  = (1.0 - alpha) * s1.lmd + alpha * s2.lmd;
-    s.gmm  = (1.0 - alpha) * s1.gmm + alpha * s2.gmm;
-    s.beta = s1.beta;
-    for (size_t i=0; i<s1.mu.size(); ++i) {
-      s.mu[i] = s1.mu[i];
-    }
-    s.nu_passive = s1.nu_passive;
-    s.setContactStatus(s1);
-    s.set_f_stack();
-    s.set_mu_stack();
-    s.setSwitchingConstraintDimension(s1.dims());
-    if (s.dims() > 0) {
-      s.xi_stack() = s1.xi_stack();
-    }
-  }
-
+                                 SplitSolution& s);
 };
 
 } // namespace robotoc

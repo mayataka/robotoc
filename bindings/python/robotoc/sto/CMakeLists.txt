@@ -1,6 +1,5 @@
 pybind11_add_robotoc_module(sto_cost_function)
 pybind11_add_robotoc_module(sto_cost_function_component_base)
-pybind11_add_robotoc_module(periodic_switching_time_cost)
 pybind11_add_robotoc_module(sto_constraints)
 
 install_robotoc_pybind_module(sto)

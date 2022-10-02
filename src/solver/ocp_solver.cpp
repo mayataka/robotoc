@@ -354,7 +354,6 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
   if (v.size() != robots_[0].dimv()) {
     throw std::out_of_range("[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
   }
-  ocp_.discretize(t);
   reserveData();
   discretizeSolution();
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
@@ -380,7 +379,6 @@ double OCPSolver::cost(const bool include_cost_barrier) const {
 
 
 bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  // ocp_.discretize(t);
   // reserveData();
   // discretizeSolution();
   return dms_.isFeasible(robots_, time_discretization_, s_);

@@ -26,28 +26,25 @@ Solution CreateSolution(const Robot& robot,
   else {
     TimeDiscretization time_discretization(T, N, max_num_impulse);
     time_discretization.discretize(contact_sequence, t);
-    Solution s(robot, N, max_num_impulse);
-    for (int i=0; i<=N; ++i) {
-      s[i].setRandom(robot, contact_sequence->contactStatus(time_discretization.contactPhase(i)));
-    }
-    const int num_impulse = contact_sequence->numImpulseEvents();
-    for (int i=0; i<num_impulse; ++i) {
-      s.impulse[i].setRandom(robot, contact_sequence->impulseStatus(i));
-    }
-    for (int i=0; i<num_impulse; ++i) {
-      s.aux[i].setRandom(robot, contact_sequence->contactStatus(time_discretization.contactPhaseAfterImpulse(i)));
-    }
-    for (int i=0; i<num_impulse; ++i) {
-      const int time_stage_before_impulse = time_discretization.timeStageBeforeImpulse(i);
-      if (time_stage_before_impulse-1 >= 0) {
-        s[time_stage_before_impulse-1].setSwitchingConstraintDimension(contact_sequence->impulseStatus(i).dimf());
-        s[time_stage_before_impulse-1].xi_stack().setRandom();
+    Solution s(robot, time_discretization.N_grids(), max_num_impulse);
+    for (int i=0; i<time_discretization.N_grids(); ++i) {
+      const auto& grid = time_discretization.grid(i);
+      if (grid.type == GridType::Impulse) {
+        s[i].setContactStatus(contact_sequence->impulseStatus(grid.impulse_index));
+        s[i].setRandom(robot);
+      }
+      else {
+        s[i].setContactStatus(contact_sequence->contactStatus(grid.contact_phase));
+        if (grid.switching_constraint) {
+          s[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(grid.impulse_index+1).dimf());
+        }
+        else {
+          s[i].setSwitchingConstraintDimension(0);
+        }
+        s[i].setRandom(robot);
       }
     }
-    const int num_lift = contact_sequence->numLiftEvents();
-    for (int i=0; i<num_lift; ++i) {
-      s.lift[i].setRandom(robot, contact_sequence->contactStatus(time_discretization.contactPhaseAfterLift(i)));
-    }
+    s[time_discretization.N_grids()].setRandom(robot);
     return s;
   }
 }

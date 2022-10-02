@@ -157,9 +157,6 @@ TEST_P(ImpactStageTest, evalKKT) {
   SplitKKTResidual kkt_residual_ocp(robot);
   SwitchingConstraintResidual switch_res(robot);
   ocp.computeKKTSystem(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix_ocp, kkt_residual_ocp);
-  kkt_residual_ocp.kkt_error = 0.0;
-  kkt_residual_ocp.cost = 0.0;
-  kkt_residual_ocp.constraint_violation = 0.0;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ocp));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ocp));
 

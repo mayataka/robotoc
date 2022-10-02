@@ -1,9 +1,51 @@
 #include "robotoc/ocp/time_discretization.hpp"
+#include "robotoc/utils/numerics.hpp"
 
 #include <iomanip>
 
 
 namespace robotoc {
+
+TimeDiscretization::TimeDiscretization(const double T, const int N, 
+                                       const int reserved_num_discrete_events) 
+  : T_(T),
+    N_(N),
+    N_grids_(N),
+    reserved_num_discrete_events_(reserved_num_discrete_events),
+    grid_(N+1+3*reserved_num_discrete_events, GridInfo()), 
+    sto_event_(), 
+    sto_phase_(), 
+    discretization_method_(DiscretizationMethod::GridBased) {
+  if (T <= 0) {
+    throw std::out_of_range("[TimeDiscretization] invalid argument: 'T' must be positive!");
+  }
+  if (N <= 0) {
+    throw std::out_of_range("[TimeDiscretization] invalid argument: 'N' must be positive!");
+  }
+  if (reserved_num_discrete_events < 0) {
+    throw std::out_of_range("[TimeDiscretization] invalid argument: 'reserved_num_discrete_events' must be non-negative!");
+  }
+  sto_event_.reserve(2*reserved_num_discrete_events+2);
+  sto_phase_.reserve(2*reserved_num_discrete_events+2);
+}
+
+
+TimeDiscretization::TimeDiscretization()
+  : T_(0),
+    N_(0),
+    N_grids_(0),
+    reserved_num_discrete_events_(0),
+    grid_(), 
+    sto_event_(), 
+    sto_phase_(), 
+    discretization_method_(DiscretizationMethod::GridBased) {
+}
+
+
+void TimeDiscretization::setDiscretizationMethod(const DiscretizationMethod discretization_method) {
+  discretization_method_ = discretization_method;
+}
+
 
 void TimeDiscretization::discretizeGrid(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
@@ -194,33 +236,33 @@ void TimeDiscretization::discretizePhase(
   grid_[N_grids_].dt_next = 0.0;
 
   // set sto
-  std::vector<bool> sto_event;
-  sto_event.reserve(grid_[N_grids_].contact_phase-grid_[N_grids_].contact_phase);
+  sto_event_.clear();
+  sto_event_.reserve(grid_[N_grids_].contact_phase-grid_[N_grids_].contact_phase);
   for (int i=0; i<N_grids_; ++i) {
     if (grid_[i].type == GridType::Impulse) {
-      sto_event.push_back(
+      sto_event_.push_back(
           contact_sequence->isSTOEnabledImpulse(grid_[i+1].impulse_index));
     }
     else if (grid_[i].type == GridType::Lift) {
-      sto_event.push_back(
+      sto_event_.push_back(
           contact_sequence->isSTOEnabledLift(grid_[i+1].lift_index));
     }
   }
-  if (sto_event.empty()) return;
+  if (sto_event_.empty()) return;
 
-  std::vector<bool> sto_phase;
-  sto_phase.reserve(grid_[N_grids_].contact_phase-grid_[N_grids_].contact_phase+2);
-  sto_phase.push_back(sto_event.front());
-  for (int i=1; i<sto_event.size(); ++i) {
-    sto_phase.push_back(sto_event[i-1] || sto_event[i]);
+  sto_phase_.clear();
+  sto_phase_.reserve(grid_[N_grids_].contact_phase-grid_[N_grids_].contact_phase+2);
+  sto_phase_.push_back(sto_event_.front());
+  for (int i=1; i<sto_event_.size(); ++i) {
+    sto_phase_.push_back(sto_event_[i-1] || sto_event_[i]);
   }
-  sto_phase.push_back(sto_event.back());
-  sto_phase.push_back(false);
+  sto_phase_.push_back(sto_event_.back());
+  sto_phase_.push_back(false);
 
   for (int i=0; i<N_grids_; ++i) {
     const int phase = grid_[i].contact_phase - grid_[0].contact_phase;
-    grid_[i].sto = sto_phase[phase];
-    grid_[i].sto_next = sto_phase[phase+1];
+    grid_[i].sto = sto_phase_[phase];
+    grid_[i].sto_next = sto_phase_[phase+1];
   }
   grid_[N_grids_].sto = false;
   grid_[N_grids_].sto_next = false;
@@ -230,61 +272,23 @@ void TimeDiscretization::discretizePhase(
 void TimeDiscretization::disp(std::ostream& os) const {
   os << "Time discretization of optimal control problem (OCP):" << "\n";
   os << "  T: " << T_ << "\n";
-  os << "  N_ideal: " << N_ideal() << "\n";
   os << "  N: " << N() << "\n";
-  os << "  N_impulse: " << N_impulse() << "\n";
-  os << "  N_lift: " << N_lift() << "\n";
-  os << "  N_all: " << (N()+1+2*N_impulse()+N_lift()) << "\n";
-  os << "  No. of discrete events: " << numDiscreteEvents() << "\n";
-  os << "  No. of contact phases: " << numContactPhases() << "\n";
-  for (int i=0; i<numContactPhases(); ++i) {
-    os << "    No. of grids at contact phase " << i << ": " << N_phase(i) << "\n";
-  }
-  os << "  isFormulationTractable: " << std::boolalpha 
-     << isFormulationTractable() << "\n";;
-  os << "  isSwitchingTimeConsistent: " << std::boolalpha
-     << isSwitchingTimeConsistent() << "\n";
+  os << "  N_grids: " << N_grids() << "\n";
   os << " -----------------------------------------------------------------------" << "\n";
   os << "  grid point | grid count |      t |     dt | phase |  sto  | sto_next |" << "\n";
   os << " -----------------------------------------------------------------------" << "\n";
-  for (int i=0; i<N(); ++i) {
+  for (int i=0; i<N_grids(); ++i) {
     os << "  stage: " << std::right << std::setw(3) << i << " | "
-       << "       " << std::right << std::setw(3) << gridInfo(i).grid_count_in_phase << " | " 
-       << std::fixed << std::setprecision(4) << gridInfo(i).t << " | " << gridInfo(i).dt
-       << " |   " << std::setw(3) << contactPhase(i)
-       << " | " << std::setw(5) << std::boolalpha << isSTOEnabledPhase(contactPhase(i)) 
-       << " |   " << std::setw(5) << std::boolalpha << isSTOEnabledNextPhase(contactPhase(i)) 
+       << "       " << std::right << std::setw(3) << grid(i).grid_count_in_phase << " | " 
+       << std::fixed << std::setprecision(4) << grid(i).t << " | " << grid(i).dt
+       << " |   " << std::setw(3) << grid(i).contact_phase
+       << " | " << std::setw(5) << std::boolalpha << grid(i).sto
+       << " |   " << std::setw(5) << std::boolalpha << grid(i).sto_next
        << "  |" << "\n";
-    if (isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = impulseIndexAfterTimeStage(i);
-      os << "    aux: " << std::right << std::setw(3) << impulse_index << " | "
-         << std::right << std::setw(3) << "         0" << " | " 
-         << std::fixed << std::setprecision(4) << gridInfoImpulse(impulse_index).t
-         << " | " << gridInfoImpulse(impulse_index).dt
-         << " |   " << std::setw(3) << contactPhaseAfterImpulse(impulse_index)
-         << " | " << std::setw(5) << std::boolalpha 
-         << isSTOEnabledPhase(contactPhaseAfterImpulse(impulse_index)) 
-         << " |   " << std::setw(5) << std::boolalpha 
-         << isSTOEnabledNextPhase(contactPhaseAfterImpulse(impulse_index)) 
-         << "  |" << "\n";
-    }
-    else if (isTimeStageBeforeLift(i)) {
-      const int lift_index = liftIndexAfterTimeStage(i);
-      os << "   lift: " << std::right << std::setw(3) << lift_index << " | "
-         << std::right << std::setw(3) << "         0" << " | " 
-         << std::fixed << std::setprecision(4) << gridInfoLift(lift_index).t
-         << " | " << gridInfoLift(lift_index).dt
-         << " |   " << std::setw(3) << contactPhaseAfterLift(lift_index)
-         << " | " << std::setw(5) << std::boolalpha
-         << isSTOEnabledPhase(contactPhaseAfterLift(lift_index)) 
-         << " |   " << std::setw(5) << std::boolalpha
-         << isSTOEnabledNextPhase(contactPhaseAfterLift(lift_index))
-         << "  |" << "\n";
-    }
   }
   os << "  stage: " << std::right << std::setw(3) << N() << " | " 
-     << "       " << std::right << std::setw(3) << gridInfo(N()).grid_count_in_phase << " | " 
-     << std::fixed << std::setprecision(4) << gridInfo(N()).t
+     << "       " << std::right << std::setw(3) << grid(N_grids()).grid_count_in_phase << " | " 
+     << std::fixed << std::setprecision(4) << grid(N_grids()).t
      << " |        |       |       |          |" << "\n"; 
   os << " -----------------------------------------------------------------------" << std::flush;
 }

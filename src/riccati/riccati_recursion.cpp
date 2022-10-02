@@ -45,17 +45,17 @@ void RiccatiRecursion::setRegularization(const double max_dts0) {
 
 
 void RiccatiRecursion::reserve(const OCP& ocp) {
-  const int reserved_num_discrete_events = ocp.reservedNumDiscreteEvents();
-  lqr_policy_.reserve(ocp.robot(), reserved_num_discrete_events);
-  while (sto_policy_.size() < 2*reserved_num_discrete_events+1) {
-    sto_policy_.emplace_back(ocp.robot());
-  }
-  const int N = ocp.timeDiscretization().N();
-  const int max_N_all = N + 1 + 3*reserved_num_discrete_events;
-  if (max_N_all > max_primal_step_sizes_.size()) {
-    max_primal_step_sizes_.resize(max_N_all);
-    max_dual_step_sizes_.resize(max_N_all);
-  }
+  // const int reserved_num_discrete_events = ocp.reservedNumDiscreteEvents();
+  // lqr_policy_.reserve(ocp.robot(), reserved_num_discrete_events);
+  // while (sto_policy_.size() < 2*reserved_num_discrete_events+1) {
+  //   sto_policy_.emplace_back(ocp.robot());
+  // }
+  // const int N = ocp.timeDiscretization().N();
+  // const int max_N_all = N + 1 + 3*reserved_num_discrete_events;
+  // if (max_N_all > max_primal_step_sizes_.size()) {
+  //   max_primal_step_sizes_.resize(max_N_all);
+  //   max_dual_step_sizes_.resize(max_N_all);
+  // }
 }
 
 
