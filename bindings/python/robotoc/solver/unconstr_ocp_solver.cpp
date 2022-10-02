@@ -16,6 +16,9 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
     .def(py::init<const UnconstrOCP&, const SolverOptions&, const int>(),
           py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
           py::arg("nthreads")=1)
+    .def(py::init<const OCP&, const SolverOptions&, const int>(),
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
+          py::arg("nthreads")=1)
     .def("set_solver_options", &UnconstrOCPSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("init_constraints", &UnconstrOCPSolver::initConstraints)

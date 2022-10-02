@@ -58,6 +58,27 @@ OCP::OCP(const Robot& _robot, const std::shared_ptr<CostFunction>& _cost,
 }
 
 
+OCP::OCP(const Robot& _robot, const std::shared_ptr<CostFunction>& _cost, 
+         const std::shared_ptr<Constraints>& _constraints, 
+         const double _T, const int _N) 
+  : robot(_robot),
+    cost(_cost),
+    constraints(_constraints),
+    sto_cost(nullptr),
+    sto_constraints(nullptr),
+    contact_sequence(nullptr),
+    T(_T),
+    N(_N),
+    reserved_num_discrete_events(0) {
+  if (_T <= 0) {
+    throw std::out_of_range("[OCP] invalid argument: 'T' must be positive!");
+  }
+  if (_N <= 0) {
+    throw std::out_of_range("[OCP] invalid argument: 'N' must be positive!");
+  }
+}
+
+
 OCP::OCP() 
   : robot(), 
     cost(nullptr),

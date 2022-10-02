@@ -28,6 +28,11 @@ PYBIND11_MODULE(ocp, m) {
           py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
           py::arg("contact_sequence"), py::arg("T"), py::arg("N"),
           py::arg("reserved_num_discrete_events")=0)
+    .def(py::init<const Robot&, const std::shared_ptr<CostFunction>&,
+                  const std::shared_ptr<Constraints>&, 
+                  const double, const int>(),
+          py::arg("robot"), py::arg("cost"), py::arg("constraints"), 
+          py::arg("T"), py::arg("N"))
     .def(py::init<>())
     .def_readwrite("robot", &OCP::robot)
     .def_readwrite("cost", &OCP::cost)

@@ -20,7 +20,6 @@ namespace robotoc {
 /// @brief The optimal control problem.
 ///
 struct OCP {
-public:
   ///
   /// @brief Construct the optiaml control problem. 
   /// @param[in] robot Robot model. 
@@ -58,6 +57,19 @@ public:
       const std::shared_ptr<Constraints>& constraints,  
       const std::shared_ptr<ContactSequence>& contact_sequence,
       const double T, const int N, const int reserved_num_discrete_events=0);
+
+  ///
+  /// @brief Construct the optiaml control problem. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] T Length of the horzion. Must be positive.
+  /// @param[in] N Number of the discretization grids of the horizon.
+  /// Must be positive.
+  ///
+  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
+      const std::shared_ptr<Constraints>& constraints,  
+      const double T, const int N);
 
   ///
   /// @brief Default constructor.

@@ -8,6 +8,30 @@
 
 namespace robotoc {
 
+auto UnconstrParNMPCFromOCP = [](const OCP& ocp) {
+  if (!ocp.cost) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: ocp.cost should not be nullptr!");
+  }
+  if (!ocp.constraints) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: ocp.constraints should not be nullptr!");
+  }
+  if (ocp.T <= 0) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: ocp.T must be positive!");
+  }
+  if (ocp.N <= 0) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: ocp.N must be positive!");
+  }
+  return UnconstrParNMPC(ocp.robot, ocp.cost, ocp.constraints, ocp.T, ocp.N);
+};
+
+
+UnconstrParNMPCSolver::UnconstrParNMPCSolver(const OCP& ocp, 
+                                     const SolverOptions& solver_options, 
+                                     const int nthreads)
+  : UnconstrParNMPCSolver(UnconstrParNMPCFromOCP(ocp), solver_options, nthreads) {
+}
+
+
 UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc, 
                                              const SolverOptions& solver_options, 
                                              const int nthreads)

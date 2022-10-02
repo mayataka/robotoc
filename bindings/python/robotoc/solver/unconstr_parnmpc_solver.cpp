@@ -16,6 +16,9 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
     .def(py::init<const UnconstrParNMPC&, const SolverOptions&, const int>(),
           py::arg("parnmpc"), py::arg("solver_options")=SolverOptions(), 
           py::arg("nthreads")=1)
+    .def(py::init<const OCP&, const SolverOptions&, const int>(),
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
+          py::arg("nthreads")=1)
     .def("set_solver_options", &UnconstrParNMPCSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("init_constraints", &UnconstrParNMPCSolver::initConstraints)

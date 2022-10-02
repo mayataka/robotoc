@@ -17,6 +17,7 @@
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
 #include "robotoc/utils/timer.hpp"
@@ -42,6 +43,19 @@ public:
   ///
   UnconstrParNMPCSolver(
       const UnconstrParNMPC& parnmpc, 
+      const SolverOptions& solver_options=SolverOptions(), 
+      const int nthreads=1);
+
+  ///
+  /// @brief Construct optimal control problem solver.
+  /// @param[in] ocp Optimal control problem. 
+  /// @param[in] solver_options Solver options. Default is 
+  /// SolverOptions().
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
+  ///
+  UnconstrParNMPCSolver(
+      const OCP& ocp, 
       const SolverOptions& solver_options=SolverOptions(), 
       const int nthreads=1);
 
