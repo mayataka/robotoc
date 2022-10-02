@@ -3,6 +3,8 @@
 
 #include "Eigen/Core"
 
+#include "robotoc/utils/aligned_vector.hpp"
+
 
 namespace robotoc {
 namespace testhelper {
@@ -21,7 +23,7 @@ bool IsApprox(const aligned_vector<Type>& rhs,
 }
 
 
-template <typename Type, typename ImpulseType, typename SwitchingType>
+template <typename Type>
 bool HasNaN(const aligned_vector<Type>& obj) {
   for (int i=0; i<obj.size(); ++i) {
     std::cout << "i = " << i << std::endl;

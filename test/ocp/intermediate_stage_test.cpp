@@ -9,14 +9,11 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/dynamics/state_equation.hpp"
 #include "robotoc/dynamics/contact_dynamics.hpp"
-#include "robotoc/core/switching_constraint_residual.hpp"
-#include "robotoc/core/switching_constraint_jacobian.hpp"
 #include "robotoc/dynamics/switching_constraint.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/ocp/intermediate_stage.hpp"
-#include "robotoc/ocp/split_ocp.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
@@ -97,25 +94,6 @@ TEST_P(IntermediateStageTest, evalOCP) {
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(data.performance_index.isApprox(data_ref.performance_index));
-
-  SplitOCP ocp(robot, cost, constraints);
-  ocp.initConstraints(robot, contact_status, grid_info.time_stage, s);
-  SplitKKTResidual kkt_residual_ocp(robot);
-  SwitchingConstraintResidual switch_res(robot);
-  double constraint_violation;
-  if (switching_constraint) {
-    const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
-    ocp.evalOCP(robot, contact_status, grid_info, s, s_next.q, s_next.v, 
-                kkt_residual_ocp, impulse_status, grid_info_next, switch_res);
-    constraint_violation = ocp.constraintViolation(kkt_residual_ocp, switch_res);
-  }
-  else {
-    ocp.evalOCP(robot, contact_status, grid_info, s, s_next.q, s_next.v, kkt_residual_ocp);
-    constraint_violation = ocp.constraintViolation(kkt_residual_ocp);
-  }
-  EXPECT_DOUBLE_EQ(ocp.stageCost(false), data_ref.performance_index.cost);
-  EXPECT_DOUBLE_EQ(ocp.stageCost(true), data_ref.performance_index.cost+data_ref.performance_index.cost_barrier);
-  EXPECT_DOUBLE_EQ(constraint_violation, data_ref.performance_index.primal_feasibility);
 }
 
 
@@ -209,42 +187,6 @@ TEST_P(IntermediateStageTest, evalKKT) {
   expandContactDynamicsDual(grid_info.dt, dts, data_ref.contact_dynamics_data, d_next, d_ref);
   correctCostateDirection(data_ref.state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
-
-  SplitOCP ocp(robot, cost, constraints);
-  ocp.initConstraints(robot, contact_status, grid_info.time_stage, s);
-  SplitKKTMatrix kkt_matrix_ocp(robot);
-  SplitKKTResidual kkt_residual_ocp(robot);
-  SwitchingConstraintJacobian switch_jac_ocp(robot);
-  SwitchingConstraintResidual switch_res_ocp(robot);
-  double constraint_violation;
-  if (switching_constraint) {
-    const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
-    ocp.computeKKTSystem(robot, contact_status, grid_info, s_prev.q, s, s_next, kkt_matrix_ocp, kkt_residual_ocp, 
-                         impulse_status, grid_info_next, switch_jac_ocp, switch_res_ocp);
-    ocp.correctSTOSensitivities(kkt_matrix_ocp, kkt_residual_ocp, switch_jac_ocp, grid_info.N_phase);
-    EXPECT_TRUE(kkt_matrix.Phiq().isApprox(switch_jac_ocp.Phiq()));
-    EXPECT_TRUE(kkt_matrix.Phiv().isApprox(switch_jac_ocp.Phiv()));
-    EXPECT_TRUE(kkt_matrix.Phiu().isApprox(switch_jac_ocp.Phiu()));
-    EXPECT_TRUE(kkt_matrix.Phit().isApprox(switch_jac_ocp.Phit()));
-    EXPECT_TRUE(kkt_residual.P().isApprox(switch_res_ocp.P()));
-  }
-  else {
-    ocp.computeKKTSystem(robot, contact_status, grid_info, s_prev.q, s, s_next, kkt_matrix_ocp, kkt_residual_ocp);
-    ocp.correctSTOSensitivities(kkt_matrix_ocp, kkt_residual_ocp, grid_info.N_phase);
-  }
-  kkt_matrix.setSwitchingConstraintDimension(0);
-  kkt_residual.setSwitchingConstraintDimension(0);
-  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ocp));
-  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ocp));
-
-  ocp.expandPrimal(contact_status, d_ocp);
-  if (switching_constraint) {
-    ocp.expandDual(grid_info, d_next, switch_jac_ocp, d_ocp, dts);
-  }
-  else {
-    ocp.expandDual(grid_info, d_next, d_ocp, dts);
-  }
-  EXPECT_TRUE(d.isApprox(d_ocp));
 }
 
 

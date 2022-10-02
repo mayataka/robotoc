@@ -11,8 +11,6 @@
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
-#include "robotoc/core/switching_constraint_residual.hpp"
-#include "robotoc/core/switching_constraint_jacobian.hpp"
 #include "robotoc/dynamics/contact_dynamics_data.hpp"
 
 
@@ -58,16 +56,6 @@ void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status,
                              SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Condenses the switching constraint. 
-/// @param[in] data Data structure for the contact dynamics.
-/// @param[in, out] sc_jacobian Jacobian of the switching constraint. 
-/// @param[in, out] sc_residual Residual of the switching constraint. 
-///
-void condenseContactDynamics(const ContactDynamicsData& data, 
-                             SwitchingConstraintJacobian& sc_jacobian,
-                             SwitchingConstraintResidual& sc_residual);
-
-///
 /// @brief Expands the primal variables, i.e., computes the Newton direction 
 /// of the condensed primal variables (acceleration a and the contact forces 
 /// f) of this stage.
@@ -88,22 +76,6 @@ void expandContactDynamicsPrimal(const ContactDynamicsData& data, SplitDirection
 void expandContactDynamicsDual(const double dt, const double dts, 
                                ContactDynamicsData& data,
                                const SplitDirection& d_next, SplitDirection& d);
-
-///
-/// @brief Expands the dual variables, i.e., computes the Newton direction 
-/// of the condensed dual variables (Lagrange multipliers) of this stage.
-/// @param[in] dt Time step of this time stage. 
-/// @param[in] dts Direction of the switching time regarding of this time stage. 
-/// @param[in, out] data Data structure for the contact dynamics.
-/// @param[in] sc_jacobian Jacobian of the switching constraint. 
-/// @param[in] d_next Split direction of the next stage.
-/// @param[in, out] d Split direction of this time stage.
-/// 
-void expandContactDynamicsDual(const double dt, const double dts, 
-                               ContactDynamicsData& data, 
-                               const SwitchingConstraintJacobian& sc_jacobian,
-                               const SplitDirection& d_next, 
-                               SplitDirection& d);
 
 } // namespace robotoc 
 

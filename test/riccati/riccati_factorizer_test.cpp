@@ -7,8 +7,6 @@
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
-#include "robotoc/core/switching_constraint_jacobian.hpp"
-#include "robotoc/core/switching_constraint_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"

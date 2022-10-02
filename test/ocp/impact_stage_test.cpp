@@ -12,7 +12,6 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/ocp/impact_stage.hpp"
-#include "robotoc/ocp/impulse_split_ocp.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
@@ -79,15 +78,6 @@ TEST_P(ImpactStageTest, evalOCP) {
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(data.performance_index.isApprox(data_ref.performance_index));
-
-  ImpulseSplitOCP ocp(robot, cost, constraints);
-  ocp.initConstraints(robot, impulse_status, s);
-  SplitKKTResidual kkt_residual_ocp(robot);
-  SwitchingConstraintResidual switch_res(robot);
-  ocp.evalOCP(robot, impulse_status, grid_info, s, s_next.q, s_next.v, kkt_residual_ocp);
-  EXPECT_DOUBLE_EQ(ocp.stageCost(false), data_ref.performance_index.cost);
-  EXPECT_DOUBLE_EQ(ocp.stageCost(true), data_ref.performance_index.cost+data_ref.performance_index.cost_barrier);
-  EXPECT_DOUBLE_EQ(ocp.constraintViolation(kkt_residual_ocp), data_ref.performance_index.primal_feasibility);
 }
 
 
@@ -150,19 +140,6 @@ TEST_P(ImpactStageTest, evalKKT) {
   expandImpulseDynamicsDual(data_ref.contact_dynamics_data, d_next, d_ref);
   correctCostateDirection(data_ref.state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
-
-  ImpulseSplitOCP ocp(robot, cost, constraints);
-  ocp.initConstraints(robot, impulse_status, s);
-  SplitKKTMatrix kkt_matrix_ocp(robot);
-  SplitKKTResidual kkt_residual_ocp(robot);
-  SwitchingConstraintResidual switch_res(robot);
-  ocp.computeKKTSystem(robot, impulse_status, grid_info, s_prev.q, s, s_next, kkt_matrix_ocp, kkt_residual_ocp);
-  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ocp));
-  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ocp));
-
-  ocp.expandPrimal(impulse_status, d_ocp);
-  ocp.expandDual(d_next, d_ocp);
-  EXPECT_TRUE(d.isApprox(d_ocp));
 }
 
 

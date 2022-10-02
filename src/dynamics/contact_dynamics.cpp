@@ -164,20 +164,6 @@ void condenseContactDynamics(Robot& robot, const ContactStatus& contact_status,
 }
 
 
-void condenseContactDynamics(const ContactDynamicsData& data,
-                             SwitchingConstraintJacobian& sc_jacobian,
-                             SwitchingConstraintResidual& sc_residual) {
-  sc_jacobian.Phix().noalias() 
-      -= sc_jacobian.Phia() * data.MJtJinv_dIDCdqv().topRows(data.dimv());
-  sc_jacobian.Phiu().noalias()  
-      = sc_jacobian.Phia() * data.MJtJinv().block(0, data.dim_passive(), data.dimv(), data.dimu());
-  sc_jacobian.Phit().noalias() 
-      -= sc_jacobian.Phia() * data.MJtJinv_IDC().head(data.dimv());
-  sc_residual.P().noalias() 
-      -= sc_jacobian.Phia() * data.MJtJinv_IDC().head(data.dimv());
-}
-
-
 void expandContactDynamicsPrimal(const ContactDynamicsData& data, 
                                  SplitDirection& d) {
   d.daf().noalias() = - data.MJtJinv_dIDCdqv() * d.dx;
@@ -208,31 +194,6 @@ void expandContactDynamicsDual(const double dt, const double dts,
     assert(data.dims() == d.dims());
     data.la().noalias()  += data.Phia().transpose() * d.dxi();
   }
-  constexpr double eps = std::numeric_limits<double>::epsilon();
-  if (dts < - eps || dts > eps) {
-    data.laf().noalias() += dts * data.haf();
-  }
-  d.dbetamu().noalias()  = - data.MJtJinv() * data.laf();
-}
-
-
-void expandContactDynamicsDual(const double dt, const double dts, 
-                               ContactDynamicsData& data, 
-                               const SwitchingConstraintJacobian& sc_jacobian,
-                               const SplitDirection& d_next, SplitDirection& d) {
-  assert(dt > 0);
-  if (data.hasFloatingBase()) {
-    d.dnu_passive            = - data.lu_passive;
-    d.dnu_passive.noalias() -= data.Quu_passive_topRight * d.du;
-    d.dnu_passive.noalias() -= data.Qxu_passive.transpose() * d.dx;
-    d.dnu_passive.noalias() 
-        -= dt * data.MJtJinv().leftCols(data.dimv()).template topRows<dim_floating_base>() 
-              * d_next.dgmm();
-  }
-  data.laf().noalias() += data.Qafqv() * d.dx;
-  data.laf().noalias() += data.Qafu() * d.du;
-  data.la().noalias()  += dt * d_next.dgmm();
-  data.la().noalias()  += sc_jacobian.Phia().transpose() * d.dxi();
   constexpr double eps = std::numeric_limits<double>::epsilon();
   if (dts < - eps || dts > eps) {
     data.laf().noalias() += dts * data.haf();

@@ -4,8 +4,6 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
-#include "robotoc/core/switching_constraint_residual.hpp"
-#include "robotoc/core/switching_constraint_jacobian.hpp"
 #include "robotoc/dynamics/switching_constraint.hpp"
 
 #include "robot_factory.hpp"
@@ -39,26 +37,16 @@ TEST_P(SwitchingConstraintTest, eval) {
   const SplitSolution s = SplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
   SwitchingConstraintData data(robot);
-  SwitchingConstraintResidual res(robot);
-  auto res_ref = res;
-  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, res);
-  res_ref.setDimension(impulse_status.dimf());
+  SplitKKTResidual kkt_residual(robot);
+  auto kkt_residual_ref = kkt_residual;
+  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_residual);
+  kkt_residual_ref.setSwitchingConstraintDimension(impulse_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, res_ref.P());
-  EXPECT_TRUE(res.isApprox(res_ref));
-  const double l2 = res.KKTError();
-  const double l2_ref = res.P().squaredNorm();
-  EXPECT_DOUBLE_EQ(l2, l2_ref);
-  const double l1 = res.constraintViolation();
-  const double l1_ref = res.P().lpNorm<1>();
-  EXPECT_DOUBLE_EQ(l1, l1_ref);
-
-  SplitKKTResidual kkt_res(robot);
-  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_res);
-  EXPECT_TRUE(kkt_res.P().isApprox(res.P()));
+  robot.computeContactPositionResidual(impulse_status, kkt_residual_ref.P());
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
 
@@ -77,69 +65,41 @@ TEST_P(SwitchingConstraintTest, linearize) {
   SplitKKTMatrix kkt_matrix(robot);
   auto kkt_matrix_ref = kkt_matrix;
   SwitchingConstraintData data(robot);
-  SwitchingConstraintJacobian jac(robot);
-  SwitchingConstraintResidual res(robot);
   auto data_ref = data;
-  auto jac_ref = jac;
-  auto res_ref = res;
   robot.updateKinematics(s.q);
   linearizeSwitchingConstraint(robot, impulse_status, data, dt1, dt2,
-                               s, kkt_matrix, kkt_residual, jac, res);
-  EXPECT_NO_THROW(
-    std::cout << jac << std::endl;
-    std::cout << res << std::endl;
-  );
+                               s, kkt_matrix, kkt_residual);
   data_ref.setDimension(impulse_status.dimf());
-  jac_ref.setDimension(impulse_status.dimf());
-  res_ref.setDimension(impulse_status.dimf());
+  kkt_matrix_ref.setSwitchingConstraintDimension(impulse_status.dimf());
+  kkt_residual_ref.setSwitchingConstraintDimension(impulse_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, res_ref.P());
-  robot.computeContactPositionDerivative(impulse_status, jac_ref.Pq());
+  robot.computeContactPositionResidual(impulse_status, kkt_residual_ref.P());
+  robot.computeContactPositionDerivative(impulse_status, data_ref.Pq());
   if (robot.hasFloatingBase()) {
-    robot.dIntegrateTransport_dq(s.q, dq, jac_ref.Pq(), jac_ref.Phiq());
-    robot.dIntegrateTransport_dv(s.q, dq, jac_ref.Pq(), jac_ref.Phiv());
-    robot.dIntegrateTransport_dv(s.q, dq, jac_ref.Pq(), jac_ref.Phia());
-    jac_ref.Phiv().array() *= (dt1+dt2);
-    jac_ref.Phia().array() *= (dt1*dt2);
+    robot.dIntegrateTransport_dq(s.q, dq, data_ref.Pq(), kkt_matrix_ref.Phiq());
+    robot.dIntegrateTransport_dv(s.q, dq, data_ref.Pq(), kkt_matrix_ref.Phiv());
+    robot.dIntegrateTransport_dv(s.q, dq, data_ref.Pq(), kkt_matrix_ref.Phia());
+    kkt_matrix_ref.Phiv().array() *= (dt1+dt2);
+    kkt_matrix_ref.Phia().array() *= (dt1*dt2);
   }
   else {
-    jac_ref.Phiq() = jac_ref.Pq();
-    jac_ref.Phiv() = (dt1+dt2) * jac_ref.Pq();
-    jac_ref.Phia() = (dt1*dt2) * jac_ref.Pq();
+    kkt_matrix_ref.Phiq() = data_ref.Pq();
+    kkt_matrix_ref.Phiv() = (dt1+dt2) * data_ref.Pq();
+    kkt_matrix_ref.Phia() = (dt1*dt2) * data_ref.Pq();
   }
-  kkt_residual_ref.lx += jac_ref.Phix().transpose() * s.xi_stack();
-  kkt_residual_ref.la += jac_ref.Phia().transpose() * s.xi_stack();
+  kkt_residual_ref.lx += kkt_matrix_ref.Phix().transpose() * s.xi_stack();
+  kkt_residual_ref.la += kkt_matrix_ref.Phia().transpose() * s.xi_stack();
   const Eigen::VectorXd dqt = 2.0 * (s.v + dt1 * s.a);
-  jac_ref.Phit()  = jac_ref.Pq() * dqt;
-  kkt_residual_ref.h += s.xi_stack().dot(jac_ref.Phit());
-  const Eigen::VectorXd PqT_xi = jac_ref.Pq().transpose() * s.xi_stack();
+  kkt_matrix_ref.Phit()  = data_ref.Pq() * dqt;
+  kkt_residual_ref.h += s.xi_stack().dot(kkt_matrix_ref.Phit());
+  const Eigen::VectorXd PqT_xi = data_ref.Pq().transpose() * s.xi_stack();
   kkt_matrix_ref.Qtt += 2.0 * PqT_xi.dot(s.a);
   kkt_matrix_ref.hv().noalias() += 2.0 * PqT_xi;
   kkt_matrix_ref.ha.noalias()  += (2.0*dt1) * PqT_xi;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  EXPECT_TRUE(jac.isApprox(jac_ref));
-  EXPECT_TRUE(res.isApprox(res_ref));
-  const double l2 = res.KKTError();
-  const double l2_ref = res.P().squaredNorm();
-  EXPECT_DOUBLE_EQ(l2, l2_ref);
-  const double l1 = res.constraintViolation();
-  const double l1_ref = res.P().lpNorm<1>();
-  EXPECT_DOUBLE_EQ(l1, l1_ref);
-
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  linearizeSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_mat, kkt_res);
-  EXPECT_TRUE(kkt_res.P().isApprox(res.P()));
-  EXPECT_TRUE(kkt_mat.Phix().isApprox(jac.Phix()));
-  EXPECT_TRUE(kkt_mat.Phiq().isApprox(jac.Phiq()));
-  EXPECT_TRUE(kkt_mat.Phiv().isApprox(jac.Phiv()));
-  EXPECT_TRUE(kkt_mat.Phia().isApprox(jac.Phia()));
-  EXPECT_TRUE(kkt_mat.Phia().isApprox(jac.Phia()));
-  EXPECT_TRUE(kkt_mat.Phiu().isApprox(jac.Phiu()));
-  EXPECT_TRUE(kkt_mat.Phit().isApprox(jac.Phit()));
 }
 
 

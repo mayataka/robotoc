@@ -10,7 +10,6 @@
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/dynamics/terminal_state_equation.hpp"
 #include "robotoc/ocp/terminal_stage.hpp"
-#include "robotoc/ocp/terminal_ocp.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
@@ -64,13 +63,6 @@ TEST_P(TerminalStageTest, evalOCP) {
   data_ref.performance_index.cost = cost->evalTerminalCost(robot, data_ref.cost_data, grid_info, s);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(data.performance_index.isApprox(data_ref.performance_index));
-
-  TerminalOCP ocp(robot, cost, constraints);
-  // ocp.initConstraints(robot, contact_status, grid_info.time_stage, s);
-  SplitKKTResidual kkt_residual_ocp(robot);
-  SwitchingConstraintResidual switch_res(robot);
-  ocp.evalOCP(robot, grid_info, s, kkt_residual_ocp);
-  EXPECT_DOUBLE_EQ(ocp.terminalCost(), data_ref.performance_index.cost);
 }
 
 
@@ -111,18 +103,6 @@ TEST_P(TerminalStageTest, evalKKT) {
   stage.expandDual(grid_info, data, d);
   correctCostateDirection(data_ref.state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
-
-  TerminalOCP ocp(robot, cost, constraints);
-  // ocp.initConstraints(robot, contact_status, grid_info.time_stage, s);
-  SplitKKTMatrix kkt_matrix_ocp(robot);
-  SplitKKTResidual kkt_residual_ocp(robot);
-  ocp.computeKKTSystem(robot, grid_info, s_prev.q, s, kkt_matrix_ocp, kkt_residual_ocp);
-  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ocp));
-  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ocp));
-
-  ocp.expandPrimal(s, d_ocp);
-  ocp.expandDual(d_ocp);
-  EXPECT_TRUE(d.isApprox(d_ocp));
 }
 
 

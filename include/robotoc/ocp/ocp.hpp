@@ -6,8 +6,6 @@
 #include <cassert>
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_ocp.hpp"
-#include "robotoc/ocp/impulse_split_ocp.hpp"
 #include "robotoc/ocp/terminal_ocp.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
@@ -139,48 +137,6 @@ public:
   /// false if not.
   ///
   bool isSTOEnabled() const;
-
-  ///
-  /// @brief Overload operator[] to access the standard data, i.e., 
-  /// OCP::data as std::vector. 
-  ///
-  SplitOCP& operator[] (const int i) {
-    assert(i >= 0);
-    assert(i < data.size());
-    return data[i];
-  }
-
-  ///
-  /// @brief const version of OCP::operator[]. 
-  ///
-  const SplitOCP& operator[] (const int i) const {
-    assert(i >= 0);
-    assert(i < data.size());
-    return data[i];
-  }
-
-  ///
-  /// @brief Split optimal control problem data for the time stages.
-  ///
-  std::vector<SplitOCP> data;
-
-  ///
-  /// @brief Split optimal control problem data for the auxiliary stages 
-  /// (additional time stages just after the impulse events).
-  ///
-  std::vector<SplitOCP> aux;
-
-  ///
-  /// @brief Split optimal control problem data for the lift stages 
-  /// (additional time stages just after the lift events).
-  ///
-  std::vector<SplitOCP> lift;
-
-  ///
-  /// @brief Split optimal control problem data for the impulse stages 
-  /// (additional time stages at the impulse events).
-  ///
-  std::vector<ImpulseSplitOCP> impulse;
 
   ///
   /// @brief Split optimal control problem data for the terminal stage.
