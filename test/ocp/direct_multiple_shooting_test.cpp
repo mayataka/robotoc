@@ -34,9 +34,9 @@ protected:
   virtual void TearDown() {
   }
 
-  Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, 
-                          const std::shared_ptr<ContactSequence>& contact_sequence) const;
+  // Solution createSolution(const Robot& robot) const;
+  // Solution createSolution(const Robot& robot, 
+  //                         const std::shared_ptr<ContactSequence>& contact_sequence) const;
   std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
@@ -44,15 +44,15 @@ protected:
 };
 
 
-Solution DirectMultipleShootingTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_num_impulse);
-}
+// Solution DirectMultipleShootingTest::createSolution(const Robot& robot) const {
+//   return testhelper::CreateSolution(robot, N, max_num_impulse);
+// }
 
 
-Solution DirectMultipleShootingTest::createSolution(const Robot& robot, 
-                                                    const std::shared_ptr<ContactSequence>& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
-}
+// Solution DirectMultipleShootingTest::createSolution(const Robot& robot, 
+//                                                     const std::shared_ptr<ContactSequence>& contact_sequence) const {
+//   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
+// }
 
 
 std::shared_ptr<ContactSequence> DirectMultipleShootingTest::createContactSequence(const Robot& robot) const {
@@ -65,15 +65,15 @@ TEST_P(DirectMultipleShootingTest, evalKKT) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  // DirectMultipleShooting dms(nthreads);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
-  const auto s = createSolution(robot, contact_sequence);
+  TimeDiscretization time_discretization(T, N, 3*max_num_impulse);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto kkt_matrix_ref = kkt_matrix;
-  auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
+  const auto s = testhelper::CreateSolution(robot, contact_sequence, time_discretization);
+  aligned_vector<Robot> robots(nthreads, robot);
+  // auto kkt_matrix = testhelper::C
+  // auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  // auto kkt_matrix_ref = kkt_matrix;
+  // auto kkt_residual_ref = kkt_residual;
 }
 
 
@@ -82,15 +82,15 @@ TEST_P(DirectMultipleShootingTest, integrateSolution) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  // DirectMultipleShooting dms(nthreads);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
-  const auto s = createSolution(robot, contact_sequence);
+  TimeDiscretization time_discretization(T, N, 3*max_num_impulse);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto kkt_matrix_ref = kkt_matrix;
-  auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
+  const auto s = testhelper::CreateSolution(robot, contact_sequence, time_discretization);
+  aligned_vector<Robot> robots(nthreads, robot);
+  // auto kkt_matrix = testhelper::C
+  // auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  // auto kkt_matrix_ref = kkt_matrix;
+  // auto kkt_residual_ref = kkt_residual;
 }
 
 

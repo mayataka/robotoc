@@ -6,7 +6,7 @@ namespace robotoc {
 SolutionInterpolator::SolutionInterpolator(const Robot& robot, const int N, 
                                            const int reserved_num_discrete_events) 
   : stored_time_discretization_(),
-    stored_solution_(robot, N+1+3*reserved_num_discrete_events, reserved_num_discrete_events),
+    stored_solution_(N+1+3*reserved_num_discrete_events, SplitSolution(robot)),
     has_stored_solution_(false) {
 }
 
@@ -19,8 +19,10 @@ SolutionInterpolator::SolutionInterpolator()
 
 
 void SolutionInterpolator::reserve(const Robot& robot, 
-                                   const int reserved_num_discrete_events) {
-  stored_solution_.reserve(robot, reserved_num_discrete_events);
+                                   const TimeDiscretization& time_discretization) {
+  while (stored_solution_.size() < time_discretization.N_grids()+1) {
+    stored_solution_.push_back(stored_solution_.back());
+  }
 }
 
 

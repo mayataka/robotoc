@@ -220,7 +220,7 @@ const Solution& MPCJump::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCJump::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCJump::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 

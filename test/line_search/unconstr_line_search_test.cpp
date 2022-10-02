@@ -47,8 +47,8 @@ protected:
 TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  const auto s = testhelper::CreateSolution(robot, N, 0);
-  const auto d = testhelper::CreateDirection(robot, N, 0);
+  const auto s = testhelper::CreateSolution(robot, N);
+  const auto d = testhelper::CreateDirection(robot, N);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   aligned_vector<Robot> robots(nthreads, robot);
@@ -72,8 +72,8 @@ TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
 TEST_F(UnconstrLineSearchTest, UnconstrParNMPC) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  const auto s = testhelper::CreateSolution(robot, N, 0);
-  const auto d = testhelper::CreateDirection(robot, N, 0);
+  const auto s = testhelper::CreateSolution(robot, N);
+  const auto d = testhelper::CreateDirection(robot, N);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   aligned_vector<Robot> robots(nthreads, robot);

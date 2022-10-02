@@ -234,7 +234,7 @@ const Solution& MPCPace::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCPace::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCPace::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 

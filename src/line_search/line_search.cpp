@@ -11,8 +11,8 @@ LineSearch::LineSearch(const OCPDef& ocp,
                        const LineSearchSettings& line_search_settings) 
   : filter_(),
     settings_(line_search_settings),
-    s_trial_(ocp.robot, ocp.N+3*ocp.num_reserved_discrete_events+1, ocp.num_reserved_discrete_events), 
-    kkt_residual_(ocp.robot, ocp.N+3*ocp.num_reserved_discrete_events+1, ocp.num_reserved_discrete_events) {
+    s_trial_(ocp.N+3*ocp.num_reserved_discrete_events+1, SplitSolution(ocp.robot)), 
+    kkt_residual_(ocp.N+3*ocp.num_reserved_discrete_events+1, SplitKKTResidual(ocp.robot)) {
 }
 
 
@@ -172,8 +172,11 @@ void LineSearch::set(const LineSearchSettings& settings) {
 
 
 void LineSearch::reserve(const TimeDiscretization& time_discretization) {
-  while (s_trial_.data.size() < time_discretization.N_grids()+1) {
-    s_trial_.data.push_back(s_trial_.data.back());
+  while (s_trial_.size() < time_discretization.N_grids()+1) {
+    s_trial_.push_back(s_trial_.back());
+  }
+  while (kkt_residual_.size() < time_discretization.N_grids()+1) {
+    kkt_residual_.push_back(kkt_residual_.back());
   }
 }
 

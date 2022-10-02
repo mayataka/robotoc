@@ -4,17 +4,16 @@
 #include <iostream>
 
 #include "robotoc/core/split_direction.hpp"
-#include "robotoc/core/hybrid_container.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
 
 
 namespace robotoc {
 
 ///
 /// @typedef Direction
-/// @brief Newton direction of the solution to the (hybrid) optimal control 
-/// problem. 
+/// @brief Newton direction of the solution to the optimal control problem. 
 ///
-using Direction = hybrid_container<SplitDirection, SplitDirection>;
+using Direction = aligned_vector<SplitDirection>;
 
 std::ostream& operator<<(std::ostream& os, const Direction& d);
 

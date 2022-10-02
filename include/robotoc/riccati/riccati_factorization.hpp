@@ -3,10 +3,8 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/robot/robot.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
-#include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
-#include "robotoc/core/hybrid_container.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
 
 
 namespace robotoc {
@@ -15,8 +13,7 @@ namespace robotoc {
 /// @typedef RiccatiFactorization
 /// @brief Riccati factorization matices of the LQR subproblem. 
 ///
-using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, 
-                                              SplitRiccatiFactorization>;
+using RiccatiFactorization = aligned_vector<SplitRiccatiFactorization>;
 
 std::ostream& operator<<(std::ostream& os, const RiccatiFactorization& riccati);
 

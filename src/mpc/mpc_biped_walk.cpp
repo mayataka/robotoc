@@ -220,7 +220,7 @@ const Solution& MPCBipedWalk::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCBipedWalk::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCBipedWalk::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 

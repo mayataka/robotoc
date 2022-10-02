@@ -4,8 +4,11 @@
 namespace robotoc {
 
 std::ostream& operator<<(std::ostream& os, const Solution& s) {
-  os << "solution:" << std::endl;
-  s.disp(os);
+  os << "Solution:" << "\n";
+  for (int i=0; i<s.size(); ++i) {
+    os << "i: " << i << "\n";
+    os << s[i] << "\n";
+  }
   return os;
 }
 

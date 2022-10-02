@@ -235,7 +235,7 @@ const Solution& MPCTrot::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCTrot::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCTrot::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 

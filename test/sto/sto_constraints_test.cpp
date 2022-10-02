@@ -23,7 +23,6 @@ protected:
     min_dt  = std::abs(Eigen::VectorXd::Random(1)[0]);
 
     auto robot = testhelper::CreateQuadrupedalRobot();
-    d = Direction(robot, N, max_num_impulse);
 
     const double dt = T / N;
     contact_sequence 
@@ -41,7 +40,6 @@ protected:
   double T, t, min_dt;
   Eigen::VectorXd lt;
   Eigen::MatrixXd Qtt;
-  Direction d;
   std::shared_ptr<ContactSequence> contact_sequence;
   TimeDiscretization time_discretization;
 };

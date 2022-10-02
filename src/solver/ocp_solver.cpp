@@ -34,21 +34,18 @@ OCPSolver::OCPSolver(const OCP& ocp,
     riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
     line_search_(createOCPDef(ocp)),
     ocp_(ocp),
-    riccati_factorization_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
-    kkt_matrix_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
-    kkt_residual_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
-    s_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
-    d_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
+    riccati_factorization_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitRiccatiFactorization(ocp.robot())),
+    kkt_matrix_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitKKTMatrix(ocp.robot())),
+    kkt_residual_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitKKTResidual(ocp.robot())),
+    s_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitSolution(ocp.robot())),
+    d_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, SplitDirection(ocp.robot())),
     solution_interpolator_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
     solver_options_(solver_options),
     solver_statistics_() {
   if (nthreads <= 0) {
     throw std::out_of_range("[OCPSolver] invalid argument: nthreads must be positive!");
   }
-  for (auto& e : s_.data)    { ocp.robot().normalizeConfiguration(e.q); }
-  for (auto& e : s_.impulse) { ocp.robot().normalizeConfiguration(e.q); }
-  for (auto& e : s_.aux)     { ocp.robot().normalizeConfiguration(e.q); }
-  for (auto& e : s_.lift)    { ocp.robot().normalizeConfiguration(e.q); }
+  for (auto& e : s_)  { ocp.robot().normalizeConfiguration(e.q); }
   time_discretization_.setDiscretizationMethod(solver_options.discretization_method);
 }
 
@@ -273,7 +270,7 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
 }
 
 
-const hybrid_container<LQRPolicy>& OCPSolver::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& OCPSolver::getLQRPolicy() const {
   return riccati_recursion_.getLQRPolicy();
 }
 
@@ -284,11 +281,6 @@ const RiccatiFactorization& OCPSolver::getRiccatiFactorization() const {
 
 
 void OCPSolver::setSolution(const Solution& s) {
-  assert(s.data.size() == s_.data.size());
-  if (s.data.size() != s_.data.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.data.size() must be " + std::to_string(s_.data.size()) + "!");
-  }
   s_ = s;
 }
 
@@ -300,31 +292,31 @@ void OCPSolver::setSolution(const std::string& name,
       throw std::out_of_range(
           "[OCPSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
     }
-    for (auto& e : s_.data)    { e.q = value; }
+    for (auto& e : s_) { e.q = value; }
   }
   else if (name == "v") {
     if (value.size() != robots_[0].dimv()) {
       throw std::out_of_range(
           "[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
-    for (auto& e : s_.data)    { e.v = value; }
+    for (auto& e : s_) { e.v = value; }
   }
   else if (name == "a") {
     if (value.size() != robots_[0].dimv()) {
       throw std::out_of_range(
           "[OCPSolver] invalid argument: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
-    for (auto& e : s_.data)    { e.a  = value; }
+    for (auto& e : s_) { e.a = value; }
   }
   else if (name == "f") {
     if (value.size() == 6) {
-      for (auto& e : s_.data) { 
+      for (auto& e : s_) { 
         for (auto& ef : e.f) { ef = value.template head<6>(); } 
         e.set_f_stack(); 
       }
     }
     else if (value.size() == 3) {
-      for (auto& e : s_.data) { 
+      for (auto& e : s_) { 
         for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
         e.set_f_stack(); 
       }
@@ -338,7 +330,7 @@ void OCPSolver::setSolution(const std::string& name,
       throw std::out_of_range(
           "[OCPSolver] invalid argument: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
     }
-    for (auto& e : s_.data)    { e.u = value; }
+    for (auto& e : s_) { e.u = value; }
   }
   else {
     throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, f, or u!");
@@ -379,8 +371,8 @@ double OCPSolver::cost(const bool include_cost_barrier) const {
 
 
 bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  // reserveData();
-  // discretizeSolution();
+  reserveData();
+  discretizeSolution();
   return dms_.isFeasible(robots_, time_discretization_, s_);
 }
 
@@ -397,21 +389,22 @@ void OCPSolver::setRobotProperties(const RobotProperties& properties) {
 }
 
 
-void OCPSolver::reserveData() {
-  kkt_matrix_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  kkt_residual_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  s_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  d_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  riccati_factorization_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  riccati_recursion_.reserve(ocp_);
-  line_search_.reserve(time_discretization_);
+template <typename T>
+void conservativeReserve(const TimeDiscretization& time_discretization, 
+                         aligned_vector<T>& data) {
+  while (data.size() < time_discretization.N_grids()+1) {
+    data.push_back(data.back());
+  }
+}
 
-  const int size = time_discretization_.N_grids() + 1;
-  kkt_matrix_.data.resize(size);
-  kkt_residual_.data.resize(size);
-  s_.data.resize(size);
-  d_.data.resize(size);
-  riccati_factorization_.data.resize(size);
+
+void OCPSolver::reserveData() {
+  conservativeReserve(time_discretization_, kkt_matrix_);
+  conservativeReserve(time_discretization_, kkt_residual_);
+  conservativeReserve(time_discretization_, s_);
+  conservativeReserve(time_discretization_, d_);
+  conservativeReserve(time_discretization_, riccati_factorization_);
+  line_search_.reserve(time_discretization_);
 }
 
 

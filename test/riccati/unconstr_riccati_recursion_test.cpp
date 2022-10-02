@@ -31,9 +31,9 @@ protected:
     T = 1;
     dt = T / N;
 
-    kkt_matrix = KKTMatrix(robot, N);
-    kkt_residual = KKTResidual(robot, N);
-    d = Direction(robot, N);
+    kkt_matrix = KKTMatrix(N+1, SplitKKTMatrix(robot));
+    kkt_residual = KKTResidual(N+1, SplitKKTResidual(robot));
+    d = Direction(N+1, SplitDirection(robot));
     riccati_factorization = UnconstrRiccatiFactorization(N+1, SplitRiccatiFactorization(robot));
     for (int i=0; i<=N; ++i) {
       const Eigen::MatrixXd H_seed = Eigen::MatrixXd::Random(dimx+dimv, dimx+dimv);

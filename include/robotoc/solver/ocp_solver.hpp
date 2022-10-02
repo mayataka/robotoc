@@ -167,7 +167,7 @@ public:
   /// @brief Gets of the local LQR policies over the horizon. 
   /// @return const reference to the local LQR policies.
   ///
-  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
+  const aligned_vector<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Gets the Riccati factorizations. This can be interpreted as 

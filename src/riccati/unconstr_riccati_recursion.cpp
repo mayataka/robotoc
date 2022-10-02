@@ -11,7 +11,7 @@ UnconstrRiccatiRecursion::UnconstrRiccatiRecursion(const UnconstrOCP& ocp)
   : N_(ocp.N()),
     dt_(ocp.T()/ocp.N()),
     factorizer_(ocp.robot()),
-    lqr_policy_(ocp.N(), LQRPolicy(ocp.robot())) {
+    lqr_policy_(ocp.N()+1, LQRPolicy(ocp.robot())) {
 }
 
 

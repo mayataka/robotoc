@@ -15,10 +15,10 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc,
     parnmpc_(parnmpc),
     backward_correction_(parnmpc, nthreads),
     line_search_(parnmpc, nthreads),
-    kkt_matrix_(parnmpc.robot(), parnmpc.N()),
-    kkt_residual_(parnmpc.robot(), parnmpc.N()),
-    s_(parnmpc.robot(), parnmpc.N()),
-    d_(parnmpc.robot(), parnmpc.N()),
+    kkt_matrix_(parnmpc.N()+1, SplitKKTMatrix(parnmpc.robot())),
+    kkt_residual_(parnmpc.N()+1, SplitKKTResidual(parnmpc.robot())),
+    s_(parnmpc.N()+1, SplitSolution(parnmpc.robot())),
+    d_(parnmpc.N()+1, SplitDirection(parnmpc.robot())),
     N_(parnmpc.N()),
     nthreads_(nthreads),
     T_(parnmpc.T()),
@@ -179,16 +179,16 @@ std::vector<Eigen::VectorXd> UnconstrParNMPCSolver::getSolution(
 void UnconstrParNMPCSolver::setSolution(const std::string& name, 
                                         const Eigen::VectorXd& value) {
   if (name == "q") {
-    for (auto& e : s_.data) { e.q = value; }
+    for (auto& e : s_) { e.q = value; }
   }
   else if (name == "v") {
-    for (auto& e : s_.data) { e.v = value; }
+    for (auto& e : s_) { e.v = value; }
   }
   else if (name == "a") {
-    for (auto& e : s_.data) { e.a  = value; }
+    for (auto& e : s_) { e.a  = value; }
   }
   else if (name == "u") {
-    for (auto& e : s_.data) { e.u = value; }
+    for (auto& e : s_) { e.u = value; }
   }
   else {
     throw std::invalid_argument("[UnconstrParNMPCSolver] invalid arugment: name must be q, v, a, or u!");

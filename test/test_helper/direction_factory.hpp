@@ -5,19 +5,18 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/planner/contact_sequence.hpp"
+#include "robotoc/ocp/time_discretization.hpp"
 #include "robotoc/core/direction.hpp"
 
 
 namespace robotoc {
 namespace testhelper {
 
-Direction CreateDirection(const Robot& robot, const int N, 
-                          const int max_num_impulse=0);
+Direction CreateDirection(const Robot& robot, const int N);
 
 Direction CreateDirection(const Robot& robot, 
-                          const std::shared_ptr<ContactSequence>& contact_sequence, 
-                          const double T, const int N, 
-                          const int max_num_impulse, const double t);
+                          const std::shared_ptr<ContactSequence>& contact_sequence,
+                          const TimeDiscretization& time_discretization);
 
 
 } // namespace testhelper

@@ -15,7 +15,7 @@ UnconstrBackwardCorrection::UnconstrBackwardCorrection(
     T_(parnmpc.T()),
     dt_(parnmpc.T()/parnmpc.N()),
     corrector_(parnmpc.N(), UnconstrSplitBackwardCorrection(parnmpc.robot())),
-    s_new_(parnmpc.robot(), parnmpc.N()),
+    s_new_(parnmpc.N()+1, SplitSolution(parnmpc.robot())),
     aux_mat_(parnmpc.N(), Eigen::MatrixXd::Zero(2*parnmpc.robot().dimv(), 
                                                 2*parnmpc.robot().dimv())),
     primal_step_sizes_(Eigen::VectorXd::Zero(parnmpc.N())),

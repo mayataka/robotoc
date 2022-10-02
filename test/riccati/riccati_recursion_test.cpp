@@ -7,7 +7,6 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
-#include "robotoc/core/hybrid_container.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
@@ -41,13 +40,6 @@ protected:
   }
 
   std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
-  Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, 
-                          const std::shared_ptr<ContactSequence>& contact_sequence) const;
-  KKTMatrix createKKTMatrix(const Robot& robot, 
-                            const std::shared_ptr<ContactSequence>& contact_sequence) const;
-  KKTResidual createKKTResidual(const Robot& robot, 
-                                const std::shared_ptr<ContactSequence>& contact_sequence) const;
   void test_riccatiRecursion(const Robot& robot) const;
   void test_computeDirection(const Robot& robot) const;
 
@@ -61,37 +53,12 @@ std::shared_ptr<ContactSequence > RiccatiRecursionTest::createContactSequence(co
 }
 
 
-Solution RiccatiRecursionTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_num_impulse);
-}
-
-
-Solution RiccatiRecursionTest::createSolution(const Robot& robot, 
-                                              const std::shared_ptr<ContactSequence>& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
-}
-
-
-KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, 
-                                                const std::shared_ptr<ContactSequence>& contact_sequence) const {
-  return testhelper::CreateKKTMatrix(robot, contact_sequence, N, max_num_impulse);
-}
-
-
-KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot, 
-                                                    const std::shared_ptr<ContactSequence>& contact_sequence) const {
-  return testhelper::CreateKKTResidual(robot, contact_sequence, N, max_num_impulse);
-}
-
-
 TEST_P(RiccatiRecursionTest, riccatiRecursion) {
   const auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
   // DirectMultipleShooting dms(nthreads);
-  KKTMatrix kkt_matrix(robot, N, max_num_impulse);
-  KKTResidual kkt_residual(robot, N, max_num_impulse);
   aligned_vector<Robot> robots(nthreads, robot);
 }
 

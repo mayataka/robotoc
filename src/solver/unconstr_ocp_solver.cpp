@@ -15,10 +15,10 @@ UnconstrOCPSolver::UnconstrOCPSolver(const UnconstrOCP& ocp,
     ocp_(ocp),
     riccati_recursion_(ocp),
     line_search_(ocp, nthreads),
-    kkt_matrix_(ocp.robot(), ocp.N()),
-    kkt_residual_(ocp.robot(), ocp.N()),
-    s_(ocp.robot(), ocp.N()),
-    d_(ocp.robot(), ocp.N()),
+    kkt_matrix_(ocp.N()+1, SplitKKTMatrix(ocp.robot())),
+    kkt_residual_(ocp.N()+1, SplitKKTResidual(ocp.robot())),
+    s_(ocp.N()+1, SplitSolution(ocp.robot())),
+    d_(ocp.N()+1, SplitDirection(ocp.robot())),
     riccati_factorization_(ocp.N()+1, SplitRiccatiFactorization(ocp.robot())),
     N_(ocp.N()),
     nthreads_(nthreads),
@@ -207,16 +207,16 @@ const std::vector<LQRPolicy>& UnconstrOCPSolver::getLQRPolicy() const {
 void UnconstrOCPSolver::setSolution(const std::string& name, 
                                     const Eigen::VectorXd& value) {
   if (name == "q") {
-    for (auto& e : s_.data) { e.q = value; }
+    for (auto& e : s_) { e.q = value; }
   }
   else if (name == "v") {
-    for (auto& e : s_.data) { e.v = value; }
+    for (auto& e : s_) { e.v = value; }
   }
   else if (name == "a") {
-    for (auto& e : s_.data) { e.a  = value; }
+    for (auto& e : s_) { e.a  = value; }
   }
   else if (name == "u") {
-    for (auto& e : s_.data) { e.u = value; }
+    for (auto& e : s_) { e.u = value; }
   }
   else {
     throw std::invalid_argument("[UnconstrOCPSolver] invalid arugment: name must be q, v, a, or u!");

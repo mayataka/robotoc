@@ -4,16 +4,16 @@
 #include <iostream>
 
 #include "robotoc/core/split_solution.hpp"
-#include "robotoc/core/hybrid_container.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
 
 
 namespace robotoc {
 
 ///
 /// @typedef Solution
-/// @brief Solution to the (hybrid) optimal control problem. 
+/// @brief Solution to the optimal control problem. 
 ///
-using Solution = hybrid_container<SplitSolution, SplitSolution>;
+using Solution = aligned_vector<SplitSolution>;
 
 std::ostream& operator<<(std::ostream& os, const Solution& s);
 

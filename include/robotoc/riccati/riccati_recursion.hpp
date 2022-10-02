@@ -9,7 +9,7 @@
 #include "robotoc/riccati/split_constrained_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 #include "robotoc/riccati/riccati_factorizer.hpp"
-#include "robotoc/core/hybrid_container.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/core/direction.hpp"
 #include "robotoc/core/kkt_matrix.hpp"
@@ -113,12 +113,12 @@ public:
   /// @brief Gets of the LQR policies over the horizon. 
   /// @return const reference to the LQR policies.
   ///
-  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
+  const aligned_vector<LQRPolicy>& getLQRPolicy() const;
 
 private:
   int nthreads_, N_all_;
   RiccatiFactorizer factorizer_;
-  hybrid_container<LQRPolicy> lqr_policy_;
+  aligned_vector<LQRPolicy> lqr_policy_;
   aligned_vector<STOPolicy> sto_policy_;
   SplitRiccatiFactorization factorization_m_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;

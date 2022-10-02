@@ -243,7 +243,7 @@ const Solution& MPCFlyingTrot::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCFlyingTrot::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCFlyingTrot::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 

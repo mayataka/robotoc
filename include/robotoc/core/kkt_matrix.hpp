@@ -4,18 +4,16 @@
 #include <iostream>
 
 #include "robotoc/core/split_kkt_matrix.hpp"
-#include "robotoc/core/switching_constraint_jacobian.hpp"
-#include "robotoc/core/hybrid_container.hpp"
+#include "robotoc/utils/aligned_vector.hpp"
 
 
 namespace robotoc {
 
 ///
 /// @typedef KKTMatrix 
-/// @brief The KKT matrix of the (hybrid) optimal control problem. 
+/// @brief The KKT matrix of the optimal control problem. 
 ///
-using KKTMatrix = hybrid_container<SplitKKTMatrix, SplitKKTMatrix, 
-                                   SwitchingConstraintJacobian>;
+using KKTMatrix = aligned_vector<SplitKKTMatrix>;
 
 std::ostream& operator<<(std::ostream& os, const KKTMatrix& kkt_matrix);
 

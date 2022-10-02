@@ -12,9 +12,8 @@ RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads,
   : nthreads_(nthreads),
     N_all_(ocp.N()+1),
     factorizer_(ocp.robot(), max_dts0),
-    lqr_policy_(ocp.robot(), ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, ocp.reservedNumDiscreteEvents()),
-    sto_policy_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, 
-                STOPolicy(ocp.robot())),
+    lqr_policy_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, LQRPolicy(ocp.robot())),
+    sto_policy_(ocp.N()+3*ocp.reservedNumDiscreteEvents()+1, STOPolicy(ocp.robot())),
     factorization_m_(ocp.robot()),
     max_primal_step_sizes_(
         Eigen::VectorXd::Zero(ocp.N()+1+3*ocp.reservedNumDiscreteEvents())), 
@@ -160,7 +159,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
 }
 
 
-const hybrid_container<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& RiccatiRecursion::getLQRPolicy() const {
   return lqr_policy_;
 }
 

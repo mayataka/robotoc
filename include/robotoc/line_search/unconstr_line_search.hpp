@@ -48,8 +48,8 @@ public:
       min_step_size_(min_step_size),
       costs_(Eigen::VectorXd::Zero(ocp.N()+1)), 
       violations_(Eigen::VectorXd::Zero(ocp.N())), 
-      s_trial_(ocp.robot(), ocp.N()), 
-      kkt_residual_(ocp.robot(), ocp.N()) {
+      s_trial_(ocp.N()+1, SplitSolution(ocp.robot())), 
+      kkt_residual_(ocp.N()+1, SplitKKTResidual(ocp.robot())) {
   }
 
   ///

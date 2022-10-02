@@ -58,18 +58,9 @@ public:
   ///
   /// @brief Reserve the discrete-event data. 
   /// @param[in] robot Robot model.
-  /// @param[in] reserved_num_discrete_events Reserved number of discrete events  
-  /// on the horizon. OCP data for impulse and lift events are constructed 
-  /// according to this value. Must be non-negative.
+  /// @param[in] time_discretization Time discretization.
   ///
-  void reserve(const Robot& robot, const int reserved_num_discrete_events);
-
-  ///
-  /// @return Reserved size of the discrete-event data. 
-  ///
-  int reservedNumDiscreteEvents() const {
-    return stored_solution_.reservedNumDiscreteEvents();
-  }
+  void reserve(const Robot& robot, const TimeDiscretization& time_discretization);
 
   ///
   /// @brief Stores the current time-discretization and solution. 
