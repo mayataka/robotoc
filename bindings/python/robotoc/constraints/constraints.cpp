@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 
 #include "robotoc/constraints/constraints.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -25,7 +26,8 @@ PYBIND11_MODULE(constraints, m) {
     .def("set_fraction_to_boundary_rule", &Constraints::setFractionToBoundaryRule,
           py::arg("fraction_to_boundary_rule"))
     .def("get_barrier_param", &Constraints::getBarrierParam)
-    .def("get_fraction_to_boundary_rule", &Constraints::getFractionToBoundaryRule);
+    .def("get_fraction_to_boundary_rule", &Constraints::getFractionToBoundaryRule)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(Constraints);
 }
 
 } // namespace python

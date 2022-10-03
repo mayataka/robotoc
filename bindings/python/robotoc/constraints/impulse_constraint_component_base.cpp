@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 
 #include "robotoc/constraints/impulse_constraint_component_base.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
