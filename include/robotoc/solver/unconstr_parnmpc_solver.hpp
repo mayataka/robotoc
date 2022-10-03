@@ -164,6 +164,12 @@ public:
   double KKTError() const;
 
   ///
+  /// @brief Gets the discretization. 
+  /// @return Returns const reference to the time discretization. 
+  ///
+  const std::vector<GridInfo>& getTimeDiscretization() const;
+
+  ///
   ///
   /// @brief Sets a collection of the properties for robot model in this solver. 
   /// @param[in] properties A collection of the properties for the robot model.

@@ -208,8 +208,8 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief OCP discretization. 
-  /// @return Returns const reference to the internal OCP discretization. 
+  /// @brief Gets the discretization. 
+  /// @return Returns const reference to the time discretization. 
   ///
   const TimeDiscretization& getTimeDiscretization() const;
 

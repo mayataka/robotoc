@@ -1,6 +1,5 @@
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 
-#include <omp.h>
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
@@ -53,7 +52,18 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const OCP& ocp,
 }
 
 
-UnconstrParNMPCSolver::UnconstrParNMPCSolver() {
+UnconstrParNMPCSolver::UnconstrParNMPCSolver() 
+  : robots_(),
+    time_discretization_(),
+    backward_correction_(),
+    line_search_(),
+    ocp_(),
+    kkt_matrix_(),
+    kkt_residual_(),
+    s_(),
+    d_(),
+    solver_options_(),
+    solver_statistics_() {
 }
 
 
@@ -214,6 +224,11 @@ double UnconstrParNMPCSolver::KKTError(const double t, const Eigen::VectorXd& q,
 
 double UnconstrParNMPCSolver::KKTError() const {
   return std::sqrt(backward_correction_.getEval().kkt_error);
+}
+
+
+const std::vector<GridInfo>& UnconstrParNMPCSolver::getTimeDiscretization() const {
+  return time_discretization_;
 }
 
 

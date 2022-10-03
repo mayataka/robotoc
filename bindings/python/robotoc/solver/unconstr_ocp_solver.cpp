@@ -36,6 +36,7 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (UnconstrOCPSolver::*)() const>(&UnconstrOCPSolver::KKTError))
+    .def("get_time_discretization", &UnconstrOCPSolver::getTimeDiscretization)
     .def("set_robot_properties", &UnconstrOCPSolver::setRobotProperties,
           py::arg("properties")); 
 }

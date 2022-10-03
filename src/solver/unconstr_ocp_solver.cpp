@@ -1,6 +1,5 @@
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 
-#include <omp.h>
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
@@ -56,7 +55,21 @@ UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp,
 }
 
 
-UnconstrOCPSolver::UnconstrOCPSolver() {
+UnconstrOCPSolver::UnconstrOCPSolver() 
+  : robots_(),
+    time_discretization_(),
+    dms_(),
+    riccati_recursion_(),
+    line_search_(),
+    ocp_(),
+    kkt_matrix_(),
+    kkt_residual_(),
+    s_(),
+    d_(),
+    riccati_factorization_(),
+    solver_options_(),
+    solver_statistics_(),
+    timer_() {
 }
 
 
@@ -213,6 +226,11 @@ double UnconstrOCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
 
 double UnconstrOCPSolver::KKTError() const {
   return std::sqrt(dms_.getEval().kkt_error);
+}
+
+
+const std::vector<GridInfo>& UnconstrOCPSolver::getTimeDiscretization() const {
+  return time_discretization_;
 }
 
 
