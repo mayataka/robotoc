@@ -69,27 +69,27 @@ public:
 
   ///
   /// @brief Computes the cost on the switching times. 
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
+  /// @param[in] time_discretization Time discretization.
   /// @return Cost on the switching times.
   ///
   double evalCost(const TimeDiscretization& time_discretization) const;
 
   ///
   /// @brief Computes the cost and its derivative on the switching times. 
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  /// @param[out] lt Derivative of the cost w.r.t. the switching times.
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] lt The derivatives of the Lagrangian w.r.t. the switching
+  /// times. 
   ///
   double linearizeCost(const TimeDiscretization& time_discretization,
                        Eigen::VectorXd& lt) const;
 
   ///
   /// @brief Computes the cost and its derivative on the switching times. 
-  /// @param[in] time_discretization Time discretization of the hybrid optimal 
-  /// control problem.
-  /// @param[out] lt Derivative of the cost w.r.t. the switching times.
-  /// @param[out] Qtt Hessian of the cost w.r.t. the switching times.
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] lt The derivatives of the Lagrangian w.r.t. the switching
+  /// times. 
+  /// @param[in, out] Qtt The Hessian of the Lagrangian w.r.t. the switching
+  /// times. 
   ///
   double quadratizeCost(const TimeDiscretization& time_discretization,
                         Eigen::VectorXd& lt, Eigen::MatrixXd& Qtt) const;

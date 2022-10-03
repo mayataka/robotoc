@@ -18,7 +18,7 @@ namespace robotoc {
 
 ///
 /// @class STOConstraints
-/// @brief Constraintn on the switching times.
+/// @brief Constraints of the switching time optimization problems.
 ///
 class STOConstraints {
 public:
@@ -152,43 +152,107 @@ public:
   ///
   double getFractionToBoundaryRule() const;
 
+  ///
+  /// @brief Creates the data for this constraints. 
+  /// @param[in] time_discretization Time discretization.
+  /// @return The constraint data for this constraints.
+  ///
   ConstraintComponentData createConstraintsData(
       const TimeDiscretization& time_discretization) const;
 
+  ///
+  /// @brief Checks whether the current split solution s is feasible or not. 
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] data Constraints data. 
+  /// @return true if s is feasible. false if not.
+  ///
   bool isFeasible(const TimeDiscretization& time_discretization,
                   ConstraintComponentData& data) const;
 
+  ///
+  /// @brief Sets the slack and dual variables of constraints. 
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] data Constraints data. 
+  ///
   void setSlackAndDual(const TimeDiscretization& time_discretization,
                        ConstraintComponentData& data) const;
 
+  ///
+  /// @brief Computes the primal residual, residual in the complementary 
+  /// slackness, and the log-barrier function of the slack varible.
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] data Constraints data. 
+  ///
   void evalConstraint(const TimeDiscretization& time_discretization, 
                       ConstraintComponentData& data) const;
 
+  ///
+  /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
+  /// the products of the Jacobian of the constraints and Lagrange multipliers.
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] data Constraints data. 
+  /// @param[in, out] lt The derivatives of the Lagrangian w.r.t. the switching
+  /// times. 
+  ///
   void linearizeConstraints(const TimeDiscretization& time_discretization, 
                             ConstraintComponentData& data, 
                             Eigen::VectorXd& lt) const;
 
+  ///
+  /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
+  /// be called before this function.
+  /// @param[in, out] data Constraints data. 
+  /// @param[in, out] lt The derivatives of the Lagrangian w.r.t. the switching
+  /// times. 
+  /// @param[in, out] Qtt The Hessian of the Lagrangian w.r.t. the switching
+  /// times. 
+  ///
   void condenseSlackAndDual(ConstraintComponentData& data, Eigen::VectorXd& lt,
                             Eigen::MatrixXd& Qtt) const;
 
+  ///
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
+  /// @param[in, out] data Constraints data. 
+  /// @param[in, out] dts The direction of the switching times.
+  ///
   void expandSlackAndDual(ConstraintComponentData& data, Eigen::VectorXd& dts) const;
 
+  ///
+  /// @brief Computes and returns the maximum step size by applying 
+  /// fraction-to-boundary-rule to the directions of the slack variables.
+  /// @param[in] data Constraints data.
+  /// @return Maximum step size regarding the slack variables.
+  ///
   double maxSlackStepSize(const ConstraintComponentData& data) const;
 
+  ///
+  /// @brief Computes and returns the maximum step size by applying 
+  /// fraction-to-boundary-rule to the directions of the dual variables.
+  /// @param[in] data Constraints data.
+  /// @return Maximum step size regarding the dual variables.
+  ///
   double maxDualStepSize(const ConstraintComponentData& data) const;
 
   ///
-  /// @brief Updates the slack variable according to the step size.
+  /// @brief Updates the slack variables according to step_size.
+  /// @param[in, out] data Constraints data. 
   /// @param[in] step_size Step size. 
   ///
   void updateSlack(ConstraintComponentData& data, const double step_size) const;
 
   ///
-  /// @brief Updates the dual variable according to the step size.
+  /// @brief Updates the dual variables according to step_size.
+  /// @param[in, out] data Constraints data. 
   /// @param[in] step_size Step size. 
   ///
   void updateDual(ConstraintComponentData& data, const double step_size) const;
 
+  ///
+  /// @brief Computes the dwell times from the given time discretization.
+  /// @param[in] time_discretization Time discretization.
+  /// @param[in, out] dwell_times Dwell times. 
+  ///
   static void computeDwellTimes(const TimeDiscretization& time_discretization,
                                 Eigen::VectorXd& dwell_times);
 

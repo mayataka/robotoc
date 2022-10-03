@@ -85,8 +85,8 @@ public:
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
   /// @param[in] robot Robot model. 
-  /// @param[in] time_stage Time stage.
-  /// @param[in] s Split solution of this time stage.
+  /// @param[in] grid_info Grid info of this stage.
+  /// @param[in] s Split solution of this stage.
   /// @param[out] data Data of this stage. 
   ///
   void initConstraints(Robot& robot, const GridInfo& grid_info, 
