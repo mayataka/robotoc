@@ -31,16 +31,16 @@ void SolverStatistics::clear() {
 
 
 void SolverStatistics::disp(std::ostream& os) const {
-  os << "Solver statistics:" << std::endl;
-  os << "  convergence: " << std::boolalpha << convergence << std::endl;
-  os << "  total no. of iteration: " << iter << std::endl;
-  os << "  CPU time (non-zero if benchmark is enabled): " << cpu_time << std::endl;
-  os << "  ------------------------------------------------------------------------------------------------------------------ " << std::endl;
-  os << "   iter |   KKT error  |        cost  |  primal feas |   dual feas  | primal alpha |   dual alpha |        ts        " << std::endl;
-  os << "  ------------------------------------------------------------------------------------------------------------------ " << std::endl;
+  os << "Solver statistics:" << "\n";
+  os << "  convergence: " << std::boolalpha << convergence << "\n";
+  os << "  total no. of iteration: " << iter << "\n";
+  os << "  CPU time (non-zero if benchmark is enabled): " << cpu_time << " ms \n";
+  os << "  ------------------------------------------------------------------------------------------------------------------ " << "\n";
+  os << "   iter |   KKT error  |      cost    |  primal feas |   dual feas  | primal alpha |   dual alpha |        ts        " << "\n";
+  os << "  ------------------------------------------------------------------------------------------------------------------ " << "\n";
   for (int i=0; i<iter; ++i) {
     if (std::find(mesh_refinement_iter.begin(), mesh_refinement_iter.end(), i) != mesh_refinement_iter.end()) {
-      os << "  ========================================= Mesh-refinement is carried out! ========================================= " << std::endl;
+      os << "  ========================================= Mesh-refinement is carried out! ========================================= " << "\n";
     }
     os << "    " << std::setw(3) << i+1;
     os << std::scientific << std::setprecision(3);
@@ -58,7 +58,7 @@ void SolverStatistics::disp(std::ostream& os) const {
       }
       os << std::setw(6) << ts[i][ts[i].size()-1] << "]";
     }
-    os << std::endl;
+    os << "\n";
   }
   os << std::defaultfloat << std::flush;
 }
