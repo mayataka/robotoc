@@ -81,7 +81,11 @@ class TrajectoryViewer:
 
     def display(self, time_discretization, q_traj, f_traj=None):
         dt = []
-        for i in range(time_discretization.size()):
+        if isinstance(time_discretization, list):
+            size = len(time_discretization)
+        else:
+            size = time_discretization.size()
+        for i in range(size):
             dt.append(time_discretization[i].dt)
         if self.viewer_type == 'gepetto':
             self.display_gepetto(dt, q_traj, f_traj)

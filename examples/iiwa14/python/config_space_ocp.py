@@ -77,4 +77,5 @@ print(parnmpc_solver.get_solver_statistics())
 
 viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='meshcat')
 viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)
-viewer.display((T/N), ocp_solver.get_solution('q'))
+viewer.display(ocp_solver.get_time_discretization(), 
+               ocp_solver.get_solution('q'))

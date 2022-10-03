@@ -203,6 +203,6 @@ print(ocp_solver.get_solver_statistics())
 
 viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
 viewer.set_contact_info(mu=mu)
-time_discretization = ocp_solver.get_time_discretization()
-viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
+viewer.display(ocp_solver.get_time_discretization(), 
+               ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))
