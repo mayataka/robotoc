@@ -26,13 +26,10 @@ public:
   /// @param[in] contact_frame_names Names of contact frames. 
   /// @param[in] default_friction_coefficient Default friction coefficitn. 
   /// Must be positive. Default is 0.7.
-  /// @param[in] impact_mode_id Identifier number of the impact. Can be used 
-  /// only in user-defined cost and constraints. Default is 0.
   ///
   ImpactStatus(const std::vector<ContactType>& contact_types, 
                const std::vector<std::string>& contact_frame_names,
-               const double default_friction_coefficient=0.7,
-               const int impact_mode_id=0);
+               const double default_friction_coefficient=0.7);
 
   ///
   /// @brief Default constructor. 
@@ -298,20 +295,6 @@ public:
   /// @return Friction coefficients of the contacts. 
   ///
   const std::vector<double>& frictionCoefficients() const;
-
-  ///
-  /// @brief Sets impact id.
-  /// @param[in] impact_mode_id Impact id. 
-  /// @note Default impact mode id is 0.
-  ///
-  void setImpactModeId(const int impact_mode_id);
-
-  ///
-  /// @brief Gets impact id.
-  /// @return Impact id. 
-  /// @note Default impact mode id is 0.
-  ///
-  int impactModeId() const;
 
   ///
   /// @brief Fills impact status randomly.

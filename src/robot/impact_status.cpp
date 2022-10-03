@@ -5,7 +5,6 @@ namespace robotoc {
 
 void ImpactStatus::disp(std::ostream& os) const {
   os << "ImpactStatus:" << "\n";
-  os << "  impact mode id: " << contact_status_.contactModeId() << "\n";
   os << "  active impacts: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {
     if (isImpactActive(i)) {

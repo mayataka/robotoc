@@ -16,9 +16,9 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(impact_status, m) {
   py::class_<ImpactStatus>(m, "ImpactStatus")
-    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double, const int>(),
+    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
-          py::arg("default_friction_coefficient")=0.7, py::arg("contact_mode_id")=0)
+          py::arg("default_friction_coefficient")=0.7)
     .def(py::init<>())
     .def("max_num_contacts", &ImpactStatus::maxNumContacts)
     .def("is_impact_active", 
@@ -74,9 +74,6 @@ PYBIND11_MODULE(impact_status, m) {
           static_cast<double (ImpactStatus::*)(const std::string&) const>(&ImpactStatus::frictionCoefficient),
           py::arg("contact_frame_name"))
     .def("friction_coefficients", &ImpactStatus::frictionCoefficients)
-    .def("set_impact_mode_id", &ImpactStatus::setImpactModeId,
-          py::arg("impact_mode_id"))
-    .def("impact_mode_id", &ImpactStatus::impactModeId)
      DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ImpactStatus)
      DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(ImpactStatus);
 }

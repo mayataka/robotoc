@@ -27,8 +27,6 @@ class DiscreteEvent {
 public:
   ///
   /// @brief Constructs discrete event from two sequential contact status.
-  /// The impact mode id of this event is set to contactModeId() of 
-  /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
   ///
@@ -117,8 +115,6 @@ public:
 
   ///
   /// @brief Sets the contact status from two sequential contact status.
-  /// The impact mode id of this event is set to contactModeId() of 
-  /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
   ///

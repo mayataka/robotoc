@@ -12,10 +12,9 @@ namespace robotoc {
 inline ImpactStatus::ImpactStatus(
     const std::vector<ContactType>& contact_types, 
     const std::vector<std::string>& contact_frame_names,
-    const double default_friction_coefficients,
-    const int impact_mode_id)
+    const double default_friction_coefficients)
   : contact_status_(contact_types, contact_frame_names, 
-                    default_friction_coefficients, impact_mode_id) {
+                    default_friction_coefficients) {
 }
 
 
@@ -174,11 +173,6 @@ ImpactStatus::contactRotations() const {
 }
 
 
-inline void ImpactStatus::setImpactModeId(const int impact_mode_id) {
-  contact_status_.setContactModeId(impact_mode_id);
-}
-
-
 inline void ImpactStatus::setFrictionCoefficient(const int contact_index, 
                                                   const double friction_coefficient) {
   contact_status_.setFrictionCoefficient(contact_index, friction_coefficient);
@@ -216,11 +210,6 @@ inline double ImpactStatus::frictionCoefficient(
 
 inline const std::vector<double>& ImpactStatus::frictionCoefficients() const {
   return contact_status_.frictionCoefficients();
-}
-
-
-inline int ImpactStatus::impactModeId() const {
-  return contact_status_.contactModeId();
 }
 
 

@@ -55,7 +55,6 @@ void DiscreteEvent::setDiscreteEvent(
     }
   }
   impact_status_.setFrictionCoefficients(pre_contact_status.frictionCoefficients());
-  impact_status_.setImpactModeId(pre_contact_status.contactModeId());
   setContactPlacements(post_contact_status.contactPositions(),
                        post_contact_status.contactRotations());
   pre_contact_status_ = pre_contact_status;
