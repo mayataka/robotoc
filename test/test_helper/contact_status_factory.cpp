@@ -22,17 +22,17 @@ ContactStatus CreateActiveContactStatus(const Robot& robot, const double time_st
 };
 
 
-ImpulseStatus CreateActiveImpulseStatus(const Robot& robot, const double time_step) {
-  auto impulse_status = robot.createImpulseStatus();
+ImpactStatus CreateActiveImpactStatus(const Robot& robot, const double time_step) {
+  auto impact_status = robot.createImpactStatus();
   for (int i=0; i<robot.contactFrames().size(); ++i) {
-    impulse_status.setContactPlacement(i, Eigen::Vector3d::Random());
-    impulse_status.setContactPlacement(i, SE3::Random());
+    impact_status.setContactPlacement(i, Eigen::Vector3d::Random());
+    impact_status.setContactPlacement(i, SE3::Random());
   }
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
-  return impulse_status;
+  return impact_status;
 };
 
 } // namespace testhelper

@@ -58,9 +58,9 @@ struct GridInfo {
   int stage = 0;
 
   ///
-  /// @brief Impulse index of this grid.
+  /// @brief Impact index of this grid.
   ///
-  int impulse_index = -1;
+  int impact_index = -1;
 
   ///
   /// @brief Lift index of this grid. 

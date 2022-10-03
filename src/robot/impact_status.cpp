@@ -1,18 +1,18 @@
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 
 
 namespace robotoc {
 
-void ImpulseStatus::disp(std::ostream& os) const {
-  os << "ImpulseStatus:" << "\n";
-  os << "  impulse mode id: " << contact_status_.contactModeId() << "\n";
-  os << "  active impulses: [";
+void ImpactStatus::disp(std::ostream& os) const {
+  os << "ImpactStatus:" << "\n";
+  os << "  impact mode id: " << contact_status_.contactModeId() << "\n";
+  os << "  active impacts: [";
   for (int i=0; i<maxNumContacts()-1; ++i) {
-    if (isImpulseActive(i)) {
+    if (isImpactActive(i)) {
       os << i << ", ";
     }
   }
-  if (isImpulseActive(maxNumContacts()-1)) {
+  if (isImpactActive(maxNumContacts()-1)) {
     os << maxNumContacts()-1;
   }
   os << "]" << "\n";
@@ -48,8 +48,8 @@ void ImpulseStatus::disp(std::ostream& os) const {
 
 
 std::ostream& operator<<(std::ostream& os, 
-                         const ImpulseStatus& impulse_status) {
-  impulse_status.disp(os);
+                         const ImpactStatus& impact_status) {
+  impact_status.disp(os);
   return os;
 }
 

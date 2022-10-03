@@ -20,7 +20,7 @@ PYBIND11_MODULE(split_solution, m) {
           static_cast<void (SplitSolution::*)(const ContactStatus&)>(&SplitSolution::setContactStatus),
           py::arg("contact_status"))
     .def("set_contact_status", 
-          static_cast<void (SplitSolution::*)(const ImpulseStatus&)>(&SplitSolution::setContactStatus),
+          static_cast<void (SplitSolution::*)(const ImpactStatus&)>(&SplitSolution::setContactStatus),
           py::arg("contact_status"))
     .def("set_contact_status", 
           static_cast<void (SplitSolution::*)(const SplitSolution&)>(&SplitSolution::setContactStatus),

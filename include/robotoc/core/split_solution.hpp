@@ -67,7 +67,7 @@ public:
   /// @brief Set contact status, i.e., set the dimension of the contacts.
   /// @param[in] contact_status Contact status.
   ///
-  void setContactStatus(const ImpulseStatus& contact_status);
+  void setContactStatus(const ImpactStatus& contact_status);
 
   ///
   /// @brief Set contact status, i.e., set the dimension of the contacts.
@@ -194,7 +194,7 @@ public:
 
   ///
   /// @brief Stack of the Lagrange multipliers w.r.t. the switching constraints
-  /// that is active at the future impulse status. Size is 
+  /// that is active at the future impact status. Size is 
   /// SplitSolution::dimf().
   /// @return Reference to the stack of the Lagrange multipliers w.r.t. the
   /// switching constraints.
@@ -236,10 +236,10 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
   /// @param[in] d Split direction.
-  /// @param[in] impulse Flaf if this is impulse stage or not.
+  /// @param[in] impact Flaf if this is impact stage or not.
   ///
   void integrate(const Robot& robot, const double step_size, 
-                 const SplitDirection& d, const bool impulse=false);
+                 const SplitDirection& d, const bool impact=false);
 
   ///
   /// @brief Copies the primal solution from another solution. 
@@ -281,21 +281,21 @@ public:
   void setRandom(const Robot& robot, const ContactStatus& contact_status);
 
   ///
-  /// @brief Set each component vector by random value. Impulse status is reset.
+  /// @brief Set each component vector by random value. Impact status is reset.
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
-  void setRandom(const Robot& robot, const ImpulseStatus& impulse_status);
+  void setRandom(const Robot& robot, const ImpactStatus& impact_status);
 
   ///
   /// @brief Set each component vector by random value. Contact status and 
-  /// impulse status are reset.
+  /// impact status are reset.
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
   void setRandom(const Robot& robot, const ContactStatus& contact_status,
-                 const ImpulseStatus& impulse_status);
+                 const ImpactStatus& impact_status);
 
   ///
   /// @brief Generates split solution filled randomly.
@@ -317,21 +317,21 @@ public:
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
   /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
   static SplitSolution Random(const Robot& robot, 
-                              const ImpulseStatus& impulse_status);
+                              const ImpactStatus& impact_status);
 
   ///
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
   static SplitSolution Random(const Robot& robot, 
                               const ContactStatus& contact_status,
-                              const ImpulseStatus& impulse_status);
+                              const ImpactStatus& impact_status);
 
   ///
   /// @brief Displays the split solution onto a ostream.

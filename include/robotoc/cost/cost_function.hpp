@@ -9,7 +9,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
@@ -206,22 +206,22 @@ public:
                                 SplitKKTMatrix& kkt_matrix) const;
 
   ///
-  /// @brief Computes the impulse cost. 
+  /// @brief Computes the impact cost. 
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                          CostFunctionData& data, const GridInfo& grid_info,
                          const SplitSolution& s) const;
 
   ///
-  /// @brief Computes the impulse cost and its first-order partial derivatives. 
+  /// @brief Computes the impact cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
@@ -229,16 +229,16 @@ public:
   /// are added to this object.
   /// @return Stage cost.
   ///
-  double linearizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double linearizeImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const SplitSolution& s, 
                               SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the impulse cost, its first-order partial derivatives, 
+  /// @brief Computes the impact cost, its first-order partial derivatives, 
   /// and its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
@@ -248,7 +248,7 @@ public:
   /// this object.
   /// @return Stage cost.
   ///
-  double quadratizeImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double quadratizeImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                                CostFunctionData& data, const GridInfo& grid_info,
                                const SplitSolution& s, 
                                SplitKKTResidual& kkt_residual,

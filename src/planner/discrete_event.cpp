@@ -9,11 +9,11 @@ DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status,
                         pre_contact_status.contactFrameNames()),
     post_contact_status_(pre_contact_status.contactTypes(), 
                          pre_contact_status.contactFrameNames()),
-    impulse_status_(pre_contact_status.contactTypes(), 
+    impact_status_(pre_contact_status.contactTypes(), 
                     pre_contact_status.contactFrameNames()),
     max_num_contacts_(pre_contact_status.maxNumContacts()),
     event_type_(DiscreteEventType::None),
-    exist_impulse_(false), 
+    exist_impact_(false), 
     exist_lift_(false) {
   setDiscreteEvent(pre_contact_status, post_contact_status);
 }
@@ -22,10 +22,10 @@ DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status,
 DiscreteEvent::DiscreteEvent() 
   : pre_contact_status_(),
     post_contact_status_(),
-    impulse_status_(),
+    impact_status_(),
     max_num_contacts_(0),
     event_type_(DiscreteEventType::None),
-    exist_impulse_(false), 
+    exist_impact_(false), 
     exist_lift_(false) {
 }
  
@@ -35,32 +35,32 @@ void DiscreteEvent::setDiscreteEvent(
     const ContactStatus& post_contact_status) {
   assert(pre_contact_status.maxNumContacts() == max_num_contacts_);
   assert(post_contact_status.maxNumContacts() == max_num_contacts_);
-  exist_impulse_ = false;
+  exist_impact_ = false;
   exist_lift_ = false;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (pre_contact_status.isContactActive(i)) {
-      impulse_status_.deactivateImpulse(i);
+      impact_status_.deactivateImpact(i);
       if (!post_contact_status.isContactActive(i)) {
         exist_lift_ = true;
       }
     }
     else {
       if (post_contact_status.isContactActive(i)) {
-        impulse_status_.activateImpulse(i);
-        exist_impulse_ = true;
+        impact_status_.activateImpact(i);
+        exist_impact_ = true;
       }
       else {
-        impulse_status_.deactivateImpulse(i);
+        impact_status_.deactivateImpact(i);
       }
     }
   }
-  impulse_status_.setFrictionCoefficients(pre_contact_status.frictionCoefficients());
-  impulse_status_.setImpulseModeId(pre_contact_status.contactModeId());
+  impact_status_.setFrictionCoefficients(pre_contact_status.frictionCoefficients());
+  impact_status_.setImpactModeId(pre_contact_status.contactModeId());
   setContactPlacements(post_contact_status.contactPositions(),
                        post_contact_status.contactRotations());
   pre_contact_status_ = pre_contact_status;
   post_contact_status_ = post_contact_status;
-  if (exist_impulse_) { event_type_ = DiscreteEventType::Impact; }
+  if (exist_impact_) { event_type_ = DiscreteEventType::Impact; }
   else if (exist_lift_) { event_type_ = DiscreteEventType::Lift; }
   else { event_type_ = DiscreteEventType::None; }
 }
@@ -70,7 +70,7 @@ void DiscreteEvent::setContactPlacement(
     const int contact_index, const Eigen::Vector3d& contact_position) {
   assert(contact_index >= 0);
   assert(contact_index < max_num_contacts_);
-  impulse_status_.setContactPlacement(contact_index, contact_position);
+  impact_status_.setContactPlacement(contact_index, contact_position);
 }
 
 
@@ -79,39 +79,39 @@ void DiscreteEvent::setContactPlacement(
     const Eigen::Matrix3d& contact_rotation) {
   assert(contact_index >= 0);
   assert(contact_index < max_num_contacts_);
-  impulse_status_.setContactPlacement(contact_index, contact_position, 
+  impact_status_.setContactPlacement(contact_index, contact_position, 
                                       contact_rotation);
 }
 
 
 void DiscreteEvent::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions) {
-  impulse_status_.setContactPlacements(contact_positions);
+  impact_status_.setContactPlacements(contact_positions);
 }
 
 
 void DiscreteEvent::setContactPlacements(
     const std::vector<Eigen::Vector3d>& contact_positions,
     const std::vector<Eigen::Matrix3d>& contact_rotations) {
-  impulse_status_.setContactPlacements(contact_positions, contact_rotations);
+  impact_status_.setContactPlacements(contact_positions, contact_rotations);
 }
 
 
 void DiscreteEvent::setFrictionCoefficient(
     const int contact_index, const double friction_coefficient) {
-  impulse_status_.setFrictionCoefficient(contact_index, friction_coefficient);
+  impact_status_.setFrictionCoefficient(contact_index, friction_coefficient);
 }
 
 
 void DiscreteEvent::setFrictionCoefficients(
     const std::vector<double>& friction_coefficients) {
-  impulse_status_.setFrictionCoefficients(friction_coefficients);
+  impact_status_.setFrictionCoefficients(friction_coefficients);
 }
 
 
 void DiscreteEvent::setContactPlacements(
     const aligned_vector<SE3>& contact_placements) {
-  impulse_status_.setContactPlacements(contact_placements);
+  impact_status_.setContactPlacements(contact_placements);
 }
 
 
@@ -136,8 +136,8 @@ void DiscreteEvent::disp(std::ostream& os) const {
   os << pre_contact_status_ << "\n";
   os << "post contact status:" << "\n";
   os << post_contact_status_ << "\n";
-  os << "impulse status:" << "\n";
-  os << impulse_status_ << std::flush;
+  os << "impact status:" << "\n";
+  os << impact_status_ << std::flush;
 }
 
 

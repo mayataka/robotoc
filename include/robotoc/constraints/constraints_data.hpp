@@ -84,11 +84,11 @@ public:
   }
 
   ///
-  /// @brief Checks wheather the impulse-level constraints are valid or not. 
-  /// @return true if the impulse-level constraints are valid. false otherwise. 
+  /// @brief Checks wheather the impact-level constraints are valid or not. 
+  /// @return true if the impact-level constraints are valid. false otherwise. 
   ///
-  bool isImpulseLevelValid() const {
-    return is_impulse_level_valid_;
+  bool isImpactLevelValid() const {
+    return is_impact_level_valid_;
   }
 
   ///
@@ -100,7 +100,7 @@ public:
   ///
   /// @brief Returns the sum of the squared norm of the KKT error 
   /// (primal residual and complementary slackness) of all the constraints. 
-  /// @return true if the impulse-level constraints are valid. false otherwise. 
+  /// @return true if the impact-level constraints are valid. false otherwise. 
   ///
   double KKTError() const;
 
@@ -148,13 +148,13 @@ public:
   std::vector<ConstraintComponentData> acceleration_level_data;
 
   ///
-  /// @brief The collection of the impulse-level constraints data. 
+  /// @brief The collection of the impact-level constraints data. 
   ///
-  std::vector<ConstraintComponentData> impulse_level_data;
+  std::vector<ConstraintComponentData> impact_level_data;
 
 private:
   bool is_position_level_valid_, is_velocity_level_valid_, 
-       is_acceleration_level_valid_, is_impulse_level_valid_;
+       is_acceleration_level_valid_, is_impact_level_valid_;
 
 };
   

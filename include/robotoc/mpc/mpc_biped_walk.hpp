@@ -27,7 +27,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/contact_wrench_cone.hpp"
-#include "robotoc/constraints/impulse_wrench_cone.hpp"
+#include "robotoc/constraints/impact_wrench_cone.hpp"
 
 
 namespace robotoc {
@@ -214,10 +214,10 @@ public:
   std::shared_ptr<ContactWrenchCone> getContactWrenchConeHandle();
 
   ///
-  /// @brief Gets the impulse wrench cone constraints handle.  
-  /// @return Shared ptr to the impulse wrench cone constraints.
+  /// @brief Gets the impact wrench cone constraints handle.  
+  /// @return Shared ptr to the impact wrench cone constraints.
   ///
-  std::shared_ptr<ImpulseWrenchCone> getImpulseWrenchConeHandle();
+  std::shared_ptr<ImpactWrenchCone> getImpactWrenchConeHandle();
 
   ///
   /// @brief Gets the const handle of the MPC solver.  
@@ -264,7 +264,7 @@ private:
   std::shared_ptr<MPCPeriodicSwingFootRef> L_foot_ref_, R_foot_ref_;
   std::shared_ptr<MPCPeriodicCoMRef> com_ref_;
   std::shared_ptr<ContactWrenchCone> contact_wrench_cone_;
-  std::shared_ptr<ImpulseWrenchCone> impulse_wrench_cone_;
+  std::shared_ptr<ImpactWrenchCone> impact_wrench_cone_;
 
   bool addStep(const double t);
 

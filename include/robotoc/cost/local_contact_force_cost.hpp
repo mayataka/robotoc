@@ -7,7 +7,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
@@ -74,15 +74,15 @@ public:
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
   ///
-  /// @brief Sets the reference impulse forces expressed in the local frames. 
-  /// @param[in] fi_ref Reference impulse forces expressed in the local frames. 
+  /// @brief Sets the reference impact forces expressed in the local frames. 
+  /// @param[in] fi_ref Reference impact forces expressed in the local frames. 
   /// Size must be Robot::maxNumContacts().
   ///
   void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);
 
   ///
-  /// @brief Sets the weight vectors on the impulse forces. 
-  /// @param[in] fi_weight Weight vectors on the impulse forces. 
+  /// @brief Sets the weight vectors on the impact forces. 
+  /// @param[in] fi_weight Weight vectors on the impact forces. 
   /// Size must be Robot::maxNumContacts().
   ///
   void set_fi_weight(const std::vector<Eigen::Vector3d>& fi_weight);
@@ -115,16 +115,16 @@ public:
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                          CostFunctionData& data, const GridInfo& grid_info, 
                          const SplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const SplitSolution& s, 
                                   SplitKKTResidual& kkt_residual) const override;
 
-  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostHessian(Robot& robot, const ImpactStatus& impact_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const SplitSolution& s, 
                               SplitKKTMatrix& kkt_matrix) const override;

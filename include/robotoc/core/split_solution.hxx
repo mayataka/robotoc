@@ -16,9 +16,9 @@ inline void SplitSolution::setContactStatus(
 
 
 inline void SplitSolution::setContactStatus(
-    const ImpulseStatus& contact_status) {
+    const ImpactStatus& contact_status) {
   assert(contact_status.maxNumContacts() == is_contact_active_.size());
-  is_contact_active_ = contact_status.isImpulseActive();
+  is_contact_active_ = contact_status.isImpactActive();
   dimf_ = contact_status.dimf();
 }
 

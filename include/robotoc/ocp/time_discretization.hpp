@@ -25,7 +25,7 @@ public:
   /// @param[in] N Number of the discretization grids of the horizon except for 
   /// the discrete events. Must be positive.
   /// @param[in] reserved_num_discrete_events Reserved size of each discrete 
-  /// events (impulse and lift) to avoid dynamic memory allocation. Must be 
+  /// events (impact and lift) to avoid dynamic memory allocation. Must be 
   /// non-negative. Default is 0.
   ///
   TimeDiscretization(const double T, const int N, 

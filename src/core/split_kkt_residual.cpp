@@ -109,8 +109,8 @@ void SplitKKTResidual::setRandom(const ContactStatus& contact_status) {
 }
 
 
-void SplitKKTResidual::setRandom(const ImpulseStatus& impulse_status) {
-  setContactDimension(impulse_status.dimf());
+void SplitKKTResidual::setRandom(const ImpactStatus& impact_status) {
+  setContactDimension(impact_status.dimf());
   setRandom();
 }
 
@@ -131,9 +131,9 @@ SplitKKTResidual SplitKKTResidual::Random(const Robot& robot,
 
 
 SplitKKTResidual SplitKKTResidual::Random(const Robot& robot,   
-                                          const ImpulseStatus& impulse_status) {
+                                          const ImpactStatus& impact_status) {
   SplitKKTResidual kkt_residual(robot);
-  kkt_residual.setRandom(impulse_status);
+  kkt_residual.setRandom(impact_status);
   return kkt_residual;
 }
 

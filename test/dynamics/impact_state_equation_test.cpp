@@ -8,14 +8,14 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
-#include "robotoc/dynamics/impulse_state_equation.hpp"
+#include "robotoc/dynamics/impact_state_equation.hpp"
 
 #include "robot_factory.hpp"
 
 
 namespace robotoc {
 
-class ImpulseStateEquationTest : public ::testing::Test {
+class ImpactStateEquationTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -26,7 +26,7 @@ protected:
 };
 
 
-TEST_F(ImpulseStateEquationTest, fixedBase) {
+TEST_F(ImpactStateEquationTest, fixedBase) {
   const double dt = 0.001;
   const auto robot = testhelper::CreateRobotManipulator(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
@@ -35,7 +35,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
   StateEquationData data(robot);
-  linearizeImpulseStateEquation(robot, q_prev, s, s_next, data, kkt_matrix, kkt_residual);
+  linearizeImpactStateEquation(robot, q_prev, s, s_next, data, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
@@ -43,7 +43,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isIdentity());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  correctLinearizeImpulseStateEquation(robot, s, s_next, data, kkt_matrix, kkt_residual);
+  correctLinearizeImpactStateEquation(robot, s, s_next, data, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
@@ -58,7 +58,7 @@ TEST_F(ImpulseStateEquationTest, fixedBase) {
 }
 
 
-TEST_F(ImpulseStateEquationTest, floatingBase) {
+TEST_F(ImpactStateEquationTest, floatingBase) {
   const double dt = 0.001;
   const auto robot = testhelper::CreateQuadrupedalRobot(dt);
   const Eigen::VectorXd q_prev = robot.generateFeasibleConfiguration();
@@ -67,7 +67,7 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   SplitKKTResidual kkt_residual(robot);
   SplitKKTMatrix kkt_matrix(robot);
   StateEquationData data(robot);
-  linearizeImpulseStateEquation(robot, q_prev, s, s_next, data, kkt_matrix, kkt_residual);
+  linearizeImpactStateEquation(robot, q_prev, s, s_next, data, kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -81,7 +81,7 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  correctLinearizeImpulseStateEquation(robot, s, s_next, data, kkt_matrix, kkt_residual);
+  correctLinearizeImpactStateEquation(robot, s, s_next, data, kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();

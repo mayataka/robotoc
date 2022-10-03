@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/cost/cost_function_component_base.hpp"
 
 
@@ -43,19 +43,19 @@ public:
   bool checkSecondOrderTerminalCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost);
 
-  bool checkFirstOrderImpulseCostDerivatives(
+  bool checkFirstOrderImpactCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost);
 
-  bool checkSecondOrderImpulseCostDerivatives(
+  bool checkSecondOrderImpactCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost);
 
-  bool checkFirstOrderImpulseCostDerivatives(
+  bool checkFirstOrderImpactCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost, 
-      const ImpulseStatus& impulse_status);
+      const ImpactStatus& impact_status);
 
-  bool checkSecondOrderImpulseCostDerivatives(
+  bool checkSecondOrderImpactCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost,
-      const ImpulseStatus& impulse_status);
+      const ImpactStatus& impact_status);
 
 private:  
   Robot robot_;

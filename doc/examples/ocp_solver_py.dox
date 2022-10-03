@@ -60,20 +60,20 @@ v_weight = np.array([100, 100, 100, 100, 100, 100,
                      1, 1, 1,
                      1, 1, 1])
 u_weight = np.full(robot.dimu(), 1.0e-01)
-q_weight_impulse = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+q_weight_impact = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
                       100, 100, 100, 
                       100, 100, 100,
                       100, 100, 100,
                       100, 100, 100])
-v_weight_impulse = np.full(robot.dimv(), 100)
+v_weight_impact = np.full(robot.dimv(), 100)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
 config_cost.set_q_weight_terminal(q_weight)
-config_cost.set_q_weight_impulse(q_weight_impulse)
+config_cost.set_q_weight_impact(q_weight_impact)
 config_cost.set_v_weight(v_weight)
 config_cost.set_v_weight_terminal(v_weight)
-config_cost.set_v_weight_impulse(v_weight_impulse)
+config_cost.set_v_weight_impact(v_weight_impact)
 config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
@@ -126,7 +126,7 @@ Next, we construct the contact sequence `robotoc::ContactSequence` as
 ```
 contact_sequence = robotoc.ContactSequence(robot)
 ```
-Then we can set an impulse event and a lift event to the contact sequence.
+Then we can set an impact event and a lift event to the contact sequence.
 
 We set the friction coefficients via the contact sequence. We then define the friction coefficients.
 ```
@@ -161,7 +161,7 @@ contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time)
 ```
-Then an impulse event is appended into the back of the contact sequence.
+Then an impact event is appended into the back of the contact sequence.
 
 @note We can check the contact sequence via 
 ```

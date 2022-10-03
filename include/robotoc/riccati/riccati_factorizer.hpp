@@ -122,9 +122,9 @@ public:
   ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage. 
-  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage. 
-  /// @param[in, out] riccati Riccati factorization of this impulse stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impact stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this impact stage. 
+  /// @param[in, out] riccati Riccati factorization of this impact stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 SplitKKTMatrix& kkt_matrix, 
@@ -134,9 +134,9 @@ public:
   ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage. 
-  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage. 
-  /// @param[in, out] riccati Riccati factorization of this impulse stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impact stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this impact stage. 
+  /// @param[in, out] riccati Riccati factorization of this impact stage. 
   /// @param[in] sto If true, the STO sensitivities are also considered. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
@@ -178,9 +178,9 @@ void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix,
 ///
 /// @brief Performs the forward Riccati recursion and computes the state 
 /// direction. 
-/// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
-/// @param[in] kkt_residual Split KKT residual of this impulse stage. 
-/// @param[in] d Split direction of this impulse stage. 
+/// @param[in] kkt_matrix Split KKT matrix of this impact stage. 
+/// @param[in] kkt_residual Split KKT residual of this impact stage. 
+/// @param[in] d Split direction of this impact stage. 
 /// @param[in, out] d_next Split direction of the next stage. 
 ///
 void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
@@ -201,7 +201,7 @@ void computeSwitchingTimeDirection(const STOPolicy& sto_policy,
 
 ///
 /// @brief Computes the Newton direction of the costate. 
-/// @param[in] riccati Riccati factorization of this impulse stage. 
+/// @param[in] riccati Riccati factorization of this impact stage. 
 /// @param[in, out] d Split direction. 
 /// @param[in] sto If true, the STO sensitivities are also considered. 
 /// @param[in] has_next_sto_phase Flag for wheather this phase has the next 
@@ -213,8 +213,8 @@ void computeCostateDirection(const SplitRiccatiFactorization& riccati,
 
 ///
 /// @brief Computes the Newton direction of the costate. 
-/// @param[in] riccati Riccati factorization of this impulse stage. 
-/// @param[in, out] d Impulse split direction. 
+/// @param[in] riccati Riccati factorization of this impact stage. 
+/// @param[in, out] d Impact split direction. 
 /// @param[in] sto If true, the STO sensitivities are also considered. 
 ///
 void computeCostateDirection(const SplitRiccatiFactorization& riccati, 

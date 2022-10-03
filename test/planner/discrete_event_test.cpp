@@ -5,7 +5,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/planner/discrete_event.hpp"
 
 
@@ -49,10 +49,10 @@ TEST_F(DiscreteEventTest, constructor) {
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
-  EXPECT_TRUE(discrete_event.existImpulse());
+  EXPECT_TRUE(discrete_event.existImpact());
   EXPECT_TRUE(discrete_event.existLift());
   for (int i=0; i<max_num_contacts; ++i) {
-    EXPECT_TRUE(contact_positions[i].isApprox(discrete_event.impulseStatus().contactPositions()[i]));
+    EXPECT_TRUE(contact_positions[i].isApprox(discrete_event.impactStatus().contactPositions()[i]));
   }
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impact);
   EXPECT_NO_THROW(
@@ -61,7 +61,7 @@ TEST_F(DiscreteEventTest, constructor) {
 }
 
 
-TEST_F(DiscreteEventTest, impulse) {
+TEST_F(DiscreteEventTest, impact) {
   ContactStatus cs_before(contact_types, contact_frame_names), cs_after(contact_types, contact_frame_names);
   cs_before.activateContacts({1, 2, 3});
   cs_after.activateContacts({1, 2, 3, 4, 5, 6});
@@ -70,7 +70,7 @@ TEST_F(DiscreteEventTest, impulse) {
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
-  EXPECT_TRUE(discrete_event.existImpulse());
+  EXPECT_TRUE(discrete_event.existImpact());
   EXPECT_FALSE(discrete_event.existLift());
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impact);
   EXPECT_NO_THROW(
@@ -88,7 +88,7 @@ TEST_F(DiscreteEventTest, lift) {
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
-  EXPECT_FALSE(discrete_event.existImpulse());
+  EXPECT_FALSE(discrete_event.existImpact());
   EXPECT_TRUE(discrete_event.existLift());
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Lift);
   EXPECT_NO_THROW(
@@ -97,7 +97,7 @@ TEST_F(DiscreteEventTest, lift) {
 }
 
 
-TEST_F(DiscreteEventTest, impulseAndLift) {
+TEST_F(DiscreteEventTest, impactAndLift) {
   ContactStatus cs_before(contact_types, contact_frame_names), cs_after(contact_types, contact_frame_names);
   cs_before.activateContacts({1, 2, 3, 6, 7});
   cs_after.activateContacts({3, 5, 6, 7, 8, 9});
@@ -106,7 +106,7 @@ TEST_F(DiscreteEventTest, impulseAndLift) {
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
-  EXPECT_TRUE(discrete_event.existImpulse());
+  EXPECT_TRUE(discrete_event.existImpact());
   EXPECT_TRUE(discrete_event.existLift());
   EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impact);
 }

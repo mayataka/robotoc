@@ -17,7 +17,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     N = 20;
-    max_num_impulse = 5;
+    max_num_impact = 5;
     T = 1.0;
     t = 0.1; 
     min_dt  = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -26,9 +26,9 @@ protected:
 
     const double dt = T / N;
     contact_sequence 
-        = testhelper::CreateContactSequence(robot, N, max_num_impulse, 0, 3*dt);
+        = testhelper::CreateContactSequence(robot, N, max_num_impact, 0, 3*dt);
 
-    time_discretization = TimeDiscretization(T, N, 2*max_num_impulse);
+    time_discretization = TimeDiscretization(T, N, 2*max_num_impact);
     time_discretization.discretize(contact_sequence, t);
 
   }
@@ -36,7 +36,7 @@ protected:
   virtual void TearDown() {
   }
 
-  int N, max_num_impulse;
+  int N, max_num_impact;
   double T, t, min_dt;
   Eigen::VectorXd lt;
   Eigen::MatrixXd Qtt;
@@ -46,7 +46,7 @@ protected:
 
 
 TEST_F(STOConstraintsTest, testParam) {
-  const int max_num_switches = 2 * max_num_impulse;
+  const int max_num_switches = 2 * max_num_impact;
   auto constraints = STOConstraints(max_num_switches, min_dt);
   EXPECT_DOUBLE_EQ(constraints.getBarrierParam(), 1.0e-03);
   EXPECT_DOUBLE_EQ(constraints.getFractionToBoundaryRule(), 0.995);
@@ -60,7 +60,7 @@ TEST_F(STOConstraintsTest, testParam) {
 
 
 // TEST_F(STOConstraintsTest, test) {
-//   const int max_num_switches = 2 * max_num_impulse;
+//   const int max_num_switches = 2 * max_num_impact;
 //   auto constraints = STOConstraints(max_num_switches, min_dt);
 //   constraints.setSlack(time_discretization);
 //   constraints.evalConstraint(time_discretization);
@@ -74,7 +74,7 @@ TEST_F(STOConstraintsTest, testParam) {
 //   constraints.updateSlack(primal_step_size);
 //   constraints.updateDual(dual_step_size);
 //   const auto& min_dwell_times = constraints.getMinimumDwellTimes();
-//   EXPECT_EQ(min_dwell_times.size(), 2*max_num_impulse+1);
+//   EXPECT_EQ(min_dwell_times.size(), 2*max_num_impact+1);
 //   for (const double e : min_dwell_times) {
 //     EXPECT_DOUBLE_EQ(e, min_dt);
 //   }

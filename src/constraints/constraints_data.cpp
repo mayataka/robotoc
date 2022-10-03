@@ -7,7 +7,7 @@ ConstraintsData::ConstraintsData(const int time_stage)
   : is_position_level_valid_(false), 
     is_velocity_level_valid_(false),
     is_acceleration_level_valid_(false),
-    is_impulse_level_valid_(false) {
+    is_impact_level_valid_(false) {
   setTimeStage(time_stage);
 }
 
@@ -16,7 +16,7 @@ ConstraintsData::ConstraintsData()
   : is_position_level_valid_(false), 
     is_velocity_level_valid_(false),
     is_acceleration_level_valid_(false),
-    is_impulse_level_valid_(false) {
+    is_impact_level_valid_(false) {
 }
 
 
@@ -25,25 +25,25 @@ void ConstraintsData::setTimeStage(const int time_stage) {
     is_position_level_valid_     = true;
     is_velocity_level_valid_     = true;
     is_acceleration_level_valid_ = true;
-    is_impulse_level_valid_      = false;
+    is_impact_level_valid_      = false;
   }
   else if (time_stage == 1) {
     is_position_level_valid_     = false;
     is_velocity_level_valid_     = true;
     is_acceleration_level_valid_ = true;
-    is_impulse_level_valid_      = false;
+    is_impact_level_valid_      = false;
   }
   else if (time_stage == 0) {
     is_position_level_valid_     = false;
     is_velocity_level_valid_     = false;
     is_acceleration_level_valid_ = true;
-    is_impulse_level_valid_      = false;
+    is_impact_level_valid_      = false;
   }
   else if (time_stage <= -1) {
     is_position_level_valid_     = false;
     is_velocity_level_valid_     = false;
     is_acceleration_level_valid_ = false;
-    is_impulse_level_valid_      = true;
+    is_impact_level_valid_      = true;
   }
 }
 
@@ -67,10 +67,10 @@ void ConstraintsData::copySlackAndDual(const ConstraintsData& other) {
       acceleration_level_data[i].copySlackAndDual(other.acceleration_level_data[i]);
     }
   }
-  if (isImpulseLevelValid()) {
-    const int size = impulse_level_data.size();
+  if (isImpactLevelValid()) {
+    const int size = impact_level_data.size();
     for (int i=0; i<size; ++i) {
-      impulse_level_data[i].copySlackAndDual(other.impulse_level_data[i]);
+      impact_level_data[i].copySlackAndDual(other.impact_level_data[i]);
     }
   }
 }

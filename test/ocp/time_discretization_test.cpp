@@ -97,24 +97,24 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   const auto contact_sequence = createContactSequence(robot);
 //   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N);
-//   EXPECT_EQ(time_discretization.N_impulse(), contact_sequence->numImpulseEvents());
+//   EXPECT_EQ(time_discretization.N_impact(), contact_sequence->numImpactEvents());
 //   EXPECT_EQ(time_discretization.N_lift(), contact_sequence->numLiftEvents());
-//   std::vector<double> t_impulse, t_lift;
-//   std::vector<int> time_stage_before_impulse, time_stage_before_lift;
-//   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
-//     t_impulse.push_back(contact_sequence->impulseTime(i));
-//     time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt));
+//   std::vector<double> t_impact, t_lift;
+//   std::vector<int> time_stage_before_impact, time_stage_before_lift;
+//   for (int i=0; i<contact_sequence->numImpactEvents(); ++i) {
+//     t_impact.push_back(contact_sequence->impactTime(i));
+//     time_stage_before_impact.push_back(std::floor((t_impact[i]-t)/dt));
 //   }
 //   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
 //     t_lift.push_back(contact_sequence->liftTime(i));
 //     time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt));
 //   }
-//   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
-//     EXPECT_EQ(time_stage_before_impulse[i], time_discretization.timeStageBeforeImpulse(i));
-//     EXPECT_DOUBLE_EQ(t_impulse[i], time_discretization.impulseTime(i));
-//     EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt-t, time_discretization.gridInfo(time_stage_before_impulse[i]).dt);
-//     EXPECT_DOUBLE_EQ(time_discretization.gridInfo(time_stage_before_impulse[i]).dt+time_discretization.gridInfoAux(i).dt, dt);
-//     EXPECT_FALSE(time_discretization.isSTOEnabledImpulse(i));
+//   for (int i=0; i<contact_sequence->numImpactEvents(); ++i) {
+//     EXPECT_EQ(time_stage_before_impact[i], time_discretization.timeStageBeforeImpact(i));
+//     EXPECT_DOUBLE_EQ(t_impact[i], time_discretization.impactTime(i));
+//     EXPECT_DOUBLE_EQ(t_impact[i]-time_stage_before_impact[i]*dt-t, time_discretization.gridInfo(time_stage_before_impact[i]).dt);
+//     EXPECT_DOUBLE_EQ(time_discretization.gridInfo(time_stage_before_impact[i]).dt+time_discretization.gridInfoAux(i).dt, dt);
+//     EXPECT_FALSE(time_discretization.isSTOEnabledImpact(i));
 //   }
 //   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
 //     EXPECT_EQ(time_stage_before_lift[i], time_discretization.timeStageBeforeLift(i));
@@ -124,7 +124,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //     EXPECT_FALSE(time_discretization.isSTOEnabledLift(i));
 //   }
 //   std::vector<int> time_stage_before_events;
-//   for (auto e :  time_stage_before_impulse) {
+//   for (auto e :  time_stage_before_impact) {
 //     time_stage_before_events.push_back(e);
 //   }
 //   for (auto e :  time_stage_before_lift) {
@@ -140,11 +140,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       ++contact_phase_ref;
 //     }
 //   }
-//   for (int i=0; i<time_discretization.N_impulse(); ++i) {
-//     EXPECT_EQ(time_discretization.timeStageBeforeImpulse(i)+1, 
-//               time_discretization.timeStageAfterImpulse(i));
-//     EXPECT_EQ(time_discretization.contactPhaseAfterImpulse(i), 
-//               time_discretization.contactPhase(time_discretization.timeStageAfterImpulse(i)));
+//   for (int i=0; i<time_discretization.N_impact(); ++i) {
+//     EXPECT_EQ(time_discretization.timeStageBeforeImpact(i)+1, 
+//               time_discretization.timeStageAfterImpact(i));
+//     EXPECT_EQ(time_discretization.contactPhaseAfterImpact(i), 
+//               time_discretization.contactPhase(time_discretization.timeStageAfterImpact(i)));
 //   }
 //   for (int i=0; i<time_discretization.N_lift(); ++i) {
 //     EXPECT_EQ(time_discretization.timeStageBeforeLift(i)+1, 
@@ -153,11 +153,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //               time_discretization.contactPhase(time_discretization.timeStageAfterLift(i)));
 //   }
 //   for (int i=0; i<N; ++i) {
-//     if (time_discretization.isTimeStageBeforeImpulse(i)) {
-//       EXPECT_EQ(time_discretization.timeStageBeforeImpulse(time_discretization.impulseIndexAfterTimeStage(i)), i);
+//     if (time_discretization.isTimeStageBeforeImpact(i)) {
+//       EXPECT_EQ(time_discretization.timeStageBeforeImpact(time_discretization.impactIndexAfterTimeStage(i)), i);
 //     }
 //     else {
-//       EXPECT_EQ(time_discretization.impulseIndexAfterTimeStage(i), -1);
+//       EXPECT_EQ(time_discretization.impactIndexAfterTimeStage(i), -1);
 //     }
 //   }
 //   for (int i=0; i<N; ++i) {
@@ -172,18 +172,18 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //     EXPECT_DOUBLE_EQ(time_discretization.gridInfo(i).t, t+i*dt);
 //   }
 //   for (int i=0; i<N; ++i) {
-//     if (!time_discretization.isTimeStageBeforeImpulse(i) && !time_discretization.isTimeStageBeforeLift(i)) {
+//     if (!time_discretization.isTimeStageBeforeImpact(i) && !time_discretization.isTimeStageBeforeLift(i)) {
 //       EXPECT_DOUBLE_EQ(time_discretization.gridInfo(i).dt, dt);
 //     }
 //   }
-//   const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
-//   int impulse_index = 0;
+//   const int num_events = time_discretization.N_impact() + time_discretization.N_lift();
+//   int impact_index = 0;
 //   int lift_index = 0;
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     EXPECT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
 //     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
-//       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
-//       ++impulse_index;
+//       EXPECT_EQ(time_discretization.eventIndexImpact(impact_index), event_index);
+//       ++impact_index;
 //     }
 //     else {
 //       EXPECT_EQ(time_discretization.eventIndexLift(lift_index), event_index);
@@ -202,14 +202,14 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   const auto contact_sequence = createContactSequenceOnGrid(robot);
 //   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N-max_num_events);
-//   EXPECT_EQ(time_discretization.N_impulse(), contact_sequence->numImpulseEvents());
+//   EXPECT_EQ(time_discretization.N_impact(), contact_sequence->numImpactEvents());
 //   EXPECT_EQ(time_discretization.N_lift(), contact_sequence->numLiftEvents());
 //   double ti = t;
 //   for (int i=0; i<time_discretization.N(); ++i) {
 //     EXPECT_NEAR(time_discretization.gridInfo(i).dt, dt, min_dt);
 //     EXPECT_NEAR(time_discretization.gridInfo(i).t, ti, min_dt);
 //     ti += dt;
-//     if (time_discretization.isTimeStageBeforeImpulse(i) || time_discretization.isTimeStageBeforeLift(i)) {
+//     if (time_discretization.isTimeStageBeforeImpact(i) || time_discretization.isTimeStageBeforeLift(i)) {
 //       ti += dt;
 //     }
 //   }
@@ -228,16 +228,16 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   const auto contact_sequence = createContactSequence(robot);
 //   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N);
-//   EXPECT_TRUE(time_discretization.N_impulse() <= contact_sequence->numImpulseEvents());
+//   EXPECT_TRUE(time_discretization.N_impact() <= contact_sequence->numImpactEvents());
 //   EXPECT_TRUE(time_discretization.N_lift() <= contact_sequence->numLiftEvents());
-//   std::vector<double> t_impulse, t_lift;
-//   std::vector<int> time_stage_before_impulse, time_stage_before_lift;
-//   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
-//     if (contact_sequence->impulseTime(i) > t+T_short-min_dt) {
+//   std::vector<double> t_impact, t_lift;
+//   std::vector<int> time_stage_before_impact, time_stage_before_lift;
+//   for (int i=0; i<contact_sequence->numImpactEvents(); ++i) {
+//     if (contact_sequence->impactTime(i) > t+T_short-min_dt) {
 //       break;
 //     }
-//     t_impulse.push_back(contact_sequence->impulseTime(i));
-//     time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt_short));
+//     t_impact.push_back(contact_sequence->impactTime(i));
+//     time_stage_before_impact.push_back(std::floor((t_impact[i]-t)/dt_short));
 //   }
 //   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
 //     if (contact_sequence->liftTime(i) > t+T_short-min_dt) {
@@ -246,19 +246,19 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //     t_lift.push_back(contact_sequence->liftTime(i));
 //     time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt_short));
 //   }
-//   const int N_impulse = t_impulse.size();
+//   const int N_impact = t_impact.size();
 //   const int N_lift = t_lift.size();
-//   EXPECT_EQ(time_discretization.N_impulse(), N_impulse);
+//   EXPECT_EQ(time_discretization.N_impact(), N_impact);
 //   EXPECT_EQ(time_discretization.N_lift(), N_lift);
-//   for (int i=0; i<N_impulse; ++i) {
-//     EXPECT_EQ(time_stage_before_impulse[i], time_discretization.timeStageBeforeImpulse(i));
-//     EXPECT_DOUBLE_EQ(t_impulse[i], time_discretization.gridInfoImpulse(i).t);
-//     EXPECT_DOUBLE_EQ(t_impulse[i], time_discretization.gridInfoAux(i).t);
-//     EXPECT_DOUBLE_EQ(t_impulse[i]-time_stage_before_impulse[i]*dt_short-t, 
-//                      time_discretization.gridInfo(time_stage_before_impulse[i]).dt);
-//     EXPECT_DOUBLE_EQ(time_discretization.gridInfo(time_stage_before_impulse[i]).dt
+//   for (int i=0; i<N_impact; ++i) {
+//     EXPECT_EQ(time_stage_before_impact[i], time_discretization.timeStageBeforeImpact(i));
+//     EXPECT_DOUBLE_EQ(t_impact[i], time_discretization.gridInfoImpact(i).t);
+//     EXPECT_DOUBLE_EQ(t_impact[i], time_discretization.gridInfoAux(i).t);
+//     EXPECT_DOUBLE_EQ(t_impact[i]-time_stage_before_impact[i]*dt_short-t, 
+//                      time_discretization.gridInfo(time_stage_before_impact[i]).dt);
+//     EXPECT_DOUBLE_EQ(time_discretization.gridInfo(time_stage_before_impact[i]).dt
 //                      +time_discretization.gridInfoAux(i).dt, dt_short);
-//     EXPECT_FALSE(time_discretization.isSTOEnabledImpulse(i));
+//     EXPECT_FALSE(time_discretization.isSTOEnabledImpact(i));
 //   }
 //   for (int i=0; i<N_lift; ++i) {
 //     EXPECT_EQ(time_stage_before_lift[i], time_discretization.timeStageBeforeLift(i));
@@ -270,7 +270,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //     EXPECT_FALSE(time_discretization.isSTOEnabledLift(i));
 //   }
 //   std::vector<int> time_stage_before_events;
-//   for (auto e :  time_stage_before_impulse) {
+//   for (auto e :  time_stage_before_impact) {
 //     time_stage_before_events.push_back(e);
 //   }
 //   for (auto e :  time_stage_before_lift) {
@@ -286,11 +286,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       ++contact_phase_ref;
 //     }
 //   }
-//   for (int i=0; i<time_discretization.N_impulse(); ++i) {
-//     EXPECT_EQ(time_discretization.timeStageBeforeImpulse(i)+1, 
-//               time_discretization.timeStageAfterImpulse(i));
-//     EXPECT_EQ(time_discretization.contactPhaseAfterImpulse(i), 
-//               time_discretization.contactPhase(time_discretization.timeStageAfterImpulse(i)));
+//   for (int i=0; i<time_discretization.N_impact(); ++i) {
+//     EXPECT_EQ(time_discretization.timeStageBeforeImpact(i)+1, 
+//               time_discretization.timeStageAfterImpact(i));
+//     EXPECT_EQ(time_discretization.contactPhaseAfterImpact(i), 
+//               time_discretization.contactPhase(time_discretization.timeStageAfterImpact(i)));
 //   }
 //   for (int i=0; i<time_discretization.N_lift(); ++i) {
 //     EXPECT_EQ(time_discretization.timeStageBeforeLift(i)+1, 
@@ -299,11 +299,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //               time_discretization.contactPhase(time_discretization.timeStageAfterLift(i)));
 //   }
 //   for (int i=0; i<N; ++i) {
-//     if (time_discretization.isTimeStageBeforeImpulse(i)) {
-//       EXPECT_EQ(time_discretization.timeStageBeforeImpulse(time_discretization.impulseIndexAfterTimeStage(i)), i);
+//     if (time_discretization.isTimeStageBeforeImpact(i)) {
+//       EXPECT_EQ(time_discretization.timeStageBeforeImpact(time_discretization.impactIndexAfterTimeStage(i)), i);
 //     }
 //     else {
-//       EXPECT_EQ(time_discretization.impulseIndexAfterTimeStage(i), -1);
+//       EXPECT_EQ(time_discretization.impactIndexAfterTimeStage(i), -1);
 //     }
 //   }
 //   for (int i=0; i<N; ++i) {
@@ -318,18 +318,18 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //     EXPECT_DOUBLE_EQ(time_discretization.gridInfo(i).t, t+i*dt_short);
 //   }
 //   for (int i=0; i<N; ++i) {
-//     if (!time_discretization.isTimeStageBeforeImpulse(i) && !time_discretization.isTimeStageBeforeLift(i)) {
+//     if (!time_discretization.isTimeStageBeforeImpact(i) && !time_discretization.isTimeStageBeforeLift(i)) {
 //       EXPECT_DOUBLE_EQ(time_discretization.gridInfo(i).dt, dt_short);
 //     }
 //   }
-//   const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
-//   int impulse_index = 0;
+//   const int num_events = time_discretization.N_impact() + time_discretization.N_lift();
+//   int impact_index = 0;
 //   int lift_index = 0;
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     EXPECT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
 //     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
-//       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
-//       ++impulse_index;
+//       EXPECT_EQ(time_discretization.eventIndexImpact(impact_index), event_index);
+//       ++impact_index;
 //     }
 //     else {
 //       EXPECT_EQ(time_discretization.eventIndexLift(lift_index), event_index);
@@ -343,10 +343,10 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int j=0;
 //   for (int i=0; i<time_discretization.N(); ++i, ++j) {
 //     EXPECT_DOUBLE_EQ(time_steps[j], time_discretization.gridInfo(i).dt);
-//     if (time_discretization.isTimeStageBeforeImpulse(i)) {
+//     if (time_discretization.isTimeStageBeforeImpact(i)) {
 //       ++j;
 //       EXPECT_DOUBLE_EQ(time_steps[j], 
-//                        time_discretization.gridInfoAux(time_discretization.impulseIndexAfterTimeStage(i)).dt);
+//                        time_discretization.gridInfoAux(time_discretization.impactIndexAfterTimeStage(i)).dt);
 //     }
 //     else if (time_discretization.isTimeStageBeforeLift(i)) {
 //       ++j;
@@ -364,27 +364,27 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   const auto contact_sequence = createContactSequence(robot);
 //   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N);
-//   EXPECT_EQ(time_discretization.N_impulse(), contact_sequence->numImpulseEvents());
+//   EXPECT_EQ(time_discretization.N_impact(), contact_sequence->numImpactEvents());
 //   EXPECT_EQ(time_discretization.N_lift(), contact_sequence->numLiftEvents());
-//   std::vector<double> t_impulse, t_lift;
-//   std::vector<int> time_stage_before_impulse, time_stage_before_lift;
-//   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
-//     t_impulse.push_back(contact_sequence->impulseTime(i));
-//     time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt));
+//   std::vector<double> t_impact, t_lift;
+//   std::vector<int> time_stage_before_impact, time_stage_before_lift;
+//   for (int i=0; i<contact_sequence->numImpactEvents(); ++i) {
+//     t_impact.push_back(contact_sequence->impactTime(i));
+//     time_stage_before_impact.push_back(std::floor((t_impact[i]-t)/dt));
 //   }
 //   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
 //     t_lift.push_back(contact_sequence->liftTime(i));
 //     time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt));
 //   }
-//   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
-//     EXPECT_EQ(time_stage_before_impulse[i], time_discretization.timeStageBeforeImpulse(i));
-//     EXPECT_DOUBLE_EQ(t_impulse[i], time_discretization.gridInfoImpulse(i).t);
-//     EXPECT_DOUBLE_EQ(t_impulse[i], time_discretization.impulseTime(i));
-//     EXPECT_FALSE(time_discretization.isSTOEnabledImpulse(i));
-//     EXPECT_EQ(time_discretization.isSTOEnabledImpulse(i), 
-//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpulse(i)));
-//     EXPECT_EQ(time_discretization.isSTOEnabledImpulse(i), 
-//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpulse(i)));
+//   for (int i=0; i<contact_sequence->numImpactEvents(); ++i) {
+//     EXPECT_EQ(time_stage_before_impact[i], time_discretization.timeStageBeforeImpact(i));
+//     EXPECT_DOUBLE_EQ(t_impact[i], time_discretization.gridInfoImpact(i).t);
+//     EXPECT_DOUBLE_EQ(t_impact[i], time_discretization.impactTime(i));
+//     EXPECT_FALSE(time_discretization.isSTOEnabledImpact(i));
+//     EXPECT_EQ(time_discretization.isSTOEnabledImpact(i), 
+//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpact(i)));
+//     EXPECT_EQ(time_discretization.isSTOEnabledImpact(i), 
+//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpact(i)));
 //   }
 //   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
 //     EXPECT_EQ(time_stage_before_lift[i], time_discretization.timeStageBeforeLift(i));
@@ -403,7 +403,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   EXPECT_EQ(time_discretization.isSTOEnabledPhase(contact_sequence->numDiscreteEvents()), 
 //             time_discretization.isSTOEnabledEvent(contact_sequence->numDiscreteEvents()-1));
 //   std::vector<int> time_stage_before_events;
-//   for (auto e :  time_stage_before_impulse) {
+//   for (auto e :  time_stage_before_impact) {
 //     time_stage_before_events.push_back(e);
 //   }
 //   for (auto e :  time_stage_before_lift) {
@@ -419,11 +419,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       ++contact_phase_ref;
 //     }
 //   }
-//   for (int i=0; i<time_discretization.N_impulse(); ++i) {
-//     EXPECT_EQ(time_discretization.timeStageBeforeImpulse(i)+1, 
-//               time_discretization.timeStageAfterImpulse(i));
-//     EXPECT_EQ(time_discretization.contactPhaseAfterImpulse(i), 
-//               time_discretization.contactPhase(time_discretization.timeStageAfterImpulse(i)));
+//   for (int i=0; i<time_discretization.N_impact(); ++i) {
+//     EXPECT_EQ(time_discretization.timeStageBeforeImpact(i)+1, 
+//               time_discretization.timeStageAfterImpact(i));
+//     EXPECT_EQ(time_discretization.contactPhaseAfterImpact(i), 
+//               time_discretization.contactPhase(time_discretization.timeStageAfterImpact(i)));
 //   }
 //   for (int i=0; i<time_discretization.N_lift(); ++i) {
 //     EXPECT_EQ(time_discretization.timeStageBeforeLift(i)+1, 
@@ -432,11 +432,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //               time_discretization.contactPhase(time_discretization.timeStageAfterLift(i)));
 //   }
 //   for (int i=0; i<N; ++i) {
-//     if (time_discretization.isTimeStageBeforeImpulse(i)) {
-//       EXPECT_EQ(time_discretization.timeStageBeforeImpulse(time_discretization.impulseIndexAfterTimeStage(i)), i);
+//     if (time_discretization.isTimeStageBeforeImpact(i)) {
+//       EXPECT_EQ(time_discretization.timeStageBeforeImpact(time_discretization.impactIndexAfterTimeStage(i)), i);
 //     }
 //     else {
-//       EXPECT_EQ(time_discretization.impulseIndexAfterTimeStage(i), -1);
+//       EXPECT_EQ(time_discretization.impactIndexAfterTimeStage(i), -1);
 //     }
 //   }
 //   for (int i=0; i<N; ++i) {
@@ -447,8 +447,8 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       EXPECT_EQ(time_discretization.liftIndexAfterTimeStage(i), -1);
 //     }
 //   }
-//   const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
-//   int impulse_index = 0;
+//   const int num_events = time_discretization.N_impact() + time_discretization.N_lift();
+//   int impact_index = 0;
 //   int lift_index = 0;
 //   int time_stage_before_event = 0;
 //   double t_prev_event = t;
@@ -456,29 +456,29 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     ASSERT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
 //     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
-//       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
-//       const int grids_phase = time_discretization.timeStageBeforeImpulse(impulse_index) 
+//       EXPECT_EQ(time_discretization.eventIndexImpact(impact_index), event_index);
+//       const int grids_phase = time_discretization.timeStageBeforeImpact(impact_index) 
 //                               - time_stage_before_event + 1;
 //       EXPECT_EQ(time_discretization.num_grids_in_phase(event_index), grids_phase);
-//       const double dt_phase = (time_discretization.impulseTime(impulse_index)-t_prev_event) / grids_phase;
+//       const double dt_phase = (time_discretization.impactTime(impact_index)-t_prev_event) / grids_phase;
 //       for (int stage=time_stage_before_event+1; 
-//             stage<time_discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
+//             stage<time_discretization.timeStageBeforeImpact(impact_index); ++stage) {
 //         EXPECT_DOUBLE_EQ(time_discretization.gridInfo(stage).dt, dt_phase);
 //       }
 //       for (int stage=time_stage_before_event+1; 
-//             stage<time_discretization.timeStageBeforeImpulse(impulse_index)-1; ++stage) {
+//             stage<time_discretization.timeStageBeforeImpact(impact_index)-1; ++stage) {
 //         EXPECT_NEAR(time_discretization.gridInfo(stage+1).t-time_discretization.gridInfo(stage).t, 
 //                     dt_phase, min_dt);
 //       }
-//       EXPECT_NEAR(time_discretization.impulseTime(impulse_index)-time_discretization.gridInfo(time_discretization.timeStageBeforeImpulse(impulse_index)).t, 
+//       EXPECT_NEAR(time_discretization.impactTime(impact_index)-time_discretization.gridInfo(time_discretization.timeStageBeforeImpact(impact_index)).t, 
 //                   dt_phase, min_dt);
-//       EXPECT_NEAR(time_discretization.gridInfoImpulse(impulse_index).t-time_discretization.gridInfo(time_discretization.timeStageBeforeImpulse(impulse_index)).t, 
+//       EXPECT_NEAR(time_discretization.gridInfoImpact(impact_index).t-time_discretization.gridInfo(time_discretization.timeStageBeforeImpact(impact_index)).t, 
 //                   dt_phase, min_dt);
 //       EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
-//       time_stage_before_event = time_discretization.timeStageBeforeImpulse(impulse_index);
-//       t_prev_event = time_discretization.gridInfoImpulse(impulse_index).t;
-//       dt_prev_aux = time_discretization.gridInfoAux(impulse_index).dt;
-//       ++impulse_index;
+//       time_stage_before_event = time_discretization.timeStageBeforeImpact(impact_index);
+//       t_prev_event = time_discretization.gridInfoImpact(impact_index).t;
+//       dt_prev_aux = time_discretization.gridInfoAux(impact_index).dt;
+//       ++impact_index;
 //     }
 //     else {
 //       EXPECT_EQ(time_discretization.eventIndexLift(lift_index), event_index);
@@ -520,14 +520,14 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   const auto contact_sequence = createContactSequence(robot);
 //   time_discretization.discretize(contact_sequence, t);
 //   EXPECT_EQ(time_discretization.N(), N);
-//   std::vector<double> t_impulse, t_lift;
-//   std::vector<int> time_stage_before_impulse, time_stage_before_lift;
-//   for (int i=0; i<contact_sequence->numImpulseEvents(); ++i) {
-//     if (contact_sequence->impulseTime(i) >= t+T_short-min_dt) {
+//   std::vector<double> t_impact, t_lift;
+//   std::vector<int> time_stage_before_impact, time_stage_before_lift;
+//   for (int i=0; i<contact_sequence->numImpactEvents(); ++i) {
+//     if (contact_sequence->impactTime(i) >= t+T_short-min_dt) {
 //       break;
 //     }
-//     t_impulse.push_back(contact_sequence->impulseTime(i));
-//     time_stage_before_impulse.push_back(std::floor((t_impulse[i]-t)/dt_short));
+//     t_impact.push_back(contact_sequence->impactTime(i));
+//     time_stage_before_impact.push_back(std::floor((t_impact[i]-t)/dt_short));
 //   }
 //   for (int i=0; i<contact_sequence->numLiftEvents(); ++i) {
 //     if (contact_sequence->liftTime(i) >= t+T_short-min_dt) {
@@ -536,18 +536,18 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //     t_lift.push_back(contact_sequence->liftTime(i));
 //     time_stage_before_lift.push_back(std::floor((t_lift[i]-t)/dt_short));
 //   }
-//   const int N_impulse = t_impulse.size();
+//   const int N_impact = t_impact.size();
 //   const int N_lift = t_lift.size();
-//   EXPECT_EQ(time_discretization.N_impulse(), N_impulse);
+//   EXPECT_EQ(time_discretization.N_impact(), N_impact);
 //   EXPECT_EQ(time_discretization.N_lift(), N_lift);
-//   for (int i=0; i<N_impulse; ++i) {
-//     EXPECT_EQ(time_stage_before_impulse[i], time_discretization.timeStageBeforeImpulse(i));
-//     EXPECT_DOUBLE_EQ(t_impulse[i], time_discretization.impulseTime(i));
-//     EXPECT_FALSE(time_discretization.isSTOEnabledImpulse(i));
-//     EXPECT_EQ(time_discretization.isSTOEnabledImpulse(i), 
-//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpulse(i)));
-//     EXPECT_EQ(time_discretization.isSTOEnabledImpulse(i), 
-//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpulse(i)));
+//   for (int i=0; i<N_impact; ++i) {
+//     EXPECT_EQ(time_stage_before_impact[i], time_discretization.timeStageBeforeImpact(i));
+//     EXPECT_DOUBLE_EQ(t_impact[i], time_discretization.impactTime(i));
+//     EXPECT_FALSE(time_discretization.isSTOEnabledImpact(i));
+//     EXPECT_EQ(time_discretization.isSTOEnabledImpact(i), 
+//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpact(i)));
+//     EXPECT_EQ(time_discretization.isSTOEnabledImpact(i), 
+//               time_discretization.isSTOEnabledEvent(time_discretization.eventIndexImpact(i)));
 //   }
 //   for (int i=0; i<N_lift; ++i) {
 //     EXPECT_EQ(time_stage_before_lift[i], time_discretization.timeStageBeforeLift(i));
@@ -558,14 +558,14 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   }
 //   EXPECT_EQ(time_discretization.isSTOEnabledPhase(0), 
 //             time_discretization.isSTOEnabledEvent(0));
-//   for (int i=1; i<N_lift+N_impulse; ++i) {
+//   for (int i=1; i<N_lift+N_impact; ++i) {
 //     EXPECT_EQ(time_discretization.isSTOEnabledPhase(i), 
 //               (time_discretization.isSTOEnabledEvent(i-1)||time_discretization.isSTOEnabledEvent(i)));
 //   }
-//   EXPECT_EQ(time_discretization.isSTOEnabledPhase(N_lift+N_impulse), 
-//             time_discretization.isSTOEnabledEvent(N_lift+N_impulse-1));
+//   EXPECT_EQ(time_discretization.isSTOEnabledPhase(N_lift+N_impact), 
+//             time_discretization.isSTOEnabledEvent(N_lift+N_impact-1));
 //   std::vector<int> time_stage_before_events;
-//   for (auto e :  time_stage_before_impulse) {
+//   for (auto e :  time_stage_before_impact) {
 //     time_stage_before_events.push_back(e);
 //   }
 //   for (auto e :  time_stage_before_lift) {
@@ -580,11 +580,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       ++contact_phase_ref;
 //     }
 //   }
-//   for (int i=0; i<time_discretization.N_impulse(); ++i) {
-//     EXPECT_EQ(time_discretization.timeStageBeforeImpulse(i)+1, 
-//               time_discretization.timeStageAfterImpulse(i));
-//     EXPECT_EQ(time_discretization.contactPhaseAfterImpulse(i), 
-//               time_discretization.contactPhase(time_discretization.timeStageAfterImpulse(i)));
+//   for (int i=0; i<time_discretization.N_impact(); ++i) {
+//     EXPECT_EQ(time_discretization.timeStageBeforeImpact(i)+1, 
+//               time_discretization.timeStageAfterImpact(i));
+//     EXPECT_EQ(time_discretization.contactPhaseAfterImpact(i), 
+//               time_discretization.contactPhase(time_discretization.timeStageAfterImpact(i)));
 //   }
 //   for (int i=0; i<time_discretization.N_lift(); ++i) {
 //     EXPECT_EQ(time_discretization.timeStageBeforeLift(i)+1, 
@@ -593,11 +593,11 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //               time_discretization.contactPhase(time_discretization.timeStageAfterLift(i)));
 //   }
 //   for (int i=0; i<N; ++i) {
-//     if (time_discretization.isTimeStageBeforeImpulse(i)) {
-//       EXPECT_EQ(time_discretization.timeStageBeforeImpulse(time_discretization.impulseIndexAfterTimeStage(i)), i);
+//     if (time_discretization.isTimeStageBeforeImpact(i)) {
+//       EXPECT_EQ(time_discretization.timeStageBeforeImpact(time_discretization.impactIndexAfterTimeStage(i)), i);
 //     }
 //     else {
-//       EXPECT_EQ(time_discretization.impulseIndexAfterTimeStage(i), -1);
+//       EXPECT_EQ(time_discretization.impactIndexAfterTimeStage(i), -1);
 //     }
 //   }
 //   for (int i=0; i<N; ++i) {
@@ -608,8 +608,8 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       EXPECT_EQ(time_discretization.liftIndexAfterTimeStage(i), -1);
 //     }
 //   }
-//   const int num_events = time_discretization.N_impulse() + time_discretization.N_lift();
-//   int impulse_index = 0;
+//   const int num_events = time_discretization.N_impact() + time_discretization.N_lift();
+//   int impact_index = 0;
 //   int lift_index = 0;
 //   int time_stage_before_event = 0;
 //   double t_prev_event = t;
@@ -617,26 +617,26 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     ASSERT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
 //     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
-//       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
-//       const int grids_phase = time_discretization.timeStageBeforeImpulse(impulse_index) 
+//       EXPECT_EQ(time_discretization.eventIndexImpact(impact_index), event_index);
+//       const int grids_phase = time_discretization.timeStageBeforeImpact(impact_index) 
 //                               - time_stage_before_event + 1;
 //       EXPECT_EQ(time_discretization.num_grids_in_phase(event_index), grids_phase);
-//       const double dt_phase = (time_discretization.impulseTime(impulse_index)-t_prev_event) / grids_phase;
+//       const double dt_phase = (time_discretization.impactTime(impact_index)-t_prev_event) / grids_phase;
 //       for (int stage=time_stage_before_event+1; 
-//             stage<time_discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
+//             stage<time_discretization.timeStageBeforeImpact(impact_index); ++stage) {
 //         EXPECT_DOUBLE_EQ(time_discretization.gridInfo(stage).dt, dt_phase);
 //       }
 //       for (int stage=time_stage_before_event+1; 
-//             stage<time_discretization.timeStageBeforeImpulse(impulse_index)-1; ++stage) {
+//             stage<time_discretization.timeStageBeforeImpact(impact_index)-1; ++stage) {
 //         EXPECT_NEAR(time_discretization.gridInfo(stage+1).t-time_discretization.gridInfo(stage).t, dt_phase, min_dt);
 //       }
-//       EXPECT_NEAR(time_discretization.impulseTime(impulse_index)-time_discretization.gridInfo(time_discretization.timeStageBeforeImpulse(impulse_index)).t, 
+//       EXPECT_NEAR(time_discretization.impactTime(impact_index)-time_discretization.gridInfo(time_discretization.timeStageBeforeImpact(impact_index)).t, 
 //                   dt_phase, min_dt);
 //       EXPECT_DOUBLE_EQ(dt_prev_aux, dt_phase);
-//       time_stage_before_event = time_discretization.timeStageBeforeImpulse(impulse_index);
-//       t_prev_event = time_discretization.impulseTime(impulse_index);
-//       dt_prev_aux = time_discretization.gridInfoAux(impulse_index).dt;
-//       ++impulse_index;
+//       time_stage_before_event = time_discretization.timeStageBeforeImpact(impact_index);
+//       t_prev_event = time_discretization.impactTime(impact_index);
+//       dt_prev_aux = time_discretization.gridInfoAux(impact_index).dt;
+//       ++impact_index;
 //     }
 //     else {
 //       EXPECT_EQ(time_discretization.eventIndexLift(lift_index), event_index);
@@ -668,10 +668,10 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int j=0;
 //   for (int i=0; i<time_discretization.N(); ++i, ++j) {
 //     EXPECT_DOUBLE_EQ(time_steps[j], time_discretization.gridInfo(i).dt);
-//     if (time_discretization.isTimeStageBeforeImpulse(i)) {
+//     if (time_discretization.isTimeStageBeforeImpact(i)) {
 //       ++j;
 //       EXPECT_DOUBLE_EQ(time_steps[j], 
-//                        time_discretization.gridInfoAux(time_discretization.impulseIndexAfterTimeStage(i)).dt);
+//                        time_discretization.gridInfoAux(time_discretization.impactIndexAfterTimeStage(i)).dt);
 //     }
 //     else if (time_discretization.isTimeStageBeforeLift(i)) {
 //       ++j;

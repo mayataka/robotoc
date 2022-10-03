@@ -25,13 +25,13 @@ Solution CreateSolution(const Robot& robot,
     for (int i=0; i<time_discretization.size()-1; ++i) {
       const auto& grid = time_discretization[i];
       if (grid.type == GridType::Impact) {
-        s[i].setContactStatus(contact_sequence->impulseStatus(grid.impulse_index));
+        s[i].setContactStatus(contact_sequence->impactStatus(grid.impact_index));
         s[i].setRandom(robot);
       }
       else {
         s[i].setContactStatus(contact_sequence->contactStatus(grid.phase));
         if (grid.switching_constraint) {
-          s[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(grid.impulse_index+1).dimf());
+          s[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(grid.impact_index+1).dimf());
         }
         else {
           s[i].setSwitchingConstraintDimension(0);

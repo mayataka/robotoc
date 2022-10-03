@@ -24,12 +24,12 @@ PYBIND11_MODULE(contact_sequence, m) {
           py::arg("contact_status"), py::arg("switching_time"), py::arg("sto")=false)
     .def("pop_back", &ContactSequence::pop_back)
     .def("pop_front", &ContactSequence::pop_front)
-    .def("set_impulse_time", &ContactSequence::setImpulseTime, 
-          py::arg("impulse_index"), py::arg("impulse_time"))
+    .def("set_impact_time", &ContactSequence::setImpactTime, 
+          py::arg("impact_index"), py::arg("impact_time"))
     .def("set_lift_time", &ContactSequence::setLiftTime, 
           py::arg("lift_index"), py::arg("lift_time"))
-    .def("is_STO_enabled_impulse", &ContactSequence::isSTOEnabledImpulse, 
-          py::arg("impulse_index"))
+    .def("is_STO_enabled_impact", &ContactSequence::isSTOEnabledImpact, 
+          py::arg("impact_index"))
     .def("is_STO_enabled_lift", &ContactSequence::isSTOEnabledLift, 
           py::arg("lift_index"))
     .def("is_event_time_consistent", &ContactSequence::isEventTimeConsistent)
@@ -42,16 +42,16 @@ PYBIND11_MODULE(contact_sequence, m) {
           py::arg("contact_rotations"))
     .def("set_friction_coefficients", &ContactSequence::setFrictionCoefficients,
           py::arg("contact_phase"), py::arg("friction_coefficients"))
-    .def("num_impulse_events", &ContactSequence::numImpulseEvents)
+    .def("num_impact_events", &ContactSequence::numImpactEvents)
     .def("num_lift_events", &ContactSequence::numLiftEvents)
     .def("num_discrete_events", &ContactSequence::numDiscreteEvents)
     .def("num_contact_phases", &ContactSequence::numContactPhases)
     .def("contact_status", &ContactSequence::contactStatus,
           py::arg("contact_phase"))
-    .def("impulse_status", &ContactSequence::impulseStatus,
-          py::arg("impulse_index"))
-    .def("impulse_time", &ContactSequence::impulseTime,
-          py::arg("impulse_index"))
+    .def("impact_status", &ContactSequence::impactStatus,
+          py::arg("impact_index"))
+    .def("impact_time", &ContactSequence::impactTime,
+          py::arg("impact_index"))
     .def("lift_time", &ContactSequence::liftTime,
           py::arg("lift_index"))
     .def("event_type", &ContactSequence::eventType,

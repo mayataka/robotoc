@@ -29,7 +29,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     N = 20;
-    max_num_impulse = 5;
+    max_num_impact = 5;
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -43,13 +43,13 @@ protected:
   void test_riccatiRecursion(const Robot& robot) const;
   void test_computeDirection(const Robot& robot) const;
 
-  int N, max_num_impulse, nthreads;
+  int N, max_num_impact, nthreads;
   double T, t, dt;
 };
 
 
 std::shared_ptr<ContactSequence > RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
+  return testhelper::CreateContactSequence(robot, N, max_num_impact, t, 3*dt);
 }
 
 

@@ -105,16 +105,16 @@ void SplitDirection::setRandom(const ContactStatus& contact_status) {
 }
 
 
-void SplitDirection::setRandom(const ImpulseStatus& impulse_status) {
-  setContactDimension(impulse_status.dimf());
+void SplitDirection::setRandom(const ImpactStatus& impact_status) {
+  setContactDimension(impact_status.dimf());
   setRandom();
 }
 
 
 void SplitDirection::setRandom(const ContactStatus& contact_status, 
-                               const ImpulseStatus& impulse_status) {
+                               const ImpactStatus& impact_status) {
   setContactDimension(contact_status.dimf());
-  setSwitchingConstraintDimension(impulse_status.dimf());
+  setSwitchingConstraintDimension(impact_status.dimf());
   setRandom();
 }
 
@@ -135,18 +135,18 @@ SplitDirection SplitDirection::Random(const Robot& robot,
 
 
 SplitDirection SplitDirection::Random(const Robot& robot, 
-                                      const ImpulseStatus& impulse_status) {
+                                      const ImpactStatus& impact_status) {
   SplitDirection d(robot);
-  d.setRandom(impulse_status);
+  d.setRandom(impact_status);
   return d;
 }
 
 
 SplitDirection SplitDirection::Random(const Robot& robot, 
                                       const ContactStatus& contact_status, 
-                                      const ImpulseStatus& impulse_status) {
+                                      const ImpactStatus& impact_status) {
   SplitDirection d(robot);
-  d.setRandom(contact_status, impulse_status);
+  d.setRandom(contact_status, impact_status);
   return d;
 }
 

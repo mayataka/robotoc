@@ -17,7 +17,7 @@
 #include "robotoc/robot/point_contact.hpp"
 #include "robotoc/robot/surface_contact.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/robot/robot_properties.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 
@@ -482,55 +482,55 @@ public:
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
-  /// @brief Computes the residual of the impulse velocity constraint. Before 
+  /// @brief Computes the residual of the impact velocity constraint. Before 
   /// calling this function, updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[out] velocity_residual Residuals in the contact velocity 
-  /// constraint. Size must be ImpulseStatus::dimf().
+  /// constraint. Size must be ImpactStatus::dimf().
   ///
   template <typename VectorType>
-  void computeImpulseVelocityResidual(
-      const ImpulseStatus& impulse_status, 
+  void computeImpactVelocityResidual(
+      const ImpactStatus& impact_status, 
       const Eigen::MatrixBase<VectorType>& velocity_residual) const;
 
   ///
-  /// @brief Computes the partial derivatives of the impulse velocity constraint.
+  /// @brief Computes the partial derivatives of the impact velocity constraint.
   /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[out] velocity_partial_dq The partial derivative with respect to the 
-  /// configuaration. Size must be ImpulseStatus::dimf() x Robot::dimv(). 
+  /// configuaration. Size must be ImpactStatus::dimf() x Robot::dimv(). 
   /// @param[out] velocity_partial_dv The partial derivative with respect to the 
-  /// velocity. Size must be ImpulseStatus::dimf() x Robot::dimv().
+  /// velocity. Size must be ImpactStatus::dimf() x Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2>
-  void computeImpulseVelocityDerivatives(
-      const ImpulseStatus& impulse_status, 
+  void computeImpactVelocityDerivatives(
+      const ImpactStatus& impact_status, 
       const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
   /// @brief Computes the residual of the contact position constraint at the 
-  /// impulse. Before calling this function, updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
+  /// impact. Before calling this function, updateKinematics() must be called.
+  /// @param[in] impact_status Impact status.
   /// @param[out] position_residual Residuals in the contact position constraint.
-  /// Size must be ImpulseStatus::dimf().
+  /// Size must be ImpactStatus::dimf().
   ///
   template <typename VectorType>
   void computeContactPositionResidual(
-      const ImpulseStatus& impulse_status, 
+      const ImpactStatus& impact_status, 
       const Eigen::MatrixBase<VectorType>& position_residual);
 
   ///
   /// @brief Computes the partial derivative of the contact position at the 
-  /// impulse. Before calling this  function, updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
+  /// impact. Before calling this  function, updateKinematics() must be called.
+  /// @param[in] impact_status Impact status.
   /// @param[out] position_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
   void computeContactPositionDerivative(
-      const ImpulseStatus& impulse_status, 
+      const ImpactStatus& impact_status, 
       const Eigen::MatrixBase<MatrixType>& position_partial_dq);
 
   ///
@@ -543,13 +543,13 @@ public:
                         const std::vector<Vector6d>& f);
 
   ///
-  /// @brief Set impulse forces in this robot model for each active impulses. 
-  /// @param[in] impulse_status Impulse status.
-  /// @param[in] f The stack of the impulse wrenches represented in the local 
+  /// @brief Set impact forces in this robot model for each active impacts. 
+  /// @param[in] impact_status Impact status.
+  /// @param[in] f The stack of the impact wrenches represented in the local 
   /// coordinate of the contact frame. Size must be Robot::maxNumContacts(). 
   /// 
-  void setImpulseForces(const ImpulseStatus& impulse_status, 
-                        const std::vector<Vector6d>& f);
+  void setImpactForces(const ImpactStatus& impact_status, 
+                       const std::vector<Vector6d>& f);
 
   ///
   /// @brief Computes inverse dynamics, i.e., generalized torques corresponding 
@@ -598,36 +598,36 @@ public:
                        const Eigen::MatrixBase<MatrixType3>& dRNEA_partial_da);
 
   ///
-  /// @brief Computes the residual of the impulse dynamics for given 
-  /// configuration and impulse change in the generalized velocity, and impulse 
+  /// @brief Computes the residual of the impact dynamics for given 
+  /// configuration and impact change in the generalized velocity, and impact 
   /// forces by using RNEA. Before call this function,   update contact forces 
-  /// via setImpulseForces().
+  /// via setImpactForces().
   /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] dv Impulse change in the velocity. Size must be Robot::dimv().
-  /// @param[out] res Residual of impulse dynamics. Size must be Robot::dimv(). 
+  /// @param[in] dv Impact change in the velocity. Size must be Robot::dimv().
+  /// @param[out] res Residual of impact dynamics. Size must be Robot::dimv(). 
   ///
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2>
-  void RNEAImpulse(const Eigen::MatrixBase<ConfigVectorType>& q, 
-                   const Eigen::MatrixBase<TangentVectorType1>& dv,
-                   const Eigen::MatrixBase<TangentVectorType2>& res);
+  void RNEAImpact(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                  const Eigen::MatrixBase<TangentVectorType1>& dv,
+                  const Eigen::MatrixBase<TangentVectorType2>& res);
 
   ///
   /// @brief Computes the partial dervatives of the function of impuse dynamics 
-  /// with respect to configuration and impulse changes in the velocity. Before 
-  /// calling this function, update contact forces via setImpulseForces().
+  /// with respect to configuration and impact changes in the velocity. Before 
+  /// calling this function, update contact forces via setImpactForces().
   /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] dv Impulse change in the velocity. Size must be Robot::dimv().
-  /// @param[out] dRNEA_partial_dq The partial derivative of impulse dynamics 
+  /// @param[in] dv Impact change in the velocity. Size must be Robot::dimv().
+  /// @param[out] dRNEA_partial_dq The partial derivative of impact dynamics 
   /// with respect to the configuration. The size must be 
   /// Robot::dimv() x Robot::dimv().
-  /// @param[out] dRNEA_partial_ddv The partial derivative of impulse dynamics 
+  /// @param[out] dRNEA_partial_ddv The partial derivative of impact dynamics 
   /// with respect to the change in velocity. The size must be 
   /// Robot::dimv() x Robot::dimv().
   ///   
   template <typename ConfigVectorType, typename TangentVectorType, 
             typename MatrixType1, typename MatrixType2>
-  void RNEAImpulseDerivatives(
+  void RNEAImpactDerivatives(
       const Eigen::MatrixBase<ConfigVectorType>& q, 
       const Eigen::MatrixBase<TangentVectorType>& dv, 
       const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
@@ -816,10 +816,10 @@ public:
   ContactStatus createContactStatus() const;
 
   ///
-  /// @brief Creates a ImpulseStatus for this robot model. 
-  /// @return ImpulseStatus for this robot model.
+  /// @brief Creates a ImpactStatus for this robot model. 
+  /// @return ImpactStatus for this robot model.
   /// 
-  ImpulseStatus createImpulseStatus() const;
+  ImpactStatus createImpactStatus() const;
 
   ///
   /// @brief Initializes the results of jointEffortLimit(), jointVelocityLimit(), 
@@ -912,10 +912,10 @@ private:
   // Robot model info
   RobotModelInfo info_;
   // Pinocchio models and datas, and runtime variables
-  pinocchio::Model model_, impulse_model_;
-  pinocchio::Data data_, impulse_data_;
+  pinocchio::Model model_, impact_model_;
+  pinocchio::Data data_, impact_data_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  Eigen::MatrixXd dimpulse_dv_; 
+  Eigen::MatrixXd dimpact_dv_; 
   // Contact models
   aligned_vector<PointContact> point_contacts_;
   aligned_vector<SurfaceContact> surface_contacts_;

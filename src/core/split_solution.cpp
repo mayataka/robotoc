@@ -56,12 +56,12 @@ SplitSolution::SplitSolution()
 
 
 void SplitSolution::integrate(const Robot& robot, const double step_size, 
-                              const SplitDirection& d, const bool impulse) {
+                              const SplitDirection& d, const bool impact) {
   assert(f_stack().size() == d.df().size());
   assert(mu_stack().size() == d.dmu().size());
   robot.integrateConfiguration(d.dq(), step_size, q);
   v.noalias() += step_size * d.dv();
-  if (!impulse) {
+  if (!impact) {
     a.noalias() += step_size * d.da();
     dv.setZero();
     u.noalias() += step_size * d.du;
@@ -74,7 +74,7 @@ void SplitSolution::integrate(const Robot& robot, const double step_size,
   lmd.noalias() += step_size * d.dlmd();
   gmm.noalias() += step_size * d.dgmm();
   beta.noalias() += step_size * d.dbeta();
-  if (has_floating_base_ && !impulse) {
+  if (has_floating_base_ && !impact) {
     nu_passive.noalias() += step_size * d.dnu_passive;
   }
   if (dimf() > 0) {
@@ -83,7 +83,7 @@ void SplitSolution::integrate(const Robot& robot, const double step_size,
     mu_stack().noalias() += step_size * d.dmu();
     set_mu_vector();
   }
-  if ((dims() > 0) && !impulse) {
+  if ((dims() > 0) && !impact) {
     assert(xi_stack().size() == d.dxi().size());
     xi_stack().noalias() += step_size * d.dxi();
   }
@@ -229,11 +229,11 @@ void SplitSolution::setRandom(const Robot& robot,
 
 
 void SplitSolution::setRandom(const Robot& robot, 
-                              const ImpulseStatus& impulse_status) {
-  setContactStatus(impulse_status);
-  setSwitchingConstraintDimension(impulse_status.dimf());
+                              const ImpactStatus& impact_status) {
+  setContactStatus(impact_status);
+  setSwitchingConstraintDimension(impact_status.dimf());
   setRandom(robot);
-  if (impulse_status.hasActiveImpulse()) {
+  if (impact_status.hasActiveImpact()) {
     xi_stack().setRandom();
   }
 }
@@ -241,10 +241,10 @@ void SplitSolution::setRandom(const Robot& robot,
 
 void SplitSolution::setRandom(const Robot& robot, 
                               const ContactStatus& contact_status,
-                              const ImpulseStatus& impulse_status) {
+                              const ImpactStatus& impact_status) {
   setRandom(robot, contact_status);
-  setSwitchingConstraintDimension(impulse_status.dimf());
-  if (impulse_status.hasActiveImpulse()) {
+  setSwitchingConstraintDimension(impact_status.dimf());
+  if (impact_status.hasActiveImpact()) {
     xi_stack().setRandom();
   }
 }
@@ -266,18 +266,18 @@ SplitSolution SplitSolution::Random(const Robot& robot,
 
 
 SplitSolution SplitSolution::Random(const Robot& robot, 
-                                    const ImpulseStatus& impulse_status) {
+                                    const ImpactStatus& impact_status) {
   SplitSolution s(robot);
-  s.setRandom(robot, impulse_status);
+  s.setRandom(robot, impact_status);
   return s;
 }
 
 
 SplitSolution SplitSolution::Random(const Robot& robot, 
                                     const ContactStatus& contact_status, 
-                                    const ImpulseStatus& impulse_status) {
+                                    const ImpactStatus& impact_status) {
   SplitSolution s(robot);
-  s.setRandom(robot, contact_status, impulse_status);
+  s.setRandom(robot, contact_status, impact_status);
   return s;
 }
 

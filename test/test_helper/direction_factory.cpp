@@ -24,13 +24,13 @@ Direction CreateDirection(const Robot& robot,
     for (int i=0; i<time_discretization.size()-1; ++i) {
       const auto& grid = time_discretization[i];
       if (grid.type == GridType::Impact) {
-        d[i].setContactDimension(contact_sequence->impulseStatus(grid.impulse_index).dimf());
+        d[i].setContactDimension(contact_sequence->impactStatus(grid.impact_index).dimf());
         d[i].setRandom();
       }
       else {
         d[i].setContactDimension(contact_sequence->contactStatus(grid.phase).dimf());
         if (grid.switching_constraint) {
-          d[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(grid.impulse_index+1).dimf());
+          d[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(grid.impact_index+1).dimf());
         }
         else {
           d[i].setSwitchingConstraintDimension(0);

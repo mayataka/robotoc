@@ -10,7 +10,7 @@
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/planner/discrete_event.hpp"
 
 
@@ -18,7 +18,7 @@ namespace robotoc {
 
 ///
 /// @class ContactSequence
-/// @brief The sequence of contact status and discrete events (impulse and lift). 
+/// @brief The sequence of contact status and discrete events (impact and lift). 
 ///
 class ContactSequence {
 public:
@@ -26,7 +26,7 @@ public:
   /// @brief Constructor. 
   /// @param[in] robot Robot model. 
   /// @param[in] reserved_num_discrete_events Reserved number of each discrete 
-  /// events (impulse and lift) to avoid dynamic memory allocation. Must be 
+  /// events (impact and lift) to avoid dynamic memory allocation. Must be 
   /// non-negative. Default is 0.
   ///
   ContactSequence(const Robot& robot, const int reserved_num_discrete_events=0);
@@ -111,12 +111,12 @@ public:
   void pop_front();
 
   ///
-  /// @brief Sets the time of the impulse event. 
-  /// @param[in] impulse_index Index of the impulse event. Must be non-negative
-  /// and less than numImpulseEvents().
-  /// @param[in] impulse_time Impulse time.
+  /// @brief Sets the time of the impact event. 
+  /// @param[in] impact_index Index of the impact event. Must be non-negative
+  /// and less than numImpactEvents().
+  /// @param[in] impact_time Impact time.
   ///
-  void setImpulseTime(const int impulse_index, const double impulse_time);
+  void setImpactTime(const int impact_index, const double impact_time);
 
   ///
   /// @brief Sets the time of the lift event. 
@@ -127,11 +127,11 @@ public:
   void setLiftTime(const int lift_index, const double lift_time);
 
   ///
-  /// @brief Checks wheather the STO is enabled for the specified impulse event. 
-  /// @param[in] impulse_index Index of the impulse of interest. 
+  /// @brief Checks wheather the STO is enabled for the specified impact event. 
+  /// @param[in] impact_index Index of the impact of interest. 
   /// @return true if the STO is enabled. false if not.
   ///
-  bool isSTOEnabledImpulse(const int impulse_index) const;
+  bool isSTOEnabledImpact(const int impact_index) const;
 
   ///
   /// @brief Checks wheather the STO is enabled for the specified lift event. 
@@ -200,7 +200,7 @@ public:
 
   ///
   /// @brief Returns number of discrete events, i.e., sum of 
-  /// numImpulseEvents() and numLiftEvents().
+  /// numImpactEvents() and numLiftEvents().
   /// @return Number of discrete events.
   ///
   int numDiscreteEvents() const {
@@ -208,11 +208,11 @@ public:
   }
 
   ///
-  /// @brief Returns number of impulse events. 
-  /// @return Number of impulse events.
+  /// @brief Returns number of impact events. 
+  /// @return Number of impact events.
   ///
-  int numImpulseEvents() const {
-    return impulse_events_.size();
+  int numImpactEvents() const {
+    return impact_events_.size();
   }
 
   ///
@@ -220,7 +220,7 @@ public:
   /// @return Number of lift events.
   ///
   int numLiftEvents() const {
-    return (numDiscreteEvents()-numImpulseEvents());
+    return (numDiscreteEvents()-numImpactEvents());
   }
 
   ///
@@ -235,24 +235,24 @@ public:
   }
 
   ///
-  /// @brief Gets the impulse status. 
-  /// @param[in] impulse_index Index of impulse event.
-  /// @return const reference to the impulse status.
+  /// @brief Gets the impact status. 
+  /// @param[in] impact_index Index of impact event.
+  /// @return const reference to the impact status.
   ///
-  const ImpulseStatus& impulseStatus(const int impulse_index) const {
-    assert(impulse_index >= 0);
-    assert(impulse_index < numImpulseEvents());
-    return impulse_events_[impulse_index].impulseStatus();
+  const ImpactStatus& impactStatus(const int impact_index) const {
+    assert(impact_index >= 0);
+    assert(impact_index < numImpactEvents());
+    return impact_events_[impact_index].impactStatus();
   }
 
   ///
-  /// @brief Returns impulse event time. 
-  /// @return Impulse event time.
+  /// @brief Returns impact event time. 
+  /// @return Impact event time.
   ///
-  double impulseTime(const int impulse_index) const {
-    assert(impulse_index >= 0);
-    assert(impulse_index < numImpulseEvents());
-    return impulse_time_[impulse_index];
+  double impactTime(const int impact_index) const {
+    assert(impact_index >= 0);
+    assert(impact_index < numImpactEvents());
+    return impact_time_[impact_index];
   }
 
   ///
@@ -273,8 +273,8 @@ public:
   ///
   DiscreteEventType eventType(const int event_index) const {
     assert(event_index >= 0);
-    assert(event_index < numImpulseEvents()+numLiftEvents());
-    if (is_impulse_event_[event_index]) return DiscreteEventType::Impact;
+    assert(event_index < numImpactEvents()+numLiftEvents());
+    if (is_impact_event_[event_index]) return DiscreteEventType::Impact;
     else return DiscreteEventType::Lift;
   }
 
@@ -287,7 +287,7 @@ public:
   }
 
   ///
-  /// @brief Reserves each discrete events (impulse and lift) to avoid dynamic 
+  /// @brief Reserves each discrete events (impact and lift) to avoid dynamic 
   /// memory allocation.
   /// @param[in] reserved_num_discrete_events The reserved size.
   ///
@@ -314,10 +314,10 @@ private:
   int reserved_num_discrete_events_;
   ContactStatus default_contact_status_;
   std::deque<ContactStatus> contact_statuses_;
-  std::deque<DiscreteEvent> impulse_events_;
-  std::deque<int> event_index_impulse_, event_index_lift_;
-  std::deque<double> event_time_, impulse_time_, lift_time_;
-  std::deque<bool> is_impulse_event_, sto_impulse_, sto_lift_;
+  std::deque<DiscreteEvent> impact_events_;
+  std::deque<int> event_index_impact_, event_index_lift_;
+  std::deque<double> event_time_, impact_time_, lift_time_;
+  std::deque<bool> is_impact_event_, sto_impact_, sto_lift_;
 
   void clear();
 };

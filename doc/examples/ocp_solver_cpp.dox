@@ -88,21 +88,21 @@ Next, we construct the cost function (TODO: write details about the cost functio
               1, 1, 1,
               1, 1, 1;
   Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1e-01);
-  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight_impulse << 1, 1, 1, 1, 1, 1,  
+  Eigen::VectorXd q_weight_impact(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impact << 1, 1, 1, 1, 1, 1,  
                100, 100, 100, 
                100, 100, 100,
                100, 100, 100,
                100, 100, 100;
-  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 100);
+  Eigen::VectorXd v_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 100);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_weight_terminal(q_weight);
-  config_cost->set_q_weight_impulse(q_weight_impulse);
+  config_cost->set_q_weight_impact(q_weight_impact);
   config_cost->set_v_weight(v_weight);
   config_cost->set_v_weight_terminal(v_weight);
-  config_cost->set_v_weight_impulse(v_weight_impulse);
+  config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_u_weight(u_weight);
   cost->push_back(config_cost);
 
@@ -157,7 +157,7 @@ Next, we construct the contact sequence `robotoc::ContactSequence` as
 ```
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 ```
-Then we can set an impulse event and a lift event to the contact sequence.
+Then we can set an impact event and a lift event to the contact sequence.
 
 We set the friction coefficients via the contact sequence. We then define the friction coefficients.
 ```
@@ -199,7 +199,7 @@ Finally, we set the contact status after touch-down as
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);
 ```
-Then an impulse event is appended into the back of the contact sequence.
+Then an impact event is appended into the back of the contact sequence.
 
 @note We can check the contact sequence via 
 ```

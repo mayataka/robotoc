@@ -23,9 +23,9 @@ PYBIND11_MODULE(discrete_event, m) {
     .def(py::init<const ContactStatus&, const ContactStatus&>(),
           py::arg("pre_contact_status"), py::arg("post_contact_status"))
     .def("exist_discrete_event", &DiscreteEvent::existDiscreteEvent)
-    .def("exist_impulse", &DiscreteEvent::existImpulse)
+    .def("exist_impact", &DiscreteEvent::existImpact)
     .def("exist_lift", &DiscreteEvent::existLift)
-    .def("impulse_status", &DiscreteEvent::impulseStatus)
+    .def("impact_status", &DiscreteEvent::impactStatus)
     .def("pre_contact_status", &DiscreteEvent::preContactStatus)
     .def("post_contact_status", &DiscreteEvent::postContactStatus)
     .def("set_discrete_event", &DiscreteEvent::setDiscreteEvent,

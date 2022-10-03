@@ -35,8 +35,8 @@ PYBIND11_MODULE(task_space_3d_cost, m) {
           py::arg("weight"))
     .def("set_weight_terminal", &TaskSpace3DCost::set_weight_terminal,
           py::arg("weight_terminal"))
-    .def("set_weight_impulse", &TaskSpace3DCost::set_weight_impulse,
-          py::arg("weight_impulse"))
+    .def("set_weight_impact", &TaskSpace3DCost::set_weight_impact,
+          py::arg("weight_impact"))
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(TaskSpace3DCost);
 }
 

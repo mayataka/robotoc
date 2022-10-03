@@ -37,22 +37,22 @@ q_weight = np.array([1.0, 0., 0., 1.0, 1.0, 1.0,
                      0.001, 0.001, 0.001])
 v_weight = np.full(robot.dimv(), 1.0)
 a_weight = np.full(robot.dimv(), 1.0e-06)
-q_weight_impulse = np.array([0., 0., 0., 100., 100., 100., 
+q_weight_impact = np.array([0., 0., 0., 100., 100., 100., 
                       0.1, 0.1, 0.1, 
                       0.1, 0.1, 0.1,
                       0.1, 0.1, 0.1,
                       0.1, 0.1, 0.1])
-v_weight_impulse = np.full(robot.dimv(), 1.0)
-dv_weight_impulse = np.full(robot.dimv(), 1.0e-06)
+v_weight_impact = np.full(robot.dimv(), 1.0)
+dv_weight_impact = np.full(robot.dimv(), 1.0e-06)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_ref)
 config_cost.set_q_weight(q_weight)
 config_cost.set_q_weight_terminal(q_weight)
-config_cost.set_q_weight_impulse(q_weight_impulse)
+config_cost.set_q_weight_impact(q_weight_impact)
 config_cost.set_v_weight(v_weight)
 config_cost.set_v_weight_terminal(v_weight)
-config_cost.set_v_weight_impulse(v_weight_impulse)
-config_cost.set_dv_weight_impulse(dv_weight_impulse)
+config_cost.set_v_weight_impact(v_weight_impact)
+config_cost.set_dv_weight_impact(dv_weight_impact)
 config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 

@@ -11,7 +11,7 @@ namespace robotoc {
 namespace testhelper {
 
 std::shared_ptr<ContactSequence> CreateContactSequence(
-    const Robot& robot, const int N, const int max_num_impulse,
+    const Robot& robot, const int N, const int max_num_impact,
     const double t0, const double event_period);
 
 } // namespace testhelper

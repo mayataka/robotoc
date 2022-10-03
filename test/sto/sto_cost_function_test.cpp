@@ -17,7 +17,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     N = 20;
-    max_num_impulse = 5;
+    max_num_impact = 5;
     T = 1.0;
     t = 0.1; 
 
@@ -25,16 +25,16 @@ protected:
 
     const double dt = T / N;
     contact_sequence 
-        = testhelper::CreateContactSequence(robot, N, max_num_impulse, 0, 3*dt);
+        = testhelper::CreateContactSequence(robot, N, max_num_impact, 0, 3*dt);
 
-    time_discretization = TimeDiscretization(T, N, 2*max_num_impulse);
+    time_discretization = TimeDiscretization(T, N, 2*max_num_impact);
     time_discretization.discretize(contact_sequence, t);
   }
 
   virtual void TearDown() {
   }
 
-  int N, max_num_impulse;
+  int N, max_num_impact;
   double T, t;
   Eigen::VectorXd lt;
   Eigen::MatrixXd Qtt;

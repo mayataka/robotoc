@@ -1,25 +1,25 @@
-#ifndef ROBOTOC_IMPULSE_WRENCH_CONE_HPP_
-#define ROBOTOC_IMPULSE_WRENCH_CONE_HPP_
+#ifndef ROBOTOC_IMPACT_WRENCH_CONE_HPP_
+#define ROBOTOC_IMPACT_WRENCH_CONE_HPP_
 
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
-#include "robotoc/constraints/impulse_constraint_component_base.hpp"
+#include "robotoc/constraints/impact_constraint_component_base.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
 
 
 namespace robotoc {
 
 ///
-/// @class ImpulseWrenchCone
+/// @class ImpactWrenchCone
 /// @brief Constraint on the wrench firction cone for surface contacts.
 ///
-class ImpulseWrenchCone final : public ImpulseConstraintComponentBase {
+class ImpactWrenchCone final : public ImpactConstraintComponentBase {
 public:
   ///
   /// @brief Constructor. 
@@ -27,37 +27,37 @@ public:
   /// @param[in] X A length of the rectangular. Must be positive.
   /// @param[in] Y A length of the rectangular. Must be positive.
   ///
-  ImpulseWrenchCone(const Robot& robot, const double X, const double Y);
+  ImpactWrenchCone(const Robot& robot, const double X, const double Y);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseWrenchCone();
+  ImpactWrenchCone();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseWrenchCone();
+  ~ImpactWrenchCone();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseWrenchCone(const ImpulseWrenchCone&) = default;
+  ImpactWrenchCone(const ImpactWrenchCone&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseWrenchCone& operator=(const ImpulseWrenchCone&) = default;
+  ImpactWrenchCone& operator=(const ImpactWrenchCone&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseWrenchCone(ImpulseWrenchCone&&) noexcept = default;
+  ImpactWrenchCone(ImpactWrenchCone&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseWrenchCone& operator=(ImpulseWrenchCone&&) noexcept = default;
+  ImpactWrenchCone& operator=(ImpactWrenchCone&&) noexcept = default;
 
   ///
   /// @param[in] X A length of the rectangular. Must be positive.
@@ -69,29 +69,29 @@ public:
 
   void allocateExtraData(ConstraintComponentData& data) const override;
 
-  bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+  bool isFeasible(Robot& robot, const ImpactStatus& impact_status, 
                   ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
 
-  void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
+  void setSlack(Robot& robot, const ImpactStatus& impact_status, 
                 ConstraintComponentData& data, 
                 const SplitSolution& s) const override;
 
-  void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalConstraint(Robot& robot, const ImpactStatus& impact_status, 
                       ConstraintComponentData& data, 
                       const SplitSolution& s) const override;
 
-  void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                        ConstraintComponentData& data, 
                        const SplitSolution& s,
                        SplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(const ImpulseStatus& impulse_status,
+  void condenseSlackAndDual(const ImpactStatus& impact_status,
                             ConstraintComponentData& data, 
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
-  void expandSlackAndDual(const ImpulseStatus& impulse_status, 
+  void expandSlackAndDual(const ImpactStatus& impact_status, 
                           ConstraintComponentData& data, 
                           const SplitDirection& d) const override; 
 
@@ -112,4 +112,4 @@ private:
 
 } // namespace robotoc
 
-#endif // ROBOTOC_IMPULSE_WRENCH_CONE_HPP_
+#endif // ROBOTOC_IMPACT_WRENCH_CONE_HPP_

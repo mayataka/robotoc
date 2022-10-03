@@ -42,15 +42,15 @@ TimeDiscretization::TimeDiscretization()
 
 void TimeDiscretization::discretize(
     const std::shared_ptr<ContactSequence>& contact_sequence, const double t) {
-  const int N = N_ + contact_sequence->numLiftEvents() + 2 * contact_sequence->numImpulseEvents() + 1;
+  const int N = N_ + contact_sequence->numLiftEvents() + 2 * contact_sequence->numImpactEvents() + 1;
   if (grid_.size() <=N) {
     grid_.resize(N);
   }
-  int next_impulse_index = 0;
+  int next_impact_index = 0;
   int next_lift_index = 0;
-  while (next_impulse_index<contact_sequence->numImpulseEvents()) {
-    if (contact_sequence->impulseTime(next_impulse_index) > t) break;
-    ++next_impulse_index;
+  while (next_impact_index<contact_sequence->numImpactEvents()) {
+    if (contact_sequence->impactTime(next_impact_index) > t) break;
+    ++next_impact_index;
   }
   while (next_lift_index<contact_sequence->numLiftEvents()) {
     if (contact_sequence->liftTime(next_lift_index) > t) break;
@@ -62,39 +62,39 @@ void TimeDiscretization::discretize(
   int stage = 0;
   double ti = t;
   while (ti+eps < t+T_) {
-    const bool has_next_impulse = (next_impulse_index < contact_sequence->numImpulseEvents());
+    const bool has_next_impact = (next_impact_index < contact_sequence->numImpactEvents());
     const bool has_next_lift = (next_lift_index < contact_sequence->numLiftEvents());
     grid_[stage].t = ti;
     grid_[stage].dt = dt;
     grid_[stage].stage = stage;
-    grid_[stage].phase = next_impulse_index + next_lift_index;
-    grid_[stage].impulse_index = next_impulse_index - 1;
+    grid_[stage].phase = next_impact_index + next_lift_index;
+    grid_[stage].impact_index = next_impact_index - 1;
     grid_[stage].lift_index = next_lift_index - 1;
     grid_[stage].type = GridType::Intermediate;
-    if (has_next_impulse) {
-      const double next_impulse_time = contact_sequence->impulseTime(next_impulse_index);
-      if (next_impulse_time <= ti+dt+eps && (next_impulse_time+margin < t+T_)) {
-        grid_[stage].dt = next_impulse_time - ti;
+    if (has_next_impact) {
+      const double next_impact_time = contact_sequence->impactTime(next_impact_index);
+      if (next_impact_time <= ti+dt+eps && (next_impact_time+margin < t+T_)) {
+        grid_[stage].dt = next_impact_time - ti;
         ++stage;
-        ++next_impulse_index;
-        grid_[stage].t = next_impulse_time;
+        ++next_impact_index;
+        grid_[stage].t = next_impact_time;
         grid_[stage].dt = 0;
         grid_[stage].stage = stage;
-        grid_[stage].phase = next_impulse_index + next_lift_index;
-        grid_[stage].impulse_index = next_impulse_index - 1;
+        grid_[stage].phase = next_impact_index + next_lift_index;
+        grid_[stage].impact_index = next_impact_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
         grid_[stage].type = GridType::Impact;
         ++stage;
-        grid_[stage].t = next_impulse_time;
-        grid_[stage].dt = std::min(ti+dt, t+T_) - next_impulse_time;
+        grid_[stage].t = next_impact_time;
+        grid_[stage].dt = std::min(ti+dt, t+T_) - next_impact_time;
         grid_[stage].stage = stage;
-        grid_[stage].phase = next_impulse_index + next_lift_index;
-        grid_[stage].impulse_index = next_impulse_index - 1;
+        grid_[stage].phase = next_impact_index + next_lift_index;
+        grid_[stage].impact_index = next_impact_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
         grid_[stage].type = GridType::Intermediate;
-        if (numerics::isApprox(ti+dt, next_impulse_time, eps)) {
+        if (numerics::isApprox(ti+dt, next_impact_time, eps)) {
           ti += dt;
-          grid_[stage].dt = ti + dt - next_impulse_time;
+          grid_[stage].dt = ti + dt - next_impact_time;
         }
       }
     }
@@ -107,8 +107,8 @@ void TimeDiscretization::discretize(
         grid_[stage].t = next_lift_time;
         grid_[stage].dt = std::min(ti+dt, t+T_) - next_lift_time;
         grid_[stage].stage = stage;
-        grid_[stage].phase = next_impulse_index + next_lift_index;
-        grid_[stage].impulse_index = next_impulse_index - 1;
+        grid_[stage].phase = next_impact_index + next_lift_index;
+        grid_[stage].impact_index = next_impact_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
         grid_[stage].type = GridType::Lift;
         if (numerics::isApprox(ti+dt, next_lift_time, eps)) {
@@ -123,8 +123,8 @@ void TimeDiscretization::discretize(
   grid_[stage].t  = t+T_;
   grid_[stage].dt = 0;
   grid_[stage].stage = stage;
-  grid_[stage].phase = next_impulse_index + next_lift_index;
-  grid_[stage].impulse_index = next_impulse_index - 1;
+  grid_[stage].phase = next_impact_index + next_lift_index;
+  grid_[stage].impact_index = next_impact_index - 1;
   grid_[stage].lift_index = next_lift_index - 1;
   grid_[stage].type = GridType::Terminal;
   num_grids_ = stage;
@@ -189,7 +189,7 @@ void TimeDiscretization::correctTimeSteps(
   double prev_event_time = t;
   for (int i=0; i<num_grids_; ++i) {
     if (grid_[i].type == GridType::Impact) {
-      const double event_time = contact_sequence->impulseTime(grid_[i+1].impulse_index);
+      const double event_time = contact_sequence->impactTime(grid_[i+1].impact_index);
       const double dt = (event_time - prev_event_time) / grid_[i-1].num_grids_in_phase;
       for (int j=prev_event_stage; j<=i-1; ++j) {
         grid_[j].t = prev_event_time + (j-prev_event_stage) * dt;
@@ -234,7 +234,7 @@ void TimeDiscretization::correctTimeSteps(
   for (int i=0; i<num_grids_; ++i) {
     if (grid_[i].type == GridType::Impact) {
       sto_event_.push_back(
-          contact_sequence->isSTOEnabledImpulse(grid_[i+1].impulse_index));
+          contact_sequence->isSTOEnabledImpact(grid_[i+1].impact_index));
     }
     else if (grid_[i].type == GridType::Lift) {
       sto_event_.push_back(
@@ -270,7 +270,7 @@ void TimeDiscretization::disp(std::ostream& os) const {
       return "Intermediate";
       break;
     case GridType::Impact:
-      return "     Impulse";
+      return "     Impact";
       break;
     case GridType::Lift:
       return "        Lift";
@@ -296,7 +296,7 @@ void TimeDiscretization::disp(std::ostream& os) const {
        << "       " << std::right << std::setw(3) << grid(i).stage_in_phase << " | " 
        << std::fixed << std::setprecision(4) << grid(i).t << " | " << grid(i).dt
        << " |   " << std::setw(3) << grid(i).phase
-       << " |    " << std::setw(3) << grid(i).impulse_index
+       << " |    " << std::setw(3) << grid(i).impact_index
        << " |  " << std::setw(3) << grid(i).lift_index
        << " | " << std::setw(5) << std::boolalpha << grid(i).sto
        << " |   " << std::setw(5) << std::boolalpha << grid(i).sto_next << "  |" << "\n";

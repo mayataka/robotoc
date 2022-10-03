@@ -45,7 +45,7 @@ UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp,
     time_discretization_[i].dt = dt;
     time_discretization_[i].phase = -1;
     time_discretization_[i].stage = i;
-    time_discretization_[i].impulse_index = -1;
+    time_discretization_[i].impact_index = -1;
     time_discretization_[i].lift_index = -1;
     time_discretization_[i].stage_in_phase = i;
     time_discretization_[i].num_grids_in_phase = ocp.N;

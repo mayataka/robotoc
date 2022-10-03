@@ -79,7 +79,7 @@ private:
   Solution stored_solution_;
   bool has_stored_solution_;
 
-  int findStoredGridIndexAtImpulseByTime(const double t) const {
+  int findStoredGridIndexAtImpactByTime(const double t) const {
     const int N = stored_time_discretization_.size() - 1;
     constexpr double eps = 1.0e-06;
     for (int i=1; i<N; ++i) {

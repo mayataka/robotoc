@@ -23,8 +23,8 @@ inline double ConstraintsData::KKTError() const {
       err += data.KKTError();
     }
   }
-  if (isImpulseLevelValid()) {
-    for (const auto& data : impulse_level_data) {
+  if (isImpactLevelValid()) {
+    for (const auto& data : impact_level_data) {
       err += data.KKTError();
     }
   }
@@ -49,8 +49,8 @@ inline double ConstraintsData::logBarrier() const {
       lb += data.log_barrier;
     }
   }
-  if (isImpulseLevelValid()) {
-    for (const auto& data : impulse_level_data) {
+  if (isImpactLevelValid()) {
+    for (const auto& data : impact_level_data) {
       lb += data.log_barrier;
     }
   }
@@ -76,8 +76,8 @@ inline double ConstraintsData::primalFeasibility() const {
       feasibility += data.template primalFeasibility<p>();
     }
   }
-  if (isImpulseLevelValid()) {
-    for (const auto& data : impulse_level_data) {
+  if (isImpactLevelValid()) {
+    for (const auto& data : impact_level_data) {
       feasibility += data.template primalFeasibility<p>();
     }
   }
@@ -103,8 +103,8 @@ inline double ConstraintsData::dualFeasibility() const {
       feasibility += data.template dualFeasibility<p>();
     }
   }
-  if (isImpulseLevelValid()) {
-    for (const auto& data : impulse_level_data) {
+  if (isImpactLevelValid()) {
+    for (const auto& data : impact_level_data) {
       feasibility += data.template dualFeasibility<p>();
     }
   }

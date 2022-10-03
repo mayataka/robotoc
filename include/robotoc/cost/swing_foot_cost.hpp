@@ -8,7 +8,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
@@ -159,16 +159,16 @@ public:
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                          CostFunctionData& data, const GridInfo& grid_info, 
                          const SplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const SplitSolution& s, 
                                   SplitKKTResidual& kkt_residual) const override;
 
-  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostHessian(Robot& robot, const ImpactStatus& impact_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const SplitSolution& s, 
                               SplitKKTMatrix& kkt_matrix) const override;

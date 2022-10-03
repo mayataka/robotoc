@@ -107,7 +107,7 @@ TEST_P(BackwardRiccatiRecursionFactorizerTest, test) {
 }
 
 
-TEST_P(BackwardRiccatiRecursionFactorizerTest, test_impulse) {
+TEST_P(BackwardRiccatiRecursionFactorizerTest, test_impact) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);

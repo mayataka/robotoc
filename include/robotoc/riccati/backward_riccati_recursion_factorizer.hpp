@@ -89,9 +89,9 @@ public:
 
   ///
   /// @brief Factorizes the split KKT matrix and split KKT residual of 
-  /// this impulse stage for the backward Riccati recursion.
+  /// this impact stage for the backward Riccati recursion.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impact stage.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
                           SplitKKTMatrix& kkt_matrix);
@@ -130,10 +130,10 @@ public:
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
-  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
-  /// ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix().
-  /// @param[out] riccati The Riccati factorization of this impulse stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this impact stage. 
+  /// @param[in] kkt_residual Split KKT residual of this impact stage.
+  /// ImpactBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix().
+  /// @param[out] riccati The Riccati factorization of this impact stage.
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 

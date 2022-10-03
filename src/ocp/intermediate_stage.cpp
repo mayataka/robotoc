@@ -71,8 +71,8 @@ void IntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   evalStateEquation(robot, grid_info.dt, s, s_next, kkt_residual);
   evalContactDynamics(robot, contact_status, s, data.contact_dynamics_data);
   if (grid_info.switching_constraint) {
-    const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index+1);
-    evalSwitchingConstraint(robot, impulse_status, data.switching_constraint_data,
+    const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index+1);
+    evalSwitchingConstraint(robot, impact_status, data.switching_constraint_data,
                             grid_info.dt, grid_info.dt_next, s, kkt_residual);
   }
   // summarize evaluations
@@ -113,8 +113,8 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   linearizeContactDynamics(robot, contact_status, s, 
                            data.contact_dynamics_data, kkt_residual);
   if (grid_info.switching_constraint) {
-    const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index+1);
-    linearizeSwitchingConstraint(robot, impulse_status, data.switching_constraint_data,
+    const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index+1);
+    linearizeSwitchingConstraint(robot, impact_status, data.switching_constraint_data,
                                  grid_info.dt, grid_info.dt_next, s, 
                                  kkt_matrix, kkt_residual);
   }

@@ -62,11 +62,11 @@ void LineSearch::computeSolutionTrial(const Robot& robot, const SplitSolution& s
                                       const SplitDirection& d, 
                                       const double step_size, 
                                       SplitSolution& s_trial,
-                                      const bool impulse) {
+                                      const bool impact) {
   s_trial.setContactStatus(s);
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
   s_trial.v = s.v + step_size * d.dv();
-  if (!impulse) {
+  if (!impact) {
     s_trial.a = s.a + step_size * d.da();
     s_trial.u = s.u + step_size * d.du;
   }

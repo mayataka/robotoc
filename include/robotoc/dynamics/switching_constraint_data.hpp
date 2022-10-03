@@ -66,7 +66,7 @@ public:
   ///
   /// @brief Jacobian of the original contact position constraint w.r.t. q. 
   /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  /// Size is ImpactStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Pq() { 
     return Pq_full_.topLeftCorner(dims_, dimv_); 

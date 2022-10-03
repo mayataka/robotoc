@@ -40,16 +40,16 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   q_weight.template head<6>() << 0, 100, 100, 100, 100, 100;
-  Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  q_weight_impulse.template head<6>() << 0, 1000, 1000, 1000, 1000, 1000;
+  Eigen::VectorXd q_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 10);
+  q_weight_impact.template head<6>() << 0, 1000, 1000, 1000, 1000, 1000;
   config_cost_->set_q_weight(q_weight);
   config_cost_->set_q_weight_terminal(q_weight);
-  config_cost_->set_q_weight_impulse(q_weight_impulse);
+  config_cost_->set_q_weight_impact(q_weight_impact);
   config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
-  config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  config_cost_->set_v_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
+  config_cost_->set_dv_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   cost_->push_back(config_cost_);
   // create constraints 
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);

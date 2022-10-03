@@ -17,7 +17,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
-#include "robotoc/constraints/impulse_friction_cone.hpp"
+#include "robotoc/constraints/impact_friction_cone.hpp"
 #include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
@@ -137,9 +137,9 @@ int main(int argc, char *argv[]) {
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_v_weight(v_weight);
   config_cost->set_v_weight_terminal(v_weight);
-  config_cost->set_v_weight_impulse(v_weight);
+  config_cost->set_v_weight_impact(v_weight);
   config_cost->set_a_weight(a_weight);
-  config_cost->set_dv_weight_impulse(a_weight);
+  config_cost->set_dv_weight_impact(a_weight);
   cost->push_back(config_cost);
 
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
   auto time_varying_config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight);
-  time_varying_config_cost->set_q_weight_impulse(q_weight);
+  time_varying_config_cost->set_q_weight_impact(q_weight);
   cost->push_back(time_varying_config_cost);
 
   // Create the constraints
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
   auto joint_torques_lower   = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot);
-  auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot);
+  auto impact_friction_cone = std::make_shared<robotoc::ImpactFrictionCone>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->push_back(impulse_friction_cone);
+  constraints->push_back(impact_friction_cone);
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);

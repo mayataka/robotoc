@@ -1,10 +1,10 @@
-#ifndef ROBOTOC_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
-#define ROBOTOC_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
+#ifndef ROBOTOC_IMPACT_CONSTRAINT_COMPONENT_BASE_HPP_
+#define ROBOTOC_IMPACT_CONSTRAINT_COMPONENT_BASE_HPP_
 
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
@@ -16,10 +16,10 @@
 namespace robotoc {
 
 ///
-/// @class ImpulseConstraintComponentBase
-/// @brief Base class for impulse constraint components. 
+/// @class ImpactConstraintComponentBase
+/// @brief Base class for impact constraint components. 
 ///
-class ImpulseConstraintComponentBase {
+class ImpactConstraintComponentBase {
 public:
   ///
   /// @brief Constructor. 
@@ -29,37 +29,37 @@ public:
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  ImpulseConstraintComponentBase(const double barrier=1.0e-03, 
-                                 const double fraction_to_boundary_rule=0.995);
+  ImpactConstraintComponentBase(const double barrier=1.0e-03, 
+                                const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Destructor. 
   ///
-  virtual ~ImpulseConstraintComponentBase() {}
+  virtual ~ImpactConstraintComponentBase() {}
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseConstraintComponentBase(
-      const ImpulseConstraintComponentBase&) = default;
+  ImpactConstraintComponentBase(
+      const ImpactConstraintComponentBase&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseConstraintComponentBase& operator=(
-      const ImpulseConstraintComponentBase&) = default;
+  ImpactConstraintComponentBase& operator=(
+      const ImpactConstraintComponentBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseConstraintComponentBase(
-      ImpulseConstraintComponentBase&&) noexcept = default;
+  ImpactConstraintComponentBase(
+      ImpactConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseConstraintComponentBase& operator=(
-      ImpulseConstraintComponentBase&&) noexcept = default;
+  ImpactConstraintComponentBase& operator=(
+      ImpactConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Checks the kinematics level of the constraint component.
@@ -76,23 +76,23 @@ public:
   ///
   /// @brief Checks whether the current solution s is feasible or not. 
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Constraint data.
-  /// @param[in] s Impulse split solution.
+  /// @param[in] s Impact split solution.
   /// @return true if s is feasible. false if not.
   ///
-  virtual bool isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+  virtual bool isFeasible(Robot& robot, const ImpactStatus& impact_status, 
                           ConstraintComponentData& data, 
                           const SplitSolution& s) const = 0;
 
   ///
   /// @brief Sets the slack variables of each constraint components. 
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[out] data Constraint data. 
-  /// @param[in] s Impulse split solution.
+  /// @param[in] s Impact split solution.
   ///
-  virtual void setSlack(Robot& robot, const ImpulseStatus& impulse_status, 
+  virtual void setSlack(Robot& robot, const ImpactStatus& impact_status, 
                         ConstraintComponentData& data, 
                         const SplitSolution& s) const = 0;
 
@@ -100,11 +100,11 @@ public:
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Constraints data.
-  /// @param[in] s Impulse split solution.
+  /// @param[in] s Impact split solution.
   ///
-  virtual void evalConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+  virtual void evalConstraint(Robot& robot, const ImpactStatus& impact_status, 
                               ConstraintComponentData& data, 
                               const SplitSolution& s) const = 0;
 
@@ -114,12 +114,12 @@ public:
   /// Jacobian and the dual variable to the KKT residual. This function is 
   /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Constraint data.
-  /// @param[in] s Impulse split solution.
-  /// @param[out] kkt_residual Impulse split KKT residual.
+  /// @param[in] s Impact split solution.
+  /// @param[out] kkt_residual Impact split KKT residual.
   ///
-  virtual void evalDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  virtual void evalDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                                ConstraintComponentData& data, 
                                const SplitSolution& s,
                                SplitKKTResidual& kkt_residual) const = 0;
@@ -128,26 +128,26 @@ public:
   /// @brief Condenses the slack and dual variables, i.e., factorizes the  
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Constraints data.
-  /// @param[out] kkt_matrix Impulse split KKT matrix. The condensed Hessians   
+  /// @param[out] kkt_matrix Impact split KKT matrix. The condensed Hessians   
   /// are added to this data.
-  /// @param[out] kkt_residual Impulse split KKT residual. The condensed KKT
+  /// @param[out] kkt_residual Impact split KKT residual. The condensed KKT
   /// residual are added to this data.
   ///
   virtual void condenseSlackAndDual(
-      const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
+      const ImpactStatus& impact_status, ConstraintComponentData& data, 
       SplitKKTMatrix& kkt_matrix, 
       SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in, out] data Constraints data.
-  /// @param[in] d Impulse split direction.
+  /// @param[in] d Impact split direction.
   ///
-  virtual void expandSlackAndDual(const ImpulseStatus& impulse_status, 
+  virtual void expandSlackAndDual(const ImpactStatus& impact_status, 
                                   ConstraintComponentData& data, 
                                   const SplitDirection& d) const = 0;
 
@@ -351,6 +351,6 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/constraints/impulse_constraint_component_base.hxx"
+#include "robotoc/constraints/impact_constraint_component_base.hxx"
 
-#endif // ROBOTOC_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
+#endif // ROBOTOC_IMPACT_CONSTRAINT_COMPONENT_BASE_HPP_

@@ -25,7 +25,7 @@ PYBIND11_MODULE(grid_info, m) {
     .def_readwrite("dt", &GridInfo::dt)
     .def_readwrite("phase", &GridInfo::phase)
     .def_readwrite("stage", &GridInfo::stage)
-    .def_readwrite("impulse_index", &GridInfo::impulse_index)
+    .def_readwrite("impact_index", &GridInfo::impact_index)
     .def_readwrite("lift_index", &GridInfo::lift_index)
     .def_readwrite("stage_in_phase", &GridInfo::stage_in_phase)
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(GridInfo)

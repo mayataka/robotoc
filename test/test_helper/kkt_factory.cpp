@@ -80,8 +80,8 @@ KKTMatrix CreateKKTMatrix(const Robot& robot,
   for (int i=0; i<time_discretization.size(); ++i) {
     kkt_matrix[i] = CreateSplitKKTMatrix(robot);
     if (time_discretization[i].switching_constraint) {
-      const int impulse_index = time_discretization[i].impulse_index + 1;
-      kkt_matrix[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
+      const int impact_index = time_discretization[i].impact_index + 1;
+      kkt_matrix[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(impact_index).dimf());
       kkt_matrix[i].Phix().setRandom();
       kkt_matrix[i].Phia().setRandom();
     }
@@ -106,8 +106,8 @@ KKTResidual CreateKKTResidual(const Robot& robot,
   for (int i=0; i<time_discretization.size(); ++i) {
     kkt_residual[i] = CreateSplitKKTResidual(robot);
     if (time_discretization[i].switching_constraint) {
-      const int impulse_index = time_discretization[i].impulse_index + 1;
-      kkt_residual[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(impulse_index).dimf());
+      const int impact_index = time_discretization[i].impact_index + 1;
+      kkt_residual[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(impact_index).dimf());
       kkt_residual[i].P().setRandom();
     }
   }

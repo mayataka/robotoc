@@ -177,10 +177,10 @@ void SwitchingTimeOptimization::integrateSolution(
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impact) {
-      const int impulse_index = grid.impulse_index;
-      const double ts = contact_sequence_->impulseTime(impulse_index) 
+      const int impact_index = grid.impact_index;
+      const double ts = contact_sequence_->impactTime(impact_index) 
                           + primal_step_size * d[i].dts;
-      contact_sequence_->setImpulseTime(impulse_index, ts);
+      contact_sequence_->setImpactTime(impact_index, ts);
     }
     else if (grid.type == GridType::Lift) {
       const int lift_index = grid.lift_index;

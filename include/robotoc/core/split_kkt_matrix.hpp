@@ -156,7 +156,7 @@ public:
   ///
   /// @brief Jacobian of the swithcing constraint w.r.t. x. 
   /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x 2 * Robot::dimv().
+  /// Size is ImpactStatus::dimf() x 2 * Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Phix();
 
@@ -168,7 +168,7 @@ public:
   ///
   /// @brief Jacobian of the swithcing constraint w.r.t. q. 
   /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  /// Size is ImpactStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Phiq();
 
@@ -180,7 +180,7 @@ public:
   ///
   /// @brief Jacobian of the swithcing constraint w.r.t. v. 
   /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  /// Size is ImpactStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Phiv();
 
@@ -192,7 +192,7 @@ public:
   ///
   /// @brief Jacobian of the swithcing constraint w.r.t. a. 
   /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  /// Size is ImpactStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Phia();
 
@@ -204,7 +204,7 @@ public:
   ///
   /// @brief Jacobian of the swithcing constraint w.r.t. u. 
   /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimu().
+  /// Size is ImpactStatus::dimf() x Robot::dimu().
   ///
   Eigen::Block<Eigen::MatrixXd> Phiu();
 
@@ -216,7 +216,7 @@ public:
   ///
   /// @brief Jacobian of the swithcing constraint w.r.t. the switching time. 
   /// @return Reference to the time Jacobian vector. 
-  /// Size is ImpulseStatus::dimf().
+  /// Size is ImpactStatus::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Phit();
 
@@ -281,7 +281,7 @@ public:
   Eigen::MatrixXd Qaa;
 
   ///
-  /// @brief Hessian w.r.t. the impulse change in the velocity ddv. 
+  /// @brief Hessian w.r.t. the impact change in the velocity ddv. 
   ///
   Eigen::MatrixXd Qdvdv;
 

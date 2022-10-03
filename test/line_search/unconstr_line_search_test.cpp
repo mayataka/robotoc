@@ -37,7 +37,7 @@ protected:
       time_discretization[i].dt = dt;
       time_discretization[i].phase = -1;
       time_discretization[i].stage = i;
-      time_discretization[i].impulse_index = -1;
+      time_discretization[i].impact_index = -1;
       time_discretization[i].lift_index = -1;
       time_discretization[i].stage_in_phase = i;
       time_discretization[i].num_grids_in_phase = N;

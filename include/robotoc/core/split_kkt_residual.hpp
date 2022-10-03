@@ -139,7 +139,7 @@ public:
   Eigen::VectorXd la;
 
   /// 
-  /// @brief KKT residual w.r.t. the impulse change in the velocity ddv. 
+  /// @brief KKT residual w.r.t. the impact change in the velocity ddv. 
   /// Size is Robot::dimv().
   /// 
   Eigen::VectorXd ldv;
@@ -246,9 +246,9 @@ public:
 
   ///
   /// @brief Set by random value. Contact status is reset.
-  /// @param[in] impulse_status Contact status.
+  /// @param[in] impact_status Contact status.
   ///
-  void setRandom(const ImpulseStatus& impulse_status);
+  void setRandom(const ImpactStatus& impact_status);
 
   ///
   /// @brief Generates split KKT residual filled randomly.
@@ -270,10 +270,10 @@ public:
   /// @brief Generates split KKT residual filled randomly.
   /// @return Split KKT residual filled randomly.
   /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Contact status.
+  /// @param[in] impact_status Contact status.
   ///
   static SplitKKTResidual Random(const Robot& robot, 
-                                 const ImpulseStatus& impulse_status);
+                                 const ImpactStatus& impact_status);
 
   ///
   /// @brief Displays the split KKT residual onto a ostream.

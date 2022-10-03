@@ -40,14 +40,14 @@ PYBIND11_MODULE(cost_function, m) {
     .def("quadratize_terminal_cost", &CostFunction::quadratizeTerminalCost,
           py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"),
           py::arg("kkt_residual"), py::arg("kkt_hessian"))
-    .def("eval_impulse_cost", &CostFunction::evalImpulseCost,
-          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+    .def("eval_impact_cost", &CostFunction::evalImpactCost,
+          py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"))
-    .def("linearize_impulse_cost", &CostFunction::linearizeImpulseCost,
-          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+    .def("linearize_impact_cost", &CostFunction::linearizeImpactCost,
+          py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"))
-    .def("quadratize_impulse_cost", &CostFunction::quadratizeImpulseCost,
-          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+    .def("quadratize_impact_cost", &CostFunction::quadratizeImpactCost,
+          py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"), 
           py::arg("kkt_matrix"))
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunction);

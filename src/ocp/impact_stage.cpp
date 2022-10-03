@@ -1,6 +1,6 @@
 #include "robotoc/ocp/impact_stage.hpp"
-#include "robotoc/dynamics/impulse_state_equation.hpp"
-#include "robotoc/dynamics/impulse_dynamics.hpp"
+#include "robotoc/dynamics/impact_state_equation.hpp"
+#include "robotoc/dynamics/impact_dynamics.hpp"
 
 #include <cassert>
 
@@ -38,8 +38,8 @@ OCPData ImpactStage::createData(const Robot& robot) const {
 bool ImpactStage::isFeasible(Robot& robot, const GridInfo& grid_info, 
                              const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Impact);
-  const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
-  return constraints_->isFeasible(robot, impulse_status, data.constraints_data, s);
+  const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
+  return constraints_->isFeasible(robot, impact_status, data.constraints_data, s);
 }
 
 
@@ -47,8 +47,8 @@ void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info,
                                   const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Impact);
   data.constraints_data.setTimeStage(-1);
-  const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
-  constraints_->setSlackAndDual(robot, impulse_status, data.constraints_data, s);
+  const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
+  constraints_->setSlackAndDual(robot, impact_status, data.constraints_data, s);
 }
 
 
@@ -57,19 +57,19 @@ void ImpactStage::evalOCP(Robot& robot, const GridInfo& grid_info,
                           OCPData& data, SplitKKTResidual& kkt_residual) const {
   assert(grid_info.type == GridType::Impact);
   // setup computation
-  const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
+  const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
   robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_residual.setContactDimension(impulse_status.dimf());
+  kkt_residual.setContactDimension(impact_status.dimf());
   kkt_residual.setSwitchingConstraintDimension(0);
   kkt_residual.setZero();
   // eval cost and constraints
   data.performance_index.cost 
-      = cost_->evalImpulseCost(robot, impulse_status, data.cost_data, grid_info, s);
-  constraints_->evalConstraint(robot, impulse_status, data.constraints_data, s);
+      = cost_->evalImpactCost(robot, impact_status, data.cost_data, grid_info, s);
+  constraints_->evalConstraint(robot, impact_status, data.constraints_data, s);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
-  evalImpulseStateEquation(robot, s, s_next, kkt_residual);
-  evalImpulseDynamics(robot, impulse_status, s, data.contact_dynamics_data);
+  evalImpactStateEquation(robot, s, s_next, kkt_residual);
+  evalImpactDynamics(robot, impact_status, s, data.contact_dynamics_data);
   // summarize evaluations
   data.performance_index.primal_feasibility 
       = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();
@@ -84,25 +84,25 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   assert(grid_info.type == GridType::Impact);
   assert(q_prev.size() == robot.dimq());
   // setup computation
-  const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
+  const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
   robot.updateKinematics(s.q, s.v+s.dv);
-  kkt_matrix.setContactDimension(impulse_status.dimf());
+  kkt_matrix.setContactDimension(impact_status.dimf());
   kkt_matrix.setSwitchingConstraintDimension(0);
-  kkt_residual.setContactDimension(impulse_status.dimf());
+  kkt_residual.setContactDimension(impact_status.dimf());
   kkt_residual.setSwitchingConstraintDimension(0);
   kkt_matrix.setZero();
   kkt_residual.setZero();
   // eval cost and constraints
   data.performance_index.cost 
-      = cost_->quadratizeImpulseCost(robot, impulse_status, data.cost_data,  
+      = cost_->quadratizeImpactCost(robot, impact_status, data.cost_data,  
                                      grid_info, s, kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, impulse_status, data.constraints_data, 
+  constraints_->linearizeConstraints(robot, impact_status, data.constraints_data, 
                                      s, kkt_residual);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
-  linearizeImpulseStateEquation(robot, q_prev, s, s_next, data.state_equation_data, 
+  linearizeImpactStateEquation(robot, q_prev, s, s_next, data.state_equation_data, 
                                 kkt_matrix, kkt_residual);
-  linearizeImpulseDynamics(robot, impulse_status, s, data.contact_dynamics_data, 
+  linearizeImpactDynamics(robot, impact_status, s, data.contact_dynamics_data, 
                            kkt_residual);
   // summarize evaluations
   data.performance_index.primal_feasibility 
@@ -111,11 +111,11 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
       = data.dualFeasibility<1>() + kkt_residual.dualFeasibility<1>();
   data.performance_index.kkt_error = data.KKTError() + kkt_residual.KKTError();
   // Forms linear system
-  constraints_->condenseSlackAndDual(impulse_status, data.constraints_data, 
+  constraints_->condenseSlackAndDual(impact_status, data.constraints_data, 
                                      kkt_matrix, kkt_residual);
-  condenseImpulseDynamics(robot, impulse_status, data.contact_dynamics_data, 
+  condenseImpactDynamics(robot, impact_status, data.contact_dynamics_data, 
                           kkt_matrix, kkt_residual);
-  correctLinearizeImpulseStateEquation(robot, s, s_next, data.state_equation_data, 
+  correctLinearizeImpactStateEquation(robot, s, s_next, data.state_equation_data, 
                                        kkt_matrix, kkt_residual);
 }
 
@@ -123,11 +123,11 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
 void ImpactStage::expandPrimal(const GridInfo& grid_info, OCPData& data, 
                                SplitDirection& d) const {
   assert(grid_info.type == GridType::Impact);
-  const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
-  d.setContactDimension(impulse_status.dimf());
+  const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
+  d.setContactDimension(impact_status.dimf());
   d.setSwitchingConstraintDimension(0);
-  expandImpulseDynamicsPrimal(data.contact_dynamics_data, d);
-  constraints_->expandSlackAndDual(impulse_status, data.constraints_data, d);
+  expandImpactDynamicsPrimal(data.contact_dynamics_data, d);
+  constraints_->expandSlackAndDual(impact_status, data.constraints_data, d);
 }
 
 
@@ -135,7 +135,7 @@ void ImpactStage::expandDual(const GridInfo& grid_info, OCPData& data,
                              const SplitDirection& d_next, 
                              SplitDirection& d) const {
   assert(grid_info.type == GridType::Impact);
-  expandImpulseDynamicsDual(data.contact_dynamics_data, d_next, d);
+  expandImpactDynamicsDual(data.contact_dynamics_data, d_next, d);
   correctCostateDirection(data.state_equation_data, d);
 }
 

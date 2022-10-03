@@ -7,7 +7,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 
 
 namespace robotoc {
@@ -292,19 +292,19 @@ public:
   void setRandom(const ContactStatus& contact_status);
 
   ///
-  /// @brief Sets each component vector by random value. Impulse status is reset.
-  /// @param[in] impulse_status Impulse status.
+  /// @brief Sets each component vector by random value. Impact status is reset.
+  /// @param[in] impact_status Impact status.
   ///
-  void setRandom(const ImpulseStatus& impulse_status);
+  void setRandom(const ImpactStatus& impact_status);
 
   ///
   /// @brief Sets each component vector by random value. Contact status and 
-  /// impulse status are reset.
+  /// impact status are reset.
   /// @param[in] contact_status Contact status.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
   void setRandom(const ContactStatus& contact_status,
-                 const ImpulseStatus& impulse_status);
+                 const ImpactStatus& impact_status);
 
   ///
   /// @brief Generates split direction filled randomly.
@@ -326,21 +326,21 @@ public:
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
   static SplitDirection Random(const Robot& robot, 
-                               const ImpulseStatus& impulse_status);
+                               const ImpactStatus& impact_status);
 
   ///
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   ///
   static SplitDirection Random(const Robot& robot, 
                                const ContactStatus& contact_status,
-                               const ImpulseStatus& impulse_status);
+                               const ImpactStatus& impact_status);
 
   ///
   /// @brief Displays the split direction onto a ostream.

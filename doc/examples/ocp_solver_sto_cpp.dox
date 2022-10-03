@@ -86,23 +86,23 @@ Next, we construct the cost function. The below is the simple quadratic cost for
               0.001, 0.001, 0.001;
   Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
   Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
-  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight_impulse << 0, 0, 0, 100.0, 100.0, 100.0,  
+  Eigen::VectorXd q_weight_impact(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impact << 0, 0, 0, 100.0, 100.0, 100.0,  
                0.1, 0.1, 0.1, 
                0.1, 0.1, 0.1,
                0.1, 0.1, 0.1,
                0.1, 0.1, 0.1;
-  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
-  Eigen::VectorXd dv_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
+  Eigen::VectorXd v_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
+  Eigen::VectorXd dv_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_ref);
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_weight_terminal(q_weight);
-  config_cost->set_q_weight_impulse(q_weight_impulse);
+  config_cost->set_q_weight_impact(q_weight_impact);
   config_cost->set_v_weight(v_weight);
   config_cost->set_v_weight_terminal(v_weight);
-  config_cost->set_v_weight_impulse(v_weight_impulse);
-  config_cost->set_dv_weight_impulse(dv_weight_impulse);
+  config_cost->set_v_weight_impact(v_weight_impact);
+  config_cost->set_dv_weight_impact(dv_weight_impact);
   config_cost->set_a_weight(a_weight);
   cost->push_back(config_cost);
 ```
@@ -132,7 +132,7 @@ Next, we construct the contact sequence `robotoc::ContactSequence` as
 ```
 auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 ```
-Then we can set an impulse event and a lift event to the contact sequence.
+Then we can set an impact event and a lift event to the contact sequence.
 
 We set the friction coefficients via the contact sequence. We then define the friction coefficients.
 ```
@@ -181,7 +181,7 @@ Finally, we set the contact status after touch-down as
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time-0.1, true);
 ```
-Then an impulse event is appended into the back of the contact sequence.
+Then an impact event is appended into the back of the contact sequence.
 
 @note We can check the contact sequence via 
 ```

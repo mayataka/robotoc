@@ -13,14 +13,14 @@ ContactSequence::ContactSequence(const Robot& robot,
   : reserved_num_discrete_events_(reserved_num_discrete_events),
     default_contact_status_(robot.createContactStatus()),
     contact_statuses_(2*reserved_num_discrete_events+1),
-    impulse_events_(reserved_num_discrete_events),
-    event_index_impulse_(reserved_num_discrete_events), 
+    impact_events_(reserved_num_discrete_events),
+    event_index_impact_(reserved_num_discrete_events), 
     event_index_lift_(reserved_num_discrete_events),
     event_time_(2*reserved_num_discrete_events),
-    impulse_time_(reserved_num_discrete_events),
+    impact_time_(reserved_num_discrete_events),
     lift_time_(reserved_num_discrete_events),
-    is_impulse_event_(2*reserved_num_discrete_events),
-    sto_impulse_(reserved_num_discrete_events), 
+    is_impact_event_(2*reserved_num_discrete_events),
+    sto_impact_(reserved_num_discrete_events), 
     sto_lift_(reserved_num_discrete_events) {
   if (reserved_num_discrete_events < 0) {
     throw std::out_of_range("[ContactSequence] invalid argument: reserved_num_discrete_events must be non-negative!");
@@ -34,14 +34,14 @@ ContactSequence::ContactSequence()
   : reserved_num_discrete_events_(0),
     default_contact_status_(),
     contact_statuses_(),
-    impulse_events_(),
-    event_index_impulse_(), 
+    impact_events_(),
+    event_index_impact_(), 
     event_index_lift_(),
     event_time_(),
-    impulse_time_(),
+    impact_time_(),
     lift_time_(),
-    is_impulse_event_(),
-    sto_impulse_(),
+    is_impact_event_(),
+    sto_impact_(),
     sto_lift_() {
 }
 
@@ -66,7 +66,7 @@ void ContactSequence::push_back(const DiscreteEvent& discrete_event,
     throw std::runtime_error(
         "[ContactSequence] discrete_event.preContactStatus() is not consistent with the last contact status!");
   }
-  if (numImpulseEvents() > 0 || numLiftEvents() > 0) {
+  if (numImpactEvents() > 0 || numLiftEvents() > 0) {
     if (event_time <= event_time_.back()) {
       throw std::runtime_error(
           "[ContactSequence] input event_time (" + std::to_string(event_time) 
@@ -76,17 +76,17 @@ void ContactSequence::push_back(const DiscreteEvent& discrete_event,
   }
   contact_statuses_.push_back(discrete_event.postContactStatus());
   event_time_.push_back(event_time);
-  if (discrete_event.existImpulse()) {
-    impulse_events_.push_back(discrete_event);
-    event_index_impulse_.push_back(contact_statuses_.size()-2);
-    impulse_time_.push_back(event_time);
-    is_impulse_event_.push_back(true);
-    sto_impulse_.push_back(sto);
+  if (discrete_event.existImpact()) {
+    impact_events_.push_back(discrete_event);
+    event_index_impact_.push_back(contact_statuses_.size()-2);
+    impact_time_.push_back(event_time);
+    is_impact_event_.push_back(true);
+    sto_impact_.push_back(sto);
   }
   else {
     event_index_lift_.push_back(contact_statuses_.size()-2);
     lift_time_.push_back(event_time);
-    is_impulse_event_.push_back(false);
+    is_impact_event_.push_back(false);
     sto_lift_.push_back(sto);
   }
   if (reserved_num_discrete_events_ < numDiscreteEvents()) {
@@ -104,11 +104,11 @@ void ContactSequence::push_back(const ContactStatus& contact_status,
 
 void ContactSequence::pop_back() {
   if (numDiscreteEvents() > 0) {
-    if (is_impulse_event_.back()) {
-      impulse_events_.pop_back();
-      event_index_impulse_.pop_back();
-      impulse_time_.pop_back();
-      sto_impulse_.pop_back();
+    if (is_impact_event_.back()) {
+      impact_events_.pop_back();
+      event_index_impact_.pop_back();
+      impact_time_.pop_back();
+      sto_impact_.pop_back();
     }
     else {
       event_index_lift_.pop_back();
@@ -116,7 +116,7 @@ void ContactSequence::pop_back() {
       sto_lift_.pop_back();
     }
     event_time_.pop_back();
-    is_impulse_event_.pop_back();
+    is_impact_event_.pop_back();
     contact_statuses_.pop_back();
   }
   else if (numContactPhases() > 0) {
@@ -129,11 +129,11 @@ void ContactSequence::pop_back() {
 
 void ContactSequence::pop_front() {
   if (numDiscreteEvents() > 0) {
-    if (is_impulse_event_.front()) {
-      impulse_events_.pop_front();
-      event_index_impulse_.pop_front();
-      impulse_time_.pop_front();
-      sto_impulse_.pop_front();
+    if (is_impact_event_.front()) {
+      impact_events_.pop_front();
+      event_index_impact_.pop_front();
+      impact_time_.pop_front();
+      sto_impact_.pop_front();
     }
     else {
       event_index_lift_.pop_front();
@@ -141,9 +141,9 @@ void ContactSequence::pop_front() {
       sto_lift_.pop_front();
     }
     event_time_.pop_front();
-    is_impulse_event_.pop_front();
+    is_impact_event_.pop_front();
     contact_statuses_.pop_front();
-    for (auto& e : event_index_impulse_) { e -= 1; }
+    for (auto& e : event_index_impact_) { e -= 1; }
     for (auto& e : event_index_lift_) { e -= 1; }
   }
   else if (numContactPhases() > 0) {
@@ -154,23 +154,23 @@ void ContactSequence::pop_front() {
 }
 
 
-void ContactSequence::setImpulseTime(const int impulse_index, 
-                                     const double impulse_time) {
-  if (numImpulseEvents() <= 0) {
+void ContactSequence::setImpactTime(const int impact_index, 
+                                     const double impact_time) {
+  if (numImpactEvents() <= 0) {
     throw std::runtime_error(
-        "[ContactSequence] numImpulseEvents() must be positive when calling setImpulseTime()!");
+        "[ContactSequence] numImpactEvents() must be positive when calling setImpactTime()!");
   }
-  if (impulse_index < 0) {
-    throw std::runtime_error("[ContactSequence] 'impulse_index' must be non-negative!");
+  if (impact_index < 0) {
+    throw std::runtime_error("[ContactSequence] 'impact_index' must be non-negative!");
   }
-  if (impulse_index >= numImpulseEvents()) {
+  if (impact_index >= numImpactEvents()) {
     throw std::runtime_error(
-        "[ContactSequence] input 'impulse_index' (" + std::to_string(impulse_index) 
-        + ") must be less than numImpulseEvents() (" 
-        + std::to_string(numImpulseEvents()) + ") !");
+        "[ContactSequence] input 'impact_index' (" + std::to_string(impact_index) 
+        + ") must be less than numImpactEvents() (" 
+        + std::to_string(numImpactEvents()) + ") !");
   }
-  impulse_time_[impulse_index] = impulse_time;
-  event_time_[event_index_impulse_[impulse_index]] = impulse_time;
+  impact_time_[impact_index] = impact_time;
+  event_time_[event_index_impact_[impact_index]] = impact_time;
 }
 
 
@@ -193,10 +193,10 @@ void ContactSequence::setLiftTime(const int lift_index, const double lift_time) 
 }
 
 
-bool ContactSequence::isSTOEnabledImpulse(const int impulse_index) const {
-  assert(impulse_index >= 0);
-  assert(impulse_index < numImpulseEvents());
-  return sto_impulse_[impulse_index];
+bool ContactSequence::isSTOEnabledImpact(const int impact_index) const {
+  assert(impact_index >= 0);
+  assert(impact_index < numImpactEvents());
+  return sto_impact_[impact_index];
 }
 
 
@@ -236,11 +236,11 @@ void ContactSequence::setContactPlacements(
   }
   contact_statuses_[contact_phase].setContactPlacements(contact_positions);
   if (contact_phase > 0) {
-    if (is_impulse_event_[contact_phase-1]) {
-      for (int impulse_index=0; ; ++impulse_index) {
-        assert(impulse_index < numImpulseEvents());
-        if (event_index_impulse_[impulse_index] == contact_phase-1) {
-          impulse_events_[impulse_index].setContactPlacements(contact_positions);
+    if (is_impact_event_[contact_phase-1]) {
+      for (int impact_index=0; ; ++impact_index) {
+        assert(impact_index < numImpactEvents());
+        if (event_index_impact_[impact_index] == contact_phase-1) {
+          impact_events_[impact_index].setContactPlacements(contact_positions);
           break;
         }
       }
@@ -262,11 +262,11 @@ void ContactSequence::setContactPlacements(
   contact_statuses_[contact_phase].setContactPlacements(contact_positions, 
                                                         contact_rotations);
   if (contact_phase > 0) {
-    if (is_impulse_event_[contact_phase-1]) {
-      for (int impulse_index=0; ; ++impulse_index) {
-        assert(impulse_index < numImpulseEvents());
-        if (event_index_impulse_[impulse_index] == contact_phase-1) {
-          impulse_events_[impulse_index].setContactPlacements(contact_positions,
+    if (is_impact_event_[contact_phase-1]) {
+      for (int impact_index=0; ; ++impact_index) {
+        assert(impact_index < numImpactEvents());
+        if (event_index_impact_[impact_index] == contact_phase-1) {
+          impact_events_[impact_index].setContactPlacements(contact_positions,
                                                               contact_rotations);
           break;
         }
@@ -286,11 +286,11 @@ void ContactSequence::setContactPlacements(
   }
   contact_statuses_[contact_phase].setContactPlacements(contact_placements);
   if (contact_phase > 0) {
-    if (is_impulse_event_[contact_phase-1]) {
-      for (int impulse_index=0; ; ++impulse_index) {
-        assert(impulse_index < numImpulseEvents());
-        if (event_index_impulse_[impulse_index] == contact_phase-1) {
-          impulse_events_[impulse_index].setContactPlacements(contact_placements);
+    if (is_impact_event_[contact_phase-1]) {
+      for (int impact_index=0; ; ++impact_index) {
+        assert(impact_index < numImpactEvents());
+        if (event_index_impact_[impact_index] == contact_phase-1) {
+          impact_events_[impact_index].setContactPlacements(contact_placements);
           break;
         }
       }
@@ -309,11 +309,11 @@ void ContactSequence::setFrictionCoefficients(
   }
   contact_statuses_[contact_phase].setFrictionCoefficients(friction_coefficient);
   if (contact_phase > 0) {
-    if (is_impulse_event_[contact_phase-1]) {
-      for (int impulse_index=0; ; ++impulse_index) {
-        assert(impulse_index < numImpulseEvents());
-        if (event_index_impulse_[impulse_index] == contact_phase-1) {
-          impulse_events_[impulse_index].setFrictionCoefficients(friction_coefficient);
+    if (is_impact_event_[contact_phase-1]) {
+      for (int impact_index=0; ; ++impact_index) {
+        assert(impact_index < numImpactEvents());
+        if (event_index_impact_[impact_index] == contact_phase-1) {
+          impact_events_[impact_index].setFrictionCoefficients(friction_coefficient);
           break;
         }
       }
@@ -345,14 +345,14 @@ void reserveDeque(std::deque<T>& deq, const int size) {
 void ContactSequence::reserve(const int reserved_num_discrete_events) {
   if (reserved_num_discrete_events_ < reserved_num_discrete_events) {
     reserveDeque(contact_statuses_, 2*reserved_num_discrete_events+1);
-    reserveDeque(impulse_events_, reserved_num_discrete_events);
-    reserveDeque(event_index_impulse_, reserved_num_discrete_events);
+    reserveDeque(impact_events_, reserved_num_discrete_events);
+    reserveDeque(event_index_impact_, reserved_num_discrete_events);
     reserveDeque(event_index_lift_, reserved_num_discrete_events);
     reserveDeque(event_time_, 2*reserved_num_discrete_events);
-    reserveDeque(impulse_time_, reserved_num_discrete_events);
+    reserveDeque(impact_time_, reserved_num_discrete_events);
     reserveDeque(lift_time_, reserved_num_discrete_events);
-    reserveDeque(is_impulse_event_, 2*reserved_num_discrete_events);
-    reserveDeque(sto_impulse_, reserved_num_discrete_events);
+    reserveDeque(is_impact_event_, 2*reserved_num_discrete_events);
+    reserveDeque(sto_impact_, reserved_num_discrete_events);
     reserveDeque(sto_lift_, reserved_num_discrete_events);
     reserved_num_discrete_events_ = reserved_num_discrete_events;
   }
@@ -366,21 +366,21 @@ int ContactSequence::reservedNumDiscreteEvents() const {
 
 void ContactSequence::clear() {
   contact_statuses_.clear();
-  impulse_events_.clear();
-  event_index_impulse_.clear(); 
+  impact_events_.clear();
+  event_index_impact_.clear(); 
   event_index_lift_.clear();
   event_time_.clear();
-  impulse_time_.clear();
+  impact_time_.clear();
   lift_time_.clear();
-  is_impulse_event_.clear();
-  sto_impulse_.clear();
+  is_impact_event_.clear();
+  sto_impact_.clear();
   sto_lift_.clear();
 }
 
 
 
 void ContactSequence::disp(std::ostream& os) const {
-  int impulse_index = 0;
+  int impact_index = 0;
   int lift_index = 0;
   os << "contact sequence:" << "\n";
   for (int event_index=0; event_index<numDiscreteEvents(); ++event_index) {
@@ -388,10 +388,10 @@ void ContactSequence::disp(std::ostream& os) const {
     os << contactStatus(event_index) << "\n";
     os << "  event index: " << event_index << ", type: ";
     if (eventType(event_index) == DiscreteEventType::Impact) {
-      os << "impulse, time: " << impulseTime(impulse_index) 
-         << ", sto: " << std::boolalpha << isSTOEnabledImpulse(impulse_index) <<  "\n";
-      os << impulseStatus(impulse_index) << "\n";
-      ++impulse_index;
+      os << "impact, time: " << impactTime(impact_index) 
+         << ", sto: " << std::boolalpha << isSTOEnabledImpact(impact_index) <<  "\n";
+      os << impactStatus(impact_index) << "\n";
+      ++impact_index;
     }
     else {
       os << "lift, time: " << liftTime(lift_index) 

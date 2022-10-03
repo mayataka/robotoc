@@ -76,10 +76,10 @@ protected:
 
   void testStageCostConstRef(Robot& robot) const;
   void testTerminalCostConstRef(Robot& robot) const;
-  void testImpulseCostConstRef(Robot& robot) const;
+  void testImpactCostConstRef(Robot& robot) const;
   void testStageCost(Robot& robot) const;
   void testTerminalCost(Robot& robot) const;
-  void testImpulseCost(Robot& robot) const;
+  void testImpactCost(Robot& robot) const;
 
   GridInfo grid_info, grid_info0, grid_infof;
   double dt, t, t0, tf;
@@ -94,13 +94,13 @@ void CoMCostTest::testStageCostConstRef(Robot& robot) const {
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d weight_terminal = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d weight_impulse = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d weight_impact = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d const_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<CoMCost>(robot);
   CostFunctionData data(robot);
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
-  cost->set_weight_impulse(weight_impulse);
+  cost->set_weight_impact(weight_impact);
   cost->set_const_ref(const_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -129,13 +129,13 @@ void CoMCostTest::testTerminalCostConstRef(Robot& robot) const {
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d weight_terminal = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d weight_impulse = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d weight_impact = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d const_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<CoMCost>(robot);
   CostFunctionData data(robot);
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
-  cost->set_weight_impulse(weight_impulse);
+  cost->set_weight_impact(weight_impact);
   cost->set_const_ref(const_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -155,7 +155,7 @@ void CoMCostTest::testTerminalCostConstRef(Robot& robot) const {
 }
 
 
-void CoMCostTest::testImpulseCostConstRef(Robot& robot) const {
+void CoMCostTest::testImpactCostConstRef(Robot& robot) const {
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
@@ -163,30 +163,30 @@ void CoMCostTest::testImpulseCostConstRef(Robot& robot) const {
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d weight_terminal = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d weight_impulse = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d weight_impact = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d const_ref = Eigen::Vector3d::Random();
   auto cost = std::make_shared<CoMCost>(robot);
   CostFunctionData data(robot);
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
-  cost->set_weight_impulse(weight_impulse);
+  cost->set_weight_impact(weight_impact);
   cost->set_const_ref(const_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
   const Eigen::Vector3d q_diff = robot.CoM() - const_ref;
-  const double l_ref = 0.5 * q_diff.transpose() * weight_impulse.asDiagonal() * q_diff;
-  const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
+  const double l_ref = 0.5 * q_diff.transpose() * weight_impact.asDiagonal() * q_diff;
+  const auto impact_status = robot.createImpactStatus();
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), l_ref);
+  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
+  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
-  kkt_res_ref.lq() += J_3d.transpose() * weight_impulse.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += J_3d.transpose() * weight_impulse.asDiagonal() * J_3d;
+  kkt_res_ref.lq() += J_3d.transpose() * weight_impact.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_3d.transpose() * weight_impact.asDiagonal() * J_3d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
-  EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost));
+  EXPECT_TRUE(derivative_checker.checkFirstOrderImpactCostDerivatives(cost));
 }
 
 
@@ -198,7 +198,7 @@ void CoMCostTest::testStageCost(Robot& robot) const {
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d weight_terminal = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d weight_impulse = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d weight_impact = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d com0_ref = Eigen::Vector3d::Random();
   const Eigen::Vector3d vcom_ref = Eigen::Vector3d::Random();
 
@@ -208,7 +208,7 @@ void CoMCostTest::testStageCost(Robot& robot) const {
   CostFunctionData data(robot);
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
-  cost->set_weight_impulse(weight_impulse);
+  cost->set_weight_impact(weight_impact);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -249,7 +249,7 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d weight_terminal = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d weight_impulse = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d weight_impact = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d com0_ref = Eigen::Vector3d::Random();
   const Eigen::Vector3d vcom_ref = Eigen::Vector3d::Random();
 
@@ -259,7 +259,7 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
   CostFunctionData data(robot);
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
-  cost->set_weight_impulse(weight_impulse);
+  cost->set_weight_impact(weight_impact);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
 
@@ -291,7 +291,7 @@ void CoMCostTest::testTerminalCost(Robot& robot) const {
 }
 
 
-void CoMCostTest::testImpulseCost(Robot& robot) const {
+void CoMCostTest::testImpactCost(Robot& robot) const {
   const int dimv = robot.dimv();
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
@@ -299,7 +299,7 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
   auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d weight_terminal = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector3d weight_impulse = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d weight_impact = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d com0_ref = Eigen::Vector3d::Random();
   const Eigen::Vector3d vcom_ref = Eigen::Vector3d::Random();
 
@@ -310,36 +310,36 @@ void CoMCostTest::testImpulseCost(Robot& robot) const {
   CostFunctionData data(robot);
   cost->set_weight(weight);
   cost->set_weight_terminal(weight_terminal);
-  cost->set_weight_impulse(weight_impulse);
+  cost->set_weight_impact(weight_impact);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
 
-  const auto impulse_status = robot.createImpulseStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info0, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_infof, s), 0);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info0, s, kkt_res);
+  const auto impact_status = robot.createImpactStatus();
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info0, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_infof, s), 0);
+  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info0, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_infof, s, kkt_res);
+  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_infof, s, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info0, s, kkt_mat);
+  cost->evalImpactCostHessian(robot, impact_status, data, grid_info0, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_infof, s, kkt_mat);
+  cost->evalImpactCostHessian(robot, impact_status, data, grid_infof, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   const Eigen::Vector3d com_ref = com0_ref + (t-t0) * vcom_ref;
   const Eigen::Vector3d q_diff = robot.CoM() - com_ref;
-  const double l_ref = 0.5 * q_diff.transpose() * weight_impulse.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), l_ref);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
+  const double l_ref = 0.5 * q_diff.transpose() * weight_impact.asDiagonal() * q_diff;
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), l_ref);
+  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
+  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
-  kkt_res_ref.lq() += J_3d.transpose() * weight_impulse.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += J_3d.transpose() * weight_impulse.asDiagonal() * J_3d;
+  kkt_res_ref.lq() += J_3d.transpose() * weight_impact.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_3d.transpose() * weight_impact.asDiagonal() * J_3d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
-  EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost));
+  EXPECT_TRUE(derivative_checker.checkFirstOrderImpactCostDerivatives(cost));
 }
 
 
@@ -354,10 +354,10 @@ TEST_F(CoMCostTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCostConstRef(robot);
   testTerminalCostConstRef(robot);
-  testImpulseCostConstRef(robot);
+  testImpactCostConstRef(robot);
   testStageCost(robot);
   testTerminalCost(robot);
-  testImpulseCost(robot);
+  testImpactCost(robot);
 }
 
 
@@ -365,10 +365,10 @@ TEST_F(CoMCostTest, floatingBase) {
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
   testStageCostConstRef(robot);
   testTerminalCostConstRef(robot);
-  testImpulseCostConstRef(robot);
+  testImpactCostConstRef(robot);
   testStageCost(robot);
   testTerminalCost(robot);
-  testImpulseCost(robot);
+  testImpactCost(robot);
 }
 
 } // namespace robotoc

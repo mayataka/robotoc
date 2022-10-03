@@ -122,7 +122,7 @@ private:
                                    const SplitDirection& d, 
                                    const double step_size, 
                                    SplitSolution& s_trial,
-                                   const bool impulse=false);
+                                   const bool impact=false);
 
   double lineSearchFilterMethod(
       DirectMultipleShooting& dms, aligned_vector<Robot>& robots,

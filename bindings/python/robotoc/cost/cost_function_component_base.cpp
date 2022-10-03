@@ -61,30 +61,30 @@ public:
                            robot, data, grid_info, s, kkt_matrix);
   }
 
-  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                          CostFunctionData& data, const GridInfo& grid_info, 
                          const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(double, CostFunctionComponentBase, 
-                           evalImpulseCost, 
-                           robot, impulse_status, data, grid_info, s);
+                           evalImpactCost, 
+                           robot, impact_status, data, grid_info, s);
   }
 
-  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const SplitSolution& s, 
                                   SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
-                           evalImpulseCostDerivatives, 
-                           robot, impulse_status, data, grid_info, s, kkt_residual);
+                           evalImpactCostDerivatives, 
+                           robot, impact_status, data, grid_info, s, kkt_residual);
   }
 
-  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostHessian(Robot& robot, const ImpactStatus& impact_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const SplitSolution& s, 
                               SplitKKTMatrix& kkt_matrix) const override {
     PYBIND11_OVERRIDE_PURE(void, CostFunctionComponentBase, 
-                           evalImpulseCostHessian, 
-                           robot, impulse_status, data, grid_info, s, kkt_matrix);
+                           evalImpactCostHessian, 
+                           robot, impact_status, data, grid_info, s, kkt_matrix);
   }
 };
 
@@ -113,14 +113,14 @@ PYBIND11_MODULE(cost_function_component_base, m) {
     .def("evalTerminalCostHessian", &CostFunctionComponentBase::evalTerminalCostHessian,
           py::arg("robot"), py::arg("data"), py::arg("grid_info"), py::arg("s"), 
           py::arg("kkt_matrix"))
-    .def("evalImpulseCost", &CostFunctionComponentBase::evalImpulseCost,
-          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+    .def("evalImpactCost", &CostFunctionComponentBase::evalImpactCost,
+          py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"))
-    .def("evalImpulseCostDerivatives", &CostFunctionComponentBase::evalImpulseCostDerivatives,
-          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+    .def("evalImpactCostDerivatives", &CostFunctionComponentBase::evalImpactCostDerivatives,
+          py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"))
-    .def("evalImpulseCostHessian", &CostFunctionComponentBase::evalImpulseCostHessian,
-          py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
+    .def("evalImpactCostHessian", &CostFunctionComponentBase::evalImpactCostHessian,
+          py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_matrix"));
 
 }

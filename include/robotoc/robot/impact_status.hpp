@@ -1,5 +1,5 @@
-#ifndef ROBOTOC_IMPULSE_STATUS_HPP_
-#define ROBOTOC_IMPULSE_STATUS_HPP_
+#ifndef ROBOTOC_IMPACT_STATUS_HPP_
+#define ROBOTOC_IMPACT_STATUS_HPP_
 
 #include <vector>
 #include <iostream>
@@ -14,11 +14,11 @@
 namespace robotoc {
 
   ///
-  /// @class ImpulseStatus
-  /// @brief Impulse status of robot model. Wrapper of ContactStatus to treat
-  /// impulses.
+  /// @class ImpactStatus
+  /// @brief Impact status of robot model. Wrapper of ContactStatus to treat
+  /// impacts.
   ///
-class ImpulseStatus {
+class ImpactStatus {
 public:
   ///
   /// @brief Constructor. 
@@ -26,53 +26,53 @@ public:
   /// @param[in] contact_frame_names Names of contact frames. 
   /// @param[in] default_friction_coefficient Default friction coefficitn. 
   /// Must be positive. Default is 0.7.
-  /// @param[in] impulse_mode_id Identifier number of the impulse. Can be used 
+  /// @param[in] impact_mode_id Identifier number of the impact. Can be used 
   /// only in user-defined cost and constraints. Default is 0.
   ///
-  ImpulseStatus(const std::vector<ContactType>& contact_types, 
-                const std::vector<std::string>& contact_frame_names,
-                const double default_friction_coefficient=0.7,
-                const int impulse_mode_id=0);
+  ImpactStatus(const std::vector<ContactType>& contact_types, 
+               const std::vector<std::string>& contact_frame_names,
+               const double default_friction_coefficient=0.7,
+               const int impact_mode_id=0);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseStatus();
+  ImpactStatus();
 
   ///
   /// @brief Default destructor. 
   ///
-  ~ImpulseStatus() = default;
+  ~ImpactStatus() = default;
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseStatus(const ImpulseStatus&) = default;
+  ImpactStatus(const ImpactStatus&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  ImpulseStatus& operator=(const ImpulseStatus&) = default;
+  ImpactStatus& operator=(const ImpactStatus&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseStatus(ImpulseStatus&&) noexcept = default;
+  ImpactStatus(ImpactStatus&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseStatus& operator=(ImpulseStatus&&) noexcept = default;
+  ImpactStatus& operator=(ImpactStatus&&) noexcept = default;
 
   ///
   /// @brief Defines a comparison operator. 
   ///
-  bool operator==(const ImpulseStatus& other) const;
+  bool operator==(const ImpactStatus& other) const;
 
   ///
   /// @brief Defines a comparison operator. 
   ///
-  bool operator!=(const ImpulseStatus& other) const;
+  bool operator!=(const ImpactStatus& other) const;
 
   ///
   /// @brief Returns the type of the contact.
@@ -92,23 +92,23 @@ public:
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return true if a contact is active and false if not. 
   ///
-  bool isImpulseActive(const int contact_index) const;
+  bool isImpactActive(const int contact_index) const;
 
   ///
-  /// @brief Returns the activity of the impulses.
-  /// @return Const reference to the activity of the impulses. 
+  /// @brief Returns the activity of the impacts.
+  /// @return Const reference to the activity of the impacts. 
   ///
-  const std::vector<bool>& isImpulseActive() const;
+  const std::vector<bool>& isImpactActive() const;
 
   ///
-  /// @brief Returns true if there are active impulses and false if not.
-  /// @return true if there are active impulses and false if not. 
+  /// @brief Returns true if there are active impacts and false if not.
+  /// @return true if there are active impacts and false if not. 
   ///
-  bool hasActiveImpulse() const;
+  bool hasActiveImpact() const;
 
   ///
-  /// @brief Returns the dimension of the active impulse forces.
-  /// @return Dimension of the active impulse forces.  
+  /// @brief Returns the dimension of the active impact forces.
+  /// @return Dimension of the active impact forces.  
   ///
   int dimf() const;
 
@@ -119,28 +119,28 @@ public:
   int maxNumContacts() const;
 
   ///
-  /// @brief Activates a impulse.
+  /// @brief Activates a impact.
   /// @param[in] contact_index Index of the contact that is activated.
   ///
-  void activateImpulse(const int contact_index);
+  void activateImpact(const int contact_index);
 
   ///
-  /// @brief Deactivates a impulse.
+  /// @brief Deactivates a impact.
   /// @param[in] contact_index Index of the contact that is deactivated.
   ///
-  void deactivateImpulse(const int contact_index);
+  void deactivateImpact(const int contact_index);
 
   ///
-  /// @brief Activates impulses.
-  /// @param[in] impulse_indices Indices of the impulses that are activated.
+  /// @brief Activates impacts.
+  /// @param[in] impact_indices Indices of the impacts that are activated.
   ///
-  void activateImpulses(const std::vector<int>& impulse_indices);
+  void activateImpacts(const std::vector<int>& impact_indices);
 
   ///
-  /// @brief Deactivates impulses.
-  /// @param[in] impulse_indices Indices of the impulses that are deactivated.
+  /// @brief Deactivates impacts.
+  /// @param[in] impact_indices Indices of the impacts that are deactivated.
   ///
-  void deactivateImpulses(const std::vector<int>& impulse_indices);
+  void deactivateImpacts(const std::vector<int>& impact_indices);
 
   ///
   /// @brief Sets a contact placement, that is, the position and rotation of 
@@ -186,7 +186,7 @@ public:
   /// Eigen::Matrix3d::Identity(), which represents the vertical direction
   /// to the ground.
   /// @param[in] contact_positions Contact positions. Size must be 
-  /// ImpulseStatus::maxNumContacts().
+  /// ImpactStatus::maxNumContacts().
   ///
   void setContactPlacements(
       const std::vector<Eigen::Vector3d>& contact_positions);
@@ -194,9 +194,9 @@ public:
   ///
   /// @brief Sets contact placements.
   /// @param[in] contact_positions Contact positions. Size must be 
-  /// ImpulseStatus::maxNumContacts().
+  /// ImpactStatus::maxNumContacts().
   /// @param[in] contact_rotations Contact rotations. Size must be 
-  /// ImpulseStatus::maxNumContacts().
+  /// ImpactStatus::maxNumContacts().
   ///
   void setContactPlacements(
       const std::vector<Eigen::Vector3d>& contact_positions,
@@ -205,7 +205,7 @@ public:
   ///
   /// @brief Sets contact placements.
   /// @param[in] contact_placements Contact placements. Size must be 
-  /// ImpulseStatus::maxNumContacts().
+  /// ImpactStatus::maxNumContacts().
   ///
   void setContactPlacements(const aligned_vector<SE3>& contact_placements);
 
@@ -300,31 +300,31 @@ public:
   const std::vector<double>& frictionCoefficients() const;
 
   ///
-  /// @brief Sets impulse id.
-  /// @param[in] impulse_mode_id Impulse id. 
-  /// @note Default impulse mode id is 0.
+  /// @brief Sets impact id.
+  /// @param[in] impact_mode_id Impact id. 
+  /// @note Default impact mode id is 0.
   ///
-  void setImpulseModeId(const int impulse_mode_id);
+  void setImpactModeId(const int impact_mode_id);
 
   ///
-  /// @brief Gets impulse id.
-  /// @return Impulse id. 
-  /// @note Default impulse mode id is 0.
+  /// @brief Gets impact id.
+  /// @return Impact id. 
+  /// @note Default impact mode id is 0.
   ///
-  int impulseModeId() const;
+  int impactModeId() const;
 
   ///
-  /// @brief Fills impulse status randomly.
+  /// @brief Fills impact status randomly.
   ///
   void setRandom();
 
   ///
-  /// @brief Displays the impulse status onto a ostream.
+  /// @brief Displays the impact status onto a ostream.
   ///
   void disp(std::ostream& os) const;
 
   friend std::ostream& operator<<(std::ostream& os, 
-                                  const ImpulseStatus& impulse_status);
+                                  const ImpactStatus& impact_status);
 
 private:
   ContactStatus contact_status_;
@@ -333,6 +333,6 @@ private:
 
 } // namespace robotoc
 
-#include "robotoc/robot/impulse_status.hxx"
+#include "robotoc/robot/impact_status.hxx"
 
-#endif // ROBOTOC_IMPULSE_STATUS_HPP_ 
+#endif // ROBOTOC_IMPACT_STATUS_HPP_ 

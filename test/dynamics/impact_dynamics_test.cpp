@@ -3,13 +3,13 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
 #include "robotoc/dynamics/contact_dynamics_data.hpp"
-#include "robotoc/dynamics/impulse_dynamics.hpp"
+#include "robotoc/dynamics/impact_dynamics.hpp"
 
 #include "robot_factory.hpp"
 #include "contact_status_factory.hpp"
@@ -17,7 +17,7 @@
 
 namespace robotoc {
 
-class ImpulseDynamicsTest : public ::testing::TestWithParam<std::pair<Robot, ImpulseStatus>> {
+class ImpactDynamicsTest : public ::testing::TestWithParam<std::pair<Robot, ImpactStatus>> {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -28,38 +28,38 @@ protected:
 };
 
 
-TEST_P(ImpulseDynamicsTest, residual) {
+TEST_P(ImpactDynamicsTest, residual) {
   auto robot = GetParam().first;
-  const auto impulse_status = GetParam().second;
-  const auto s = SplitSolution::Random(robot, impulse_status);
+  const auto impact_status = GetParam().second;
+  const auto s = SplitSolution::Random(robot, impact_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ContactDynamicsData data(robot);
-  evalImpulseDynamics(robot, impulse_status, s, data);
+  evalImpactDynamics(robot, impact_status, s, data);
   ContactDynamicsData data_ref(robot);
-  data_ref.setContactDimension(impulse_status.dimf());
-  robot.setImpulseForces(impulse_status, s.f);
-  robot.RNEAImpulse(s.q, s.dv, data_ref.ID_full());
-  robot.computeImpulseVelocityResidual(impulse_status, data_ref.C());
+  data_ref.setContactDimension(impact_status.dimf());
+  robot.setImpactForces(impact_status, s.f);
+  robot.RNEAImpact(s.q, s.dv, data_ref.ID_full());
+  robot.computeImpactVelocityResidual(impact_status, data_ref.C());
   EXPECT_TRUE(data.IDC().isApprox(data_ref.IDC()));
 }
 
 
-TEST_P(ImpulseDynamicsTest, linearize) {
+TEST_P(ImpactDynamicsTest, linearize) {
   auto robot = GetParam().first;
-  const auto impulse_status = GetParam().second;
-  const auto s = SplitSolution::Random(robot, impulse_status);
+  const auto impact_status = GetParam().second;
+  const auto s = SplitSolution::Random(robot, impact_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ContactDynamicsData data(robot);
-  auto kkt_residual = SplitKKTResidual::Random(robot, impulse_status);
+  auto kkt_residual = SplitKKTResidual::Random(robot, impact_status);
   auto kkt_residual_ref = kkt_residual;
-  linearizeImpulseDynamics(robot, impulse_status, s, data, kkt_residual);
+  linearizeImpactDynamics(robot, impact_status, s, data, kkt_residual);
   ContactDynamicsData data_ref(robot);
-  data_ref.setContactDimension(impulse_status.dimf());
-  robot.setImpulseForces(impulse_status, s.f);
-  robot.RNEAImpulse(s.q, s.dv, data_ref.ID_full());
-  robot.computeImpulseVelocityResidual(impulse_status, data_ref.C());
-  robot.RNEAImpulseDerivatives(s.q, s.dv, data_ref.dIDdq(), data_ref.dIDddv);
-  robot.computeImpulseVelocityDerivatives(impulse_status, data_ref.dCdq(), data_ref.dCdv());
+  data_ref.setContactDimension(impact_status.dimf());
+  robot.setImpactForces(impact_status, s.f);
+  robot.RNEAImpact(s.q, s.dv, data_ref.ID_full());
+  robot.computeImpactVelocityResidual(impact_status, data_ref.C());
+  robot.RNEAImpactDerivatives(s.q, s.dv, data_ref.dIDdq(), data_ref.dIDddv);
+  robot.computeImpactVelocityDerivatives(impact_status, data_ref.dCdq(), data_ref.dCdv());
   kkt_residual_ref.lq().noalias() += data_ref.dIDdq().transpose() * s.beta;
   kkt_residual_ref.ldv.noalias()  += data_ref.dIDddv.transpose() * s.beta;
   kkt_residual_ref.lf().noalias() -= data_ref.dCdv() * s.beta;
@@ -71,33 +71,33 @@ TEST_P(ImpulseDynamicsTest, linearize) {
 }
 
 
-TEST_P(ImpulseDynamicsTest, condense) {
+TEST_P(ImpactDynamicsTest, condense) {
   auto robot = GetParam().first;
-  const auto impulse_status = GetParam().second;
-  const auto s = SplitSolution::Random(robot, impulse_status);
+  const auto impact_status = GetParam().second;
+  const auto s = SplitSolution::Random(robot, impact_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ContactDynamicsData data(robot);
-  auto kkt_residual = SplitKKTResidual::Random(robot, impulse_status);
-  linearizeImpulseDynamics(robot, impulse_status, s, data, kkt_residual);
+  auto kkt_residual = SplitKKTResidual::Random(robot, impact_status);
+  linearizeImpactDynamics(robot, impact_status, s, data, kkt_residual);
   ContactDynamicsData data_ref(robot);
-  data_ref.setContactDimension(impulse_status.dimf());
-  robot.setImpulseForces(impulse_status, s.f);
-  robot.RNEAImpulse(s.q, s.dv, data_ref.ID_full());
-  robot.computeImpulseVelocityResidual(impulse_status, data_ref.C());
-  robot.RNEAImpulseDerivatives(s.q, s.dv, data_ref.dIDdq(), data_ref.dIDddv);
-  robot.computeImpulseVelocityDerivatives(impulse_status, data_ref.dCdq(), data_ref.dCdv());
+  data_ref.setContactDimension(impact_status.dimf());
+  robot.setImpactForces(impact_status, s.f);
+  robot.RNEAImpact(s.q, s.dv, data_ref.ID_full());
+  robot.computeImpactVelocityResidual(impact_status, data_ref.C());
+  robot.RNEAImpactDerivatives(s.q, s.dv, data_ref.dIDdq(), data_ref.dIDddv);
+  robot.computeImpactVelocityDerivatives(impact_status, data_ref.dCdq(), data_ref.dCdv());
   const int dimv = robot.dimv();
-  const int dimf = impulse_status.dimf();
-  // auto kkt_matrix = SplitKKTMatrix::Random(robot, impulse_status);
+  const int dimf = impact_status.dimf();
+  // auto kkt_matrix = SplitKKTMatrix::Random(robot, impact_status);
   auto kkt_matrix = SplitKKTMatrix(robot);
-  kkt_matrix.setContactDimension(impulse_status.dimf());
+  kkt_matrix.setContactDimension(impact_status.dimf());
   kkt_matrix.setRandom();
   kkt_matrix.Fxx.setZero();
   kkt_matrix.Qdvdv.setZero();
   kkt_matrix.Qdvdv.diagonal().setRandom();
   auto kkt_residual_ref = kkt_residual;
   auto kkt_matrix_ref = kkt_matrix;
-  condenseImpulseDynamics(robot, impulse_status, data, kkt_matrix, kkt_residual);
+  condenseImpactDynamics(robot, impact_status, data, kkt_matrix, kkt_residual);
   robot.computeMJtJinv(data_ref.dIDddv, data_ref.dCdv(), data_ref.MJtJinv());
   data_ref.MJtJinv_dIDCdqv() = data_ref.MJtJinv() * data_ref.dIDCdqv();
   data_ref.MJtJinv_IDC()     = data_ref.MJtJinv() * data_ref.IDC();
@@ -121,14 +121,14 @@ TEST_P(ImpulseDynamicsTest, condense) {
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
-  auto d = SplitDirection::Random(robot, impulse_status);
+  auto d = SplitDirection::Random(robot, impact_status);
   auto d_ref = d;
-  expandImpulseDynamicsPrimal(data, d);
+  expandImpactDynamicsPrimal(data, d);
   d_ref.ddvf() = - data_ref.MJtJinv() * (data_ref.dIDCdqv() * d_ref.dx + data_ref.IDC());
   d_ref.df().array() *= -1;
   EXPECT_TRUE(d.isApprox(d_ref));
   const auto d_next = SplitDirection::Random(robot);
-  expandImpulseDynamicsDual(data, d_next, d);
+  expandImpactDynamicsDual(data, d_next, d);
   d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qdvfqv() * d.dx 
                                          + OOIO_mat.transpose() * d_next.dlmdgmm
                                          + data_ref.ldvf());
@@ -139,15 +139,15 @@ TEST_P(ImpulseDynamicsTest, condense) {
 constexpr double dt = 0.01;
 
 INSTANTIATE_TEST_SUITE_P(
-  TestWithMultipleRobots, ImpulseDynamicsTest, 
+  TestWithMultipleRobots, ImpactDynamicsTest, 
   ::testing::Values(std::make_pair(testhelper::CreateRobotManipulator(dt), 
-                                   testhelper::CreateRobotManipulator(dt).createImpulseStatus()), 
+                                   testhelper::CreateRobotManipulator(dt).createImpactStatus()), 
                     std::make_pair(testhelper::CreateRobotManipulator(dt), 
-                                   testhelper::CreateActiveImpulseStatus(testhelper::CreateRobotManipulator(dt), dt)),
+                                   testhelper::CreateActiveImpactStatus(testhelper::CreateRobotManipulator(dt), dt)),
                     std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
-                                   testhelper::CreateQuadrupedalRobot(dt).createImpulseStatus()), 
+                                   testhelper::CreateQuadrupedalRobot(dt).createImpactStatus()), 
                     std::make_pair(testhelper::CreateQuadrupedalRobot(dt), 
-                                   testhelper::CreateActiveImpulseStatus(testhelper::CreateQuadrupedalRobot(dt), dt)))
+                                   testhelper::CreateActiveImpactStatus(testhelper::CreateQuadrupedalRobot(dt), dt)))
 );
 
 } // namespace robotoc

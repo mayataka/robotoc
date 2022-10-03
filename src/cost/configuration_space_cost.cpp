@@ -20,9 +20,9 @@ ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
     u_weight_(Eigen::VectorXd::Zero(robot.dimu())),
     q_weight_terminal_(Eigen::VectorXd::Zero(robot.dimv())),
     v_weight_terminal_(Eigen::VectorXd::Zero(robot.dimv())),
-    q_weight_impulse_(Eigen::VectorXd::Zero(robot.dimv())),
-    v_weight_impulse_(Eigen::VectorXd::Zero(robot.dimv())),
-    dv_weight_impulse_(Eigen::VectorXd::Zero(robot.dimv())),
+    q_weight_impact_(Eigen::VectorXd::Zero(robot.dimv())),
+    v_weight_impact_(Eigen::VectorXd::Zero(robot.dimv())),
+    dv_weight_impact_(Eigen::VectorXd::Zero(robot.dimv())),
     ref_(),
     use_nonconst_ref_(false),
     enable_q_cost_(false), 
@@ -31,9 +31,9 @@ ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
     enable_u_cost_(false), 
     enable_q_cost_terminal_(false), 
     enable_v_cost_terminal_(false),
-    enable_q_cost_impulse_(false), 
-    enable_v_cost_impulse_(false), 
-    enable_dv_cost_impulse_(false) {
+    enable_q_cost_impact_(false), 
+    enable_v_cost_impact_(false), 
+    enable_dv_cost_impact_(false) {
   if (robot.hasFloatingBase()) {
     robot.normalizeConfiguration(q_ref_);
   }
@@ -61,9 +61,9 @@ ConfigurationSpaceCost::ConfigurationSpaceCost()
     u_weight_(),
     q_weight_terminal_(),
     v_weight_terminal_(),
-    q_weight_impulse_(),
-    v_weight_impulse_(),
-    dv_weight_impulse_(),
+    q_weight_impact_(),
+    v_weight_impact_(),
+    dv_weight_impact_(),
     ref_(),
     use_nonconst_ref_(false),
     enable_q_cost_(false), 
@@ -72,9 +72,9 @@ ConfigurationSpaceCost::ConfigurationSpaceCost()
     enable_u_cost_(false), 
     enable_q_cost_terminal_(false), 
     enable_v_cost_terminal_(false),
-    enable_q_cost_impulse_(false), 
-    enable_v_cost_impulse_(false), 
-    enable_dv_cost_impulse_(false) {
+    enable_q_cost_impact_(false), 
+    enable_v_cost_impact_(false), 
+    enable_dv_cost_impact_(false) {
 }
 
 
@@ -203,48 +203,48 @@ void ConfigurationSpaceCost::set_v_weight_terminal(
 }
 
 
-void ConfigurationSpaceCost::set_q_weight_impulse(
-    const Eigen::VectorXd& q_weight_impulse) {
-  if (q_weight_impulse.size() != dimv_) {
+void ConfigurationSpaceCost::set_q_weight_impact(
+    const Eigen::VectorXd& q_weight_impact) {
+  if (q_weight_impact.size() != dimv_) {
     throw std::invalid_argument(
-        "[ConfigurationSpaceCost] invalid argument: q_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
+        "[ConfigurationSpaceCost] invalid argument: q_weight_impact.size() must be " + std::to_string(dimv_) + "!");
   }
-  if (q_weight_impulse.minCoeff() < 0.0) {
+  if (q_weight_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[ConfigurationSpaceCost] invalid argument: elements of 'q_weight_impulse' must be non-negative!");
+        "[ConfigurationSpaceCost] invalid argument: elements of 'q_weight_impact' must be non-negative!");
   }
-  q_weight_impulse_ = q_weight_impulse;
-  enable_q_cost_impulse_ = (!q_weight_impulse.isZero());
+  q_weight_impact_ = q_weight_impact;
+  enable_q_cost_impact_ = (!q_weight_impact.isZero());
 }
 
 
-void ConfigurationSpaceCost::set_v_weight_impulse(
-    const Eigen::VectorXd& v_weight_impulse) {
-  if (v_weight_impulse.size() != dimv_) {
+void ConfigurationSpaceCost::set_v_weight_impact(
+    const Eigen::VectorXd& v_weight_impact) {
+  if (v_weight_impact.size() != dimv_) {
     throw std::invalid_argument(
-        "[ConfigurationSpaceCost] invalid argument: v_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
+        "[ConfigurationSpaceCost] invalid argument: v_weight_impact.size() must be " + std::to_string(dimv_) + "!");
   }
-  if (v_weight_impulse.minCoeff() < 0.0) {
+  if (v_weight_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[ConfigurationSpaceCost] invalid argument: elements of 'v_weight_impulse' must be non-negative!");
+        "[ConfigurationSpaceCost] invalid argument: elements of 'v_weight_impact' must be non-negative!");
   }
-  v_weight_impulse_ = v_weight_impulse;
-  enable_v_cost_impulse_ = (!v_weight_impulse.isZero());
+  v_weight_impact_ = v_weight_impact;
+  enable_v_cost_impact_ = (!v_weight_impact.isZero());
 }
 
 
-void ConfigurationSpaceCost::set_dv_weight_impulse(
-    const Eigen::VectorXd& dv_weight_impulse) {
-  if (dv_weight_impulse.size() != dimv_) {
+void ConfigurationSpaceCost::set_dv_weight_impact(
+    const Eigen::VectorXd& dv_weight_impact) {
+  if (dv_weight_impact.size() != dimv_) {
     throw std::invalid_argument(
-        "[ConfigurationSpaceCost] invalid argument: dv_weight_impulse.size() must be " + std::to_string(dimv_) + "!");
+        "[ConfigurationSpaceCost] invalid argument: dv_weight_impact.size() must be " + std::to_string(dimv_) + "!");
   }
-  if (dv_weight_impulse.minCoeff() < 0.0) {
+  if (dv_weight_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[ConfigurationSpaceCost] invalid argument: elements of 'dv_weight_impulse' must be non-negative!");
+        "[ConfigurationSpaceCost] invalid argument: elements of 'dv_weight_impact' must be non-negative!");
   }
-  dv_weight_impulse_ = dv_weight_impulse;
-  enable_dv_cost_impulse_ = (!dv_weight_impulse.isZero());
+  dv_weight_impact_ = dv_weight_impact;
+  enable_dv_cost_impact_ = (!dv_weight_impact.isZero());
 }
 
 
@@ -378,66 +378,66 @@ void ConfigurationSpaceCost::evalTerminalCostHessian(
 }
 
 
-double ConfigurationSpaceCost::evalImpulseCost(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+double ConfigurationSpaceCost::evalImpactCost(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s) const {
   double l = 0;
-  if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
+  if (enable_q_cost_impact_ && isCostConfigActive(grid_info)) {
     evalConfigDiff(robot, data, grid_info, s.q);
-    l += (q_weight_impulse_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
+    l += (q_weight_impact_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
-  if (enable_v_cost_impulse_) {
-    l += (v_weight_impulse_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
+  if (enable_v_cost_impact_) {
+    l += (v_weight_impact_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
   }
-  if (enable_dv_cost_impulse_) {
-    l += (dv_weight_impulse_.array()*s.dv.array()*s.dv.array()).sum();
+  if (enable_dv_cost_impact_) {
+    l += (dv_weight_impact_.array()*s.dv.array()*s.dv.array()).sum();
   }
   return 0.5 * l;
 }
 
 
-void ConfigurationSpaceCost::evalImpulseCostDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+void ConfigurationSpaceCost::evalImpactCostDerivatives(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
+  if (enable_q_cost_impact_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       evalConfigDiffJac(robot, data, grid_info, s.q);
       kkt_residual.lq().noalias()
-          += data.J_qdiff.transpose() * q_weight_impulse_.asDiagonal() * data.qdiff;
+          += data.J_qdiff.transpose() * q_weight_impact_.asDiagonal() * data.qdiff;
     }
     else {
-      kkt_residual.lq().array() += q_weight_impulse_.array() * data.qdiff.array();
+      kkt_residual.lq().array() += q_weight_impact_.array() * data.qdiff.array();
     }
   }
-  if (enable_v_cost_impulse_) {
+  if (enable_v_cost_impact_) {
     kkt_residual.lv().array()
-        += v_weight_impulse_.array() * (s.v.array()-v_ref_.array());
+        += v_weight_impact_.array() * (s.v.array()-v_ref_.array());
   }
-  if (enable_dv_cost_impulse_) {
-    kkt_residual.ldv.array() += dv_weight_impulse_.array() * s.dv.array();
+  if (enable_dv_cost_impact_) {
+    kkt_residual.ldv.array() += dv_weight_impact_.array() * s.dv.array();
   }
 }
 
 
-void ConfigurationSpaceCost::evalImpulseCostHessian(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+void ConfigurationSpaceCost::evalImpactCostHessian(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
-  if (enable_q_cost_impulse_ && isCostConfigActive(grid_info)) {
+  if (enable_q_cost_impact_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
-          += data.J_qdiff.transpose() * q_weight_impulse_.asDiagonal() * data.J_qdiff;
+          += data.J_qdiff.transpose() * q_weight_impact_.asDiagonal() * data.J_qdiff;
     }
     else {
-      kkt_matrix.Qqq().diagonal().noalias() += q_weight_impulse_;
+      kkt_matrix.Qqq().diagonal().noalias() += q_weight_impact_;
     }
   }
-  if (enable_v_cost_impulse_) {
-    kkt_matrix.Qvv().diagonal().noalias() += v_weight_impulse_;
+  if (enable_v_cost_impact_) {
+    kkt_matrix.Qvv().diagonal().noalias() += v_weight_impact_;
   }
-  if (enable_dv_cost_impulse_) {
-    kkt_matrix.Qdvdv.diagonal().noalias() += dv_weight_impulse_;
+  if (enable_dv_cost_impact_) {
+    kkt_matrix.Qdvdv.diagonal().noalias() += dv_weight_impact_;
   }
 }
 

@@ -9,12 +9,12 @@ TaskSpace3DCost::TaskSpace3DCost(const Robot& robot, const int frame_id)
     const_ref_(Eigen::Vector3d::Zero()),
     weight_(Eigen::Vector3d::Zero()),
     weight_terminal_(Eigen::Vector3d::Zero()),
-    weight_impulse_(Eigen::Vector3d::Zero()),
+    weight_impact_(Eigen::Vector3d::Zero()),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
-    enable_cost_impulse_(false) {
+    enable_cost_impact_(false) {
 }
 
 
@@ -60,12 +60,12 @@ TaskSpace3DCost::TaskSpace3DCost()
     const_ref_(Eigen::Vector3d::Zero()),
     weight_(Eigen::Vector3d::Zero()),
     weight_terminal_(Eigen::Vector3d::Zero()),
-    weight_impulse_(Eigen::Vector3d::Zero()),
+    weight_impact_(Eigen::Vector3d::Zero()),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
-    enable_cost_impulse_(false) {
+    enable_cost_impact_(false) {
 }
 
 
@@ -105,13 +105,13 @@ void TaskSpace3DCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal
 }
 
 
-void TaskSpace3DCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
-  if (weight_impulse.minCoeff() < 0.0) {
+void TaskSpace3DCost::set_weight_impact(const Eigen::Vector3d& weight_impact) {
+  if (weight_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[TaskSpace3DCost] invalid argument: elements of 'weight_impulse' must be non-negative!");
+        "[TaskSpace3DCost] invalid argument: elements of 'weight_impact' must be non-negative!");
   }
-  weight_impulse_ = weight_impulse;
-  enable_cost_impulse_ = (!weight_impulse.isZero());
+  weight_impact_ = weight_impact;
+  enable_cost_impact_ = (!weight_impact.isZero());
 }
 
 
@@ -197,14 +197,14 @@ void TaskSpace3DCost::evalTerminalCostHessian(
 }
 
 
-double TaskSpace3DCost::evalImpulseCost(Robot& robot,  
-                                        const ImpulseStatus& impulse_status,
+double TaskSpace3DCost::evalImpactCost(Robot& robot,  
+                                        const ImpactStatus& impact_status,
                                         CostFunctionData& data, 
                                         const GridInfo& grid_info, 
                                         const SplitSolution& s) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
-    const double l = (weight_impulse_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    const double l = (weight_impact_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * l;
   }
   else {
@@ -213,28 +213,28 @@ double TaskSpace3DCost::evalImpulseCost(Robot& robot,
 }
 
 
-void TaskSpace3DCost::evalImpulseCostDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+void TaskSpace3DCost::evalImpactCostDerivatives(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.J_3d.noalias() 
         = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
     kkt_residual.lq().noalias() 
-        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.diff_3d;
+        += data.J_3d.transpose() * weight_impact_.asDiagonal() * data.diff_3d;
   }
 }
 
 
-void TaskSpace3DCost::evalImpulseCostHessian(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
+void TaskSpace3DCost::evalImpactCostHessian(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
     const GridInfo& grid_info, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
-        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;
+        += data.J_3d.transpose() * weight_impact_.asDiagonal() * data.J_3d;
   }
 }
 

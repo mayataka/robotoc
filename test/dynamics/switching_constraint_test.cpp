@@ -29,35 +29,35 @@ protected:
 
 TEST_P(SwitchingConstraintTest, eval) {
   auto robot = GetParam();
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
-  const SplitSolution s = SplitSolution::Random(robot, impulse_status);
+  const SplitSolution s = SplitSolution::Random(robot, impact_status);
   robot.updateKinematics(s.q);
   SwitchingConstraintData data(robot);
   SplitKKTResidual kkt_residual(robot);
   auto kkt_residual_ref = kkt_residual;
-  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_residual);
-  kkt_residual_ref.setSwitchingConstraintDimension(impulse_status.dimf());
+  evalSwitchingConstraint(robot, impact_status, data, dt1, dt2, s, kkt_residual);
+  kkt_residual_ref.setSwitchingConstraintDimension(impact_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impact_status, kkt_residual_ref.P());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
 
 TEST_P(SwitchingConstraintTest, linearize) {
   auto robot = GetParam();
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
-  const SplitSolution s = SplitSolution::Random(robot, impulse_status);
+  const SplitSolution s = SplitSolution::Random(robot, impact_status);
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.lx.setRandom();
   kkt_residual.la.setRandom();
@@ -67,17 +67,17 @@ TEST_P(SwitchingConstraintTest, linearize) {
   SwitchingConstraintData data(robot);
   auto data_ref = data;
   robot.updateKinematics(s.q);
-  linearizeSwitchingConstraint(robot, impulse_status, data, dt1, dt2,
+  linearizeSwitchingConstraint(robot, impact_status, data, dt1, dt2,
                                s, kkt_matrix, kkt_residual);
-  data_ref.setDimension(impulse_status.dimf());
-  kkt_matrix_ref.setSwitchingConstraintDimension(impulse_status.dimf());
-  kkt_residual_ref.setSwitchingConstraintDimension(impulse_status.dimf());
+  data_ref.setDimension(impact_status.dimf());
+  kkt_matrix_ref.setSwitchingConstraintDimension(impact_status.dimf());
+  kkt_residual_ref.setSwitchingConstraintDimension(impact_status.dimf());
   const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactPositionResidual(impulse_status, kkt_residual_ref.P());
-  robot.computeContactPositionDerivative(impulse_status, data_ref.Pq());
+  robot.computeContactPositionResidual(impact_status, kkt_residual_ref.P());
+  robot.computeContactPositionDerivative(impact_status, data_ref.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegrateTransport_dq(s.q, dq, data_ref.Pq(), kkt_matrix_ref.Phiq());
     robot.dIntegrateTransport_dv(s.q, dq, data_ref.Pq(), kkt_matrix_ref.Phiv());

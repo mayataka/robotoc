@@ -7,7 +7,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
@@ -167,14 +167,14 @@ public:
                            const Eigen::Vector3d& weight_rotation_terminal);
 
   ///
-  /// @brief Sets the weight vector at the impulse stage. 
-  /// @param[in] weight_position_impulse Weight vector on the task-space 
-  /// position error at the impulse stage. 
-  /// @param[in] weight_rotation_impulse Weight vector on the task-space 
-  /// rotation error at the impulse stage. 
+  /// @brief Sets the weight vector at the impact stage. 
+  /// @param[in] weight_position_impact Weight vector on the task-space 
+  /// position error at the impact stage. 
+  /// @param[in] weight_rotation_impact Weight vector on the task-space 
+  /// rotation error at the impact stage. 
   ///
-  void set_weight_impulse(const Eigen::Vector3d& weight_position_impulse,
-                          const Eigen::Vector3d& weight_rotation_impulse);
+  void set_weight_impact(const Eigen::Vector3d& weight_position_impact,
+                          const Eigen::Vector3d& weight_rotation_impact);
 
   ///
   /// @brief Evaluate if the cost is active for given grid_info. 
@@ -241,16 +241,16 @@ public:
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                          CostFunctionData& data, const GridInfo& grid_info, 
                          const SplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                                   CostFunctionData& data, const GridInfo& grid_info,
                                   const SplitSolution& s, 
                                   SplitKKTResidual& kkt_residual) const override;
 
-  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostHessian(Robot& robot, const ImpactStatus& impact_status, 
                               CostFunctionData& data, const GridInfo& grid_info,
                               const SplitSolution& s, 
                               SplitKKTMatrix& kkt_matrix) const override;
@@ -260,9 +260,9 @@ public:
 private:
   int frame_id_;
   SE3 const_ref_, const_ref_inv_;
-  Eigen::VectorXd weight_, weight_terminal_, weight_impulse_;
+  Eigen::VectorXd weight_, weight_terminal_, weight_impact_;
   std::shared_ptr<TaskSpace6DRefBase> ref_;
-  bool use_nonconst_ref_, enable_cost_, enable_cost_terminal_, enable_cost_impulse_;
+  bool use_nonconst_ref_, enable_cost_, enable_cost_terminal_, enable_cost_impact_;
 };
 
 } // namespace robotoc

@@ -5,7 +5,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
@@ -149,33 +149,33 @@ public:
                                        SplitKKTMatrix& kkt_matrix) const = 0;
 
   ///
-  /// @brief Computes the impulse cost. 
+  /// @brief Computes the impact cost. 
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
-  /// @return Impulse cost.
+  /// @return Impact cost.
   ///
-  virtual double evalImpulseCost(Robot& robot, 
-                                 const ImpulseStatus& impulse_status,
+  virtual double evalImpactCost(Robot& robot, 
+                                 const ImpactStatus& impact_status,
                                  CostFunctionData& data, 
                                  const GridInfo& grid_info, 
                                  const SplitSolution& s) const = 0;
 
   ///
-  /// @brief Computes the first-order partial derivatives of the impulse cost. 
-  /// This function is always called just after evalImpulseCost().
+  /// @brief Computes the first-order partial derivatives of the impact cost. 
+  /// This function is always called just after evalImpactCost().
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   ///
-  virtual void evalImpulseCostDerivatives(Robot& robot, 
-                                          const ImpulseStatus& impulse_status, 
+  virtual void evalImpactCostDerivatives(Robot& robot, 
+                                          const ImpactStatus& impact_status, 
                                           CostFunctionData& data,  
                                           const GridInfo& grid_info, 
                                           const SplitSolution& s, 
@@ -183,18 +183,18 @@ public:
 
   ///
   /// @brief Computes the Hessian, i.e., the second-order partial derivatives of 
-  /// the impulse cost. This function is always called just after 
-  /// evalImpulseCostDerivatives().
+  /// the impact cost. This function is always called just after 
+  /// evalImpactCostDerivatives().
   /// @param[in] robot Robot model.
-  /// @param[in] impulse_status Impulse status.
+  /// @param[in] impact_status Impact status.
   /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
-  /// @param[in, out] kkt_matrix Impulse split KKT matrix. The Hessians are  
+  /// @param[in, out] kkt_matrix Impact split KKT matrix. The Hessians are  
   /// added to this object.
   ///
-  virtual void evalImpulseCostHessian(Robot& robot, 
-                                      const ImpulseStatus& impulse_status, 
+  virtual void evalImpactCostHessian(Robot& robot, 
+                                      const ImpactStatus& impact_status, 
                                       CostFunctionData& data,  
                                       const GridInfo& grid_info, 
                                       const SplitSolution& s, 

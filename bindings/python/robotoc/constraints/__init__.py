@@ -1,5 +1,5 @@
 from .constraint_component_base import *
-from .impulse_constraint_component_base import *
+from .impact_constraint_component_base import *
 from .joint_position_lower_limit import *
 from .joint_position_upper_limit import *
 from .joint_velocity_lower_limit import *
@@ -9,7 +9,7 @@ from .joint_acceleration_upper_limit import *
 from .joint_torques_lower_limit import *
 from .joint_torques_upper_limit import *
 from .friction_cone import *
-from .impulse_friction_cone import *
+from .impact_friction_cone import *
 from .contact_wrench_cone import *
-from .impulse_wrench_cone import *
+from .impact_wrench_cone import *
 from .constraints import *

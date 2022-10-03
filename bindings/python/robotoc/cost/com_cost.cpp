@@ -29,8 +29,8 @@ PYBIND11_MODULE(com_cost, m) {
           py::arg("weight"))
     .def("set_weight_terminal", &CoMCost::set_weight_terminal,
           py::arg("weight_terminal"))
-    .def("set_weight_impulse", &CoMCost::set_weight_impulse,
-          py::arg("weight_impulse"))
+    .def("set_weight_impact", &CoMCost::set_weight_impact,
+          py::arg("weight_impact"))
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CoMCost);
 }
 

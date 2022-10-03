@@ -9,7 +9,7 @@ namespace testhelper {
 
 ContactStatus CreateActiveContactStatus(const Robot& robot, const double time_step);
 
-ImpulseStatus CreateActiveImpulseStatus(const Robot& robot, const double time_step);
+ImpactStatus CreateActiveImpactStatus(const Robot& robot, const double time_step);
 
 } // namespace testhelper
 } // namespace robotoc

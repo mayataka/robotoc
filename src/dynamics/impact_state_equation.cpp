@@ -1,14 +1,14 @@
-#include "robotoc/dynamics/impulse_state_equation.hpp"
+#include "robotoc/dynamics/impact_state_equation.hpp"
 #include "robotoc/dynamics/state_equation.hpp"
 
 #include <cassert>
 
 namespace robotoc {
 
-void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s, 
-                              const Eigen::VectorXd& q_next, 
-                              const Eigen::VectorXd& v_next, 
-                              SplitKKTResidual& kkt_residual) {
+void evalImpactStateEquation(const Robot& robot, const SplitSolution& s, 
+                             const Eigen::VectorXd& q_next, 
+                             const Eigen::VectorXd& v_next, 
+                             SplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
@@ -16,22 +16,22 @@ void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s,
 }
 
 
-void evalImpulseStateEquation(const Robot& robot, const SplitSolution& s, 
-                              const SplitSolution& s_next, 
-                              SplitKKTResidual& kkt_residual) {
-  evalImpulseStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
+void evalImpactStateEquation(const Robot& robot, const SplitSolution& s, 
+                             const SplitSolution& s_next, 
+                             SplitKKTResidual& kkt_residual) {
+  evalImpactStateEquation(robot, s, s_next.q, s_next.v, kkt_residual);
 }
 
 
-void linearizeImpulseStateEquation(const Robot& robot, 
-                                   const Eigen::VectorXd& q_prev, 
-                                   const SplitSolution& s, 
-                                   const SplitSolution& s_next, 
-                                   StateEquationData& data, 
-                                   SplitKKTMatrix& kkt_matrix, 
-                                   SplitKKTResidual& kkt_residual) {
+void linearizeImpactStateEquation(const Robot& robot, 
+                                  const Eigen::VectorXd& q_prev, 
+                                  const SplitSolution& s, 
+                                  const SplitSolution& s_next, 
+                                  StateEquationData& data, 
+                                  SplitKKTMatrix& kkt_matrix, 
+                                  SplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
-  evalImpulseStateEquation(robot, s, s_next, kkt_residual);
+  evalImpactStateEquation(robot, s, s_next, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, s_next.q, kkt_matrix.Fqq());
     data.Fqq_prev.setZero();
@@ -54,12 +54,12 @@ void linearizeImpulseStateEquation(const Robot& robot,
 }
 
 
-void correctLinearizeImpulseStateEquation(const Robot& robot, 
-                                          const SplitSolution& s, 
-                                          const SplitSolution& s_next, 
-                                          StateEquationData& data, 
-                                          SplitKKTMatrix& kkt_matrix, 
-                                          SplitKKTResidual& kkt_residual) {
+void correctLinearizeImpactStateEquation(const Robot& robot, 
+                                         const SplitSolution& s, 
+                                         const SplitSolution& s_next, 
+                                         StateEquationData& data, 
+                                         SplitKKTMatrix& kkt_matrix, 
+                                         SplitKKTResidual& kkt_residual) {
   if (!data.hasFloatingBase()) return;
 
   data.se3_jac_inverse.compute(data.Fqq_prev, data.Fqq_prev_inv);

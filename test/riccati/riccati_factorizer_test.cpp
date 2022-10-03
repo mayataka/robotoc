@@ -120,19 +120,19 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionPhaseTransition) {
 
 TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   const auto robot = GetParam();
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impact_status.dimf();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
   auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
   auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
-  kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
-  kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
+  kkt_matrix.setSwitchingConstraintDimension(impact_status.dimf());
+  kkt_residual.setSwitchingConstraintDimension(impact_status.dimf());
   kkt_matrix.Phix().setRandom();
   kkt_matrix.Phia().setRandom();
   kkt_matrix.Phiu().setRandom();
@@ -223,7 +223,7 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
   if (!lqr_policy_ref.W.isZero()) {
     EXPECT_TRUE(lqr_policy_ref.W.isApprox(lqr_policy.W)); // if near zero, approx does not work well
   }
-  std::cout << "impulse_status: " << impulse_status << std::endl;
+  std::cout << "impact_status: " << impact_status << std::endl;
 
   // Tests when has_next_sto_phase = false
   has_next_sto_phase = false;
@@ -234,7 +234,7 @@ TEST_P(RiccatiFactorizerTest, backwardRecursionWithSwitchingConstraint) {
 }
 
 
-TEST_P(RiccatiFactorizerTest, backwardRecursionImpulse) {
+TEST_P(RiccatiFactorizerTest, backwardRecursionImpact) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
@@ -340,15 +340,15 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
   computeCostateDirection(riccati, d, sto, sto_next);
   d_ref.dlmdgmm -= riccati.Phi * d_ref.dts_next;
   EXPECT_TRUE(d.isApprox(d_ref));
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
-  riccati.setConstraintDimension(impulse_status.dimf());
+  riccati.setConstraintDimension(impact_status.dimf());
   riccati.M().setRandom();
   riccati.m().setRandom();
-  d.setSwitchingConstraintDimension(impulse_status.dimf());
+  d.setSwitchingConstraintDimension(impact_status.dimf());
   d.dxi().setRandom();
   d_ref = d;
   sto = false;
@@ -367,7 +367,7 @@ TEST_P(RiccatiFactorizerTest, forwardRecursion) {
 }
 
 
-TEST_P(RiccatiFactorizerTest, forwardRecursionImpulse) {
+TEST_P(RiccatiFactorizerTest, forwardRecursionImpact) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);

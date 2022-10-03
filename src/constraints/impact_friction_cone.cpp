@@ -1,4 +1,4 @@
-#include "robotoc/constraints/impulse_friction_cone.hpp"
+#include "robotoc/constraints/impact_friction_cone.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -6,8 +6,8 @@
 
 namespace robotoc {
 
-ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot)
-  : ImpulseConstraintComponentBase(),
+ImpactFrictionCone::ImpactFrictionCone(const Robot& robot)
+  : ImpactConstraintComponentBase(),
     dimv_(robot.dimv()),
     dimc_(5*robot.maxNumContacts()),
     max_num_contacts_(robot.maxNumContacts()),
@@ -15,13 +15,13 @@ ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot)
     contact_types_(robot.contactTypes()) {
   if (robot.maxNumContacts() == 0) {
     throw std::out_of_range(
-        "[ImpulseFrictionCone] invalid argument: robot.maxNumContacts() must be positive!");
+        "[ImpactFrictionCone] invalid argument: robot.maxNumContacts() must be positive!");
   }
 }
 
 
-ImpulseFrictionCone::ImpulseFrictionCone()
-  : ImpulseConstraintComponentBase(),
+ImpactFrictionCone::ImpactFrictionCone()
+  : ImpactConstraintComponentBase(),
     dimc_(0),
     max_num_contacts_(0),
     dimv_(0),
@@ -30,16 +30,16 @@ ImpulseFrictionCone::ImpulseFrictionCone()
 }
 
 
-ImpulseFrictionCone::~ImpulseFrictionCone() {
+ImpactFrictionCone::~ImpactFrictionCone() {
 }
 
 
-KinematicsLevel ImpulseFrictionCone::kinematicsLevel() const {
+KinematicsLevel ImpactFrictionCone::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }
 
 
-void ImpulseFrictionCone::allocateExtraData(
+void ImpactFrictionCone::allocateExtraData(
     ConstraintComponentData& data) const {
   data.r.clear();
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -76,19 +76,19 @@ void ImpulseFrictionCone::allocateExtraData(
 }
 
 
-bool ImpulseFrictionCone::isFeasible(Robot& robot, 
-                                     const ImpulseStatus& impulse_status,
+bool ImpactFrictionCone::isFeasible(Robot& robot, 
+                                     const ImpactStatus& impact_status,
                                      ConstraintComponentData& data, 
                                      const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const int idx = 5*i;
       Eigen::VectorXd& fWi = fW(data, i);
       robot.transformFromLocalToWorld(contact_frame_[i], 
                                       s.f[i].template head<3>(), fWi);
-      frictionConeResidual(impulse_status.frictionCoefficient(i), fWi, 
-                           impulse_status.contactRotation(i), 
+      frictionConeResidual(impact_status.frictionCoefficient(i), fWi, 
+                           impact_status.contactRotation(i), 
                            data.residual.template segment<5>(idx));
       if (data.residual.maxCoeff() > 0) {
         return false;
@@ -99,8 +99,8 @@ bool ImpulseFrictionCone::isFeasible(Robot& robot,
 }
 
 
-void ImpulseFrictionCone::setSlack(Robot& robot, 
-                                   const ImpulseStatus& impulse_status,
+void ImpactFrictionCone::setSlack(Robot& robot, 
+                                   const ImpactStatus& impact_status,
                                    ConstraintComponentData& data, 
                                    const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
@@ -109,8 +109,8 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
     Eigen::VectorXd& fWi = fW(data, i);
     robot.transformFromLocalToWorld(contact_frame_[i], 
                                     s.f[i].template head<3>(), fWi);
-    frictionConeResidual(impulse_status.frictionCoefficient(i), fWi, 
-                         impulse_status.contactRotation(i), 
+    frictionConeResidual(impact_status.frictionCoefficient(i), fWi, 
+                         impact_status.contactRotation(i), 
                          data.residual.template segment<5>(idx));
     data.slack.template segment<5>(idx)
         = - data.residual.template segment<5>(idx);
@@ -118,22 +118,22 @@ void ImpulseFrictionCone::setSlack(Robot& robot,
 }
 
 
-void ImpulseFrictionCone::evalConstraint(Robot& robot, 
-                                         const ImpulseStatus& impulse_status,
+void ImpactFrictionCone::evalConstraint(Robot& robot, 
+                                         const ImpactStatus& impact_status,
                                          ConstraintComponentData& data, 
                                          const SplitSolution& s) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       Eigen::VectorXd& fWi = fW(data, i);
       robot.transformFromLocalToWorld(contact_frame_[i], 
                                       s.f[i].template head<3>(), fWi);
-      frictionConeResidual(impulse_status.frictionCoefficient(i), fWi, 
-                           impulse_status.contactRotation(i), 
+      frictionConeResidual(impact_status.frictionCoefficient(i), fWi, 
+                           impact_status.contactRotation(i), 
                            data.residual.template segment<5>(idx));
       data.residual.template segment<5>(idx).noalias()
           += data.slack.template segment<5>(idx);
@@ -144,24 +144,24 @@ void ImpulseFrictionCone::evalConstraint(Robot& robot,
 }
 
 
-void ImpulseFrictionCone::evalDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status,
+void ImpactFrictionCone::evalDerivatives(
+    Robot& robot, const ImpactStatus& impact_status,
     ConstraintComponentData& data, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const int idx = 5*i;
       // Contact force expressed in the world frame.
       const Eigen::VectorXd& fWi = fW(data, i);
       // Friction cone in the world frame.
       Eigen::MatrixXd& cone_world_i = cone_world(data, i);
       for (int j=0; j<4; ++j) {
-        cone_world_i.coeffRef(j+1, 2) = - (impulse_status.frictionCoefficient(i)/std::sqrt(2));
+        cone_world_i.coeffRef(j+1, 2) = - (impact_status.frictionCoefficient(i)/std::sqrt(2));
       }
       // Friction cone in the local frame of the contact surface.
       Eigen::MatrixXd& cone_local_i = cone_local(data, i);
-      cone_local_i.noalias() = cone_world_i * impulse_status.contactRotation(i).transpose();
+      cone_local_i.noalias() = cone_world_i * impact_status.contactRotation(i).transpose();
       // Jacobian of the contact force expressed in the world frame fWi 
       // with respect to the configuration q.
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
@@ -193,14 +193,14 @@ void ImpulseFrictionCone::evalDerivatives(
 }
 
 
-void ImpulseFrictionCone::condenseSlackAndDual(
-    const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
+void ImpactFrictionCone::condenseSlackAndDual(
+    const ImpactStatus& impact_status, ConstraintComponentData& data, 
     SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const int idx = 5*i;
       computeCondensingCoeffcient<5>(data, idx);
       const Vector5d& condi = data.cond.template segment<5>(idx);
@@ -237,8 +237,8 @@ void ImpulseFrictionCone::condenseSlackAndDual(
 }
 
 
-void ImpulseFrictionCone::expandSlackAndDual(
-     const ImpulseStatus& impulse_status, ConstraintComponentData& data, 
+void ImpactFrictionCone::expandSlackAndDual(
+     const ImpactStatus& impact_status, ConstraintComponentData& data, 
     const SplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
@@ -247,7 +247,7 @@ void ImpulseFrictionCone::expandSlackAndDual(
   data.ddual.fill(1.0);
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const int idx = 5*i;
       const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       const Eigen::MatrixXd& dgi_df = dg_df(data, i);
@@ -270,7 +270,7 @@ void ImpulseFrictionCone::expandSlackAndDual(
 }
 
 
-int ImpulseFrictionCone::dimc() const {
+int ImpactFrictionCone::dimc() const {
   return dimc_;
 }
 

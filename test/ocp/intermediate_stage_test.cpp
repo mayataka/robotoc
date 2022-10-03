@@ -32,12 +32,12 @@ protected:
     grid_info.type = GridType::Intermediate;
     grid_info.switching_constraint = false;
     grid_info.phase = 0;
-    grid_info.impulse_index = -1;
+    grid_info.impact_index = -1;
     grid_info.num_grids_in_phase = 15;
     grid_info.dt_next = grid_info_next.dt;
 
     N = 10;
-    max_num_impulse = 10;
+    max_num_impact = 10;
     t0 = 0.0;
     event_period = 0.1;
     t = grid_info.t;
@@ -47,7 +47,7 @@ protected:
   }
 
   GridInfo grid_info, grid_info_next;
-  int N, max_num_impulse;
+  int N, max_num_impact;
   double t, t0, event_period;
 };
 
@@ -58,12 +58,12 @@ TEST_P(IntermediateStageTest, evalOCP) {
   grid_info.switching_constraint = switching_constraint;
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
+  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impact, t0, event_period);
   const auto contact_status = contact_sequence->contactStatus(grid_info.phase);
   auto s = SplitSolution::Random(robot, contact_status);
   if (switching_constraint) {
-    const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
-    s.setSwitchingConstraintDimension(impulse_status.dimf());
+    const auto& impact_status = contact_sequence->impactStatus(grid_info.impact_index+1);
+    s.setSwitchingConstraintDimension(impact_status.dimf());
     s.setRandom(robot);
   }
   const auto s_next = SplitSolution::Random(robot);
@@ -86,9 +86,9 @@ TEST_P(IntermediateStageTest, evalOCP) {
   evalStateEquation(robot, grid_info.dt, s, s_next, kkt_residual_ref);
   evalContactDynamics(robot, contact_status, s, data_ref.contact_dynamics_data);
   if (switching_constraint) {
-    const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
-    kkt_residual_ref.setSwitchingConstraintDimension(impulse_status.dimf());
-    evalSwitchingConstraint(robot, impulse_status, data_ref.switching_constraint_data, grid_info.dt, grid_info.dt_next, s, kkt_residual_ref);
+    const auto& impact_status = contact_sequence->impactStatus(grid_info.impact_index+1);
+    kkt_residual_ref.setSwitchingConstraintDimension(impact_status.dimf());
+    evalSwitchingConstraint(robot, impact_status, data_ref.switching_constraint_data, grid_info.dt, grid_info.dt_next, s, kkt_residual_ref);
   }
   data_ref.performance_index.primal_feasibility 
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
@@ -103,13 +103,13 @@ TEST_P(IntermediateStageTest, evalKKT) {
   grid_info.switching_constraint = switching_constraint;
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
+  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impact, t0, event_period);
   const auto contact_status = contact_sequence->contactStatus(grid_info.phase);
   auto s_prev = SplitSolution::Random(robot);
   auto s = SplitSolution::Random(robot, contact_status);
   if (switching_constraint) {
-    const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
-    s.setSwitchingConstraintDimension(impulse_status.dimf());
+    const auto& impact_status = contact_sequence->impactStatus(grid_info.impact_index+1);
+    s.setSwitchingConstraintDimension(impact_status.dimf());
     s.setRandom(robot);
   }
   const auto s_next = SplitSolution::Random(robot);
@@ -141,8 +141,8 @@ TEST_P(IntermediateStageTest, evalKKT) {
   linearizeStateEquation(robot, grid_info.dt, s_prev.q, s, s_next, data_ref.state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   linearizeContactDynamics(robot, contact_status, s, data_ref.contact_dynamics_data, kkt_residual_ref);
   if (switching_constraint) {
-    const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
-    linearizeSwitchingConstraint(robot, impulse_status, data_ref.switching_constraint_data, grid_info.dt, grid_info.dt_next, s, 
+    const auto& impact_status = contact_sequence->impactStatus(grid_info.impact_index+1);
+    linearizeSwitchingConstraint(robot, impact_status, data_ref.switching_constraint_data, grid_info.dt, grid_info.dt_next, s, 
                                  kkt_matrix_ref, kkt_residual_ref);
   }
   data_ref.performance_index.primal_feasibility 

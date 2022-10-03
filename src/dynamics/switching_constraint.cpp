@@ -4,26 +4,26 @@
 
 namespace robotoc {
 
-void evalSwitchingConstraint(Robot& robot, const ImpulseStatus& impulse_status, 
+void evalSwitchingConstraint(Robot& robot, const ImpactStatus& impact_status, 
                              SwitchingConstraintData& data, 
                              const double dt1, const double dt2, 
                              const SplitSolution& s, 
                              SplitKKTResidual& kkt_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
-  if (impulse_status.dimf() == 0) return;
+  if (impact_status.dimf() == 0) return;
 
-  kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
+  kkt_residual.setSwitchingConstraintDimension(impact_status.dimf());
   kkt_residual.P().setZero();
   data.dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, data.dq, 1.0, data.q);
   robot.updateKinematics(data.q);
-  robot.computeContactPositionResidual(impulse_status, kkt_residual.P());
+  robot.computeContactPositionResidual(impact_status, kkt_residual.P());
 }
 
 
 void linearizeSwitchingConstraint(Robot& robot, 
-                                  const ImpulseStatus& impulse_status, 
+                                  const ImpactStatus& impact_status, 
                                   SwitchingConstraintData& data, 
                                   const double dt1, const double dt2, 
                                   const SplitSolution& s, 
@@ -31,14 +31,14 @@ void linearizeSwitchingConstraint(Robot& robot,
                                   SplitKKTResidual& kkt_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
-  if (impulse_status.dimf() == 0) return;
+  if (impact_status.dimf() == 0) return;
 
-  kkt_matrix.setSwitchingConstraintDimension(impulse_status.dimf());
-  kkt_residual.setSwitchingConstraintDimension(impulse_status.dimf());
-  evalSwitchingConstraint(robot, impulse_status, data, dt1, dt2, s, kkt_residual);
-  data.setDimension(impulse_status.dimf());
+  kkt_matrix.setSwitchingConstraintDimension(impact_status.dimf());
+  kkt_residual.setSwitchingConstraintDimension(impact_status.dimf());
+  evalSwitchingConstraint(robot, impact_status, data, dt1, dt2, s, kkt_residual);
+  data.setDimension(impact_status.dimf());
   data.Pq().setZero();
-  robot.computeContactPositionDerivative(impulse_status, data.Pq());
+  robot.computeContactPositionDerivative(impact_status, data.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegrateTransport_dq(s.q, data.dq, data.Pq(), kkt_matrix.Phiq());
     robot.dIntegrateTransport_dv(s.q, data.dq, data.Pq(), kkt_matrix.Phiv());

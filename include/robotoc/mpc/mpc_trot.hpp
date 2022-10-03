@@ -27,7 +27,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
-#include "robotoc/constraints/impulse_friction_cone.hpp"
+#include "robotoc/constraints/impact_friction_cone.hpp"
 
 
 namespace robotoc {

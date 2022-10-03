@@ -435,12 +435,12 @@ void OCPSolver::resizeData() {
       s_[i].set_f_stack();
     }
     else if (grid.type == GridType::Impact) {
-      s_[i].setContactStatus(contact_sequence_->impulseStatus(grid.impulse_index));
+      s_[i].setContactStatus(contact_sequence_->impactStatus(grid.impact_index));
       s_[i].set_f_stack();
     }
     if (grid.switching_constraint) {
       const auto& grid_next_next = time_discretization_.grid(i+2);
-      s_[i].setSwitchingConstraintDimension(contact_sequence_->impulseStatus(grid_next_next.impulse_index).dimf());
+      s_[i].setSwitchingConstraintDimension(contact_sequence_->impactStatus(grid_next_next.impact_index).dimf());
     }
     else {
       s_[i].setSwitchingConstraintDimension(0);

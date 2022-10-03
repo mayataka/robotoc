@@ -44,7 +44,7 @@ PYBIND11_MODULE(mpc_biped_walk, m) {
     .def("get_com_cost_handle", &MPCBipedWalk::getCoMCostHandle)
     .def("get_constraints_handle", &MPCBipedWalk::getConstraintsHandle)
     .def("get_contact_wrench_cone_handle", &MPCBipedWalk::getContactWrenchConeHandle)
-    .def("get_impulse_wrench_cone_handle", &MPCBipedWalk::getImpulseWrenchConeHandle)
+    .def("get_impact_wrench_cone_handle", &MPCBipedWalk::getImpactWrenchConeHandle)
     .def("get_solver", &MPCBipedWalk::getSolver)
     .def("get_contact_sequence", &MPCBipedWalk::getContactSequence)
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCBipedWalk);

@@ -27,7 +27,7 @@ protected:
     grid_info.switching_constraint = false;
     grid_info.dt = 0.;
     N = 10;
-    max_num_impulse = 10;
+    max_num_impact = 10;
     t0 = 0.0;
     event_period = 0.1;
     t = grid_info.t;
@@ -37,7 +37,7 @@ protected:
   }
 
   GridInfo grid_info;
-  int N, max_num_impulse;
+  int N, max_num_impact;
   double t, t0, event_period;
 };
 
@@ -46,7 +46,7 @@ TEST_P(TerminalStageTest, evalOCP) {
   auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
+  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impact, t0, event_period);
   const SplitSolution s = SplitSolution::Random(robot);
 
   TerminalStage stage(cost, constraints, contact_sequence);
@@ -70,7 +70,7 @@ TEST_P(TerminalStageTest, evalKKT) {
   auto robot = GetParam();
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
+  auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impact, t0, event_period);
   const SplitSolution s = SplitSolution::Random(robot);
   const SplitSolution s_prev = SplitSolution::Random(robot);
 

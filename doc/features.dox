@@ -29,7 +29,7 @@ The common features in mathematical formulation, algorithms, and implementation 
 - <b>Versatile cost function and constraints interface</b>:
     - new cost compoments can be easily defined by inheriting `robotoc::CostFunctionComponentBase`.
     - The cost function can be easily be constructed by collecting cost components into `robotoc::CostFunction`
-    - new constraint compoments can be easily defined by inheriting `robotoc::ConstraintComponentBase` or `robotoc::ImpulseConstraintComponentBase`.
+    - new constraint compoments can be easily defined by inheriting `robotoc::ConstraintComponentBase` or `robotoc::ImpactConstraintComponentBase`.
     - The constraints can be easily be constructed by collecting constraint components into `robotoc::Constraints`
 
 \section ocp_solver robotoc::OCPSolver

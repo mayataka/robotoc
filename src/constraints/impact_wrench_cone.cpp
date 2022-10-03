@@ -1,4 +1,4 @@
-#include "robotoc/constraints/impulse_wrench_cone.hpp"
+#include "robotoc/constraints/impact_wrench_cone.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -6,9 +6,9 @@
 
 namespace robotoc {
 
-ImpulseWrenchCone::ImpulseWrenchCone(const Robot& robot, 
+ImpactWrenchCone::ImpactWrenchCone(const Robot& robot, 
                                      const double X, const double Y)
-  : ImpulseConstraintComponentBase(),
+  : ImpactConstraintComponentBase(),
     dimc_(17*robot.maxNumSurfaceContacts()),
     max_num_contacts_(robot.maxNumContacts()),
     contact_frame_(robot.contactFrames()),
@@ -17,21 +17,21 @@ ImpulseWrenchCone::ImpulseWrenchCone(const Robot& robot,
     Y_(Y) {
   if (robot.maxNumContacts() == 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchCone] invalid argument: robot.maxNumContacts() must be positive!");
+        "[ImpactWrenchCone] invalid argument: robot.maxNumContacts() must be positive!");
   }
   if (X <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchCone] invalid argument: 'X' must be positive!");
+        "[ImpactWrenchCone] invalid argument: 'X' must be positive!");
   }
   if (Y <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchCone] invalid argument: 'Y' must be positive!");
+        "[ImpactWrenchCone] invalid argument: 'Y' must be positive!");
   }
 }
 
 
-ImpulseWrenchCone::ImpulseWrenchCone()
-  : ImpulseConstraintComponentBase(),
+ImpactWrenchCone::ImpactWrenchCone()
+  : ImpactConstraintComponentBase(),
     dimc_(0),
     max_num_contacts_(0),
     dimv_(0),
@@ -42,30 +42,30 @@ ImpulseWrenchCone::ImpulseWrenchCone()
 }
 
 
-ImpulseWrenchCone::~ImpulseWrenchCone() {
+ImpactWrenchCone::~ImpactWrenchCone() {
 }
 
 
-void ImpulseWrenchCone::setRectangular(const double X, const double Y) {
+void ImpactWrenchCone::setRectangular(const double X, const double Y) {
   if (X <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchCone] invalid argument: 'X' must be positive!");
+        "[ImpactWrenchCone] invalid argument: 'X' must be positive!");
   }
   if (Y <= 0) {
     throw std::out_of_range(
-        "[ImpulseWrenchCone] invalid argument: 'Y' must be positive!");
+        "[ImpactWrenchCone] invalid argument: 'Y' must be positive!");
   }
   X_ = X;
   Y_ = Y;
 }
 
 
-KinematicsLevel ImpulseWrenchCone::kinematicsLevel() const {
+KinematicsLevel ImpactWrenchCone::kinematicsLevel() const {
   return KinematicsLevel::AccelerationLevel;
 }
 
 
-void ImpulseWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
+void ImpactWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
   data.r.clear();
   data.r.push_back(Eigen::VectorXd::Zero(17));
   const double mu = 0.7;
@@ -78,8 +78,8 @@ void ImpulseWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
 }
 
 
-bool ImpulseWrenchCone::isFeasible(Robot& robot, 
-                                   const ImpulseStatus& impulse_status,
+bool ImpactWrenchCone::isFeasible(Robot& robot, 
+                                   const ImpactStatus& impact_status,
                                    ConstraintComponentData& data, 
                                    const SplitSolution& s) const {
   data.residual.setZero();
@@ -89,9 +89,9 @@ bool ImpulseWrenchCone::isFeasible(Robot& robot,
       case ContactType::PointContact:
         break;
       case ContactType::SurfaceContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           Eigen::MatrixXd& cone_i = data.J[i];
-          updateCone(impulse_status.frictionCoefficient(i), cone_i);
+          updateCone(impact_status.frictionCoefficient(i), cone_i);
           data.residual.template segment<17>(c_begin).noalias() 
               += cone_i * s.f[i];
         }
@@ -110,8 +110,8 @@ bool ImpulseWrenchCone::isFeasible(Robot& robot,
 }
 
 
-void ImpulseWrenchCone::setSlack(Robot& robot, 
-                                 const ImpulseStatus& impulse_status,
+void ImpactWrenchCone::setSlack(Robot& robot, 
+                                 const ImpactStatus& impact_status,
                                  ConstraintComponentData& data, 
                                  const SplitSolution& s) const {
   int c_begin = 0;
@@ -120,9 +120,9 @@ void ImpulseWrenchCone::setSlack(Robot& robot,
       case ContactType::PointContact:
         break;
       case ContactType::SurfaceContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           Eigen::MatrixXd& cone_i = data.J[i];
-          updateCone(impulse_status.frictionCoefficient(i), cone_i);
+          updateCone(impact_status.frictionCoefficient(i), cone_i);
           data.residual.template segment<17>(c_begin).noalias() = cone_i * s.f[i];
           data.slack.template segment<17>(c_begin)
               = - data.residual.template segment<17>(c_begin);
@@ -136,8 +136,8 @@ void ImpulseWrenchCone::setSlack(Robot& robot,
 }
 
 
-void ImpulseWrenchCone::evalConstraint(Robot& robot, 
-                                       const ImpulseStatus& impulse_status,
+void ImpactWrenchCone::evalConstraint(Robot& robot, 
+                                       const ImpactStatus& impact_status,
                                        ConstraintComponentData& data, 
                                        const SplitSolution& s) const {
   data.residual.setZero();
@@ -149,9 +149,9 @@ void ImpulseWrenchCone::evalConstraint(Robot& robot,
       case ContactType::PointContact:
         break;
       case ContactType::SurfaceContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           Eigen::MatrixXd& cone_i = data.J[i];
-          updateCone(impulse_status.frictionCoefficient(i), cone_i);
+          updateCone(impact_status.frictionCoefficient(i), cone_i);
           data.residual.template segment<17>(c_begin).noalias() 
               = cone_i * s.f[i] + data.slack.template segment<17>(c_begin);
           computeComplementarySlackness<17>(data, c_begin);
@@ -166,8 +166,8 @@ void ImpulseWrenchCone::evalConstraint(Robot& robot,
 }
 
 
-void ImpulseWrenchCone::evalDerivatives(Robot& robot, 
-                                        const ImpulseStatus& impulse_status, 
+void ImpactWrenchCone::evalDerivatives(Robot& robot, 
+                                        const ImpactStatus& impact_status, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s, 
                                         SplitKKTResidual& kkt_residual) const {
@@ -176,12 +176,12 @@ void ImpulseWrenchCone::evalDerivatives(Robot& robot,
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
       case ContactType::PointContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           dimf_stack += 3;
         }
         break;
       case ContactType::SurfaceContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           const Eigen::MatrixXd& cone_i = data.J[i];
           kkt_residual.lf().template segment<6>(dimf_stack).noalias()
               += cone_i.transpose() * data.dual.template segment<17>(c_begin);
@@ -196,7 +196,7 @@ void ImpulseWrenchCone::evalDerivatives(Robot& robot,
 }
 
 
-void ImpulseWrenchCone::condenseSlackAndDual(const ImpulseStatus& impulse_status, 
+void ImpactWrenchCone::condenseSlackAndDual(const ImpactStatus& impact_status, 
                                              ConstraintComponentData& data, 
                                              SplitKKTMatrix& kkt_matrix, 
                                              SplitKKTResidual& kkt_residual) const {
@@ -206,12 +206,12 @@ void ImpulseWrenchCone::condenseSlackAndDual(const ImpulseStatus& impulse_status
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
       case ContactType::PointContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           dimf_stack += 3;
         }
         break;
       case ContactType::SurfaceContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           const Eigen::MatrixXd& cone_i = data.J[i];
           data.r[0].array() = data.dual.template segment<17>(c_begin).array() 
                                 / data.slack.template segment<17>(c_begin).array();
@@ -231,7 +231,7 @@ void ImpulseWrenchCone::condenseSlackAndDual(const ImpulseStatus& impulse_status
 }
 
 
-void ImpulseWrenchCone::expandSlackAndDual(const ImpulseStatus& impulse_status, 
+void ImpactWrenchCone::expandSlackAndDual(const ImpactStatus& impact_status, 
                                            ConstraintComponentData& data, 
                                            const SplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
@@ -244,12 +244,12 @@ void ImpulseWrenchCone::expandSlackAndDual(const ImpulseStatus& impulse_status,
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
       case ContactType::PointContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           dimf_stack += 3;
         }
         break;
       case ContactType::SurfaceContact:
-        if (impulse_status.isImpulseActive(i)) {
+        if (impact_status.isImpactActive(i)) {
           const Eigen::MatrixXd& cone_i = data.J[i];
           data.dslack.template segment<17>(c_begin).noalias()
               = - cone_i * d.df().template segment<6>(dimf_stack) 
@@ -266,12 +266,12 @@ void ImpulseWrenchCone::expandSlackAndDual(const ImpulseStatus& impulse_status,
 }
 
 
-int ImpulseWrenchCone::dimc() const {
+int ImpactWrenchCone::dimc() const {
   return dimc_;
 }
 
 
-void ImpulseWrenchCone::computeCone(const double mu, Eigen::MatrixXd& cone) const {
+void ImpactWrenchCone::computeCone(const double mu, Eigen::MatrixXd& cone) const {
   const double XYmu = (X_+Y_)*mu;
   cone.resize(17, 6);
   cone <<  0,  0,  -1,  0,  0,  0,
@@ -294,7 +294,7 @@ void ImpulseWrenchCone::computeCone(const double mu, Eigen::MatrixXd& cone) cons
 }
 
 
-void ImpulseWrenchCone::updateCone(const double mu, Eigen::MatrixXd& cone) const {
+void ImpactWrenchCone::updateCone(const double mu, Eigen::MatrixXd& cone) const {
   for (int i=1; i<5; ++i) {
     cone.coeffRef(i, 2) = -mu;
   }

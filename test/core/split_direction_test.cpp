@@ -3,7 +3,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/core/split_direction.hpp"
 
 #include "robot_factory.hpp"
@@ -22,23 +22,23 @@ protected:
   }
 
   static void test(const Robot& robot, const ContactStatus& contact_status, 
-                   const ImpulseStatus& impulse_status);
+                   const ImpactStatus& impact_status);
   static void test_isApprox(const Robot& robot, 
                            const ContactStatus& contact_status, 
-                           const ImpulseStatus& impulse_status);
+                           const ImpactStatus& impact_status);
 
   double dt;
 };
 
 
 void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_status,
-                              const ImpulseStatus& impulse_status) {
+                              const ImpactStatus& impact_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
   const int dimf = contact_status.dimf();
-  const int dimi = impulse_status.dimf();
+  const int dimi = impact_status.dimf();
   SplitDirection d(robot);
   EXPECT_EQ(d.dx.size(), dimx);
   EXPECT_EQ(d.dq().size(), dimv);
@@ -58,7 +58,7 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_EQ(d.dimf(), 0);
   EXPECT_EQ(d.dims(), 0);
   d.setContactDimension(contact_status.dimf());
-  d.setSwitchingConstraintDimension(impulse_status.dimf());
+  d.setSwitchingConstraintDimension(impact_status.dimf());
   EXPECT_EQ(d.dx.size(), dimx);
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);
@@ -111,14 +111,14 @@ void SplitDirectionTest::test(const Robot& robot, const ContactStatus& contact_s
 
 void SplitDirectionTest::test_isApprox(const Robot& robot, 
                                       const ContactStatus& contact_status,
-                                      const ImpulseStatus& impulse_status) {
+                                      const ImpactStatus& impact_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
   const int dimf = contact_status.dimf();
-  const int dimi = impulse_status.dimf();
-  auto d = SplitDirection::Random(robot, contact_status, impulse_status);
+  const int dimi = impact_status.dimf();
+  auto d = SplitDirection::Random(robot, contact_status, impact_status);
   EXPECT_FALSE(d.dx.isZero());
   EXPECT_FALSE(d.daf().isZero());
   EXPECT_FALSE(d.dlmdgmm.isZero());
@@ -171,7 +171,7 @@ void SplitDirectionTest::test_isApprox(const Robot& robot,
     d_ref.dmu().setRandom();
     EXPECT_TRUE(d.isApprox(d_ref));
   }
-  if (impulse_status.hasActiveImpulse()) {
+  if (impact_status.hasActiveImpact()) {
     d_ref.dxi().setRandom();
     EXPECT_FALSE(d.isApprox(d_ref));
     d_ref.dxi() = d.dxi();
@@ -191,54 +191,54 @@ void SplitDirectionTest::test_isApprox(const Robot& robot,
 TEST_F(SplitDirectionTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);
   ContactStatus contact_status = robot.createContactStatus();
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  ImpactStatus impact_status = robot.createImpactStatus();
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
   contact_status.activateContact(0);
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
   contact_status.deactivateContact(0);
-  impulse_status.activateImpulse(0);
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  impact_status.activateImpact(0);
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
   contact_status.activateContact(0);
-  impulse_status.activateImpulse(0);
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  impact_status.activateImpact(0);
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
 }
 
 
 TEST_F(SplitDirectionTest, floatingBase) {
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
   ContactStatus contact_status = robot.createContactStatus();
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  ImpactStatus impact_status = robot.createImpactStatus();
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
   for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.deactivateContact(i);
   }
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
+  impact_status.setRandom();
+  if (!impact_status.hasActiveImpact()) {
+    impact_status.activateImpact(0);
   }
-  test(robot, contact_status, impulse_status);
-  test_isApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status, impact_status);
+  test_isApprox(robot, contact_status, impact_status);
 }
 
 } // namespace robotoc

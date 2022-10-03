@@ -70,21 +70,21 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1e-01);
-  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight_impulse << 1, 1, 1, 1, 1, 1,  
+  Eigen::VectorXd q_weight_impact(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impact << 1, 1, 1, 1, 1, 1,  
                100, 100, 100, 
                100, 100, 100,
                100, 100, 100,
                100, 100, 100;
-  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 100);
+  Eigen::VectorXd v_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 100);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_weight_terminal(q_weight);
-  config_cost->set_q_weight_impulse(q_weight_impulse);
+  config_cost->set_q_weight_impact(q_weight_impact);
   config_cost->set_v_weight(v_weight);
   config_cost->set_v_weight_terminal(v_weight);
-  config_cost->set_v_weight_impulse(v_weight_impulse);
+  config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_u_weight(u_weight);
   cost->push_back(config_cost);
 

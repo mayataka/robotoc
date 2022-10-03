@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 
 
 namespace robotoc {
@@ -21,13 +21,13 @@ enum class DiscreteEventType {
 
 ///
 /// @class DiscreteEvent
-/// @brief Discrete event composed by impulse and lift.
+/// @brief Discrete event composed by impact and lift.
 ///
 class DiscreteEvent {
 public:
   ///
   /// @brief Constructs discrete event from two sequential contact status.
-  /// The impulse mode id of this event is set to contactModeId() of 
+  /// The impact mode id of this event is set to contactModeId() of 
   /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
@@ -70,16 +70,16 @@ public:
   /// @return true if this discrete event exists. false if not.
   ///
   bool existDiscreteEvent() const {
-    return (exist_impulse_ || exist_lift_);
+    return (exist_impact_ || exist_lift_);
   }
 
   ///
-  /// @brief Returns true if impulse exists in this discrete event. Returns 
+  /// @brief Returns true if impact exists in this discrete event. Returns 
   /// false if not.
-  /// @return true if impulse exists. false if not.
+  /// @return true if impact exists. false if not.
   ///
-  bool existImpulse() const {
-    return exist_impulse_;
+  bool existImpact() const {
+    return exist_impact_;
   }
 
   ///
@@ -92,11 +92,11 @@ public:
   }
 
   ///
-  /// @brief Returns const reference to impulse status. 
-  /// @return const reference to impulse status. 
+  /// @brief Returns const reference to impact status. 
+  /// @return const reference to impact status. 
   ///
-  const ImpulseStatus& impulseStatus() const {
-    return impulse_status_;
+  const ImpactStatus& impactStatus() const {
+    return impact_status_;
   }
 
   ///
@@ -117,7 +117,7 @@ public:
 
   ///
   /// @brief Sets the contact status from two sequential contact status.
-  /// The impulse mode id of this event is set to contactModeId() of 
+  /// The impact mode id of this event is set to contactModeId() of 
   /// pre_contact_status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
@@ -222,10 +222,10 @@ public:
 
 private:
   ContactStatus pre_contact_status_, post_contact_status_;
-  ImpulseStatus impulse_status_;
+  ImpactStatus impact_status_;
   int max_num_contacts_;
   DiscreteEventType event_type_;
-  bool exist_impulse_, exist_lift_;
+  bool exist_impact_, exist_lift_;
 
 };
 
