@@ -43,7 +43,7 @@ void UnconstrIntermediateStage::initConstraints(Robot& robot,
                                                 const GridInfo& grid_info, 
                                                 const SplitSolution& s,
                                                 UnconstrOCPData& data) const {
-  data.constraints_data = constraints_->createConstraintsData(robot, grid_info.time_stage);
+  data.constraints_data = constraints_->createConstraintsData(robot, grid_info.stage);
   constraints_->setSlackAndDual(robot, contact_status_, data.constraints_data, s);
 }
 

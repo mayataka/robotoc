@@ -15,10 +15,10 @@ void GridInfo::setRandom() {
   t = t0 + std::abs(d_distr(eng));
   dt = d_distr(eng);
   std::uniform_int_distribution<int> i_distr(0, 100);
-  contact_phase = i_distr(eng);
-  time_stage = i_distr(eng);
-  grid_count_in_phase = i_distr(eng);
-  N_phase = i_distr(eng);
+  phase = i_distr(eng);
+  stage = i_distr(eng);
+  stage_in_phase = i_distr(eng);
+  num_grids_in_phase = i_distr(eng);
 }
 
 
@@ -56,12 +56,12 @@ void GridInfo::disp(std::ostream& os) const {
   os << "  t:       " << t << "\n";
   os << "  dt:      " << dt << "\n";
   os << "  dt_next: " << dt_next << "\n";
-  os << "  stage:   " << time_stage << "\n";
-  os << "  phase:   " << contact_phase << "\n";
+  os << "  stage:   " << stage << "\n";
+  os << "  phase:   " << phase << "\n";
   os << "  impulse_index: " << impulse_index << "\n";
   os << "  lift_index:    " << lift_index << "\n";
-  os << "  grid_count_in_phase: " << grid_count_in_phase << "\n";
-  os << "  N_phase:             " << N_phase << "\n";
+  os << "  stage_in_phase:     " << stage_in_phase << "\n";
+  os << "  num_grids_in_phase: " << num_grids_in_phase << "\n";
   os << "  sto:      " << std::boolalpha << sto << "\n";
   os << "  sto_next: " << std::boolalpha << sto_next << "\n";
   os << "  switching_constraint: " << std::boolalpha << switching_constraint << std::flush;

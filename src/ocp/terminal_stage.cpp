@@ -107,7 +107,7 @@ void TerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
 void TerminalStage::expandPrimal(const GridInfo& grid_info, OCPData& data, 
                                  SplitDirection& d) const {
   assert(grid_info.type == GridType::Terminal);
-  // const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
+  // const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   // d.setContactDimension(contact_status.dimf());
   d.setContactDimension(0);
   d.setSwitchingConstraintDimension(0);

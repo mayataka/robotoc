@@ -28,7 +28,7 @@ Direction CreateDirection(const Robot& robot,
         d[i].setRandom();
       }
       else {
-        d[i].setContactDimension(contact_sequence->contactStatus(grid.contact_phase).dimf());
+        d[i].setContactDimension(contact_sequence->contactStatus(grid.phase).dimf());
         if (grid.switching_constraint) {
           d[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(grid.impulse_index+1).dimf());
         }

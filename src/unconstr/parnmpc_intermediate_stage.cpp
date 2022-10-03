@@ -46,7 +46,7 @@ void ParNMPCIntermediateStage::initConstraints(Robot& robot,
                                                const GridInfo& grid_info, 
                                                const SplitSolution& s,
                                                UnconstrOCPData& data) const { 
-  data.constraints_data = constraints_->createConstraintsData(robot, grid_info.time_stage+1);
+  data.constraints_data = constraints_->createConstraintsData(robot, grid_info.stage+1);
   constraints_->setSlackAndDual(robot, contact_status_, data.constraints_data, s);
 }
 

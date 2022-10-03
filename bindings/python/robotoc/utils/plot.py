@@ -109,14 +109,14 @@ class PlotContactForce:
         assert len(fx) == len(mfz)
         N = len(fx) 
         f_norm = [fz[i]*fz[i] for i in range(N)]
-        N_phase = []
+        num_grids_in_phase = []
         active_phase = []
         active = f_norm[0] > self.eps
         ngrids = 0
         for i in range(N):
             if active:
                 if f_norm[i] <= self.eps:
-                    N_phase.append(ngrids)
+                    num_grids_in_phase.append(ngrids)
                     active_phase.append(active)
                     active = False
                     ngrids = 0
@@ -124,27 +124,27 @@ class PlotContactForce:
                     ngrids += 1
             else:
                 if f_norm[i] > self.eps:
-                    N_phase.append(ngrids)
+                    num_grids_in_phase.append(ngrids)
                     active_phase.append(active)
                     active = True
                     ngrids = 0
                 else:
                     ngrids += 1
-        N_phase.append(ngrids)
+        num_grids_in_phase.append(ngrids)
         active_phase.append(active)
-        return N_phase, active_phase
+        return num_grids_in_phase, active_phase
 
     def _plot_f_leg(self, ax, fx, fy, fz, mfz, t, title, enable_xlabel):
         import matplotlib.pyplot as plt
         cmap = plt.get_cmap("tab10")
-        N_phase, active_phase = self._detect_phases(fx, fy, fz, mfz)
-        for phase in range(len(N_phase)):
+        num_grids_in_phase, active_phase = self._detect_phases(fx, fy, fz, mfz)
+        for phase in range(len(num_grids_in_phase)):
             if active_phase[phase]:
                 N_begin = 0
                 if phase > 0:
-                    N_begin = sum([N_phase[i] for i in range(phase)]) + 1
-                N_end = N_begin + N_phase[phase] 
-                if phase == len(N_phase)-1:
+                    N_begin = sum([num_grids_in_phase[i] for i in range(phase)]) + 1
+                N_end = N_begin + num_grids_in_phase[phase] 
+                if phase == len(num_grids_in_phase)-1:
                     ax.plot(
                         t[N_begin:N_end], 
                         fx[N_begin:N_end], 
@@ -201,7 +201,7 @@ class PlotContactForce:
                         alpha=0.25, 
                         hatch="///////"
                     )
-                if phase == len(N_phase)-1:
+                if phase == len(num_grids_in_phase)-1:
                     ax.plot(
                         t[N_begin:N_end], 
                         fz[N_begin:N_end], 

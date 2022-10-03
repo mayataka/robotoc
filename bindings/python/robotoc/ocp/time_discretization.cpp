@@ -23,15 +23,20 @@ PYBIND11_MODULE(time_discretization, m) {
   py::class_<TimeDiscretization>(m, "TimeDiscretization")
     .def(py::init<const double, const int, const int>(), 
           py::arg("T"), py::arg("N"), py::arg("reserved_num_discrete_events")=0)
-    .def("set_discretization_method", &TimeDiscretization::setDiscretizationMethod,
-          py::arg("discretization_method"))
     .def("N", &TimeDiscretization::N)
-    .def("discretizeGrid", &TimeDiscretization::discretizeGrid,
+    .def("size", &TimeDiscretization::size) 
+    .def("grid", &TimeDiscretization::grid,
+          py::arg("i")) 
+    .def("front", &TimeDiscretization::front)
+    .def("back", &TimeDiscretization::back)
+    .def("__getitem__", [](const TimeDiscretization& self, const int i) {
+        return self[i];
+     })
+    .def("max_time_step", &TimeDiscretization::maxTimeStep)
+    .def("discretize", &TimeDiscretization::discretize,
           py::arg("contact_sequence"), py::arg("t")) 
-    .def("discretizePhase", &TimeDiscretization::discretizePhase,
+    .def("correct_time_steps", &TimeDiscretization::correctTimeSteps,
           py::arg("contact_sequence"), py::arg("t")) 
-    .def("getGrid", &TimeDiscretization::getGrid) 
-    .def("N_grids", &TimeDiscretization::N_grids) 
     .def("__str__", [](const TimeDiscretization& self) {
         std::stringstream ss;
         ss << self;

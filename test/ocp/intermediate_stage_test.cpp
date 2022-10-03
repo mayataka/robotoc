@@ -31,9 +31,9 @@ protected:
 
     grid_info.type = GridType::Intermediate;
     grid_info.switching_constraint = false;
-    grid_info.contact_phase = 0;
+    grid_info.phase = 0;
     grid_info.impulse_index = -1;
-    grid_info.N_phase = 15;
+    grid_info.num_grids_in_phase = 15;
     grid_info.dt_next = grid_info_next.dt;
 
     N = 10;
@@ -59,7 +59,7 @@ TEST_P(IntermediateStageTest, evalOCP) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
-  const auto contact_status = contact_sequence->contactStatus(grid_info.contact_phase);
+  const auto contact_status = contact_sequence->contactStatus(grid_info.phase);
   auto s = SplitSolution::Random(robot, contact_status);
   if (switching_constraint) {
     const auto& impulse_status = contact_sequence->impulseStatus(grid_info.impulse_index+1);
@@ -104,7 +104,7 @@ TEST_P(IntermediateStageTest, evalKKT) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   auto contact_sequence = testhelper::CreateContactSequence(robot, N, max_num_impulse, t0, event_period);
-  const auto contact_status = contact_sequence->contactStatus(grid_info.contact_phase);
+  const auto contact_status = contact_sequence->contactStatus(grid_info.phase);
   auto s_prev = SplitSolution::Random(robot);
   auto s = SplitSolution::Random(robot, contact_status);
   if (switching_constraint) {
@@ -157,14 +157,14 @@ TEST_P(IntermediateStageTest, evalKKT) {
                           data_ref.contact_dynamics_data, kkt_matrix_ref, kkt_residual_ref);
   correctLinearizeStateEquation(robot, grid_info.dt, s, s_next, 
                                 data_ref.state_equation_data, kkt_matrix_ref, kkt_residual_ref);
-  kkt_residual_ref.h        *= (1.0 / grid_info.N_phase);
-  kkt_matrix_ref.hx.array() *= (1.0 / grid_info.N_phase);
-  kkt_matrix_ref.hu.array() *= (1.0 / grid_info.N_phase);
-  kkt_matrix_ref.fx.array() *= (1.0 / grid_info.N_phase);
-  kkt_matrix_ref.Qtt        *= 1.0 / (grid_info.N_phase * grid_info.N_phase);
+  kkt_residual_ref.h        *= (1.0 / grid_info.num_grids_in_phase);
+  kkt_matrix_ref.hx.array() *= (1.0 / grid_info.num_grids_in_phase);
+  kkt_matrix_ref.hu.array() *= (1.0 / grid_info.num_grids_in_phase);
+  kkt_matrix_ref.fx.array() *= (1.0 / grid_info.num_grids_in_phase);
+  kkt_matrix_ref.Qtt        *= 1.0 / (grid_info.num_grids_in_phase * grid_info.num_grids_in_phase);
   kkt_matrix_ref.Qtt_prev    = - kkt_matrix_ref.Qtt;
   if (switching_constraint) {
-    kkt_matrix_ref.Phit().array() *= (1.0/grid_info.N_phase);
+    kkt_matrix_ref.Phit().array() *= (1.0/grid_info.num_grids_in_phase);
   }
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -178,7 +178,7 @@ TEST_P(IntermediateStageTest, evalKKT) {
   auto d_ref = d;
   auto d_ocp = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
-  const double dts = (d.dts_next - d.dts) / grid_info.N_phase;
+  const double dts = (d.dts_next - d.dts) / grid_info.num_grids_in_phase;
   stage.expandPrimal(grid_info, data, d);
   stage.expandDual(grid_info, data, d_next, d);
   d_ref.setContactDimension(contact_status.dimf());

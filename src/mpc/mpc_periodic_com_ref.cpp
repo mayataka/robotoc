@@ -91,21 +91,21 @@ void MPCPeriodicCoMRef::updateRef(const GridInfo& grid_info,
                                        Eigen::VectorXd& com_ref) const {
   // if (isActive(grid_info)) { 
   if ((grid_info.t > swing_start_time_) 
-        && has_inactive_contacts_[grid_info.contact_phase]) {
+        && has_inactive_contacts_[grid_info.phase]) {
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);
     const double rate = (grid_info.t-swing_start_time_-cycle*period_) / period_active_;
-    com_ref = (1.0-rate) * com_[grid_info.contact_phase]
-                + rate * com_[grid_info.contact_phase+num_phases_in_period_];
+    com_ref = (1.0-rate) * com_[grid_info.phase]
+                + rate * com_[grid_info.phase+num_phases_in_period_];
   }
   else {
-    com_ref = com_[grid_info.contact_phase];
+    com_ref = com_[grid_info.phase];
   }
 }
 
 
 bool MPCPeriodicCoMRef::isActive(const GridInfo& grid_info) const {
   return ((grid_info.t > swing_start_time_) 
-            && has_inactive_contacts_[grid_info.contact_phase]);
+            && has_inactive_contacts_[grid_info.phase]);
   // return true;
 }
 

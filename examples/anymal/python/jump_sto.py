@@ -144,7 +144,6 @@ print(ocp_solver.get_solver_statistics())
 
 # print(ocp_solver.get_time_discretization())
 
-# N_grids = time_discretization.N_grids()
 # for i in range(N_grids+1):
 #     print(time_discretization.getGrid()[i])
 

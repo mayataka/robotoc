@@ -43,41 +43,39 @@ struct GridInfo {
   double dt = 0;
 
   ///
-  /// @brief Time step of the next.
+  /// @brief Time step of the next grid.
   ///
   double dt_next = 0;
 
   ///
-  /// @brief Contact phase of this grid.
+  /// @brief Phase of this grid.
   ///
-  int contact_phase = 0;
+  int phase = 0;
 
   ///
-  /// @brief Time stage of this grid. This value is valid and takes 
-  /// non-negative value only if this grid is a time stage or termina stage.
-  int time_stage = -1;
+  /// @brief Stage of this grid. 
+  ///
+  int stage = 0;
 
   ///
-  /// @brief Impulse index of this grid. This value is valid and takes 
-  /// non-negative value only if this grid is an impulse or aux grid.
+  /// @brief Impulse index of this grid.
   ///
   int impulse_index = -1;
 
   ///
-  /// @brief Lift index of this grid. This value is valid and takes 
-  /// non-negative value only if this grid is a lift grid.
+  /// @brief Lift index of this grid. 
   ///
   int lift_index = -1;
 
   ///
-  /// @brief Grid index counded in the contact phase that contains this grid. 
+  /// @brief Stage index counded in the phase. 
   ///
-  int grid_count_in_phase = 0;
+  int stage_in_phase = 0;
 
   ///
-  /// @brief Total number of grids in the contact phase that contains this grid. 
+  /// @brief Total number of grids in the phase.
   ///
-  int N_phase = 0;
+  int num_grids_in_phase = 0;
 
   ///
   /// @brief Flag if the STO is enabled in the current phase. 

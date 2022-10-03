@@ -84,9 +84,9 @@ std::shared_ptr<ContactSequence> TimeDiscretizationTest::createContactSequenceOn
 TEST_P(TimeDiscretizationTest, constructor) {
   TimeDiscretization time_discretization(T, N, max_num_events);
   EXPECT_EQ(time_discretization.N(), N);
-  EXPECT_EQ(time_discretization.N_grids(), N);
+  EXPECT_EQ(time_discretization.size(), N+1);
   for (int i=0; i<=N; ++i) {
-    EXPECT_EQ(time_discretization[i].contact_phase, 0);
+    EXPECT_EQ(time_discretization[i].phase, 0);
   }
 }
 
@@ -135,7 +135,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int contact_phase_ref = 0;
 //   for (int i=0; i<=N; ++i) {
 //     EXPECT_EQ(time_discretization.contactPhase(i), contact_phase_ref);
-//     EXPECT_EQ(time_discretization.gridInfo(i).contact_phase, contact_phase_ref);
+//     EXPECT_EQ(time_discretization.gridInfo(i).phase, contact_phase_ref);
 //     if (i == time_stage_before_events[contact_phase_ref]) {
 //       ++contact_phase_ref;
 //     }
@@ -281,7 +281,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int contact_phase_ref = 0;
 //   for (int i=0; i<=N; ++i) {
 //     EXPECT_EQ(time_discretization.contactPhase(i), contact_phase_ref);
-//     EXPECT_EQ(time_discretization.gridInfo(i).contact_phase, contact_phase_ref);
+//     EXPECT_EQ(time_discretization.gridInfo(i).phase, contact_phase_ref);
 //     if (i == time_stage_before_events[contact_phase_ref]) {
 //       ++contact_phase_ref;
 //     }
@@ -414,7 +414,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int contact_phase_ref = 0;
 //   for (int i=0; i<=N; ++i) {
 //     EXPECT_EQ(time_discretization.contactPhase(i), contact_phase_ref);
-//     EXPECT_EQ(time_discretization.gridInfo(i).contact_phase, contact_phase_ref);
+//     EXPECT_EQ(time_discretization.gridInfo(i).phase, contact_phase_ref);
 //     if (i == time_stage_before_events[contact_phase_ref]) {
 //       ++contact_phase_ref;
 //     }
@@ -459,7 +459,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
 //       const int grids_phase = time_discretization.timeStageBeforeImpulse(impulse_index) 
 //                               - time_stage_before_event + 1;
-//       EXPECT_EQ(time_discretization.N_phase(event_index), grids_phase);
+//       EXPECT_EQ(time_discretization.num_grids_in_phase(event_index), grids_phase);
 //       const double dt_phase = (time_discretization.impulseTime(impulse_index)-t_prev_event) / grids_phase;
 //       for (int stage=time_stage_before_event+1; 
 //             stage<time_discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
@@ -484,7 +484,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       EXPECT_EQ(time_discretization.eventIndexLift(lift_index), event_index);
 //       const int grids_phase = time_discretization.timeStageBeforeLift(lift_index) 
 //                               - time_stage_before_event + 1;
-//       EXPECT_EQ(time_discretization.N_phase(event_index), grids_phase);
+//       EXPECT_EQ(time_discretization.num_grids_in_phase(event_index), grids_phase);
 //       const double dt_phase = (time_discretization.liftTime(lift_index)-t_prev_event) / grids_phase;
 //       for (int stage=time_stage_before_event+1; 
 //             stage<time_discretization.timeStageBeforeLift(lift_index); ++stage) {
@@ -620,7 +620,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
 //       const int grids_phase = time_discretization.timeStageBeforeImpulse(impulse_index) 
 //                               - time_stage_before_event + 1;
-//       EXPECT_EQ(time_discretization.N_phase(event_index), grids_phase);
+//       EXPECT_EQ(time_discretization.num_grids_in_phase(event_index), grids_phase);
 //       const double dt_phase = (time_discretization.impulseTime(impulse_index)-t_prev_event) / grids_phase;
 //       for (int stage=time_stage_before_event+1; 
 //             stage<time_discretization.timeStageBeforeImpulse(impulse_index); ++stage) {
@@ -642,7 +642,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //       EXPECT_EQ(time_discretization.eventIndexLift(lift_index), event_index);
 //       const int grids_phase = time_discretization.timeStageBeforeLift(lift_index) 
 //                               - time_stage_before_event + 1;
-//       EXPECT_EQ(time_discretization.N_phase(event_index), grids_phase);
+//       EXPECT_EQ(time_discretization.num_grids_in_phase(event_index), grids_phase);
 //       const double dt_phase = (time_discretization.liftTime(lift_index)-t_prev_event) / grids_phase;
 //       for (int stage=time_stage_before_event+1; 
 //             stage<time_discretization.timeStageBeforeLift(lift_index); ++stage) {

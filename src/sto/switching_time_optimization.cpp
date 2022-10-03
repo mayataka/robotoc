@@ -74,8 +74,8 @@ void SwitchingTimeOptimization::evalKKT(
   if (!is_sto_enabled_) return;
 
   const int N = time_discretization.size() - 1;
-  const int num_discrete_events = time_discretization.grid(N).contact_phase 
-                                    - time_discretization.grid(0).contact_phase;
+  const int num_discrete_events = time_discretization.grid(N).phase 
+                                    - time_discretization.grid(0).phase;
   performance_index_.setZero();
   lt_.setZero(num_discrete_events);
   Qtt_.setZero(num_discrete_events, num_discrete_events);
@@ -107,7 +107,7 @@ void SwitchingTimeOptimization::evalKKT(
   h_.setZero(num_discrete_events+1);
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
-    h_.coeffRef(grid.contact_phase) += kkt_residual[i].h;
+    h_.coeffRef(grid.phase) += kkt_residual[i].h;
   }
 
   event_index = 0;
@@ -128,8 +128,8 @@ void SwitchingTimeOptimization::computeStepSizes(
   if (!is_sto_enabled_) return;
 
   const int N = time_discretization.size() - 1;
-  const int num_discrete_events = time_discretization.grid(N).contact_phase 
-                                    - time_discretization.grid(0).contact_phase;
+  const int num_discrete_events = time_discretization.grid(N).phase 
+                                    - time_discretization.grid(0).phase;
   dts_.resize(num_discrete_events);
   int event_index = 0;
   for (int i=0; i<N; ++i) {
@@ -171,8 +171,8 @@ void SwitchingTimeOptimization::integrateSolution(
   if (!is_sto_enabled_) return;
 
   const int N = time_discretization.size() - 1;
-  const int num_discrete_events = time_discretization.grid(N).contact_phase 
-                                    - time_discretization.grid(0).contact_phase;
+  const int num_discrete_events = time_discretization.grid(N).phase 
+                                    - time_discretization.grid(0).phase;
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
     if (grid.type == GridType::Impulse) {

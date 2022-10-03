@@ -51,7 +51,6 @@ OCPSolver::OCPSolver(const OCP& ocp,
   if (ocp.sto_cost && ocp.sto_constraints) {
     solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
-  time_discretization_.setDiscretizationMethod(solver_options_.discretization_method);
 }
 
 
@@ -81,15 +80,14 @@ void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
   if (ocp_.sto_cost && ocp_.sto_constraints) {
     solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
-  time_discretization_.setDiscretizationMethod(solver_options_.discretization_method);
   riccati_recursion_.setRegularization(solver_options_.max_dts_riccati);
 }
 
 
 void OCPSolver::discretize(const double t) {
-  time_discretization_.discretizeGrid(contact_sequence_, t);
+  time_discretization_.discretize(contact_sequence_, t);
   if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
-    time_discretization_.discretizePhase(contact_sequence_, t);
+    time_discretization_.correctTimeSteps(contact_sequence_, t);
   }
   resizeData();
 }
@@ -108,7 +106,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   if ((solver_options_.discretization_method == DiscretizationMethod::PhaseBased)
        || (ocp_.sto_cost && ocp_.sto_constraints)) {
-    time_discretization_.discretizePhase(contact_sequence_, t);
+    time_discretization_.correctTimeSteps(contact_sequence_, t);
   }
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
   sto_.evalKKT(time_discretization_, kkt_matrix_, kkt_residual_);
@@ -176,7 +174,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     const double kkt_error = KKTError();
     solver_statistics_.kkt_error.push_back(kkt_error); 
     if ((ocp_.sto_cost && ocp_.sto_constraints) && (kkt_error < solver_options_.kkt_tol_mesh)) {
-      if (time_discretization_.dt_max() > solver_options_.max_dt_mesh) {
+      if (time_discretization_.maxTimeStep() > solver_options_.max_dt_mesh) {
         if (solver_options_.enable_solution_interpolation) {
           solution_interpolator_.store(time_discretization_, s_);
         }
@@ -408,7 +406,7 @@ void OCPSolver::resizeData() {
   for (int i=0; i<time_discretization_.size(); ++i) {
     const auto& grid = time_discretization_[i];
     if (grid.type == GridType::Intermediate || grid.type == GridType::Lift) {
-      s_[i].setContactStatus(contact_sequence_->contactStatus(grid.contact_phase));
+      s_[i].setContactStatus(contact_sequence_->contactStatus(grid.phase));
       s_[i].set_f_stack();
     }
     else if (grid.type == GridType::Impulse) {

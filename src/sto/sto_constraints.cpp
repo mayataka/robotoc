@@ -119,8 +119,8 @@ double STOConstraints::getFractionToBoundaryRule() const {
 ConstraintComponentData STOConstraints::createConstraintsData(
     const TimeDiscretization& time_discretization) const {
   const int N = time_discretization.size() - 1;
-  const int num_discrete_events = time_discretization.grid(N).contact_phase 
-                                    - time_discretization.grid(0).contact_phase;
+  const int num_discrete_events = time_discretization.grid(N).phase 
+                                    - time_discretization.grid(0).phase;
   auto data = ConstraintComponentData(num_discrete_events+1, barrier_);
   data.r.push_back(Eigen::VectorXd::Zero(num_discrete_events+1));
   data.r.push_back(Eigen::VectorXd::Zero(num_discrete_events+1));
@@ -238,8 +238,8 @@ void STOConstraints::updateDual(ConstraintComponentData& data,
 void STOConstraints::computeDwellTimes(const TimeDiscretization& time_discretization,
                                        Eigen::VectorXd& dwell_times) {
   const int N = time_discretization.size() - 1;
-  const int num_discrete_events = time_discretization.grid(N).contact_phase 
-                                    - time_discretization.grid(0).contact_phase;
+  const int num_discrete_events = time_discretization.grid(N).phase 
+                                    - time_discretization.grid(0).phase;
   dwell_times.resize(num_discrete_events+1);
   dwell_times.setZero();
   int event_index = 0;

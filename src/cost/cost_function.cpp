@@ -95,7 +95,7 @@ double CostFunction::evalStageCost(Robot& robot,
     l += e->evalStageCost(robot, contact_status, data, grid_info, s);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = std::pow(discount_factor_, grid_info.stage);
     l *= f;
   }
   return l;

@@ -35,12 +35,12 @@ protected:
     for (int i=0; i<=N; ++i) {
       time_discretization[i].t = t + dt * i;
       time_discretization[i].dt = dt;
-      time_discretization[i].contact_phase = -1;
-      time_discretization[i].time_stage = i;
+      time_discretization[i].phase = -1;
+      time_discretization[i].stage = i;
       time_discretization[i].impulse_index = -1;
       time_discretization[i].lift_index = -1;
-      time_discretization[i].grid_count_in_phase = i;
-      time_discretization[i].N_phase = N;
+      time_discretization[i].stage_in_phase = i;
+      time_discretization[i].num_grids_in_phase = N;
     }
   }
 

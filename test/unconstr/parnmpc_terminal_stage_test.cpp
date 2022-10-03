@@ -59,7 +59,7 @@ TEST_F(ParNMPCTerminalStageTest, evalOCP) {
   PerformanceIndex performance_index_ref;
   UnconstrOCPData data_ref;
   data_ref.cost_data = cost->createCostFunctionData(robot);
-  data_ref.constraints_data = constraints->createConstraintsData(robot, grid_info.time_stage);
+  data_ref.constraints_data = constraints->createConstraintsData(robot, grid_info.stage);
   data_ref.unconstr_dynamics = UnconstrDynamics(robot);
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, data_ref.constraints_data, s);
@@ -91,7 +91,7 @@ TEST_F(ParNMPCTerminalStageTest, evalKKT) {
   PerformanceIndex performance_index_ref;
   UnconstrOCPData data_ref;
   data_ref.cost_data = cost->createCostFunctionData(robot);
-  data_ref.constraints_data = constraints->createConstraintsData(robot, grid_info.time_stage);
+  data_ref.constraints_data = constraints->createConstraintsData(robot, grid_info.stage);
   data_ref.unconstr_dynamics = UnconstrDynamics(robot);
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, data_ref.constraints_data, s);

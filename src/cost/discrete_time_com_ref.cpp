@@ -78,20 +78,20 @@ void DiscreteTimeCoMRef::setCoMRef(
 
 void DiscreteTimeCoMRef::updateRef(const GridInfo& grid_info,
                                         Eigen::VectorXd& com_ref) const {
-  if (has_inactive_contacts_[grid_info.contact_phase]) {
-    double rate = static_cast<double>(grid_info.grid_count_in_phase) 
-                    / static_cast<double>(grid_info.N_phase);
-    if (grid_info.contact_phase == 0) {
+  if (has_inactive_contacts_[grid_info.phase]) {
+    double rate = static_cast<double>(grid_info.stage_in_phase) 
+                    / static_cast<double>(grid_info.num_grids_in_phase);
+    if (grid_info.phase == 0) {
       rate = first_rate_ * (1.0-rate) + rate;
     }
-    else if (grid_info.contact_phase == num_contact_phases_-1) {
+    else if (grid_info.phase == num_contact_phases_-1) {
       rate = last_rate_ * (1.0-rate) + rate;
     }
-    com_ref = (1.0-rate) * com_position_[grid_info.contact_phase]
-                + rate * com_position_[grid_info.contact_phase+1];
+    com_ref = (1.0-rate) * com_position_[grid_info.phase]
+                + rate * com_position_[grid_info.phase+1];
   }
   else {
-    com_ref = com_position_[grid_info.contact_phase];
+    com_ref = com_position_[grid_info.phase];
   }
 }
 

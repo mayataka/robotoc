@@ -41,12 +41,12 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const OCP& ocp,
   for (int i=0; i<=ocp.N; ++i) {
     time_discretization_[i].t = dt * i;
     time_discretization_[i].dt = dt;
-    time_discretization_[i].contact_phase = -1;
-    time_discretization_[i].time_stage = i;
+    time_discretization_[i].phase = -1;
+    time_discretization_[i].stage = i;
     time_discretization_[i].impulse_index = -1;
     time_discretization_[i].lift_index = -1;
-    time_discretization_[i].grid_count_in_phase = i;
-    time_discretization_[i].N_phase = ocp.N;
+    time_discretization_[i].stage_in_phase = i;
+    time_discretization_[i].num_grids_in_phase = ocp.N;
   }
   time_discretization_[ocp.N].type = GridType::Terminal;
   initConstraints();

@@ -39,7 +39,7 @@ OCPData IntermediateStage::createData(const Robot& robot) const {
 bool IntermediateStage::isFeasible(Robot& robot, const GridInfo& grid_info, 
                                    const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
-  const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
+  const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   return constraints_->isFeasible(robot, contact_status, data.constraints_data, s);
 }
 
@@ -47,8 +47,8 @@ bool IntermediateStage::isFeasible(Robot& robot, const GridInfo& grid_info,
 void IntermediateStage::initConstraints(Robot& robot, const GridInfo& grid_info, 
                                         const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
-  data.constraints_data.setTimeStage(grid_info.time_stage);
-  const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
+  data.constraints_data.setTimeStage(grid_info.stage);
+  const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   constraints_->setSlackAndDual(robot, contact_status, data.constraints_data, s);
 }
 
@@ -58,7 +58,7 @@ void IntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
                                 OCPData& data, SplitKKTResidual& kkt_residual) const {
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
   // setup computation
-  const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
+  const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   robot.updateKinematics(s.q, s.v, s.a);
   kkt_residual.setContactDimension(contact_status.dimf());
   kkt_residual.setZero();
@@ -89,7 +89,7 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
   assert(q_prev.size() == robot.dimq());
   // setup computation
-  const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
+  const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   robot.updateKinematics(s.q, s.v, s.a);
   kkt_matrix.setContactDimension(contact_status.dimf());
   kkt_residual.setContactDimension(contact_status.dimf());
@@ -135,14 +135,14 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
                           data.contact_dynamics_data, kkt_matrix, kkt_residual);
   correctLinearizeStateEquation(robot, grid_info.dt, s, s_next, 
                                 data.state_equation_data, kkt_matrix, kkt_residual);
-  kkt_residual.h        *= (1.0/grid_info.N_phase);
-  kkt_matrix.hx.array() *= (1.0/grid_info.N_phase);
-  kkt_matrix.hu.array() *= (1.0/grid_info.N_phase);
-  kkt_matrix.fx.array() *= (1.0/grid_info.N_phase);
-  kkt_matrix.Qtt        *= (1.0/(grid_info.N_phase*grid_info.N_phase));
+  kkt_residual.h        *= (1.0/grid_info.num_grids_in_phase);
+  kkt_matrix.hx.array() *= (1.0/grid_info.num_grids_in_phase);
+  kkt_matrix.hu.array() *= (1.0/grid_info.num_grids_in_phase);
+  kkt_matrix.fx.array() *= (1.0/grid_info.num_grids_in_phase);
+  kkt_matrix.Qtt        *= (1.0/(grid_info.num_grids_in_phase*grid_info.num_grids_in_phase));
   kkt_matrix.Qtt_prev    = - kkt_matrix.Qtt;
   if (grid_info.switching_constraint) {
-    kkt_matrix.Phit().array() *= (1.0/grid_info.N_phase);
+    kkt_matrix.Phit().array() *= (1.0/grid_info.num_grids_in_phase);
   }
 }
 
@@ -150,7 +150,7 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
 void IntermediateStage::expandPrimal(const GridInfo& grid_info, OCPData& data, 
                                      SplitDirection& d) const {
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
-  const auto& contact_status = contact_sequence_->contactStatus(grid_info.contact_phase);
+  const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   d.setContactDimension(contact_status.dimf());
   expandContactDynamicsPrimal(data.contact_dynamics_data, d);
   constraints_->expandSlackAndDual(contact_status, data.constraints_data, d);
@@ -163,8 +163,8 @@ void IntermediateStage::expandDual(const GridInfo& grid_info, OCPData& data,
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
   assert(grid_info.dt > 0);
   double dts = 0.0;
-  if (grid_info.N_phase > 0) {
-    dts = (d.dts_next - d.dts) / grid_info.N_phase;
+  if (grid_info.num_grids_in_phase > 0) {
+    dts = (d.dts_next - d.dts) / grid_info.num_grids_in_phase;
   }
   expandContactDynamicsDual(grid_info.dt, dts, data.contact_dynamics_data, 
                             d_next, d);

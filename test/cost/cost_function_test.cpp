@@ -70,7 +70,7 @@ void CostFunctionTest::testStageCost(Robot& robot) {
   auto contact_status = robot.createContactStatus();
   contact_status.setRandom();
 
-  grid_info.time_stage = 10;
+  grid_info.stage = 10;
 
   auto data = CostFunctionData(robot);
 

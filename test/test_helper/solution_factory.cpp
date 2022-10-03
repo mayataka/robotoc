@@ -29,7 +29,7 @@ Solution CreateSolution(const Robot& robot,
         s[i].setRandom(robot);
       }
       else {
-        s[i].setContactStatus(contact_sequence->contactStatus(grid.contact_phase));
+        s[i].setContactStatus(contact_sequence->contactStatus(grid.phase));
         if (grid.switching_constraint) {
           s[i].setSwitchingConstraintDimension(contact_sequence->impulseStatus(grid.impulse_index+1).dimf());
         }
