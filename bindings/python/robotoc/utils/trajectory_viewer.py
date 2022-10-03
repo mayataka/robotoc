@@ -79,7 +79,10 @@ class TrajectoryViewer:
             self.zoom = zoom
 
 
-    def display(self, dt, q_traj, f_traj=None):
+    def display(self, time_discretization, q_traj, f_traj=None):
+        dt = []
+        for i in range(time_discretization.size()):
+            dt.append(time_discretization[i].dt)
         if self.viewer_type == 'gepetto':
             self.display_gepetto(dt, q_traj, f_traj)
         elif self.viewer_type == 'meshcat':
@@ -87,12 +90,6 @@ class TrajectoryViewer:
 
 
     def display_gepetto(self, dt, q_traj, f_traj):
-        if isinstance(dt, float):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
-        assert len(q_traj)-1 == len(dt)
-        if f_traj is not None:
-            assert len(dt) == len(f_traj)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(windowName=self.window_name, loadModel=False)
         self.robot.loadViewerModel(rootNodeName=self.window_name)
@@ -189,10 +186,6 @@ class TrajectoryViewer:
 
 
     def display_meshcat(self, dt, q_traj, open=True):
-        if isinstance(dt, float):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
-        assert len(q_traj)-1 == len(dt)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(open=open)
         self.robot.loadViewerModel(rootNodeName='robotoc.TrajectoryViewer')

@@ -28,8 +28,7 @@ STOConstraints::STOConstraints(const std::vector<double>& minimum_dwell_times,
 STOConstraints::STOConstraints(const Eigen::VectorXd& minimum_dwell_times, 
                                const double barrier_param, 
                                const double fraction_to_boundary_rule) 
-  : eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
-    barrier_(barrier_param), 
+  : barrier_(barrier_param), 
     fraction_to_boundary_rule_(fraction_to_boundary_rule),
     num_switches_(minimum_dwell_times.size()-1),
     primal_step_size_(Eigen::VectorXd::Zero(minimum_dwell_times.size())), 
@@ -57,8 +56,7 @@ STOConstraints::STOConstraints(const Eigen::VectorXd& minimum_dwell_times,
 
 
 STOConstraints::STOConstraints()
-  : eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
-    barrier_(1.0e-03), 
+  : barrier_(1.0e-03), 
     fraction_to_boundary_rule_(0.995),
     num_switches_(0),
     primal_step_size_(), 
@@ -174,12 +172,7 @@ void STOConstraints::setSlackAndDual(
 
   data.resize(num_phases);
   data.slack = - (minimum_dwell_times_ - data.r[0]);
-  for (int i=0; i<data.slack.size(); ++i) {
-    if (data.slack.coeff(i) <= 0.0) {
-      data.slack.coeffRef(i) = std::sqrt(barrier_);
-    }
-  }
-  data.dual.array() = barrier_ / data.slack.array();
+  pdipm::setSlackAndDualPositive(barrier_, data);
 }
 
 

@@ -193,7 +193,7 @@ public:
                                 Eigen::VectorXd& dwell_times);
 
 private:
-  double barrier_, fraction_to_boundary_rule_, eps_;
+  double barrier_, fraction_to_boundary_rule_;
   int num_switches_;
 
   Eigen::VectorXd primal_step_size_, dual_step_size_;

@@ -15,8 +15,8 @@ void SolverOptions::disp(std::ostream& os) const {
   os << "  enable_line_search: " << std::boolalpha << enable_line_search << "\n";
   os << "  line_search_settings: " << line_search_settings << "\n";
   os << "  discretization_method: ";
-  if (discretization_method == DiscretizationMethod::GridBased) os << "grid-based" << "\n";
-  else os << "phase-based" << "\n";
+  if (discretization_method == DiscretizationMethod::GridBased) os << "GridBased" << "\n";
+  else os << "PhaseBased" << "\n";
   os << "  initial_sto_reg_iter: " << initial_sto_reg_iter << "\n";
   os << "  initial_sto_reg: " << initial_sto_reg << "\n";
   os << "  kkt_tol_mesh: " << kkt_tol_mesh << "\n";
