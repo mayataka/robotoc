@@ -278,7 +278,7 @@ void ContactSequenceTest::test_setContactPlacements(const Robot& robot) const {
   int impulse_index = 0;
   for (int i=0; i<5; ++i) {
     contact_sequence.push_back(discrete_events[i], event_times[i], false);
-    if (discrete_events[i].eventType() == DiscreteEventType::Impulse) {
+    if (discrete_events[i].eventType() == DiscreteEventType::Impact) {
       impulse_indices.push_back(impulse_index);
       ++impulse_index;
     }
@@ -301,7 +301,7 @@ void ContactSequenceTest::test_setContactPlacements(const Robot& robot) const {
       EXPECT_TRUE(cps[j].isApprox(contact_positions[i][j]));
     }
     if (i > 0) {
-      if (contact_sequence.eventType(i-1) == DiscreteEventType::Impulse) {
+      if (contact_sequence.eventType(i-1) == DiscreteEventType::Impact) {
         const auto& ips = contact_sequence.impulseStatus(impulse_indices[i-1]).contactPositions();
         for (int j=0; j<robot.maxNumContacts(); ++j) {
           EXPECT_TRUE(ips[j].isApprox(contact_positions[i][j]));

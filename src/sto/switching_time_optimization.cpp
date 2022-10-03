@@ -92,7 +92,7 @@ void SwitchingTimeOptimization::evalKKT(
   int event_index = 0;
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
-    if (grid.type == GridType::Impulse) {
+    if (grid.type == GridType::Impact) {
       kkt_residual[i+1].h -= lt_.coeff(event_index);
       kkt_matrix[i+1].Qtt += Qtt_.coeff(event_index, event_index);
       ++event_index;
@@ -113,7 +113,7 @@ void SwitchingTimeOptimization::evalKKT(
   event_index = 0;
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
-    if ((grid.type == GridType::Impulse && time_discretization[i+1].sto)
+    if ((grid.type == GridType::Impact && time_discretization[i+1].sto)
         || (grid.type == GridType::Lift && grid.sto)) {
       const double hdiff = h_.coeff(event_index) - h_.coeff(event_index+1);
       performance_index_.dual_feasibility += std::abs(hdiff);
@@ -135,7 +135,7 @@ void SwitchingTimeOptimization::computeStepSizes(
   int event_index = 0;
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
-    if (grid.type == GridType::Impulse || grid.type == GridType::Lift) {
+    if (grid.type == GridType::Impact || grid.type == GridType::Lift) {
       dts_.coeffRef(event_index) = d[i].dts;
       ++event_index;
     }
@@ -176,7 +176,7 @@ void SwitchingTimeOptimization::integrateSolution(
                                     - time_discretization.grid(0).phase;
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
-    if (grid.type == GridType::Impulse) {
+    if (grid.type == GridType::Impact) {
       const int impulse_index = grid.impulse_index;
       const double ts = contact_sequence_->impulseTime(impulse_index) 
                           + primal_step_size * d[i].dts;

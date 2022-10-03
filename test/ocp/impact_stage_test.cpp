@@ -26,7 +26,7 @@ class ImpactStageTest : public ::testing::TestWithParam<Robot> {
 protected:
   virtual void SetUp() {
     grid_info = GridInfo::Random();
-    grid_info.type = GridType::Impulse;
+    grid_info.type = GridType::Impact;
     grid_info.switching_constraint = false;
     grid_info.dt = 0.;
     grid_info.impulse_index = 0;

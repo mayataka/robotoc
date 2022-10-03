@@ -48,7 +48,7 @@ void DirectMultipleShooting::initConstraints(
       terminal_stage_.initConstraints(robots[omp_get_thread_num()], 
                                       grid, s[i], ocp_data_[i]);
     }
-    else if (grid.type == GridType::Impulse) {
+    else if (grid.type == GridType::Impact) {
       impact_stage_.initConstraints(robots[omp_get_thread_num()], 
                                     grid, s[i], ocp_data_[i]);
     }
@@ -73,7 +73,7 @@ bool DirectMultipleShooting::isFeasible(
       is_feasible[i] = terminal_stage_.isFeasible(robots[omp_get_thread_num()], 
                                                   grid, s[i], ocp_data_[i]);
     }
-    else if (grid.type == GridType::Impulse) {
+    else if (grid.type == GridType::Impact) {
       is_feasible[i] = impact_stage_.isFeasible(robots[omp_get_thread_num()], 
                                                 grid, s[i], ocp_data_[i]);
     }
@@ -102,7 +102,7 @@ void DirectMultipleShooting::evalOCP(
       terminal_stage_.evalOCP(robots[omp_get_thread_num()], grid, s[i],  
                               ocp_data_[i], kkt_residual[i]);
     }
-    else if (grid.type == GridType::Impulse) {
+    else if (grid.type == GridType::Impact) {
       impact_stage_.evalOCP(robots[omp_get_thread_num()], grid, s[i], s[i+1], 
                             ocp_data_[i], kkt_residual[i]);
     }
@@ -131,7 +131,7 @@ void DirectMultipleShooting::evalKKT(
       terminal_stage_.evalKKT(robots[omp_get_thread_num()], grid, s[i-1].q, s[i], 
                               ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
     }
-    else if (grid.type == GridType::Impulse) {
+    else if (grid.type == GridType::Impact) {
       impact_stage_.evalKKT(robots[omp_get_thread_num()], grid, s[i-1].q, s[i], s[i+1],
                             ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
     }
@@ -177,7 +177,7 @@ void DirectMultipleShooting::computeStepSizes(
       max_primal_step_sizes_.coeffRef(i) = terminal_stage_.maxPrimalStepSize(ocp_data_[i]);
       max_dual_step_sizes_.coeffRef(i) = terminal_stage_.maxDualStepSize(ocp_data_[i]);
     }
-    else if (grid.type == GridType::Impulse) {
+    else if (grid.type == GridType::Impact) {
       impact_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
       max_primal_step_sizes_.coeffRef(i) = impact_stage_.maxPrimalStepSize(ocp_data_[i]);
       max_dual_step_sizes_.coeffRef(i) = impact_stage_.maxDualStepSize(ocp_data_[i]);
@@ -217,7 +217,7 @@ void DirectMultipleShooting::integrateSolution(
                                    primal_step_size, d[i], s[i], ocp_data_[i]);
       terminal_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
-    else if (grid.type == GridType::Impulse) {
+    else if (grid.type == GridType::Impact) {
       impact_stage_.expandDual(grid, ocp_data_[i], d[i+1], d[i]);
       impact_stage_.updatePrimal(robots[omp_get_thread_num()], 
                                  primal_step_size, d[i], s[i], ocp_data_[i]);

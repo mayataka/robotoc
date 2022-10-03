@@ -181,7 +181,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int lift_index = 0;
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     EXPECT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
-//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
 //       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
 //       ++impulse_index;
 //     }
@@ -327,7 +327,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   int lift_index = 0;
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     EXPECT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
-//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
 //       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
 //       ++impulse_index;
 //     }
@@ -455,7 +455,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   double dt_prev_aux = time_discretization.gridInfo(0).dt;
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     ASSERT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
-//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
 //       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
 //       const int grids_phase = time_discretization.timeStageBeforeImpulse(impulse_index) 
 //                               - time_stage_before_event + 1;
@@ -616,7 +616,7 @@ TEST_P(TimeDiscretizationTest, constructor) {
 //   double dt_prev_aux = time_discretization.gridInfo(0).dt;
 //   for (int event_index=0; event_index<num_events; ++event_index) {
 //     ASSERT_FALSE(time_discretization.eventType(event_index)==DiscreteEventType::None);
-//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impulse) {
+//     if (time_discretization.eventType(event_index) == DiscreteEventType::Impact) {
 //       EXPECT_EQ(time_discretization.eventIndexImpulse(impulse_index), event_index);
 //       const int grids_phase = time_discretization.timeStageBeforeImpulse(impulse_index) 
 //                               - time_stage_before_event + 1;

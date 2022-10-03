@@ -60,7 +60,7 @@ void DiscreteEvent::setDiscreteEvent(
                        post_contact_status.contactRotations());
   pre_contact_status_ = pre_contact_status;
   post_contact_status_ = post_contact_status;
-  if (exist_impulse_) { event_type_ = DiscreteEventType::Impulse; }
+  if (exist_impulse_) { event_type_ = DiscreteEventType::Impact; }
   else if (exist_lift_) { event_type_ = DiscreteEventType::Lift; }
   else { event_type_ = DiscreteEventType::None; }
 }
@@ -119,11 +119,11 @@ void DiscreteEvent::disp(std::ostream& os) const {
   auto discreteEventTypeToString = [](const DiscreteEventType& type) {
     switch (type)
     {
-    case DiscreteEventType::Impulse:
-      return "Impulse";
+    case DiscreteEventType::Impact:
+      return "Impact";
       break;
     case DiscreteEventType::Lift:
-      return "Impulse";
+      return "Lift";
       break;
     default:
       return "None";

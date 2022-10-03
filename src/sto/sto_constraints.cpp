@@ -252,7 +252,7 @@ void STOConstraints::computeDwellTimes(const TimeDiscretization& time_discretiza
   int event_index = 0;
   double prev_event_time = time_discretization.grid(0).t;
   for (int i=0; i<N; ++i) {
-    if (time_discretization[i].type == GridType::Impulse
+    if (time_discretization[i].type == GridType::Impact
         || time_discretization[i].type == GridType::Lift) {
       dwell_times.coeffRef(event_index) = time_discretization[i].t - prev_event_time;
       prev_event_time = time_discretization[i].t;

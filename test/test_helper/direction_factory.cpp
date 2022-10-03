@@ -23,7 +23,7 @@ Direction CreateDirection(const Robot& robot,
     Direction d(time_discretization.size(), SplitDirection(robot));
     for (int i=0; i<time_discretization.size()-1; ++i) {
       const auto& grid = time_discretization[i];
-      if (grid.type == GridType::Impulse) {
+      if (grid.type == GridType::Impact) {
         d[i].setContactDimension(contact_sequence->impulseStatus(grid.impulse_index).dimf());
         d[i].setRandom();
       }

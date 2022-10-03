@@ -54,7 +54,7 @@ TEST_F(DiscreteEventTest, constructor) {
   for (int i=0; i<max_num_contacts; ++i) {
     EXPECT_TRUE(contact_positions[i].isApprox(discrete_event.impulseStatus().contactPositions()[i]));
   }
-  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impact);
   EXPECT_NO_THROW(
     std::cout << discrete_event << std::endl;
   );
@@ -72,7 +72,7 @@ TEST_F(DiscreteEventTest, impulse) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impact);
   EXPECT_NO_THROW(
     std::cout << discrete_event << std::endl;
   );
@@ -108,7 +108,7 @@ TEST_F(DiscreteEventTest, impulseAndLift) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
-  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impulse);
+  EXPECT_EQ(discrete_event.eventType(), DiscreteEventType::Impact);
 }
 
 } // namespace robotoc

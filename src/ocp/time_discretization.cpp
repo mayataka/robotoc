@@ -83,7 +83,7 @@ void TimeDiscretization::discretize(
         grid_[stage].phase = next_impulse_index + next_lift_index;
         grid_[stage].impulse_index = next_impulse_index - 1;
         grid_[stage].lift_index = next_lift_index - 1;
-        grid_[stage].type = GridType::Impulse;
+        grid_[stage].type = GridType::Impact;
         ++stage;
         grid_[stage].t = next_impulse_time;
         grid_[stage].dt = std::min(ti+dt, t+T_) - next_impulse_time;
@@ -137,7 +137,7 @@ void TimeDiscretization::discretize(
 
   // set switching_constraint flag
   for (int i=0; i<num_grids_-1; ++i) {
-    grid_[i].switching_constraint = (grid_[i+2].type == GridType::Impulse);
+    grid_[i].switching_constraint = (grid_[i+2].type == GridType::Impact);
   }
   grid_[num_grids_-1].switching_constraint = false;
   grid_[num_grids_].switching_constraint = false;
@@ -155,7 +155,7 @@ void TimeDiscretization::discretize(
   int stage_in_phase = 0;
   int phase_start_stage = 0;
   for (int i=0; i<num_grids_; ++i) {
-    if (grid_[i].type == GridType::Impulse) {
+    if (grid_[i].type == GridType::Impact) {
       for (int j=phase_start_stage; j<i; ++j) {
         grid_[j].num_grids_in_phase = stage_in_phase;
       }
@@ -188,7 +188,7 @@ void TimeDiscretization::correctTimeSteps(
   int prev_event_stage = 0;
   double prev_event_time = t;
   for (int i=0; i<num_grids_; ++i) {
-    if (grid_[i].type == GridType::Impulse) {
+    if (grid_[i].type == GridType::Impact) {
       const double event_time = contact_sequence->impulseTime(grid_[i+1].impulse_index);
       const double dt = (event_time - prev_event_time) / grid_[i-1].num_grids_in_phase;
       for (int j=prev_event_stage; j<=i-1; ++j) {
@@ -232,7 +232,7 @@ void TimeDiscretization::correctTimeSteps(
   sto_event_.clear();
   sto_event_.reserve(grid_[num_grids_].phase-grid_[num_grids_].phase);
   for (int i=0; i<num_grids_; ++i) {
-    if (grid_[i].type == GridType::Impulse) {
+    if (grid_[i].type == GridType::Impact) {
       sto_event_.push_back(
           contact_sequence->isSTOEnabledImpulse(grid_[i+1].impulse_index));
     }
@@ -269,7 +269,7 @@ void TimeDiscretization::disp(std::ostream& os) const {
     case GridType::Intermediate:
       return "Intermediate";
       break;
-    case GridType::Impulse:
+    case GridType::Impact:
       return "     Impulse";
       break;
     case GridType::Lift:

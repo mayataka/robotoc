@@ -14,7 +14,7 @@ namespace robotoc {
 /// @brief Type of the discrete events.
 ///
 enum class DiscreteEventType {
-  Impulse,
+  Impact,
   Lift,
   None
 };

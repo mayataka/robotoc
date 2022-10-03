@@ -24,7 +24,7 @@ Solution CreateSolution(const Robot& robot,
     Solution s(time_discretization.size(), SplitSolution(robot));
     for (int i=0; i<time_discretization.size()-1; ++i) {
       const auto& grid = time_discretization[i];
-      if (grid.type == GridType::Impulse) {
+      if (grid.type == GridType::Impact) {
         s[i].setContactStatus(contact_sequence->impulseStatus(grid.impulse_index));
         s[i].setRandom(robot);
       }

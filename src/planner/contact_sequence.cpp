@@ -387,7 +387,7 @@ void ContactSequence::disp(std::ostream& os) const {
     os << "  contact phase: " << event_index << "\n";
     os << contactStatus(event_index) << "\n";
     os << "  event index: " << event_index << ", type: ";
-    if (eventType(event_index) == DiscreteEventType::Impulse) {
+    if (eventType(event_index) == DiscreteEventType::Impact) {
       os << "impulse, time: " << impulseTime(impulse_index) 
          << ", sto: " << std::boolalpha << isSTOEnabledImpulse(impulse_index) <<  "\n";
       os << impulseStatus(impulse_index) << "\n";

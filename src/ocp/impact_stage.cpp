@@ -37,7 +37,7 @@ OCPData ImpactStage::createData(const Robot& robot) const {
 
 bool ImpactStage::isFeasible(Robot& robot, const GridInfo& grid_info, 
                              const SplitSolution& s, OCPData& data) const {
-  assert(grid_info.type == GridType::Impulse);
+  assert(grid_info.type == GridType::Impact);
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   return constraints_->isFeasible(robot, impulse_status, data.constraints_data, s);
 }
@@ -45,7 +45,7 @@ bool ImpactStage::isFeasible(Robot& robot, const GridInfo& grid_info,
 
 void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info, 
                                   const SplitSolution& s, OCPData& data) const {
-  assert(grid_info.type == GridType::Impulse);
+  assert(grid_info.type == GridType::Impact);
   data.constraints_data.setTimeStage(-1);
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   constraints_->setSlackAndDual(robot, impulse_status, data.constraints_data, s);
@@ -55,7 +55,7 @@ void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info,
 void ImpactStage::evalOCP(Robot& robot, const GridInfo& grid_info, 
                           const SplitSolution& s, const SplitSolution& s_next, 
                           OCPData& data, SplitKKTResidual& kkt_residual) const {
-  assert(grid_info.type == GridType::Impulse);
+  assert(grid_info.type == GridType::Impact);
   // setup computation
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   robot.updateKinematics(s.q, s.v+s.dv);
@@ -81,7 +81,7 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
                           const SplitSolution& s_next, OCPData& data, 
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual) const {
-  assert(grid_info.type == GridType::Impulse);
+  assert(grid_info.type == GridType::Impact);
   assert(q_prev.size() == robot.dimq());
   // setup computation
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
@@ -122,7 +122,7 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
 
 void ImpactStage::expandPrimal(const GridInfo& grid_info, OCPData& data, 
                                SplitDirection& d) const {
-  assert(grid_info.type == GridType::Impulse);
+  assert(grid_info.type == GridType::Impact);
   const auto& impulse_status = contact_sequence_->impulseStatus(grid_info.impulse_index);
   d.setContactDimension(impulse_status.dimf());
   d.setSwitchingConstraintDimension(0);
@@ -134,7 +134,7 @@ void ImpactStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
 void ImpactStage::expandDual(const GridInfo& grid_info, OCPData& data,
                              const SplitDirection& d_next, 
                              SplitDirection& d) const {
-  assert(grid_info.type == GridType::Impulse);
+  assert(grid_info.type == GridType::Impact);
   expandImpulseDynamicsDual(data.contact_dynamics_data, d_next, d);
   correctCostateDirection(data.state_equation_data, d);
 }

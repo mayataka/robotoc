@@ -12,7 +12,7 @@ namespace robotoc {
 ///
 enum class GridType {
   Intermediate,
-  Impulse,
+  Impact,
   Lift,
   Terminal,
 };

@@ -39,7 +39,7 @@ void RiccatiRecursion::backwardRiccatiRecursion(
   factorization[N].s = - kkt_residual[N].lx;
   for (int i=N-1; i>=0; --i) {
     const auto& grid = time_discretization[i];
-    if (grid.type == GridType::Impulse) {
+    if (grid.type == GridType::Impact) {
       if (time_discretization[i-1].sto || grid.sto) {
         factorizer_.backwardRiccatiRecursionPhaseTransition(
             factorization[i+1], factorization_m_, sto_policy_[i], grid.sto_next);
@@ -94,7 +94,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
   }
   for (int i=0; i<N; ++i) {
     const auto& grid = time_discretization[i];
-    if (grid.type == GridType::Impulse) {
+    if (grid.type == GridType::Impact) {
       d[i].dts = d[i-1].dts_next;
       d[i].dts_next = 0.0;
       ::robotoc::forwardRiccatiRecursion(kkt_matrix[i], kkt_residual[i], d[i], d[i+1]);

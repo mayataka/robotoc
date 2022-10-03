@@ -274,7 +274,7 @@ public:
   DiscreteEventType eventType(const int event_index) const {
     assert(event_index >= 0);
     assert(event_index < numImpulseEvents()+numLiftEvents());
-    if (is_impulse_event_[event_index]) return DiscreteEventType::Impulse;
+    if (is_impulse_event_[event_index]) return DiscreteEventType::Impact;
     else return DiscreteEventType::Lift;
   }
 

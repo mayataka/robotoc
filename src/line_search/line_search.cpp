@@ -89,7 +89,7 @@ void LineSearch::computeSolutionTrial(const aligned_vector<Robot>& robots,
   const int N = time_discretization.size() - 1;
   for (int i=0; i<=N; ++i) {
     computeSolutionTrial(robots[0], s[i], d[i], step_size, s_trial_[i],
-                         (time_discretization[i].type == GridType::Impulse));
+                         (time_discretization[i].type == GridType::Impact));
   }
 }
 

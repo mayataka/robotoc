@@ -14,7 +14,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(discrete_event, m) {
   py::enum_<DiscreteEventType>(m, "DiscreteEventType", py::arithmetic())
-    .value("Impulse",  DiscreteEventType::Impulse)
+    .value("Impact",  DiscreteEventType::Impact)
     .value("Lift", DiscreteEventType::Lift)
     .value("NoneEvent", DiscreteEventType::None)
     .export_values();

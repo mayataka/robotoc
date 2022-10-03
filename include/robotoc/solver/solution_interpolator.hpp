@@ -83,7 +83,7 @@ private:
     const int N = stored_time_discretization_.size() - 1;
     constexpr double eps = 1.0e-06;
     for (int i=1; i<N; ++i) {
-      if ((stored_time_discretization_[i].type == GridType::Impulse)
+      if ((stored_time_discretization_[i].type == GridType::Impact)
             && (numerics::isApprox(t, stored_time_discretization_[i].t, eps))) {
         return i;
       }
@@ -108,7 +108,7 @@ private:
     const int N = stored_time_discretization_.size() - 1;
     for (int i=0; i<N; ++i) {
       if (t < stored_time_discretization_[i+1].t) {
-        if (stored_time_discretization_[i].type == GridType::Impulse) {
+        if (stored_time_discretization_[i].type == GridType::Impact) {
           return i+1;
         }
         else {

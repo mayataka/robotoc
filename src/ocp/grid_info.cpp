@@ -36,8 +36,8 @@ void GridInfo::disp(std::ostream& os) const {
     case GridType::Intermediate:
       return "Intermediate";
       break;
-    case GridType::Impulse:
-      return "Impulse";
+    case GridType::Impact:
+      return "Impact";
       break;
     case GridType::Lift:
       return "Lift";
