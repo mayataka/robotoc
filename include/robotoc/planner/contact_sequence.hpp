@@ -4,6 +4,7 @@
 #include <deque>
 #include <iostream>
 #include <memory>
+#include <cassert>
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3.hpp"
@@ -36,9 +37,9 @@ public:
   ContactSequence();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ContactSequence();
+  ~ContactSequence() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -190,55 +191,79 @@ public:
                                const std::vector<double>& friction_coefficients);
 
   ///
-  /// @brief Returns number of impulse events. 
-  /// @return Number of impulse events.
+  /// @brief Returns number of contact phases. 
+  /// @return Number of contact phases.
   ///
-  int numImpulseEvents() const;
-
-  ///
-  /// @brief Returns number of lift events. 
-  /// @return Number of lift events.
-  ///
-  int numLiftEvents() const;
+  int numContactPhases() const {
+    return contact_statuses_.size();
+  }
 
   ///
   /// @brief Returns number of discrete events, i.e., sum of 
   /// numImpulseEvents() and numLiftEvents().
   /// @return Number of discrete events.
   ///
-  int numDiscreteEvents() const;
+  int numDiscreteEvents() const {
+    return (numContactPhases()-1);
+  }
 
   ///
-  /// @brief Returns number of contact phases. 
-  /// @return Number of contact phases.
+  /// @brief Returns number of impulse events. 
+  /// @return Number of impulse events.
   ///
-  int numContactPhases() const;
+  int numImpulseEvents() const {
+    return impulse_events_.size();
+  }
+
+  ///
+  /// @brief Returns number of lift events. 
+  /// @return Number of lift events.
+  ///
+  int numLiftEvents() const {
+    return (numDiscreteEvents()-numImpulseEvents());
+  }
 
   ///
   /// @brief Gets the contact status. 
   /// @param[in] contact_phase Index of contact status phase.
   /// @return const reference to the contact status.
   ///
-  const ContactStatus& contactStatus(const int contact_phase) const;
+  const ContactStatus& contactStatus(const int contact_phase) const {
+    assert(contact_phase >= 0);
+    assert(contact_phase < numContactPhases());
+    return contact_statuses_[contact_phase];
+  }
 
   ///
   /// @brief Gets the impulse status. 
   /// @param[in] impulse_index Index of impulse event.
   /// @return const reference to the impulse status.
   ///
-  const ImpulseStatus& impulseStatus(const int impulse_index) const;
+  const ImpulseStatus& impulseStatus(const int impulse_index) const {
+    assert(impulse_index >= 0);
+    assert(impulse_index < numImpulseEvents());
+    return impulse_events_[impulse_index].impulseStatus();
+  }
 
   ///
   /// @brief Returns impulse event time. 
   /// @return Impulse event time.
   ///
-  double impulseTime(const int impulse_index) const;
+  double impulseTime(const int impulse_index) const {
+    assert(impulse_index >= 0);
+    assert(impulse_index < numImpulseEvents());
+    return impulse_time_[impulse_index];
+  }
 
   ///
   /// @brief Returns lift event time. 
   /// @return Lift event time.
   ///
-  double liftTime(const int lift_index) const;
+  double liftTime(const int lift_index) const {
+    assert(lift_index >= 0);
+    assert(lift_index < numLiftEvents());
+    return lift_time_[lift_index];
+  }
 
   ///
   /// @brief Returns the event type of the specified discrete event. 
@@ -246,13 +271,20 @@ public:
   /// ContactSequence::numDiscreteEvents().
   /// @return The event type of the specified discrete event.
   ///
-  DiscreteEventType eventType(const int event_index) const;
+  DiscreteEventType eventType(const int event_index) const {
+    assert(event_index >= 0);
+    assert(event_index < numImpulseEvents()+numLiftEvents());
+    if (is_impulse_event_[event_index]) return DiscreteEventType::Impulse;
+    else return DiscreteEventType::Lift;
+  }
 
   ///
   /// @brief Returns the event times of each event. 
   /// @return const reference to the event times.
   ///
-  const std::deque<double>& eventTimes() const;
+  const std::deque<double>& eventTimes() const {
+    return event_time_;
+  }
 
   ///
   /// @brief Reserves each discrete events (impulse and lift) to avoid dynamic 
@@ -287,30 +319,9 @@ private:
   std::deque<double> event_time_, impulse_time_, lift_time_;
   std::deque<bool> is_impulse_event_, sto_impulse_, sto_lift_;
 
-  void clear_all();
-
-  template <typename T> 
-  static void reserveDeque(std::deque<T>& deq, const int size) {
-    if (deq.empty()) {
-      deq.resize(size);
-    }
-    else {
-      const int current_size = deq.size();
-      if (current_size < size) {
-        while (deq.size() < size) {
-          deq.push_back(deq.back());
-        }
-        while (deq.size() > current_size) {
-          deq.pop_back();
-        }
-      }
-    }
-  }
-
+  void clear();
 };
  
 } // namespace robotoc 
-
-#include "robotoc/planner/contact_sequence.hxx"
 
 #endif // ROBOTOC_CONTACT_SEQUENCE_HPP_ 

@@ -1,6 +1,3 @@
-#ifndef ROBOTOC_CONSTRAINT_COMPONENT_DATA_HXX_
-#define ROBOTOC_CONSTRAINT_COMPONENT_DATA_HXX_
-
 #include "robotoc/constraints/constraint_component_data.hpp"
 
 #include <cmath>
@@ -10,8 +7,8 @@
 
 namespace robotoc {
 
-inline ConstraintComponentData::ConstraintComponentData(const int dimc,
-                                                        const double barrier_param)
+ConstraintComponentData::ConstraintComponentData(const int dimc,
+                                                 const double barrier_param)
   : slack(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier_param))),
     dual(Eigen::VectorXd::Constant(dimc, std::sqrt(barrier_param))),
     residual(Eigen::VectorXd::Zero(dimc)),
@@ -34,7 +31,7 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc,
 }
 
 
-inline ConstraintComponentData::ConstraintComponentData()
+ConstraintComponentData::ConstraintComponentData()
   : slack(),
     dual(),
     residual(),
@@ -49,20 +46,14 @@ inline ConstraintComponentData::ConstraintComponentData()
 }
 
 
-inline void ConstraintComponentData::copySlackAndDual(
-    const ConstraintComponentData& other) {
+void ConstraintComponentData::copySlackAndDual(const ConstraintComponentData& other) {
   assert(dimc() == other.dimc());
   slack = other.slack;
   dual = other.dual;
 }
 
 
-inline double ConstraintComponentData::KKTError() const {
-  return (residual.squaredNorm() + cmpl.squaredNorm());
-}
-
-
-inline void ConstraintComponentData::resize(const int dimc) {
+void ConstraintComponentData::resize(const int dimc) {
   assert(dimc >= 0);
   slack.conservativeResize(dimc);
   dual.conservativeResize(dimc);
@@ -74,12 +65,7 @@ inline void ConstraintComponentData::resize(const int dimc) {
 }
 
 
-inline int ConstraintComponentData::dimc() const {
-  return dimc_;
-}
-
-
-inline bool ConstraintComponentData::checkDimensionalConsistency() const {
+bool ConstraintComponentData::checkDimensionalConsistency() const {
   if (slack.size() != dimc_) {
     return false;
   }
@@ -105,7 +91,7 @@ inline bool ConstraintComponentData::checkDimensionalConsistency() const {
 }
 
 
-inline bool ConstraintComponentData::isApprox(
+bool ConstraintComponentData::isApprox(
     const ConstraintComponentData& other) const {
   if (!slack.isApprox(other.slack)) {
     return false;
@@ -138,5 +124,3 @@ inline bool ConstraintComponentData::isApprox(
 }
 
 } // namespace robotoc
-
-#endif // ROBOTOC_CONSTRAINT_COMPONENT_DATA_HXX_

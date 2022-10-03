@@ -30,10 +30,6 @@ Constraints::Constraints(const double barrier_param,
 }
 
 
-Constraints::~Constraints() {
-}
-
-
 void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
   constraint_component->setBarrierParam(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);

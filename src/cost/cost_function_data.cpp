@@ -1,11 +1,8 @@
-#ifndef ROBOTOC_COST_FUNCTION_DATA_HXX_
-#define ROBOTOC_COST_FUNCTION_DATA_HXX_
-
 #include "robotoc/cost/cost_function_data.hpp"
 
 namespace robotoc {
 
-inline CostFunctionData::CostFunctionData(const Robot& robot) 
+CostFunctionData::CostFunctionData(const Robot& robot) 
   : qdiff(Eigen::VectorXd::Zero(robot.dimv())),
     q_ref(Eigen::VectorXd::Zero(robot.dimq())),
     x3d_ref(Eigen::VectorXd::Zero(3)),
@@ -28,7 +25,7 @@ inline CostFunctionData::CostFunctionData(const Robot& robot)
 }
 
 
-inline CostFunctionData::CostFunctionData() 
+CostFunctionData::CostFunctionData() 
   : qdiff(),
     q_ref(),
     x3d_ref(),
@@ -44,11 +41,4 @@ inline CostFunctionData::CostFunctionData()
     JJ_6d() {
 }
 
-
-inline CostFunctionData::~CostFunctionData() {
-}
-
 } // namespace robotoc
-
-
-#endif // ROBOTOC_COST_FUNCTION_DATA_HXX_ 

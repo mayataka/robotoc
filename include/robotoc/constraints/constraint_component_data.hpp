@@ -126,7 +126,9 @@ public:
   /// the constraint. 
   /// @return Squared norm of the KKT residual. 
   ///
-  double KKTError() const;
+  double KKTError() const {
+    return (residual.squaredNorm() + cmpl.squaredNorm());
+  }
 
   ///
   /// @brief Returns the lp norm of the primal feasibility, i.e., the constraint 
@@ -162,7 +164,9 @@ public:
   /// @brief Dimension of the constraint. 
   /// @return Dimension of the constraint. 
   ///
-  int dimc() const;
+  int dimc() const {
+    return dimc_;
+  }
 
   ///
   /// @brief Check whether dimensions of slack, dual, residual, cmpl, 
@@ -184,7 +188,5 @@ private:
 };
 
 } // namespace robotoc
-
-#include "robotoc/constraints/constraint_component_data.hxx"
 
 #endif // ROBOTOC_CONSTRAINT_COMPONENT_DATA_HPP_

@@ -16,7 +16,6 @@
 #include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 #include "robotoc/ocp/ocp_data.hpp"
-#include "robotoc/ocp/ocp_def.hpp"
 
 
 namespace robotoc {

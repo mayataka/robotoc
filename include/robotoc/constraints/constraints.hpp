@@ -42,9 +42,9 @@ public:
               const double fraction_to_boundary_rule=0.995);
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~Constraints();
+  ~Constraints() = default;
 
   ///
   /// @brief Default copy constructor. 

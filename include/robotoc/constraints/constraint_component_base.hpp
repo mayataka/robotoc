@@ -65,8 +65,7 @@ public:
   ///
   /// @brief Default move assign operator. 
   ///
-  ConstraintComponentBase& operator=(ConstraintComponentBase&&) noexcept 
-      = default;
+  ConstraintComponentBase& operator=(ConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Checks the kinematics level of the constraint component.

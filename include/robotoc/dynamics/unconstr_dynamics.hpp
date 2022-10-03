@@ -31,9 +31,9 @@ public:
   UnconstrDynamics();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~UnconstrDynamics();
+  ~UnconstrDynamics() = default;
 
   ///
   /// @brief Default copy constructor. 

@@ -47,7 +47,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~CostFunction();
+  ~CostFunction() = default;
 
   ///
   /// @brief Default copy constructor. 

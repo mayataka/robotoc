@@ -17,6 +17,8 @@ class ConstraintsData {
 public:
   ///
   /// @brief Constructor. 
+  /// @param[in] time_stage Time stage. 
+  ///
   ///
   ConstraintsData(const int time_stage);
 
@@ -50,32 +52,44 @@ public:
   ///
   ConstraintsData& operator=(ConstraintsData&&) noexcept = default;
 
+///
+/// @brief Sets the time stage info. 
+/// @param[in] time_stage Time stage. 
+///
   void setTimeStage(const int time_stage);
 
   ///
   /// @brief Checks wheather the position-level constraints are valid or not. 
   /// @return true if the position-level constraints are valid. false otherwise. 
   ///
-  bool isPositionLevelValid() const;
+  bool isPositionLevelValid() const {
+    return is_position_level_valid_;
+  }
 
   ///
   /// @brief Checks wheather the velocity-level constraints are valid or not. 
   /// @return true if the velocity-level constraints are valid. false otherwise. 
   ///
-  bool isVelocityLevelValid() const;
+  bool isVelocityLevelValid() const {
+    return is_velocity_level_valid_;
+  }
 
   ///
   /// @brief Checks wheather the acceleration-level constraints are valid or not. 
   /// @return true if the acceleration-level constraints are valid. false 
   /// otherwise. 
   ///
-  bool isAccelerationLevelValid() const;
+  bool isAccelerationLevelValid() const {
+    return is_acceleration_level_valid_;
+  }
 
   ///
   /// @brief Checks wheather the impulse-level constraints are valid or not. 
   /// @return true if the impulse-level constraints are valid. false otherwise. 
   ///
-  bool isImpulseLevelValid() const;
+  bool isImpulseLevelValid() const {
+    return is_impulse_level_valid_;
+  }
 
   ///
   /// @brief Copies the slack and dual variables from another constraint data.

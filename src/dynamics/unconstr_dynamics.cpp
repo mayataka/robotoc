@@ -43,10 +43,6 @@ UnconstrDynamics::UnconstrDynamics()
 }
 
 
-UnconstrDynamics::~UnconstrDynamics() {
-}
-
-
 void UnconstrDynamics::evalUnconstrDynamics(Robot& robot, 
                                             const SplitSolution& s) {
   robot.RNEA(s.q, s.v, s.a, ID_);

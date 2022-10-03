@@ -43,7 +43,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~DiscreteEvent();
+  ~DiscreteEvent() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -69,39 +69,51 @@ public:
   /// @brief Returns true if this discrete event exists. Returns false if not.
   /// @return true if this discrete event exists. false if not.
   ///
-  bool existDiscreteEvent() const;
+  bool existDiscreteEvent() const {
+    return (exist_impulse_ || exist_lift_);
+  }
 
   ///
   /// @brief Returns true if impulse exists in this discrete event. Returns 
   /// false if not.
   /// @return true if impulse exists. false if not.
   ///
-  bool existImpulse() const;
+  bool existImpulse() const {
+    return exist_impulse_;
+  }
 
   ///
   /// @brief Returns true if lift exists in this discrete event. Returns false 
   /// if not.
   /// @return true if lift exists. false if not.
   ///
-  bool existLift() const;
+  bool existLift() const {
+    return exist_lift_;
+  }
 
   ///
   /// @brief Returns const reference to impulse status. 
   /// @return const reference to impulse status. 
   ///
-  const ImpulseStatus& impulseStatus() const;
+  const ImpulseStatus& impulseStatus() const {
+    return impulse_status_;
+  }
 
   ///
   /// @brief Gets the contact status before this discrete event.
   /// @return const reference to the pre contact status.
   ///
-  const ContactStatus& preContactStatus() const;
+  const ContactStatus& preContactStatus() const {
+    return pre_contact_status_;
+  }
 
   ///
   /// @brief Gets the contact status after this discrete event.
   /// @return const reference to the post contact status.
   ///
-  const ContactStatus& postContactStatus() const;
+  const ContactStatus& postContactStatus() const {
+    return post_contact_status_;
+  }
 
   ///
   /// @brief Sets the contact status from two sequential contact status.
@@ -188,13 +200,17 @@ public:
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
-  int maxNumContacts() const;
+  int maxNumContacts() const {
+    return max_num_contacts_;
+  }
 
   ///
   /// @brief Returns the event type of this discrete event.
   /// @return Event type of this discrete event. 
   ///
-  DiscreteEventType eventType() const;
+  DiscreteEventType eventType() const {
+    return event_type_;
+  }
 
   ///
   /// @brief Displays the discrete event onto a ostream.
@@ -214,7 +230,5 @@ private:
 };
 
 } // namespace robotoc
-
-#include "robotoc/planner/discrete_event.hxx"
 
 #endif // ROBOTOC_DISCRETE_EVENT_HPP_
