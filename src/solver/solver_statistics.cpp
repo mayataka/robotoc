@@ -33,8 +33,8 @@ void SolverStatistics::clear() {
 void SolverStatistics::disp(std::ostream& os) const {
   os << "Solver statistics:" << "\n";
   os << "  convergence: " << std::boolalpha << convergence << "\n";
-  os << "  total no. of iteration: " << iter << "\n";
-  os << "  CPU time (non-zero if benchmark is enabled): " << cpu_time << " ms \n";
+  os << "  total No. of iterations: " << iter << "\n";
+  os << "  CPU time: " << std::setprecision(3) << cpu_time << " ms (non-zero if benchmark is enabled) \n";
   os << "  ------------------------------------------------------------------------------------------------------------------ " << "\n";
   os << "   iter |   KKT error  |      cost    |  primal feas |   dual feas  | primal alpha |   dual alpha |        ts        " << "\n";
   os << "  ------------------------------------------------------------------------------------------------------------------ " << "\n";
@@ -45,7 +45,9 @@ void SolverStatistics::disp(std::ostream& os) const {
     os << "    " << std::setw(3) << i+1;
     os << std::scientific << std::setprecision(3);
     os << " |    " << std::sqrt(performance_index[i].kkt_error);
-    os << " |    " << performance_index[i].cost + performance_index[i].cost_barrier;
+    const double cost = performance_index[i].cost + performance_index[i].cost_barrier;
+    if (cost >= 0) os << " |    " << cost;
+    else os << " |   " << cost;
     os << " |    " << performance_index[i].primal_feasibility;
     os << " |    " << performance_index[i].dual_feasibility;
     os << " |    " << primal_step_size[i];

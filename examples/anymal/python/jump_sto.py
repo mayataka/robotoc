@@ -93,14 +93,14 @@ contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
-contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3-0.05, sto=True)
+contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
 
 contact_positions['LF_FOOT'] += jump_length
 contact_positions['LH_FOOT'] += jump_length
 contact_positions['RF_FOOT'] += jump_length
 contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time+0.05, sto=True)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 
 # you can check the contact sequence via 
 # print(contact_sequence)
@@ -120,9 +120,11 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
                   contact_sequence=contact_sequence, T=T, N=N)
 # Create the OCP solver
 solver_options = robotoc.SolverOptions()
-solver_options.kkt_tol_mesh = 0.1
+solver_options.kkt_tol_mesh = 1.0
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
+# solver_options.interpolation_order = robotoc.InterpolationOrder.Zero
+solver_options.enable_solution_interpolation = False
 ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
@@ -143,7 +145,7 @@ print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
 # Plot results
-kkt_data = ocp_solver.get_solver_statistics().kkt_error + [ocp_solver.KKT_error()] # append KKT after convergence
+kkt_data = [math.sqrt(e.kkt_error) for e in ocp_solver.get_solver_statistics().performance_index] + [ocp_solver.KKT_error()] # append KKT after convergence
 ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
 
 plot_ts = robotoc.utils.PlotConvergence()

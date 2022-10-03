@@ -45,15 +45,20 @@ void SolutionInterpolator::interpolate(
       continue;
     }
     if (grid.type == GridType::Impulse) {
-      const int grid_index = findStoredGridIndexAtImpulseByTime(grid.t);
-      assert(grid_index >= 0);
-      solution[i] = stored_solution_[grid_index];
+      const int stored_grid_index = findStoredGridIndexAtImpulseByTime(grid.t);
+      assert(stored_grid_index >= 0);
+      solution[i] = stored_solution_[stored_grid_index];
+      if ((i-2 >= 0) && (stored_grid_index-2 >= 0)) {
+        solution[i-2].setSwitchingConstraintDimension(
+            stored_solution_[stored_grid_index-2].dimf());
+        solution[i-2].xi_stack() = stored_solution_[stored_grid_index-2].xi_stack();
+      }
       continue;
     }
     if (grid.type == GridType::Lift) {
-      const int grid_index = findStoredGridIndexAtLiftByTime(grid.t);
-      assert(grid_index >= 0);
-      solution[i] = stored_solution_[grid_index];
+      const int stored_grid_index = findStoredGridIndexAtLiftByTime(grid.t);
+      assert(stored_grid_index >= 0);
+      solution[i] = stored_solution_[stored_grid_index];
       continue;
     }
 
@@ -68,11 +73,10 @@ void SolutionInterpolator::interpolate(
         || (stored_time_discretization_[grid_index+1].type == GridType::Lift)) {
       interpolatePartial(robot, stored_solution_[grid_index],
                         stored_solution_[grid_index+1], alpha, solution[i]);
+      continue;
     }
-    else {
-      interpolate(robot, stored_solution_[grid_index],
-                  stored_solution_[grid_index+1], alpha, solution[i]);
-    }
+    interpolate(robot, stored_solution_[grid_index],
+                stored_solution_[grid_index+1], alpha, solution[i]);
   }
 }
 

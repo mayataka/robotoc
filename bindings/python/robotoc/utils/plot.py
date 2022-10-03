@@ -226,14 +226,14 @@ class PlotContactForce:
 
 
     def plot(self, f_data, time_discretization: TimeDiscretization, fig_name=None, save_dir='./'):
-        f = []
+        # f = []
         t = []
         for i in range(time_discretization.size()):
             if time_discretization[i].type == GridType.Intermediate \
                 or time_discretization[i].type == GridType.Lift:
-                f.append(f_data[i])
+                # f.append(f_data[i])
                 t.append(time_discretization[i].t)
-        f_data = f
+        # f_data = f
         import matplotlib.pyplot as plt
         import seaborn 
         seaborn.set()

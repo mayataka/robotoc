@@ -26,6 +26,9 @@ PYBIND11_MODULE(time_discretization, m) {
     .def("__getitem__", [](const TimeDiscretization& self, const int i) {
         return self[i];
      })
+    .def("__len__", [](const TimeDiscretization& self) {
+        return self.size();
+     })
     .def("max_time_step", &TimeDiscretization::maxTimeStep)
     .def("discretize", &TimeDiscretization::discretize,
           py::arg("contact_sequence"), py::arg("t")) 

@@ -108,7 +108,12 @@ private:
     const int N = stored_time_discretization_.size() - 1;
     for (int i=0; i<N; ++i) {
       if (t < stored_time_discretization_[i+1].t) {
-        return i;
+        if (stored_time_discretization_[i].type == GridType::Impulse) {
+          return i+1;
+        }
+        else {
+          return i;
+        }
       }
     }
     return N;

@@ -116,7 +116,8 @@ void SwitchingTimeOptimization::evalKKT(
     if ((grid.type == GridType::Impulse && time_discretization[i+1].sto)
         || (grid.type == GridType::Lift && grid.sto)) {
       const double hdiff = h_.coeff(event_index) - h_.coeff(event_index+1);
-      performance_index_.kkt_error = hdiff * hdiff;
+      performance_index_.dual_feasibility += std::abs(hdiff);
+      performance_index_.kkt_error += hdiff * hdiff;
       ++event_index;
     }
   }
