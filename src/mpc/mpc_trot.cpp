@@ -179,9 +179,11 @@ void MPCTrot::init(const double t, const Eigen::VectorXd& q,
                                                                 swing_time_, stance_time_);
   base_rot_cost_->set_ref(base_rot_ref_);
   resetContactPlacements(t, q, v);
+  ocp_solver_.discretize(t);
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
+  ocp_solver_.initConstraints();
   ocp_solver_.solve(t, q, v, true);
   s_ = ocp_solver_.getSolution();
   ts_last_ = swing_start_time_;

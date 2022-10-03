@@ -47,7 +47,7 @@ bool IntermediateStage::isFeasible(Robot& robot, const GridInfo& grid_info,
 void IntermediateStage::initConstraints(Robot& robot, const GridInfo& grid_info, 
                                         const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
-  data.constraints_data.setTimeStage(grid_info.stage);
+  data.constraints_data = constraints_->createConstraintsData(robot, grid_info.stage);
   const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   constraints_->setSlackAndDual(robot, contact_status, data.constraints_data, s);
 }

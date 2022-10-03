@@ -91,17 +91,17 @@ class PlotContactForce:
         self.legend_bbox_to_anchor = (-0.2, 3.0)
         self.ylim = [-200, 200]
 
-    def _decompose_f_data(self, f_data):
-        length = len(f_data) 
+    def _decompose_f_traj(self, f_traj):
+        length = len(f_traj) 
         fx = []
         fy = []
         fz = []
         mfz = []
         for i in range(length):
-            fx.append(f_data[i][0])
-            fy.append(f_data[i][1])
-            fz.append(f_data[i][2])
-            mfz.append(-1*f_data[i][2])
+            fx.append(f_traj[i][0])
+            fy.append(f_traj[i][1])
+            fz.append(f_traj[i][2])
+            mfz.append(-1*f_traj[i][2])
         return fx, fy, fz, mfz
 
     def _detect_phases(self, fx, fy, fz, mfz):
@@ -225,15 +225,13 @@ class PlotContactForce:
         ax.set_xlim([t[0], t[-1]])
 
 
-    def plot(self, f_data, time_discretization: TimeDiscretization, fig_name=None, save_dir='./'):
-        # f = []
+    def plot(self, f_traj, time_discretization: TimeDiscretization, fig_name=None, save_dir='./'):
         t = []
-        for i in range(time_discretization.size()):
-            if time_discretization[i].type == GridType.Intermediate \
-                or time_discretization[i].type == GridType.Lift:
-                # f.append(f_data[i])
+        f = []
+        for i in range(len(time_discretization)-1):
+            if time_discretization[i].type is not GridType.Impact:
                 t.append(time_discretization[i].t)
-        # f_data = f
+                f.append(f_traj[i])
         import matplotlib.pyplot as plt
         import seaborn 
         seaborn.set()
@@ -271,17 +269,17 @@ class PlotContactForce:
         f_LH = []
         f_RF = []
         f_RH = []
-        N = len(f_data) 
+        N = len(f) 
         for i in range(N):
-            f_LF.append(f_data[i][0:3])
-            f_LH.append(f_data[i][3:6])
-            f_RF.append(f_data[i][6:9])
-            f_RH.append(f_data[i][9:12])
+            f_LF.append(f[i][0:3])
+            f_LH.append(f[i][3:6])
+            f_RF.append(f[i][6:9])
+            f_RH.append(f[i][9:12])
 
-        fx_LF, fy_LF, fz_LF, mfz_LF = self._decompose_f_data(f_LF)
-        fx_LH, fy_LH, fz_LH, mfz_LH = self._decompose_f_data(f_LH)
-        fx_RF, fy_RF, fz_RF, mfz_RF = self._decompose_f_data(f_RF)
-        fx_RH, fy_RH, fz_RH, mfz_RH = self._decompose_f_data(f_RH)
+        fx_LF, fy_LF, fz_LF, mfz_LF = self._decompose_f_traj(f_LF)
+        fx_LH, fy_LH, fz_LH, mfz_LH = self._decompose_f_traj(f_LH)
+        fx_RF, fy_RF, fz_RF, mfz_RF = self._decompose_f_traj(f_RF)
+        fx_RH, fy_RH, fz_RH, mfz_RH = self._decompose_f_traj(f_RH)
 
         self._plot_f_leg(ax_LF, fx_LF, fy_LF, fz_LF, mfz_LF, t, 'Left-front leg', False)
         self._plot_f_leg(ax_LH, fx_LH, fy_LH, fz_LH, mfz_LH, t, 'Left-hip leg', False)

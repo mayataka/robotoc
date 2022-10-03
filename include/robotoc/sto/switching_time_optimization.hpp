@@ -102,10 +102,10 @@ public:
   ///
   /// @brief Computes the step sizes via the fraction-to-boundary-rule.
   /// @param[in] time_discretization Time discretization. 
-  /// @param[in, out] d Direction. 
+  /// @param[in] d Direction. 
   ///
   void computeStepSizes(const TimeDiscretization& time_discretization,
-                        Direction& d);
+                        const Direction& d);
 
   ///
   /// @brief Gets the maximum primal step size of the fraction-to-boundary-rule.

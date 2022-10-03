@@ -125,7 +125,7 @@ void SwitchingTimeOptimization::evalKKT(
 
 
 void SwitchingTimeOptimization::computeStepSizes(
-    const TimeDiscretization& time_discretization, Direction& d) {
+    const TimeDiscretization& time_discretization, const Direction& d) {
   if (!is_sto_enabled_) return;
 
   const int N = time_discretization.size() - 1;

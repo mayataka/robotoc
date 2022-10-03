@@ -124,7 +124,7 @@ solver_options.kkt_tol_mesh = 1.0
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
 # solver_options.interpolation_order = robotoc.InterpolationOrder.Zero
-solver_options.enable_solution_interpolation = False
+# solver_options.enable_solution_interpolation = False
 ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
@@ -154,7 +154,7 @@ plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto',
              save_dir='jump_sto_log')
 
 plot_f = robotoc.utils.PlotContactForce(mu=mu)
-plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
+plot_f.plot(f_traj=ocp_solver.get_solution('f', 'WORLD'), 
             time_discretization=ocp_solver.get_time_discretization(), 
             fig_name='jump_sto_f', save_dir='jump_sto_log')
 

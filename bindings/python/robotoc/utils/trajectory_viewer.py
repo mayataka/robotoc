@@ -81,12 +81,19 @@ class TrajectoryViewer:
 
     def display(self, time_discretization, q_traj, f_traj=None):
         dt = []
-        for i in range(len(time_discretization)):
-            dt.append(time_discretization[i].dt)
+        q = []
+        f = []
+        for i in range(len(time_discretization)-1):
+            if time_discretization[i].type is not robotoc.GridType.Impact:
+                dt.append(time_discretization[i].dt)
+                q.append(q_traj[i])
+                f.append(f_traj[i])
+        q.append(q_traj[-1])
+        f.append(f_traj[-2])
         if self.viewer_type == 'gepetto':
-            self.display_gepetto(dt, q_traj, f_traj)
+            self.display_gepetto(dt, q, f)
         elif self.viewer_type == 'meshcat':
-            self.display_meshcat(dt, q_traj)
+            self.display_meshcat(dt, q)
 
 
     def display_gepetto(self, dt, q_traj, f_traj):

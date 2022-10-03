@@ -238,56 +238,77 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
     for (int i=0; i<time_discretization_.size(); ++i) {
-      if (time_discretization_[i].type == GridType::Impact) continue;
       sol.push_back(s_[i].q);
     }
   }
   else if (name == "v") {
     for (int i=0; i<time_discretization_.size(); ++i) {
-      if (time_discretization_[i].type == GridType::Impact) continue;
       sol.push_back(s_[i].v);
+    }
+  }
+  else if (name == "u") {
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robots_[0].dimu()));
+      }
+      else {
+        sol.push_back(s_[i].u);
+      }
     }
   }
   else if (name == "a") {
     for (int i=0; i<time_discretization_.size(); ++i) {
-      if (time_discretization_[i].type == GridType::Impact) continue;
-      sol.push_back(s_[i].a);
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robots_[0].dimv()));
+      }
+      else {
+        sol.push_back(s_[i].a);
+      }
     }
   }
   else if (name == "f" && option == "WORLD") {
     Robot robot = robots_[0];
     for (int i=0; i<time_discretization_.size(); ++i) {
-      if (time_discretization_[i].type == GridType::Impact) continue;
-      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-      robot.updateFrameKinematics(s_[i].q);
-      for (int j=0; j<robot.maxNumContacts(); ++j) {
-        if (s_[i].isContactActive(j)) {
-          const int contact_frame = robot.contactFrames()[j];
-          robot.transformFromLocalToWorld(contact_frame, s_[i].f[j].template head<3>(),
-                                          f.template segment<3>(3*j));
-        }
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robot.max_dimf()));
       }
-      sol.push_back(f);
+      else {
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        robot.updateFrameKinematics(s_[i].q);
+        for (int j=0; j<robot.maxNumContacts(); ++j) {
+          if (s_[i].isContactActive(j)) {
+            const int contact_frame = robot.contactFrames()[j];
+            robot.transformFromLocalToWorld(contact_frame, s_[i].f[j].template head<3>(),
+                                            f.template segment<3>(3*j));
+          }
+        }
+        sol.push_back(f);
+      }
     }
   }
   else if (name == "f") {
     Robot robot = robots_[0];
     for (int i=0; i<time_discretization_.size(); ++i) {
-      if (time_discretization_[i].type == GridType::Impact) continue;
-      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-      for (int j=0; j<robot.maxNumContacts(); ++j) {
-        if (s_[i].isContactActive(j)) {
-          f.template segment<3>(3*j) = s_[i].f[j].template head<3>();
-        }
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robot.max_dimf()));
       }
-      sol.push_back(f);
+      else {
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        for (int j=0; j<robot.maxNumContacts(); ++j) {
+          if (s_[i].isContactActive(j)) {
+            f.template segment<3>(3*j) = s_[i].f[j].template head<3>();
+          }
+        }
+        sol.push_back(f);
+      }
     }
   }
-  else if (name == "u") {
-    for (int i=0; i<time_discretization_.size(); ++i) {
-      if (time_discretization_[i].type == GridType::Impact) continue;
-      sol.push_back(s_[i].u);
-    }
+  else {
+    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, u, a, f!");
   }
   return sol;
 }

@@ -46,13 +46,6 @@ ConstraintComponentData::ConstraintComponentData()
 }
 
 
-void ConstraintComponentData::copySlackAndDual(const ConstraintComponentData& other) {
-  assert(dimc() == other.dimc());
-  slack = other.slack;
-  dual = other.dual;
-}
-
-
 void ConstraintComponentData::resize(const int dimc) {
   assert(dimc >= 0);
   slack.conservativeResize(dimc);

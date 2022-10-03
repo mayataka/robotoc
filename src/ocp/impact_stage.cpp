@@ -46,7 +46,7 @@ bool ImpactStage::isFeasible(Robot& robot, const GridInfo& grid_info,
 void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info, 
                                   const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Impact);
-  data.constraints_data.setTimeStage(-1);
+  data.constraints_data = constraints_->createConstraintsData(robot, -1);
   const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
   constraints_->setSlackAndDual(robot, impact_status, data.constraints_data, s);
 }

@@ -114,13 +114,6 @@ public:
   std::vector<Eigen::MatrixXd> J;
 
   ///
-  /// @brief Copies the slack and dual variables from another constraint 
-  /// component data. this->dimc() and other.dimc() must be the same.
-  /// @param[in] other Another constraint component data. 
-  ///
-  void copySlackAndDual(const ConstraintComponentData& other);
-
-  ///
   /// @brief Returns the squared norm of the KKT reisdual, that is, the sum of
   /// the squared norm of the primal residual and complementary slackness of 
   /// the constraint. 
