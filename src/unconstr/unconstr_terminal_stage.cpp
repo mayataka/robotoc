@@ -78,7 +78,7 @@ void UnconstrTerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   // constraints_->linearizeConstraints(robot, contact_status_, 
   //                                    data.constraints_data, s, kkt_residual);
   // data.performance_index.cost_barrier = constraints_data_.logBarrier();
-  unconstr::stateequation::linearizeForwardEulerTerminal(s, kkt_residual);
+  linearizeUnconstrForwardEulerTerminal(s, kkt_residual);
   data.performance_index.primal_feasibility = 0.0;
       // = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();
   data.performance_index.dual_feasibility

@@ -1,6 +1,6 @@
 #include "robotoc/unconstr/parnmpc_terminal_stage.hpp"
-#include "robotoc/unconstr/unconstr_state_equation.hpp"
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_state_equation.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -64,8 +64,7 @@ void ParNMPCTerminalStage::evalOCP(Robot& robot, const GridInfo& grid_info,
                                                         grid_info, s);
   constraints_->evalConstraint(robot, contact_status_, data.constraints_data, s);
   data.performance_index.cost_barrier += data.constraints_data.logBarrier();
-  unconstr::stateequation::evalBackwardEuler(grid_info.dt, q_prev, v_prev, s, 
-                                             kkt_residual);
+  evalUnconstrBackwardEuler(grid_info.dt, q_prev, v_prev, s, kkt_residual);
   data.unconstr_dynamics.evalUnconstrDynamics(robot, s);
   data.performance_index.primal_feasibility 
       = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();
@@ -93,8 +92,8 @@ void ParNMPCTerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   constraints_->linearizeConstraints(robot, contact_status_, 
                                      data.constraints_data, s, kkt_residual);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
-  unconstr::stateequation::linearizeBackwardEulerTerminal(grid_info.dt, q_prev, v_prev,
-                                                          s, kkt_matrix, kkt_residual);
+  linearizeUnconstrBackwardEulerTerminal(grid_info.dt, q_prev, v_prev, s, 
+                                         kkt_matrix, kkt_residual);
   data.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
   data.performance_index.primal_feasibility 
       = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();

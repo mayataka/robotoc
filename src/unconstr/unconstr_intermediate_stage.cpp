@@ -59,7 +59,7 @@ void UnconstrIntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
                                                       data.cost_data, grid_info, s);
   constraints_->evalConstraint(robot, contact_status_, data.constraints_data, s);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
-  unconstr::stateequation::evalForwardEuler(grid_info.dt, s, s_next, kkt_residual);
+  evalUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_residual);
   data.unconstr_dynamics.evalUnconstrDynamics(robot, s);
   data.performance_index.primal_feasibility 
       = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();
@@ -81,8 +81,7 @@ void UnconstrIntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   constraints_->linearizeConstraints(robot, contact_status_, 
                                      data.constraints_data, s, kkt_residual);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
-  unconstr::stateequation::linearizeForwardEuler(grid_info.dt, s, s_next, 
-                                                 kkt_matrix, kkt_residual);
+  linearizeUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_matrix, kkt_residual);
   data.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
   data.performance_index.primal_feasibility 
       = data.primalFeasibility<1>() + kkt_residual.primalFeasibility<1>();

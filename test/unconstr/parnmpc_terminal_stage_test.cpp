@@ -10,9 +10,9 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/unconstr/parnmpc_intermediate_stage.hpp"
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
-#include "robotoc/unconstr/unconstr_state_equation.hpp"
+#include "robotoc/unconstr/parnmpc_terminal_stage.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_state_equation.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
@@ -21,7 +21,7 @@
 
 namespace robotoc {
 
-class ParNMPCIntermediateStageTest : public ::testing::Test {
+class ParNMPCTerminalStageTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     robot = testhelper::CreateRobotManipulator();
@@ -43,10 +43,11 @@ protected:
 };
 
 
-TEST_F(ParNMPCIntermediateStageTest, evalOCP) {
+
+TEST_F(ParNMPCTerminalStageTest, evalOCP) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = SplitSolution::Random(robot);
-  ParNMPCIntermediateStage stage(robot, cost, constraints);
+  ParNMPCTerminalStage stage(robot, cost, constraints);
   UnconstrOCPData data = stage.createData(robot);
   stage.initConstraints(robot, grid_info, s, data);
   const int dimv = robot.dimv();
@@ -64,9 +65,10 @@ TEST_F(ParNMPCIntermediateStageTest, evalOCP) {
   constraints->setSlackAndDual(robot, contact_status, data_ref.constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   performance_index_ref.cost = cost->evalStageCost(robot, contact_status, data_ref.cost_data, grid_info, s);
+  performance_index_ref.cost += cost->evalTerminalCost(robot, data_ref.cost_data, grid_info, s);
   constraints->evalConstraint(robot, contact_status, data_ref.constraints_data, s);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
-  unconstr::stateequation::evalBackwardEuler(grid_info.dt, s_prev.q, s_prev.v, s, kkt_residual_ref);
+  evalUnconstrBackwardEuler(grid_info.dt, s_prev.q, s_prev.v, s, kkt_residual_ref);
   data_ref.unconstr_dynamics.evalUnconstrDynamics(robot, s);
   performance_index_ref.primal_feasibility 
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
@@ -74,17 +76,16 @@ TEST_F(ParNMPCIntermediateStageTest, evalOCP) {
 }
 
 
-TEST_F(ParNMPCIntermediateStageTest, evalKKT) {
+TEST_F(ParNMPCTerminalStageTest, evalKKT) {
   const auto s_prev = SplitSolution::Random(robot);
   const auto s = SplitSolution::Random(robot);
-  const auto s_next = SplitSolution::Random(robot);
-  ParNMPCIntermediateStage stage(robot, cost, constraints);
+  ParNMPCTerminalStage stage(robot, cost, constraints);
   UnconstrOCPData data = stage.createData(robot);
   stage.initConstraints(robot, grid_info, s, data);
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  stage.evalKKT(robot, grid_info, s_prev.q, s_prev.v, s, s_next, data, kkt_matrix, kkt_residual);
+  stage.evalKKT(robot, grid_info, s_prev.q, s_prev.v, s, data, kkt_matrix, kkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   PerformanceIndex performance_index_ref;
@@ -96,9 +97,10 @@ TEST_F(ParNMPCIntermediateStageTest, evalKKT) {
   constraints->setSlackAndDual(robot, contact_status, data_ref.constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
+  performance_index_ref.cost += cost->quadratizeTerminalCost(robot, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, contact_status, data_ref.constraints_data, s, kkt_residual_ref);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
-  unconstr::stateequation::linearizeBackwardEuler(dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  linearizeUnconstrBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   data_ref.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual_ref);
   performance_index_ref.primal_feasibility 
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
@@ -129,6 +131,7 @@ TEST_F(ParNMPCIntermediateStageTest, evalKKT) {
   constraints->updateSlack(data_ref.constraints_data, step_size);
   EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
 }
+
 
 } // namespace robotoc
 

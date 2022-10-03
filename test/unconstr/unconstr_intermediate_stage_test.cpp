@@ -11,8 +11,8 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/unconstr/unconstr_intermediate_stage.hpp"
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
-#include "robotoc/unconstr/unconstr_state_equation.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_state_equation.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
@@ -66,7 +66,7 @@ TEST_F(UnconstrIntermediateStageTest, evalOCP) {
   performance_index_ref.cost = cost->evalStageCost(robot, contact_status, data_ref.cost_data, grid_info, s);
   constraints->evalConstraint(robot, contact_status, data_ref.constraints_data, s);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
-  unconstr::stateequation::evalForwardEuler(grid_info.dt, s, s_next, kkt_residual_ref);
+  evalUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_residual_ref);
   data_ref.unconstr_dynamics.evalUnconstrDynamics(robot, s);
   performance_index_ref.primal_feasibility 
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
@@ -97,7 +97,7 @@ TEST_F(UnconstrIntermediateStageTest, evalKKT) {
   performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, contact_status, data_ref.constraints_data, s, kkt_residual_ref);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
-  unconstr::stateequation::linearizeForwardEuler(grid_info.dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  linearizeUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   data_ref.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual_ref);
   performance_index_ref.primal_feasibility 
       = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();

@@ -7,7 +7,7 @@
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/core/split_solution.hpp"
 #include "robotoc/core/split_direction.hpp"
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
 
 #include "robot_factory.hpp"
 

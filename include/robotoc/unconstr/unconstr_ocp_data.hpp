@@ -4,7 +4,7 @@
 #include "robotoc/core/performance_index.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
 
 
 namespace robotoc {

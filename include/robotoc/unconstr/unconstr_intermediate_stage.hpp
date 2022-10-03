@@ -16,8 +16,8 @@
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
-#include "robotoc/unconstr/unconstr_state_equation.hpp"
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_state_equation.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
 #include "robotoc/unconstr/unconstr_ocp_data.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 

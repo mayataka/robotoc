@@ -31,6 +31,17 @@ protected:
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     step_size_reduction_rate = 0.75;
     min_step_size = 0.05;
+    time_discretization.resize(N+1);
+    for (int i=0; i<=N; ++i) {
+      time_discretization[i].t = t + dt * i;
+      time_discretization[i].dt = dt;
+      time_discretization[i].contact_phase = -1;
+      time_discretization[i].time_stage = i;
+      time_discretization[i].impulse_index = -1;
+      time_discretization[i].lift_index = -1;
+      time_discretization[i].grid_count_in_phase = i;
+      time_discretization[i].N_phase = N;
+    }
   }
 
   virtual void TearDown() {
@@ -39,31 +50,33 @@ protected:
   Robot robot;
   int dimv, N, nthreads;
   double T, dt, t, step_size_reduction_rate, min_step_size;
+  std::vector<GridInfo> time_discretization;
 };
 
 
 TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
-  // auto cost = testhelper::CreateCost(robot);
-  // auto constraints = testhelper::CreateConstraints(robot);
-  // const auto s = testhelper::CreateSolution(robot, N);
-  // const auto d = testhelper::CreateDirection(robot, N);
-  // const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
-  // const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  // aligned_vector<Robot> robots(nthreads, robot);
-  // auto ocp = UnconstrOCP(robot, cost, constraints, T, N);
-  // for (int i=0; i<N; ++i) {
-  //   ocp[i].initConstraints(robot, i, s[i]);
-  // }
-  // UnconstrLineSearch line_search(ocp, nthreads);
-  // EXPECT_TRUE(line_search.isFilterEmpty());
-  // const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
-  // const double step_size = line_search.computeStepSize(ocp, robots, t, q, v, s, d, max_primal_step_size);
-  // EXPECT_TRUE(step_size <= max_primal_step_size);
-  // EXPECT_TRUE(step_size >= min_step_size);
-  // EXPECT_FALSE(line_search.isFilterEmpty());
-  // const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
-  // EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, t, q, v, s, d, very_small_max_primal_step_size),
-  //                  min_step_size);
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
+  const auto s = testhelper::CreateSolution(robot, N);
+  const auto d = testhelper::CreateDirection(robot, N);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  aligned_vector<Robot> robots(nthreads, robot);
+  OCP ocp(robot, cost, constraints, T, N);
+  UnconstrDirectMultipleShooting dms(ocp, nthreads);
+  dms.initConstraints(robots, time_discretization, s);
+  UnconstrLineSearch line_search(ocp, nthreads);
+  EXPECT_TRUE(line_search.isFilterEmpty());
+  const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
+  const double step_size = line_search.computeStepSize(dms, robots, time_discretization, 
+                                                       q, v, s, d, max_primal_step_size);
+  EXPECT_TRUE(step_size <= max_primal_step_size);
+  EXPECT_TRUE(step_size >= min_step_size);
+  EXPECT_FALSE(line_search.isFilterEmpty());
+  const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double step_size2 = line_search.computeStepSize(dms, robots, time_discretization, 
+                                                        q, v, s, d, max_primal_step_size);
+  EXPECT_DOUBLE_EQ(step_size2, min_step_size);
 }
 
 
@@ -75,21 +88,21 @@ TEST_F(UnconstrLineSearchTest, UnconstrParNMPC) {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   aligned_vector<Robot> robots(nthreads, robot);
-  // auto parnmpc = UnconstrParNMPC(robot, cost, constraints, T, N);
-  // for (int i=0; i<N-1; ++i) {
-  //   parnmpc[i].initConstraints(robot, i+1, s[i]);
-  // }
-  // parnmpc.terminal.initConstraints(robot, N, s[N-1]);
-  // UnconstrLineSearch line_search(parnmpc, nthreads);
-  // EXPECT_TRUE(line_search.isFilterEmpty());
-  // const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
-  // const double step_size = line_search.computeStepSize(parnmpc, robots, t, q, v, s, d, max_primal_step_size);
-  // EXPECT_TRUE(step_size <= max_primal_step_size);
-  // EXPECT_TRUE(step_size >= min_step_size);
-  // EXPECT_FALSE(line_search.isFilterEmpty());
-  // const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
-  // EXPECT_DOUBLE_EQ(line_search.computeStepSize(parnmpc, robots, t, q, v, s, d, very_small_max_primal_step_size),
-  //                  min_step_size);
+  OCP ocp(robot, cost, constraints, T, N);
+  UnconstrBackwardCorrection backward_correction(ocp, nthreads);
+  backward_correction.initConstraints(robots, time_discretization, s);
+  UnconstrLineSearch line_search(ocp, nthreads);
+  EXPECT_TRUE(line_search.isFilterEmpty());
+  const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
+  const double step_size = line_search.computeStepSize(backward_correction, robots, time_discretization, 
+                                                       q, v, s, d, max_primal_step_size);
+  EXPECT_TRUE(step_size <= max_primal_step_size);
+  EXPECT_TRUE(step_size >= min_step_size);
+  EXPECT_FALSE(line_search.isFilterEmpty());
+  const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double step_size2 = line_search.computeStepSize(backward_correction, robots, time_discretization, 
+                                                        q, v, s, d, max_primal_step_size);
+  EXPECT_DOUBLE_EQ(step_size2, min_step_size);
 }
 
 } // namespace robotoc

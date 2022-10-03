@@ -1,4 +1,4 @@
-#include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/dynamics/unconstr_dynamics.hpp"
 
 #include <stdexcept>
 #include <iostream>

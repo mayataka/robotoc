@@ -93,7 +93,7 @@ TEST_F(UnconstrTerminalStageTest, evalKKT) {
   performance_index_ref.cost = cost->quadratizeTerminalCost(robot, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
   // constraints->linearizeConstraints(robot, contact_status, data_ref.constraints_data, s, kkt_residual_ref);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
-  unconstr::stateequation::linearizeForwardEulerTerminal(s, kkt_residual_ref);
+  linearizeUnconstrForwardEulerTerminal(s, kkt_residual_ref);
   // data.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual_ref);
   // performance_index_ref.primal_feasibility 
   //     = data_ref.primalFeasibility<1>() + kkt_residual_ref.primalFeasibility<1>();
