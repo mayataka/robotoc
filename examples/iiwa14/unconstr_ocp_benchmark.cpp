@@ -69,6 +69,7 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   ocp_solver.initConstraints();

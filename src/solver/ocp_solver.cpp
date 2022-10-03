@@ -93,8 +93,7 @@ void OCPSolver::discretize(const double t) {
 }
 
 
-void OCPSolver::initConstraints(const double t) {
-  discretize(t);
+void OCPSolver::initConstraints() {
   dms_.initConstraints(robots_, time_discretization_, s_);
   sto_.initConstraints(time_discretization_);
 }

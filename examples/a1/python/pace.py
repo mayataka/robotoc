@@ -188,12 +188,13 @@ t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
 
+ocp_solver.discretize(t)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
-ocp_solver.init_constraints(t)
+ocp_solver.init_constraints()
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))

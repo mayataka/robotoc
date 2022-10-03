@@ -82,6 +82,12 @@ public:
   void setSolverOptions(const SolverOptions& solver_options);
 
   ///
+  /// @brief Discretizes the problem and reiszes the data structures.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void discretize(const double t);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   ///
@@ -89,9 +95,8 @@ public:
 
   ///
   /// @brief Initializes the backward correction solver.
-  /// @param[in] t Initial time of the horizon. 
   ///
-  void initBackwardCorrection(const double t);
+  void initBackwardCorrection();
 
   ///
   /// @brief Performs single Newton-type iteration, computes the primal-dual 
@@ -190,8 +195,6 @@ private:
   SolverStatistics solver_statistics_;
   Timer timer_;
    
-  void discretize(const double t);
-
 };
 
 } // namespace robotoc 

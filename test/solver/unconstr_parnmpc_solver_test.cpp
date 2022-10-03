@@ -73,7 +73,7 @@ TEST_F(UnconstrParNMPCSolverTest, test) {
   robotoc::OCP ocp(robot, cost, constraints, T, N);
   auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
-  robotoc::UnconstrParNMPCSolver ocp_solver(ocp, solver_options, nthreads);
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(ocp, solver_options, nthreads);
 
   // Initial time and initial state
   const double t = 0;
@@ -82,11 +82,13 @@ TEST_F(UnconstrParNMPCSolverTest, test) {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the ParNMPC.
-  ocp_solver.setSolution("q", q);
-  ocp_solver.setSolution("v", v);
-  ocp_solver.initConstraints();
-  ocp_solver.solve(t, q, v);
-  const auto result = ocp_solver.getSolverStatistics();
+  parnmpc_solver.discretize(t);
+  parnmpc_solver.setSolution("q", q);
+  parnmpc_solver.setSolution("v", v);
+  parnmpc_solver.initConstraints();
+  parnmpc_solver.initBackwardCorrection();
+  parnmpc_solver.solve(t, q, v);
+  const auto result = parnmpc_solver.getSolverStatistics();
   EXPECT_TRUE(result.convergence);
 }
 

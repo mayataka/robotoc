@@ -233,7 +233,7 @@ Let's run the solver!
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init); // set the initial guess of the solution.
   ocp_solver.discretize(t);
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;

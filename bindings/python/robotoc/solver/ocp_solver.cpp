@@ -21,8 +21,7 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("solver_options"))
     .def("discretize", &OCPSolver::discretize,
           py::arg("t"))
-    .def("init_constraints", &OCPSolver::initConstraints,
-          py::arg("t"))
+    .def("init_constraints", &OCPSolver::initConstraints)
     .def("update_solution", &OCPSolver::updateSolution,
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("solve", &OCPSolver::solve,

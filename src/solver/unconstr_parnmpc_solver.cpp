@@ -72,13 +72,20 @@ void UnconstrParNMPCSolver::setSolverOptions(const SolverOptions& solver_options
 }
 
 
+void UnconstrParNMPCSolver::discretize(const double t) {
+  const double dt = ocp_.T / ocp_.N;
+  for (int i=0; i<=ocp_.N; ++i) {
+    time_discretization_[i].t = dt * i;
+  }
+}
+
+
 void UnconstrParNMPCSolver::initConstraints() {
   backward_correction_.initConstraints(robots_, time_discretization_, s_);
 }
 
 
-void UnconstrParNMPCSolver::initBackwardCorrection(const double t) {
-  discretize(t);
+void UnconstrParNMPCSolver::initBackwardCorrection() {
   backward_correction_.initAuxMat(robots_, time_discretization_, s_, 
                                   kkt_matrix_, kkt_residual_);
 }
@@ -122,8 +129,9 @@ void UnconstrParNMPCSolver::solve(const double t, const Eigen::VectorXd& q,
     timer_.tick();
   }
   if (init_solver) {
+    discretize(t);
     initConstraints();
-    initBackwardCorrection(t);
+    initBackwardCorrection();
     line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
@@ -235,14 +243,6 @@ const std::vector<GridInfo>& UnconstrParNMPCSolver::getTimeDiscretization() cons
 void UnconstrParNMPCSolver::setRobotProperties(const RobotProperties& properties) {
   for (auto& e : robots_) {
     e.setRobotProperties(properties);
-  }
-}
-
-
-void UnconstrParNMPCSolver::discretize(const double t) {
-  const double dt = ocp_.T / ocp_.N;
-  for (int i=0; i<=ocp_.N; ++i) {
-    time_discretization_[i].t = dt * i;
   }
 }
 

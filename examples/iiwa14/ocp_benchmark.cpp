@@ -70,9 +70,10 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;

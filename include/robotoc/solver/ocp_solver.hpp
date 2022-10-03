@@ -98,9 +98,8 @@ public:
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
-  /// @param[in] t Initial time of the horizon. 
   ///
-  void initConstraints(const double t);
+  void initConstraints();
 
   ///
   /// @brief Performs single Newton-type iteration and updates the solution.

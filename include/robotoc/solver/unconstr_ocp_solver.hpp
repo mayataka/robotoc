@@ -82,6 +82,12 @@ public:
   void setSolverOptions(const SolverOptions& solver_options);
 
   ///
+  /// @brief Discretizes the problem and reiszes the data structures.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void discretize(const double t);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   ///
@@ -188,8 +194,6 @@ private:
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
   Timer timer_;
-
-  void discretize(const double t);
 
 };
 

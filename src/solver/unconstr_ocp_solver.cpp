@@ -78,6 +78,14 @@ void UnconstrOCPSolver::setSolverOptions(const SolverOptions& solver_options) {
 }
 
 
+void UnconstrOCPSolver::discretize(const double t) {
+  const double dt = ocp_.T / ocp_.N;
+  for (int i=0; i<=ocp_.N; ++i) {
+    time_discretization_[i].t = dt * i;
+  }
+}
+
+
 void UnconstrOCPSolver::initConstraints() {
   dms_.initConstraints(robots_, time_discretization_, s_);
 }
@@ -121,6 +129,7 @@ void UnconstrOCPSolver::solve(const double t, const Eigen::VectorXd& q,
     timer_.tick();
   }
   if (init_solver) {
+    discretize(t);
     initConstraints();
     line_search_.clearFilter();
   }
@@ -237,14 +246,6 @@ const std::vector<GridInfo>& UnconstrOCPSolver::getTimeDiscretization() const {
 void UnconstrOCPSolver::setRobotProperties(const RobotProperties& properties) {
   for (auto& e : robots_) {
     e.setRobotProperties(properties);
-  }
-}
-
-
-void UnconstrOCPSolver::discretize(const double t) {
-  const double dt = ocp_.T / ocp_.N;
-  for (int i=0; i<=ocp_.N; ++i) {
-    time_discretization_[i].t = dt * i;
   }
 }
 

@@ -313,7 +313,7 @@ int main(int argc, char *argv[]) {
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
   ocp_solver.setSolution("lmd", f_init);
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;

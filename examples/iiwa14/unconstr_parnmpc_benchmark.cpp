@@ -69,10 +69,11 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the OCP.
+  parnmpc_solver.discretize(t);
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);
   parnmpc_solver.initConstraints();
-  parnmpc_solver.initBackwardCorrection(t);
+  parnmpc_solver.initBackwardCorrection();
   std::cout << "Initial KKT error: " << parnmpc_solver.KKTError(t, q, v) << std::endl;
   parnmpc_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << parnmpc_solver.KKTError(t, q, v) << std::endl;

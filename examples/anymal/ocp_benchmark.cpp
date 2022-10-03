@@ -124,7 +124,7 @@ int main () {
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   ocp_solver.solve(t, q, v);
   std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
