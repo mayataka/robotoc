@@ -1,8 +1,10 @@
 #ifndef ROBOTOC_SOLUTION_INTERPOLATOR_HPP_
 #define ROBOTOC_SOLUTION_INTERPOLATOR_HPP_
 
+#include "robotoc/robot/robot.hpp"
 #include "robotoc/core/solution.hpp"
 #include "robotoc/ocp/time_discretization.hpp"
+#include "robotoc/solver/interpolation_order.hpp"
 #include "robotoc/utils/numerics.hpp"
 
 
@@ -16,19 +18,9 @@ class SolutionInterpolator {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] robot Robot model.
-  /// @param[in] N Number of the discretization grids of the horizon except for 
-  /// the discrete events. Must be positive.
-  /// @param[in] reserved_num_discrete_events Reserved number of discrete events  
-  /// on the horizon. 
+  /// @param[in] order Order of the interpolation.
   ///
-  SolutionInterpolator(const Robot& robot, const int N, 
-                       const int reserved_num_discrete_events=1);
-
-  ///
-  /// @brief Default constructor. 
-  ///
-  SolutionInterpolator();
+  SolutionInterpolator(const InterpolationOrder order=InterpolationOrder::Linear);
 
   ///
   /// @brief Default destructor. 
@@ -54,6 +46,8 @@ public:
   /// @brief Default move assign operator. 
   ///
   SolutionInterpolator& operator=(SolutionInterpolator&&) noexcept = default;
+
+  void setInterpolationOrder(const InterpolationOrder order);
 
   ///
   /// @brief Stores the current time discretization and solution. 
@@ -90,6 +84,7 @@ public:
   bool hasStoredSolution() const { return has_stored_solution_; }
 
 private:
+  InterpolationOrder order_;
   TimeDiscretization stored_time_discretization_;
   Solution stored_solution_;
   bool has_stored_solution_;

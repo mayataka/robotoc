@@ -22,7 +22,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
     s_(ocp.N+1+ocp.reserved_num_discrete_events, SplitSolution(ocp.robot)),
     d_(ocp.N+1+ocp.reserved_num_discrete_events, SplitDirection(ocp.robot)),
     riccati_factorization_(ocp.N+1+ocp.reserved_num_discrete_events+1, SplitRiccatiFactorization(ocp.robot)),
-    solution_interpolator_(ocp.robot, ocp.N, ocp.reserved_num_discrete_events),
+    solution_interpolator_(solver_options.interpolation_order),
     solver_options_(solver_options),
     solver_statistics_(),
     timer_() {
@@ -81,6 +81,8 @@ void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
     solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
   riccati_recursion_.setRegularization(solver_options_.max_dts_riccati);
+  solution_interpolator_.setInterpolationOrder(solver_options.interpolation_order);
+  line_search_.set(solver_options.line_search_settings);
 }
 
 
@@ -103,8 +105,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  if ((solver_options_.discretization_method == DiscretizationMethod::PhaseBased)
-       || (ocp_.sto_cost && ocp_.sto_constraints)) {
+  if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
     time_discretization_.correctTimeSteps(contact_sequence_, t);
   }
   dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
@@ -175,6 +176,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     if ((ocp_.sto_cost && ocp_.sto_constraints) && (kkt_error < solver_options_.kkt_tol_mesh)) {
       if (time_discretization_.maxTimeStep() > solver_options_.max_dt_mesh) {
         if (solver_options_.enable_solution_interpolation) {
+          time_discretization_.correctTimeSteps(contact_sequence_, t);
           solution_interpolator_.store(time_discretization_, s_);
         }
         discretize(t);
@@ -201,6 +203,9 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     solver_statistics_.iter = solver_options_.max_iter;
   }
   if (solver_options_.enable_solution_interpolation) {
+    if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
+      time_discretization_.correctTimeSteps(contact_sequence_, t);
+    }
     solution_interpolator_.store(time_discretization_, s_);
   }
   if (solver_options_.enable_benchmark) {

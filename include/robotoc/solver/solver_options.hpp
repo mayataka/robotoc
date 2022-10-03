@@ -5,6 +5,7 @@
 
 #include "robotoc/ocp/discretization_method.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/solver/interpolation_order.hpp"
 
 
 namespace robotoc {
@@ -130,6 +131,12 @@ struct SolverOptions {
   /// interpolation of the previous solution. 
   ///
   bool enable_solution_interpolation = true;
+
+  ///
+  /// @brief Order of the solution interpolation if enable_solution_interpolation
+  /// is true. 
+  ///
+  InterpolationOrder interpolation_order = InterpolationOrder::Linear;
 
   ///
   /// @brief If true, the CPU time is measured at each solve().

@@ -28,6 +28,7 @@ PYBIND11_MODULE(solver_options, m) {
     .def_readwrite("max_dt_mesh", &SolverOptions::max_dt_mesh)
     .def_readwrite("max_dts_riccati", &SolverOptions::max_dts_riccati)
     .def_readwrite("enable_solution_interpolation", &SolverOptions::enable_solution_interpolation)
+    .def_readwrite("interpolation_order", &SolverOptions::interpolation_order)
     .def_readwrite("enable_benchmark", &SolverOptions::enable_benchmark)
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(SolverOptions)
     DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(SolverOptions);

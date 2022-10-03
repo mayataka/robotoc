@@ -23,6 +23,9 @@ void SolverOptions::disp(std::ostream& os) const {
   os << "  max_dt_mesh: " << max_dt_mesh << "\n";
   os << "  mex_dts_riccati: " << max_dts_riccati << "\n";
   os << "  enable_solution_interpolation: " << std::boolalpha << enable_solution_interpolation << "\n";
+  os << "  interpolation_order: ";
+  if (interpolation_order == InterpolationOrder::Linear) os << "Linear" << "\n";
+  else os << "Zero" << "\n";
   os << "  enable_benchmark: " << std::boolalpha << enable_benchmark << std::flush;
 }
 
