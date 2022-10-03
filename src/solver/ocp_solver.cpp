@@ -152,7 +152,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   if (init_solver) {
     discretize(t);
     if (solver_options_.enable_solution_interpolation) {
-      solution_interpolator_.interpolateTimeBased(robots_[0], time_discretization_, s_);
+      solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
     }
     dms_.initConstraints(robots_, time_discretization_, s_);
     sto_.initConstraints(time_discretization_);
@@ -181,7 +181,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
         }
         discretize(t);
         if (solver_options_.enable_solution_interpolation) {
-          solution_interpolator_.interpolateEventBased(robots_[0], time_discretization_, s_);
+          solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
         }
         dms_.initConstraints(robots_, time_discretization_, s_);
         inner_iter = 0;

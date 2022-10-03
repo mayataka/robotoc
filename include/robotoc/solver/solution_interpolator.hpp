@@ -63,19 +63,9 @@ public:
   /// @param[in] time_discretization Time discretization. 
   /// @param[out] solution Solution. 
   ///
-  void interpolateEventBased(const Robot& robot, 
-                             const TimeDiscretization& time_discretization, 
-                             Solution& solution) const;
-
-  ///
-  /// @brief Interpolates the solution. 
-  /// @param[in] robot Robot model.
-  /// @param[in] time_discretization Time discretization. 
-  /// @param[out] solution Solution. 
-  ///
-  void interpolateTimeBased(const Robot& robot, 
-                            const TimeDiscretization& time_discretization, 
-                            Solution& solution) const;
+  void interpolate(const Robot& robot, 
+                   const TimeDiscretization& time_discretization, 
+                   Solution& solution) const;
 
   ///
   /// @brief Check if this has a stored solution. 
@@ -91,9 +81,10 @@ private:
 
   int findStoredGridIndexAtImpulseByTime(const double t) const {
     const int N = stored_time_discretization_.size() - 1;
+    constexpr double eps = 1.0e-06;
     for (int i=1; i<N; ++i) {
       if ((stored_time_discretization_[i].type == GridType::Impulse)
-            && (numerics::isApprox(t, stored_time_discretization_[i].t))) {
+            && (numerics::isApprox(t, stored_time_discretization_[i].t, eps))) {
         return i;
       }
     }
@@ -102,31 +93,10 @@ private:
 
   int findStoredGridIndexAtLiftByTime(const double t) const {
     const int N = stored_time_discretization_.size() - 1;
+    constexpr double eps = 1.0e-06;
     for (int i=1; i<N; ++i) {
       if ((stored_time_discretization_[i].type == GridType::Lift)
-            && (numerics::isApprox(t, stored_time_discretization_[i].t))) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  int findStoredGridIndexAtImpulseByIndex(const int impulse_index) const {
-    const int N = stored_time_discretization_.size() - 1;
-    for (int i=1; i<N; ++i) {
-      if ((stored_time_discretization_[i].type == GridType::Impulse)
-            && (impulse_index == stored_time_discretization_[i].impulse_index)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  int findStoredGridIndexAtLiftByIndex(const int lift_index) const {
-    const int N = stored_time_discretization_.size() - 1;
-    for (int i=1; i<N; ++i) {
-      if ((stored_time_discretization_[i].type == GridType::Lift)
-            && (lift_index == stored_time_discretization_[i].lift_index)) {
+            && (numerics::isApprox(t, stored_time_discretization_[i].t, eps))) {
         return i;
       }
     }

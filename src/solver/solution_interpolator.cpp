@@ -26,56 +26,7 @@ void SolutionInterpolator::store(const TimeDiscretization& time_discretization,
 }
 
 
-void SolutionInterpolator::interpolateEventBased(
-    const Robot& robot, const TimeDiscretization& time_discretization, 
-    Solution& solution) const {
-  if (!has_stored_solution_) return;
-
-  const int N = time_discretization.size() - 1;
-  for (int i=0; i<=N; ++i) {
-    const auto& grid = time_discretization[i];
-    if (grid.t <= stored_time_discretization_.front().t) {
-      solution[i] = stored_solution_[0];
-      continue;
-    }
-    if (grid.t >= stored_time_discretization_.back().t) {
-      solution[i] = stored_solution_[stored_time_discretization_.size()-1];
-      continue;
-    }
-    if (grid.type == GridType::Impulse) {
-      const int grid_index = findStoredGridIndexAtImpulseByIndex(grid.impulse_index);
-      assert(grid_index >= 0);
-      solution[i] = stored_solution_[grid_index];
-      continue;
-    }
-    if (grid.type == GridType::Lift) {
-      const int grid_index = findStoredGridIndexAtLiftByIndex(grid.lift_index);
-      assert(grid_index >= 0);
-      solution[i] = stored_solution_[grid_index];
-      continue;
-    }
-
-    const int grid_index = findStoredGridIndexBeforeTime(grid.t);
-    const double alpha = (grid.t - stored_time_discretization_[grid_index].t) 
-                          / stored_time_discretization_[grid_index].dt;
-    if (order_ == InterpolationOrder::Zero) {
-      solution[i] = stored_solution_[grid_index];
-      continue;
-    }
-    if ((stored_time_discretization_[grid_index+1].type == GridType::Impulse)
-        || (stored_time_discretization_[grid_index+1].type == GridType::Lift)) {
-      interpolatePartial(robot, stored_solution_[grid_index],
-                        stored_solution_[grid_index+1], alpha, solution[i]);
-    }
-    else {
-      interpolate(robot, stored_solution_[grid_index],
-                  stored_solution_[grid_index+1], alpha, solution[i]);
-    }
-  }
-}
-
-
-void SolutionInterpolator::interpolateTimeBased(
+void SolutionInterpolator::interpolate(
     const Robot& robot, const TimeDiscretization& time_discretization, 
     Solution& solution) const {
   if (!has_stored_solution_) return;
