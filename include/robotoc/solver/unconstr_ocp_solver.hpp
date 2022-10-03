@@ -16,7 +16,7 @@
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"
-// #include "robotoc/line_search/unconstr_line_search.hpp"
+#include "robotoc/line_search/unconstr_line_search.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/grid_info.hpp"
 #include "robotoc/solver/solver_options.hpp"
@@ -172,7 +172,7 @@ private:
   std::vector<GridInfo> time_discretization_;
   UnconstrDirectMultipleShooting dms_;
   UnconstrRiccatiRecursion riccati_recursion_;
-  // UnconstrLineSearch line_search_;
+  UnconstrLineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
@@ -184,8 +184,6 @@ private:
   Timer timer_;
 
   void discretize(const double t);
-
-  void evalKKT(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
 };
 

@@ -14,7 +14,7 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver(const OCP& ocp,
   : robots_(nthreads, ocp.robot),
     time_discretization_(ocp.N+1, GridInfo()),
     backward_correction_(ocp, nthreads),
-    // line_search_(ocp, nthreads),
+    line_search_(ocp, nthreads),
     ocp_(ocp),
     kkt_matrix_(ocp.N+1, SplitKKTMatrix(ocp.robot)),
     kkt_residual_(ocp.N+1, SplitKKTResidual(ocp.robot)),
@@ -86,11 +86,12 @@ void UnconstrParNMPCSolver::updateSolution(const double t,
                                           kkt_matrix_, kkt_residual_, d_);
   double primal_step_size     = backward_correction_.primalStepSize();
   const double dual_step_size = backward_correction_.dualStepSize();
-  // if (solver_options_.enable_line_search) {
-  //   const double max_primal_step_size = primal_step_size;
-  //   primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, t, q, v, 
-  //                                                   s_, d_, max_primal_step_size);
-  // }
+  if (solver_options_.enable_line_search) {
+    const double max_primal_step_size = primal_step_size;
+    primal_step_size = line_search_.computeStepSize(backward_correction_, 
+                                                    robots_, time_discretization_, 
+                                                    q, v, s_, d_, max_primal_step_size);
+  }
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
   backward_correction_.integrateSolution(robots_, time_discretization_, 
@@ -113,7 +114,7 @@ void UnconstrParNMPCSolver::solve(const double t, const Eigen::VectorXd& q,
   if (init_solver) {
     initConstraints();
     initBackwardCorrection(t);
-    // line_search_.clearFilter();
+    line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {

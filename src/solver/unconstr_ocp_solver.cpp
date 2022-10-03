@@ -15,7 +15,7 @@ UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp,
     time_discretization_(ocp.N+1, GridInfo()),
     dms_(ocp, nthreads),
     riccati_recursion_(ocp),
-    // line_search_(ocp, nthreads),
+    line_search_(ocp, nthreads),
     ocp_(ocp),
     kkt_matrix_(ocp.N+1, SplitKKTMatrix(ocp.robot)),
     kkt_residual_(ocp.N+1, SplitKKTResidual(ocp.robot)),
@@ -83,11 +83,11 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   dms_.computeStepSizes(time_discretization_, kkt_matrix_, kkt_residual_, d_);
   double primal_step_size = dms_.maxPrimalStepSize();
   const double dual_step_size   = dms_.maxDualStepSize();
-  // if (solver_options_.enable_line_search) {
-  //   const double max_primal_step_size = primal_step_size;
-  //   primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
-  //                                                   d_, max_primal_step_size);
-  // }
+  if (solver_options_.enable_line_search) {
+    const double max_primal_step_size = primal_step_size;
+    primal_step_size = line_search_.computeStepSize(dms_, robots_, time_discretization_, 
+                                                    q, v, s_, d_, max_primal_step_size);
+  }
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
   dms_.integrateSolution(robots_, time_discretization_, 
@@ -109,7 +109,7 @@ void UnconstrOCPSolver::solve(const double t, const Eigen::VectorXd& q,
   }
   if (init_solver) {
     initConstraints();
-    // line_search_.clearFilter();
+    line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {

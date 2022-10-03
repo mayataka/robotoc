@@ -15,7 +15,7 @@
 #include "robotoc/core/kkt_matrix.hpp"
 #include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/parnmpc/unconstr_backward_correction.hpp"
-// #include "robotoc/line_search/unconstr_line_search.hpp"
+#include "robotoc/line_search/unconstr_line_search.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/ocp/time_discretization.hpp"
 #include "robotoc/solver/solver_options.hpp"
@@ -174,7 +174,7 @@ private:
   aligned_vector<Robot> robots_;
   std::vector<GridInfo> time_discretization_;
   UnconstrBackwardCorrection backward_correction_;
-  // UnconstrLineSearch line_search_;
+  UnconstrLineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
