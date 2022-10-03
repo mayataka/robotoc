@@ -159,6 +159,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
+  solver_statistics_.reserve(solver_options_.max_iter);
   int inner_iter = 0;
   for (int iter=0; iter<solver_options_.max_iter; ++iter, ++inner_iter) {
     if (ocp_.sto_cost && ocp_.sto_constraints) {

@@ -14,11 +14,6 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(time_discretization, m) {
-  py::enum_<DiscretizationMethod>(m, "DiscretizationMethod", py::arithmetic())
-    .value("GridBased",  DiscretizationMethod::GridBased)
-    .value("PhaseBased", DiscretizationMethod::PhaseBased)
-    .export_values();
-
   py::class_<TimeDiscretization>(m, "TimeDiscretization")
     .def(py::init<const double, const int, const int>(), 
           py::arg("T"), py::arg("N"), py::arg("reserved_num_discrete_events")=0)

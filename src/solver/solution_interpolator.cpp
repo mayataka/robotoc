@@ -20,6 +20,7 @@ void SolutionInterpolator::setInterpolationOrder(const InterpolationOrder order)
 
 void SolutionInterpolator::store(const TimeDiscretization& time_discretization,
                                  const Solution& solution) {
+  assert(solution.size() >= time_discretization.size());
   stored_time_discretization_ = time_discretization;
   stored_solution_ = solution;
   has_stored_solution_ = true;
@@ -29,6 +30,7 @@ void SolutionInterpolator::store(const TimeDiscretization& time_discretization,
 void SolutionInterpolator::interpolate(
     const Robot& robot, const TimeDiscretization& time_discretization, 
     Solution& solution) const {
+  assert(solution.size() >= time_discretization.size());
   if (!has_stored_solution_) return;
 
   const int N = time_discretization.size() - 1;

@@ -54,6 +54,12 @@ struct SolverStatistics {
   double cpu_time = 0;
 
   ///
+  /// @brief Reserves the data.
+  /// @param[in] size Size of the new data.
+  ///
+  void reserve(const int size);
+
+  ///
   /// @brief Clear the all elements.
   ///
   void clear();

@@ -1,10 +1,21 @@
 #include "robotoc/solver/solver_statistics.hpp"
 
+#include <cassert>
 #include <iomanip>
 #include <algorithm>
 
 
 namespace robotoc {
+
+void SolverStatistics::reserve(const int size) {
+  assert(size >= 0);
+  kkt_error.reserve(size);
+  primal_step_size.reserve(size);
+  dual_step_size.reserve(size);
+  ts.reserve(size);
+  mesh_refinement_iter.reserve(size);
+}
+
 
 void SolverStatistics::clear() {
   convergence = false;
@@ -24,17 +35,17 @@ void SolverStatistics::disp(std::ostream& os) const {
   os << "  total no. of iteration: " << iter << std::endl;
   os << "  CPU time (positive if benchmark is enabled): " << cpu_time << std::endl;
   os << "  ------------------------------------------------------------------------------------ " << std::endl;
-  os << "   iteration |      KKT error | primal step size |   dual step size |        ts        " << std::endl;
+  os << "   iter |   KKT error | primal step size |   dual step size |        ts        " << std::endl;
   os << "  ------------------------------------------------------------------------------------ " << std::endl;
   for (int i=0; i<iter; ++i) {
     if (std::find(mesh_refinement_iter.begin(), mesh_refinement_iter.end(), i) != mesh_refinement_iter.end()) {
       os << "        ======================== Mesh-refinement is carried out! ========================" << std::endl;
     }
-    os << "         " << std::setw(3) << i+1 << " | ";
-    os << std::scientific << std::setprecision(6);
+    os << "    " << std::setw(3) << i+1 << " | ";
+    os << std::scientific << std::setprecision(3);
     os << "  " << kkt_error[i];
-    os << " |     " << primal_step_size[i];
-    os << " |     " << dual_step_size[i] << " |";
+    os << " |        " << primal_step_size[i];
+    os << " |        " << dual_step_size[i] << " |";
     if (ts.size() > 0) {
       os << "  [";
       os << std::fixed << std::setprecision(4);
