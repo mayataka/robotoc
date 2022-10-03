@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 
 #include "robotoc/cost/cost_function.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -48,7 +49,8 @@ PYBIND11_MODULE(cost_function, m) {
     .def("quadratize_impulse_cost", &CostFunction::quadratizeImpulseCost,
           py::arg("robot"), py::arg("impulse_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"), 
-          py::arg("kkt_matrix"));
+          py::arg("kkt_matrix"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunction);
 }
 
 } // namespace python

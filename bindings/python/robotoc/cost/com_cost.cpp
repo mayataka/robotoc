@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/cost/com_cost.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -29,7 +30,8 @@ PYBIND11_MODULE(com_cost, m) {
     .def("set_weight_terminal", &CoMCost::set_weight_terminal,
           py::arg("weight_terminal"))
     .def("set_weight_impulse", &CoMCost::set_weight_impulse,
-          py::arg("weight_impulse"));
+          py::arg("weight_impulse"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CoMCost);
 }
 
 } // namespace python

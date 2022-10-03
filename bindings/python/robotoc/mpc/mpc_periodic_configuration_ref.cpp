@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 
 #include "robotoc/mpc/mpc_periodic_configuration_ref.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -26,7 +27,8 @@ PYBIND11_MODULE(mpc_periodic_configuration_ref, m) {
     .def("updateRef", &MPCPeriodicConfigurationRef::updateRef,
           py::arg("robot"), py::arg("grid_info"), py::arg("com_ref"))
     .def("is_active", &MPCPeriodicConfigurationRef::isActive,
-          py::arg("grid_info"));
+          py::arg("grid_info"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCPeriodicConfigurationRef);
 }
 
 } // namespace python

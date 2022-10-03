@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/core/split_direction.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -51,11 +52,8 @@ PYBIND11_MODULE(split_direction, m) {
                          static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitDirection::*)()>(&SplitDirection::dxi))
     .def("dimf", &SplitDirection::dimf)
     .def("dims", &SplitDirection::dims)
-    .def("__str__", [](const SplitDirection& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(SplitDirection)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(SplitDirection);
 }
 
 } // namespace python

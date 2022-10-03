@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/cost/cost_function_data.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -27,7 +28,8 @@ PYBIND11_MODULE(cost_function_data, m) {
     .def_readwrite("J_6d", &CostFunctionData::J_6d)
     .def_readwrite("J_3d", &CostFunctionData::J_3d)
     .def_readwrite("J_66", &CostFunctionData::J_66)
-    .def_readwrite("JJ_6d", &CostFunctionData::JJ_6d);
+    .def_readwrite("JJ_6d", &CostFunctionData::JJ_6d)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunctionData);
 
 }
 

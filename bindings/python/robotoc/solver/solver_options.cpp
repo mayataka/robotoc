@@ -1,8 +1,7 @@
 #include <pybind11/pybind11.h>
 
-#include <sstream>
-
 #include "robotoc/solver/solver_options.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -30,11 +29,8 @@ PYBIND11_MODULE(solver_options, m) {
     .def_readwrite("max_dts_riccati", &SolverOptions::max_dts_riccati)
     .def_readwrite("enable_solution_interpolation", &SolverOptions::enable_solution_interpolation)
     .def_readwrite("enable_benchmark", &SolverOptions::enable_benchmark)
-    .def("__str__", [](const SolverOptions& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(SolverOptions)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(SolverOptions);
 }
 
 } // namespace python

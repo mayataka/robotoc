@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/sto/sto_constraints.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -34,7 +35,8 @@ PYBIND11_MODULE(sto_constraints, m) {
     .def("set_fraction_to_boundary_rule", &STOConstraints::setFractionToBoundaryRule,
           py::arg("fraction_to_boundary_rule"))
     .def("get_barrier_param", &STOConstraints::getBarrierParam)
-    .def("get_fraction_to_boundary_rule", &STOConstraints::getFractionToBoundaryRule);
+    .def("get_fraction_to_boundary_rule", &STOConstraints::getFractionToBoundaryRule)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(STOConstraints);
 }
 
 } // namespace python

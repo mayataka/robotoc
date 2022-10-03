@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/mpc_pace.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -45,7 +46,8 @@ PYBIND11_MODULE(mpc_pace, m) {
     .def("get_friction_cone_handle", &MPCPace::getFrictionConeHandle)
     .def("get_solver", &MPCPace::getSolver)
     .def("get_contact_sequence", &MPCPace::getContactSequence)
-    .def("set_robot_properties", &MPCPace::setRobotProperties);
+    .def("set_robot_properties", &MPCPace::setRobotProperties)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCPace);
 }
 
 } // namespace python

@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -25,11 +26,8 @@ PYBIND11_MODULE(line_search_settings, m) {
     .def_readwrite("armijo_control_rate", &LineSearchSettings::armijo_control_rate)
     .def_readwrite("margin_rate", &LineSearchSettings::margin_rate)
     .def_readwrite("eps", &LineSearchSettings::eps)
-    .def("__str__", [](const LineSearchSettings& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(LineSearchSettings)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(LineSearchSettings);
 }
 
 } // namespace python

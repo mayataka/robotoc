@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/planner/contact_sequence.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -59,11 +60,8 @@ PYBIND11_MODULE(contact_sequence, m) {
     .def("reserve", &ContactSequence::reserve,
          py::arg("reserved_num_discrete_events"))
     .def("reserved_num_discrete_events", &ContactSequence::reservedNumDiscreteEvents)
-    .def("__str__", [](const ContactSequence& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ContactSequence)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(ContactSequence);
 }
 
 } // namespace python

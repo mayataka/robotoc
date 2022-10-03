@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/mpc_flying_trot.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -46,7 +47,8 @@ PYBIND11_MODULE(mpc_flying_trot, m) {
     .def("get_contact_sequence_handle", &MPCFlyingTrot::getContactSequenceHandle)
     .def("get_solver", &MPCFlyingTrot::getSolver)
     .def("get_contact_sequence", &MPCFlyingTrot::getContactSequence)
-    .def("set_robot_properties", &MPCFlyingTrot::setRobotProperties);
+    .def("set_robot_properties", &MPCFlyingTrot::setRobotProperties)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCFlyingTrot);
 }
 
 } // namespace python

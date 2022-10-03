@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/riccati/lqr_policy.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -20,7 +21,8 @@ PYBIND11_MODULE(lqr_policy, m) {
     .def_readwrite("T", &LQRPolicy::T)
     .def_readwrite("W", &LQRPolicy::W)
     .def("Kq", &LQRPolicy::Kq)
-    .def("Kv", &LQRPolicy::Kv);
+    .def("Kv", &LQRPolicy::Kv)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(LQRPolicy);
 }
 
 } // namespace python

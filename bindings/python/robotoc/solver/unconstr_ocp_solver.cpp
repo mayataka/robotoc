@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -38,7 +39,8 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
           static_cast<double (UnconstrOCPSolver::*)() const>(&UnconstrOCPSolver::KKTError))
     .def("get_time_discretization", &UnconstrOCPSolver::getTimeDiscretization)
     .def("set_robot_properties", &UnconstrOCPSolver::setRobotProperties,
-          py::arg("properties")); 
+          py::arg("properties"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(UnconstrOCPSolver);
 }
 
 } // namespace python

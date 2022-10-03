@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/core/split_solution.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -56,11 +57,8 @@ PYBIND11_MODULE(split_solution, m) {
                              static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitSolution::*)()>(&SplitSolution::xi_stack))
     .def("dimf", &SplitSolution::dimf)
     .def("dims", &SplitSolution::dims)
-    .def("__str__", [](const SplitSolution& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(SplitSolution)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(SplitSolution);
 }
 
 } // namespace python

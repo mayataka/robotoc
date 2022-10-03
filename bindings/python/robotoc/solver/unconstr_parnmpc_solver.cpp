@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -39,7 +40,8 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
           static_cast<double (UnconstrParNMPCSolver::*)() const>(&UnconstrParNMPCSolver::KKTError))
     .def("get_time_discretization", &UnconstrParNMPCSolver::getTimeDiscretization)
     .def("set_robot_properties", &UnconstrParNMPCSolver::setRobotProperties,
-          py::arg("properties")); 
+          py::arg("properties"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(UnconstrParNMPCSolver);
 }
 
 } // namespace python

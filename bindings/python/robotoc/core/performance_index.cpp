@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/core/performance_index.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -20,11 +21,8 @@ PYBIND11_MODULE(performance_index, m) {
     .def_readwrite("dual_feasibility", &PerformanceIndex::dual_feasibility)
     .def_readwrite("kkt_error", &PerformanceIndex::kkt_error)
     .def("set_zero", &PerformanceIndex::setZero)
-    .def("__str__", [](const PerformanceIndex& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(PerformanceIndex)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(PerformanceIndex);
 }
 
 } // namespace python

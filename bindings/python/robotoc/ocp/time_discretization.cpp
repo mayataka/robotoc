@@ -5,8 +5,7 @@
 
 #include "robotoc/ocp/discretization_method.hpp"
 #include "robotoc/ocp/time_discretization.hpp"
-
-#include <iostream>
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -37,11 +36,8 @@ PYBIND11_MODULE(time_discretization, m) {
           py::arg("contact_sequence"), py::arg("t")) 
     .def("correct_time_steps", &TimeDiscretization::correctTimeSteps,
           py::arg("contact_sequence"), py::arg("t")) 
-    .def("__str__", [](const TimeDiscretization& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(TimeDiscretization)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(TimeDiscretization);
 }
 
 } // namespace python

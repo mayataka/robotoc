@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -38,11 +39,8 @@ PYBIND11_MODULE(split_kkt_residual, m) {
                         static_cast<Eigen::VectorBlock<Eigen::VectorXd> (SplitKKTResidual::*)()>(&SplitKKTResidual::lf))
     .def("dimf", &SplitKKTResidual::dimf)
     .def("dims", &SplitKKTResidual::dims)
-    .def("__str__", [](const SplitKKTResidual& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(SplitKKTResidual)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(SplitKKTResidual);
 }
 
 } // namespace python

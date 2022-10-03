@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -78,11 +79,8 @@ PYBIND11_MODULE(split_kkt_matrix, m) {
                          static_cast<Eigen::Block<Eigen::MatrixXd> (SplitKKTMatrix::*)()>(&SplitKKTMatrix::Qqf))
     .def("dimf", &SplitKKTMatrix::dimf)
     .def("dims", &SplitKKTMatrix::dims)
-    .def("__str__", [](const SplitKKTMatrix& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(SplitKKTMatrix)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(SplitKKTMatrix);
 }
 
 } // namespace python

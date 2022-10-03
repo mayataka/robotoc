@@ -4,8 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/planner/discrete_event.hpp"
-
-#include <iostream>
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -45,11 +44,8 @@ PYBIND11_MODULE(discrete_event, m) {
           py::arg("contact_positions"), py::arg("contact_rotations"))
     .def("max_num_contacts", &DiscreteEvent::maxNumContacts)
     .def("event_type", &DiscreteEvent::eventType)
-    .def("__str__", [](const DiscreteEvent& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(DiscreteEvent)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(DiscreteEvent);
 }
 
 } // namespace python

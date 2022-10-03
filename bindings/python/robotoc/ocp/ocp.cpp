@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 
 #include "robotoc/ocp/ocp.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -43,11 +44,8 @@ PYBIND11_MODULE(ocp, m) {
     .def_readwrite("T", &OCP::T)
     .def_readwrite("N", &OCP::N)
     .def_readwrite("reserved_num_discrete_events", &OCP::reserved_num_discrete_events)
-    .def("__str__", [](const OCP& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(OCP)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(OCP);
 }
 
 } // namespace python

@@ -1,9 +1,7 @@
 #include <pybind11/pybind11.h>
 
 #include "robotoc/ocp/grid_info.hpp"
-
-#include <iostream>
-#include <sstream>
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -29,11 +27,8 @@ PYBIND11_MODULE(grid_info, m) {
     .def_readwrite("impulse_index", &GridInfo::impulse_index)
     .def_readwrite("lift_index", &GridInfo::lift_index)
     .def_readwrite("stage_in_phase", &GridInfo::stage_in_phase)
-    .def("__str__", [](const GridInfo& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(GridInfo)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(GridInfo);
 }
 
 } // namespace python
