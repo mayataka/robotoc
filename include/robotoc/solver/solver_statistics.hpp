@@ -5,6 +5,8 @@
 #include <deque>
 #include <iostream>
 
+#include "robotoc/core/performance_index.hpp"
+
 
 namespace robotoc {
 
@@ -24,9 +26,9 @@ struct SolverStatistics {
   int iter = 0;
 
   ///
-  /// @brief l2-norm of the KKT residual at each iteration.
+  /// @brief Performance measurements at each iteration.
   ///
-  std::vector<double> kkt_error;
+  std::vector<PerformanceIndex> performance_index;
 
   ///
   /// @brief Primal step sizes at each iteration.

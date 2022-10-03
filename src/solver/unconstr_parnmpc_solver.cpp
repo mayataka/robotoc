@@ -137,8 +137,8 @@ void UnconstrParNMPCSolver::solve(const double t, const Eigen::VectorXd& q,
   solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {
     updateSolution(t, q, v);
+    solver_statistics_.performance_index.push_back(backward_correction_.getEval()); 
     const double kkt_error = KKTError();
-    solver_statistics_.kkt_error.push_back(kkt_error); 
     if (kkt_error < solver_options_.kkt_tol) {
       solver_statistics_.convergence = true;
       solver_statistics_.iter = iter+1;

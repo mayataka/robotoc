@@ -172,8 +172,8 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
       solver_statistics_.ts.emplace_back(contact_sequence_->eventTimes());
     } 
     updateSolution(t, q, v);
+    solver_statistics_.performance_index.push_back(dms_.getEval()+sto_.getEval()); 
     const double kkt_error = KKTError();
-    solver_statistics_.kkt_error.push_back(kkt_error); 
     if ((ocp_.sto_cost && ocp_.sto_constraints) && (kkt_error < solver_options_.kkt_tol_mesh)) {
       if (time_discretization_.maxTimeStep() > solver_options_.max_dt_mesh) {
         if (solver_options_.enable_solution_interpolation) {
