@@ -104,12 +104,6 @@ inline double SplitKKTResidual::KKTError() const {
 }
 
 
-template <int p>
-inline double SplitKKTResidual::constraintViolation() const {
-  return primalFeasibility<p>();
-}
-
-
 template <int p=1>
 inline double SplitKKTResidual::primalFeasibility() const {
   double feasibility = Fx.template lpNorm<p>();

@@ -63,7 +63,7 @@ void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact
                           + kkt_res.lf().squaredNorm();
   EXPECT_DOUBLE_EQ(err, err_ref);
 
-  const double vio = kkt_res.constraintViolation();
+  const double vio = kkt_res.primalFeasibility();
   const double vio_ref = kkt_res.Fx.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
 

@@ -176,17 +176,6 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Returns the lp norm of the constraint violation, that is,
-  /// the primal residual in the state equation. Default norm is l1-norm.
-  /// You can specify l-infty norm by passing Eigen::Infinity as the 
-  /// template parameter.
-  /// @tparam p Index of norm. Default is 1 (l1-norm).
-  /// @return The lp norm of the constraint violation.
-  ///
-  template <int p=1>
-  double constraintViolation() const;
-
-  ///
   /// @brief Returns the lp norm of the primal feasibility, i.e., the constraint 
   /// violation. Default norm is l1-norm. You can also specify l-infty norm by 
   /// passing Eigen::Infinity as the template parameter.

@@ -115,19 +115,6 @@ public:
     return ID_.squaredNorm();
   }
 
-  ///
-  /// @brief Returns the lp norm of the constraint violation, that is,
-  /// the primal residual in the unconstr dynamics. Default norm is l1-norm.
-  /// You can specify l-infty norm by passing Eigen::Infinity as the 
-  /// template parameter.
-  /// @tparam p Index of norm. Default is 1 (l1-norm).
-  /// @return The lp norm of the constraint violation.
-  ///
-  template <int p=1>
-  double constraintViolation() const {
-    return ID_.template lpNorm<p>();
-  }
-
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ka,
                             const Eigen::MatrixBase<MatrixType2>& Ku) const {

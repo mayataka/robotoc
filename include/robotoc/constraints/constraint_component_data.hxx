@@ -49,10 +49,6 @@ inline ConstraintComponentData::ConstraintComponentData()
 }
 
 
-inline ConstraintComponentData::~ConstraintComponentData() {
-}
-
-
 inline void ConstraintComponentData::copySlackAndDual(
     const ConstraintComponentData& other) {
   assert(dimc() == other.dimc());
@@ -63,12 +59,6 @@ inline void ConstraintComponentData::copySlackAndDual(
 
 inline double ConstraintComponentData::KKTError() const {
   return (residual.squaredNorm() + cmpl.squaredNorm());
-}
-
-
-template <int p>
-inline double ConstraintComponentData::constraintViolation() const {
-  return residual.template lpNorm<p>();
 }
 
 

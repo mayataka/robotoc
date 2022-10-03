@@ -30,9 +30,9 @@ public:
   ConstraintComponentData();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ConstraintComponentData();
+  ~ConstraintComponentData() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -52,8 +52,7 @@ public:
   ///
   /// @brief Default move assign operator. 
   ///
-  ConstraintComponentData& operator=(ConstraintComponentData&&) noexcept 
-      = default;
+  ConstraintComponentData& operator=(ConstraintComponentData&&) noexcept = default;
 
   ///
   /// @brief Slack variable of the constraint. Size is 
@@ -99,6 +98,7 @@ public:
 
   ///
   /// @brief Value of the log berrier function of the slack variable.
+  ///
   double log_barrier;
 
   ///
@@ -128,36 +128,29 @@ public:
   ///
   double KKTError() const;
 
+  ///
+  /// @brief Returns the lp norm of the primal feasibility, i.e., the constraint 
+  /// violation. Default norm is l1-norm. You can also specify l-infty norm by 
+  /// passing Eigen::Infinity as the template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the primal feasibility.
+  ///
   template <int p=1>
   double primalFeasibility() const {
     return residual.template lpNorm<p>();
   }
 
+  ///
+  /// @brief Returns the lp norm of the dual feasibility. Default norm is 
+  /// l1-norm. You can also specify l-infty norm by passing Eigen::Infinity as 
+  /// the template parameter.
+  /// @tparam p Index of norm. Default is 1 (l1-norm).
+  /// @return The lp norm of the dual feasibility.
+  ///
   template <int p=1>
   double dualFeasibility() const {
     return cmpl.template lpNorm<p>();
   }
-
-  ///
-  /// @brief Returns the lp norm of the constraint violation, that is,
-  /// the primal residual in the constraint. Default norm is l1-norm.
-  /// You can specify l-infty norm by passing Eigen::Infinity as the 
-  /// template parameter.
-  /// @tparam p Index of norm. Default is 1 (l1-norm).
-  /// @return The lp norm of the constraint violation.
-  ///
-  template <int p=1>
-  double constraintViolation() const;
-
-  ///
-  /// @brief Returns the lp norm of the complementarity residual.
-  /// Default norm is l1-norm. You can specify l-infty norm by passing 
-  /// Eigen::Infinity as the template parameter.
-  /// @tparam p Index of norm. Default is 1 (l1-norm).
-  /// @return The lp norm of the complementarity residual.
-  ///
-  template <int p=1>
-  double complementarityResidual() const;
 
   ///
   /// @brief Resizes the constraint. 

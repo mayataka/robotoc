@@ -205,11 +205,6 @@ public:
     return (IDC().squaredNorm() + lu_passive.squaredNorm());
   }
 
-  template <int p=1>
-  double constraintViolation() const {
-    return IDC().template lpNorm<p>();
-  }
-
 private:
   Eigen::MatrixXd dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 

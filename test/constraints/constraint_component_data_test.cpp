@@ -41,7 +41,7 @@ TEST_F(ConstraintComponentDataTest, err) {
   const double err_ref = data.residual.squaredNorm() + data.cmpl.squaredNorm();
   EXPECT_DOUBLE_EQ(err, err_ref);
 
-  const double vio = data.constraintViolation();
+  const double vio = data.primalFeasibility();
   const double vio_ref = data.residual.template lpNorm<1>();
   EXPECT_DOUBLE_EQ(vio, vio_ref);
 }
