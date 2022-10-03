@@ -7,7 +7,7 @@
 namespace robotoc {
 
 ///
-/// @typedef PerformanceIndex
+/// @class PerformanceIndex
 /// @brief Performance index of optimal control problems.
 ///
 struct PerformanceIndex {

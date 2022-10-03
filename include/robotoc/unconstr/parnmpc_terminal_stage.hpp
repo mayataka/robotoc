@@ -23,13 +23,12 @@ namespace robotoc {
 
 ///
 /// @class ParNMPCTerminalStage
-/// @brief An optimal control problem of unconstrained rigid-body systems for 
-/// ParNMPC algorithm split into the terminal stage. 
+/// @brief The terminal stage of ParNMPC for unconstrained rigid-body systems.
 ///
 class ParNMPCTerminalStage {
 public:
   ///
-  /// @brief Constructs a split optimal control problem.
+  /// @brief Constructs the terminal stage.
   /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
@@ -68,6 +67,10 @@ public:
   ///
   ParNMPCTerminalStage& operator=(ParNMPCTerminalStage&&) noexcept = default;
 
+  ///
+  /// @brief Creates the data.
+  /// @param[in] robot Robot model. 
+  ///
   UnconstrOCPData createData(const Robot& robot) const;
 
   ///
@@ -82,20 +85,23 @@ public:
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] time_stage Time stage.
-  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] robot Robot model. 
+  /// @param[in] grid_info Grid info.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   void initConstraints(Robot& robot, const GridInfo& grid_info, 
                        const SplitSolution& s, UnconstrOCPData& data) const;
 
   ///
   /// @brief Computes the stage cost and constraint violation.
-  /// Used in the line search.
-  /// @param[in] robot Robot model. 
+  /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] q_prev Configuration at the previous stage. 
+  /// @param[in] v_prev Configuration at the previous stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this stage.
   ///
   void evalOCP(Robot& robot, const GridInfo& grid_info, 
                const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
@@ -103,13 +109,15 @@ public:
                SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the KKT system of this time stage, i.e., the condensed
-  /// KKT matrix and KKT residual of this time stage for Newton's method.
-  /// @param[in] robot Robot model. 
+  /// @brief Computes the KKT matrix and residual of this stage.
+  /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] q_prev Configuration at the previous stage. 
+  /// @param[in] v_prev Configuration at the previous stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this stage.
   ///
   void evalKKT(Robot& robot, const GridInfo& grid_info, 
                const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
@@ -119,25 +127,27 @@ public:
   ///
   /// @brief Expands the primal and dual variables, i.e., computes the Newton 
   /// direction of the condensed variables of this stage.
-  /// @param[in, out] d Split direction of this time stage.
-  /// 
+  /// @param[in] dt Time step. 
+  /// @param[in] kkt_matrix Split KKT matrix of this stage.
+  /// @param[in] kkt_residual Split KKT residual of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] d Split direction of this stage.
+  ///
   void expandPrimalAndDual(const double dt, const SplitKKTMatrix& kkt_matrix, 
                            const SplitKKTResidual& kkt_residual, 
                            UnconstrOCPData& data, SplitDirection& d) const; 
 
   ///
-  /// @brief Returns maximum stap size of the primal variables that satisfies 
-  /// the inequality constraints.
-  /// @return Maximum stap size of the primal variables that satisfies 
-  /// the inequality constraints.
+  /// @brief Computes the maximum primal step size.
+  /// @param[in] data Data of this stage. 
+  /// @return Maximum primal step size.
   ///
   double maxPrimalStepSize(const UnconstrOCPData& data) const;
 
   ///
-  /// @brief Returns maximum stap size of the dual variables that satisfies 
-  /// the inequality constraints.
-  /// @return Maximum stap size of the dual variables that satisfies 
-  /// the inequality constraints.
+  /// @brief Computes the maximum dual size.
+  /// @param[in] data Data of this stage. 
+  /// @return Maximum dual step size.
   ///
   double maxDualStepSize(const UnconstrOCPData& data) const;
 
@@ -147,6 +157,7 @@ public:
   /// @param[in] primal_step_size Primal step size. 
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const SplitDirection& d, SplitSolution& s, 
@@ -155,17 +166,19 @@ public:
   ///
   /// @brief Updates dual variables of the inequality constraints.
   /// @param[in] dual_step_size Dula step size. 
+  /// @param[in, out] data Data of this stage. 
   ///
   void updateDual(const double dual_step_size, UnconstrOCPData& data) const;
 
   ///
   /// @brief Computes the terminal cost Hessian to initialize the auxiliary 
   /// matrices for backward correction. 
-  /// @param[in] robot Robot model. 
+  /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this stage.
   ///
   void evalTerminalCostHessian(Robot& robot, const GridInfo& grid_info, 
                                const SplitSolution& s, 

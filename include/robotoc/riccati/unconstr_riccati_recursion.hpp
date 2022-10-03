@@ -79,6 +79,7 @@ public:
   ///
   /// @brief Performs the forward Riccati recursion and computes the direction.
   /// @param[in] kkt_residual KKT residual. 
+  /// @param[in] factorization Riccati factorization. 
   /// @param[in, out] d Direction. 
   ///
   void forwardRiccatiRecursion(const KKTResidual& kkt_residual, 

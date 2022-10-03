@@ -72,9 +72,9 @@ public:
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
-  /// @param[in, out] ocp optimal control problem.
+  /// @param[in, out] dms Direct multiple shooting method.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
@@ -90,9 +90,9 @@ public:
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
-  /// @param[in, out] ocp optimal control problem.
+  /// @param[in, out] backward_correction Backward correction method.
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 

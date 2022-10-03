@@ -25,17 +25,16 @@ namespace robotoc {
 
 ///
 /// @class UnconstrDirectMultipleShooting
-/// @brief Optimal control problem solver of unconstrained rigid-body systems 
-/// by Riccati recursion. "Unconstrained" means that the system does not have 
-/// either a floating base or any contacts.
+/// @brief Direct multiple shooting method of hybrid optimal control problems
+/// of unconstrained rigid-body systems. 
 ///
 class UnconstrDirectMultipleShooting {
 public:
   ///
-  /// @brief Construct optimal control problem solver.
+  /// @brief Construct the direct multiple shooting method.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// @param[in] nthreads Number of the threads used in solving the optimal 
+  /// control problem. Must be positive. 
   ///
   UnconstrDirectMultipleShooting(const OCP& ocp, const int nthreads=1);
 
@@ -144,6 +143,8 @@ public:
   ///
   /// @brief Computes the step sizes via the fraction-to-boundary-rule.
   /// @param[in] time_discretization Time discretization. 
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
   /// @param[in, out] d Direction. 
   ///
   void computeStepSizes(const std::vector<GridInfo>& time_discretization,
@@ -163,12 +164,11 @@ public:
   double maxDualStepSize() const;
 
   ///
-  /// @brief Computes the initial state direction. 
+  /// @brief Integrates the solution. 
   /// @param[in, out] robots aligned_vector of Robot for paralle computing.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
-  /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in, out] d Direction. 
   /// @param[in, out] s Solution. 
   ///

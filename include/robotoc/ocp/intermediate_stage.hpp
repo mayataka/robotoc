@@ -73,7 +73,7 @@ public:
   OCPData createData(const Robot& robot) const;
 
   ///
-  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @brief Checks whether the solution is feasible w.r.t. the inequality constraints.
   /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info of this stage.
   /// @param[in] s Split solution of this stage.
@@ -84,10 +84,10 @@ public:
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
-  /// @param[in, out] robot Robot model. 
-  /// @param[in] grid_info Grid info of this stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in, out] data Data of this stage. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] time_stage Time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[out] data Data of this stage. 
   ///
   void initConstraints(Robot& robot, const GridInfo& grid_info, 
                        const SplitSolution& s, OCPData& data) const;

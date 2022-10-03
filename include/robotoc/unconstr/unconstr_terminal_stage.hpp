@@ -25,9 +25,8 @@
 namespace robotoc {
 
 ///
-/// @class UnconstrTerminalStage
-/// @brief An optimal control problem of unconstrained rigid-body systems for 
-/// Riccati recursion algorithm split into a time stage. 
+/// @class UnconstrIntermediateStage
+/// @brief The terminal stage of OCP computation for unconstrained rigid-body systems.
 ///
 class UnconstrTerminalStage {
 public:
@@ -71,10 +70,14 @@ public:
   ///
   UnconstrTerminalStage& operator=(UnconstrTerminalStage&&) noexcept = default;
 
+  ///
+  /// @brief Creates the data.
+  /// @param[in] robot Robot model. 
+  ///
   UnconstrOCPData createData(const Robot& robot) const;
 
   ///
-  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @brief Checks whether the solution is feasible w.r.t. the inequality constraints.
   /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info of this stage.
   /// @param[in] s Split solution of this stage.
@@ -85,32 +88,33 @@ public:
 
   ///
   /// @brief Initializes the constraints, i.e., set slack and dual variables. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] time_stage Time stage.
-  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] robot Robot model. 
+  /// @param[in] grid_info Grid info.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   void initConstraints(Robot& robot, const GridInfo& grid_info, 
                        const SplitSolution& s, UnconstrOCPData& data) const;
 
   ///
-  /// @brief Computes the stage cost and constraint violation.
-  /// Used in the line search.
-  /// @param[in] robot Robot model. 
+  /// @brief Computes the stage cost and constraint violation of this stage.
+  /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this stage.
   ///
   void evalOCP(Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
                UnconstrOCPData& data, SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the KKT system of this time stage, i.e., the condensed
-  /// KKT matrix and KKT residual of this time stage for Newton's method.
-  /// @param[in] robot Robot model. 
+  /// @brief Computes the KKT matrix and residual of this stage.
+  /// @param[in, out] robot Robot model. 
   /// @param[in] grid_info Grid info. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this stage.
   ///
   void evalKKT(Robot& robot, const GridInfo& grid_info, 
                const SplitSolution& s, UnconstrOCPData& data,
@@ -119,23 +123,22 @@ public:
   ///
   /// @brief Expands the primal and dual variables, i.e., computes the Newton 
   /// direction of the condensed variables of this stage.
-  /// @param[in, out] d Split direction of this time stage.
-  /// 
+  /// @param[in, out] data Data of this stage. 
+  /// @param[in, out] d Split direction of this stage.
+  ///
   void expandPrimalAndDual(UnconstrOCPData& data, SplitDirection& d) const;
 
   ///
-  /// @brief Returns maximum stap size of the primal variables that satisfies 
-  /// the inequality constraints.
-  /// @return Maximum stap size of the primal variables that satisfies 
-  /// the inequality constraints.
+  /// @brief Computes the maximum primal step size.
+  /// @param[in] data Data of this stage. 
+  /// @return Maximum primal step size.
   ///
   double maxPrimalStepSize(const UnconstrOCPData& data) const;
 
   ///
-  /// @brief Returns maximum stap size of the dual variables that satisfies 
-  /// the inequality constraints.
-  /// @return Maximum stap size of the dual variables that satisfies 
-  /// the inequality constraints.
+  /// @brief Computes the maximum dual size.
+  /// @param[in] data Data of this stage. 
+  /// @return Maximum dual step size.
   ///
   double maxDualStepSize(const UnconstrOCPData& data) const;
 
@@ -145,6 +148,7 @@ public:
   /// @param[in] primal_step_size Primal step size. 
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
+  /// @param[in, out] data Data of this stage. 
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const SplitDirection& d, SplitSolution& s, 
@@ -153,6 +157,7 @@ public:
   ///
   /// @brief Updates dual variables of the inequality constraints.
   /// @param[in] dual_step_size Dula step size. 
+  /// @param[in, out] data Data of this stage. 
   ///
   void updateDual(const double dual_step_size, UnconstrOCPData& data) const;
 

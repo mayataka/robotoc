@@ -34,7 +34,7 @@ class UnconstrBackwardCorrection {
 public:
   ///
   /// @brief Construct a backward correction.
-  /// @param[in] parnmpc Optimal control problem. 
+  /// @param[in] ocp Optimal control problem. 
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
@@ -74,8 +74,7 @@ public:
   /// @brief Initializes the auxiliary matrices by the terminal cost Hessian 
   /// computed by the current solution. 
   /// @param[in] robots aligned_vector of Robot.
-  /// @param[in] parnmpc Optimal control problem.
-  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] s Solution. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
@@ -89,10 +88,7 @@ public:
   /// @brief Computes the cost and constraint violations. 
   /// @param[in, out] robots aligned_vector of Robot for paralle computing.
   /// @param[in] time_discretization Time discretization. 
-  /// @param[in] q Initial configuration.
-  /// @param[in] v Initial generalized velocity.
   /// @param[in] s Solution. 
-  /// @param[in, out] kkt_residual KKT residual. 
   ///
   void initConstraints(aligned_vector<Robot>& robots, 
                        const std::vector<GridInfo>& time_discretization, 
@@ -100,7 +96,7 @@ public:
 
   ///
   /// @brief Computes the cost and constraint violations. 
-  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in, out] robots aligned_vector of Robot.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -114,7 +110,7 @@ public:
 
   ///
   /// @brief Computes the KKT residual and matrix. 
-  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in, out] robots aligned_vector of Robot.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -129,16 +125,15 @@ public:
                KKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the optimal control problem and coarse updates the 
-  /// solution in parallel. 
-  /// @param[in] robots aligned_vector of Robot.
-  /// @param[in, out] parnmpc Optimal control problem.
-  /// @param[in] t Initial time of the horizon.
+  /// @brief Eval KKT and coarse updates the solution leveraging the parallel
+  /// computation. 
+  /// @param[in, out] robots aligned_vector of Robot.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
+  /// @param[in] s Solution. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
-  /// @param[in] s Solution. 
   ///
   void coarseUpdate(aligned_vector<Robot>& robots, 
                     const std::vector<GridInfo>& time_discretization,
@@ -149,10 +144,10 @@ public:
   ///
   /// @brief Performs the backward correction for coarse updated solution and 
   /// computes the Newton direction. 
-  /// @param[in] parnmpc Optimal control problem.
+  /// @param[in] time_discretization Time discretization. 
   /// @param[in] s Solution. 
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] kkt_residual KKT residual. 
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
   /// @param[in, out] d Direction. 
   ///
   void backwardCorrection(const std::vector<GridInfo>& time_discretization,
@@ -160,21 +155,34 @@ public:
                           const KKTResidual& kkt_residual, Direction& d);
 
   ///
-  /// @brief Returns max primal step size.
-  /// @return max primal step size.
-  /// 
+  /// @brief Gets the maximum primal step size of the fraction-to-boundary-rule.
+  /// @return The primal step size of the fraction-to-boundary-rule.
+  ///
   double primalStepSize() const;
 
   ///
-  /// @brief Returns max dual step size.
-  /// @return max dual step size.
-  /// 
+  /// @brief Gets the maximum dual step size of the fraction-to-boundary-rule.
+  /// @return The dual step size of the fraction-to-boundary-rule.
+  ///
   double dualStepSize() const;
 
+  ///
+  /// @brief Gets the performance index of the evaluation. 
+  /// @return const reference to the performance index.
+  ///
   const PerformanceIndex& getEval() const {
     return performance_index_;
   }
 
+  ///
+  /// @brief Integrates the solution. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in] primal_step_size Primal step size.
+  /// @param[in] dual_step_size Dual step size.
+  /// @param[in, out] d Direction. 
+  /// @param[in, out] s Solution. 
+  ///
   void integrateSolution(const aligned_vector<Robot>& robots,
                          const std::vector<GridInfo>& time_discretization, 
                          const double primal_step_size, 
