@@ -8,30 +8,37 @@
 
 namespace robotoc {
 
-STOConstraints::STOConstraints(const int reserved_num_switches, 
-                               const double min_dt, 
+STOConstraints::STOConstraints(const int num_switches, 
+                               const double minimum_dwell_time, 
                                const double barrier_param, 
                                const double fraction_to_boundary_rule) 
-  : STOConstraints(std::vector<double>(reserved_num_switches+1, min_dt), 
+  : STOConstraints(std::vector<double>(num_switches+1, minimum_dwell_time), 
                    barrier_param, fraction_to_boundary_rule) {
 }
 
 
-STOConstraints::STOConstraints(const std::vector<double>& min_dt, 
+STOConstraints::STOConstraints(const std::vector<double>& minimum_dwell_times, 
                                const double barrier_param, 
                                const double fraction_to_boundary_rule) 
-  : min_dt_(min_dt), 
-    eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
+  : STOConstraints(Eigen::Map<const Eigen::VectorXd>(minimum_dwell_times.data(), minimum_dwell_times.size()), 
+                   barrier_param, fraction_to_boundary_rule) {
+}
+
+
+STOConstraints::STOConstraints(const Eigen::VectorXd& minimum_dwell_times, 
+                               const double barrier_param, 
+                               const double fraction_to_boundary_rule) 
+  : eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
     barrier_(barrier_param), 
     fraction_to_boundary_rule_(fraction_to_boundary_rule),
-    reserved_num_switches_(min_dt.size()-1),
-    num_switches_(0),
-    primal_step_size_(Eigen::VectorXd::Zero(min_dt.size())), 
-    dual_step_size_(Eigen::VectorXd::Zero(min_dt.size())) {
-  for (const auto e : min_dt) {
-    if (e < 0.) {
+    num_switches_(minimum_dwell_times.size()-1),
+    primal_step_size_(Eigen::VectorXd::Zero(minimum_dwell_times.size())), 
+    dual_step_size_(Eigen::VectorXd::Zero(minimum_dwell_times.size())),
+    minimum_dwell_times_(minimum_dwell_times) {
+  for (int i=0; i<minimum_dwell_times.size(); ++i) {
+    if (minimum_dwell_times.coeff(i) < 0.) {
       throw std::out_of_range(
-          "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
+          "[STOConstraints] invalid argment: 'minimum_dwell_times' must be non-negative!");
     }
   }
   if (barrier_param <= 0) {
@@ -46,49 +53,47 @@ STOConstraints::STOConstraints(const std::vector<double>& min_dt,
     throw std::out_of_range(
         "[STOConstraints] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
-  minimum_dwell_times_.resize(min_dt.size());
-  for (int i=0; i<min_dt_.size(); ++i) {
-    minimum_dwell_times_[i] = min_dt[i];
-  }
 }
 
 
 STOConstraints::STOConstraints()
-  : min_dt_(0), 
+  : eps_(std::sqrt(std::numeric_limits<double>::epsilon())),
+    barrier_(1.0e-03), 
+    fraction_to_boundary_rule_(0.995),
     num_switches_(0),
     primal_step_size_(), 
-    dual_step_size_() {
+    dual_step_size_(),
+    minimum_dwell_times_() {
 }
 
 
-void STOConstraints::setMinimumDwellTimes(const double min_dt) {
-  if (min_dt < 0) {
-    throw std::out_of_range(
-        "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
-  }
-  for (auto& e : min_dt_) {
-    e = min_dt;
-  }
+void STOConstraints::setMinimumDwellTimes(const double minimum_dwell_time) {
+  setMinimumDwellTimes(std::vector<double>(num_switches_+1, minimum_dwell_time));
 }
 
 
 void STOConstraints::setMinimumDwellTimes(
-    const std::vector<double>& min_dt) {
-  for (const auto e : min_dt) {
-    if (e < 0) {
-      throw std::out_of_range(
-          "[STOConstraints] invalid argment: 'min_dt' must be non-negative!");
-    }
-  }
-  min_dt_ = min_dt;
-  while (min_dt_.size() < (reserved_num_switches_+1)) {
-    min_dt_.push_back(eps_);
-  }
+    const std::vector<double>& minimum_dwell_times) {
+  setMinimumDwellTimes(Eigen::Map<const Eigen::VectorXd>(minimum_dwell_times.data(), 
+                                                         minimum_dwell_times.size()));
 }
 
 
-const std::vector<double>& STOConstraints::getMinimumDwellTimes() const {
-  return min_dt_;
+void STOConstraints::setMinimumDwellTimes(
+    const Eigen::VectorXd& minimum_dwell_times) {
+  for (int i=0; i<minimum_dwell_times.size(); ++i) {
+    if (minimum_dwell_times.coeff(i) < 0.) {
+      throw std::out_of_range(
+          "[STOConstraints] invalid argment: 'minimum_dwell_times' must be non-negative!");
+    }
+  }
+  minimum_dwell_times_ = minimum_dwell_times;
+  num_switches_ = minimum_dwell_times.size() - 1;
+}
+
+
+const Eigen::VectorXd& STOConstraints::getMinimumDwellTimes() const {
+  return minimum_dwell_times_;
 }
 
 
@@ -133,6 +138,10 @@ ConstraintComponentData STOConstraints::createConstraintsData(
 bool STOConstraints::isFeasible(const TimeDiscretization& time_discretization,
                                 ConstraintComponentData& data) const {
   computeDwellTimes(time_discretization, data.r[0]);
+  if (data.r[0].size() != minimum_dwell_times_.size()) {
+    throw std::runtime_error(
+        "[STOConstraints] : invalid size of minimum_dwell_times_ is detected! It should be " + std::to_string(data.r[0].size()));
+  }
   data.residual = minimum_dwell_times_ - data.r[0];
   return (data.residual.minCoeff() > 0.0);
 }
@@ -146,10 +155,12 @@ void STOConstraints::setSlackAndDual(
 
   data.r[0].resize(num_phases);
   computeDwellTimes(time_discretization, data.r[0]);
-  data.r[1].resize(num_phases);
-  for (int i=0; i<num_phases; ++i) {
-    data.r[1].coeffRef(i) = min_dt_[i];
+  if (data.r[0].size() != minimum_dwell_times_.size()) {
+    throw std::runtime_error(
+        "[STOConstraints] : invalid size of minimum_dwell_times_ is detected! It should be " + std::to_string(data.r[0].size()));
   }
+  data.r[1].resize(num_phases);
+  data.r[1] = minimum_dwell_times_;
   data.J[0].resize(num_phases, num_phases-1);
   data.J[1].resize(num_phases, num_phases-1);
   auto& J = data.J[0];
@@ -176,7 +187,10 @@ void STOConstraints::evalConstraint(
     const TimeDiscretization& time_discretization, 
     ConstraintComponentData& data) const {
   computeDwellTimes(time_discretization, data.r[0]);
-
+  if (data.r[0].size() != minimum_dwell_times_.size()) {
+    throw std::runtime_error(
+        "[STOConstraints] : invalid size of minimum_dwell_times_ is detected! It should be " + std::to_string(data.r[0].size()));
+  }
   data.residual = minimum_dwell_times_ - data.r[0] + data.slack;
   pdipm::computeComplementarySlackness(barrier_, data);
   data.log_barrier = pdipm::logBarrier(barrier_, data.slack);

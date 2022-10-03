@@ -24,24 +24,24 @@ class STOConstraints {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] reserved_num_switches The reserved number of switches.
-  /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
-  /// minimum dwell times are set to this value. Default is 
-  /// std::numeric_limits<double>::epsilon().
+  /// @param[in] num_switches The number of switches.
+  /// @param[in] minimum_dwell_time Minimum dwell time. Must be non-negative. 
+  /// The all minimum dwell times are set to this value. Default is 
+  /// std::sqrt(std::numeric_limits<double>::epsilon()).
   /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03.
   /// @param[in] fraction_to_boundary_rule Parameter of the 
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  STOConstraints(const int reserved_num_switches, 
-                 const double min_dt=std::numeric_limits<double>::epsilon(),
+  STOConstraints(const int num_switches, 
+                 const double minimum_dwell_time=std::sqrt(std::numeric_limits<double>::epsilon()),
                  const double barrier_param=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
   ///
   /// @brief Constructor. 
-  /// @param[in] min_dt Minimum dwell times. Each component must be 
+  /// @param[in] minimum_dwell_times Minimum dwell times. Each component must be 
   /// non-negative. 
   /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
   /// Default is 1.0e-03.
@@ -49,7 +49,21 @@ public:
   /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
   /// Should be between 0.9 and 0.995. Default is 0.995.
   ///
-  STOConstraints(const std::vector<double>& min_dt,
+  STOConstraints(const std::vector<double>& minimum_dwell_times,
+                 const double barrier_param=1.0e-03, 
+                 const double fraction_to_boundary_rule=0.995);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] minimum_dwell_times Minimum dwell times. Each component must be 
+  /// non-negative. 
+  /// @param[in] barrier_param Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-03.
+  /// @param[in] fraction_to_boundary_rule Parameter of the 
+  /// fraction-to-boundary-rule Must be larger than 0 and smaller than 1. 
+  /// Should be between 0.9 and 0.995. Default is 0.995.
+  ///
+  STOConstraints(const Eigen::VectorXd& minimum_dwell_times,
                  const double barrier_param=1.0e-03, 
                  const double fraction_to_boundary_rule=0.995);
 
@@ -85,25 +99,32 @@ public:
 
   ///
   /// @brief Sets the minimum dwell times. 
-  /// @param[in] min_dt Minimum dwell time. Must be non-negative. The all 
-  /// minimum dwell times are set to this value. Default is 
-  /// std::numeric_limits<double>::epsilon().
+  /// @param[in] minimum_dwell_time Minimum dwell time. Must be non-negative. 
+  /// The all minimum dwell times are set to this value. Default is 
+  /// std::sqrt(std::numeric_limits<double>::epsilon()).
   ///
   void setMinimumDwellTimes(
-      const double min_dt=std::numeric_limits<double>::epsilon());
+      const double minimum_dwell_time=std::sqrt(std::numeric_limits<double>::epsilon()));
 
   ///
   /// @brief Sets the minimum dwell times. 
-  /// @param[in] min_dt Minimum dwell times. Each component must be 
-  /// non-negative.
+  /// @param[in] minimum_dwell_times Minimum dwell times. Each component must be 
+  /// non-negative. 
   ///
-  void setMinimumDwellTimes(const std::vector<double>& min_dt);
+  void setMinimumDwellTimes(const std::vector<double>& minimum_dwell_times);
+
+  ///
+  /// @brief Sets the minimum dwell times. 
+  /// @param[in] minimum_dwell_times Minimum dwell times. Each component must be 
+  /// non-negative. 
+  ///
+  void setMinimumDwellTimes(const Eigen::VectorXd& minimum_dwell_times);
 
   ///
   /// @brief Gets the minimum dwell times. 
   /// @return const reference to the minimum dwell times. 
   ///
-  const std::vector<double>& getMinimumDwellTimes() const;
+  const Eigen::VectorXd& getMinimumDwellTimes() const;
 
   ///
   /// @brief Sets the barrier parameter for all the constraint components.
@@ -172,9 +193,8 @@ public:
                                 Eigen::VectorXd& dwell_times);
 
 private:
-  std::vector<double> min_dt_;
   double barrier_, fraction_to_boundary_rule_, eps_;
-  int reserved_num_switches_, num_switches_;
+  int num_switches_;
 
   Eigen::VectorXd primal_step_size_, dual_step_size_;
   Eigen::VectorXd minimum_dwell_times_;

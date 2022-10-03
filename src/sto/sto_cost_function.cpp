@@ -20,50 +20,41 @@ void STOCostFunction::clear() {
 
 double STOCostFunction::evalCost(
     const TimeDiscretization& time_discretization) const {
-  if (!costs_.empty()) {
-    double cost = 0;
-    for (auto& e : costs_) {
-      cost += e->evalCost(time_discretization);
-    }
-    return cost;
+  if (costs_.empty()) return 0.0;
+
+  double cost = 0;
+  for (auto& e : costs_) {
+    cost += e->evalCost(time_discretization);
   }
-  else {
-    return 0.0;
-  }
+  return cost;
 }
 
 
 double STOCostFunction::linearizeCost(const TimeDiscretization& time_discretization, 
                                       Eigen::VectorXd& lt) const {
-  if (!costs_.empty()) {
-    double cost = 0;
-    for (auto& e : costs_) {
-      cost += e->evalCost(time_discretization);
-      e->evalCostDerivatives(time_discretization, lt);
-    }
-    return cost;
+  if (costs_.empty()) return 0.0;
+
+  double cost = 0;
+  for (auto& e : costs_) {
+    cost += e->evalCost(time_discretization);
+    e->evalCostDerivatives(time_discretization, lt);
   }
-  else {
-    return 0.0;
-  }
+  return cost;
 }
 
 
 double STOCostFunction::quadratizeCost(const TimeDiscretization& time_discretization, 
                                        Eigen::VectorXd& lt, 
                                        Eigen::MatrixXd& Qtt) const {
-  if (!costs_.empty()) {
-    double cost = 0;
-    for (auto& e : costs_) {
-      cost += e->evalCost(time_discretization);
-      e->evalCostDerivatives(time_discretization, lt);
-      e->evalCostHessian(time_discretization, Qtt);
-    }
-    return cost;
+  if (costs_.empty()) return 0.0;
+
+  double cost = 0;
+  for (auto& e : costs_) {
+    cost += e->evalCost(time_discretization);
+    e->evalCostDerivatives(time_discretization, lt);
+    e->evalCostHessian(time_discretization, Qtt);
   }
-  else {
-    return 0.0;
-  }
+  return cost;
 }
 
 } // namespace robotoc

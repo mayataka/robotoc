@@ -149,7 +149,7 @@ sto_cost = robotoc.STOCostFunction()
 ```
 and the minimum dwell-time constraints for the STO problem
 ```
-sto_constraints = robotoc.STOConstraints(min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
+sto_constraints = robotoc.STOConstraints(minimum_dwell_times=[0.6, 0.2, 0.6, 0.2, 0.6],
                                          barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 ```

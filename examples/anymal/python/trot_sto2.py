@@ -169,7 +169,7 @@ com_ref.set_ref(contact_sequence)
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
 min_dt = [0.02] + cycle * [0.2, 0.2] + [0.02]
-sto_constraints = robotoc.STOConstraints(min_dt=min_dt,
+sto_constraints = robotoc.STOConstraints(minimum_dwell_times=min_dt,
                                          barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 

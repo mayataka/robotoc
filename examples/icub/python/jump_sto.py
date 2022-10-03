@@ -101,7 +101,7 @@ contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_ti
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
+sto_constraints = robotoc.STOConstraints(minimum_dwell_times=[0.6, 0.2, 0.6, 0.2, 0.6],
                                          barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
