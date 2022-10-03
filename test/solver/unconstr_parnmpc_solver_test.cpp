@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "robotoc/unconstr/unconstr_parnmpc.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -70,7 +70,7 @@ TEST_F(UnconstrParNMPCSolverTest, test) {
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  robotoc::UnconstrParNMPC ocp(robot, cost, constraints, T, N);
+  robotoc::OCP ocp(robot, cost, constraints, T, N);
   auto solver_options = robotoc::SolverOptions();
   const int nthreads = 4;
   robotoc::UnconstrParNMPCSolver ocp_solver(ocp, solver_options, nthreads);

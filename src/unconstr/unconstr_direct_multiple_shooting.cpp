@@ -11,8 +11,6 @@ namespace robotoc {
 UnconstrDirectMultipleShooting::UnconstrDirectMultipleShooting(const OCP& ocp, 
                                                                const int nthreads)
   : nthreads_(nthreads),
-    // ocp_(ocp.N, SplitUnconstrOCP(ocp.robot, ocp.cost, ocp.constraints)),
-    // terminal_ocp_(ocp.robot, ocp.cost, ocp.constraints),
     intermediate_stage_(ocp.robot, ocp.cost, ocp.constraints),
     terminal_stage_(ocp.robot, ocp.cost, ocp.constraints),
     data_(),

@@ -13,9 +13,6 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
   py::class_<UnconstrParNMPCSolver>(m, "UnconstrParNMPCSolver")
-    .def(py::init<const UnconstrParNMPC&, const SolverOptions&, const int>(),
-          py::arg("parnmpc"), py::arg("solver_options")=SolverOptions(), 
-          py::arg("nthreads")=1)
     .def(py::init<const OCP&, const SolverOptions&, const int>(),
           py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
           py::arg("nthreads")=1)
@@ -40,7 +37,6 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (UnconstrParNMPCSolver::*)() const>(&UnconstrParNMPCSolver::KKTError))
-    .def("cost", &UnconstrParNMPCSolver::cost)
     .def("set_robot_properties", &UnconstrParNMPCSolver::setRobotProperties,
           py::arg("properties")); 
 }

@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"

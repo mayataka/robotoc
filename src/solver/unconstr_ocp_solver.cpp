@@ -51,6 +51,7 @@ UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp,
     time_discretization_[i].grid_count_in_phase = i;
     time_discretization_[i].N_phase = ocp.N;
   }
+  time_discretization_[ocp.N].type = GridType::Terminal;
   initConstraints();
 }
 

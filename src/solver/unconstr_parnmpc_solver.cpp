@@ -8,7 +8,20 @@
 
 namespace robotoc {
 
-auto UnconstrParNMPCFromOCP = [](const OCP& ocp) {
+UnconstrParNMPCSolver::UnconstrParNMPCSolver(const OCP& ocp, 
+                                             const SolverOptions& solver_options, 
+                                             const int nthreads)
+  : robots_(nthreads, ocp.robot),
+    time_discretization_(ocp.N+1, GridInfo()),
+    backward_correction_(ocp, nthreads),
+    // line_search_(ocp, nthreads),
+    ocp_(ocp),
+    kkt_matrix_(ocp.N+1, SplitKKTMatrix(ocp.robot)),
+    kkt_residual_(ocp.N+1, SplitKKTResidual(ocp.robot)),
+    s_(ocp.N+1, SplitSolution(ocp.robot)),
+    d_(ocp.N+1, SplitDirection(ocp.robot)),
+    solver_options_(solver_options),
+    solver_statistics_() {
   if (!ocp.cost) {
     throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: ocp.cost should not be nullptr!");
   }
@@ -21,46 +34,26 @@ auto UnconstrParNMPCFromOCP = [](const OCP& ocp) {
   if (ocp.N <= 0) {
     throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: ocp.N must be positive!");
   }
-  return UnconstrParNMPC(ocp.robot, ocp.cost, ocp.constraints, ocp.T, ocp.N);
-};
-
-
-UnconstrParNMPCSolver::UnconstrParNMPCSolver(const OCP& ocp, 
-                                     const SolverOptions& solver_options, 
-                                     const int nthreads)
-  : UnconstrParNMPCSolver(UnconstrParNMPCFromOCP(ocp), solver_options, nthreads) {
-}
-
-
-UnconstrParNMPCSolver::UnconstrParNMPCSolver(const UnconstrParNMPC& parnmpc, 
-                                             const SolverOptions& solver_options, 
-                                             const int nthreads)
-  : robots_(nthreads, parnmpc.robot()),
-    parnmpc_(parnmpc),
-    backward_correction_(parnmpc, nthreads),
-    line_search_(parnmpc, nthreads),
-    kkt_matrix_(parnmpc.N()+1, SplitKKTMatrix(parnmpc.robot())),
-    kkt_residual_(parnmpc.N()+1, SplitKKTResidual(parnmpc.robot())),
-    s_(parnmpc.N()+1, SplitSolution(parnmpc.robot())),
-    d_(parnmpc.N()+1, SplitDirection(parnmpc.robot())),
-    N_(parnmpc.N()),
-    nthreads_(nthreads),
-    T_(parnmpc.T()),
-    dt_(parnmpc.T()/parnmpc.N()),
-    solver_options_(solver_options),
-    solver_statistics_() {
   if (nthreads <= 0) {
     throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: nthreads must be positive!");
   }
+  const double dt = ocp.T / ocp.N;
+  for (int i=0; i<=ocp.N; ++i) {
+    time_discretization_[i].t = dt * i;
+    time_discretization_[i].dt = dt;
+    time_discretization_[i].contact_phase = -1;
+    time_discretization_[i].time_stage = i;
+    time_discretization_[i].impulse_index = -1;
+    time_discretization_[i].lift_index = -1;
+    time_discretization_[i].grid_count_in_phase = i;
+    time_discretization_[i].N_phase = ocp.N;
+  }
+  time_discretization_[ocp.N].type = GridType::Terminal;
   initConstraints();
 }
 
 
 UnconstrParNMPCSolver::UnconstrParNMPCSolver() {
-}
-
-
-UnconstrParNMPCSolver::~UnconstrParNMPCSolver() {
 }
 
 
@@ -70,21 +63,13 @@ void UnconstrParNMPCSolver::setSolverOptions(const SolverOptions& solver_options
 
 
 void UnconstrParNMPCSolver::initConstraints() {
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_; ++i) {
-    if (i < N_-1) {
-      parnmpc_[i].initConstraints(robots_[omp_get_thread_num()], i+1, s_[i]);
-    }
-    else {
-      parnmpc_.terminal.initConstraints(robots_[omp_get_thread_num()], i+1, 
-                                        s_[i]);
-    }
-  }
+  backward_correction_.initConstraints(robots_, time_discretization_, s_);
 }
 
 
 void UnconstrParNMPCSolver::initBackwardCorrection(const double t) {
-  backward_correction_.initAuxMat(robots_, parnmpc_, t, s_, 
+  discretize(t);
+  backward_correction_.initAuxMat(robots_, time_discretization_, s_, 
                                   kkt_matrix_, kkt_residual_);
 }
 
@@ -94,32 +79,22 @@ void UnconstrParNMPCSolver::updateSolution(const double t,
                                            const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  backward_correction_.coarseUpdate(robots_, parnmpc_, t, q, v, kkt_matrix_,
-                                    kkt_residual_, s_);
-  backward_correction_.backwardCorrection(parnmpc_, s_, kkt_matrix_, 
-                                          kkt_residual_, d_);
+  discretize(t);
+  backward_correction_.coarseUpdate(robots_, time_discretization_, q, v, 
+                                    s_, kkt_matrix_, kkt_residual_);
+  backward_correction_.backwardCorrection(time_discretization_, s_, 
+                                          kkt_matrix_, kkt_residual_, d_);
   double primal_step_size     = backward_correction_.primalStepSize();
   const double dual_step_size = backward_correction_.dualStepSize();
-  if (solver_options_.enable_line_search) {
-    const double max_primal_step_size = primal_step_size;
-    primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, t, q, v, 
-                                                    s_, d_, max_primal_step_size);
-  }
+  // if (solver_options_.enable_line_search) {
+  //   const double max_primal_step_size = primal_step_size;
+  //   primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, t, q, v, 
+  //                                                   s_, d_, max_primal_step_size);
+  // }
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_; ++i) {
-    if (i < N_-1) {
-      parnmpc_[i].updatePrimal(robots_[omp_get_thread_num()], primal_step_size, 
-                               d_[i], s_[i]);
-      parnmpc_[i].updateDual(dual_step_size);
-    }
-    else {
-      parnmpc_.terminal.updatePrimal(robots_[omp_get_thread_num()],  
-                                     primal_step_size, d_[i], s_[i]);
-      parnmpc_.terminal.updateDual(dual_step_size);
-    }
-  }
+  backward_correction_.integrateSolution(robots_, time_discretization_, 
+                                         primal_step_size, dual_step_size, d_, s_);
 } 
 
 
@@ -138,7 +113,7 @@ void UnconstrParNMPCSolver::solve(const double t, const Eigen::VectorXd& q,
   if (init_solver) {
     initConstraints();
     initBackwardCorrection(t);
-    line_search_.clearFilter();
+    // line_search_.clearFilter();
   }
   solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {
@@ -168,7 +143,7 @@ const SolverStatistics& UnconstrParNMPCSolver::getSolverStatistics() const {
 
 const SplitSolution& UnconstrParNMPCSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= N_);
+  assert(stage <= ocp_.N);
   return s_[stage];
 }
 
@@ -177,22 +152,22 @@ std::vector<Eigen::VectorXd> UnconstrParNMPCSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.N; ++i) {
       sol.push_back(s_[i].q);
     }
   }
   if (name == "v") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.N; ++i) {
       sol.push_back(s_[i].v);
     }
   }
   if (name == "a") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.N; ++i) {
       sol.push_back(s_[i].a);
     }
   }
   if (name == "u") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.N; ++i) {
       sol.push_back(s_[i].u);
     }
   }
@@ -229,73 +204,29 @@ double UnconstrParNMPCSolver::KKTError(const double t, const Eigen::VectorXd& q,
   if (v.size() != robots_[0].dimv()) {
     throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
   }
-  parnmpc_.discretize(t);
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_; ++i) {
-    if (i == 0) {
-      parnmpc_[0].computeKKTResidual(robots_[omp_get_thread_num()], 
-                                     parnmpc_.gridInfo(0), q, v, s_[0], s_[1], 
-                                     kkt_matrix_[0], kkt_residual_[0]);
-    }
-    else if (i < N_-1) {
-      parnmpc_[i].computeKKTResidual(robots_[omp_get_thread_num()], 
-                                     parnmpc_.gridInfo(i), s_[i-1].q, s_[i-1].v, 
-                                     s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
-    }
-    else {
-      parnmpc_.terminal.computeKKTResidual(robots_[omp_get_thread_num()],  
-                                           parnmpc_.gridInfo(i), s_[i-1].q, 
-                                           s_[i-1].v, s_[i], kkt_matrix_[i], 
-                                           kkt_residual_[i]);
-    }
-  }
+  discretize(t);
+  backward_correction_.evalKKT(robots_, time_discretization_, q, v, 
+                               s_, kkt_matrix_, kkt_residual_);
   return KKTError();
 }
 
 
 double UnconstrParNMPCSolver::KKTError() const {
-  double kkt_error = 0;
-  for (int i=0; i<N_; ++i) {
-    kkt_error += kkt_residual_[i].KKTError();
-  }
-  return std::sqrt(kkt_error);
-}
-
-
-double UnconstrParNMPCSolver::cost() const {
-  double total_cost = 0;
-  for (int i=0; i<N_-1; ++i) {
-    total_cost += parnmpc_[i].stageCost();
-  }
-  total_cost += parnmpc_.terminal.stageCost();
-  return total_cost;
-}
-
-
-bool UnconstrParNMPCSolver::isCurrentSolutionFeasible() {
-  for (int i=0; i<N_; ++i) {
-    if (i < N_-1) {
-      const bool feasible = parnmpc_[i].isFeasible(robots_[0], s_[i]);
-      if (!feasible) {
-        std::cout << "INFEASIBLE at time stage " << i << std::endl;
-        return false;
-      }
-    }
-    else {
-      const bool feasible = parnmpc_.terminal.isFeasible(robots_[0], s_[i]);
-      if (!feasible) {
-        std::cout << "INFEASIBLE at time stage " << i << std::endl;
-        return false;
-      }
-    }
-  }
-  return true;
+  return std::sqrt(backward_correction_.getEval().kkt_error);
 }
 
 
 void UnconstrParNMPCSolver::setRobotProperties(const RobotProperties& properties) {
   for (auto& e : robots_) {
     e.setRobotProperties(properties);
+  }
+}
+
+
+void UnconstrParNMPCSolver::discretize(const double t) {
+  const double dt = ocp_.T / ocp_.N;
+  for (int i=0; i<=ocp_.N; ++i) {
+    time_discretization_[i].t = dt * i;
   }
 }
 

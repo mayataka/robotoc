@@ -11,6 +11,8 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/unconstr/unconstr_intermediate_stage.hpp"
+#include "robotoc/unconstr/unconstr_dynamics.hpp"
+#include "robotoc/unconstr/unconstr_state_equation.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"

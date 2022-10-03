@@ -180,9 +180,6 @@ public:
 
 private:
   int nthreads_;
-//   UnconstrOCP ocp_;
-//   aligned_vector<SplitUnconstrOCP> ocp_;
-//   TerminalUnconstrOCP terminal_ocp_;
   UnconstrIntermediateStage intermediate_stage_;
   UnconstrTerminalStage terminal_stage_;
   aligned_vector<UnconstrOCPData> data_;
