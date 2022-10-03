@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import os
+from robotoc import TimeDiscretization, GridType
 
 
 class PlotConvergence:
@@ -224,10 +225,17 @@ class PlotContactForce:
         ax.set_xlim([t[0], t[-1]])
 
 
-    def plot(self, f_data, t, fig_name=None, save_dir='./'):
+    def plot(self, f_data, time_discretization: TimeDiscretization, fig_name=None, save_dir='./'):
+        f = []
+        t = []
+        for i in range(time_discretization.size()):
+            if time_discretization[i].type == GridType.Intermediate \
+                or time_discretization[i].type == GridType.Lift:
+                f.append(f_data[i])
+                t.append(time_discretization[i].t)
+        f_data = f
         import matplotlib.pyplot as plt
         import seaborn 
-        assert len(t) >= len(f_data)
         seaborn.set()
         seaborn.set_style('whitegrid')
         seaborn.set_style("ticks")

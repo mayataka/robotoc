@@ -13,6 +13,7 @@ PYBIND11_MODULE(grid_info, m) {
   py::enum_<GridType>(m, "GridType", py::arithmetic())
     .value("Intermediate",  GridType::Intermediate)
     .value("Impulse",  GridType::Impulse)
+    .value("Lift",  GridType::Lift)
     .value("Terminal",  GridType::Terminal)
     .export_values();
 

@@ -152,7 +152,7 @@ plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto',
 
 plot_f = robotoc.utils.PlotContactForce(mu=mu)
 plot_f.plot(f_data=ocp_solver.get_solution('f', 'WORLD'), 
-            t=ocp_solver.get_time_discretization().time_points(), 
+            time_discretization=ocp_solver.get_time_discretization(), 
             fig_name='jump_sto_f', save_dir='jump_sto_log')
 
 # Display results
