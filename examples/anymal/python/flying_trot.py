@@ -184,6 +184,7 @@ t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
 
+ocp_solver.discretize(t)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])

@@ -123,11 +123,11 @@ ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=
 t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
+ocp_solver.discretize(t)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 
-ocp_solver.discretize(t)
-
+ocp_solver.init_constraints(t)
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))

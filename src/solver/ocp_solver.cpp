@@ -320,38 +320,58 @@ void OCPSolver::setSolution(const std::string& name,
     for (auto& e : s_) { e.v = value; }
   }
   else if (name == "a") {
-    if (value.size() != robots_[0].dimv()) {
-      throw std::out_of_range(
-          "[OCPSolver] invalid argument: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse
+          || time_discretization_[i].type == GridType::Terminal) continue;
+      s_[i].a = value;
     }
-    for (auto& e : s_) { e.a = value; }
+  }
+  else if (name == "dv") {
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type != GridType::Impulse) continue;
+      s_[i].dv = value;
+    }
   }
   else if (name == "f") {
-    if (value.size() == 6) {
-      for (auto& e : s_) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
-    }
-    else if (value.size() == 3) {
-      for (auto& e : s_) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-    }
-    else {
+    if ((value.size() != 3) && (value.size() != 6)) {
       throw std::out_of_range("[OCPSolver] invalid argument: f.size() must be 3 or 6!");
+    }
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse
+          || time_discretization_[i].type == GridType::Terminal) continue;
+      if (value.size() == 3) {
+        for (auto& ef : s_[i].f) { ef.template head<3>() = value.template head<3>(); } 
+      }
+      else {
+        for (auto& ef : s_[i].f) { ef = value.template head<6>(); } 
+      }
+      s_[i].set_f_stack(); 
+    }
+  }
+  else if (name == "lmd") {
+    if ((value.size() != 3) && (value.size() != 6)) {
+      throw std::out_of_range("[OCPSolver] invalid argument: lmd.size() must be 3 or 6!");
+    }
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type != GridType::Impulse) continue;
+      if (value.size() == 3) {
+        for (auto& ef : s_[i].f) { ef.template head<3>() = value.template head<3>(); } 
+      }
+      else {
+        for (auto& ef : s_[i].f) { ef = value.template head<6>(); } 
+      }
+      s_[i].set_f_stack(); 
     }
   }
   else if (name == "u") {
-    if (value.size() != robots_[0].dimu()) {
-      throw std::out_of_range(
-          "[OCPSolver] invalid argument: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impulse
+          || time_discretization_[i].type == GridType::Terminal) continue;
+      s_[i].u = value;
     }
-    for (auto& e : s_) { e.u = value; }
   }
   else {
-    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, f, or u!");
+    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, dv, u, f, or lmd!");
   }
 }
 

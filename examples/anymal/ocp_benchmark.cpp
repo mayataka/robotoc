@@ -117,6 +117,7 @@ int main () {
   const Eigen::VectorXd q = q_standing;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;

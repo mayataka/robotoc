@@ -146,8 +146,8 @@ int main(int argc, char *argv[]) {
   // Create the STO cost function
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
-  const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(min_dwell_times,
+  const std::vector<double> minimum_dwell_times = {0.15, 0.15, 0.65};
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(minimum_dwell_times,
                                                                    barrier_param, 
                                                                    fraction_to_boundary_rule);
 
@@ -171,6 +171,7 @@ int main(int argc, char *argv[]) {
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
