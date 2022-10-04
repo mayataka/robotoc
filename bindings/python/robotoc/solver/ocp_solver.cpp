@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/solver/ocp_solver.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -13,17 +14,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ocp_solver, m) {
   py::class_<OCPSolver>(m, "OCPSolver")
-    .def(py::init<const OCP&, const SolverOptions&, const int>(),
-          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
-          py::arg("nthreads")=1)
+    .def(py::init<const OCP&, const SolverOptions&>(),
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions())
     .def("set_solver_options", &OCPSolver::setSolverOptions,
           py::arg("solver_options"))
-    .def("mesh_refinement", &OCPSolver::meshRefinement,
+    .def("discretize", &OCPSolver::discretize,
           py::arg("t"))
-    .def("init_constraints", &OCPSolver::initConstraints,
-          py::arg("t"))
-    .def("update_solution", &OCPSolver::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"))
+    .def("init_constraints", &OCPSolver::initConstraints)
     .def("solve", &OCPSolver::solve,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=true)
     .def("get_solver_statistics", &OCPSolver::getSolverStatistics)
@@ -48,18 +45,11 @@ PYBIND11_MODULE(ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (OCPSolver::*)() const>(&OCPSolver::KKTError))
-    .def("cost", &OCPSolver::cost,
-          py::arg("include_cost_barrier")=true)
-    .def("is_current_solution_feasible", &OCPSolver::isCurrentSolutionFeasible,
-          py::arg("verbose")=false)
     .def("get_time_discretization", &OCPSolver::getTimeDiscretization)
     .def("set_robot_properties", &OCPSolver::setRobotProperties,
           py::arg("properties"))
-    .def("__str__", [](const OCPSolver& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(OCPSolver)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(OCPSolver);
 }
 
 } // namespace python

@@ -8,7 +8,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/task_space_3d_cost.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 
 
 namespace robotoc {

@@ -166,12 +166,12 @@ void LocalContactForceCost::evalTerminalCostHessian(
 }
 
 
-double LocalContactForceCost::evalImpulseCost(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s) const {
+double LocalContactForceCost::evalImpactCost(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
+    const GridInfo& grid_info, const SplitSolution& s) const {
   double l = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const auto& fl = s.f[i].template head<3>();
       l += (fi_weight_[i].array() * (fl.array()-fi_ref_[i].array()) 
                                   * (fl.array()-fi_ref_[i].array())).sum();
@@ -181,13 +181,13 @@ double LocalContactForceCost::evalImpulseCost(
 }
 
 
-void LocalContactForceCost::evalImpulseCostDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
+void LocalContactForceCost::evalImpactCostDerivatives(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const auto& fl = s.f[i].template head<3>();
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += fi_weight_[i].array() * (fl.array()-fi_ref_[i].array());
@@ -206,13 +206,13 @@ void LocalContactForceCost::evalImpulseCostDerivatives(
 }
 
 
-void LocalContactForceCost::evalImpulseCostHessian(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix) const {
+void LocalContactForceCost::evalImpactCostHessian(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
           += fi_weight_[i];
       switch (contact_types_[i]) {

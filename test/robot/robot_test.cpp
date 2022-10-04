@@ -15,7 +15,7 @@
 #include "robotoc/robot/point_contact.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 
 #include "urdf_factory.hpp"
 
@@ -409,7 +409,7 @@ TEST_P(RobotTest, baumgarte) {
 }
 
 
-TEST_P(RobotTest, impulseVelocity) {
+TEST_P(RobotTest, impactVelocity) {
   const auto model_info = GetParam();
   Robot robot(model_info);
   pinocchio::Model model;
@@ -432,26 +432,26 @@ TEST_P(RobotTest, impulseVelocity) {
 
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeImpulseVelocityResidual(impulse_status, residual.head(impulse_status.dimi()));
+  robot.computeImpactVelocityResidual(impact_status, residual.head(impact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   int dimf = 0;
   for (int i=0; i<point_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_ref[i].computeContactVelocityResidual(
           model, data, residual_ref.segment<3>(dimf));
       dimf += 3;
     }
   }
   for (int i=0; i<surface_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i+point_contacts_ref.size())) {
+    if (impact_status.isImpactActive(i+point_contacts_ref.size())) {
       surface_contacts_ref[i].computeContactVelocityResidual(
           model, data, residual_ref.segment<6>(dimf));
       dimf += 6;
@@ -461,13 +461,13 @@ TEST_P(RobotTest, impulseVelocity) {
 
   Eigen::MatrixXd velocity_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd velocity_partial_v = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeImpulseVelocityDerivatives(impulse_status, velocity_partial_q.topRows(impulse_status.dimi()), 
-                                          velocity_partial_v.topRows(impulse_status.dimi()));
+  robot.computeImpactVelocityDerivatives(impact_status, velocity_partial_q.topRows(impact_status.dimf()), 
+                                          velocity_partial_v.topRows(impact_status.dimf()));
   Eigen::MatrixXd velocity_partial_q_ref = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd velocity_partial_v_ref = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   dimf = 0;
   for (int i=0; i<point_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_ref[i].computeContactVelocityDerivatives(
           model, data, 
           velocity_partial_q_ref.middleRows<3>(dimf), 
@@ -476,7 +476,7 @@ TEST_P(RobotTest, impulseVelocity) {
     }
   }
   for (int i=0; i<surface_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i+point_contacts_ref.size())) {
+    if (impact_status.isImpactActive(i+point_contacts_ref.size())) {
       surface_contacts_ref[i].computeContactVelocityDerivatives(
           model, data, 
           velocity_partial_q_ref.middleRows<6>(dimf), 
@@ -512,29 +512,29 @@ TEST_P(RobotTest, contactPosition) {
 
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeContactPositionResidual(impulse_status, residual.head(impulse_status.dimi()));
+  robot.computeContactPositionResidual(impact_status, residual.head(impact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   int dimf = 0;
   for (int i=0; i<point_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_ref[i].computeContactPositionResidual(
-          model, data, impulse_status.contactPosition(i), 
+          model, data, impact_status.contactPosition(i), 
           residual_ref.segment<3>(dimf));
       dimf += 3;
     }
   }
   for (int i=0; i<surface_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i+point_contacts_ref.size())) {
+    if (impact_status.isImpactActive(i+point_contacts_ref.size())) {
       surface_contacts_ref[i].computeContactPositionResidual(
-          model, data, impulse_status.contactPlacement(i+point_contacts_ref.size()), 
+          model, data, impact_status.contactPlacement(i+point_contacts_ref.size()), 
           residual_ref.segment<6>(dimf));
       dimf += 6;
     }
@@ -542,19 +542,19 @@ TEST_P(RobotTest, contactPosition) {
   EXPECT_TRUE(residual.isApprox(residual_ref));
 
   Eigen::MatrixXd contact_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeContactPositionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimi()));
+  robot.computeContactPositionDerivative(impact_status, contact_partial_q.topRows(impact_status.dimf()));
 
   Eigen::MatrixXd contact_partial_q_ref = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   dimf = 0;
   for (int i=0; i<point_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_ref[i].computeContactPositionDerivative(
           model, data, contact_partial_q_ref.middleRows<3>(dimf));
       dimf += 3;
     }
   }
   for (int i=0; i<surface_contacts_ref.size(); ++i) {
-    if (impulse_status.isImpulseActive(i+point_contacts_ref.size())) {
+    if (impact_status.isImpactActive(i+point_contacts_ref.size())) {
       surface_contacts_ref[i].computeContactPositionDerivative(
           model, data, contact_partial_q_ref.middleRows<6>(dimf));
       dimf += 6;
@@ -627,7 +627,7 @@ TEST_P(RobotTest, RNEA) {
 }
 
 
-TEST_P(RobotTest, RNEAImpulse) {
+TEST_P(RobotTest, RNEAImpact) {
   const auto model_info = GetParam();
   Robot robot(model_info);
   pinocchio::Model model;
@@ -650,23 +650,23 @@ TEST_P(RobotTest, RNEAImpulse) {
   for (const auto& e : model_info.surface_contacts) {
     f.push_back(Vector6d::Random());
   }
-  auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  robot.setImpulseForces(impulse_status, f);
+  auto impact_status = robot.createImpactStatus();
+  impact_status.setRandom();
+  robot.setImpactForces(impact_status, f);
 
   Eigen::VectorXd tau = Eigen::VectorXd::Zero(model.nv);
-  robot.RNEAImpulse(q, dv, tau);
+  robot.RNEAImpact(q, dv, tau);
 
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint
       = pinocchio::container::aligned_vector<pinocchio::Force>(model.joints.size(), pinocchio::Force::Zero());
   for (int i=0; i<model_info.point_contacts.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       PointContact(model, model_info.point_contacts[i]).computeJointForceFromContactForce(
           f[i].template head<3>(), fjoint);
     }
   }
   for (int i=0; i<model_info.surface_contacts.size(); ++i) {
-    if (impulse_status.isImpulseActive(i+model_info.point_contacts.size())) {
+    if (impact_status.isImpactActive(i+model_info.point_contacts.size())) {
       SurfaceContact(model, model_info.surface_contacts[i]).computeJointForceFromContactWrench(
           f[i+model_info.point_contacts.size()], fjoint);
     }
@@ -679,7 +679,7 @@ TEST_P(RobotTest, RNEAImpulse) {
   Eigen::MatrixXd dRNEA_dq_ref = dRNEA_dq;
   Eigen::MatrixXd dRNEA_ddv_ref = dRNEA_ddv;
   Eigen::MatrixXd dRNEA_dv_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
-  robot.RNEAImpulseDerivatives(q, dv, dRNEA_dq, dRNEA_ddv);
+  robot.RNEAImpactDerivatives(q, dv, dRNEA_dq, dRNEA_ddv);
   pinocchio::computeRNEADerivatives(model, data, q, Eigen::VectorXd::Zero(model.nv), dv, fjoint, 
                                     dRNEA_dq_ref, dRNEA_dv_ref, dRNEA_ddv_ref);
   dRNEA_ddv_ref.triangularView<Eigen::StrictlyLower>() 

@@ -2,9 +2,9 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/core/split_direction.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 #include "robotoc/riccati/backward_riccati_recursion_factorizer.hpp"
@@ -107,12 +107,12 @@ TEST_P(BackwardRiccatiRecursionFactorizerTest, test) {
 }
 
 
-TEST_P(BackwardRiccatiRecursionFactorizerTest, test_impulse) {
+TEST_P(BackwardRiccatiRecursionFactorizerTest, test_impact) {
   const auto robot = GetParam();
   const int dimv = robot.dimv();
   const auto riccati_next = testhelper::CreateSplitRiccatiFactorization(robot);
-  auto kkt_matrix = testhelper::CreateImpulseSplitKKTMatrix(robot);
-  auto kkt_residual = testhelper::CreateImpulseSplitKKTResidual(robot);
+  auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot);
+  auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   const auto kkt_matrix_ref = kkt_matrix;
   const auto kkt_residual_ref = kkt_residual;
   BackwardRiccatiRecursionFactorizer factorizer(robot);

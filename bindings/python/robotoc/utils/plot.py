@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import os
+from robotoc import TimeDiscretization, GridType
 
 
 class PlotConvergence:
@@ -90,17 +91,17 @@ class PlotContactForce:
         self.legend_bbox_to_anchor = (-0.2, 3.0)
         self.ylim = [-200, 200]
 
-    def _decompose_f_data(self, f_data):
-        length = len(f_data) 
+    def _decompose_f_traj(self, f_traj):
+        length = len(f_traj) 
         fx = []
         fy = []
         fz = []
         mfz = []
         for i in range(length):
-            fx.append(f_data[i][0])
-            fy.append(f_data[i][1])
-            fz.append(f_data[i][2])
-            mfz.append(-1*f_data[i][2])
+            fx.append(f_traj[i][0])
+            fy.append(f_traj[i][1])
+            fz.append(f_traj[i][2])
+            mfz.append(-1*f_traj[i][2])
         return fx, fy, fz, mfz
 
     def _detect_phases(self, fx, fy, fz, mfz):
@@ -109,14 +110,14 @@ class PlotContactForce:
         assert len(fx) == len(mfz)
         N = len(fx) 
         f_norm = [fz[i]*fz[i] for i in range(N)]
-        N_phase = []
+        num_grids_in_phase = []
         active_phase = []
         active = f_norm[0] > self.eps
         ngrids = 0
         for i in range(N):
             if active:
                 if f_norm[i] <= self.eps:
-                    N_phase.append(ngrids)
+                    num_grids_in_phase.append(ngrids)
                     active_phase.append(active)
                     active = False
                     ngrids = 0
@@ -124,27 +125,27 @@ class PlotContactForce:
                     ngrids += 1
             else:
                 if f_norm[i] > self.eps:
-                    N_phase.append(ngrids)
+                    num_grids_in_phase.append(ngrids)
                     active_phase.append(active)
                     active = True
                     ngrids = 0
                 else:
                     ngrids += 1
-        N_phase.append(ngrids)
+        num_grids_in_phase.append(ngrids)
         active_phase.append(active)
-        return N_phase, active_phase
+        return num_grids_in_phase, active_phase
 
     def _plot_f_leg(self, ax, fx, fy, fz, mfz, t, title, enable_xlabel):
         import matplotlib.pyplot as plt
         cmap = plt.get_cmap("tab10")
-        N_phase, active_phase = self._detect_phases(fx, fy, fz, mfz)
-        for phase in range(len(N_phase)):
+        num_grids_in_phase, active_phase = self._detect_phases(fx, fy, fz, mfz)
+        for phase in range(len(num_grids_in_phase)):
             if active_phase[phase]:
                 N_begin = 0
                 if phase > 0:
-                    N_begin = sum([N_phase[i] for i in range(phase)]) + 1
-                N_end = N_begin + N_phase[phase] 
-                if phase == len(N_phase)-1:
+                    N_begin = sum([num_grids_in_phase[i] for i in range(phase)]) + 1
+                N_end = N_begin + num_grids_in_phase[phase] 
+                if phase == len(num_grids_in_phase)-1:
                     ax.plot(
                         t[N_begin:N_end], 
                         fx[N_begin:N_end], 
@@ -201,7 +202,7 @@ class PlotContactForce:
                         alpha=0.25, 
                         hatch="///////"
                     )
-                if phase == len(N_phase)-1:
+                if phase == len(num_grids_in_phase)-1:
                     ax.plot(
                         t[N_begin:N_end], 
                         fz[N_begin:N_end], 
@@ -224,10 +225,15 @@ class PlotContactForce:
         ax.set_xlim([t[0], t[-1]])
 
 
-    def plot(self, f_data, t, fig_name=None, save_dir='./'):
+    def plot(self, f_traj, time_discretization: TimeDiscretization, fig_name=None, save_dir='./'):
+        t = []
+        f = []
+        for i in range(len(time_discretization)-1):
+            if time_discretization[i].type is not GridType.Impact:
+                t.append(time_discretization[i].t)
+                f.append(f_traj[i])
         import matplotlib.pyplot as plt
         import seaborn 
-        assert len(t) >= len(f_data)
         seaborn.set()
         seaborn.set_style('whitegrid')
         seaborn.set_style("ticks")
@@ -263,17 +269,17 @@ class PlotContactForce:
         f_LH = []
         f_RF = []
         f_RH = []
-        N = len(f_data) 
+        N = len(f) 
         for i in range(N):
-            f_LF.append(f_data[i][0:3])
-            f_LH.append(f_data[i][3:6])
-            f_RF.append(f_data[i][6:9])
-            f_RH.append(f_data[i][9:12])
+            f_LF.append(f[i][0:3])
+            f_LH.append(f[i][3:6])
+            f_RF.append(f[i][6:9])
+            f_RH.append(f[i][9:12])
 
-        fx_LF, fy_LF, fz_LF, mfz_LF = self._decompose_f_data(f_LF)
-        fx_LH, fy_LH, fz_LH, mfz_LH = self._decompose_f_data(f_LH)
-        fx_RF, fy_RF, fz_RF, mfz_RF = self._decompose_f_data(f_RF)
-        fx_RH, fy_RH, fz_RH, mfz_RH = self._decompose_f_data(f_RH)
+        fx_LF, fy_LF, fz_LF, mfz_LF = self._decompose_f_traj(f_LF)
+        fx_LH, fy_LH, fz_LH, mfz_LH = self._decompose_f_traj(f_LH)
+        fx_RF, fy_RF, fz_RF, mfz_RF = self._decompose_f_traj(f_RF)
+        fx_RH, fy_RH, fz_RH, mfz_RH = self._decompose_f_traj(f_RH)
 
         self._plot_f_leg(ax_LF, fx_LF, fy_LF, fz_LF, mfz_LF, t, 'Left-front leg', False)
         self._plot_f_leg(ax_LH, fx_LH, fy_LH, fz_LH, mfz_LH, t, 'Left-hip leg', False)

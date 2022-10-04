@@ -8,63 +8,103 @@
 namespace robotoc {
 
 OCPSolver::OCPSolver(const OCP& ocp, 
-                     const SolverOptions& solver_options, const int nthreads)
-  : robots_(nthreads, ocp.robot()),
-    contact_sequence_(ocp.contact_sequence()),
-    dms_(nthreads),
+                     const SolverOptions& solver_options)
+  : robots_(solver_options.nthreads, ocp.robot),
+    contact_sequence_(ocp.contact_sequence),
+    time_discretization_(ocp.T, ocp.N, ocp.reserved_num_discrete_events),
+    dms_(ocp, solver_options.nthreads),
     sto_(ocp),
-    riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
-    line_search_(ocp, nthreads),
+    riccati_recursion_(ocp, solver_options.max_dts_riccati),
+    line_search_(ocp),
     ocp_(ocp),
-    riccati_factorization_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
-    kkt_matrix_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
-    kkt_residual_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
-    s_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
-    d_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
-    solution_interpolator_(ocp.robot(), ocp.N(), ocp.reservedNumDiscreteEvents()),
+    kkt_matrix_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTMatrix(ocp.robot)),
+    kkt_residual_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTResidual(ocp.robot)),
+    s_(ocp.N+1+ocp.reserved_num_discrete_events, SplitSolution(ocp.robot)),
+    d_(ocp.N+1+ocp.reserved_num_discrete_events, SplitDirection(ocp.robot)),
+    riccati_factorization_(ocp.N+1+ocp.reserved_num_discrete_events+1, SplitRiccatiFactorization(ocp.robot)),
+    solution_interpolator_(solver_options.interpolation_order),
     solver_options_(solver_options),
-    solver_statistics_() {
-  if (nthreads <= 0) {
-    throw std::out_of_range("[OCPSolver] invalid argument: nthreads must be positive!");
+    solver_statistics_(),
+    timer_() {
+  if (!ocp.cost) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.cost should not be nullptr!");
   }
-  for (auto& e : s_.data)    { ocp.robot().normalizeConfiguration(e.q); }
-  for (auto& e : s_.impulse) { ocp.robot().normalizeConfiguration(e.q); }
-  for (auto& e : s_.aux)     { ocp.robot().normalizeConfiguration(e.q); }
-  for (auto& e : s_.lift)    { ocp.robot().normalizeConfiguration(e.q); }
+  if (!ocp.constraints) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.constraints should not be nullptr!");
+  }
+  if (!ocp.contact_sequence) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.contact_sequence should not be nullptr!");
+  }
+  if (ocp.T <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.T must be positive!");
+  }
+  if (ocp.N <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.N must be positive!");
+  }
+  if (ocp.reserved_num_discrete_events< 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: ocp.reserved_num_discrete_events must be non-negative!");
+  }
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: solver_options.nthreads must be positive!");
+  }
+  for (auto& e : s_)  { ocp.robot.normalizeConfiguration(e.q); }
+  if (ocp.sto_cost && ocp.sto_constraints) {
+    solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
+  }
 }
 
 
-OCPSolver::OCPSolver() {
-}
-
-
-OCPSolver::~OCPSolver() {
+OCPSolver::OCPSolver()
+  : robots_(),
+    contact_sequence_(),
+    time_discretization_(),
+    dms_(),
+    sto_(),
+    riccati_recursion_(),
+    line_search_(),
+    ocp_(),
+    kkt_matrix_(),
+    kkt_residual_(),
+    s_(),
+    d_(),
+    riccati_factorization_(),
+    solution_interpolator_(),
+    solver_options_(),
+    solver_statistics_(),
+    timer_() {
 }
 
 
 void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: solver_options.nthreads must be positive!");
+  }
+  while (robots_.size() < solver_options.nthreads) {
+    robots_.push_back(robots_.back());
+  }
+  dms_.setNumThreads(solver_options.nthreads);
+  riccati_recursion_.setRegularization(solver_options_.max_dts_riccati);
+  solution_interpolator_.setInterpolationOrder(solver_options.interpolation_order);
+  line_search_.set(solver_options.line_search_settings);
   solver_options_ = solver_options;
-  riccati_recursion_.setRegularization(solver_options.max_dts_riccati);
-}
-
-
-void OCPSolver::meshRefinement(const double t) {
-  ocp_.meshRefinement(t);
-  if (ocp_.timeDiscretization().discretizationMethod() == DiscretizationMethod::PhaseBased) {
-    reserveData();
-    discretizeSolution();
-    dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
-    sto_.initConstraints(ocp_);
+  if (ocp_.sto_cost && ocp_.sto_constraints) {
+    solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
 }
 
 
-void OCPSolver::initConstraints(const double t) {
-  ocp_.discretize(t);
-  reserveData();
-  discretizeSolution();
-  dms_.initConstraints(ocp_, robots_, contact_sequence_, s_);
-  sto_.initConstraints(ocp_);
+void OCPSolver::discretize(const double t) {
+  time_discretization_.discretize(contact_sequence_, t);
+  if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
+    time_discretization_.correctTimeSteps(contact_sequence_, t);
+  }
+  resizeData();
+}
+
+
+void OCPSolver::initConstraints() {
+  dms_.initConstraints(robots_, time_discretization_, s_);
+  sto_.initConstraints(time_discretization_);
 }
 
 
@@ -72,37 +112,36 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_.discretize(t);
-  reserveData();
-  discretizeSolution();
-  dms_.computeKKTSystem(ocp_, robots_, contact_sequence_, q, v, s_, 
-                        kkt_matrix_, kkt_residual_);
-  sto_.computeKKTSystem(ocp_, kkt_matrix_, kkt_residual_);
-  sto_.applyRegularization(ocp_, kkt_matrix_);
-  riccati_recursion_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
+  if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
+    time_discretization_.correctTimeSteps(contact_sequence_, t);
+  }
+  dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
+  sto_.evalKKT(time_discretization_, kkt_matrix_, kkt_residual_);
+  riccati_recursion_.backwardRiccatiRecursion(time_discretization_, 
+                                              kkt_matrix_, kkt_residual_, 
                                               riccati_factorization_);
-  dms_.computeInitialStateDirection(ocp_, robots_, q, v, s_, d_);
-  riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
-  riccati_recursion_.computeDirection(ocp_, contact_sequence_, 
-                                      riccati_factorization_, d_);
-  sto_.computeDirection(ocp_, d_);
-  double primal_step_size = std::min(riccati_recursion_.maxPrimalStepSize(), 
+  dms_.computeInitialStateDirection(robots_[0], q, v, s_, d_);
+  riccati_recursion_.forwardRiccatiRecursion(time_discretization_, 
+                                             kkt_matrix_, kkt_residual_, 
+                                             riccati_factorization_, d_);
+  dms_.computeStepSizes(time_discretization_, d_);
+  sto_.computeStepSizes(time_discretization_, d_);
+  double primal_step_size = std::min(dms_.maxPrimalStepSize(), 
                                      sto_.maxPrimalStepSize());
-  const double dual_step_size = std::min(riccati_recursion_.maxDualStepSize(),
+  const double dual_step_size = std::min(dms_.maxDualStepSize(),
                                          sto_.maxDualStepSize());
   if (solver_options_.enable_line_search) {
     const double max_primal_step_size = primal_step_size;
-    primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
-                                                    contact_sequence_, 
+    primal_step_size = line_search_.computeStepSize(dms_, robots_, 
+                                                    time_discretization_, 
                                                     q, v, s_, d_, 
                                                     max_primal_step_size);
   }
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
-  dms_.integrateSolution(ocp_, robots_, primal_step_size, dual_step_size, 
-                         kkt_matrix_, d_, s_);
-  sto_.integrateSolution(ocp_, contact_sequence_, primal_step_size, 
-                         dual_step_size, d_);
+  dms_.integrateSolution(robots_, time_discretization_, 
+                         primal_step_size, dual_step_size, kkt_matrix_, d_, s_);
+  sto_.integrateSolution(time_discretization_, primal_step_size, dual_step_size, d_);
 } 
 
 
@@ -118,16 +157,19 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     timer_.tick();
   }
   if (init_solver) {
-    meshRefinement(t);
-    if (solver_options_.enable_solution_interpolation) 
-      solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
-    initConstraints(t);
-    line_search_.clearFilter();
+    discretize(t);
+    if (solver_options_.enable_solution_interpolation) {
+      solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
+    }
+    dms_.initConstraints(robots_, time_discretization_, s_);
+    sto_.initConstraints(time_discretization_);
+    line_search_.clearHistory();
   }
   solver_statistics_.clear(); 
+  solver_statistics_.reserve(solver_options_.max_iter);
   int inner_iter = 0;
   for (int iter=0; iter<solver_options_.max_iter; ++iter, ++inner_iter) {
-    if (ocp_.isSTOEnabled()) {
+    if (ocp_.sto_cost && ocp_.sto_constraints) {
       if (inner_iter < solver_options_.initial_sto_reg_iter) {
         sto_.setRegularization(solver_options_.initial_sto_reg);
       }
@@ -137,15 +179,21 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
       solver_statistics_.ts.emplace_back(contact_sequence_->eventTimes());
     } 
     updateSolution(t, q, v);
+    solver_statistics_.performance_index.push_back(dms_.getEval()+sto_.getEval()); 
     const double kkt_error = KKTError();
-    solver_statistics_.kkt_error.push_back(kkt_error); 
-    if (ocp_.isSTOEnabled() && (kkt_error < solver_options_.kkt_tol_mesh)) {
-      if (ocp_.timeDiscretization().dt_max() > solver_options_.max_dt_mesh) {
-        if (solver_options_.enable_solution_interpolation) 
-          solution_interpolator_.store(ocp_.timeDiscretization(), s_);
-        meshRefinement(t);
-        if (solver_options_.enable_solution_interpolation) 
-          solution_interpolator_.interpolate(robots_[0], ocp_.timeDiscretization(), s_);
+    if ((ocp_.sto_cost && ocp_.sto_constraints) && (kkt_error < solver_options_.kkt_tol_mesh)) {
+      if (time_discretization_.maxTimeStep() > solver_options_.max_dt_mesh) {
+        if (solver_options_.enable_solution_interpolation) {
+          time_discretization_.correctTimeSteps(contact_sequence_, t);
+          solution_interpolator_.store(time_discretization_, s_);
+        }
+        discretize(t);
+        if (solver_options_.enable_solution_interpolation) {
+          solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
+        }
+        dms_.initConstraints(robots_, time_discretization_, s_);
+        sto_.initConstraints(time_discretization_);
+        line_search_.clearHistory();
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }
@@ -164,8 +212,12 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
   if (!solver_statistics_.convergence) {
     solver_statistics_.iter = solver_options_.max_iter;
   }
-  if (solver_options_.enable_solution_interpolation) 
-    solution_interpolator_.store(ocp_.timeDiscretization(), s_);
+  if (solver_options_.enable_solution_interpolation) {
+    if (solver_options_.discretization_method == DiscretizationMethod::PhaseBased) {
+      time_discretization_.correctTimeSteps(contact_sequence_, t);
+    }
+    solution_interpolator_.store(time_discretization_, s_);
+  }
   if (solver_options_.enable_benchmark) {
     timer_.tock();
     solver_statistics_.cpu_time = timer_.ms();
@@ -185,7 +237,7 @@ const Solution& OCPSolver::getSolution() const {
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= ocp_.timeDiscretization().N());
+  assert(stage < time_discretization_.size());
   return s_[stage];
 }
 
@@ -194,80 +246,51 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name, const std::string& option) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<time_discretization_.size(); ++i) {
       sol.push_back(s_[i].q);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].q);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].q);
-      }
     }
   }
   else if (name == "v") {
-    for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
+    for (int i=0; i<time_discretization_.size(); ++i) {
       sol.push_back(s_[i].v);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].v);
+    }
+  }
+  else if (name == "u") {
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robots_[0].dimu()));
       }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].v);
+      else {
+        sol.push_back(s_[i].u);
       }
     }
   }
   else if (name == "a") {
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
-      sol.push_back(s_[i].a);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].a);
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robots_[0].dimv()));
       }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].a);
+      else {
+        sol.push_back(s_[i].a);
       }
     }
   }
   else if (name == "f" && option == "WORLD") {
     Robot robot = robots_[0];
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
-      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-      robot.updateFrameKinematics(s_[i].q);
-      for (int j=0; j<robot.maxNumContacts(); ++j) {
-        if (s_[i].isContactActive(j)) {
-          const int contact_frame = robot.contactFrames()[j];
-          robot.transformFromLocalToWorld(contact_frame, s_[i].f[j].template head<3>(),
-                                          f.template segment<3>(3*j));
-        }
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robot.max_dimf()));
       }
-      sol.push_back(f);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
+      else {
         Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        robot.updateFrameKinematics(s_.aux[impulse_index].q);
+        robot.updateFrameKinematics(s_[i].q);
         for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.aux[impulse_index].isContactActive(j)) {
+          if (s_[i].isContactActive(j)) {
             const int contact_frame = robot.contactFrames()[j];
-            robot.transformFromLocalToWorld(contact_frame, 
-                                            s_.aux[impulse_index].f[j].template head<3>(),
-                                            f.template segment<3>(3*j));
-          }
-        }
-        sol.push_back(f);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        robot.updateFrameKinematics(s_.lift[lift_index].q);
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.lift[lift_index].isContactActive(j)) {
-            const int contact_frame = robot.contactFrames()[j];
-            robot.transformFromLocalToWorld(contact_frame, 
-                                            s_.lift[lift_index].f[j].template head<3>(), 
+            robot.transformFromLocalToWorld(contact_frame, s_[i].f[j].template head<3>(),
                                             f.template segment<3>(3*j));
           }
         }
@@ -277,71 +300,30 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
   }
   else if (name == "f") {
     Robot robot = robots_[0];
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
-      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-      for (int j=0; j<robot.maxNumContacts(); ++j) {
-        if (s_[i].isContactActive(j)) {
-          f.template segment<3>(3*j) = s_[i].f[j].template head<3>();
-        }
-      }
-      sol.push_back(f);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.aux[impulse_index].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_.aux[impulse_index].f[j].template head<3>();
-          }
-        }
-        sol.push_back(f);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
-        for (int j=0; j<robot.maxNumContacts(); ++j) {
-          if (s_.lift[lift_index].isContactActive(j)) {
-            f.template segment<3>(3*j) = s_.lift[lift_index].f[j].template head<3>();
-          }
-        }
-        sol.push_back(f);
-      }
-    }
-  }
-  else if (name == "u") {
-    for (int i=0; i<ocp_.timeDiscretization().N(); ++i) {
-      sol.push_back(s_[i].u);
-      if (ocp_.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_.timeDiscretization().impulseIndexAfterTimeStage(i);
-        sol.push_back(s_.aux[impulse_index].u);
-      }
-      else if (ocp_.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_.timeDiscretization().liftIndexAfterTimeStage(i);
-        sol.push_back(s_.lift[lift_index].u);
-      }
-    }
-  }
-  else if (name == "ts") {
-    const int num_events = ocp_.timeDiscretization().N_impulse()+ocp_.timeDiscretization().N_lift();
-    int impulse_index = 0;
-    int lift_index = 0;
-    Eigen::VectorXd ts(num_events);
-    for (int event_index=0; event_index<num_events; ++event_index) {
-      if (ocp_.timeDiscretization().eventType(event_index) == DiscreteEventType::Impulse) {
-        ts.coeffRef(event_index) = contact_sequence_->impulseTime(impulse_index);
-        ++impulse_index;
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if ((time_discretization_[i].type == GridType::Impact)
+          || (time_discretization_[i].type == GridType::Terminal)) {
+        sol.push_back(Eigen::VectorXd::Zero(robot.max_dimf()));
       }
       else {
-        ts.coeffRef(event_index) = contact_sequence_->liftTime(lift_index);
-        ++lift_index;
+        Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+        for (int j=0; j<robot.maxNumContacts(); ++j) {
+          if (s_[i].isContactActive(j)) {
+            f.template segment<3>(3*j) = s_[i].f[j].template head<3>();
+          }
+        }
+        sol.push_back(f);
       }
     }
-    sol.push_back(ts);
+  }
+  else {
+    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, u, a, f!");
   }
   return sol;
 }
 
 
-const hybrid_container<LQRPolicy>& OCPSolver::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& OCPSolver::getLQRPolicy() const {
   return riccati_recursion_.getLQRPolicy();
 }
 
@@ -352,26 +334,6 @@ const RiccatiFactorization& OCPSolver::getRiccatiFactorization() const {
 
 
 void OCPSolver::setSolution(const Solution& s) {
-  assert(s.data.size() == s_.data.size());
-  assert(s.lift.size() == s_.lift.size());
-  assert(s.aux.size() == s_.aux.size());
-  assert(s.impulse.size() == s_.impulse.size());
-  if (s.data.size() != s_.data.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.data.size() must be " + std::to_string(s_.data.size()) + "!");
-  }
-  if (s.lift.size() != s_.lift.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.lift.size() must be " + std::to_string(s_.lift.size()) + "!");
-  }
-  if (s.aux.size() != s_.aux.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.aux.size() must be " + std::to_string(s_.aux.size()) + "!");
-  }
-  if (s.impulse.size() != s_.impulse.size()) {
-    throw std::out_of_range(
-        "[OCPSolver] invalid argument: s.impulse.size() must be " + std::to_string(s_.impulse.size()) + "!");
-  }
   s_ = s;
 }
 
@@ -383,92 +345,68 @@ void OCPSolver::setSolution(const std::string& name,
       throw std::out_of_range(
           "[OCPSolver] invalid argument: q.size() must be " + std::to_string(robots_[0].dimq()) + "!");
     }
-    for (auto& e : s_.data)    { e.q = value; }
-    for (auto& e : s_.impulse) { e.q = value; }
-    for (auto& e : s_.aux)     { e.q = value; }
-    for (auto& e : s_.lift)    { e.q = value; }
+    for (auto& e : s_) { e.q = value; }
   }
   else if (name == "v") {
     if (value.size() != robots_[0].dimv()) {
       throw std::out_of_range(
           "[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
     }
-    for (auto& e : s_.data)    { e.v = value; }
-    for (auto& e : s_.impulse) { e.v = value; }
-    for (auto& e : s_.aux)     { e.v = value; }
-    for (auto& e : s_.lift)    { e.v = value; }
+    for (auto& e : s_) { e.v = value; }
   }
   else if (name == "a") {
-    if (value.size() != robots_[0].dimv()) {
-      throw std::out_of_range(
-          "[OCPSolver] invalid argument: a.size() must be " + std::to_string(robots_[0].dimv()) + "!");
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impact
+          || time_discretization_[i].type == GridType::Terminal) continue;
+      s_[i].a = value;
     }
-    for (auto& e : s_.data)    { e.a  = value; }
-    for (auto& e : s_.impulse) { e.dv = value; }
-    for (auto& e : s_.aux)     { e.a  = value; }
-    for (auto& e : s_.lift)    { e.a  = value; }
+  }
+  else if (name == "dv") {
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type != GridType::Impact) continue;
+      s_[i].dv = value;
+    }
   }
   else if (name == "f") {
-    if (value.size() == 6) {
-      for (auto& e : s_.data) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.aux) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.lift) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
-    }
-    else if (value.size() == 3) {
-      for (auto& e : s_.data) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.aux) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-      for (auto& e : s_.lift) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
-      }
-    }
-    else {
+    if ((value.size() != 3) && (value.size() != 6)) {
       throw std::out_of_range("[OCPSolver] invalid argument: f.size() must be 3 or 6!");
+    }
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impact
+          || time_discretization_[i].type == GridType::Terminal) continue;
+      if (value.size() == 3) {
+        for (auto& ef : s_[i].f) { ef.template head<3>() = value.template head<3>(); } 
+      }
+      else {
+        for (auto& ef : s_[i].f) { ef = value.template head<6>(); } 
+      }
+      s_[i].set_f_stack(); 
     }
   }
   else if (name == "lmd") {
-    if (value.size() != 6) {
-      for (auto& e : s_.impulse) { 
-        for (auto& ef : e.f) { ef = value.template head<6>(); } 
-        e.set_f_stack(); 
-      }
+    if ((value.size() != 3) && (value.size() != 6)) {
+      throw std::out_of_range("[OCPSolver] invalid argument: lmd.size() must be 3 or 6!");
     }
-    else if (value.size() != 3) {
-      for (auto& e : s_.impulse) { 
-        for (auto& ef : e.f) { ef.template head<3>() = value.template head<3>(); } 
-        e.set_f_stack(); 
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type != GridType::Impact) continue;
+      if (value.size() == 3) {
+        for (auto& ef : s_[i].f) { ef.template head<3>() = value.template head<3>(); } 
       }
-    }
-    else {
-      throw std::out_of_range("[OCPSolver] invalid argument: f.size() must be 3 or 6!");
+      else {
+        for (auto& ef : s_[i].f) { ef = value.template head<6>(); } 
+      }
+      s_[i].set_f_stack(); 
     }
   }
   else if (name == "u") {
-    if (value.size() != robots_[0].dimu()) {
-      throw std::out_of_range(
-          "[OCPSolver] invalid argument: u.size() must be " + std::to_string(robots_[0].dimu()) + "!");
+    for (int i=0; i<time_discretization_.size(); ++i) {
+      if (time_discretization_[i].type == GridType::Impact
+          || time_discretization_[i].type == GridType::Terminal) continue;
+      s_[i].u = value;
     }
-    for (auto& e : s_.data)    { e.u = value; }
-    for (auto& e : s_.aux)     { e.u = value; }
-    for (auto& e : s_.lift)    { e.u = value; }
   }
   else {
-    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, f, or u!");
+    throw std::invalid_argument("[OCPSolver] invalid arugment: name must be q, v, a, dv, u, f, or lmd!");
   }
 }
 
@@ -481,36 +419,20 @@ double OCPSolver::KKTError(const double t, const Eigen::VectorXd& q,
   if (v.size() != robots_[0].dimv()) {
     throw std::out_of_range("[OCPSolver] invalid argument: v.size() must be " + std::to_string(robots_[0].dimv()) + "!");
   }
-  ocp_.discretize(t);
-  reserveData();
-  discretizeSolution();
-  dms_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
-                          kkt_matrix_, kkt_residual_);
-  sto_.computeKKTResidual(ocp_, kkt_residual_);
+  resizeData();
+  dms_.evalKKT(robots_, time_discretization_, q, v, s_, kkt_matrix_, kkt_residual_);
+  sto_.evalKKT(time_discretization_, kkt_matrix_, kkt_residual_);
   return KKTError();
 }
 
 
 double OCPSolver::KKTError() const {
-  return std::sqrt(dms_.KKTError(ocp_, kkt_residual_) + sto_.KKTError());
-}
-
-
-double OCPSolver::cost(const bool include_cost_barrier) const {
-  return dms_.totalCost(ocp_, include_cost_barrier);
-}
-
-
-bool OCPSolver::isCurrentSolutionFeasible(const bool verbose) {
-  // ocp_.discretize(t);
-  // reserveData();
-  // discretizeSolution();
-  return dms_.isFeasible(ocp_, robots_, contact_sequence_, s_);
+  return std::sqrt(dms_.getEval().kkt_error + sto_.getEval().kkt_error);
 }
 
 
 const TimeDiscretization& OCPSolver::getTimeDiscretization() const {
-  return ocp_.timeDiscretization();
+  return time_discretization_;
 }
 
 
@@ -521,45 +443,42 @@ void OCPSolver::setRobotProperties(const RobotProperties& properties) {
 }
 
 
-void OCPSolver::reserveData() {
-  kkt_matrix_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  kkt_residual_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  s_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  d_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  riccati_factorization_.reserve(ocp_.robot(), ocp_.reservedNumDiscreteEvents());
-  riccati_recursion_.reserve(ocp_);
-  line_search_.reserve(ocp_);
+template <typename T>
+void conservativeReserve(const TimeDiscretization& time_discretization, 
+                         aligned_vector<T>& data) {
+  while (data.size() < time_discretization.size()) {
+    data.push_back(data.back());
+  }
 }
 
 
-void OCPSolver::discretizeSolution() {
-  for (int i=0; i<=ocp_.timeDiscretization().N(); ++i) {
-    s_[i].setContactStatus(
-        contact_sequence_->contactStatus(ocp_.timeDiscretization().contactPhase(i)));
-    s_[i].set_f_stack();
-    s_[i].setImpulseStatus();
-  }
-  for (int i=0; i<ocp_.timeDiscretization().N_lift(); ++i) {
-    s_.lift[i].setContactStatus(
-        contact_sequence_->contactStatus(
-            ocp_.timeDiscretization().contactPhaseAfterLift(i)));
-    s_.lift[i].set_f_stack();
-    s_.lift[i].setImpulseStatus();
-  }
-  for (int i=0; i<ocp_.timeDiscretization().N_impulse(); ++i) {
-    s_.impulse[i].setImpulseStatus(contact_sequence_->impulseStatus(i));
-    s_.impulse[i].set_f_stack();
-    s_.aux[i].setContactStatus(
-        contact_sequence_->contactStatus(
-            ocp_.timeDiscretization().contactPhaseAfterImpulse(i)));
-    s_.aux[i].set_f_stack();
-    const int time_stage_before_impulse 
-        = ocp_.timeDiscretization().timeStageBeforeImpulse(i);
-    if (time_stage_before_impulse-1 >= 0) {
-      s_[time_stage_before_impulse-1].setImpulseStatus(
-          contact_sequence_->impulseStatus(i));
+void OCPSolver::resizeData() {
+  conservativeReserve(time_discretization_, kkt_matrix_);
+  conservativeReserve(time_discretization_, kkt_residual_);
+  conservativeReserve(time_discretization_, s_);
+  conservativeReserve(time_discretization_, d_);
+  conservativeReserve(time_discretization_, riccati_factorization_);
+  for (int i=0; i<time_discretization_.size(); ++i) {
+    const auto& grid = time_discretization_[i];
+    if (grid.type == GridType::Intermediate || grid.type == GridType::Lift) {
+      s_[i].setContactStatus(contact_sequence_->contactStatus(grid.phase));
+      s_[i].set_f_stack();
+    }
+    else if (grid.type == GridType::Impact) {
+      s_[i].setContactStatus(contact_sequence_->impactStatus(grid.impact_index));
+      s_[i].set_f_stack();
+    }
+    if (grid.switching_constraint) {
+      const auto& grid_next_next = time_discretization_.grid(i+2);
+      s_[i].setSwitchingConstraintDimension(contact_sequence_->impactStatus(grid_next_next.impact_index).dimf());
+    }
+    else {
+      s_[i].setSwitchingConstraintDimension(0);
     }
   }
+  dms_.resizeData(time_discretization_);
+  riccati_recursion_.resizeData(time_discretization_);
+  line_search_.resizeData(time_discretization_);
 }
 
 

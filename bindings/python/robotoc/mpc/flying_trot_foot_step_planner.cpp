@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/flying_trot_foot_step_planner.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -42,11 +43,8 @@ PYBIND11_MODULE(flying_trot_foot_step_planner, m) {
     .def("R", &FlyingTrotFootStepPlanner::R,
           py::arg("step"))
     .def("size", &FlyingTrotFootStepPlanner::size)
-    .def("__str__", [](const FlyingTrotFootStepPlanner& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(FlyingTrotFootStepPlanner)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(FlyingTrotFootStepPlanner);
 }
 
 } // namespace python

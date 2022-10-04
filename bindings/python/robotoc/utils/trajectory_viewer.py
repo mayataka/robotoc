@@ -79,20 +79,28 @@ class TrajectoryViewer:
             self.zoom = zoom
 
 
-    def display(self, dt, q_traj, f_traj=None):
+    def display(self, time_discretization, q_traj, f_traj=None):
+        dt = []
+        q = []
+        for i in range(len(time_discretization)-1):
+            if time_discretization[i].type is not robotoc.GridType.Impact:
+                dt.append(time_discretization[i].dt)
+                q.append(q_traj[i])
+        q.append(q_traj[-1])
+        f = None
+        if f_traj is not None:
+            f = []
+            for i in range(len(time_discretization)-1):
+                if time_discretization[i].type is not robotoc.GridType.Impact:
+                    f.append(f_traj[i])
+            f.append(f_traj[-2])
         if self.viewer_type == 'gepetto':
-            self.display_gepetto(dt, q_traj, f_traj)
+            self.display_gepetto(dt, q, f)
         elif self.viewer_type == 'meshcat':
-            self.display_meshcat(dt, q_traj)
+            self.display_meshcat(dt, q)
 
 
     def display_gepetto(self, dt, q_traj, f_traj):
-        if isinstance(dt, float):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
-        assert len(q_traj)-1 == len(dt)
-        if f_traj is not None:
-            assert len(dt) == len(f_traj)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(windowName=self.window_name, loadModel=False)
         self.robot.loadViewerModel(rootNodeName=self.window_name)
@@ -189,10 +197,6 @@ class TrajectoryViewer:
 
 
     def display_meshcat(self, dt, q_traj, open=True):
-        if isinstance(dt, float):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
-        assert len(q_traj)-1 == len(dt)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(open=open)
         self.robot.loadViewerModel(rootNodeName='robotoc.TrajectoryViewer')

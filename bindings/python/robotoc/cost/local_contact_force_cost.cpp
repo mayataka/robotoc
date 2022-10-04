@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 
 #include "robotoc/cost/local_contact_force_cost.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -23,7 +24,8 @@ PYBIND11_MODULE(local_contact_force_cost, m) {
     .def("set_f_weight", &LocalContactForceCost::set_f_weight,
           py::arg("f_weight"))
     .def("set_fi_weight", &LocalContactForceCost::set_fi_weight,
-          py::arg("fi_weight"));
+          py::arg("fi_weight"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(LocalContactForceCost);
 }
 
 } // namespace python

@@ -1,6 +1,0 @@
-pybind11_add_robotoc_module(impulse_split_solution)
-pybind11_add_robotoc_module(impulse_split_direction)
-pybind11_add_robotoc_module(impulse_split_kkt_residual)
-pybind11_add_robotoc_module(impulse_split_kkt_matrix)
-
-install_robotoc_pybind_module(impulse)

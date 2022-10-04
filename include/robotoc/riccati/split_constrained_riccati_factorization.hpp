@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 
 namespace robotoc {
 
@@ -57,9 +57,9 @@ public:
   SplitConstrainedRiccatiFactorization& operator=(
       SplitConstrainedRiccatiFactorization&&) noexcept = default;
 
-  void setImpulseStatus(const int dimi=0);
+  void setConstraintDimension(const int dimi=0);
 
-  int dimi() const;
+  int dims() const;
 
   Eigen::Block<Eigen::MatrixXd> DGinv();
 
@@ -76,22 +76,6 @@ public:
   Eigen::Block<Eigen::MatrixXd> SinvDGinv();
 
   const Eigen::Block<const Eigen::MatrixXd> SinvDGinv() const; 
-
-  Eigen::Block<Eigen::MatrixXd> M();
-
-  const Eigen::Block<const Eigen::MatrixXd> M() const;
-
-  Eigen::VectorBlock<Eigen::VectorXd> m();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> m() const;
-
-  Eigen::VectorBlock<Eigen::VectorXd> mt();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> mt() const;
-
-    Eigen::VectorBlock<Eigen::VectorXd> mt_next();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> mt_next() const;
 
   Eigen::MatrixXd Ginv;
 
@@ -112,9 +96,8 @@ public:
       std::ostream& os, const SplitConstrainedRiccatiFactorization& c_riccati);
 
 private:
-  Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_, M_full_;
-  Eigen::VectorXd m_full_, mt_full_, mt_next_full_;
-  int dimv_, dimx_, dimu_, dimi_;
+  Eigen::MatrixXd DGinv_full_, S_full_, Sinv_full_, SinvDGinv_full_;
+  int dimv_, dimx_, dimu_, dims_;
 
 };
 

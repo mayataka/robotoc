@@ -8,12 +8,12 @@ CoMCost::CoMCost(const Robot& robot)
     const_ref_(Eigen::Vector3d::Zero()),
     weight_(Eigen::Vector3d::Zero()),
     weight_terminal_(Eigen::Vector3d::Zero()),
-    weight_impulse_(Eigen::Vector3d::Zero()),
+    weight_impact_(Eigen::Vector3d::Zero()),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
-    enable_cost_impulse_(false) {
+    enable_cost_impact_(false) {
 }
 
 
@@ -34,12 +34,12 @@ CoMCost::CoMCost()
     const_ref_(Eigen::Vector3d::Zero()),
     weight_(Eigen::Vector3d::Zero()),
     weight_terminal_(Eigen::Vector3d::Zero()),
-    weight_impulse_(Eigen::Vector3d::Zero()),
+    weight_impact_(Eigen::Vector3d::Zero()),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
-    enable_cost_impulse_(false) {
+    enable_cost_impact_(false) {
 }
 
 
@@ -79,13 +79,13 @@ void CoMCost::set_weight_terminal(const Eigen::Vector3d& weight_terminal) {
 }
 
 
-void CoMCost::set_weight_impulse(const Eigen::Vector3d& weight_impulse) {
-  if (weight_impulse.minCoeff() < 0.0) {
+void CoMCost::set_weight_impact(const Eigen::Vector3d& weight_impact) {
+  if (weight_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[CoMCost] invalid argument: elements of 'weight_impulse' must be non-negative!");
+        "[CoMCost] invalid argument: elements of 'weight_impact' must be non-negative!");
   }
-  weight_impulse_ = weight_impulse;
-  enable_cost_impulse_ = (!weight_impulse.isZero());
+  weight_impact_ = weight_impact;
+  enable_cost_impact_ = (!weight_impact.isZero());
 }
 
 
@@ -171,13 +171,13 @@ void CoMCost::evalTerminalCostHessian(Robot& robot, CostFunctionData& data,
 }
 
 
-double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+double CoMCost::evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                                 CostFunctionData& data, 
                                 const GridInfo& grid_info,
-                                const ImpulseSplitSolution& s) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+                                const SplitSolution& s) const {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
-    const double l = (weight_impulse_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+    const double l = (weight_impact_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
     return 0.5 * l;
   }
   else {
@@ -186,28 +186,28 @@ double CoMCost::evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_statu
 }
 
 
-void CoMCost::evalImpulseCostDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+void CoMCost::evalImpactCostDerivatives(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 
-        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.diff_3d;
+        += data.J_3d.transpose() * weight_impact_.asDiagonal() * data.diff_3d;
   }
 }
 
 
-void CoMCost::evalImpulseCostHessian(Robot& robot, 
-                                     const ImpulseStatus& impulse_status, 
+void CoMCost::evalImpactCostHessian(Robot& robot, 
+                                     const ImpactStatus& impact_status, 
                                      CostFunctionData& data, 
                                      const GridInfo& grid_info,
-                                     const ImpulseSplitSolution& s, 
-                                     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+                                     const SplitSolution& s, 
+                                     SplitKKTMatrix& kkt_matrix) const {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
-        += data.J_3d.transpose() * weight_impulse_.asDiagonal() * data.J_3d;
+        += data.J_3d.transpose() * weight_impact_.asDiagonal() * data.J_3d;
   }
 }
 

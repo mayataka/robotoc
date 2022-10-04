@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/mpc_trot.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -13,8 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_trot, m) {
   py::class_<MPCTrot>(m, "MPCTrot")
-    .def(py::init<const Robot&, const double, const int, const int>(),
-         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int>(),
+         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"))
     .def("set_gait_pattern", &MPCTrot::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("stance_time"), py::arg("swing_start_time"))
@@ -45,7 +46,8 @@ PYBIND11_MODULE(mpc_trot, m) {
     .def("get_friction_cone_handle", &MPCTrot::getFrictionConeHandle)
     .def("get_solver", &MPCTrot::getSolver)
     .def("get_contact_sequence", &MPCTrot::getContactSequence)
-    .def("set_robot_properties", &MPCTrot::setRobotProperties);
+    .def("set_robot_properties", &MPCTrot::setRobotProperties)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCTrot);
 }
 
 } // namespace python

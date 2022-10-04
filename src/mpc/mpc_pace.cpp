@@ -10,14 +10,13 @@
 
 namespace robotoc {
 
-MPCPace::MPCPace(const Robot& robot, const double T, const int N, 
-                 const int nthreads)
+MPCPace::MPCPace(const Robot& robot, const double T, const int N)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),
     constraints_(std::make_shared<Constraints>(1.0e-03, 0.995)),
     ocp_solver_(OCP(robot, cost_, constraints_, contact_sequence_, T, N), 
-                SolverOptions(), nthreads), 
+                SolverOptions()), 
     solver_options_(SolverOptions()),
     cs_standing_(robot.createContactStatus()),
     cs_left_swing_(robot.createContactStatus()),
@@ -43,22 +42,22 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.001);
   q_weight.template head<6>().setZero();
-  Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1);
-  q_weight_impulse.template head<6>().setZero();
+  Eigen::VectorXd q_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 1);
+  q_weight_impact.template head<6>().setZero();
   config_cost_->set_q_weight(q_weight);
   config_cost_->set_q_weight_terminal(q_weight);
-  config_cost_->set_q_weight_impulse(q_weight_impulse);
+  config_cost_->set_q_weight_impact(q_weight_impact);
   config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 1.0e-02));
-  config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
-  config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  config_cost_->set_v_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
+  config_cost_->set_dv_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   base_rot_cost_ = std::make_shared<ConfigurationSpaceCost>(robot, base_rot_ref_);
   Eigen::VectorXd base_rot_weight = Eigen::VectorXd::Zero(robot.dimv());
   base_rot_weight.template head<6>() << 0, 0, 0, 1000, 1000, 1000;
   base_rot_cost_->set_q_weight(base_rot_weight);
   base_rot_cost_->set_q_weight_terminal(base_rot_weight);
-  base_rot_cost_->set_q_weight_impulse(base_rot_weight);
+  base_rot_cost_->set_q_weight_impact(base_rot_weight);
   LF_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[0],
                                                     LF_foot_ref_);
   LH_foot_cost_ = std::make_shared<TaskSpace3DCost>(robot, robot.contactFrames()[1],
@@ -88,7 +87,7 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
-  // auto impulse_friction_cone = std::make_shared<robotoc::ImpulseFrictionCone>(robot);
+  // auto impact_friction_cone = std::make_shared<robotoc::ImpactFrictionCone>(robot);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
@@ -96,7 +95,7 @@ MPCPace::MPCPace(const Robot& robot, const double T, const int N,
   constraints_->push_back(joint_torques_lower);
   constraints_->push_back(joint_torques_upper);
   constraints_->push_back(friction_cone_);
-  // constraints_->push_back(impulse_friction_cone);
+  // constraints_->push_back(impact_friction_cone);
   // create contact status
   cs_standing_.activateContacts(std::vector<int>({0, 1, 2, 3}));
   cs_left_swing_.activateContacts(std::vector<int>({2, 3}));
@@ -234,7 +233,7 @@ const Solution& MPCPace::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCPace::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCPace::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 

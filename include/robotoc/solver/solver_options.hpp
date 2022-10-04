@@ -3,8 +3,9 @@
 
 #include <iostream>
 
-#include "robotoc/hybrid/discretization_method.hpp"
+#include "robotoc/ocp/discretization_method.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/solver/interpolation_order.hpp"
 
 
 namespace robotoc {
@@ -14,6 +15,12 @@ namespace robotoc {
 /// @brief Options of optimal control solvers. 
 ///
 struct SolverOptions {
+  ///
+  /// @brief Number of the threads of parallel computations. Must be positive.
+  /// Default is 1.
+  ///
+  int nthreads = 1;
+
   ///
   /// @brief Maximum number of iterations. Must be non-negative. 
   /// Default is 100. 
@@ -68,7 +75,7 @@ struct SolverOptions {
   LineSearchSettings line_search_settings;
 
   ///
-  /// @brief Discretization method of the hybrid optimal control problem.
+  /// @brief Discretization method of the optimal control problem.
   /// Only used in OCPSolver without the STO problem. Default is 
   /// DiscretizationMethod::GridBased.
   /// @note For the STO problem, discretization method is fixed to 
@@ -130,6 +137,12 @@ struct SolverOptions {
   /// interpolation of the previous solution. 
   ///
   bool enable_solution_interpolation = true;
+
+  ///
+  /// @brief Order of the solution interpolation if enable_solution_interpolation
+  /// is true. 
+  ///
+  InterpolationOrder interpolation_order = InterpolationOrder::Linear;
 
   ///
   /// @brief If true, the CPU time is measured at each solve().

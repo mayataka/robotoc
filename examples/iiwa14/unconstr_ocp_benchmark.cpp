@@ -3,7 +3,7 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/unconstr/unconstr_ocp.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -58,10 +58,10 @@ int main() {
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  robotoc::UnconstrOCP ocp(robot, cost, constraints, T, N);
+  robotoc::OCP ocp(robot, cost, constraints, T, N);
   auto solver_options = robotoc::SolverOptions();
-  const int nthreads = 4;
-  robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options, nthreads);
+  solver_options.nthreads = 4;
+  robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
@@ -69,6 +69,7 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   ocp_solver.initConstraints();

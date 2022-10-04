@@ -363,15 +363,15 @@ inline void Robot::computeBaumgarteDerivatives(
 
 
 template <typename VectorType>
-inline void Robot::computeImpulseVelocityResidual(
-    const ImpulseStatus& impulse_status, 
+inline void Robot::computeImpactVelocityResidual(
+    const ImpactStatus& impact_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
-  assert(velocity_residual.size() == impulse_status.dimi());
+  assert(velocity_residual.size() == impact_status.dimf());
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   int dimf = 0;
   for (int i=0; i<num_point_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_[i].computeContactVelocityResidual(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
@@ -380,7 +380,7 @@ inline void Robot::computeImpulseVelocityResidual(
     }
   }
   for (int i=0; i<num_surface_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i+num_point_contacts)) {
+    if (impact_status.isImpactActive(i+num_point_contacts)) {
       surface_contacts_[i].computeContactVelocityResidual(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
@@ -388,24 +388,24 @@ inline void Robot::computeImpulseVelocityResidual(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impact_status.dimf());
 }
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void Robot::computeImpulseVelocityDerivatives(
-    const ImpulseStatus& impulse_status, 
+inline void Robot::computeImpactVelocityDerivatives(
+    const ImpactStatus& impact_status, 
     const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
-  assert(velocity_partial_dq.rows() == impulse_status.dimi());
+  assert(velocity_partial_dq.rows() == impact_status.dimf());
   assert(velocity_partial_dq.cols() == dimv_);
-  assert(velocity_partial_dv.rows() == impulse_status.dimi());
+  assert(velocity_partial_dv.rows() == impact_status.dimf());
   assert(velocity_partial_dv.cols() == dimv_);
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   int dimf = 0;
   for (int i=0; i<num_point_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_[i].computeContactVelocityDerivatives(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
@@ -416,7 +416,7 @@ inline void Robot::computeImpulseVelocityDerivatives(
     }
   }
   for (int i=0; i<num_surface_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i+num_point_contacts)) {
+    if (impact_status.isImpactActive(i+num_point_contacts)) {
       surface_contacts_[i].computeContactVelocityDerivatives(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
@@ -426,51 +426,51 @@ inline void Robot::computeImpulseVelocityDerivatives(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impact_status.dimf());
 }
 
 
 template <typename VectorType>
 inline void Robot::computeContactPositionResidual(
-    const ImpulseStatus& impulse_status, 
+    const ImpactStatus& impact_status, 
     const Eigen::MatrixBase<VectorType>& position_residual) {
-  assert(position_residual.size() == impulse_status.dimi());
+  assert(position_residual.size() == impact_status.dimf());
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   int dimf = 0;
   for (int i=0; i<num_point_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_[i].computeContactPositionResidual(
-          model_, data_, impulse_status.contactPosition(i),
+          model_, data_, impact_status.contactPosition(i),
           (const_cast<Eigen::MatrixBase<VectorType>&>(position_residual))
               .template segment<3>(dimf));
       dimf += 3;
     }
   }
   for (int i=0; i<num_surface_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i+num_point_contacts)) {
+    if (impact_status.isImpactActive(i+num_point_contacts)) {
       surface_contacts_[i].computeContactPositionResidual(
-          model_, data_, impulse_status.contactPlacement(i+num_point_contacts),
+          model_, data_, impact_status.contactPlacement(i+num_point_contacts),
           (const_cast<Eigen::MatrixBase<VectorType>&>(position_residual))
               .template segment<6>(dimf));
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impact_status.dimf());
 }
 
 
 template <typename MatrixType>
 inline void Robot::computeContactPositionDerivative(
-    const ImpulseStatus& impulse_status, 
+    const ImpactStatus& impact_status, 
     const Eigen::MatrixBase<MatrixType>& position_partial_dq) {
-  assert(position_partial_dq.rows() == impulse_status.dimi());
+  assert(position_partial_dq.rows() == impact_status.dimf());
   assert(position_partial_dq.cols() == dimv_);
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   int dimf = 0;
   for (int i=0; i<num_point_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_[i].computeContactPositionDerivative(
           model_, data_, 
         (const_cast<Eigen::MatrixBase<MatrixType>&>(position_partial_dq))
@@ -479,7 +479,7 @@ inline void Robot::computeContactPositionDerivative(
     }
   }
   for (int i=0; i<num_surface_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i+num_point_contacts)) {
+    if (impact_status.isImpactActive(i+num_point_contacts)) {
       surface_contacts_[i].computeContactPositionDerivative(
           model_, data_, 
         (const_cast<Eigen::MatrixBase<MatrixType>&>(position_partial_dq))
@@ -487,17 +487,17 @@ inline void Robot::computeContactPositionDerivative(
       dimf += 6;
     }
   }
-  assert(dimf == impulse_status.dimi());
+  assert(dimf == impact_status.dimf());
 }
 
 
-inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
+inline void Robot::setImpactForces(const ImpactStatus& impact_status, 
                                     const std::vector<Vector6d>& f) {
   assert(f.size() == max_num_contacts_);
   const int num_point_contacts = point_contacts_.size();
   const int num_surface_contacts = surface_contacts_.size();
   for (int i=0; i<num_point_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(
           f[i].template head<3>(), fjoint_);
     }
@@ -507,7 +507,7 @@ inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status,
     }
   }
   for (int i=0; i<num_surface_contacts; ++i) {
-    if (impulse_status.isImpulseActive(i+num_point_contacts)) {
+    if (impact_status.isImpactActive(i+num_point_contacts)) {
       surface_contacts_[i].computeJointForceFromContactWrench(
           f[i+num_point_contacts], fjoint_);
     }
@@ -586,7 +586,7 @@ inline void Robot::RNEADerivatives(
 
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2>
-inline void Robot::RNEAImpulse(
+inline void Robot::RNEAImpact(
     const Eigen::MatrixBase<ConfigVectorType>& q, 
     const Eigen::MatrixBase<TangentVectorType1>& dv,
     const Eigen::MatrixBase<TangentVectorType2>& res) {
@@ -594,14 +594,14 @@ inline void Robot::RNEAImpulse(
   assert(dv.size() == dimv_);
   assert(res.size() == dimv_);
   const_cast<Eigen::MatrixBase<TangentVectorType2>&>(res)
-      = pinocchio::rnea(impulse_model_, impulse_data_, q, 
+      = pinocchio::rnea(impact_model_, impact_data_, q, 
                         Eigen::VectorXd::Zero(dimv_),  dv, fjoint_);
 }
 
 
 template <typename ConfigVectorType, typename TangentVectorType, 
           typename MatrixType1, typename MatrixType2>
-inline void Robot::RNEAImpulseDerivatives(
+inline void Robot::RNEAImpactDerivatives(
     const Eigen::MatrixBase<ConfigVectorType>& q, 
     const Eigen::MatrixBase<TangentVectorType>& dv, 
     const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
@@ -613,9 +613,9 @@ inline void Robot::RNEAImpulseDerivatives(
   assert(dRNEA_partial_ddv.cols() == dimv_);
   assert(dRNEA_partial_ddv.rows() == dimv_);
   pinocchio::computeRNEADerivatives(
-      impulse_model_, impulse_data_, q, Eigen::VectorXd::Zero(dimv_), dv, 
+      impact_model_, impact_data_, q, Eigen::VectorXd::Zero(dimv_), dv, 
       fjoint_, const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
-      dimpulse_dv_,
+      dimpact_dv_,
       const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv));
   (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)) 
       .template triangularView<Eigen::StrictlyLower>() 

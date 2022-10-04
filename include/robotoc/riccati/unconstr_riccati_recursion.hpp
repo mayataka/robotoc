@@ -6,10 +6,10 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/direction.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
+#include "robotoc/core/direction.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/riccati/unconstr_riccati_factorizer.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
@@ -35,7 +35,7 @@ public:
   /// @brief Construct a Riccati recursion solver.
   /// @param[in] ocp Optimial control problem. 
   ///
-  UnconstrRiccatiRecursion(const UnconstrOCP& ocp);
+  UnconstrRiccatiRecursion(const OCP& ocp);
 
   ///
   /// @brief Default constructor. 
@@ -43,10 +43,10 @@ public:
   UnconstrRiccatiRecursion();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~UnconstrRiccatiRecursion();
- 
+  ~UnconstrRiccatiRecursion() = default;
+
   ///
   /// @brief Default copy constructor. 
   ///
@@ -79,9 +79,11 @@ public:
   ///
   /// @brief Performs the forward Riccati recursion and computes the direction.
   /// @param[in] kkt_residual KKT residual. 
+  /// @param[in] factorization Riccati factorization. 
   /// @param[in, out] d Direction. 
   ///
   void forwardRiccatiRecursion(const KKTResidual& kkt_residual, 
+                               const UnconstrRiccatiFactorization& factorization,
                                Direction& d) const;
 
   ///

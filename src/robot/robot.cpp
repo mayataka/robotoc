@@ -8,11 +8,11 @@ namespace robotoc {
 Robot::Robot(const RobotModelInfo& info)
   : info_(info),
     model_(),
-    impulse_model_(),
+    impact_model_(),
     data_(),
-    impulse_data_(),
+    impact_data_(),
     fjoint_(),
-    dimpulse_dv_(),
+    dimpact_dv_(),
     point_contacts_(),
     surface_contacts_(),
     dimq_(0),
@@ -40,10 +40,10 @@ Robot::Robot(const RobotModelInfo& info)
       std::runtime_error("[Robot] invalid argument: invalid base joint type");
       break;
   }
-  impulse_model_ = model_;
-  impulse_model_.gravity.linear().setZero();
+  impact_model_ = model_;
+  impact_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
-  impulse_data_ = pinocchio::Data(impulse_model_);
+  impact_data_ = pinocchio::Data(impact_model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                 model_.joints.size(), pinocchio::Force::Zero());
   point_contacts_.clear();
@@ -63,12 +63,12 @@ Robot::Robot(const RobotModelInfo& info)
   data_.JMinvJt.setZero();
   data_.sDUiJt.resize(model_.nv, max_dimf_);
   data_.sDUiJt.setZero();
-  impulse_data_.JMinvJt.resize(max_dimf_, max_dimf_);
-  impulse_data_.JMinvJt.setZero();
-  impulse_data_.sDUiJt.resize(model_.nv, max_dimf_);
-  impulse_data_.sDUiJt.setZero();
-  dimpulse_dv_.resize(model_.nv, model_.nv);
-  dimpulse_dv_.setZero();
+  impact_data_.JMinvJt.resize(max_dimf_, max_dimf_);
+  impact_data_.JMinvJt.setZero();
+  impact_data_.sDUiJt.resize(model_.nv, max_dimf_);
+  impact_data_.sDUiJt.setZero();
+  dimpact_dv_.resize(model_.nv, model_.nv);
+  dimpact_dv_.setZero();
   initializeJointLimits();
 }
 
@@ -76,11 +76,11 @@ Robot::Robot(const RobotModelInfo& info)
 Robot::Robot()
   : info_(),
     model_(),
-    impulse_model_(),
+    impact_model_(),
     data_(),
-    impulse_data_(),
+    impact_data_(),
     fjoint_(),
-    dimpulse_dv_(),
+    dimpact_dv_(),
     point_contacts_(),
     surface_contacts_(),
     dimq_(0),
@@ -376,8 +376,8 @@ ContactStatus Robot::createContactStatus() const {
 }
 
 
-ImpulseStatus Robot::createImpulseStatus() const {
-  return ImpulseStatus(contactTypes(), contactFrameNames());
+ImpactStatus Robot::createImpactStatus() const {
+  return ImpactStatus(contactTypes(), contactFrameNames());
 }
 
 

@@ -28,9 +28,9 @@ public:
   CostFunctionData();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~CostFunctionData();
+  ~CostFunctionData() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -148,7 +148,5 @@ public:
 };
 
 } // namespace robotoc
-
-#include "robotoc/cost/cost_function_data.hxx"
 
 #endif // ROBOTOC_COST_FUNCTION_DATA_HPP_ 

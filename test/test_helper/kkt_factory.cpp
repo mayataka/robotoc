@@ -36,10 +36,10 @@ SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
 }
 
 
-ImpulseSplitKKTMatrix CreateImpulseSplitKKTMatrix(const Robot& robot) {
+SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot) {
   const int dimv = robot.dimv();
   const int dimx = 2*dimv;
-  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
@@ -54,7 +54,6 @@ ImpulseSplitKKTMatrix CreateImpulseSplitKKTMatrix(const Robot& robot) {
   return kkt_matrix;
 }
 
-
 SplitKKTResidual CreateSplitKKTResidual(const Robot& robot) {
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.Fx.setRandom();
@@ -65,66 +64,52 @@ SplitKKTResidual CreateSplitKKTResidual(const Robot& robot) {
 }
 
 
-ImpulseSplitKKTResidual CreateImpulseSplitKKTResidual(const Robot& robot) {
-  ImpulseSplitKKTResidual  kkt_residual(robot);
-  kkt_residual.Fx.setRandom();
-  kkt_residual.lx.setRandom();
-  return kkt_residual;
-}
-
-
-KKTMatrix CreateKKTMatrix(const Robot& robot,  
-                          const std::shared_ptr<ContactSequence>& contact_sequence, 
-                          const int N, const int max_num_impulse) {
-  KKTMatrix kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  const int dimx = 2*robot.dimv();
-  const int dimu = robot.dimu();
-  const double dt = 0.01;
+KKTMatrix CreateKKTMatrix(const Robot& robot, const int N) {
+  KKTMatrix kkt_matrix(N+1, SplitKKTMatrix(robot));
   for (int i=0; i<=N; ++i) {
-    kkt_matrix[i] = CreateSplitKKTMatrix(robot, dt);
-  }
-  const int num_impulse = contact_sequence->numImpulseEvents();
-  for (int i=0; i<num_impulse; ++i) {
-    kkt_matrix.impulse[i] = CreateImpulseSplitKKTMatrix(robot);
-  }
-  for (int i=0; i<num_impulse; ++i) {
-    kkt_matrix.aux[i] = CreateSplitKKTMatrix(robot, dt);
-  }
-  const int num_lift = contact_sequence->numLiftEvents();
-  for (int i=0; i<num_lift; ++i) {
-    kkt_matrix.lift[i] = CreateSplitKKTMatrix(robot, dt);
-  }
-  for (int i=0; i<num_impulse; ++i) {
-    kkt_matrix.switching[i].setImpulseStatus(contact_sequence->impulseStatus(i));
-    kkt_matrix.switching[i].Pq().setRandom();
-    kkt_matrix.switching[i].Phix().setRandom();
-    kkt_matrix.switching[i].Phia().setRandom();
+    kkt_matrix[i] = CreateSplitKKTMatrix(robot);
   }
   return kkt_matrix;
 }
 
 
-KKTResidual CreateKKTResidual(const Robot& robot,  
-                              const std::shared_ptr<ContactSequence>& contact_sequence, 
-                              const int N, const int max_num_impulse) {
-  KKTResidual kkt_residual = KKTResidual(robot, N, max_num_impulse);
+KKTMatrix CreateKKTMatrix(const Robot& robot,  
+                          const std::shared_ptr<ContactSequence>& contact_sequence, 
+                          const TimeDiscretization& time_discretization) {
+  KKTMatrix kkt_matrix(time_discretization.size(), SplitKKTMatrix(robot));
+  for (int i=0; i<time_discretization.size(); ++i) {
+    kkt_matrix[i] = CreateSplitKKTMatrix(robot);
+    if (time_discretization[i].switching_constraint) {
+      const int impact_index = time_discretization[i].impact_index + 1;
+      kkt_matrix[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(impact_index).dimf());
+      kkt_matrix[i].Phix().setRandom();
+      kkt_matrix[i].Phia().setRandom();
+    }
+  }
+  return kkt_matrix;
+}
+
+
+KKTResidual CreateKKTResidual(const Robot& robot, const int N) {
+  KKTResidual kkt_residual(N+1, SplitKKTResidual(robot));
   for (int i=0; i<=N; ++i) {
     kkt_residual[i] = CreateSplitKKTResidual(robot);
   }
-  const int num_impulse = contact_sequence->numImpulseEvents();
-  for (int i=0; i<num_impulse; ++i) {
-    kkt_residual.impulse[i] = CreateImpulseSplitKKTResidual(robot);
-  }
-  for (int i=0; i<num_impulse; ++i) {
-    kkt_residual.aux[i] = CreateSplitKKTResidual(robot);
-  }
-  const int num_lift = contact_sequence->numLiftEvents();
-  for (int i=0; i<num_lift; ++i) {
-    kkt_residual.lift[i] = CreateSplitKKTResidual(robot);
-  }
-  for (int i=0; i<num_impulse; ++i) {
-    kkt_residual.switching[i].setImpulseStatus(contact_sequence->impulseStatus(i));
-    kkt_residual.switching[i].P().setRandom();
+  return kkt_residual;
+}
+
+
+KKTResidual CreateKKTResidual(const Robot& robot,  
+                              const std::shared_ptr<ContactSequence>& contact_sequence, 
+                              const TimeDiscretization& time_discretization) {
+  KKTResidual kkt_residual(time_discretization.size(), SplitKKTResidual(robot));
+  for (int i=0; i<time_discretization.size(); ++i) {
+    kkt_residual[i] = CreateSplitKKTResidual(robot);
+    if (time_discretization[i].switching_constraint) {
+      const int impact_index = time_discretization[i].impact_index + 1;
+      kkt_residual[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(impact_index).dimf());
+      kkt_residual[i].P().setRandom();
+    }
   }
   return kkt_residual;
 }

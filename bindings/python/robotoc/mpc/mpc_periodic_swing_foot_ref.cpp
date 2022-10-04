@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 
 #include "robotoc/mpc/mpc_periodic_swing_foot_ref.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -27,7 +28,8 @@ PYBIND11_MODULE(mpc_periodic_swing_foot_ref, m) {
     .def("updateRef", &MPCPeriodicSwingFootRef::updateRef,
           py::arg("grid_info"), py::arg("x3d_ref"))
     .def("is_active", &MPCPeriodicSwingFootRef::isActive,
-          py::arg("grid_info"));
+          py::arg("grid_info"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCPeriodicSwingFootRef);
 }
 
 } // namespace python

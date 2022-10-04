@@ -7,7 +7,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
-#include "robotoc/constraints/impulse_friction_cone.hpp"
+#include "robotoc/constraints/impact_friction_cone.hpp"
 
 
 namespace robotoc {
@@ -29,9 +29,9 @@ std::shared_ptr<Constraints> CreateConstraints(const Robot& robot) {
   constraints->push_back(torques_upper_limit);
   if (robot.maxNumContacts() > 0) {
     auto friction_cone = std::make_shared<FrictionCone>(robot);
-    auto impulse_friction_cone = std::make_shared<ImpulseFrictionCone>(robot);
+    auto impact_friction_cone = std::make_shared<ImpactFrictionCone>(robot);
     constraints->push_back(friction_cone);
-    constraints->push_back(impulse_friction_cone);
+    constraints->push_back(impact_friction_cone);
   }
   return constraints;
 }

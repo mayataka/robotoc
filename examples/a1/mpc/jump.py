@@ -20,7 +20,7 @@ elif jump_type == 'back':
     jump_yaw = 0
 elif jump_type == 'rotational':
     jump_length = [0.1, 0.0, 0]
-    jump_yaw = np.pi / 6
+    jump_yaw = np.pi / 4
 
 model_info = robotoc.RobotModelInfo()
 model_info.urdf_path = '../a1_description/urdf/a1.urdf'
@@ -33,9 +33,8 @@ model_info.point_contacts = [robotoc.ContactModelInfo('FL_foot', baumgarte_time_
 robot = robotoc.Robot(model_info)
 
 T = 0.8
-N = 18
-nthreads = 4
-mpc = robotoc.MPCJump(robot, T, N, nthreads)
+N = 20
+mpc = robotoc.MPCJump(robot, T, N)
 
 planner = robotoc.JumpFootStepPlanner(robot)
 planner.set_jump_pattern(jump_length, jump_yaw)
@@ -50,16 +49,16 @@ q0 = np.array([0, 0, 0.3181, 0, 0, 0, 1,
                0.0,  0.67, -1.3])
 v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
-option_init.max_iter = 50
-option_init.initial_sto_reg_iter = 50
-option_init.enable_solution_interpolation = False
-mpc.init(t0, q0, v0, option_init, sto=True)  
+option_init.max_iter = 100
+option_init.initial_sto_reg_iter = 100
+option_init.nthreads = 4
+mpc.init(t0, q0, v0, option_init, sto=(jump_type=='longitudinal'))  
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations
 option_mpc.initial_sto_reg_iter = 0
 option_mpc.max_dt_mesh = T / N
-option_mpc.enable_solution_interpolation = False
+option_mpc.nthreads = 4
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC

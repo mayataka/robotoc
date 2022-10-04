@@ -10,8 +10,7 @@
 
 namespace robotoc {
 
-MPCJump::MPCJump(const Robot& robot, const double T, const int N, 
-                 const int nthreads)
+MPCJump::MPCJump(const Robot& robot, const double T, const int N)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot, 1)),
     cost_(std::make_shared<CostFunction>()),
@@ -20,7 +19,7 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
     sto_constraints_(std::make_shared<STOConstraints>(2)),
     ocp_solver_(OCP(robot, cost_, constraints_, sto_cost_, sto_constraints_, 
                     contact_sequence_, T, N), 
-                SolverOptions(), nthreads), 
+                SolverOptions()), 
     solver_options_(SolverOptions()),
     cs_ground_(robot.createContactStatus()),
     cs_flying_(robot.createContactStatus()),
@@ -40,16 +39,16 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N,
   config_cost_ = std::make_shared<ConfigurationSpaceCost>(robot);
   Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   q_weight.template head<6>() << 0, 100, 100, 100, 100, 100;
-  Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  q_weight_impulse.template head<6>() << 0, 1000, 1000, 1000, 1000, 1000;
+  Eigen::VectorXd q_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 10);
+  q_weight_impact.template head<6>() << 0, 1000, 1000, 1000, 1000, 1000;
   config_cost_->set_q_weight(q_weight);
   config_cost_->set_q_weight_terminal(q_weight);
-  config_cost_->set_q_weight_impulse(q_weight_impulse);
+  config_cost_->set_q_weight_impact(q_weight_impact);
   config_cost_->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1.0));
   config_cost_->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  config_cost_->set_v_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
-  config_cost_->set_dv_weight_impulse(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
+  config_cost_->set_v_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
+  config_cost_->set_dv_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   cost_->push_back(config_cost_);
   // create constraints 
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
@@ -164,7 +163,6 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
-  ocp_solver_.meshRefinement(t);
   ocp_solver_.solve(t, q, v, true);
   s_ = ocp_solver_.getSolution();
   const auto ts = contact_sequence_->eventTimes();
@@ -220,7 +218,7 @@ const Solution& MPCJump::getSolution() const {
 }
 
 
-const hybrid_container<LQRPolicy>& MPCJump::getLQRPolicy() const {
+const aligned_vector<LQRPolicy>& MPCJump::getLQRPolicy() const {
   return ocp_solver_.getLQRPolicy();
 }
 
@@ -262,24 +260,22 @@ void MPCJump::setRobotProperties(const RobotProperties& properties) {
 
 
 void MPCJump::resetMinimumDwellTimes(const double t, const double min_dt) {
-  const int num_switches = contact_sequence_->numDiscreteEvents();
-  if (num_switches > 0) {
-    std::vector<double> minimum_dwell_times;
-    switch (current_step_) {
-      case 0:
-        minimum_dwell_times.push_back(min_dt);
-        minimum_dwell_times.push_back(min_flying_time_);
-        break;
-      case 1:
-        minimum_dwell_times.push_back(min_dt);
-        break;
-      default:
-        // if current_step_ >= 2, num_switches == 0.
-        break;
-    }
-    minimum_dwell_times.push_back(min_ground_time_+(t-t_mpc_start_));
-    sto_constraints_->setMinimumDwellTimes(minimum_dwell_times);
+  std::vector<double> minimum_dwell_times;
+  switch (current_step_) {
+    case 0:
+      minimum_dwell_times.push_back(min_dt);
+      minimum_dwell_times.push_back(min_flying_time_);
+      minimum_dwell_times.push_back(min_ground_time_+(t-t_mpc_start_));
+      break;
+    case 1:
+      minimum_dwell_times.push_back(min_dt);
+      minimum_dwell_times.push_back(min_ground_time_+(t-t_mpc_start_));
+      break;
+    default:
+      minimum_dwell_times.push_back(min_dt);
+      break;
   }
+  sto_constraints_->setMinimumDwellTimes(minimum_dwell_times);
 }
 
 

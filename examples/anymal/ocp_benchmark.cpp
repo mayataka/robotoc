@@ -6,7 +6,7 @@
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/local_contact_force_cost.hpp"
@@ -109,21 +109,22 @@ int main () {
   const int N = 20;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions();
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
   const Eigen::VectorXd q = q_standing;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   ocp_solver.solve(t, q, v);
   std::cout << ocp_solver.getSolverStatistics() << std::endl;
 

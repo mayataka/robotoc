@@ -14,14 +14,17 @@ import math
 
 ```
 
-First, define the robot model with contact frames (in this case, the contact frames are the frames of all feet).
+First, we define the robot model. We speficy the URDF path, base joint type, and contact frames (in this case, the contact frames are the frames of all feet).
 ```
-path_to_urdf = '../anymal_b_simple_description/urdf/anymal.urdf'
-contact_frames = ['LF_FOOT', 'LH_FOOT', 'RF_FOOT', 'RH_FOOT'] 
-contact_types = [robotoc.ContactType.PointContact for i in range(4)]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../anymal_b_simple_description/urdf/anymal.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.point_contacts = [robotoc.ContactModelInfo('LF_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('LH_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RF_FOOT', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RH_FOOT', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 ```
 @note 
 `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
@@ -57,22 +60,22 @@ q_weight = np.array([1.0, 0., 0., 1.0, 1.0, 1.0,
                      0.001, 0.001, 0.001])
 v_weight = np.full(robot.dimv(), 1.0)
 a_weight = np.full(robot.dimv(), 1.0e-06)
-q_weight_impulse = np.array([0., 0., 0., 100., 100., 100., 
+q_weight_impact = np.array([0., 0., 0., 100., 100., 100., 
                       0.1, 0.1, 0.1, 
                       0.1, 0.1, 0.1,
                       0.1, 0.1, 0.1,
                       0.1, 0.1, 0.1])
-v_weight_impulse = np.full(robot.dimv(), 1.0)
-dv_weight_impulse = np.full(robot.dimv(), 1.0e-06)
+v_weight_impact = np.full(robot.dimv(), 1.0)
+dv_weight_impact = np.full(robot.dimv(), 1.0e-06)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_ref)
 config_cost.set_q_weight(q_weight)
 config_cost.set_q_weight_terminal(q_weight)
-config_cost.set_q_weight_impulse(q_weight_impulse)
+config_cost.set_q_weight_impact(q_weight_impact)
 config_cost.set_v_weight(v_weight)
 config_cost.set_v_weight_terminal(v_weight)
-config_cost.set_v_weight_impulse(v_weight_impulse)
-config_cost.set_dv_weight_impulse(dv_weight_impulse)
+config_cost.set_v_weight_impact(v_weight_impact)
+config_cost.set_dv_weight_impact(dv_weight_impact)
 config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 ```
@@ -100,9 +103,9 @@ Next, we construct the contact sequence `robotoc::ContactSequence` as
 ```
 contact_sequence = robotoc.ContactSequence(robot)
 ```
-Then we can set an impulse event and a lift event to the contact sequence.
+Then we can set an impact event and a lift event to the contact sequence.
 
-We set the friction coefficients via the contact sequence. We then define the friction coefficients.
+We set the contact positions and friction coefficients through the contact sequence. We then define the friction coefficients.
 ```
   mu = 0.7
   friction_coefficients = {'LF_FOOT': mu, 'LH_FOOT': mu, 'RF_FOOT': mu, 'RH_FOOT': mu} 
@@ -131,7 +134,7 @@ Then the all the contacts are inactive.
 contact_status_flying = robot.create_contact_status()
 contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
 ```
-Then a lift event is appended into the back of the contact sequence.
+Then a lift event is automatically appended into the contact sequence.
 By setting `sto=True`, the switching time of this event is regarded as an optimization variable.
 Finally, we set the contact status after touch-down as
 ```
@@ -142,7 +145,7 @@ contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
 contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
 ```
-Then an impulse event is appended into the back of the contact sequence.
+Then an impact event is automatically appended into the contact sequence.
 
 @note We can check the contact sequence via 
 ```
@@ -155,7 +158,7 @@ sto_cost = robotoc.STOCostFunction()
 ```
 and the minimum dwell-time constraints for the STO problem
 ```
-sto_constraints = robotoc.STOConstraints(min_dt=[0.15, 0.15, 0.65],
+sto_constraints = robotoc.STOConstraints(minimum_dwell_times=[0.15, 0.15, 0.65],
                                          barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 ```
@@ -171,7 +174,8 @@ solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+solver_options.nthreads=4
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options)
 ```
 @note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
 Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
@@ -188,14 +192,14 @@ t = 0.
 q = q_standing # initial state.
 v = np.zeros(robot.dimv()) # initial state.
 
+ocp_solver.discretize(t) # discretizes the optimal control problem.
 ocp_solver.setSolution("q", q); # set the initial guess of the solution.
 ocp_solver.setSolution("v", v); # set the initial guess of the solution.
 Eigen::Vector3d f_init;
 f_init << 0, 0, 0.25*robot.totalWeight();
 ocp_solver.setSolution("f", f_init); # set the initial guess of the solution.
 
-ocp_solver.meshRefinement(t);
-ocp_solver.init_constraints(t) # initialize the slack and dual variables of the primal-dual interior point method.
+ocp_solver.init_constraints() # initialize the slack and dual variables of the primal-dual interior point method.
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) 
@@ -240,16 +244,11 @@ viewer.display(ocp_solver.get_time_discretization().time_steps(),
                ocp_solver.get_solution('f', 'WORLD'))
 ```
 
-@note We can check the formulation of the discretized optimal control problem 
-before running it via
+@note We can check the discretization of the optimal control problem sololy via
 ```
 time_discretization = robotoc.TimeDiscretization(T, N)
 time_discretization.discretize(contact_sequence, t)
 print(time_discretization)
-```
-or 
-```
-print(ocp_solver.get_time_discretization())
 ```
 
 */

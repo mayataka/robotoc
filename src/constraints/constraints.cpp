@@ -12,7 +12,7 @@ Constraints::Constraints(const double barrier_param,
   : position_level_constraints_(),
     velocity_level_constraints_(),
     acceleration_level_constraints_(),
-    impulse_level_constraints_(),
+    impact_level_constraints_(),
     barrier_(barrier_param), 
     fraction_to_boundary_rule_(fraction_to_boundary_rule) {
   if (barrier_param <= 0) {
@@ -27,10 +27,6 @@ Constraints::Constraints(const double barrier_param,
     throw std::out_of_range(
         "[Constraints] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
   }
-}
-
-
-Constraints::~Constraints() {
 }
 
 
@@ -52,13 +48,13 @@ void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
 }
 
 
-void Constraints::push_back(ImpulseConstraintComponentBasePtr constraint_component) {
+void Constraints::push_back(ImpactConstraintComponentBasePtr constraint_component) {
   constraint_component->setBarrierParam(barrier_);
   constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
   if (constraint_component->kinematicsLevel() 
         == KinematicsLevel::AccelerationLevel) {
-    // Only the acceleration level constraints are valid at impulse stage.
-    impulse_level_constraints_.push_back(constraint_component); 
+    // Only the acceleration level constraints are valid at impact stage.
+    impact_level_constraints_.push_back(constraint_component); 
   }
 }
 
@@ -67,29 +63,21 @@ void Constraints::clear() {
   constraintsimpl::clear(position_level_constraints_);
   constraintsimpl::clear(velocity_level_constraints_);
   constraintsimpl::clear(acceleration_level_constraints_);
-  constraintsimpl::clear(impulse_level_constraints_);
+  constraintsimpl::clear(impact_level_constraints_);
 }
 
 
 ConstraintsData Constraints::createConstraintsData(const Robot& robot, 
                                                    const int time_stage) const {
   ConstraintsData data(time_stage);
-  if (data.isPositionLevelValid()) {
-    constraintsimpl::createConstraintsData(position_level_constraints_, 
-                                           data.position_level_data);
-  }
-  if (data.isVelocityLevelValid()) {
-    constraintsimpl::createConstraintsData(velocity_level_constraints_, 
-                                           data.velocity_level_data);
-  }
-  if (data.isAccelerationLevelValid()) {
-    constraintsimpl::createConstraintsData(acceleration_level_constraints_, 
-                                           data.acceleration_level_data);
-  }
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::createConstraintsData(impulse_level_constraints_, 
-                                           data.impulse_level_data);
-  }
+  constraintsimpl::createConstraintsData(position_level_constraints_, 
+                                         data.position_level_data);
+  constraintsimpl::createConstraintsData(velocity_level_constraints_, 
+                                         data.velocity_level_data);
+  constraintsimpl::createConstraintsData(acceleration_level_constraints_, 
+                                         data.acceleration_level_data);
+  constraintsimpl::createConstraintsData(impact_level_constraints_, 
+                                         data.impact_level_data);
   return data;
 }
 
@@ -122,13 +110,13 @@ bool Constraints::isFeasible(Robot& robot, const ContactStatus& contact_status,
 }
 
 
-bool Constraints::isFeasible(Robot& robot, const ImpulseStatus& impulse_status, 
+bool Constraints::isFeasible(Robot& robot, const ImpactStatus& impact_status, 
                              ConstraintsData& data, 
-                             const ImpulseSplitSolution& s) const {
-  if (data.isImpulseLevelValid()) {
-    if (!constraintsimpl::isFeasible(impulse_level_constraints_, robot, 
-                                     impulse_status, 
-                                     data.impulse_level_data, s)) {
+                             const SplitSolution& s) const {
+  if (data.isImpactLevelValid()) {
+    if (!constraintsimpl::isFeasible(impact_level_constraints_, robot, 
+                                     impact_status, 
+                                     data.impact_level_data, s)) {
       return false;
     }
   }
@@ -159,13 +147,13 @@ void Constraints::setSlackAndDual(Robot& robot,
 
 
 void Constraints::setSlackAndDual(Robot& robot, 
-                                  const ImpulseStatus& impulse_status,
+                                  const ImpactStatus& impact_status,
                                   ConstraintsData& data, 
-                                  const ImpulseSplitSolution& s) const {
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::setSlackAndDual(impulse_level_constraints_, robot,
-                                     impulse_status, 
-                                     data.impulse_level_data, s);
+                                  const SplitSolution& s) const {
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::setSlackAndDual(impact_level_constraints_, robot,
+                                     impact_status, 
+                                     data.impact_level_data, s);
   }
 }
 
@@ -190,12 +178,12 @@ void Constraints::evalConstraint(Robot& robot,
 
 
 void Constraints::evalConstraint(Robot& robot, 
-                                 const ImpulseStatus& impulse_status, 
+                                 const ImpactStatus& impact_status, 
                                  ConstraintsData& data, 
-                                 const ImpulseSplitSolution& s) const {
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::evalConstraint(impulse_level_constraints_, robot, 
-                                    impulse_status, data.impulse_level_data, s);
+                                 const SplitSolution& s) const {
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::evalConstraint(impact_level_constraints_, robot, 
+                                    impact_status, data.impact_level_data, s);
   }
 }
 
@@ -227,14 +215,14 @@ void Constraints::linearizeConstraints(Robot& robot,
 
 
 void Constraints::linearizeConstraints(Robot& robot, 
-                                       const ImpulseStatus& impulse_status, 
+                                       const ImpactStatus& impact_status, 
                                        ConstraintsData& data, 
-                                       const ImpulseSplitSolution& s, 
-                                       ImpulseSplitKKTResidual& kkt_residual) const {
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::linearizeConstraints(impulse_level_constraints_, robot, 
-                                          impulse_status, 
-                                          data.impulse_level_data, s, kkt_residual);
+                                       const SplitSolution& s, 
+                                       SplitKKTResidual& kkt_residual) const {
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::linearizeConstraints(impact_level_constraints_, robot, 
+                                          impact_status, 
+                                          data.impact_level_data, s, kkt_residual);
   }
 }
 
@@ -264,14 +252,14 @@ void Constraints::condenseSlackAndDual(const ContactStatus& contact_status,
 }
 
 
-void Constraints::condenseSlackAndDual(const ImpulseStatus& impulse_status, 
+void Constraints::condenseSlackAndDual(const ImpactStatus& impact_status, 
                                        ConstraintsData& data, 
-                                       ImpulseSplitKKTMatrix& kkt_matrix, 
-                                       ImpulseSplitKKTResidual& kkt_residual) const {
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(impulse_level_constraints_, 
-                                          impulse_status, 
-                                          data.impulse_level_data, 
+                                       SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual) const {
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::condenseSlackAndDual(impact_level_constraints_, 
+                                          impact_status, 
+                                          data.impact_level_data, 
                                           kkt_matrix, kkt_residual);
   }
 }
@@ -298,13 +286,13 @@ void Constraints::expandSlackAndDual(const ContactStatus& contact_status,
 }
 
 
-void Constraints::expandSlackAndDual(const ImpulseStatus& impulse_status, 
+void Constraints::expandSlackAndDual(const ImpactStatus& impact_status, 
                                      ConstraintsData& data, 
-                                     const ImpulseSplitDirection& d) const {
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::expandSlackAndDual(impulse_level_constraints_, 
-                                        impulse_status, 
-                                        data.impulse_level_data, d);
+                                     const SplitDirection& d) const {
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::expandSlackAndDual(impact_level_constraints_, 
+                                        impact_status, 
+                                        data.impact_level_data, d);
   }
 }
 
@@ -332,9 +320,9 @@ double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
       min_step_size = step_size;
     }
   }
-  if (data.isImpulseLevelValid()) {
+  if (data.isImpactLevelValid()) {
     const double step_size = constraintsimpl::maxSlackStepSize(
-        impulse_level_constraints_, data.impulse_level_data);
+        impact_level_constraints_, data.impact_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
@@ -366,9 +354,9 @@ double Constraints::maxDualStepSize(const ConstraintsData& data) const {
       min_step_size = step_size;
     }
   }
-  if (data.isImpulseLevelValid()) {
+  if (data.isImpactLevelValid()) {
     const double step_size = constraintsimpl::maxDualStepSize(
-        impulse_level_constraints_, data.impulse_level_data);
+        impact_level_constraints_, data.impact_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
@@ -389,8 +377,8 @@ void Constraints::updateSlack(ConstraintsData& data, const double step_size) {
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::updateSlack(data.acceleration_level_data, step_size);
   }
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::updateSlack(data.impulse_level_data, step_size);
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::updateSlack(data.impact_level_data, step_size);
   }
 }
 
@@ -407,8 +395,8 @@ void Constraints::updateDual(ConstraintsData& data, const double step_size) {
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::updateDual(data.acceleration_level_data, step_size);
   }
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::updateDual(data.impulse_level_data, step_size);
+  if (data.isImpactLevelValid()) {
+    constraintsimpl::updateDual(data.impact_level_data, step_size);
   }
 }
 
@@ -421,7 +409,7 @@ void Constraints::setBarrierParam(const double barrier_param) {
   constraintsimpl::setBarrierParam(position_level_constraints_, barrier_param);
   constraintsimpl::setBarrierParam(velocity_level_constraints_, barrier_param);
   constraintsimpl::setBarrierParam(acceleration_level_constraints_, barrier_param);
-  constraintsimpl::setBarrierParam(impulse_level_constraints_, barrier_param);
+  constraintsimpl::setBarrierParam(impact_level_constraints_, barrier_param);
   barrier_ = barrier_param;
 }
 
@@ -442,7 +430,7 @@ void Constraints::setFractionToBoundaryRule(
                                              fraction_to_boundary_rule);
   constraintsimpl::setFractionToBoundaryRule(acceleration_level_constraints_, 
                                              fraction_to_boundary_rule);
-  constraintsimpl::setFractionToBoundaryRule(impulse_level_constraints_, 
+  constraintsimpl::setFractionToBoundaryRule(impact_level_constraints_, 
                                              fraction_to_boundary_rule);
   fraction_to_boundary_rule_ = fraction_to_boundary_rule;
 }

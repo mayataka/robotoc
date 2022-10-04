@@ -30,9 +30,9 @@ public:
   ConstraintComponentData();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ConstraintComponentData();
+  ~ConstraintComponentData() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -52,8 +52,7 @@ public:
   ///
   /// @brief Default move assign operator. 
   ///
-  ConstraintComponentData& operator=(ConstraintComponentData&&) noexcept 
-      = default;
+  ConstraintComponentData& operator=(ConstraintComponentData&&) noexcept = default;
 
   ///
   /// @brief Slack variable of the constraint. Size is 
@@ -99,6 +98,7 @@ public:
 
   ///
   /// @brief Value of the log berrier function of the slack variable.
+  ///
   double log_barrier;
 
   ///
@@ -114,46 +114,52 @@ public:
   std::vector<Eigen::MatrixXd> J;
 
   ///
-  /// @brief Copies the slack and dual variables from another constraint 
-  /// component data. this->dimc() and other.dimc() must be the same.
-  /// @param[in] other Another constraint component data. 
-  ///
-  void copySlackAndDual(const ConstraintComponentData& other);
-
-  ///
   /// @brief Returns the squared norm of the KKT reisdual, that is, the sum of
   /// the squared norm of the primal residual and complementary slackness of 
   /// the constraint. 
   /// @return Squared norm of the KKT residual. 
   ///
-  double KKTError() const;
+  double KKTError() const {
+    return (residual.squaredNorm() + cmpl.squaredNorm());
+  }
 
   ///
-  /// @brief Returns the lp norm of the constraint violation, that is,
-  /// the primal residual in the constraint. Default norm is l1-norm.
-  /// You can specify l-infty norm by passing Eigen::Infinity as the 
-  /// template parameter.
+  /// @brief Returns the lp norm of the primal feasibility, i.e., the constraint 
+  /// violation. Default norm is l1-norm. You can also specify l-infty norm by 
+  /// passing Eigen::Infinity as the template parameter.
   /// @tparam p Index of norm. Default is 1 (l1-norm).
-  /// @return The lp norm of the constraint violation.
+  /// @return The lp norm of the primal feasibility.
   ///
   template <int p=1>
-  double constraintViolation() const;
+  double primalFeasibility() const {
+    return residual.template lpNorm<p>();
+  }
 
   ///
-  /// @brief Returns the lp norm of the complementarity residual.
-  /// Default norm is l1-norm. You can specify l-infty norm by passing 
-  /// Eigen::Infinity as the template parameter.
+  /// @brief Returns the lp norm of the dual feasibility. Default norm is 
+  /// l1-norm. You can also specify l-infty norm by passing Eigen::Infinity as 
+  /// the template parameter.
   /// @tparam p Index of norm. Default is 1 (l1-norm).
-  /// @return The lp norm of the complementarity residual.
+  /// @return The lp norm of the dual feasibility.
   ///
   template <int p=1>
-  double complementarityResidual() const;
+  double dualFeasibility() const {
+    return cmpl.template lpNorm<p>();
+  }
+
+  ///
+  /// @brief Resizes the constraint. 
+  /// @param[in] dimc The new size. 
+  ///
+  void resize(const int dimc);
 
   ///
   /// @brief Dimension of the constraint. 
   /// @return Dimension of the constraint. 
   ///
-  int dimc() const;
+  int dimc() const {
+    return dimc_;
+  }
 
   ///
   /// @brief Check whether dimensions of slack, dual, residual, cmpl, 
@@ -175,7 +181,5 @@ private:
 };
 
 } // namespace robotoc
-
-#include "robotoc/constraints/constraint_component_data.hxx"
 
 #endif // ROBOTOC_CONSTRAINT_COMPONENT_DATA_HPP_

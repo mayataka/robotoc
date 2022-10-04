@@ -9,7 +9,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/ocp_solver.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
@@ -27,7 +27,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/contact_wrench_cone.hpp"
-#include "robotoc/constraints/impulse_wrench_cone.hpp"
+#include "robotoc/constraints/impact_wrench_cone.hpp"
 
 
 namespace robotoc {
@@ -43,10 +43,8 @@ public:
   /// @param[in] biped_robot Biped robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCBipedWalk(const Robot& biped_robot, const double T, const int N, 
-               const int nthreads);
+  MPCBipedWalk(const Robot& biped_robot, const double T, const int N);
 
   ///
   /// @brief Default constructor. 
@@ -151,7 +149,7 @@ public:
   /// @brief Gets of the local LQR policies over the horizon. 
   /// @return const reference to the local LQR policies.
   ///
-  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
+  const aligned_vector<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Computes the KKT residual of the optimal control problem. 
@@ -214,10 +212,10 @@ public:
   std::shared_ptr<ContactWrenchCone> getContactWrenchConeHandle();
 
   ///
-  /// @brief Gets the impulse wrench cone constraints handle.  
-  /// @return Shared ptr to the impulse wrench cone constraints.
+  /// @brief Gets the impact wrench cone constraints handle.  
+  /// @return Shared ptr to the impact wrench cone constraints.
   ///
-  std::shared_ptr<ImpulseWrenchCone> getImpulseWrenchConeHandle();
+  std::shared_ptr<ImpactWrenchCone> getImpactWrenchConeHandle();
 
   ///
   /// @brief Gets the const handle of the MPC solver.  
@@ -264,7 +262,7 @@ private:
   std::shared_ptr<MPCPeriodicSwingFootRef> L_foot_ref_, R_foot_ref_;
   std::shared_ptr<MPCPeriodicCoMRef> com_ref_;
   std::shared_ptr<ContactWrenchCone> contact_wrench_cone_;
-  std::shared_ptr<ImpulseWrenchCone> impulse_wrench_cone_;
+  std::shared_ptr<ImpactWrenchCone> impact_wrench_cone_;
 
   bool addStep(const double t);
 

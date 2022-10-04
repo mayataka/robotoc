@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/cost/configuration_space_cost.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -37,12 +38,13 @@ PYBIND11_MODULE(configuration_space_cost, m) {
           py::arg("q_weight_terminal"))
     .def("set_v_weight_terminal", &ConfigurationSpaceCost::set_v_weight_terminal,
           py::arg("v_weight_terminal"))
-    .def("set_q_weight_impulse", &ConfigurationSpaceCost::set_q_weight_impulse,
-          py::arg("q_weight_impulse"))
-    .def("set_v_weight_impulse", &ConfigurationSpaceCost::set_v_weight_impulse,
-          py::arg("v_weight_impulse"))
-    .def("set_dv_weight_impulse", &ConfigurationSpaceCost::set_dv_weight_impulse,
-          py::arg("dv_weight_impulse"));
+    .def("set_q_weight_impact", &ConfigurationSpaceCost::set_q_weight_impact,
+          py::arg("q_weight_impact"))
+    .def("set_v_weight_impact", &ConfigurationSpaceCost::set_v_weight_impact,
+          py::arg("v_weight_impact"))
+    .def("set_dv_weight_impact", &ConfigurationSpaceCost::set_dv_weight_impact,
+          py::arg("dv_weight_impact"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ConfigurationSpaceCost);
 }
 
 } // namespace python

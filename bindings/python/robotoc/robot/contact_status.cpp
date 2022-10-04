@@ -21,9 +21,9 @@ PYBIND11_MODULE(contact_status, m) {
     .export_values();
 
   py::class_<ContactStatus>(m, "ContactStatus")
-    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double, const int>(),
+    .def(py::init<const std::vector<ContactType>&, const std::vector<std::string>&, const double>(),
           py::arg("contact_types"), py::arg("contact_frame_names")=std::vector<std::string>({}), 
-          py::arg("default_friction_coefficient")=0.7, py::arg("contact_mode_id")=0)
+          py::arg("default_friction_coefficient")=0.7)
     .def(py::init<>())
     .def("max_num_contacts", &ContactStatus::maxNumContacts)
     .def("is_contact_active", 
@@ -137,9 +137,6 @@ PYBIND11_MODULE(contact_status, m) {
     .def("friction_coefficients", &ContactStatus::frictionCoefficients)
     .def("find_contact_index", &ContactStatus::findContactIndex,
           py::arg("contact_frame_name"))
-    .def("set_contact_mode_id", &ContactStatus::setContactModeId,
-          py::arg("contact_mode_id"))
-    .def("contact_mode_id", &ContactStatus::contactModeId)
      DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ContactStatus)
      DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(ContactStatus);
 }

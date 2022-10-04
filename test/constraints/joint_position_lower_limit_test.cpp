@@ -4,10 +4,10 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_direction.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
 #include "robotoc/constraints/pdipm.hpp"
 

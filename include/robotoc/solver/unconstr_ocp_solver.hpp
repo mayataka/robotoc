@@ -10,13 +10,15 @@
 #include "robotoc/utils/aligned_vector.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
-#include "robotoc/ocp/solution.hpp"
-#include "robotoc/ocp/direction.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
+#include "robotoc/unconstr/unconstr_direct_multiple_shooting.hpp"
+#include "robotoc/core/solution.hpp"
+#include "robotoc/core/direction.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 #include "robotoc/line_search/unconstr_line_search.hpp"
+#include "robotoc/ocp/ocp.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
 #include "robotoc/utils/timer.hpp"
@@ -36,13 +38,9 @@ public:
   /// @brief Construct optimal control problem solver.
   /// @param[in] ocp Optimal control problem. 
   /// @param[in] solver_options Solver options. Default is SolverOptions().
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
   ///
-  UnconstrOCPSolver(
-      const UnconstrOCP& ocp, 
-      const SolverOptions& solver_options=SolverOptions(), 
-      const int nthreads=1);
+  UnconstrOCPSolver(const OCP& ocp, 
+                    const SolverOptions& solver_options=SolverOptions());
 
   ///
   /// @brief Default constructor. 
@@ -52,7 +50,7 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~UnconstrOCPSolver();
+  ~UnconstrOCPSolver() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -81,20 +79,16 @@ public:
   void setSolverOptions(const SolverOptions& solver_options);
 
   ///
+  /// @brief Discretizes the problem and reiszes the data structures.
+  /// @param[in] t Initial time of the horizon. 
+  ///
+  void discretize(const double t);
+
+  ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   ///
   void initConstraints();
-
-  ///
-  /// @brief Performs single Newton-type iteration, computes the primal-dual 
-  /// Newon direction, and updates the solution.
-  /// @param[in] t Initial time of the horizon. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  ///
-  void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
 
   ///
   /// @brief Solves the optimal control problem. Internally calls 
@@ -161,20 +155,11 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Returns the value of the cost function.
-  /// UnconstrOCPsolver::updateSolution() or 
-  /// UnconstrOCPsolver::computeKKTResidual() must be called.  
-  /// @return The value of the cost function.
+  /// @brief Gets the discretization. 
+  /// @return Returns const reference to the time discretization. 
   ///
-  double cost() const;
+  const std::vector<GridInfo>& getTimeDiscretization() const;
 
-  ///
-  /// @return true if the current solution is feasible subject to the 
-  /// inequality constraints. Return false if it is not feasible.
-  ///
-  bool isCurrentSolutionFeasible();
-
-  ///
   ///
   /// @brief Sets a collection of the properties for robot model in this solver. 
   /// @param[in] properties A collection of the properties for the robot model.
@@ -183,20 +168,29 @@ public:
 
 private:
   aligned_vector<Robot> robots_;
+  std::vector<GridInfo> time_discretization_;
+  UnconstrDirectMultipleShooting dms_;
   UnconstrRiccatiRecursion riccati_recursion_;
   UnconstrLineSearch line_search_;
-  UnconstrOCP ocp_;
+  OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;
   Direction d_;
   UnconstrRiccatiFactorization riccati_factorization_;
-  int N_, nthreads_;
-  double T_, dt_;
-  Eigen::VectorXd primal_step_size_, dual_step_size_ ;
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
   Timer timer_;
+
+  ///
+  /// @brief Performs single Newton-type iteration, computes the primal-dual 
+  /// Newon direction, and updates the solution.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  ///
+  void updateSolution(const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v);
 
 };
 

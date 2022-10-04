@@ -4,10 +4,8 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/riccati/split_riccati_factorization.hpp"
 #include "robotoc/riccati/lqr_policy.hpp"
 
@@ -91,12 +89,12 @@ public:
 
   ///
   /// @brief Factorizes the split KKT matrix and split KKT residual of 
-  /// this impulse stage for the backward Riccati recursion.
+  /// this impact stage for the backward Riccati recursion.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impact stage.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
-                          ImpulseSplitKKTMatrix& kkt_matrix);
+                          SplitKKTMatrix& kkt_matrix);
 
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
@@ -132,15 +130,15 @@ public:
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
-  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
-  /// ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix().
-  /// @param[out] riccati The Riccati factorization of this impulse stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this impact stage. 
+  /// @param[in] kkt_residual Split KKT residual of this impact stage.
+  /// ImpactBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix().
+  /// @param[out] riccati The Riccati factorization of this impact stage.
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 
-      const ImpulseSplitKKTMatrix& kkt_matrix, 
-      const ImpulseSplitKKTResidual& kkt_residual, 
+      const SplitKKTMatrix& kkt_matrix, 
+      const SplitKKTResidual& kkt_residual, 
       SplitRiccatiFactorization& riccati);
 
   ///
@@ -152,8 +150,8 @@ public:
   ///
   void factorizeSTOFactorization(
       const SplitRiccatiFactorization& riccati_next, 
-      const ImpulseSplitKKTMatrix& kkt_matrix, 
-      const ImpulseSplitKKTResidual& kkt_residual, 
+      const SplitKKTMatrix& kkt_matrix, 
+      const SplitKKTResidual& kkt_residual, 
       SplitRiccatiFactorization& riccati);
 
 private:

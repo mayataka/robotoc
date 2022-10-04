@@ -5,7 +5,7 @@
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/local_contact_force_cost.hpp"
@@ -103,9 +103,9 @@ TEST_F(OCPSolverTest, test) {
   contact_status_standing.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q_standing);
   const std::vector<Eigen::Vector3d> contact_positions = {robot.framePosition(LF_foot_id), 
-                                                       robot.framePosition(LH_foot_id),
-                                                       robot.framePosition(RF_foot_id),
-                                                       robot.framePosition(RH_foot_id)};
+                                                          robot.framePosition(LH_foot_id),
+                                                          robot.framePosition(RF_foot_id),
+                                                          robot.framePosition(RH_foot_id)};
   contact_status_standing.setContactPlacements(contact_positions);
   contact_sequence->init(contact_status_standing);
 
@@ -114,14 +114,15 @@ TEST_F(OCPSolverTest, test) {
   const int N = 20;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions();
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
   const Eigen::VectorXd q = q_standing;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
@@ -131,7 +132,6 @@ TEST_F(OCPSolverTest, test) {
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, 0.2);
 
-  ocp_solver.initConstraints(t);
   ocp_solver.solve(t, q, v);
   const auto result = ocp_solver.getSolverStatistics();
   EXPECT_TRUE(result.convergence);

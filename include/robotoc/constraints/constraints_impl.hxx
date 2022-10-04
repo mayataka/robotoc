@@ -29,12 +29,11 @@ inline void createConstraintsData(
 }
 
 
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline bool isFeasible(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s) {
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -48,12 +47,11 @@ inline bool isFeasible(
 }
 
 
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void setSlackAndDual(
    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
    Robot& robot, const ContactStatusType& contact_status, 
-   std::vector<ConstraintComponentData>& data, const SplitSolutionType& s) {
+   std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -64,32 +62,34 @@ inline void setSlackAndDual(
 }
 
 
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void evalConstraint(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s) {
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
+    data[i].residual.setZero();
+    data[i].cmpl.setZero();
     constraints[i]->evalConstraint(robot, contact_status, data[i], s);
   }
 }
 
 
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType, typename SplitKKTResidualType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void linearizeConstraints(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s, 
-    SplitKKTResidualType& kkt_residual) {
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
+    data[i].residual.setZero();
+    data[i].cmpl.setZero();
     constraints[i]->evalConstraint(robot, contact_status, data[i], s);
     constraints[i]->evalDerivatives(robot, contact_status, data[i], s, 
                                     kkt_residual);
@@ -97,13 +97,12 @@ inline void linearizeConstraints(
 }
 
 
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType,
-          typename SplitKKTMatrixType, typename SplitKKTResidualType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void condenseSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     const ContactStatusType& contact_status,
-    std::vector<ConstraintComponentData>& data, SplitKKTMatrixType& kkt_matrix, 
-    SplitKKTResidualType& kkt_residual) {
+    std::vector<ConstraintComponentData>& data, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());

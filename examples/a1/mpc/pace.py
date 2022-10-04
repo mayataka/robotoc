@@ -22,17 +22,15 @@ step_yaw = 0.0
 
 step_height = 0.1
 swing_time = 0.25
-stance_time = 0
-# stance_time = 0.05
+stance_time = 0.05
 swing_start_time = 0.5
 
 vcom_cmd = 0.5 * step_length / (swing_time+stance_time)
 yaw_rate_cmd = step_yaw / swing_time
 
 T = 0.5
-N = 18
-nthreads = 4
-mpc = robotoc.MPCPace(robot, T, N, nthreads)
+N = 20
+mpc = robotoc.MPCPace(robot, T, N)
 
 planner = robotoc.PaceFootStepPlanner(robot)
 # planner.set_gait_pattern(step_length, step_yaw, (stance_time > 0.))
@@ -48,10 +46,12 @@ q0 = np.array([0, 0, 0.3181, 0, 0, 0, 1,
 v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 10
+option_init.nthreads = 4
 mpc.init(t0, q0, v0, option_init)
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations
+option_mpc.nthreads = 4
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC

@@ -10,22 +10,22 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/robot_properties.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/ocp/ocp.hpp"
-#include "robotoc/ocp/solution.hpp"
-#include "robotoc/ocp/direction.hpp"
-#include "robotoc/ocp/kkt_matrix.hpp"
-#include "robotoc/ocp/kkt_residual.hpp"
+#include "robotoc/core/solution.hpp"
+#include "robotoc/core/direction.hpp"
+#include "robotoc/core/kkt_matrix.hpp"
+#include "robotoc/core/kkt_residual.hpp"
 #include "robotoc/ocp/direct_multiple_shooting.hpp"
 #include "robotoc/riccati/riccati_recursion.hpp"
 #include "robotoc/riccati/riccati_factorization.hpp"
 #include "robotoc/line_search/line_search.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
-#include "robotoc/hybrid/switching_time_optimization.hpp"
-#include "robotoc/hybrid/sto_cost_function.hpp"
-#include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/sto/switching_time_optimization.hpp"
+#include "robotoc/sto/sto_cost_function.hpp"
+#include "robotoc/sto/sto_constraints.hpp"
 #include "robotoc/solver/solution_interpolator.hpp"
 #include "robotoc/solver/solver_options.hpp"
 #include "robotoc/solver/solver_statistics.hpp"
@@ -44,14 +44,9 @@ public:
   /// @brief Construct optimal control problem solver.
   /// @param[in] ocp Optimal control problem. 
   /// @param[in] solver_options Solver options. Default is SolverOptions().
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
-  /// @note If you consider the switching time optimization (STO) problem,
-  /// please use the other constructor.
   ///
   OCPSolver(const OCP& ocp, 
-            const SolverOptions& solver_options=SolverOptions(), 
-            const int nthreads=1);
+            const SolverOptions& solver_options=SolverOptions());
 
   ///
   /// @brief Default constructor. 
@@ -59,9 +54,9 @@ public:
   OCPSolver();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~OCPSolver();
+  ~OCPSolver() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -90,39 +85,25 @@ public:
   void setSolverOptions(const SolverOptions& solver_options);
 
   ///
-  /// @brief Applies mesh refinement if the discretization method is   
-  /// DiscretizationMethod::PhaseBased. Also initializes the constraints 
-  /// if the mesh refiement is carried out.
+  /// @brief Discretizes the problem and reiszes the data structures.
   /// @param[in] t Initial time of the horizon. 
   ///
-  void meshRefinement(const double t);
+  void discretize(const double t);
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
-  /// @param[in] t Initial time of the horizon. 
   ///
-  void initConstraints(const double t);
-
-  ///
-  /// @brief Performs single Newton-type iteration and updates the solution.
-  /// @param[in] t Initial time of the horizon. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @remark The linear and angular velocities of the floating base are assumed
-  /// to be expressed in the body local coordinate.
-  ///
-  void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
+  void initConstraints();
 
   ///
   /// @brief Solves the optimal control problem. Internally calls 
-  /// updateSolutio() and meshRefinement().
+  /// updateSolutio() and discretize().
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] init_solver If true, initializes the solver, that is, calls
-  /// meshRefinement(), initConstraints(), and clears the line search filter.
+  /// discretize(), initConstraints(), and clears the line search filter.
   /// Default is true.
   /// @remark The linear and angular velocities of the floating base are assumed
   /// to be expressed in the body local coordinate.
@@ -167,7 +148,7 @@ public:
   /// @brief Gets of the local LQR policies over the horizon. 
   /// @return const reference to the local LQR policies.
   ///
-  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
+  const aligned_vector<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Gets the Riccati factorizations. This can be interpreted as 
@@ -210,24 +191,8 @@ public:
   double KKTError() const;
 
   ///
-  /// @brief Returns the value of the cost function.
-  /// OCPsolver::updateSolution() or OCPsolver::computeKKTResidual() must be 
-  /// called.  
-  /// @param[in] include_cost_barrier If true, includes the cost due to the 
-  /// barrier function. Default is true.
-  /// @return The value of the cost function.
-  ///
-  double cost(const bool include_cost_barrier=true) const;
-
-  ///
-  /// @return true if the current solution is feasible subject to the 
-  /// inequality constraints. Return false if it is not feasible.
-  ///
-  bool isCurrentSolutionFeasible(const bool verbose=false);
-
-  ///
-  /// @brief OCP discretization. 
-  /// @return Returns const reference to the internal OCP discretization. 
+  /// @brief Gets the discretization. 
+  /// @return Returns const reference to the time discretization. 
   ///
   const TimeDiscretization& getTimeDiscretization() const;
 
@@ -249,6 +214,7 @@ public:
 private:
   aligned_vector<Robot> robots_;
   std::shared_ptr<ContactSequence> contact_sequence_;
+  TimeDiscretization time_discretization_;
   DirectMultipleShooting dms_;
   SwitchingTimeOptimization sto_;
   RiccatiRecursion riccati_recursion_;
@@ -264,9 +230,18 @@ private:
   SolverStatistics solver_statistics_;
   Timer timer_;
 
-  void reserveData();
-  void discretizeSolution();
-  void interpolateSolution();
+  ///
+  /// @brief Performs single Newton-type iteration and updates the solution.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
+  ///
+  void updateSolution(const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v);
+
+  void resizeData();
 
 };
 

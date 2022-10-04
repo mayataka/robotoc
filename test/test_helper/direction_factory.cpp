@@ -1,14 +1,11 @@
 #include "direction_factory.hpp"
 
-#include "robotoc/hybrid/time_discretization.hpp"
-
 
 namespace robotoc {
 namespace testhelper {
 
-Direction CreateDirection(const Robot& robot, const int N, 
-                          const int max_num_impulse) {
-  Direction d(robot, N, max_num_impulse);
+Direction CreateDirection(const Robot& robot, const int N) {
+  Direction d(N+1, SplitDirection(robot));
   for (int i=0; i<=N; ++i) {
     d[i].setRandom();
   }
@@ -17,37 +14,31 @@ Direction CreateDirection(const Robot& robot, const int N,
 
 
 Direction CreateDirection(const Robot& robot, 
-                          const std::shared_ptr<ContactSequence>& contact_sequence, 
-                          const double T, const int N, 
-                          const int max_num_impulse, const double t) {
+                          const std::shared_ptr<ContactSequence>& contact_sequence,
+                          const TimeDiscretization& time_discretization) {
   if (robot.maxNumContacts() == 0) {
-    return CreateDirection(robot, N, max_num_impulse);
+    return CreateDirection(robot, time_discretization.N());
   }
   else {
-    TimeDiscretization time_discretization(T, N, max_num_impulse);
-    time_discretization.discretize(contact_sequence, t);
-    Direction d(robot, N, max_num_impulse);
-    for (int i=0; i<=N; ++i) {
-      d[i].setRandom(contact_sequence->contactStatus(time_discretization.contactPhase(i)));
-    }
-    const int num_impulse = contact_sequence->numImpulseEvents();
-    for (int i=0; i<num_impulse; ++i) {
-      d.impulse[i].setRandom(contact_sequence->impulseStatus(i));
-    }
-    for (int i=0; i<num_impulse; ++i) {
-      d.aux[i].setRandom(contact_sequence->contactStatus(time_discretization.contactPhaseAfterImpulse(i)));
-    }
-    for (int i=0; i<num_impulse; ++i) {
-      const int time_stage_before_impulse = time_discretization.timeStageBeforeImpulse(i);
-      if (time_stage_before_impulse-1 >= 0) {
-        d[time_stage_before_impulse-1].setImpulseStatus(contact_sequence->impulseStatus(i));
-        d[time_stage_before_impulse-1].dxi().setRandom();
+    Direction d(time_discretization.size(), SplitDirection(robot));
+    for (int i=0; i<time_discretization.size()-1; ++i) {
+      const auto& grid = time_discretization[i];
+      if (grid.type == GridType::Impact) {
+        d[i].setContactDimension(contact_sequence->impactStatus(grid.impact_index).dimf());
+        d[i].setRandom();
+      }
+      else {
+        d[i].setContactDimension(contact_sequence->contactStatus(grid.phase).dimf());
+        if (grid.switching_constraint) {
+          d[i].setSwitchingConstraintDimension(contact_sequence->impactStatus(grid.impact_index+1).dimf());
+        }
+        else {
+          d[i].setSwitchingConstraintDimension(0);
+        }
+        d[i].setRandom();
       }
     }
-    const int num_lift = contact_sequence->numLiftEvents();
-    for (int i=0; i<num_lift; ++i) {
-      d.lift[i].setRandom(contact_sequence->contactStatus(time_discretization.contactPhaseAfterLift(i)));
-    }
+    d[time_discretization.size()-1].setRandom();
     return d;
   }
 }

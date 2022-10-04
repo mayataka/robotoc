@@ -92,8 +92,8 @@ void MPCPeriodicSwingFootRef::updateRef(const GridInfo& grid_info,
   if (isActive(grid_info)) {
     const int cycle = std::floor((grid_info.t-swing_start_time_)/period_);
     const double rate = (grid_info.t-swing_start_time_-cycle*period_) / period_swing_;
-    x3d_ref = (1.0-rate) * contact_position_[grid_info.contact_phase]
-                + rate * contact_position_[grid_info.contact_phase+num_phases_in_period_];
+    x3d_ref = (1.0-rate) * contact_position_[grid_info.phase]
+                + rate * contact_position_[grid_info.phase+num_phases_in_period_];
     if (rate < 0.5) {
       x3d_ref.coeffRef(2) += 2 * rate * swing_height_;
     }
@@ -106,7 +106,7 @@ void MPCPeriodicSwingFootRef::updateRef(const GridInfo& grid_info,
 
 bool MPCPeriodicSwingFootRef::isActive(const GridInfo& grid_info) const {
   return ((grid_info.t > swing_start_time_) 
-            && !is_contact_active_[grid_info.contact_phase]);
+            && !is_contact_active_[grid_info.phase]);
 }
 
 } // namespace robotoc
