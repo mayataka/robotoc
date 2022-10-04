@@ -30,14 +30,11 @@ public:
   ///
   /// @brief Construct a line search.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
   /// @param[in] step_size_reduction_rate Reduction rate of the step size. 
   /// Defalt is 0.75.
   /// @param[in] min_step_size Minimum step size. Default is 0.05.
   ///
-  UnconstrLineSearch(const OCP& ocp, const int nthreads=1, 
-                     const double step_size_reduction_rate=0.75, 
+  UnconstrLineSearch(const OCP& ocp, const double step_size_reduction_rate=0.75, 
                      const double min_step_size=0.05);
 
   ///
@@ -118,7 +115,6 @@ public:
 
 private:
   LineSearchFilter filter_;
-  int nthreads_;
   double step_size_reduction_rate_, min_step_size_;
   Solution s_trial_;
   KKTResidual kkt_residual_;

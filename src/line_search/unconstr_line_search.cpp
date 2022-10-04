@@ -7,11 +7,10 @@
 
 namespace robotoc {
 
-UnconstrLineSearch::UnconstrLineSearch(const OCP& ocp, const int nthreads, 
+UnconstrLineSearch::UnconstrLineSearch(const OCP& ocp,  
                                        const double step_size_reduction_rate, 
                                        const double min_step_size) 
   : filter_(),
-    nthreads_(nthreads),
     step_size_reduction_rate_(step_size_reduction_rate), 
     min_step_size_(min_step_size),
     s_trial_(ocp.N+1, SplitSolution(ocp.robot)), 
@@ -21,7 +20,6 @@ UnconstrLineSearch::UnconstrLineSearch(const OCP& ocp, const int nthreads,
 
 UnconstrLineSearch::UnconstrLineSearch() 
   : filter_(),
-    nthreads_(0),
     step_size_reduction_rate_(0), 
     min_step_size_(0),
     s_trial_(), 

@@ -65,7 +65,7 @@ TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
   OCP ocp(robot, cost, constraints, T, N);
   UnconstrDirectMultipleShooting dms(ocp, nthreads);
   dms.initConstraints(robots, time_discretization, s);
-  UnconstrLineSearch line_search(ocp, nthreads);
+  UnconstrLineSearch line_search(ocp);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(dms, robots, time_discretization, 
@@ -91,7 +91,7 @@ TEST_F(UnconstrLineSearchTest, UnconstrParNMPC) {
   OCP ocp(robot, cost, constraints, T, N);
   UnconstrBackwardCorrection backward_correction(ocp, nthreads);
   backward_correction.initConstraints(robots, time_discretization, s);
-  UnconstrLineSearch line_search(ocp, nthreads);
+  UnconstrLineSearch line_search(ocp);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(backward_correction, robots, time_discretization, 
