@@ -73,6 +73,10 @@ UnconstrOCPSolver::UnconstrOCPSolver()
 
 
 void UnconstrOCPSolver::setSolverOptions(const SolverOptions& solver_options) {
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: solver_options.nthreads must be positive!");
+  }
+  dms_.setNumThreads(solver_options.nthreads);
   solver_options_ = solver_options;
 }
 

@@ -67,6 +67,10 @@ UnconstrParNMPCSolver::UnconstrParNMPCSolver()
 
 
 void UnconstrParNMPCSolver::setSolverOptions(const SolverOptions& solver_options) {
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[UnconstrParNMPCSolver] invalid argument: solver_options.nthreads must be positive!");
+  }
+  backward_correction_.setNumThreads(solver_options.nthreads);
   solver_options_ = solver_options;
 }
 
