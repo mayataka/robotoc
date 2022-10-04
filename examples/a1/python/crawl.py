@@ -201,7 +201,8 @@ N = math.floor(T/dt)
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   contact_sequence=contact_sequence, T=T, N=N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options)
 
 # Initial time and intial state 
 t = 0.

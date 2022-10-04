@@ -43,9 +43,7 @@ swing_start_time = 0.5
 
 T = 0.5
 N = 20
-nthreads = 4
-mpc = robotoc.MPCFlyingTrot(robot, T, N, nthreads)
-
+mpc = robotoc.MPCFlyingTrot(robot, T, N)
 
 vcom_cmd = 0.5 * step_length / (flying_time+stance_time)
 yaw_rate_cmd = step_yaw / flying_time
@@ -63,10 +61,12 @@ q0 = np.array([0, 0, 0.3181, 0, 0, 0, 1,
 v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 10
+option_init.nthreads = 4
 mpc.init(t0, q0, v0, option_init)
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations
+option_mpc.nthreads = 4
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC

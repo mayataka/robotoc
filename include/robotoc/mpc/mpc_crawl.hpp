@@ -43,9 +43,8 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCCrawl(const Robot& robot, const double T, const int N, const int nthreads);
+  MPCCrawl(const Robot& robot, const double T, const int N);
 
   ///
   /// @brief Default constructor. 

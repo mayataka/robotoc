@@ -14,8 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_trot, m) {
   py::class_<MPCTrot>(m, "MPCTrot")
-    .def(py::init<const Robot&, const double, const int, const int>(),
-         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int>(),
+         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"))
     .def("set_gait_pattern", &MPCTrot::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("stance_time"), py::arg("swing_start_time"))

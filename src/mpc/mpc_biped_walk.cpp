@@ -10,8 +10,7 @@
 
 namespace robotoc {
 
-MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N, 
-                           const int nthreads)
+MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N)
   : foot_step_planner_(),
     contact_sequence_(std::make_shared<robotoc::ContactSequence>(robot)),
     cost_(std::make_shared<CostFunction>()),

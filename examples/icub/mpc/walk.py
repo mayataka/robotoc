@@ -27,8 +27,7 @@ yaw_rate_cmd = step_yaw / swing_time
 
 T = 0.7
 N = 25
-nthreads = 4
-mpc = robotoc.MPCBipedWalk(robot, T, N, nthreads)
+mpc = robotoc.MPCBipedWalk(robot, T, N)
 
 planner = robotoc.BipedWalkFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, step_yaw, (double_support_time > 0.))
@@ -50,10 +49,12 @@ q0[2] = - 0.5 * (robot.frame_position('l_sole')[2] + robot.frame_position('r_sol
 v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 200
+option_init.nthreads = 4
 mpc.init(t0, q0, v0, option_init)
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 1 # MPC iterations
+option_mpc.nthreads = 4
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC

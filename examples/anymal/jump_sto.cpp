@@ -162,8 +162,8 @@ int main(int argc, char *argv[]) {
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;
   solver_options.max_iter = 200;
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;

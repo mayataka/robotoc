@@ -43,8 +43,8 @@ T = 3.0
 N = 60
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, T=T, N=N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, solver_options=solver_options, 
-                                       nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, solver_options=solver_options)
 
 # Initial time and intial state 
 t = 0.0
@@ -62,9 +62,9 @@ print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
 # Solves the OCP by ParNMPC algorithm.
+solver_options.nthreads = 8
 parnmpc_solver = robotoc.UnconstrParNMPCSolver(ocp=ocp, 
-                                               solver_options=solver_options, 
-                                               nthreads=8)
+                                               solver_options=solver_options)
 
 print("\n----- Solves the OCP by ParNMPC algorithm. -----")
 parnmpc_solver.discretize(t)

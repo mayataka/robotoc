@@ -123,7 +123,8 @@ solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 1.0
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options)
 
 # Initial time and intial state 
 t = 0.
