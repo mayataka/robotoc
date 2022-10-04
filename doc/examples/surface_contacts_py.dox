@@ -16,12 +16,13 @@ import math
 
 First, define the robot model with surface contact frames (in this case, the contact frames are the frames of all feet).
 ```
-path_to_urdf = '../icub_description/urdf/icub.urdf'
-contact_frames = ['l_sole', 'r_sole']
-contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../icub_description/urdf/icub.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.surface_contacts = [robotoc.ContactModelInfo('l_sole', baumgarte_time_step),
+                               robotoc.ContactModelInfo('r_sole', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 ```
 @note 
 `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
@@ -97,7 +98,7 @@ contact_sequence = robotoc.ContactSequence(robot)
 ```
 Then we can set an impact event and a lift event to the contact sequence.
 
-We set the friction coefficients via the contact sequence. We then define the friction coefficients.
+We set the contact positions and friction coefficients through the contact sequence. We then define the friction coefficients.
 ```
   mu = 0.6
   friction_coefficients = {'l_sole': mu, 'r_sole': mu} 
@@ -164,9 +165,10 @@ ocp = robotoc.OCP(robot=robot, contact_sequence=contact_sequence,
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-solver_options.max_iter = 300
+solver_options.max_iter = 350
 solver_options.initial_sto_reg_iter = 10 
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options)
 ```
 @note Without `robotoc::STOCostFunction` and `robotoc::STOConstraints`, the solver does not optimize the switching times.
 Therefore, even if there are empty (e.g., the STO cost of this example is also empty), please pass them to the constructor of OCP.
@@ -183,11 +185,11 @@ t = 0.
 q = q_standing # initial state.
 v = np.zeros(robot.dimv()) # initial state.
 
-ocp_solver.setSolution("q", q); # set the initial guess of the solution.
-ocp_solver.setSolution("v", v); # set the initial guess of the solution.
+ocp_solver.discretize(t)
+ocp_solver.setSolution("q", q) # set the initial guess of the solution.
+ocp_solver.setSolution("v", v) # set the initial guess of the solution.
 
-ocp_solver.discretize(t);
-
+ocp_solver.init_constraints()
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v)) 
@@ -205,18 +207,11 @@ viewer.display(ocp_solver.get_time_discretization().time_steps(),
                ocp_solver.get_solution('f', 'WORLD'))
 ```
 
-
-
-@note We can check the formulation of the discretized optimal control problem 
-before running it via
+@note We can check the discretization of the optimal control problem sololy via
 ```
 time_discretization = robotoc.TimeDiscretization(T, N)
 time_discretization.discretize(contact_sequence, t)
 print(time_discretization)
-```
-or 
-```
-print(ocp_solver.get_time_discretization())
 ```
 
 */

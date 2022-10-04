@@ -16,10 +16,12 @@ import math
 
 First, define the robot model.
 ```
-path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf"
-robot = robotoc.Robot(path_to_urdf)
-robot.set_joint_effort_limit(np.full(robot.dimu(), 50))
-robot.set_joint_velocity_limit(np.full(robot.dimv(), 0.5*math.pi))
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = "../iiwa_description/urdf/iiwa14.urdf"
+robot = robotoc.Robot(model_info)
+
+robot.set_joint_effort_limit(np.full(robot.dimu(), 50)) # change the joint limits
+robot.set_joint_velocity_limit(np.full(robot.dimv(), 0.5*math.pi)) # change the joint limits
 ```
 
 Next, we construct the cost function.
@@ -57,19 +59,19 @@ Finally, we can construct the optimal control solver!
 ```
 T = 3.0
 N = 60
-ocp = robotoc.UnconstrOCP(robot, cost, constraints, T, N)
+ocp = robotoc.OCP(robot, cost, constraints, T, N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, solver_options=solver_options, 
-                                       nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.UnconstrOCPSolver(ocp=ocp, solver_options=solver_options)
 ```
 or ParNMPC solver!
 ```
 T = 3.0
 N = 60
-parnmpc = robotoc.UnconstrParNMPC(robot, cost, constraints, T, N)
+parnmpc = robotoc.OCP(robot, cost, constraints, T, N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.UnconstrParNMPCSolver(parnmpc=parnmpc, solver_options=solver_options, 
-                                           nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.UnconstrParNMPCSolver(ocp=ocp, solver_options=solver_options)
 ```
 
 Let's run the solver! 
@@ -89,12 +91,10 @@ print(ocp_solver.get_solver_statistics()) # print solver statistics
 
 We can visualize the solution trajectory as
 ```
-num_iteration = 60
-robotoc.utils.benchmark.convergence(ocp_solver, t, q, v, num_iteration)
-
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, viewer_type='meshcat')
+viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='meshcat')
 viewer.set_camera_transform_meshcat(camera_tf_vec=[0.5, -3.0, 0.0], zoom=2.0)
-viewer.display((T/N), ocp_solver.get_solution('q'))
+viewer.display(ocp_solver.get_time_discretization(), 
+               ocp_solver.get_solution('q'))
 ```
 
 */

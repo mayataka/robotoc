@@ -36,17 +36,17 @@ Required header files are as follows.
 int main(int argc, char *argv[]) {
 ```
 
-First, define the robot model with contact frames (in this case, the contact frames are the frames of all feet).
+First, we define the robot model. We speficy the URDF path, base joint type, and contact frames (in this case, the contact frames are the frames of all feet).
 ```
-  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  const std::vector<std::string> contact_frames = {"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}; 
-  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact};
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../anymal_b_simple_description/urdf/anymal.urdf";
+  model_info.base_joint_type = robotoc::BaseJointType::FloatingBase;
   const double baumgarte_time_step = 0.04;
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, contact_types, baumgarte_time_step);
+  model_info.point_contacts = {robotoc::ContactModelInfo("LF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("LH_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RH_FOOT", baumgarte_time_step)};
+  robotoc::Robot robot(model_info);
 ```
 @note 
 `baumgarte_time_step` is the stabilization parameter for acceleration-level rigid contact constraints. 
@@ -157,9 +157,8 @@ Next, we construct the contact sequence `robotoc::ContactSequence` as
 ```
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);
 ```
-Then we can set an impact event and a lift event to the contact sequence.
 
-We set the friction coefficients via the contact sequence. We then define the friction coefficients.
+We set the contact positions and friction coefficients through the contact sequence. We then define the friction coefficients.
 ```
   const double mu = 0.7;
   const std::unordered_map<std::string, double> friction_coefficients = {{"LF_FOOT", mu}, 
@@ -188,7 +187,7 @@ Then the all the contacts are inactive.
   auto contact_status_flying = robot.createContactStatus();
   contact_sequence->push_back(contact_status_flying, t0+ground_time);
 ```
-Then a lift event is appended into the back of the contact sequence.
+Then a lift event is automatically appended into the contact sequence.
 Finally, we set the contact status after touch-down as
 ```
   contact_positions["LF_FOOT"].noalias() += jump_length;
@@ -199,7 +198,7 @@ Finally, we set the contact status after touch-down as
   contact_sequence->push_back(contact_status_standing, 
                               t0+ground_time+flying_time);
 ```
-Then an impact event is appended into the back of the contact sequence.
+Then an impact event is automatically appended into the contact sequence.
 
 @note We can check the contact sequence via 
 ```
@@ -212,8 +211,8 @@ Finally, we can construct the optimal control solver!
   const int N = T / dt;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
   auto solver_options = robotoc::SolverOptions();
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 ```
 
 Let's run the solver!
@@ -222,12 +221,14 @@ Let's run the solver!
   const Eigen::VectorXd q(q_standing); // initial state.
   const Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv())); // initial state.
 
+  ocp_solver.discretize(t); // discretizes the optimal control problem.
   ocp_solver.setSolution("q", q); // set the initial guess of the solution.
   ocp_solver.setSolution("v", v); // set the initial guess of the solution.
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init); // set the initial guess of the solution.
-  ocp_solver.initConstraints();
+  
+  ocp_solver.initConstraints(); // initialize the slack and dual variables of the primal-dual interior point method.
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
@@ -237,8 +238,7 @@ Let's run the solver!
 }
 ```
 
-@note We can check the formulation of the discretized optimal control problem 
-before running it via
+@note We can check the discretization of the optimal control problem sololy via
 ```
 robotoc::TimeDiscretization time_discretization(T, N);
 time_discretization.discretize(contact_sequence, t);
