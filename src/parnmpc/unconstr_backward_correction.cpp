@@ -46,6 +46,14 @@ UnconstrBackwardCorrection::UnconstrBackwardCorrection()
 }
 
 
+void UnconstrBackwardCorrection::setNumThreads(const int nthreads) {
+  if (nthreads <= 0) {
+    throw std::out_of_range("[UnconstrBackwardCorrection] invalid argument: nthreads must be positive!");
+  }
+  nthreads_ = nthreads;
+}
+
+
 void UnconstrBackwardCorrection::initAuxMat(
     aligned_vector<Robot>& robots, 
     const std::vector<GridInfo>& time_discretization, const Solution& s, 

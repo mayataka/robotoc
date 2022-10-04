@@ -32,6 +32,14 @@ UnconstrDirectMultipleShooting::UnconstrDirectMultipleShooting() {
 }
 
 
+void UnconstrDirectMultipleShooting::setNumThreads(const int nthreads) {
+  if (nthreads <= 0) {
+    throw std::out_of_range("[UnconstrDirectMultipleShooting] invalid argument: nthreads must be positive!");
+  }
+  nthreads_ = nthreads;
+}
+
+
 void UnconstrDirectMultipleShooting::initConstraints(
     aligned_vector<Robot>& robots, 
     const std::vector<GridInfo>& time_discretization, const Solution& s) {

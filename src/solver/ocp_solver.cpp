@@ -8,13 +8,13 @@
 namespace robotoc {
 
 OCPSolver::OCPSolver(const OCP& ocp, 
-                     const SolverOptions& solver_options, const int nthreads)
-  : robots_(nthreads, ocp.robot),
+                     const SolverOptions& solver_options)
+  : robots_(solver_options.nthreads, ocp.robot),
     contact_sequence_(ocp.contact_sequence),
     time_discretization_(ocp.T, ocp.N, ocp.reserved_num_discrete_events),
-    dms_(ocp, nthreads),
+    dms_(ocp, solver_options.nthreads),
     sto_(ocp),
-    riccati_recursion_(ocp, nthreads, solver_options.max_dts_riccati),
+    riccati_recursion_(ocp, solver_options.max_dts_riccati),
     line_search_(ocp),
     ocp_(ocp),
     kkt_matrix_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTMatrix(ocp.robot)),
@@ -44,8 +44,8 @@ OCPSolver::OCPSolver(const OCP& ocp,
   if (ocp.reserved_num_discrete_events< 0) {
     throw std::out_of_range("[OCPSolver] invalid argument: ocp.reserved_num_discrete_events must be non-negative!");
   }
-  if (nthreads <= 0) {
-    throw std::out_of_range("[OCPSolver] invalid argument: nthreads must be positive!");
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: solver_options.nthreads must be positive!");
   }
   for (auto& e : s_)  { ocp.robot.normalizeConfiguration(e.q); }
   if (ocp.sto_cost && ocp.sto_constraints) {
@@ -76,13 +76,20 @@ OCPSolver::OCPSolver()
 
 
 void OCPSolver::setSolverOptions(const SolverOptions& solver_options) {
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[OCPSolver] invalid argument: solver_options.nthreads must be positive!");
+  }
+  while (robots_.size() < solver_options.nthreads) {
+    robots_.push_back(robots_.back());
+  }
+  dms_.setNumThreads(solver_options.nthreads);
+  riccati_recursion_.setRegularization(solver_options_.max_dts_riccati);
+  solution_interpolator_.setInterpolationOrder(solver_options.interpolation_order);
+  line_search_.set(solver_options.line_search_settings);
   solver_options_ = solver_options;
   if (ocp_.sto_cost && ocp_.sto_constraints) {
     solver_options_.discretization_method = DiscretizationMethod::PhaseBased;
   }
-  riccati_recursion_.setRegularization(solver_options_.max_dts_riccati);
-  solution_interpolator_.setInterpolationOrder(solver_options.interpolation_order);
-  line_search_.set(solver_options.line_search_settings);
 }
 
 

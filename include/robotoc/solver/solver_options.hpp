@@ -16,6 +16,12 @@ namespace robotoc {
 ///
 struct SolverOptions {
   ///
+  /// @brief Number of the threads of parallel computations. Must be positive.
+  /// Default is 1.
+  ///
+  int nthreads = 1;
+
+  ///
   /// @brief Maximum number of iterations. Must be non-negative. 
   /// Default is 100. 
   ///

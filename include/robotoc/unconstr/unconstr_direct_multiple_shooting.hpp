@@ -33,8 +33,8 @@ public:
   ///
   /// @brief Construct the direct multiple shooting method.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] nthreads Number of the threads used in solving the optimal 
-  /// control problem. Must be positive. 
+  /// @param[in] nthreads Number of the threads of the parallel computations.
+  /// Must be positive. 
   ///
   UnconstrDirectMultipleShooting(const OCP& ocp, const int nthreads=1);
 
@@ -71,6 +71,13 @@ public:
   ///
   UnconstrDirectMultipleShooting& operator=(
       UnconstrDirectMultipleShooting&&) noexcept = default;
+
+  ///
+  /// @brief Sets the number of threads of the parallel computations.
+  /// @param[in] nthreads Number of the threads of the parallel computations.
+  /// Must be positive. 
+  ///
+  void setNumThreads(const int nthreads);
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 

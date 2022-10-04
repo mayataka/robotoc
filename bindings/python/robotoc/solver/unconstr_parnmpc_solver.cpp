@@ -14,9 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
   py::class_<UnconstrParNMPCSolver>(m, "UnconstrParNMPCSolver")
-    .def(py::init<const OCP&, const SolverOptions&, const int>(),
-          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
-          py::arg("nthreads")=1)
+    .def(py::init<const OCP&, const SolverOptions&>(),
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions())
     .def("set_solver_options", &UnconstrParNMPCSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("discretize", &UnconstrParNMPCSolver::discretize,

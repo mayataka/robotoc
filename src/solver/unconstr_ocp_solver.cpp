@@ -8,11 +8,10 @@
 namespace robotoc {
 
 UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp, 
-                                     const SolverOptions& solver_options, 
-                                     const int nthreads)
-  : robots_(nthreads, ocp.robot),
+                                     const SolverOptions& solver_options)
+  : robots_(solver_options.nthreads, ocp.robot),
     time_discretization_(ocp.N+1, GridInfo()),
-    dms_(ocp, nthreads),
+    dms_(ocp, solver_options.nthreads),
     riccati_recursion_(ocp),
     line_search_(ocp),
     ocp_(ocp),
@@ -36,8 +35,8 @@ UnconstrOCPSolver::UnconstrOCPSolver(const OCP& ocp,
   if (ocp.N <= 0) {
     throw std::out_of_range("[UnconstrOCPSolver] invalid argument: ocp.N must be positive!");
   }
-  if (nthreads <= 0) {
-    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: nthreads must be positive!");
+  if (solver_options.nthreads <= 0) {
+    throw std::out_of_range("[UnconstrOCPSolver] invalid argument: solver_options.nthreads must be positive!");
   }
   const double dt = ocp.T / ocp.N;
   for (int i=0; i<=ocp.N; ++i) {

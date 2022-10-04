@@ -12,6 +12,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(solver_options, m) {
   py::class_<SolverOptions>(m, "SolverOptions")
     .def(py::init<>())
+    .def_readwrite("nthreads", &SolverOptions::nthreads)
     .def_readwrite("max_iter", &SolverOptions::max_iter)
     .def_readwrite("kkt_tol", &SolverOptions::kkt_tol)
     .def_readwrite("mu_init", &SolverOptions::mu_init)

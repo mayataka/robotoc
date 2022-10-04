@@ -44,14 +44,9 @@ public:
   /// @brief Construct optimal control problem solver.
   /// @param[in] ocp Optimal control problem. 
   /// @param[in] solver_options Solver options. Default is SolverOptions().
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
-  /// @note If you consider the switching time optimization (STO) problem,
-  /// please use the other constructor.
   ///
   OCPSolver(const OCP& ocp, 
-            const SolverOptions& solver_options=SolverOptions(), 
-            const int nthreads=1);
+            const SolverOptions& solver_options=SolverOptions());
 
   ///
   /// @brief Default constructor. 

@@ -35,8 +35,8 @@ public:
   ///
   /// @brief Construct a backward correction.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] nthreads Number of the threads used in solving the optimal 
-  /// control problem. Must be positive. 
+  /// @param[in] nthreads Number of the threads of the parallel computations.
+  /// Must be positive. 
   ///
   UnconstrBackwardCorrection(const OCP& ocp, const int nthreads);
 
@@ -69,6 +69,13 @@ public:
   /// @brief Default move assign operator. 
   ///
   UnconstrBackwardCorrection& operator=(UnconstrBackwardCorrection&&) noexcept = default;
+
+  ///
+  /// @brief Sets the number of threads of the parallel computations.
+  /// @param[in] nthreads Number of the threads of the parallel computations.
+  /// Must be positive. 
+  ///
+  void setNumThreads(const int nthreads);
 
   ///
   /// @brief Initializes the auxiliary matrices by the terminal cost Hessian 

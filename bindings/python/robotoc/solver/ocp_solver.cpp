@@ -14,9 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ocp_solver, m) {
   py::class_<OCPSolver>(m, "OCPSolver")
-    .def(py::init<const OCP&, const SolverOptions&, const int>(),
-          py::arg("ocp"), py::arg("solver_options")=SolverOptions(), 
-          py::arg("nthreads")=1)
+    .def(py::init<const OCP&, const SolverOptions&>(),
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions())
     .def("set_solver_options", &OCPSolver::setSolverOptions,
           py::arg("solver_options"))
     .def("discretize", &OCPSolver::discretize,

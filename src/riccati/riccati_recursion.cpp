@@ -7,8 +7,7 @@
 
 namespace robotoc {
 
-RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const int nthreads, 
-                                   const double max_dts0)
+RiccatiRecursion::RiccatiRecursion(const OCP& ocp, const double max_dts0)
   : factorizer_(ocp.robot, max_dts0),
     lqr_policy_(ocp.N+1+ocp.reserved_num_discrete_events, LQRPolicy(ocp.robot)),
     sto_policy_(ocp.N+1+ocp.reserved_num_discrete_events, STOPolicy(ocp.robot)),

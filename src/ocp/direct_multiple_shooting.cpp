@@ -36,6 +36,14 @@ DirectMultipleShooting::DirectMultipleShooting()
 }
 
 
+void DirectMultipleShooting::setNumThreads(const int nthreads) {
+  if (nthreads <= 0) {
+    throw std::out_of_range("[DirectMultipleShooting] invalid argument: nthreads must be positive!");
+  }
+  nthreads_ = nthreads;
+}
+
+
 void DirectMultipleShooting::initConstraints(
     aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Solution& s) {

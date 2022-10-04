@@ -5,6 +5,7 @@ namespace robotoc {
 
 void SolverOptions::disp(std::ostream& os) const {
   os << "Solver options:" << "\n";
+  os << "  nthreads: " << nthreads << "\n";
   os << "  max_iter: " << max_iter << "\n";
   os << "  kkt_tol: " << kkt_tol << "\n";
   os << "  mu_init: " << mu_init << "\n";
