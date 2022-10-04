@@ -61,7 +61,7 @@ int main() {
   robotoc::OCP ocp(robot, cost, constraints, T, N);
   auto solver_options = robotoc::SolverOptions();
   solver_options.nthreads = 8; // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
-  robotoc::UnconstrParNMPCSolver ocp_solver(ocp, solver_options);
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
