@@ -30,7 +30,7 @@ vcom_cmd = 0.5 * step_length / (swing_time+stance_time)
 yaw_rate_cmd = step_yaw / swing_time
 
 T = 0.5
-N = 18
+N = 20
 nthreads = 4
 mpc = robotoc.MPCPace(robot, T, N, nthreads)
 

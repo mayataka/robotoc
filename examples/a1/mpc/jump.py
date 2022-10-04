@@ -33,7 +33,7 @@ model_info.point_contacts = [robotoc.ContactModelInfo('FL_foot', baumgarte_time_
 robot = robotoc.Robot(model_info)
 
 T = 0.8
-N = 18
+N = 20
 nthreads = 4
 mpc = robotoc.MPCJump(robot, T, N, nthreads)
 
@@ -52,14 +52,12 @@ v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
 option_init.max_iter = 50
 option_init.initial_sto_reg_iter = 50
-option_init.enable_solution_interpolation = False
 mpc.init(t0, q0, v0, option_init, sto=True)  
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations
 option_mpc.initial_sto_reg_iter = 0
 option_mpc.max_dt_mesh = T / N
-option_mpc.enable_solution_interpolation = False
 mpc.set_solver_options(option_mpc)
 
 time_step = 0.0025 # 400 Hz MPC

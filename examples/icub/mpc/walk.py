@@ -26,7 +26,7 @@ vcom_cmd = 0.5 * step_length / (swing_time+double_support_time)
 yaw_rate_cmd = step_yaw / swing_time
 
 T = 0.7
-N = 20
+N = 25
 nthreads = 4
 mpc = robotoc.MPCBipedWalk(robot, T, N, nthreads)
 
@@ -62,7 +62,7 @@ camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitc
                                  camera_target_pos=q0[0:3]+np.array([0.7, 1.2, 0.0]))
 icub_simulator.set_camera_settings(camera_settings=camera_settings)
 
-simulation_time = 10.0
+simulation_time = 20.0
 log = False
 record = False
 simulation = MPCSimulation(simulator=icub_simulator)
