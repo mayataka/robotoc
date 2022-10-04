@@ -164,7 +164,6 @@ void MPCJump::reset(const double t, const Eigen::VectorXd& q,
   ocp_solver_.setSolution("q", q);
   ocp_solver_.setSolution("v", v);
   ocp_solver_.setSolverOptions(solver_options);
-  ocp_solver_.discretize(t);
   ocp_solver_.solve(t, q, v, true);
   s_ = ocp_solver_.getSolution();
   const auto ts = contact_sequence_->eventTimes();
@@ -262,24 +261,22 @@ void MPCJump::setRobotProperties(const RobotProperties& properties) {
 
 
 void MPCJump::resetMinimumDwellTimes(const double t, const double min_dt) {
-  const int num_switches = contact_sequence_->numDiscreteEvents();
-  if (num_switches > 0) {
-    std::vector<double> minimum_dwell_times;
-    switch (current_step_) {
-      case 0:
-        minimum_dwell_times.push_back(min_dt);
-        minimum_dwell_times.push_back(min_flying_time_);
-        break;
-      case 1:
-        minimum_dwell_times.push_back(min_dt);
-        break;
-      default:
-        // if current_step_ >= 2, num_switches == 0.
-        break;
-    }
-    minimum_dwell_times.push_back(min_ground_time_+(t-t_mpc_start_));
-    sto_constraints_->setMinimumDwellTimes(minimum_dwell_times);
+  std::vector<double> minimum_dwell_times;
+  switch (current_step_) {
+    case 0:
+      minimum_dwell_times.push_back(min_dt);
+      minimum_dwell_times.push_back(min_flying_time_);
+      minimum_dwell_times.push_back(min_ground_time_+(t-t_mpc_start_));
+      break;
+    case 1:
+      minimum_dwell_times.push_back(min_dt);
+      minimum_dwell_times.push_back(min_ground_time_+(t-t_mpc_start_));
+      break;
+    default:
+      minimum_dwell_times.push_back(min_dt);
+      break;
   }
+  sto_constraints_->setMinimumDwellTimes(minimum_dwell_times);
 }
 
 

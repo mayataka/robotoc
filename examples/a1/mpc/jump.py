@@ -5,9 +5,9 @@ import numpy as np
 
 
 jump_type = 'longitudinal'
-# jump_type = 'lateral'
-# jump_type = 'back'
-# jump_type = 'rotational'
+jump_type = 'lateral'
+jump_type = 'back'
+jump_type = 'rotational'
 
 if jump_type == 'longitudinal':
     jump_length = [0.6, 0, 0]
@@ -50,8 +50,8 @@ q0 = np.array([0, 0, 0.3181, 0, 0, 0, 1,
                0.0,  0.67, -1.3])
 v0 = np.zeros(robot.dimv())
 option_init = robotoc.SolverOptions()
-option_init.max_iter = 50
-option_init.initial_sto_reg_iter = 50
+option_init.max_iter = 100
+option_init.initial_sto_reg_iter = 100
 mpc.init(t0, q0, v0, option_init, sto=True)  
 
 option_mpc = robotoc.SolverOptions()

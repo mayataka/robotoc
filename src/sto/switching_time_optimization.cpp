@@ -61,6 +61,14 @@ void SwitchingTimeOptimization::evalSTO(
     const TimeDiscretization& time_discretization) {
   if (!is_sto_enabled_) return;
 
+  const int N = time_discretization.size() - 1;
+  const int num_discrete_events = time_discretization.grid(N).phase 
+                                    - time_discretization.grid(0).phase;
+  if (num_discrete_events == 0)  {
+    performance_index_.setZero();
+    return;
+  }
+
   performance_index_.cost = sto_cost_->evalCost(time_discretization);
   sto_constraints_->evalConstraint(time_discretization, constraint_data_);
   performance_index_.cost_barrier = constraint_data_.log_barrier;
@@ -76,6 +84,11 @@ void SwitchingTimeOptimization::evalKKT(
   const int N = time_discretization.size() - 1;
   const int num_discrete_events = time_discretization.grid(N).phase 
                                     - time_discretization.grid(0).phase;
+  if (num_discrete_events == 0)  {
+    performance_index_.setZero();
+    return;
+  }
+
   performance_index_.setZero();
   lt_.setZero(num_discrete_events);
   Qtt_.setZero(num_discrete_events, num_discrete_events);

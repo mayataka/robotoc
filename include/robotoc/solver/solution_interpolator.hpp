@@ -130,6 +130,10 @@ private:
   static void initEventSolution(const Robot& robot, const SplitSolution& s1, 
                                 const SplitSolution& s2, const double alpha, 
                                 SplitSolution& s);
+
+  static void modifyImpactSolution(SplitSolution& s);
+
+  static void modifyTerminalSolution(SplitSolution& s);
 };
 
 } // namespace robotoc

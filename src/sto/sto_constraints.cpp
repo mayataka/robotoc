@@ -126,7 +126,6 @@ ConstraintComponentData STOConstraints::createConstraintsData(
                                     - time_discretization.grid(0).phase;
   auto data = ConstraintComponentData(num_discrete_events+1, barrier_);
   data.r.push_back(Eigen::VectorXd::Zero(num_discrete_events+1));
-  data.r.push_back(Eigen::VectorXd::Zero(num_discrete_events+1));
   data.J.push_back(Eigen::MatrixXd::Zero(num_discrete_events+1, num_discrete_events));
   data.J.push_back(Eigen::MatrixXd::Zero(num_discrete_events+1, num_discrete_events));
   return data;
@@ -136,6 +135,8 @@ ConstraintComponentData STOConstraints::createConstraintsData(
 bool STOConstraints::isFeasible(const TimeDiscretization& time_discretization,
                                 ConstraintComponentData& data) const {
   computeDwellTimes(time_discretization, data.r[0]);
+  if (data.r[0].size() <= 1) return true;
+
   if (data.r[0].size() != minimum_dwell_times_.size()) {
     throw std::runtime_error(
         "[STOConstraints] : invalid size of minimum_dwell_times_ is detected! It should be " + std::to_string(data.r[0].size()));
@@ -148,17 +149,14 @@ bool STOConstraints::isFeasible(const TimeDiscretization& time_discretization,
 void STOConstraints::setSlackAndDual(
     const TimeDiscretization& time_discretization, 
     ConstraintComponentData& data) const {
-  const int num_phases = minimum_dwell_times_.size();
-  if (num_phases <= 1) return;
-
-  data.r[0].resize(num_phases);
   computeDwellTimes(time_discretization, data.r[0]);
+  if (data.r[0].size() <= 1) return;
+
   if (data.r[0].size() != minimum_dwell_times_.size()) {
     throw std::runtime_error(
         "[STOConstraints] : invalid size of minimum_dwell_times_ is detected! It should be " + std::to_string(data.r[0].size()));
   }
-  data.r[1].resize(num_phases);
-  data.r[1] = minimum_dwell_times_;
+  const int num_phases = data.r[0].size();
   data.J[0].resize(num_phases, num_phases-1);
   data.J[1].resize(num_phases, num_phases-1);
   auto& J = data.J[0];
@@ -180,6 +178,8 @@ void STOConstraints::evalConstraint(
     const TimeDiscretization& time_discretization, 
     ConstraintComponentData& data) const {
   computeDwellTimes(time_discretization, data.r[0]);
+  if (data.r[0].size() <= 1) return;
+
   if (data.r[0].size() != minimum_dwell_times_.size()) {
     throw std::runtime_error(
         "[STOConstraints] : invalid size of minimum_dwell_times_ is detected! It should be " + std::to_string(data.r[0].size()));
@@ -194,6 +194,8 @@ void STOConstraints::linearizeConstraints(
     const TimeDiscretization& time_discretization,  
     ConstraintComponentData& data, Eigen::VectorXd& lt) const {
   evalConstraint(time_discretization, data);
+  if (data.r[0].size() <= 1) return;
+
   lt.noalias() += data.J[0].transpose() * data.dual;
 }
 
@@ -201,6 +203,8 @@ void STOConstraints::linearizeConstraints(
 void STOConstraints::condenseSlackAndDual(ConstraintComponentData& data, 
                                           Eigen::VectorXd& lt,
                                           Eigen::MatrixXd& Qtt) const {
+  if (data.r[0].size() <= 1) return;
+
   pdipm::computeCondensingCoeffcient(data);
   lt.noalias() += data.J[0].transpose() * data.cond;
   data.cond.array() = data.dual.array() / data.slack.array();
@@ -211,17 +215,23 @@ void STOConstraints::condenseSlackAndDual(ConstraintComponentData& data,
 
 void STOConstraints::expandSlackAndDual(ConstraintComponentData& data, 
                                         Eigen::VectorXd& dts) const {
+  if (data.r[0].size() <= 1) return;
+
   data.dslack.noalias() = - data.J[0] * dts - data.residual;
   pdipm::computeDualDirection(data);
 }
 
 
 double STOConstraints::maxSlackStepSize(const ConstraintComponentData& data) const {
+  if (data.r[0].size() <= 1) return 1.0;
+
   return pdipm::fractionToBoundarySlack(fraction_to_boundary_rule_, data);
 }
 
 
 double STOConstraints::maxDualStepSize(const ConstraintComponentData& data) const {
+  if (data.r[0].size() <= 1) return 1.0;
+
   return pdipm::fractionToBoundaryDual(fraction_to_boundary_rule_, data);
 }
 
@@ -230,6 +240,7 @@ void STOConstraints::updateSlack(ConstraintComponentData& data,
                                  const double step_size) const {
   assert(step_size > 0);
   assert(step_size <= 1.0);
+  if (data.r[0].size() <= 1) return;
   data.slack.noalias() += step_size * data.dslack;
 }
 
@@ -238,6 +249,7 @@ void STOConstraints::updateDual(ConstraintComponentData& data,
                                 const double step_size) const {
   assert(step_size > 0);
   assert(step_size <= 1.0);
+  if (data.r[0].size() <= 1) return;
   data.dual.noalias() += step_size * data.ddual;
 }
 

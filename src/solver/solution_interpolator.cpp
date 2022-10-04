@@ -49,6 +49,7 @@ void SolutionInterpolator::interpolate(
       const int stored_grid_index = findStoredGridIndexAtImpactByTime(grid.t);
       if (stored_grid_index >= 0) {
         solution[i] = stored_solution_[stored_grid_index];
+        modifyImpactSolution(solution[i]);
         if ((i-2 >= 0) && (stored_grid_index-2 >= 0)) {
           solution[i-2].setSwitchingConstraintDimension(
               stored_solution_[stored_grid_index-2].dims());
@@ -87,8 +88,7 @@ void SolutionInterpolator::interpolate(
       solution[i] = stored_solution_[grid_index];
       continue;
     }
-    if ((stored_time_discretization_[grid_index+1].type == GridType::Impact)
-        || (stored_time_discretization_[grid_index+1].type == GridType::Lift)) {
+    if (stored_time_discretization_[grid_index+1].type != GridType::Intermediate) {
       interpolatePartial(robot, stored_solution_[grid_index],
                          stored_solution_[grid_index+1], alpha, solution[i]);
       continue;
@@ -96,6 +96,7 @@ void SolutionInterpolator::interpolate(
     interpolate(robot, stored_solution_[grid_index],
                 stored_solution_[grid_index+1], alpha, solution[i]);
   }
+  modifyTerminalSolution(solution[N]);
 }
 
 
@@ -178,6 +179,30 @@ void SolutionInterpolator::initEventSolution(const Robot& robot,
     s.mu[i] = s2.mu[i];
   }
   s.nu_passive = s2.nu_passive;
+  s.set_f_stack();
+  s.set_mu_stack();
+}
+
+
+void SolutionInterpolator::modifyImpactSolution(SplitSolution& s) {
+  s.u.setZero();
+  s.a.setZero();
+  s.nu_passive.setZero();
+}
+
+
+void SolutionInterpolator::modifyTerminalSolution(SplitSolution& s) {
+  s.u.setZero();
+  s.a.setZero();
+  s.dv.setZero();
+  for (auto& e : s.f) {
+    e.setZero();
+  }
+  s.beta.setZero();
+  for (auto& e : s.mu) {
+    e.setZero();
+  }
+  s.nu_passive.setZero();
   s.set_f_stack();
   s.set_mu_stack();
 }
