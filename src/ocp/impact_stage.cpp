@@ -62,6 +62,7 @@ void ImpactStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   kkt_residual.setContactDimension(impact_status.dimf());
   kkt_residual.setSwitchingConstraintDimension(0);
   kkt_residual.setZero();
+  data.performance_index.setZero();
   // eval cost and constraints
   data.performance_index.cost 
       = cost_->evalImpactCost(robot, impact_status, data.cost_data, grid_info, s);
@@ -92,6 +93,7 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   kkt_residual.setSwitchingConstraintDimension(0);
   kkt_matrix.setZero();
   kkt_residual.setZero();
+  data.performance_index.setZero();
   // eval cost and constraints
   data.performance_index.cost 
       = cost_->quadratizeImpactCost(robot, impact_status, data.cost_data,  

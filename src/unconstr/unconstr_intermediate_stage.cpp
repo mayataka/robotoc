@@ -54,6 +54,7 @@ void UnconstrIntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
                                         UnconstrOCPData& data, 
                                         SplitKKTResidual& kkt_residual) const {
   robot.updateKinematics(s.q);
+  data.performance_index.setZero();
   kkt_residual.setZero();
   data.performance_index.cost = cost_->evalStageCost(robot, contact_status_, 
                                                       data.cost_data, grid_info, s);
@@ -73,6 +74,7 @@ void UnconstrIntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
                                         SplitKKTMatrix& kkt_matrix,
                                         SplitKKTResidual& kkt_residual) const {
   robot.updateKinematics(s.q);
+  data.performance_index.setZero();
   kkt_matrix.setZero();
   kkt_residual.setZero();
   data.performance_index.cost = cost_->quadratizeStageCost(robot, contact_status_, 

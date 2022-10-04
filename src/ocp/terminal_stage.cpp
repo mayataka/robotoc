@@ -58,6 +58,7 @@ void TerminalStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   kkt_residual.setContactDimension(0);
   kkt_residual.setSwitchingConstraintDimension(0);
   kkt_residual.setZero();
+  data.performance_index.setZero();
   // eval cost and constraints
   data.performance_index.cost = cost_->evalTerminalCost(robot, data.cost_data, grid_info, s);
   // constraints_->evalConstraint(robot, contact_status, data.constraints_data, s);
@@ -82,6 +83,7 @@ void TerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   kkt_residual.setSwitchingConstraintDimension(0);
   kkt_matrix.setZero();
   kkt_residual.setZero();
+  data.performance_index.setZero();
   // eval cost and constraints
   data.performance_index.cost 
       = cost_->quadratizeTerminalCost(robot, data.cost_data, grid_info, s, 
