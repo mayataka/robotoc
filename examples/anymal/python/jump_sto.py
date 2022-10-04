@@ -15,7 +15,7 @@ robot = robotoc.Robot(model_info)
 
 dt = 0.02
 jump_length = np.array([0.8, 0, 0])
-flying_up_time = 0.15
+flying_up_time = 0.3
 flying_down_time = flying_up_time
 flying_time = flying_up_time + flying_down_time
 ground_time = 0.7
@@ -93,14 +93,14 @@ contact_status_standing.set_friction_coefficients(friction_coefficients)
 contact_sequence.init(contact_status_standing)
 
 contact_status_flying = robot.create_contact_status()
-contact_sequence.push_back(contact_status_flying, t0+ground_time-0.3, sto=True)
+contact_sequence.push_back(contact_status_flying, t0+ground_time, sto=True)
 
 contact_positions['LF_FOOT'] += jump_length
 contact_positions['LH_FOOT'] += jump_length
 contact_positions['RF_FOOT'] += jump_length
 contact_positions['RH_FOOT'] += jump_length
 contact_status_standing.set_contact_placements(contact_positions)
-contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0.1, sto=True)
+contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time, sto=True)
 
 # you can check the contact sequence via 
 # print(contact_sequence)
@@ -108,7 +108,7 @@ contact_sequence.push_back(contact_status_standing, t0+ground_time+flying_time-0
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(minimum_dwell_times=[0.15, 0.15, 0.65],
+sto_constraints = robotoc.STOConstraints(minimum_dwell_times=[0.15, 0.15, 0.7],
                                          barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
@@ -123,8 +123,6 @@ solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 1.0
 solver_options.max_dt_mesh = T/N 
 solver_options.max_iter = 200
-# solver_options.interpolation_order = robotoc.InterpolationOrder.Zero
-# solver_options.enable_solution_interpolation = False
 ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
 
 # Initial time and intial state 
@@ -149,7 +147,7 @@ kkt_data = [math.sqrt(e.kkt_error) for e in ocp_solver.get_solver_statistics().p
 ts_data = ocp_solver.get_solver_statistics().ts + [contact_sequence.event_times()] # append ts after convergence
 
 plot_ts = robotoc.utils.PlotConvergence()
-plot_ts.ylim = [0., 1.5]
+plot_ts.ylim = [0., 1.8]
 plot_ts.plot(kkt_data=kkt_data, ts_data=ts_data, fig_name='jump_sto', 
              save_dir='jump_sto_log')
 

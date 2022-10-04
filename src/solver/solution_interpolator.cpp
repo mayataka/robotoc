@@ -50,7 +50,7 @@ void SolutionInterpolator::interpolate(
       solution[i] = stored_solution_[stored_grid_index];
       if ((i-2 >= 0) && (stored_grid_index-2 >= 0)) {
         solution[i-2].setSwitchingConstraintDimension(
-            stored_solution_[stored_grid_index-2].dimf());
+            stored_solution_[stored_grid_index-2].dims());
         solution[i-2].xi_stack() = stored_solution_[stored_grid_index-2].xi_stack();
       }
       continue;

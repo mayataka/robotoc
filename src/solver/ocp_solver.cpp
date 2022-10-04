@@ -185,6 +185,8 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
           solution_interpolator_.interpolate(robots_[0], time_discretization_, s_);
         }
         dms_.initConstraints(robots_, time_discretization_, s_);
+        sto_.initConstraints(time_discretization_);
+        line_search_.clearFilter();
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }
