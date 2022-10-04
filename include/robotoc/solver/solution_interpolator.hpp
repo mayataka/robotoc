@@ -126,6 +126,10 @@ private:
   static void interpolatePartial(const Robot& robot, const SplitSolution& s1, 
                                  const SplitSolution& s2, const double alpha, 
                                  SplitSolution& s);
+
+  static void initEventSolution(const Robot& robot, const SplitSolution& s1, 
+                                const SplitSolution& s2, const double alpha, 
+                                SplitSolution& s);
 };
 
 } // namespace robotoc

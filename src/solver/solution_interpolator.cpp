@@ -44,21 +44,39 @@ void SolutionInterpolator::interpolate(
       solution[i] = stored_solution_[stored_time_discretization_.size()-1];
       continue;
     }
+
     if (grid.type == GridType::Impact) {
       const int stored_grid_index = findStoredGridIndexAtImpactByTime(grid.t);
-      assert(stored_grid_index >= 0);
-      solution[i] = stored_solution_[stored_grid_index];
-      if ((i-2 >= 0) && (stored_grid_index-2 >= 0)) {
-        solution[i-2].setSwitchingConstraintDimension(
-            stored_solution_[stored_grid_index-2].dims());
-        solution[i-2].xi_stack() = stored_solution_[stored_grid_index-2].xi_stack();
+      if (stored_grid_index >= 0) {
+        solution[i] = stored_solution_[stored_grid_index];
+        if ((i-2 >= 0) && (stored_grid_index-2 >= 0)) {
+          solution[i-2].setSwitchingConstraintDimension(
+              stored_solution_[stored_grid_index-2].dims());
+          solution[i-2].xi_stack() = stored_solution_[stored_grid_index-2].xi_stack();
+        }
+      }
+      else {
+        const int grid_index = findStoredGridIndexBeforeTime(grid.t);
+        const double alpha = (grid.t - stored_time_discretization_[grid_index].t) 
+                              / stored_time_discretization_[grid_index].dt;
+        initEventSolution(robot, stored_solution_[grid_index], 
+                          stored_solution_[grid_index+1], alpha, solution[i]);
       }
       continue;
     }
+
     if (grid.type == GridType::Lift) {
       const int stored_grid_index = findStoredGridIndexAtLiftByTime(grid.t);
-      assert(stored_grid_index >= 0);
-      solution[i] = stored_solution_[stored_grid_index];
+      if (stored_grid_index >= 0) {
+        solution[i] = stored_solution_[stored_grid_index];
+      }
+      else {
+        const int grid_index = findStoredGridIndexBeforeTime(grid.t);
+        const double alpha = (grid.t - stored_time_discretization_[grid_index].t) 
+                              / stored_time_discretization_[grid_index].dt;
+        initEventSolution(robot, stored_solution_[grid_index], 
+                          stored_solution_[grid_index+1], alpha, solution[i]);
+      }
       continue;
     }
 
@@ -72,7 +90,7 @@ void SolutionInterpolator::interpolate(
     if ((stored_time_discretization_[grid_index+1].type == GridType::Impact)
         || (stored_time_discretization_[grid_index+1].type == GridType::Lift)) {
       interpolatePartial(robot, stored_solution_[grid_index],
-                        stored_solution_[grid_index+1], alpha, solution[i]);
+                         stored_solution_[grid_index+1], alpha, solution[i]);
       continue;
     }
     interpolate(robot, stored_solution_[grid_index],
@@ -107,13 +125,8 @@ void SolutionInterpolator::interpolate(const Robot& robot,
       s.mu[i] = s1.mu[i];
   }
   s.nu_passive = (1.0 - alpha) * s1.nu_passive + alpha * s2.nu_passive;
-  s.setContactStatus(s1);
   s.set_f_stack();
   s.set_mu_stack();
-  s.setSwitchingConstraintDimension(s1.dims());
-  if (s.dims() > 0) {
-    s.xi_stack() = s1.xi_stack();
-  }
 }
 
 
@@ -138,13 +151,35 @@ void SolutionInterpolator::interpolatePartial(const Robot& robot,
     s.mu[i] = s1.mu[i];
   }
   s.nu_passive = s1.nu_passive;
-  s.setContactStatus(s1);
   s.set_f_stack();
   s.set_mu_stack();
-  s.setSwitchingConstraintDimension(s1.dims());
-  if (s.dims() > 0) {
-    s.xi_stack() = s1.xi_stack();
+}
+
+
+void SolutionInterpolator::initEventSolution(const Robot& robot, 
+                                             const SplitSolution& s1, 
+                                             const SplitSolution& s2, 
+                                             const double alpha, 
+                                             SplitSolution& s) {
+  assert(alpha >= 0.0);
+  assert(alpha <= 1.0);
+  robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
+  s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
+  s.a = (1.0 - alpha) * s1.a + alpha * s2.a;
+  s.dv.setZero();
+  s.u = s2.u;
+  for (size_t i=0; i<s2.f.size(); ++i) {
+    s.f[i] = s2.f[i];
   }
+  s.lmd  = (1.0 - alpha) * s1.lmd + alpha * s2.lmd;
+  s.gmm  = (1.0 - alpha) * s1.gmm + alpha * s2.gmm;
+  s.beta = s2.beta;
+  for (size_t i=0; i<s2.mu.size(); ++i) {
+    s.mu[i] = s2.mu[i];
+  }
+  s.nu_passive = s2.nu_passive;
+  s.set_f_stack();
+  s.set_mu_stack();
 }
 
 } // namespace robotoc
