@@ -97,17 +97,6 @@ public:
   void initConstraints();
 
   ///
-  /// @brief Performs single Newton-type iteration and updates the solution.
-  /// @param[in] t Initial time of the horizon. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @remark The linear and angular velocities of the floating base are assumed
-  /// to be expressed in the body local coordinate.
-  ///
-  void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
-
-  ///
   /// @brief Solves the optimal control problem. Internally calls 
   /// updateSolutio() and discretize().
   /// @param[in] t Initial time of the horizon. 
@@ -240,6 +229,17 @@ private:
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
   Timer timer_;
+
+  ///
+  /// @brief Performs single Newton-type iteration and updates the solution.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @remark The linear and angular velocities of the floating base are assumed
+  /// to be expressed in the body local coordinate.
+  ///
+  void updateSolution(const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v);
 
   void resizeData();
 

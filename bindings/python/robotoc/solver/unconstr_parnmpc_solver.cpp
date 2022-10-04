@@ -22,8 +22,6 @@ PYBIND11_MODULE(unconstr_parnmpc_solver, m) {
           py::arg("t"))
     .def("init_constraints", &UnconstrParNMPCSolver::initConstraints)
     .def("init_backward_correction", &UnconstrParNMPCSolver::initBackwardCorrection)
-    .def("update_solution", &UnconstrParNMPCSolver::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"))
     .def("solve", &UnconstrParNMPCSolver::solve,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=true)
     .def("get_solver_statistics", &UnconstrParNMPCSolver::getSolverStatistics)

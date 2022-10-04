@@ -96,16 +96,6 @@ public:
   void initBackwardCorrection();
 
   ///
-  /// @brief Performs single Newton-type iteration, computes the primal-dual 
-  /// Newon direction, and updates the solution.
-  /// @param[in] t Initial time of the horizon. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  ///
-  void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
-
-  ///
   /// @brief Solves the optimal control problem. Internally calls 
   /// updateSolution().
   /// @param[in] t Initial time of the horizon. 
@@ -191,6 +181,16 @@ private:
   SolverOptions solver_options_;
   SolverStatistics solver_statistics_;
   Timer timer_;
+
+  ///
+  /// @brief Performs single Newton-type iteration, computes the primal-dual 
+  /// Newon direction, and updates the solution.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  ///
+  void updateSolution(const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v);
    
 };
 
