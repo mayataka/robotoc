@@ -9,7 +9,7 @@
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/ocp_solver.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
@@ -43,9 +43,8 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] T Length of the horizon. 
   /// @param[in] N Number of the discretization grids of the horizon. 
-  /// @param[in] nthreads Number of threads used in the parallel computing.
   ///
-  MPCCrawl(const Robot& robot, const double T, const int N, const int nthreads);
+  MPCCrawl(const Robot& robot, const double T, const int N);
 
   ///
   /// @brief Default constructor. 
@@ -149,7 +148,7 @@ public:
   /// @brief Gets of the local LQR policies over the horizon. 
   /// @return const reference to the local LQR policies.
   ///
-  const hybrid_container<LQRPolicy>& getLQRPolicy() const;
+  const aligned_vector<LQRPolicy>& getLQRPolicy() const;
 
   ///
   /// @brief Computes the KKT residual of the optimal control problem. 

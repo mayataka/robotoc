@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/constraints/joint_velocity_lower_limit.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -14,7 +15,8 @@ PYBIND11_MODULE(joint_velocity_lower_limit, m) {
   py::class_<JointVelocityLowerLimit, ConstraintComponentBase, 
              std::shared_ptr<JointVelocityLowerLimit>>(m, "JointVelocityLowerLimit")
     .def(py::init<const Robot&>(),
-         py::arg("robot"));
+         py::arg("robot"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(JointVelocityLowerLimit);
 }
 
 } // namespace python

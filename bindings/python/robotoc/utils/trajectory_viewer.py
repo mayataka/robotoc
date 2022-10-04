@@ -7,19 +7,16 @@ import math
 import time
 
 class TrajectoryViewer:
-    def __init__(self, path_to_urdf, path_to_pkg=None, 
-                 base_joint_type=robotoc.BaseJointType.FixedBase, 
-                 viewer_type='gepetto'):
-        self.path_to_urdf = abspath(path_to_urdf)
-        if path_to_pkg is None:
-            path_to_pkg = join(dirname(self.path_to_urdf), '../..')
-        if base_joint_type == robotoc.BaseJointType.FloatingBase:
-            self.robot= RobotWrapper.BuildFromURDF(self.path_to_urdf, path_to_pkg,
+    def __init__(self, model_info: robotoc.RobotModelInfo, pkg_path=None, viewer_type='gepetto'):
+        self.model_info = model_info
+        urdf_path = abspath(model_info.urdf_path)
+        if pkg_path is None:
+           pkg_path = join(dirname(urdf_path), '../..')
+        if model_info.base_joint_type == robotoc.BaseJointType.FloatingBase:
+            self.robot= RobotWrapper.BuildFromURDF(urdf_path, pkg_path,
                                                    pinocchio.JointModelFreeFlyer())
         else:
-            self.robot= RobotWrapper.BuildFromURDF(self.path_to_urdf, path_to_pkg)
-        self.path_to_urdf = path_to_urdf
-        self.base_joint_type = base_joint_type
+            self.robot= RobotWrapper.BuildFromURDF(urdf_path, pkg_path)
 
         self.play_speed = 1.0
 
@@ -62,9 +59,8 @@ class TrajectoryViewer:
             return NotImplementedError()
 
 
-    def set_contact_info(self, contact_frames, mu):
+    def set_contact_info(self, mu):
         self.display_contact = True
-        self.contact_frames = contact_frames
         self.mu = mu
 
 
@@ -83,20 +79,28 @@ class TrajectoryViewer:
             self.zoom = zoom
 
 
-    def display(self, dt, q_traj, f_traj=None):
+    def display(self, time_discretization, q_traj, f_traj=None):
+        dt = []
+        q = []
+        for i in range(len(time_discretization)-1):
+            if time_discretization[i].type is not robotoc.GridType.Impact:
+                dt.append(time_discretization[i].dt)
+                q.append(q_traj[i])
+        q.append(q_traj[-1])
+        f = None
+        if f_traj is not None:
+            f = []
+            for i in range(len(time_discretization)-1):
+                if time_discretization[i].type is not robotoc.GridType.Impact:
+                    f.append(f_traj[i])
+            f.append(f_traj[-2])
         if self.viewer_type == 'gepetto':
-            self.display_gepetto(dt, q_traj, f_traj)
+            self.display_gepetto(dt, q, f)
         elif self.viewer_type == 'meshcat':
-            self.display_meshcat(dt, q_traj)
+            self.display_meshcat(dt, q)
 
 
     def display_gepetto(self, dt, q_traj, f_traj):
-        if isinstance(dt, float):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
-        assert len(q_traj)-1 == len(dt)
-        if f_traj is not None:
-            assert len(dt) == len(f_traj)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(windowName=self.window_name, loadModel=False)
         self.robot.loadViewerModel(rootNodeName=self.window_name)
@@ -110,6 +114,9 @@ class TrajectoryViewer:
         gui.addFloor(floor_name)
         gui.setColor(floor_name, [0.7, 0.7, 0.7, 1.0])
         gui.setLightingMode(floor_name, 'OFF')
+        robot = robotoc.Robot(self.model_info)
+        if self.display_contact:
+            self.contact_frames = robot.contact_frames()
         # init contact forces and friction cones
         if f_traj is not None and self.display_contact:
             # create cones
@@ -157,8 +164,6 @@ class TrajectoryViewer:
         # display
         if f_traj is not None:
             contact_types = [robotoc.ContactType.PointContact for frame in self.contact_frames]
-            robot = robotoc.Robot(self.path_to_urdf, self.base_joint_type, 
-                                  self.contact_frames, contact_types, [0, 0])
             for q, f, dts in zip(q_traj, f_traj, dt):
                 robot.forward_kinematics(q)
                 for i in range(len(self.contact_frames)):
@@ -192,10 +197,6 @@ class TrajectoryViewer:
 
 
     def display_meshcat(self, dt, q_traj, open=True):
-        if isinstance(dt, float):
-            time_steps = dt * np.ones(len(q_traj)-1)
-            dt = time_steps
-        assert len(q_traj)-1 == len(dt)
         self.robot.setVisualizer(self.viewer)
         self.robot.initViewer(open=open)
         self.robot.loadViewerModel(rootNodeName='robotoc.TrajectoryViewer')

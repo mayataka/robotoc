@@ -5,15 +5,12 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/cost/cost_function_component_base.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/impulse/impulse_split_solution.hpp"
-#include "robotoc/impulse/impulse_split_kkt_residual.hpp"
-#include "robotoc/impulse/impulse_split_kkt_matrix.hpp"
 #include "robotoc/cost/configuration_space_ref_base.hpp"
 
 
@@ -139,26 +136,26 @@ public:
   void set_v_weight_terminal(const Eigen::VectorXd& v_weight_terminal);
 
   ///
-  /// @brief Sets the weight vector on the configuration q at impulse stages. 
-  /// @param[in] q_weight_impulse Weight vector on the configuration q at impulse  
+  /// @brief Sets the weight vector on the configuration q at impact stages. 
+  /// @param[in] q_weight_impact Weight vector on the configuration q at impact  
   /// stages. Size must be Robot::dimv().
   ///
-  void set_q_weight_impulse(const Eigen::VectorXd& q_weight_impulse);
+  void set_q_weight_impact(const Eigen::VectorXd& q_weight_impact);
 
   ///
-  /// @brief Sets the weight vector on the velocity v at the impulse stages. 
-  /// @param[in] v_weight_impulse Weight vector on the velocity v at the impulse  
+  /// @brief Sets the weight vector on the velocity v at the impact stages. 
+  /// @param[in] v_weight_impact Weight vector on the velocity v at the impact  
   /// stages. Size must be Robot::dimv().
   ///
-  void set_v_weight_impulse(const Eigen::VectorXd& v_weight_impulse);
+  void set_v_weight_impact(const Eigen::VectorXd& v_weight_impact);
 
   ///
-  /// @brief Sets the weight vector on the impulse change in the velocity dv at 
-  /// the impulse stages. 
-  /// @param[in] dv_weight_impulse Weight vector on the impulse change in the velocity
-  /// the impulse stages. Size must be Robot::dimv().
+  /// @brief Sets the weight vector on the impact change in the velocity dv at 
+  /// the impact stages. 
+  /// @param[in] dv_weight_impact Weight vector on the impact change in the velocity
+  /// the impact stages. Size must be Robot::dimv().
   ///
-  void set_dv_weight_impulse(const Eigen::VectorXd& dv_weight_impulse);
+  void set_dv_weight_impact(const Eigen::VectorXd& dv_weight_impact);
 
   ///
   /// @brief Evaluate if the cost on the configuration q is active for given 
@@ -243,31 +240,31 @@ public:
                                const GridInfo& grid_info, const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalImpulseCost(Robot& robot, const ImpulseStatus& impulse_status, 
+  double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                          CostFunctionData& data, const GridInfo& grid_info, 
-                         const ImpulseSplitSolution& s) const override;
+                         const SplitSolution& s) const override;
 
-  void evalImpulseCostDerivatives(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostDerivatives(Robot& robot, const ImpactStatus& impact_status, 
                                   CostFunctionData& data, const GridInfo& grid_info, 
-                                  const ImpulseSplitSolution& s, 
-                                  ImpulseSplitKKTResidual& kkt_residual) const override;
+                                  const SplitSolution& s, 
+                                  SplitKKTResidual& kkt_residual) const override;
 
-  void evalImpulseCostHessian(Robot& robot, const ImpulseStatus& impulse_status, 
+  void evalImpactCostHessian(Robot& robot, const ImpactStatus& impact_status, 
                               CostFunctionData& data, const GridInfo& grid_info, 
-                              const ImpulseSplitSolution& s, 
-                              ImpulseSplitKKTMatrix& kkt_matrix) const override;
+                              const SplitSolution& s, 
+                              SplitKKTMatrix& kkt_matrix) const override;
 
 private:
   int dimq_, dimv_, dimu_;
   Eigen::VectorXd q_ref_, v_ref_, u_ref_, 
                   q_weight_, v_weight_, a_weight_, u_weight_,
                   q_weight_terminal_, v_weight_terminal_, 
-                  q_weight_impulse_, v_weight_impulse_, dv_weight_impulse_;
+                  q_weight_impact_, v_weight_impact_, dv_weight_impact_;
   std::shared_ptr<ConfigurationSpaceRefBase> ref_;
   bool use_nonconst_ref_, 
        enable_q_cost_, enable_v_cost_, enable_a_cost_, enable_u_cost_,
        enable_q_cost_terminal_, enable_v_cost_terminal_,
-       enable_q_cost_impulse_, enable_v_cost_impulse_, enable_dv_cost_impulse_;
+       enable_q_cost_impact_, enable_v_cost_impact_, enable_dv_cost_impact_;
 };
 
 } // namespace robotoc

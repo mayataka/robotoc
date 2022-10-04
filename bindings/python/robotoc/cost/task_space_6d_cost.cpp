@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/cost/task_space_6d_cost.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -41,9 +42,10 @@ PYBIND11_MODULE(task_space_6d_cost, m) {
     .def("set_weight_terminal", &TaskSpace6DCost::set_weight_terminal,
           py::arg("weight_position_terminal"), 
           py::arg("weight_rotation_terminal"))
-    .def("set_weight_impulse", &TaskSpace6DCost::set_weight_impulse,
-          py::arg("weight_position_impulse"), 
-          py::arg("weight_rotation_impulse"));
+    .def("set_weight_impact", &TaskSpace6DCost::set_weight_impact,
+          py::arg("weight_position_impact"), 
+          py::arg("weight_rotation_impact"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(TaskSpace6DCost);
 }
 
 } // namespace python

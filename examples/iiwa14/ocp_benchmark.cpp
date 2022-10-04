@@ -20,8 +20,9 @@
 
 int main() {
   // Create a robot.
-  const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
-  robotoc::Robot robot(path_to_urdf);
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../iiwa_description/urdf/iiwa14.urdf";
+  robotoc::Robot robot(model_info);
 
   // Create a cost function.
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
@@ -59,9 +60,9 @@ int main() {
   const double T = 1;
   const int N = 20;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  auto solver_options = robotoc::SolverOptions();
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
@@ -69,9 +70,10 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;

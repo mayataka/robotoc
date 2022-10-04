@@ -3,12 +3,13 @@ import numpy as np
 import math
 
 
-path_to_urdf = '../icub_description/urdf/icub.urdf'
-contact_frames = ['l_sole', 'r_sole']
-contact_types = [robotoc.ContactType.SurfaceContact for i in contact_frames]
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../icub_description/urdf/icub.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.surface_contacts = [robotoc.ContactModelInfo('l_sole', baumgarte_time_step),
+                               robotoc.ContactModelInfo('r_sole', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 dt = 0.02
 jump_length = np.array([0.5, 0, 0])
@@ -34,16 +35,16 @@ q_weight = np.array([0, 1, 1, 100, 100, 100,
 q_weight_terminal = q_weight
 v_weight = np.full(robot.dimv(), 1.0e-03)
 a_weight = np.full(robot.dimv(), 1.0e-05)
-q_weight_impulse = 1.0 * q_weight
-v_weight_impulse = 1.0 * v_weight
+q_weight_impact = 1.0 * q_weight
+v_weight_impact = 1.0 * v_weight
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
 config_cost.set_q_weight_terminal(q_weight)
-config_cost.set_q_weight_impulse(q_weight_impulse)
+config_cost.set_q_weight_impact(q_weight_impact)
 config_cost.set_v_weight(v_weight)
 config_cost.set_v_weight_terminal(v_weight)
-config_cost.set_v_weight_impulse(v_weight_impulse)
+config_cost.set_v_weight_impact(v_weight_impact)
 config_cost.set_a_weight(a_weight)
 cost.push_back(config_cost)
 
@@ -100,7 +101,7 @@ contact_sequence.push_back(contact_status_standing, t0+2*ground_time+2*flying_ti
 # Create the STO cost function. This is necessary even empty one to construct an OCP with a STO problem
 sto_cost = robotoc.STOCostFunction()
 # Create the STO constraints 
-sto_constraints = robotoc.STOConstraints(min_dt=[0.6, 0.2, 0.6, 0.2, 0.6],
+sto_constraints = robotoc.STOConstraints(minimum_dwell_times=[0.6, 0.2, 0.6, 0.2, 0.6],
                                          barrier_param=1.0e-03, 
                                          fraction_to_boundary_rule=0.995)
 
@@ -114,29 +115,28 @@ ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints,
 solver_options = robotoc.SolverOptions()
 solver_options.kkt_tol_mesh = 0.1
 solver_options.max_dt_mesh = T/N 
-solver_options.max_iter = 300
+solver_options.max_iter = 350
 solver_options.initial_sto_reg_iter = 10 
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options)
 
 # Initial time and intial state 
 t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
+ocp_solver.discretize(t)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 
-ocp_solver.mesh_refinement(t)
-
+ocp_solver.init_constraints()
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
 print(ocp_solver.get_solver_statistics())
 
 # Display results
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                        viewer_type='gepetto')
-viewer.set_contact_info(robot.contact_frames(), mu)
-time_discretization = ocp_solver.get_time_discretization()
-viewer.display(time_discretization.time_steps(), ocp_solver.get_solution('q'), 
+viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
+viewer.set_contact_info(mu=mu)
+viewer.display(ocp_solver.get_time_discretization(), 
+               ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

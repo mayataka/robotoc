@@ -1,32 +1,13 @@
 #ifndef ROBOTOC_CONSTRAINT_COMPONENT_BASE_HXX_
 #define ROBOTOC_CONSTRAINT_COMPONENT_BASE_HXX_
 
+#include "robotoc/constraints/constraint_component_base.hpp"
 #include "robotoc/constraints/pdipm.hpp"
+
 #include <cassert>
-#include <stdexcept>
-#include <iostream>
 
 
 namespace robotoc {
-
-inline ConstraintComponentBase::ConstraintComponentBase(
-    const double barrier_param, const double fraction_to_boundary_rule) 
-  : barrier_(barrier_param),
-    fraction_to_boundary_rule_(fraction_to_boundary_rule) {
-  if (barrier_param <= 0) {
-    throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'barrier_param' must be positive!");
-  }
-  if (fraction_to_boundary_rule <= 0) {
-    throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive!");
-  }
-  if (fraction_to_boundary_rule >= 1) {
-    throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1!");
-  }
-}
-
 
 inline double ConstraintComponentBase::maxSlackStepSize(
     const ConstraintComponentData& data) const {
@@ -51,45 +32,6 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
                                                 const double step_size) {
   assert(step_size > 0);
   data.dual.noalias() += step_size * data.ddual;
-}
-
-
-inline double ConstraintComponentBase::getBarrierParam() const {
-  return barrier_;
-}
-
-
-inline double ConstraintComponentBase::getFractionToBoundaryRule() const {
-  return fraction_to_boundary_rule_;
-}
-
-
-inline void ConstraintComponentBase::setBarrierParam(const double barrier_param) {
-  if (barrier_param <= 0) {
-    throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'barrier_param' must be positive");
-  }
-  barrier_ = barrier_param;
-}
-
-
-inline void ConstraintComponentBase::setFractionToBoundaryRule(
-    const double fraction_to_boundary_rule) {
-  if (fraction_to_boundary_rule <= 0) {
-    throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be positive");
-  }
-  if (fraction_to_boundary_rule >= 1) {
-    throw std::out_of_range(
-        "[ConstraintComponentBase] invalid argment: 'fraction_to_boundary_rule' must be less than 1");
-  }
-  fraction_to_boundary_rule_ = fraction_to_boundary_rule;
-}
-
-
-inline void ConstraintComponentBase::setSlackAndDualPositive(
-    ConstraintComponentData& data) const {
-  pdipm::setSlackAndDualPositive(barrier_, data);
 }
 
 

@@ -6,7 +6,7 @@
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/task_space_3d_cost.hpp"
@@ -31,15 +31,15 @@
 
 
 int main(int argc, char *argv[]) {
-  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  const std::vector<std::string> contact_frames = {"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}; 
-  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact};
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../anymal_b_simple_description/urdf/anymal.urdf";
+  model_info.base_joint_type = robotoc::BaseJointType::FloatingBase;
   const double baumgarte_time_step = 0.04;
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, contact_types, baumgarte_time_step);
+  model_info.point_contacts = {robotoc::ContactModelInfo("LF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("LH_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RH_FOOT", baumgarte_time_step)};
+  robotoc::Robot robot(model_info);
 
   const double dt = 0.01;
   const Eigen::Vector3d jump_length = {0.5, 0, 0};
@@ -71,21 +71,21 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1e-01);
-  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight_impulse << 1, 1, 1, 1, 1, 1,  
+  Eigen::VectorXd q_weight_impact(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impact << 1, 1, 1, 1, 1, 1,  
                100, 100, 100, 
                100, 100, 100,
                100, 100, 100,
                100, 100, 100;
-  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 100);
+  Eigen::VectorXd v_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 100);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_weight_terminal(q_weight);
-  config_cost->set_q_weight_impulse(q_weight_impulse);
+  config_cost->set_q_weight_impact(q_weight_impact);
   config_cost->set_v_weight(v_weight);
   config_cost->set_v_weight_terminal(v_weight);
-  config_cost->set_v_weight_impulse(v_weight_impulse);
+  config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_u_weight(u_weight);
   cost->push_back(config_cost);
 
@@ -169,9 +169,9 @@ int main(int argc, char *argv[]) {
   const double T = t0 + flying_time + 2 * ground_time; 
   const int N = T / dt;
   robotoc::OCP ocp(robot, cost, constraints, contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  auto solver_options = robotoc::SolverOptions();
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
@@ -179,12 +179,13 @@ int main(int argc, char *argv[]) {
   const Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
-  ocp_solver.initConstraints(t);
+  ocp_solver.initConstraints();
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;

@@ -8,7 +8,7 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/com_ref_base.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/mpc/contact_planner_base.hpp"
 
 

@@ -14,8 +14,7 @@ namespace robotoc {
 inline ContactStatus::ContactStatus(
     const std::vector<ContactType>& contact_types, 
     const std::vector<std::string>& contact_frame_names,
-    const double default_friction_coefficients,
-    const int contact_mode_id)
+    const double default_friction_coefficients)
   : contact_types_(contact_types),
     contact_frame_names_(contact_frame_names),
     is_contact_active_(contact_types.size(), false),
@@ -26,7 +25,6 @@ inline ContactStatus::ContactStatus(
     dimf_(0),
     max_contacts_(contact_types.size()),
     max_num_contacts_(contact_types.size()),
-    contact_mode_id_(contact_mode_id),
     has_active_contacts_(false) {
   if (contact_types.size() != contact_frame_names.size()) {
     throw std::invalid_argument(
@@ -49,12 +47,7 @@ inline ContactStatus::ContactStatus()
     dimf_(0),
     max_contacts_(0),
     max_num_contacts_(0),
-    contact_mode_id_(0),
     has_active_contacts_(false) {
-}
-
-
-inline ContactStatus::~ContactStatus() {
 }
 
 
@@ -459,16 +452,6 @@ inline int ContactStatus::findContactIndex(
     }
   }
   throw std::runtime_error("[ContactStatus] cannot find the input contact_frame_name: '" + contact_frame_name + "'");
-}
-
-
-inline void ContactStatus::setContactModeId(const int contact_mode_id) {
-  contact_mode_id_ = contact_mode_id;
-}
-
-
-inline int ContactStatus::contactModeId() const {
-  return contact_mode_id_;
 }
 
 

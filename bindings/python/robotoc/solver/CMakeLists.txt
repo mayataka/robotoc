@@ -1,3 +1,4 @@
+pybind11_add_robotoc_module(interpolation_order)
 pybind11_add_robotoc_module(solver_options)
 pybind11_add_robotoc_module(solver_statistics)
 pybind11_add_robotoc_module(ocp_solver)

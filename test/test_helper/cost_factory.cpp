@@ -40,9 +40,9 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimu());
   const Eigen::VectorXd q_weight_terminal = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   const Eigen::VectorXd v_weight_terminal = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd q_weight_impulse = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd dv_weight_impulse = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd q_weight_impact = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd v_weight_impact = Eigen::VectorXd::Random(robot.dimv()).array().abs();
+  const Eigen::VectorXd dv_weight_impact = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_ref(q_ref);
   config_cost->set_v_weight(v_weight);
@@ -52,9 +52,9 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   config_cost->set_u_ref(u_ref);
   config_cost->set_q_weight_terminal(q_weight_terminal);
   config_cost->set_v_weight_terminal(v_weight_terminal);
-  config_cost->set_q_weight_impulse(q_weight_impulse);
-  config_cost->set_v_weight_impulse(v_weight_impulse);
-  config_cost->set_dv_weight_impulse(dv_weight_impulse);
+  config_cost->set_q_weight_impact(q_weight_impact);
+  config_cost->set_v_weight_impact(v_weight_impact);
+  config_cost->set_dv_weight_impact(dv_weight_impact);
   cost->push_back(config_cost);
 
   if (robot.maxNumContacts() > 0) {
@@ -76,7 +76,7 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
       = std::make_shared<ConfigurationSpaceCost>(robot, time_varying_config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight_terminal);
-  time_varying_config_cost->set_q_weight_impulse(q_weight_impulse);
+  time_varying_config_cost->set_q_weight_impact(q_weight_impact);
   cost->push_back(time_varying_config_cost);
 
   return cost;

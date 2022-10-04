@@ -5,8 +5,11 @@ namespace robotoc {
 
 std::ostream& operator<<(std::ostream& os, 
                          const RiccatiFactorization& riccati) {
-  os << "Riccati factorization:" << std::endl;
-  riccati.disp(os);
+  os << "RiccatiFactorization:" << "\n";
+  for (int i=0; i<riccati.size(); ++i) {
+    os << "i: " << i << "\n";
+    os << riccati[i] << "\n";
+  }
   return os;
 }
 

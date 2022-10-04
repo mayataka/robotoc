@@ -16,7 +16,7 @@
 #include "robotoc/robot/point_contact.hpp"
 #include "robotoc/robot/surface_contact.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
+#include "robotoc/robot/impact_status.hpp"
 #include "robotoc/utils/aligned_vector.hpp"
 
 
@@ -29,6 +29,7 @@ namespace robotoc {
 ///
 struct RobotProperties {
   Eigen::VectorXd generalized_momentum_bias; 
+  bool has_generalized_momentum_bias = false;
 };
 
 } // namespace robotoc 

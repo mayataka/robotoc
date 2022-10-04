@@ -5,6 +5,9 @@
 #include <memory>
 
 #include "robotoc/robot/robot.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
 
 
@@ -37,12 +40,11 @@ void createConstraintsData(
 /// @param[in] s Split solution.
 /// @return true if s is feasible. false if not.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 bool isFeasible(const std::vector<ConstraintComponentBaseTypePtr>& constraints,
                 Robot& robot, const ContactStatusType& contact_status, 
                 std::vector<ConstraintComponentData>& data, 
-                const SplitSolutionType& s);
+                const SplitSolution& s);
 
 ///
 /// @brief Sets the slack and dual variables of each constraint components. 
@@ -52,12 +54,11 @@ bool isFeasible(const std::vector<ConstraintComponentBaseTypePtr>& constraints,
 /// @param[in, out] data Vector of the constraints data. 
 /// @param[in] s Split solution.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 void setSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s);
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s);
 
 ///
 /// @brief Computes the primal residual, residual in the complementary 
@@ -68,12 +69,11 @@ void setSlackAndDual(
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 void evalConstraint(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s);
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s);
 
 ///
 /// @brief Evaluates the constraints (i.e., calls evalConstraint()) and adds 
@@ -85,13 +85,12 @@ void evalConstraint(
 /// @param[in] s Split solution.
 /// @param[in, out] kkt_residual Split KKT residual.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType, 
-          typename SplitSolutionType, typename SplitKKTResidualType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 void linearizeConstraints(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolutionType& s, 
-    SplitKKTResidualType& kkt_residual);
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual);
 
 ///
 /// @brief Condenses the slack and dual variables. linearizeConstraints() must 
@@ -104,13 +103,12 @@ void linearizeConstraints(
 /// @param[in, out] kkt_residual Split KKT residual. The condensed residuals are 
 /// added to this object.
 ///
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType,
-          typename SplitKKTMatrixType, typename SplitKKTResidualType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 void condenseSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     const ContactStatusType& contact_status,
-    std::vector<ConstraintComponentData>& data, SplitKKTMatrixType& kkt_matrix, 
-    SplitKKTResidualType& kkt_residual);
+    std::vector<ConstraintComponentData>& data, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual);
 
 ///
 /// @brief Expands the slack and dual, i.e., computes the directions of the 

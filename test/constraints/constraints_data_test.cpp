@@ -20,11 +20,11 @@ TEST_F(ConstraintsDataTest, defaultConstructor) {
   EXPECT_FALSE(data.isPositionLevelValid());
   EXPECT_FALSE(data.isVelocityLevelValid());
   EXPECT_FALSE(data.isAccelerationLevelValid());
-  EXPECT_FALSE(data.isImpulseLevelValid());
+  EXPECT_FALSE(data.isImpactLevelValid());
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_TRUE(data.velocity_level_data.empty());
   EXPECT_TRUE(data.acceleration_level_data.empty());
-  EXPECT_TRUE(data.impulse_level_data.empty());
+  EXPECT_TRUE(data.impact_level_data.empty());
 }
 
 
@@ -34,11 +34,11 @@ TEST_F(ConstraintsDataTest, timestep0) {
   EXPECT_FALSE(data.isPositionLevelValid());
   EXPECT_FALSE(data.isVelocityLevelValid());
   EXPECT_TRUE(data.isAccelerationLevelValid());
-  EXPECT_FALSE(data.isImpulseLevelValid());
+  EXPECT_FALSE(data.isImpactLevelValid());
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_TRUE(data.velocity_level_data.empty());
   EXPECT_TRUE(data.acceleration_level_data.empty());
-  EXPECT_TRUE(data.impulse_level_data.empty());
+  EXPECT_TRUE(data.impact_level_data.empty());
 }
 
 
@@ -48,11 +48,11 @@ TEST_F(ConstraintsDataTest, timestep1) {
   EXPECT_FALSE(data.isPositionLevelValid());
   EXPECT_TRUE(data.isVelocityLevelValid());
   EXPECT_TRUE(data.isAccelerationLevelValid());
-  EXPECT_FALSE(data.isImpulseLevelValid());
+  EXPECT_FALSE(data.isImpactLevelValid());
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_TRUE(data.velocity_level_data.empty());
   EXPECT_TRUE(data.acceleration_level_data.empty());
-  EXPECT_TRUE(data.impulse_level_data.empty());
+  EXPECT_TRUE(data.impact_level_data.empty());
 }
 
 
@@ -62,11 +62,11 @@ TEST_F(ConstraintsDataTest, timestep2) {
   EXPECT_TRUE(data.isPositionLevelValid());
   EXPECT_TRUE(data.isVelocityLevelValid());
   EXPECT_TRUE(data.isAccelerationLevelValid());
-  EXPECT_FALSE(data.isImpulseLevelValid());
+  EXPECT_FALSE(data.isImpactLevelValid());
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_TRUE(data.velocity_level_data.empty());
   EXPECT_TRUE(data.acceleration_level_data.empty());
-  EXPECT_TRUE(data.impulse_level_data.empty());
+  EXPECT_TRUE(data.impact_level_data.empty());
 }
 
 
@@ -76,11 +76,11 @@ TEST_F(ConstraintsDataTest, timestepminus1) {
   EXPECT_FALSE(data.isPositionLevelValid());
   EXPECT_FALSE(data.isVelocityLevelValid());
   EXPECT_FALSE(data.isAccelerationLevelValid());
-  EXPECT_TRUE(data.isImpulseLevelValid());
+  EXPECT_TRUE(data.isImpactLevelValid());
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_TRUE(data.velocity_level_data.empty());
   EXPECT_TRUE(data.acceleration_level_data.empty());
-  EXPECT_TRUE(data.impulse_level_data.empty());
+  EXPECT_TRUE(data.impact_level_data.empty());
 }
 
 } // namespace robotoc

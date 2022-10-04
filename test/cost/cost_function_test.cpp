@@ -7,9 +7,9 @@
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 
 #include "robot_factory.hpp"
 
@@ -70,7 +70,7 @@ void CostFunctionTest::testStageCost(Robot& robot) {
   auto contact_status = robot.createContactStatus();
   contact_status.setRandom();
 
-  grid_info.time_stage = 10;
+  grid_info.stage = 10;
 
   auto data = CostFunctionData(robot);
 

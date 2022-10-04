@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -13,15 +14,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(unconstr_ocp_solver, m) {
   py::class_<UnconstrOCPSolver>(m, "UnconstrOCPSolver")
-    .def(py::init<const UnconstrOCP&, const SolverOptions&, const int>(),
-          py::arg("ocp"), 
-          py::arg("solver_options")=SolverOptions::defaultOptions(), 
-          py::arg("nthreads")=1)
+    .def(py::init<const OCP&, const SolverOptions&>(),
+          py::arg("ocp"), py::arg("solver_options")=SolverOptions())
     .def("set_solver_options", &UnconstrOCPSolver::setSolverOptions,
           py::arg("solver_options"))
+    .def("discretize", &UnconstrOCPSolver::discretize,
+          py::arg("t"))
     .def("init_constraints", &UnconstrOCPSolver::initConstraints)
-    .def("update_solution", &UnconstrOCPSolver::updateSolution,
-          py::arg("t"), py::arg("q"), py::arg("v"))
     .def("solve", &UnconstrOCPSolver::solve,
           py::arg("t"), py::arg("q"), py::arg("v"), py::arg("init_solver")=true)
     .def("get_solver_statistics", &UnconstrOCPSolver::getSolverStatistics)
@@ -37,9 +36,10 @@ PYBIND11_MODULE(unconstr_ocp_solver, m) {
           py::arg("t"), py::arg("q"), py::arg("v"))
     .def("KKT_error", 
           static_cast<double (UnconstrOCPSolver::*)() const>(&UnconstrOCPSolver::KKTError))
-    .def("cost", &UnconstrOCPSolver::cost)
+    .def("get_time_discretization", &UnconstrOCPSolver::getTimeDiscretization)
     .def("set_robot_properties", &UnconstrOCPSolver::setRobotProperties,
-          py::arg("properties")); 
+          py::arg("properties"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(UnconstrOCPSolver);
 }
 
 } // namespace python

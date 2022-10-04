@@ -33,10 +33,6 @@ CostFunction::CostFunction()
 }
 
 
-CostFunction::~CostFunction() {
-}
-
-
 void CostFunction::setDiscountFactor(const double discount_factor, 
                                      const double discount_time_step) {
   if (discount_factor > 0 && discount_factor < 1.0 && discount_time_step > 0) {
@@ -99,7 +95,7 @@ double CostFunction::evalStageCost(Robot& robot,
     l += e->evalStageCost(robot, contact_status, data, grid_info, s);
   }
   if (discounted_cost_) {
-    const double f = std::pow(discount_factor_, grid_info.time_stage);
+    const double f = std::pow(discount_factor_, grid_info.stage);
     l *= f;
   }
   return l;
@@ -224,14 +220,14 @@ double CostFunction::quadratizeTerminalCost(Robot& robot,
 }
 
 
-double CostFunction::evalImpulseCost(Robot& robot, 
-                                     const ImpulseStatus& impulse_status, 
+double CostFunction::evalImpactCost(Robot& robot, 
+                                     const ImpactStatus& impact_status, 
                                      CostFunctionData& data, 
                                      const GridInfo& grid_info, 
-                                     const ImpulseSplitSolution& s) const {
+                                     const SplitSolution& s) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalImpulseCost(robot, impulse_status, data, grid_info, s);
+    l += e->evalImpactCost(robot, impact_status, data, grid_info, s);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);
@@ -241,16 +237,16 @@ double CostFunction::evalImpulseCost(Robot& robot,
 }
 
 
-double CostFunction::linearizeImpulseCost(Robot& robot, 
-                                          const ImpulseStatus& impulse_status, 
+double CostFunction::linearizeImpactCost(Robot& robot, 
+                                          const ImpactStatus& impact_status, 
                                           CostFunctionData& data, 
                                           const GridInfo& grid_info, 
-                                          const ImpulseSplitSolution& s, 
-                                          ImpulseSplitKKTResidual& kkt_residual) const {
+                                          const SplitSolution& s, 
+                                          SplitKKTResidual& kkt_residual) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalImpulseCost(robot, impulse_status, data, grid_info, s);
-    e->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, 
+    l += e->evalImpactCost(robot, impact_status, data, grid_info, s);
+    e->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, 
                                   kkt_residual);
   }
   if (discounted_cost_) {
@@ -266,19 +262,19 @@ double CostFunction::linearizeImpulseCost(Robot& robot,
 }
 
 
-double CostFunction::quadratizeImpulseCost(Robot& robot, 
-                                           const ImpulseStatus& impulse_status, 
+double CostFunction::quadratizeImpactCost(Robot& robot, 
+                                           const ImpactStatus& impact_status, 
                                            CostFunctionData& data, 
                                            const GridInfo& grid_info, 
-                                           const ImpulseSplitSolution& s, 
-                                           ImpulseSplitKKTResidual& kkt_residual, 
-                                           ImpulseSplitKKTMatrix& kkt_matrix) const {
+                                           const SplitSolution& s, 
+                                           SplitKKTResidual& kkt_residual, 
+                                           SplitKKTMatrix& kkt_matrix) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalImpulseCost(robot, impulse_status, data, grid_info, s);
-    e->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, 
+    l += e->evalImpactCost(robot, impact_status, data, grid_info, s);
+    e->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, 
                                   kkt_residual);
-    e->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, 
+    e->evalImpactCostHessian(robot, impact_status, data, grid_info, s, 
                               kkt_matrix);
   }
   if (discounted_cost_) {

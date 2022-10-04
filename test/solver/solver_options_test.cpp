@@ -18,7 +18,7 @@ protected:
 
 
 TEST_F(SolverOptionsTest, cout) {
-  auto options = SolverOptions::defaultOptions();
+  auto options = SolverOptions();
   EXPECT_NO_THROW(
     std::cout << options << std::endl;
   );

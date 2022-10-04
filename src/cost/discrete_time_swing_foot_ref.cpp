@@ -50,21 +50,21 @@ void DiscreteTimeSwingFootRef::setSwingFootRef(
 
 void DiscreteTimeSwingFootRef::updateRef(const GridInfo& grid_info,
                                               Eigen::VectorXd& x3d_ref) const {
-  if (!is_contact_active_[grid_info.contact_phase]) {
-    double rate = static_cast<double>(grid_info.grid_count_in_phase) 
-                    / static_cast<double>(grid_info.N_phase);
-    if (grid_info.contact_phase == 0) {
+  if (!is_contact_active_[grid_info.phase]) {
+    double rate = static_cast<double>(grid_info.stage_in_phase) 
+                    / static_cast<double>(grid_info.num_grids_in_phase);
+    if (grid_info.phase == 0) {
       rate = first_rate_ * (1.0-rate) + rate;
     }
-    else if (grid_info.contact_phase == num_contact_phases_-1) {
+    else if (grid_info.phase == num_contact_phases_-1) {
       rate = last_rate_ * (1.0-rate) + rate;
     }
-    if (grid_info.contact_phase == 0 ) {
+    if (grid_info.phase == 0 ) {
       x3d_ref = (1.0-rate) * contact_position_[0] + rate * contact_position_[1];
     }
     else {
-      x3d_ref = (1.0-rate) * contact_position_[grid_info.contact_phase-1]
-                  + rate * contact_position_[grid_info.contact_phase+1];
+      x3d_ref = (1.0-rate) * contact_position_[grid_info.phase-1]
+                  + rate * contact_position_[grid_info.phase+1];
     }
     if (rate < 0.5) {
       x3d_ref.coeffRef(2) += 2.0 * rate * step_height_;
@@ -77,7 +77,7 @@ void DiscreteTimeSwingFootRef::updateRef(const GridInfo& grid_info,
 
 
 bool DiscreteTimeSwingFootRef::isActive(const GridInfo& grid_info) const {
-  return (!is_contact_active_[grid_info.contact_phase]);
+  return (!is_contact_active_[grid_info.phase]);
 }
 
 } // namespace robotoc

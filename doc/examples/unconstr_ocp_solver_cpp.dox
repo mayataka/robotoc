@@ -15,8 +15,6 @@ Required header files are as follows.
 
 #include "robotoc/solver/unconstr_ocp_solver.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
-#include "robotoc/unconstr/unconstr_parnmpc.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/se3.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -68,11 +66,14 @@ int main(int argc, char *argv[]) {
 
 We define the robot model.
 ```
-  const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
-  robotoc::Robot robot(path_to_urdf);
-  const std::string ee_frame= "iiwa_link_ee_kuka";
-  robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 50));
-  robot.setJointVelocityLimit(Eigen::VectorXd::Constant(robot.dimv(), M_PI_2));
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../iiwa_description/urdf/iiwa14.urdf";
+  robotoc::Robot robot(model_info);
+
+  const std::string ee_frame = "iiwa_link_ee_kuka"; // end-effector frame
+  
+  robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 50)); // change the joint limits
+  robot.setJointVelocityLimit(Eigen::VectorXd::Constant(robot.dimv(), M_PI_2)); // change the joint limits
 ```
 
 Next, we construct the cost function.
@@ -112,23 +113,23 @@ We also construct the constraints.
   constraints->setBarrierParam(1.0e-03);
 ```
 
-Finally, we can construct the optimal control solver!
+Finally, we can construct the optimal control solver
 ```
   const double T = 6;
   const int N = 120;
-  robotoc::UnconstrOCP ocp(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 4;
-  robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options, nthreads);
+  robotoc::OCP ocp(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions();
+  solver_options.nthreads = 4;
+  robotoc::UnconstrOCPSolver ocp_solver(ocp, solver_options);
 ```
-or ParNMPC solver!
+or ParNMPC solver
 ```
   const double T = 6;
   const int N = 120;
-  robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 4;
-  robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, solver_options, nthreads);
+  robotoc::OCP parnmpc(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions();
+  solver_options.nthreads = 4;
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, solver_options);
 ```
 
 Let's run the solver!
@@ -138,8 +139,10 @@ Let's run the solver!
   q << 0, M_PI_2, 0, M_PI_2, 0, M_PI_2, 0;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q); // initial state.
   ocp_solver.setSolution("v", v); // initial state.
+
   ocp_solver.initConstraints(); // initialize the slack and dual variables of the primal-dual interior point method.
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);

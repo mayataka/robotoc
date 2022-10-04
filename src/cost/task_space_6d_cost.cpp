@@ -10,12 +10,12 @@ TaskSpace6DCost::TaskSpace6DCost(const Robot& robot, const int frame_id)
     const_ref_inv_(const_ref_.inverse()),
     weight_(Eigen::VectorXd::Zero(6)), 
     weight_terminal_(Eigen::VectorXd::Zero(6)), 
-    weight_impulse_(Eigen::VectorXd::Zero(6)),
+    weight_impact_(Eigen::VectorXd::Zero(6)),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
-    enable_cost_impulse_(false) {
+    enable_cost_impact_(false) {
 }
 
 
@@ -79,12 +79,12 @@ TaskSpace6DCost::TaskSpace6DCost()
     const_ref_inv_(const_ref_.inverse()),
     weight_(Eigen::VectorXd::Zero(6)), 
     weight_terminal_(Eigen::VectorXd::Zero(6)), 
-    weight_impulse_(Eigen::VectorXd::Zero(6)),
+    weight_impact_(Eigen::VectorXd::Zero(6)),
     ref_(),
     use_nonconst_ref_(false),
     enable_cost_(false), 
     enable_cost_terminal_(false), 
-    enable_cost_impulse_(false) {
+    enable_cost_impact_(false) {
 }
 
 
@@ -144,20 +144,20 @@ void TaskSpace6DCost::set_weight_terminal(
 }
 
 
-void TaskSpace6DCost::set_weight_impulse(
-    const Eigen::Vector3d& weight_position_impulse, 
-    const Eigen::Vector3d& weight_rotation_impulse) {
-  if (weight_position_impulse.minCoeff() < 0.0) {
+void TaskSpace6DCost::set_weight_impact(
+    const Eigen::Vector3d& weight_position_impact, 
+    const Eigen::Vector3d& weight_rotation_impact) {
+  if (weight_position_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[TaskSpace6DCost] invalid argument: elements of 'weight_position_impulse' must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_position_impact' must be non-negative!");
   }
-  if (weight_rotation_impulse.minCoeff() < 0.0) {
+  if (weight_rotation_impact.minCoeff() < 0.0) {
     throw std::invalid_argument(
-        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation_impulse' must be non-negative!");
+        "[TaskSpace6DCost] invalid argument: elements of 'weight_rotation_impact' must be non-negative!");
   }
-  weight_impulse_.template head<3>() = weight_rotation_impulse;
-  weight_impulse_.template tail<3>() = weight_position_impulse;
-  enable_cost_impulse_ = (!weight_impulse_.isZero());
+  weight_impact_.template head<3>() = weight_rotation_impact;
+  weight_impact_.template tail<3>() = weight_position_impact;
+  enable_cost_impact_ = (!weight_impact_.isZero());
 }
 
 
@@ -245,14 +245,14 @@ void TaskSpace6DCost::evalTerminalCostHessian(
 }
 
 
-double TaskSpace6DCost::evalImpulseCost(Robot& robot, 
-                                        const ImpulseStatus& impulse_status,
+double TaskSpace6DCost::evalImpactCost(Robot& robot, 
+                                        const ImpactStatus& impact_status,
                                         CostFunctionData& data, 
                                         const GridInfo& grid_info, 
-                                        const ImpulseSplitSolution& s) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+                                        const SplitSolution& s) const {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
-    const double l = (weight_impulse_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
+    const double l = (weight_impact_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
     return 0.5 * l;
   }
   else {
@@ -261,29 +261,29 @@ double TaskSpace6DCost::evalImpulseCost(Robot& robot,
 }
 
 
-void TaskSpace6DCost::evalImpulseCostDerivatives(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+void TaskSpace6DCost::evalImpactCostDerivatives(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTResidual& kkt_residual) const {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     data.J_66.setZero();
     computeJLog6Map(data.diff_x6d, data.J_66);
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.JJ_6d.noalias() = data.J_66 * data.J_6d;
     kkt_residual.lq().noalias() 
-        += data.JJ_6d.transpose() * weight_impulse_.asDiagonal() * data.diff_6d;
+        += data.JJ_6d.transpose() * weight_impact_.asDiagonal() * data.diff_6d;
   }
 }
 
 
-void TaskSpace6DCost::evalImpulseCostHessian(
-    Robot& robot, const ImpulseStatus& impulse_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (enable_cost_impulse_ && isCostActive(grid_info)) {
+void TaskSpace6DCost::evalImpactCostHessian(
+    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
+    const GridInfo& grid_info, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) const {
+  if (enable_cost_impact_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
-        += data.JJ_6d.transpose() * weight_impulse_.asDiagonal() * data.JJ_6d;
+        += data.JJ_6d.transpose() * weight_impact_.asDiagonal() * data.JJ_6d;
   }
 }
 

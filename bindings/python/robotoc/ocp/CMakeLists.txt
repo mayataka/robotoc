@@ -1,8 +1,6 @@
-pybind11_add_robotoc_module(split_solution)
-pybind11_add_robotoc_module(split_direction)
-pybind11_add_robotoc_module(split_kkt_residual)
-pybind11_add_robotoc_module(split_kkt_matrix)
-pybind11_add_robotoc_module(solution)
+pybind11_add_robotoc_module(grid_info)
+pybind11_add_robotoc_module(discretization_method)
+pybind11_add_robotoc_module(time_discretization)
 pybind11_add_robotoc_module(ocp)
 
 install_robotoc_pybind_module(ocp)

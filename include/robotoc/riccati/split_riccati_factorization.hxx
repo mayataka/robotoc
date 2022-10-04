@@ -20,8 +20,13 @@ inline SplitRiccatiFactorization::SplitRiccatiFactorization(const Robot& robot)
     rho(0.0),
     eta(0.0),
     iota(0.0),
+    M_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
+    m_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    mt_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    mt_next_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()),
-    dimx_(2*robot.dimv()) {
+    dimx_(2*robot.dimv()),
+    dims_(0) {
 }
 
 
@@ -39,12 +44,69 @@ inline SplitRiccatiFactorization::SplitRiccatiFactorization()
     rho(0.0),
     eta(0.0),
     iota(0.0),
-    dimv_(0.0),
-    dimx_(0.0) {
+    M_full_(),
+    m_full_(),
+    mt_full_(),
+    mt_next_full_(),
+    dimv_(0),
+    dimx_(0),
+    dims_(0) {
 }
 
 
 inline SplitRiccatiFactorization::~SplitRiccatiFactorization() {
+}
+
+
+inline void SplitRiccatiFactorization::setConstraintDimension(const int dims) {
+  assert(dims >= 0);
+  assert(dims <= m_full_.size());
+  dims_ = dims;
+}
+
+
+inline int SplitRiccatiFactorization::dims() const {
+  return dims_;
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitRiccatiFactorization::M() {
+  return M_full_.topLeftCorner(dims_, dimx_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitRiccatiFactorization::M() const {
+  return M_full_.topLeftCorner(dims_, dimx_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitRiccatiFactorization::m() {
+  return m_full_.head(dims_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitRiccatiFactorization::m() const {
+  return m_full_.head(dims_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitRiccatiFactorization::mt() {
+  return mt_full_.head(dims_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitRiccatiFactorization::mt() const {
+  return mt_full_.head(dims_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitRiccatiFactorization::mt_next() {
+  return mt_next_full_.head(dims_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> SplitRiccatiFactorization::mt_next() const {
+  return mt_next_full_.head(dims_);
 }
 
 
@@ -62,6 +124,10 @@ inline void SplitRiccatiFactorization::setZero() {
   rho = 0;
   eta = 0;
   iota = 0;
+  M_full_.setZero();
+  m_full_.setZero();
+  mt_full_.setZero();
+  mt_next_full_.setZero();
 }
 
 
@@ -80,6 +146,10 @@ inline void SplitRiccatiFactorization::setRandom() {
   rho = vec[2];
   eta = vec[3];
   iota = vec[4];
+  M_full_.setRandom();
+  m_full_.setRandom();
+  mt_full_.setRandom();
+  mt_next_full_.setRandom();
 }
 
 
@@ -97,6 +167,12 @@ inline bool SplitRiccatiFactorization::isApprox(
   vec << xi, chi, rho, eta, iota;
   other_vec << other.xi, other.chi, other.rho, other.eta, other.iota;
   if (!vec.isApprox(other_vec)) return false;
+  if (dims() > 0) {
+    if (!M().isApprox(other.M())) return false;
+    if (!m().isApprox(other.m())) return false;
+    if (!mt().isApprox(other.mt())) return false;
+    if (!mt_next().isApprox(other.mt_next())) return false;
+  }
   return true;
 }
 
@@ -113,6 +189,12 @@ inline bool SplitRiccatiFactorization::hasNaN() const {
   Eigen::VectorXd vec(5);
   vec << xi, chi, rho, eta, iota;
   if (vec.hasNaN()) return true;
+  if (dims() > 0) {
+    if (M().hasNaN()) return true;
+    if (m().hasNaN()) return true;
+    if (mt().hasNaN()) return true;
+    if (mt_next().hasNaN()) return true;
+  }
   return false;
 }
 

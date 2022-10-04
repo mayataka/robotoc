@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -14,7 +15,8 @@ PYBIND11_MODULE(joint_torques_lower_limit, m) {
   py::class_<JointTorquesLowerLimit, ConstraintComponentBase, 
              std::shared_ptr<JointTorquesLowerLimit>>(m, "JointTorquesLowerLimit")
     .def(py::init<const Robot&>(),
-         py::arg("robot"));
+         py::arg("robot"))
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(JointTorquesLowerLimit);
 }
 
 } // namespace python

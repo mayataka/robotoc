@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "robotoc/unconstr/unconstr_parnmpc.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -70,10 +70,10 @@ TEST_F(UnconstrParNMPCSolverTest, test) {
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  robotoc::UnconstrParNMPC ocp(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 4;
-  robotoc::UnconstrParNMPCSolver ocp_solver(ocp, solver_options, nthreads);
+  robotoc::OCP ocp(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions();
+  solver_options.nthreads = 4;
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
@@ -82,11 +82,13 @@ TEST_F(UnconstrParNMPCSolverTest, test) {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the ParNMPC.
-  ocp_solver.setSolution("q", q);
-  ocp_solver.setSolution("v", v);
-  ocp_solver.initConstraints();
-  ocp_solver.solve(t, q, v);
-  const auto result = ocp_solver.getSolverStatistics();
+  parnmpc_solver.discretize(t);
+  parnmpc_solver.setSolution("q", q);
+  parnmpc_solver.setSolution("v", v);
+  parnmpc_solver.initConstraints();
+  parnmpc_solver.initBackwardCorrection();
+  parnmpc_solver.solve(t, q, v);
+  const auto result = parnmpc_solver.getSolverStatistics();
   EXPECT_TRUE(result.convergence);
 }
 

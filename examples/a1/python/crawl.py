@@ -3,12 +3,16 @@ import numpy as np
 import math
 
 
-path_to_urdf = '../a1_description/urdf/a1.urdf'
+model_info = robotoc.RobotModelInfo()
+model_info.urdf_path = '../a1_description/urdf/a1.urdf'
+model_info.base_joint_type = robotoc.BaseJointType.FloatingBase
 contact_frames = ['FL_foot', 'RL_foot', 'FR_foot', 'RR_foot'] 
-contact_types = [robotoc.ContactType.PointContact for i in range(4)]
 baumgarte_time_step = 0.05
-robot = robotoc.Robot(path_to_urdf, robotoc.BaseJointType.FloatingBase, 
-                      contact_frames, contact_types, baumgarte_time_step)
+model_info.point_contacts = [robotoc.ContactModelInfo('FL_foot', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RL_foot', baumgarte_time_step),
+                             robotoc.ContactModelInfo('FR_foot', baumgarte_time_step),
+                             robotoc.ContactModelInfo('RR_foot', baumgarte_time_step)]
+robot = robotoc.Robot(model_info)
 
 dt = 0.02
 step_length = np.array([0.20, 0, 0])
@@ -36,20 +40,20 @@ v_weight = np.array([100, 100, 100, 100, 100, 100,
                      1, 1, 1,
                      1, 1, 1])
 u_weight = np.full(robot.dimu(), 1.0e-01)
-q_weight_impulse = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+q_weight_impact = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
                       100, 100, 100, 
                       100, 100, 100,
                       100, 100, 100,
                       100, 100, 100])
-v_weight_impulse = np.full(robot.dimv(), 100)
+v_weight_impact = np.full(robot.dimv(), 100)
 config_cost = robotoc.ConfigurationSpaceCost(robot)
 config_cost.set_q_ref(q_standing)
 config_cost.set_q_weight(q_weight)
 config_cost.set_q_weight_terminal(q_weight)
-config_cost.set_q_weight_impulse(q_weight_impulse)
+config_cost.set_q_weight_impact(q_weight_impact)
 config_cost.set_v_weight(v_weight)
 config_cost.set_v_weight_terminal(v_weight)
-config_cost.set_v_weight_impulse(v_weight_impulse)
+config_cost.set_v_weight_impact(v_weight_impact)
 config_cost.set_u_weight(u_weight)
 cost.push_back(config_cost)
 
@@ -197,19 +201,21 @@ N = math.floor(T/dt)
 ocp = robotoc.OCP(robot=robot, cost=cost, constraints=constraints, 
                   contact_sequence=contact_sequence, T=T, N=N)
 solver_options = robotoc.SolverOptions()
-ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options, nthreads=4)
+solver_options.nthreads = 4
+ocp_solver = robotoc.OCPSolver(ocp=ocp, solver_options=solver_options)
 
 # Initial time and intial state 
 t = 0.
 q = q_standing
 v = np.zeros(robot.dimv())
 
+ocp_solver.discretize(t)
 ocp_solver.set_solution("q", q)
 ocp_solver.set_solution("v", v)
 f_init = np.array([0.0, 0.0, 0.25*robot.total_weight()])
 ocp_solver.set_solution("f", f_init)
 
-ocp_solver.init_constraints(t)
+ocp_solver.init_constraints()
 print("Initial KKT error: ", ocp_solver.KKT_error(t, q, v))
 ocp_solver.solve(t, q, v)
 print("KKT error after convergence: ", ocp_solver.KKT_error(t, q, v))
@@ -218,10 +224,9 @@ print(ocp_solver.get_solver_statistics())
 # num_iteration = 1000
 # robotoc.utils.benchmark.cpu_time(ocp_solver, t, q, v, num_iteration)
 
-viewer = robotoc.utils.TrajectoryViewer(path_to_urdf=path_to_urdf, 
-                                        base_joint_type=robotoc.BaseJointType.FloatingBase,
-                                        viewer_type='gepetto')
-viewer.set_contact_info(robot.contact_frames(), mu)
+viewer = robotoc.utils.TrajectoryViewer(model_info=model_info, viewer_type='gepetto')
+viewer.set_contact_info(mu=mu)
 time_discretization = ocp_solver.get_time_discretization()
-viewer.display(time_discretization .time_steps(), ocp_solver.get_solution('q'), 
+viewer.display(ocp_solver.get_time_discretization(), 
+               ocp_solver.get_solution('q'), 
                ocp_solver.get_solution('f', 'WORLD'))

@@ -7,9 +7,9 @@
 #include "robotoc/robot/contact_status.hpp"
 #include "robotoc/cost/local_contact_force_cost.hpp"
 #include "robotoc/cost/cost_function_data.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
 
 #include "robotoc/utils/derivative_checker.hpp"
 
@@ -30,7 +30,7 @@ protected:
 
   void testStageCost(Robot& robot) const;
   void testTerminalCost(Robot& robot) const;
-  void testImpulseCost(Robot& robot) const;
+  void testImpactCost(Robot& robot) const;
 
   GridInfo grid_info;
   double dt, t;
@@ -57,8 +57,8 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   }
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   auto s = SplitSolution::Random(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0);
   cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
@@ -76,8 +76,8 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
     }
   }
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0.5*dt*l_ref);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
@@ -146,8 +146,8 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   }
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   auto s = SplitSolution::Random(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), 0);
   cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
@@ -157,8 +157,8 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   contact_status.setRandom();
   s.setRandom(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), 0);
-  kkt_res.setContactStatus(contact_status);
-  kkt_mat.setContactStatus(contact_status);
+  kkt_res.setContactDimension(contact_status.dimf());
+  kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
@@ -173,7 +173,7 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
 }
 
 
-void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
+void LocalContactForceCostTest::testImpactCost(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref, fi_weight, fi_ref;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
@@ -187,42 +187,42 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   cost->set_f_ref(f_ref);
   cost->set_fi_weight(fi_weight);
   cost->set_fi_ref(fi_ref);
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
+  ImpactStatus impact_status = robot.createImpactStatus();
   for (int i=0; i<robot.maxNumContacts(); ++i) {
-    impulse_status.deactivateImpulse(i);
+    impact_status.deactivateImpact(i);
   }
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_mat.setImpulseStatus(impulse_status);
-  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0);
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
+  kkt_res.setContactDimension(impact_status.dimf());
+  kkt_mat.setContactDimension(impact_status.dimf());
+  SplitSolution s = SplitSolution::Random(robot, impact_status);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), 0);
+  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
+  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
-  impulse_status.setRandom();
-  s.setRandom(robot, impulse_status);
+  impact_status.setRandom();
+  s.setRandom(robot, impact_status);
   double l_ref = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const auto& fl = s.f[i].template head<3>();
       l_ref += (fi_weight[i].array() * (fl.array()-fi_ref[i].array()) 
                                      * (fl.array()-fi_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->evalImpulseCost(robot, impulse_status, data, grid_info, s), 0.5*l_ref);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_mat.setImpulseStatus(impulse_status);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), 0.5*l_ref);
+  kkt_res.setContactDimension(impact_status.dimf());
+  kkt_mat.setContactDimension(impact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->evalImpulseCostDerivatives(robot, impulse_status, data, grid_info, s, kkt_res);
-  cost->evalImpulseCostHessian(robot, impulse_status, data, grid_info, s, kkt_mat);
+  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
+  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       const auto& fl = s.f[i].template head<3>();
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
           += fi_weight[i].array() * (fl.array()-fi_ref[i].array());
@@ -240,7 +240,7 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   }
   dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
+    if (impact_status.isImpactActive(i)) {
       kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += fi_weight[i];
       switch (robot.contactType(i)) {
         case ContactType::PointContact:
@@ -257,8 +257,8 @@ void LocalContactForceCostTest::testImpulseCost(Robot& robot) const {
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
-  EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost, impulse_status));
-  EXPECT_TRUE(derivative_checker.checkSecondOrderImpulseCostDerivatives(cost, impulse_status));
+  EXPECT_TRUE(derivative_checker.checkFirstOrderImpactCostDerivatives(cost, impact_status));
+  EXPECT_TRUE(derivative_checker.checkSecondOrderImpactCostDerivatives(cost, impact_status));
 }
 
 
@@ -273,7 +273,7 @@ TEST_F(LocalContactForceCostTest, fixedBase) {
   auto robot = testhelper::CreateRobotManipulator(dt);
   testStageCost(robot);
   testTerminalCost(robot);
-  testImpulseCost(robot);
+  testImpactCost(robot);
 }
 
 
@@ -281,7 +281,7 @@ TEST_F(LocalContactForceCostTest, floatingBase) {
   auto robot = testhelper::CreateQuadrupedalRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
-  testImpulseCost(robot);
+  testImpactCost(robot);
 }
 
 
@@ -289,7 +289,7 @@ TEST_F(LocalContactForceCostTest, humanoidRobot) {
   auto robot = testhelper::CreateHumanoidRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
-  testImpulseCost(robot);
+  testImpactCost(robot);
 }
 } // namespace robotoc
 

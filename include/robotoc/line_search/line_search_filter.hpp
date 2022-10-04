@@ -22,9 +22,9 @@ public:
                    const double constraints_reduction_rate=0.005);
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~LineSearchFilter();
+  ~LineSearchFilter() = default;
 
   ///
   /// @brief Default copy constructor. 

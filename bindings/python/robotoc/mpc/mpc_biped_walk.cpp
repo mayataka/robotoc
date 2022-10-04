@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/mpc_biped_walk.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -13,8 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_biped_walk, m) {
   py::class_<MPCBipedWalk>(m, "MPCBipedWalk")
-    .def(py::init<const Robot&, const double, const int,  const int>(),
-         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int>(),
+         py::arg("quadruped_robot"), py::arg("T"), py::arg("N"))
     .def("set_gait_pattern", &MPCBipedWalk::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("double_support_time"), py::arg("swing_start_time"))
@@ -43,9 +44,10 @@ PYBIND11_MODULE(mpc_biped_walk, m) {
     .def("get_com_cost_handle", &MPCBipedWalk::getCoMCostHandle)
     .def("get_constraints_handle", &MPCBipedWalk::getConstraintsHandle)
     .def("get_contact_wrench_cone_handle", &MPCBipedWalk::getContactWrenchConeHandle)
-    .def("get_impulse_wrench_cone_handle", &MPCBipedWalk::getImpulseWrenchConeHandle)
+    .def("get_impact_wrench_cone_handle", &MPCBipedWalk::getImpactWrenchConeHandle)
     .def("get_solver", &MPCBipedWalk::getSolver)
-    .def("get_contact_sequence", &MPCBipedWalk::getContactSequence);
+    .def("get_contact_sequence", &MPCBipedWalk::getContactSequence)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCBipedWalk);
 }
 
 } // namespace python

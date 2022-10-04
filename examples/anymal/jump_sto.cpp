@@ -6,7 +6,7 @@
 #include "robotoc/solver/ocp_solver.hpp"
 #include "robotoc/ocp/ocp.hpp"
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/hybrid/contact_sequence.hpp"
+#include "robotoc/planner/contact_sequence.hpp"
 #include "robotoc/cost/cost_function.hpp"
 #include "robotoc/cost/configuration_space_cost.hpp"
 #include "robotoc/cost/task_space_3d_cost.hpp"
@@ -21,8 +21,8 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
-#include "robotoc/hybrid/sto_cost_function.hpp"
-#include "robotoc/hybrid/sto_constraints.hpp"
+#include "robotoc/sto/sto_cost_function.hpp"
+#include "robotoc/sto/sto_constraints.hpp"
 #include "robotoc/solver/solver_options.hpp"
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
@@ -33,15 +33,15 @@
 
 
 int main(int argc, char *argv[]) {
-  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  const std::vector<std::string> contact_frames = {"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"}; 
-  const std::vector<robotoc::ContactType> contact_types = {robotoc::ContactType::PointContact, 
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact,
-                                                           robotoc::ContactType::PointContact};
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../anymal_b_simple_description/urdf/anymal.urdf";
+  model_info.base_joint_type = robotoc::BaseJointType::FloatingBase;
   const double baumgarte_time_step = 0.05;
-  robotoc::Robot robot(path_to_urdf, robotoc::BaseJointType::FloatingBase, 
-                       contact_frames, contact_types, baumgarte_time_step);
+  model_info.point_contacts = {robotoc::ContactModelInfo("LF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("LH_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RF_FOOT", baumgarte_time_step),
+                               robotoc::ContactModelInfo("RH_FOOT", baumgarte_time_step)};
+  robotoc::Robot robot(model_info);
 
   const double dt = 0.02;
   const Eigen::Vector3d jump_length = {0.8, 0, 0};
@@ -69,23 +69,23 @@ int main(int argc, char *argv[]) {
               0.001, 0.001, 0.001;
   Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
   Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
-  Eigen::VectorXd q_weight_impulse(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight_impulse << 0, 0, 0, 100.0, 100.0, 100.0,  
+  Eigen::VectorXd q_weight_impact(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight_impact << 0, 0, 0, 100.0, 100.0, 100.0,  
                0.1, 0.1, 0.1, 
                0.1, 0.1, 0.1,
                0.1, 0.1, 0.1,
                0.1, 0.1, 0.1;
-  Eigen::VectorXd v_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
-  Eigen::VectorXd dv_weight_impulse = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
+  Eigen::VectorXd v_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 1.0);
+  Eigen::VectorXd dv_weight_impact = Eigen::VectorXd::Constant(robot.dimv(), 1.0e-06);
   auto config_cost = std::make_shared<robotoc::ConfigurationSpaceCost>(robot);
   config_cost->set_q_ref(q_ref);
   config_cost->set_q_weight(q_weight);
   config_cost->set_q_weight_terminal(q_weight);
-  config_cost->set_q_weight_impulse(q_weight_impulse);
+  config_cost->set_q_weight_impact(q_weight_impact);
   config_cost->set_v_weight(v_weight);
   config_cost->set_v_weight_terminal(v_weight);
-  config_cost->set_v_weight_impulse(v_weight_impulse);
-  config_cost->set_dv_weight_impulse(dv_weight_impulse);
+  config_cost->set_v_weight_impact(v_weight_impact);
+  config_cost->set_dv_weight_impact(dv_weight_impact);
   config_cost->set_a_weight(a_weight);
   cost->push_back(config_cost);
 
@@ -146,8 +146,8 @@ int main(int argc, char *argv[]) {
   // Create the STO cost function
   auto sto_cost = std::make_shared<robotoc::STOCostFunction>();
   // Create the STO constraints 
-  const std::vector<double> min_dwell_times = {0.15, 0.15, 0.65};
-  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(min_dwell_times,
+  const std::vector<double> minimum_dwell_times = {0.15, 0.15, 0.65};
+  auto sto_constraints = std::make_shared<robotoc::STOConstraints>(minimum_dwell_times,
                                                                    barrier_param, 
                                                                    fraction_to_boundary_rule);
 
@@ -158,12 +158,12 @@ int main(int argc, char *argv[]) {
   const int N = std::floor(T / dt);
   robotoc::OCP ocp(robot, cost, constraints, sto_cost, sto_constraints, 
                    contact_sequence, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
+  auto solver_options = robotoc::SolverOptions();
   solver_options.max_dt_mesh = T/N;
   solver_options.kkt_tol_mesh = 0.1;
   solver_options.max_iter = 200;
-  const int nthreads = 4;
-  robotoc::OCPSolver ocp_solver(ocp, solver_options, nthreads);
+  solver_options.nthreads = 4;
+  robotoc::OCPSolver ocp_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
@@ -171,13 +171,14 @@ int main(int argc, char *argv[]) {
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
   // Solves the OCP.
+  ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
-  ocp_solver.meshRefinement(t);
-  ocp_solver.initConstraints(t);
+  ocp_solver.discretize(t);
+  ocp_solver.initConstraints();
   std::cout << "Initial KKT error: " << ocp_solver.KKTError(t, q, v) << std::endl;
   ocp_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;

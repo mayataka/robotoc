@@ -4,19 +4,19 @@
 namespace robotoc {
 
 void SplitRiccatiFactorization::disp(std::ostream& os) const {
-  os << "split Riccati factorization:" << std::endl;
-  os << "  P = " << P << std::endl;
-  os << "  s = " << s.transpose() << std::endl;
-  os << "  psi_x = " << psi_x.transpose() << std::endl;
-  os << "  psi_u = " << psi_u.transpose() << std::endl;
-  os << "  Psi = " << Psi.transpose() << std::endl;
-  os << "  phi_x = " << phi_x.transpose() << std::endl;
-  os << "  phi_u = " << phi_u.transpose() << std::endl;
-  os << "  Phi = " << Phi.transpose() << std::endl;
-  os << "  xi = " << xi << std::endl;
-  os << "  chi = " << chi << std::endl;
-  os << "  rho = " << rho << std::endl;
-  os << "  eta = " << eta << std::endl;
+  os << "split Riccati factorization:" << "\n";
+  os << "  P = " << "\n" << P << "\n";
+  os << "  s = " << s.transpose() << "\n";
+  os << "  psi_x = " << psi_x.transpose() << "\n";
+  os << "  psi_u = " << psi_u.transpose() << "\n";
+  os << "  Psi = " << Psi.transpose() << "\n";
+  os << "  phi_x = " << phi_x.transpose() << "\n";
+  os << "  phi_u = " << phi_u.transpose() << "\n";
+  os << "  Phi = " << Phi.transpose() << "\n";
+  os << "  xi = " << xi << "\n";
+  os << "  chi = " << chi << "\n";
+  os << "  rho = " << rho << "\n";
+  os << "  eta = " << eta << "\n";
   os << "  iota = " << iota << std::flush;
 }
 

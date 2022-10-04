@@ -3,8 +3,9 @@
 
 #include <iostream>
 
-#include "robotoc/hybrid/discretization_method.hpp"
+#include "robotoc/ocp/discretization_method.hpp"
 #include "robotoc/line_search/line_search_settings.hpp"
+#include "robotoc/solver/interpolation_order.hpp"
 
 
 namespace robotoc {
@@ -13,37 +14,12 @@ namespace robotoc {
 /// @class SolverOptions
 /// @brief Options of optimal control solvers. 
 ///
-class SolverOptions {
-public:
+struct SolverOptions {
   ///
-  /// @brief Default constructor. 
+  /// @brief Number of the threads of parallel computations. Must be positive.
+  /// Default is 1.
   ///
-  SolverOptions();
-
-  ///
-  /// @brief Destructor. 
-  ///
-  ~SolverOptions();
-
-  ///
-  /// @brief Default copy constructor. 
-  ///
-  SolverOptions(const SolverOptions&) = default;
-
-  ///
-  /// @brief Default copy assign operator. 
-  ///
-  SolverOptions& operator=(const SolverOptions&) = default;
-
-  ///
-  /// @brief Default move constructor. 
-  ///
-  SolverOptions(SolverOptions&&) noexcept = default;
-
-  ///
-  /// @brief Default move assign operator. 
-  ///
-  SolverOptions& operator=(SolverOptions&&) noexcept = default;
+  int nthreads = 1;
 
   ///
   /// @brief Maximum number of iterations. Must be non-negative. 
@@ -94,13 +70,12 @@ public:
   bool enable_line_search = false;
 
   ///
-  /// @brief Line search settings. Default is 
-  /// LineSearchSettings::defaultSettings().
+  /// @brief Line search settings. 
   ///
-  LineSearchSettings line_search_settings = LineSearchSettings::defaultSettings();
+  LineSearchSettings line_search_settings;
 
   ///
-  /// @brief Discretization method of the hybrid optimal control problem.
+  /// @brief Discretization method of the optimal control problem.
   /// Only used in OCPSolver without the STO problem. Default is 
   /// DiscretizationMethod::GridBased.
   /// @note For the STO problem, discretization method is fixed to 
@@ -158,14 +133,21 @@ public:
   double max_dts_riccati = 0.1;
 
   ///
+  /// @brief If true, the solution initial guess is constructed from the linear 
+  /// interpolation of the previous solution. 
+  ///
+  bool enable_solution_interpolation = true;
+
+  ///
+  /// @brief Order of the solution interpolation if enable_solution_interpolation
+  /// is true. 
+  ///
+  InterpolationOrder interpolation_order = InterpolationOrder::Linear;
+
+  ///
   /// @brief If true, the CPU time is measured at each solve().
   ///
   bool enable_benchmark = false;
-
-  ///
-  /// @brief Returns options with default parameters.
-  ///
-  static SolverOptions defaultOptions();
 
   ///
   /// @brief Displays the solver settings onto a ostream.

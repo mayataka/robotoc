@@ -37,13 +37,10 @@ public:
   /// @param[in] contact_frame_names Names of contact frames. 
   /// @param[in] default_friction_coefficient Default friction coefficitn. 
   /// Must be positive. Default is 0.7.
-  /// @param[in] contact_mode_id Identifier number of the contact mode. Can be  
-  /// used only in user-defined cost and constraints. Default is 0.
   ///
   ContactStatus(const std::vector<ContactType>& contact_types, 
                 const std::vector<std::string>& contact_frame_names,
-                const double default_friction_coefficient=0.7,
-                const int contact_mode_id=0);
+                const double default_friction_coefficient=0.7);
 
   ///
   /// @brief Default constructor. 
@@ -51,9 +48,9 @@ public:
   ContactStatus();
 
   ///
-  /// @brief Destructor. 
+  /// @brief Default destructor. 
   ///
-  ~ContactStatus();
+  ~ContactStatus() = default;
 
   ///
   /// @brief Default copy constructor. 
@@ -453,20 +450,6 @@ public:
   int findContactIndex(const std::string& contact_frame_name) const;
 
   ///
-  /// @brief Sets contact mode id.
-  /// @param[in] contact_mode_id Contact mode id. 
-  /// @note Default contact mode id is 0.
-  ///
-  void setContactModeId(const int contact_mode_id);
-
-  ///
-  /// @brief Gets contact mode id.
-  /// @return Contact mode id. 
-  /// @note Default contact mode id is 0.
-  ///
-  int contactModeId() const;
-
-  ///
   /// @brief Fills contact status randomly.
   ///
   void setRandom();
@@ -489,7 +472,7 @@ private:
   std::vector<Eigen::Vector3d> contact_positions_;
   std::vector<Eigen::Matrix3d> contact_rotations_;
   std::vector<double> friction_coefficients_;
-  int dimf_, max_contacts_, max_num_contacts_, contact_mode_id_;
+  int dimf_, max_contacts_, max_num_contacts_;
   bool has_active_contacts_;
 
   void setHasActiveContacts();

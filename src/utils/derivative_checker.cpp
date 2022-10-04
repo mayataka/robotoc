@@ -1,9 +1,9 @@
 #include "robotoc/utils/derivative_checker.hpp"
 
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/hybrid/grid_info.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 #include <cmath>
 
@@ -54,7 +54,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
   const int dimu = robot_.dimu();
   const int dimf = contact_status.dimf();
   SplitKKTResidual kkt_residual(robot_);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_residual.setContactDimension(contact_status.dimf());
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
   double cost0 = cost->evalStageCost(robot_, contact_status, data, grid_info, s);
@@ -136,16 +136,16 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
   const int dimu = robot_.dimu();
   const int dimf = contact_status.dimf();
   SplitKKTResidual kkt_residual0(robot_);
-  kkt_residual0.setContactStatus(contact_status);
+  kkt_residual0.setContactDimension(contact_status.dimf());
   SplitKKTMatrix kkt_matrix(robot_);
-  kkt_matrix.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
   cost->evalStageCost(robot_, contact_status, data, grid_info, s);
   cost->evalStageCostDerivatives(robot_, contact_status, data, grid_info, s, kkt_residual0);
   cost->evalStageCostHessian(robot_, contact_status, data, grid_info, s, kkt_matrix);
   SplitKKTResidual kkt_residual(robot_);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_residual.setContactDimension(contact_status.dimf());
   auto s1 = s;
   Eigen::MatrixXd Qqq_ref(dimv, dimv);
   for (int i=0; i<dimv; ++i) {
@@ -320,31 +320,31 @@ bool DerivativeChecker::checkSecondOrderTerminalCostDerivatives(
 }
 
 
-bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
+bool DerivativeChecker::checkFirstOrderImpactCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost) {
-  return checkFirstOrderImpulseCostDerivatives(cost, robot_.createImpulseStatus());
+  return checkFirstOrderImpactCostDerivatives(cost, robot_.createImpactStatus());
 }
 
 
-bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
+bool DerivativeChecker::checkSecondOrderImpactCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost) {
-  return checkSecondOrderImpulseCostDerivatives(cost, robot_.createImpulseStatus());
+  return checkSecondOrderImpactCostDerivatives(cost, robot_.createImpactStatus());
 }
 
 
-bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
+bool DerivativeChecker::checkFirstOrderImpactCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost, 
-    const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
+    const ImpactStatus& impact_status) {
+  const auto s = SplitSolution::Random(robot_, impact_status);
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
-  const int dimf = impulse_status.dimi();
-  ImpulseSplitKKTResidual kkt_residual(robot_);
-  kkt_residual.setImpulseStatus(impulse_status);
+  const int dimf = impact_status.dimf();
+  SplitKKTResidual kkt_residual(robot_);
+  kkt_residual.setContactDimension(impact_status.dimf());
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
-  double cost0 = cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s);
-  cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s, kkt_residual);
+  double cost0 = cost->evalImpactCost(robot_, impact_status, data, grid_info, s);
+  cost->evalImpactCostDerivatives(robot_, impact_status, data, grid_info, s, kkt_residual);
   auto s1 = s;
   Eigen::VectorXd lq_ref(dimv);
   for (int i=0; i<dimv; ++i) {
@@ -353,7 +353,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
     dq(i) = 1;
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     robot_.updateKinematics(s1.q, s1.v);
-    lq_ref(i) = (cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1) - cost0) / finite_diff_;
+    lq_ref(i) = (cost->evalImpactCost(robot_, impact_status, data, grid_info, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.lq().isApprox(lq_ref, test_tol_)) {
     std::cout << "lq is not correct! lq - lq_ref = " 
@@ -365,7 +365,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
     s1 = s;
     s1.v(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v);
-    lv_ref(i) = (cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1) - cost0) / finite_diff_;
+    lv_ref(i) = (cost->evalImpactCost(robot_, impact_status, data, grid_info, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.lv().isApprox(lv_ref, test_tol_)) {
     std::cout << "lv is not correct! lv - lv_ref = " 
@@ -376,7 +376,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
   for (int i=0; i<dimv; ++i) {
     s1 = s;
     s1.dv(i) += finite_diff_;
-    ldv_ref(i) = (cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1) - cost0) / finite_diff_;
+    ldv_ref(i) = (cost->evalImpactCost(robot_, impact_status, data, grid_info, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.ldv.isApprox(ldv_ref, test_tol_)) {
     std::cout << "ldv is not correct! ldv - ldv_ref = " 
@@ -389,7 +389,7 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
       s1 = s;
       s1.f_stack().coeffRef(i) += finite_diff_;
       s1.set_f_vector();
-      lf_ref(i) = (cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1) - cost0) / finite_diff_;
+      lf_ref(i) = (cost->evalImpactCost(robot_, impact_status, data, grid_info, s1) - cost0) / finite_diff_;
     }
     if (!kkt_residual.lf().isApprox(lf_ref, test_tol_)) {
       std::cout << "lf is not correct! lf - lf_ref = " 
@@ -401,24 +401,24 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
 }
 
 
-bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
+bool DerivativeChecker::checkSecondOrderImpactCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost,
-    const ImpulseStatus& impulse_status) {
-  const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
+    const ImpactStatus& impact_status) {
+  const auto s = SplitSolution::Random(robot_, impact_status);
   const auto grid_info = GridInfo::Random();
   const int dimv = robot_.dimv();
-  const int dimf = impulse_status.dimi();
-  ImpulseSplitKKTMatrix kkt_matrix(robot_);
-  kkt_matrix.setImpulseStatus(impulse_status);
-  ImpulseSplitKKTResidual kkt_residual0(robot_);
-  kkt_residual0.setImpulseStatus(impulse_status);
+  const int dimf = impact_status.dimf();
+  SplitKKTMatrix kkt_matrix(robot_);
+  kkt_matrix.setContactDimension(impact_status.dimf());
+  SplitKKTResidual kkt_residual0(robot_);
+  kkt_residual0.setContactDimension(impact_status.dimf());
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
-  cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s);
-  cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s, kkt_residual0);
-  cost->evalImpulseCostHessian(robot_, impulse_status, data, grid_info, s, kkt_matrix);
-  ImpulseSplitKKTResidual kkt_residual(robot_);
-  kkt_residual.setImpulseStatus(impulse_status);
+  cost->evalImpactCost(robot_, impact_status, data, grid_info, s);
+  cost->evalImpactCostDerivatives(robot_, impact_status, data, grid_info, s, kkt_residual0);
+  cost->evalImpactCostHessian(robot_, impact_status, data, grid_info, s, kkt_matrix);
+  SplitKKTResidual kkt_residual(robot_);
+  kkt_residual.setContactDimension(impact_status.dimf());
   auto s1 = s;
   Eigen::MatrixXd Qqq_ref(dimv, dimv);
   for (int i=0; i<dimv; ++i) {
@@ -428,8 +428,8 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     kkt_residual.lq().setZero();
     robot_.updateKinematics(s1.q, s1.v);
-    cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1);
-    cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s1, kkt_residual);
+    cost->evalImpactCost(robot_, impact_status, data, grid_info, s1);
+    cost->evalImpactCostDerivatives(robot_, impact_status, data, grid_info, s1, kkt_residual);
     Qqq_ref.col(i) = (kkt_residual.lq() - kkt_residual0.lq()) / finite_diff_;
   }
   if (!kkt_matrix.Qqq().isApprox(Qqq_ref, test_tol_)) {
@@ -443,8 +443,8 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     s1.v(i) += finite_diff_;
     kkt_residual.lv().setZero();
     robot_.updateKinematics(s1.q, s1.v);
-    cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1);
-    cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s1, kkt_residual);
+    cost->evalImpactCost(robot_, impact_status, data, grid_info, s1);
+    cost->evalImpactCostDerivatives(robot_, impact_status, data, grid_info, s1, kkt_residual);
     Qvv_ref.col(i) = (kkt_residual.lv() - kkt_residual0.lv()) / finite_diff_;
   }
   if (!kkt_matrix.Qvv().isApprox(Qvv_ref, test_tol_)) {
@@ -457,8 +457,8 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     s1 = s;
     s1.dv(i) += finite_diff_;
     kkt_residual.ldv.setZero();
-    cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1);
-    cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s1, kkt_residual);
+    cost->evalImpactCost(robot_, impact_status, data, grid_info, s1);
+    cost->evalImpactCostDerivatives(robot_, impact_status, data, grid_info, s1, kkt_residual);
     Qdvdv_ref.col(i) = (kkt_residual.ldv - kkt_residual0.ldv) / finite_diff_;
   }
   if (!kkt_matrix.Qdvdv.isApprox(Qdvdv_ref, test_tol_)) {
@@ -473,8 +473,8 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
       s1.f_stack().coeffRef(i) += finite_diff_;
       s1.set_f_vector();
       kkt_residual.lf().setZero();
-      cost->evalImpulseCost(robot_, impulse_status, data, grid_info, s1);
-      cost->evalImpulseCostDerivatives(robot_, impulse_status, data, grid_info, s1, kkt_residual);
+      cost->evalImpactCost(robot_, impact_status, data, grid_info, s1);
+      cost->evalImpactCostDerivatives(robot_, impact_status, data, grid_info, s1, kkt_residual);
       Qff_ref.col(i) = (kkt_residual.lf() - kkt_residual0.lf()) / finite_diff_;
     }
     if (!kkt_matrix.Qff().isApprox(Qff_ref, test_tol_)) {

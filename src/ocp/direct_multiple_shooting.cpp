@@ -8,258 +8,248 @@
 
 namespace robotoc{
 
-DirectMultipleShooting::DirectMultipleShooting(const int nthreads) 
-  : nthreads_(nthreads) {
-  if (nthreads <= 0) {
-    throw std::out_of_range("[DirectMultipleShooting] invalid argument: 'nthreads' must be positive!");
+DirectMultipleShooting::DirectMultipleShooting(const OCP& ocp, const int nthreads)
+  : ocp_data_(),
+    intermediate_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
+    impact_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
+    terminal_stage_(ocp.cost, ocp.constraints, ocp.contact_sequence),
+    performance_index_(),
+    max_primal_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.reserved_num_discrete_events)), 
+    max_dual_step_sizes_(Eigen::VectorXd::Ones(ocp.N+1+ocp.reserved_num_discrete_events)),
+    nthreads_(nthreads) {
+  ocp_data_.resize(ocp.N+1+ocp.reserved_num_discrete_events);
+  for (int i=0; i<ocp.N+1+ocp.reserved_num_discrete_events; ++i) {
+    ocp_data_[i] = intermediate_stage_.createData(ocp.robot);
   }
 }
 
 
 DirectMultipleShooting::DirectMultipleShooting()
-  : nthreads_(0) {
+  : ocp_data_(),
+    intermediate_stage_(),
+    impact_stage_(),
+    terminal_stage_(),
+    performance_index_(),
+    max_primal_step_sizes_(), 
+    max_dual_step_sizes_(),
+    nthreads_(0) {
 }
 
 
-DirectMultipleShooting::~DirectMultipleShooting() {
+void DirectMultipleShooting::setNumThreads(const int nthreads) {
+  if (nthreads <= 0) {
+    throw std::out_of_range("[DirectMultipleShooting] invalid argument: nthreads must be positive!");
+  }
+  nthreads_ = nthreads;
+}
+
+
+void DirectMultipleShooting::initConstraints(
+    aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
+    const Solution& s) {
+  resizeData(time_discretization);
+  const int N = time_discretization.size() - 1;
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.initConstraints(robots[omp_get_thread_num()], 
+                                      grid, s[i], ocp_data_[i]);
+    }
+    else if (grid.type == GridType::Impact) {
+      impact_stage_.initConstraints(robots[omp_get_thread_num()], 
+                                    grid, s[i], ocp_data_[i]);
+    }
+    else {
+      intermediate_stage_.initConstraints(robots[omp_get_thread_num()], 
+                                          grid, s[i], ocp_data_[i]);
+    }
+  }
 }
 
 
 bool DirectMultipleShooting::isFeasible(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Solution& s) const {
-  const int N = ocp.timeDiscretization().N();
-  const int N_impulse = ocp.timeDiscretization().N_impulse();
-  const int N_lift = ocp.timeDiscretization().N_lift();
-  const int N_all = N + 1 + 2*N_impulse + N_lift;
-  std::vector<bool> is_feasible(N_all, true);
+    aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
+    const Solution& s) {
+  const int N = time_discretization.size() - 1;
+  assert(ocp_data_.size() >= N+1);
+  std::vector<bool> is_feasible(N+1, true);
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all; ++i) {
-    if (i < N) {
-      const int contact_phase = ocp.timeDiscretization().contactPhase(i);
-      is_feasible[i] = ocp[i].isFeasible(
-          robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(contact_phase), s[i]);
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      is_feasible[i] = terminal_stage_.isFeasible(robots[omp_get_thread_num()], 
+                                                  grid, s[i], ocp_data_[i]);
     }
-    else if (i == N) {
-      is_feasible[i] = ocp.terminal.isFeasible(robots[omp_get_thread_num()], s[N]);
-    }
-    else if (i < N+1+N_impulse) {
-      const int impulse_index  = i - (N+1);
-      is_feasible[i] = ocp.impulse[impulse_index].isFeasible(
-          robots[omp_get_thread_num()], 
-          contact_sequence->impulseStatus(impulse_index), 
-          s.impulse[impulse_index]);
-    }
-    else if (i < N+1+2*N_impulse) {
-      const int impulse_index  = i - (N+1+N_impulse);
-      const int contact_phase = ocp.timeDiscretization().contactPhaseAfterImpulse(impulse_index);
-      is_feasible[i] = ocp.aux[impulse_index].isFeasible(
-          robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(contact_phase), s.aux[impulse_index]);
+    else if (grid.type == GridType::Impact) {
+      is_feasible[i] = impact_stage_.isFeasible(robots[omp_get_thread_num()], 
+                                                grid, s[i], ocp_data_[i]);
     }
     else {
-      const int lift_index = i - (N+1+2*N_impulse);
-      const int contact_phase = ocp.timeDiscretization().contactPhaseAfterLift(lift_index);
-      is_feasible[i] = ocp.lift[lift_index].isFeasible(
-          robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(lift_index), s.lift[lift_index]);
+      is_feasible[i] = intermediate_stage_.isFeasible(robots[omp_get_thread_num()], 
+                                                      grid, s[i], ocp_data_[i]);
     }
   }
-  for (int i=0; i<N_all; ++i) {
-    if (!is_feasible[i]) {
-      return false;
-    }
+  for (const auto e : is_feasible) {
+    if (!e) return false;
   }
   return true;
 }
 
 
-void DirectMultipleShooting::initConstraints(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Solution& s) const {
-  const int N = ocp.timeDiscretization().N();
-  const int N_impulse = ocp.timeDiscretization().N_impulse();
-  const int N_lift = ocp.timeDiscretization().N_lift();
-  const int N_all = N + 1 + 2*N_impulse + N_lift;
+void DirectMultipleShooting::evalOCP(
+    aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+    KKTResidual& kkt_residual) {
+  const int N = time_discretization.size() - 1;
+  assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all; ++i) {
-    if (i < N) {
-      ocp[i].initConstraints(
-          robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(ocp.timeDiscretization().contactPhase(i)),
-          i, s[i]);
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.evalOCP(robots[omp_get_thread_num()], grid, s[i],  
+                              ocp_data_[i], kkt_residual[i]);
     }
-    else if (i == N) {
-      ocp.terminal.initConstraints(robots[omp_get_thread_num()], N, s[N]);
-    }
-    else if (i < N+1+N_impulse) {
-      const int impulse_index  = i - (N+1);
-      ocp.impulse[impulse_index].initConstraints(
-          robots[omp_get_thread_num()], 
-          contact_sequence->impulseStatus(impulse_index), 
-          s.impulse[impulse_index]);
-    }
-    else if (i < N+1+2*N_impulse) {
-      const int impulse_index  = i - (N+1+N_impulse);
-      ocp.aux[impulse_index].initConstraints(
-          robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(
-              ocp.timeDiscretization().contactPhaseAfterImpulse(impulse_index)), 
-          0, s.aux[impulse_index]);
+    else if (grid.type == GridType::Impact) {
+      impact_stage_.evalOCP(robots[omp_get_thread_num()], grid, s[i], s[i+1], 
+                            ocp_data_[i], kkt_residual[i]);
     }
     else {
-      const int lift_index = i - (N+1+2*N_impulse);
-      ocp.lift[lift_index].initConstraints(
-          robots[omp_get_thread_num()], 
-          contact_sequence->contactStatus(
-              ocp.timeDiscretization().contactPhaseAfterLift(lift_index)), 
-          0, s.lift[lift_index]);
+      intermediate_stage_.evalOCP(robots[omp_get_thread_num()], grid, s[i], s[i+1], 
+                                  ocp_data_[i], kkt_residual[i]);
     }
   }
+  performance_index_.setZero();
+  for (int i=0; i<=N; ++i) {
+    performance_index_ += ocp_data_[i].performance_index;
+  }
 }
 
 
-void DirectMultipleShooting::computeKKTResidual(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
+void DirectMultipleShooting::evalKKT(
+    aligned_vector<Robot>& robots, const TimeDiscretization& time_discretization, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
-  runParallel<internal::ComputeKKTResidual>(ocp, robots, contact_sequence, q, v,  
-                                            s, kkt_matrix, kkt_residual);
-}
-
-
-void DirectMultipleShooting::computeKKTSystem(
-    OCP& ocp, aligned_vector<Robot>& robots, 
-    const std::shared_ptr<ContactSequence>& contact_sequence, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const {
-  runParallel<internal::ComputeKKTSystem>(ocp, robots, contact_sequence, q, v, 
-                                          s, kkt_matrix, kkt_residual);
-}
-
-
-double DirectMultipleShooting::KKTError(const OCP& ocp, 
-                                        const KKTResidual& kkt_residual) {
-  double kkt_error = 0;
-  for (int i=0; i<=ocp.timeDiscretization().N(); ++i) {
-    kkt_error += kkt_residual[i].kkt_error;
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+  const int N = time_discretization.size() - 1;
+  assert(ocp_data_.size() >= N+1);
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.evalKKT(robots[omp_get_thread_num()], grid, s[i-1].q, s[i], 
+                              ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
+    }
+    else if (grid.type == GridType::Impact) {
+      impact_stage_.evalKKT(robots[omp_get_thread_num()], grid, s[i-1].q, s[i], s[i+1],
+                            ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
+    }
+    else if (i == 0) {
+      intermediate_stage_.evalKKT(robots[omp_get_thread_num()], grid, q, s[i], s[i+1], 
+                                  ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
+    }
+    else {
+      intermediate_stage_.evalKKT(robots[omp_get_thread_num()], grid, s[i-1].q, s[i], s[i+1],
+                                  ocp_data_[i], kkt_matrix[i], kkt_residual[i]);
+    }
   }
-  for (int i=0; i<ocp.timeDiscretization().N_impulse(); ++i) {
-    kkt_error += kkt_residual.impulse[i].kkt_error;
-    kkt_error += kkt_residual.aux[i].kkt_error;
+  performance_index_.setZero();
+  for (int i=0; i<=N; ++i) {
+    performance_index_ += ocp_data_[i].performance_index;
   }
-  for (int i=0; i<ocp.timeDiscretization().N_lift(); ++i) {
-    kkt_error += kkt_residual.lift[i].kkt_error;
-  }
-  return kkt_error;
-}
-
-
-double DirectMultipleShooting::totalCost(const OCP& ocp, 
-                                         const bool include_cost_barrier) {
-  double total_cost = 0;
-  for (int i=0; i<ocp.timeDiscretization().N(); ++i) {
-    total_cost += ocp[i].stageCost(include_cost_barrier);
-  }
-  total_cost += ocp.terminal.terminalCost(include_cost_barrier);
-  for (int i=0; i<ocp.timeDiscretization().N_impulse(); ++i) {
-    total_cost += ocp.impulse[i].stageCost(include_cost_barrier);
-    total_cost += ocp.aux[i].stageCost(include_cost_barrier);
-  }
-  for (int i=0; i<ocp.timeDiscretization().N_lift(); ++i) {
-    total_cost += ocp.lift[i].stageCost(include_cost_barrier);
-  }
-  return total_cost;
 }
 
 
 void DirectMultipleShooting::computeInitialStateDirection(
-    const OCP& ocp, const aligned_vector<Robot>& robots, 
-    const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
-    const Solution& s, Direction& d) {
-  ocp[0].computeInitialStateDirection(robots[0], q0, v0, s[0], d[0]);
+    const Robot& robot,  const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
+    const Solution& s, Direction& d) const {
+  ::robotoc::computeInitialStateDirection(robot, q0, v0, s[0], ocp_data_[0], d[0]);
+}
+
+
+const PerformanceIndex& DirectMultipleShooting::getEval() const {
+  return performance_index_;
+}
+
+
+void DirectMultipleShooting::computeStepSizes(
+    const TimeDiscretization& time_discretization, Direction& d) {
+  const int N = time_discretization.size() - 1;
+  assert(ocp_data_.size() >= N+1);
+  max_primal_step_sizes_.fill(1.0);
+  max_dual_step_sizes_.fill(1.0);
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = terminal_stage_.maxPrimalStepSize(ocp_data_[i]);
+      max_dual_step_sizes_.coeffRef(i) = terminal_stage_.maxDualStepSize(ocp_data_[i]);
+    }
+    else if (grid.type == GridType::Impact) {
+      impact_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = impact_stage_.maxPrimalStepSize(ocp_data_[i]);
+      max_dual_step_sizes_.coeffRef(i) = impact_stage_.maxDualStepSize(ocp_data_[i]);
+    }
+    else {
+      intermediate_stage_.expandPrimal(grid, ocp_data_[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = intermediate_stage_.maxPrimalStepSize(ocp_data_[i]);
+      max_dual_step_sizes_.coeffRef(i) = intermediate_stage_.maxDualStepSize(ocp_data_[i]);
+    }
+  }
+}
+
+
+double DirectMultipleShooting::maxPrimalStepSize() const {
+  return max_primal_step_sizes_.minCoeff();
+}
+
+
+double DirectMultipleShooting::maxDualStepSize() const {
+  return max_dual_step_sizes_.minCoeff();
 }
 
 
 void DirectMultipleShooting::integrateSolution(
-    OCP& ocp, const aligned_vector<Robot>& robots, 
+    const aligned_vector<Robot>& robots, 
+    const TimeDiscretization& time_discretization, 
     const double primal_step_size, const double dual_step_size, 
-    const KKTMatrix& kkt_matrix, Direction& d, Solution& s) const {
-  assert(robots.size() == nthreads_);
-  const int N = ocp.timeDiscretization().N();
-  const int N_impulse = ocp.timeDiscretization().N_impulse();
-  const int N_lift = ocp.timeDiscretization().N_lift();
-  const int N_all = N + 1 + 2*N_impulse + N_lift;
+    const KKTMatrix& kkt_matrix, Direction& d, Solution& s) {
+  const int N = time_discretization.size() - 1;
+  assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all; ++i) {
-    if (i < N) {
-      if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp.timeDiscretization().impulseIndexAfterTimeStage(i);
-        ocp[i].expandDual(ocp.timeDiscretization().gridInfo(i), 
-                          d.impulse[impulse_index], d[i], dts_stage(ocp, d, i));
-      }
-      else if (ocp.timeDiscretization().isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp.timeDiscretization().liftIndexAfterTimeStage(i);
-        ocp[i].expandDual(ocp.timeDiscretization().gridInfo(i), 
-                          d.lift[lift_index], d[i], dts_stage(ocp, d, i));
-      }
-      else if (ocp.timeDiscretization().isTimeStageBeforeImpulse(i+1)) {
-        const int impulse_index = ocp.timeDiscretization().impulseIndexAfterTimeStage(i+1);
-        ocp[i].expandDual(ocp.timeDiscretization().gridInfo(i), d[i+1], 
-                          kkt_matrix.switching[impulse_index], d[i], 
-                          dts_stage(ocp, d, i));
-      }
-      else {
-        ocp[i].expandDual(ocp.timeDiscretization().gridInfo(i), d[i+1], d[i], 
-                          dts_stage(ocp, d, i));
-      }
-      ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
-                          d[i], s[i]);
-      ocp[i].updateDual(dual_step_size);
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.expandDual(grid, ocp_data_[i], d[i]);
+      terminal_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                   primal_step_size, d[i], s[i], ocp_data_[i]);
+      terminal_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
-    else if (i == N) {
-      ocp.terminal.expandDual(d[N]);
-      ocp.terminal.updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
-                                d[N], s[N]);
-      ocp.terminal.updateDual(dual_step_size);
-    }
-    else if (i < N+1+N_impulse) {
-      const int impulse_index  = i - (N+1);
-      ocp.impulse[impulse_index].expandDual(d.aux[impulse_index], 
-                                            d.impulse[impulse_index]);
-      ocp.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
-                                              primal_step_size, 
-                                              d.impulse[impulse_index], 
-                                              s.impulse[impulse_index]);
-      ocp.impulse[impulse_index].updateDual(dual_step_size);
-    }
-    else if (i < N+1+2*N_impulse) {
-      const int impulse_index  = i - (N+1+N_impulse);
-      ocp.aux[impulse_index].expandDual(
-          ocp.timeDiscretization().gridInfoAux(impulse_index), 
-          d[ocp.timeDiscretization().timeStageAfterImpulse(impulse_index)], 
-          d.aux[impulse_index], dts_aux(ocp, d, impulse_index));
-      ocp.aux[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
-                                          primal_step_size, 
-                                          d.aux[impulse_index], 
-                                          s.aux[impulse_index]);
-      ocp.aux[impulse_index].updateDual(dual_step_size);
+    else if (grid.type == GridType::Impact) {
+      impact_stage_.expandDual(grid, ocp_data_[i], d[i+1], d[i]);
+      impact_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                 primal_step_size, d[i], s[i], ocp_data_[i]);
+      impact_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
     else {
-      const int lift_index = i - (N+1+2*N_impulse);
-      ocp.lift[lift_index].expandDual(
-          ocp.timeDiscretization().gridInfoLift(lift_index), 
-          d[ocp.timeDiscretization().timeStageAfterLift(lift_index)], 
-          d.lift[lift_index], dts_lift(ocp, d, lift_index));
-      ocp.lift[lift_index].updatePrimal(robots[omp_get_thread_num()], 
-                                        primal_step_size, d.lift[lift_index], 
-                                        s.lift[lift_index]);
-      ocp.lift[lift_index].updateDual(dual_step_size);
+      intermediate_stage_.expandDual(grid, ocp_data_[i], d[i+1], d[i]);
+      intermediate_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                       primal_step_size, d[i], s[i], ocp_data_[i]);
+      intermediate_stage_.updateDual(dual_step_size, ocp_data_[i]);
     }
+  }
+}
+
+
+void DirectMultipleShooting::resizeData(
+    const TimeDiscretization& time_discretization) {
+  const int N = time_discretization.size() - 1;
+  while (ocp_data_.size() < N+1) {
+    ocp_data_.push_back(ocp_data_.back());
+  }
+  if (max_primal_step_sizes_.size() < N+1) {
+    max_primal_step_sizes_.resize(N+1);
+    max_dual_step_sizes_.resize(N+1);
   }
 }
 

@@ -57,11 +57,13 @@ configure_file(
 
 # add tests
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cost)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hybrid)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/impulse)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dynamics)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ocp)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sto)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/planner)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/riccati)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/unconstr)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/parnmpc)

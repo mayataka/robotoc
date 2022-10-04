@@ -3,7 +3,7 @@
 
 #include "Eigen/Core"
 
-#include "robotoc/unconstr/unconstr_parnmpc.hpp"
+#include "robotoc/ocp/ocp.hpp"
 #include "robotoc/solver/unconstr_parnmpc_solver.hpp"
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/cost/cost_function.hpp"
@@ -20,8 +20,9 @@
 
 int main() {
   // Create a robot.
-  const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
-  robotoc::Robot robot(path_to_urdf);
+  robotoc::RobotModelInfo model_info;
+  model_info.urdf_path = "../iiwa_description/urdf/iiwa14.urdf";
+  robotoc::Robot robot(model_info);
 
   // Create a cost function.
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
@@ -57,10 +58,10 @@ int main() {
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  robotoc::UnconstrParNMPC parnmpc(robot, cost, constraints, T, N);
-  auto solver_options = robotoc::SolverOptions::defaultOptions();
-  const int nthreads = 8; // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
-  robotoc::UnconstrParNMPCSolver parnmpc_solver(parnmpc, solver_options, nthreads);
+  robotoc::OCP ocp(robot, cost, constraints, T, N);
+  auto solver_options = robotoc::SolverOptions();
+  solver_options.nthreads = 8; // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
+  robotoc::UnconstrParNMPCSolver parnmpc_solver(ocp, solver_options);
 
   // Initial time and initial state
   const double t = 0;
@@ -68,10 +69,11 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   // Solves the OCP.
+  parnmpc_solver.discretize(t);
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);
   parnmpc_solver.initConstraints();
-  parnmpc_solver.initBackwardCorrection(t);
+  parnmpc_solver.initBackwardCorrection();
   std::cout << "Initial KKT error: " << parnmpc_solver.KKTError(t, q, v) << std::endl;
   parnmpc_solver.solve(t, q, v);
   std::cout << "KKT error after convergence: " << parnmpc_solver.KKTError(t, q, v) << std::endl;

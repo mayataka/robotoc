@@ -5,6 +5,8 @@
 #include <deque>
 #include <iostream>
 
+#include "robotoc/core/performance_index.hpp"
+
 
 namespace robotoc {
 
@@ -12,52 +14,21 @@ namespace robotoc {
 /// @class SolverStatistics
 /// @brief Statistics of optimal control solvers. 
 ///
-class SolverStatistics {
-public:
-  ///
-  /// @brief Default constructor. 
-  ///
-  SolverStatistics();
-
-  ///
-  /// @brief Destructor. 
-  ///
-  ~SolverStatistics();
-
-  ///
-  /// @brief Default copy constructor. 
-  ///
-  SolverStatistics(const SolverStatistics&) = default;
-
-  ///
-  /// @brief Default copy assign operator. 
-  ///
-  SolverStatistics& operator=(const SolverStatistics&) = default;
-
-  ///
-  /// @brief Default move constructor. 
-  ///
-  SolverStatistics(SolverStatistics&&) noexcept = default;
-
-  ///
-  /// @brief Default move assign operator. 
-  ///
-  SolverStatistics& operator=(SolverStatistics&&) noexcept = default;
-
+struct SolverStatistics {
   ///
   /// @brief Flags whether the convergence is achieved.
   ///
-  bool convergence;
+  bool convergence = false;
 
   ///
   /// @brief Number of iterations until convergence.
   ///
-  int iter;
+  int iter = 0;
 
   ///
-  /// @brief l2-norm of the KKT residual at each iteration.
+  /// @brief Performance measurements at each iteration.
   ///
-  std::vector<double> kkt_error;
+  std::vector<PerformanceIndex> performance_index;
 
   ///
   /// @brief Primal step sizes at each iteration.
@@ -82,7 +53,13 @@ public:
   ///
   /// @brief CPU time is stored if SolverOptions::enable_benchmark is true.
   ///
-  double cpu_time;
+  double cpu_time = 0;
+
+  ///
+  /// @brief Reserves the data.
+  /// @param[in] size Size of the new data.
+  ///
+  void reserve(const int size);
 
   ///
   /// @brief Clear the all elements.

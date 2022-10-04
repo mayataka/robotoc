@@ -1,7 +1,9 @@
 add_library(
   test_helper
   SHARED
+  ${CMAKE_CURRENT_SOURCE_DIR}/urdf_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/robot_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/contact_status_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/contact_sequence_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solution_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/direction_factory.cpp

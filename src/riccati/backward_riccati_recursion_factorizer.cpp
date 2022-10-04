@@ -68,7 +68,7 @@ void BackwardRiccatiRecursionFactorizer::factorizeHamiltonian(
 
 void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     const SplitRiccatiFactorization& riccati_next, 
-    ImpulseSplitKKTMatrix& kkt_matrix) {
+    SplitKKTMatrix& kkt_matrix) {
   AtP_.noalias() = kkt_matrix.Fxx.transpose() * riccati_next.P;
   // Factorize F
   kkt_matrix.Qxx.noalias() += AtP_ * kkt_matrix.Fxx;
@@ -145,8 +145,8 @@ void BackwardRiccatiRecursionFactorizer::factorizeSTOFactorization(
 
 void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const SplitRiccatiFactorization& riccati_next, 
-    const ImpulseSplitKKTMatrix& kkt_matrix, 
-    const ImpulseSplitKKTResidual& kkt_residual, 
+    const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati) {
   // Riccati factorization matrix with preserving the symmetry
   riccati.P = 0.5 * (kkt_matrix.Qxx + kkt_matrix.Qxx.transpose());
@@ -159,8 +159,8 @@ void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
 
 void BackwardRiccatiRecursionFactorizer::factorizeSTOFactorization(
     const SplitRiccatiFactorization& riccati_next, 
-    const ImpulseSplitKKTMatrix& kkt_matrix, 
-    const ImpulseSplitKKTResidual& kkt_residual, 
+    const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati) {
   // Qtx
   riccati.Psi.setZero();

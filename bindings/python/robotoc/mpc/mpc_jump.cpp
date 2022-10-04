@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/mpc_jump.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -13,8 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_jump, m) {
   py::class_<MPCJump>(m, "MPCJump")
-    .def(py::init<const Robot&, const double, const int, const int>(),
-         py::arg("robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int>(),
+         py::arg("robot"), py::arg("T"), py::arg("N"))
     .def("set_jump_pattern", &MPCJump::setJumpPattern,
          py::arg("foot_step_planner"), py::arg("flying_time"), py::arg("min_flying_time"), 
          py::arg("ground_time"), py::arg("min_ground_time"))
@@ -47,7 +48,8 @@ PYBIND11_MODULE(mpc_jump, m) {
     .def("get_friction_cone_handle", &MPCJump::getFrictionConeHandle)
     .def("get_solver", &MPCJump::getSolver)
     .def("get_contact_sequence", &MPCJump::getContactSequence)
-    .def("set_robot_properties", &MPCJump::setRobotProperties);
+    .def("set_robot_properties", &MPCJump::setRobotProperties)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCJump);
 }
 
 } // namespace python

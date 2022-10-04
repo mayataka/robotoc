@@ -5,11 +5,11 @@
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
-#include "robotoc/robot/impulse_status.hpp"
-#include "robotoc/ocp/split_solution.hpp"
-#include "robotoc/ocp/split_direction.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
+#include "robotoc/robot/impact_status.hpp"
+#include "robotoc/core/split_solution.hpp"
+#include "robotoc/core/split_direction.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/constraints/constraints.hpp"
 #include "robotoc/constraints/constraints_data.hpp"
 #include "robotoc/constraints/joint_position_lower_limit.hpp"
@@ -81,16 +81,18 @@ void ConstraintsTest::timeStage0(Robot& robot,
   const int time_stage = 0;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
-  EXPECT_TRUE(data.position_level_data.empty());
-  EXPECT_TRUE(data.velocity_level_data.empty());
+  EXPECT_FALSE(data.position_level_data.empty());
+  EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
+  EXPECT_EQ(data.position_level_data.size(), 2);
+  EXPECT_EQ(data.velocity_level_data.size(), 2);
   EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
+  kkt_residual.setContactDimension(contact_status.dimf());
   constraints->setSlackAndDual(robot, contact_status, data, s);
   constraints->linearizeConstraints(robot, contact_status, data, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
@@ -121,17 +123,18 @@ void ConstraintsTest::timeStage1(Robot& robot,
   const int time_stage = 1;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
-  EXPECT_TRUE(data.position_level_data.empty());
+  EXPECT_FALSE(data.position_level_data.empty());
   EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
+  EXPECT_EQ(data.position_level_data.size(), 2);
   EXPECT_EQ(data.velocity_level_data.size(), 2);
   EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
+  kkt_residual.setContactDimension(contact_status.dimf());
   constraints->setSlackAndDual(robot, contact_status, data, s);
   constraints->linearizeConstraints(robot, contact_status, data, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
@@ -172,8 +175,8 @@ void ConstraintsTest::timeStage2(Robot& robot,
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitKKTMatrix kkt_matrix(robot);
   SplitKKTResidual kkt_residual(robot);
-  kkt_matrix.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactDimension(contact_status.dimf());
+  kkt_residual.setContactDimension(contact_status.dimf());
   constraints->setSlackAndDual(robot, contact_status, data, s);
   constraints->linearizeConstraints(robot, contact_status, data, s, kkt_residual);
   EXPECT_FALSE(kkt_residual.lq().isZero());

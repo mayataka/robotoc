@@ -13,29 +13,22 @@
 
 namespace robotoc {
 
-inline void SurfaceContact::computeJointForceFromContactWrench(
-    const Vector6d& contact_wrench, 
-    pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const {
-  joint_forces[parent_joint_id_] = jXf_.act(pinocchio::Force(contact_wrench));
-}
-
-
 template <typename VectorType>
 inline void SurfaceContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const SE3& cotact_placement, 
+    const SE3& desired_contact_placement, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) {
   assert(baumgarte_residual.size() == 6);
   const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
       = pinocchio::getFrameAcceleration(model, data, contact_frame_id_, 
                                         pinocchio::LOCAL).toVector();
   (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
-      += baumgarte_weight_on_velocity_ 
+      += info_.baumgarte_velocity_gain 
           * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
                                         pinocchio::LOCAL).toVector();
-  X_diff_ = cotact_placement.inverse() * data.oMf[contact_frame_id_];
+  X_diff_ = desired_contact_placement.inverse() * data.oMf[contact_frame_id_];
   (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
-      += baumgarte_weight_on_position_ * Log6Map(X_diff_);
+      += info_.baumgarte_position_gain * Log6Map(X_diff_);
 }
 
 
@@ -69,12 +62,12 @@ inline void SurfaceContact::computeBaumgarteDerivatives(
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = frame_a_partial_da_;
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_velocity_ * frame_v_partial_dq_;
+      += info_.baumgarte_velocity_gain * frame_v_partial_dq_;
   (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
-      += baumgarte_weight_on_velocity_ * frame_a_partial_da_;
+      += info_.baumgarte_velocity_gain * frame_a_partial_da_;
   computeJLog6Map(X_diff_, Jlog6_);
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_position_ * Jlog6_ * J_frame_;
+      += info_.baumgarte_position_gain * Jlog6_ * J_frame_;
 }
 
 
@@ -112,10 +105,10 @@ inline void SurfaceContact::computeContactVelocityDerivatives(
 template <typename VectorType>
 inline void SurfaceContact::computeContactPositionResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const SE3& contact_placement,
+    const SE3& desired_contact_placement,
     const Eigen::MatrixBase<VectorType>& position_residual) {
   assert(position_residual.size() == 6);
-  X_diff_ = contact_placement.inverse() * data.oMf[contact_frame_id_];
+  X_diff_ = desired_contact_placement.inverse() * data.oMf[contact_frame_id_];
   (const_cast<Eigen::MatrixBase<VectorType>&> (position_residual))
       = Log6Map(X_diff_);
 }
@@ -132,22 +125,6 @@ inline void SurfaceContact::computeContactPositionDerivative(
   computeJLog6Map(X_diff_, Jlog6_);
   (const_cast<Eigen::MatrixBase<MatrixType>&> (position_partial_dq)).noalias()
       = Jlog6_ * J_frame_;
-}
-
-
-inline const SE3& SurfaceContact::contactPlacement(
-    const pinocchio::Data& data) const {
-  return data.oMf[contact_frame_id_];
-}
-
-
-inline int SurfaceContact::contact_frame_id() const {
-  return contact_frame_id_;
-}
-
-
-inline int SurfaceContact::parent_joint_id() const {
-  return parent_joint_id_;
 }
 
 } // namespace robotoc

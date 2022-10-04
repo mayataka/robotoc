@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 
 #include "robotoc/mpc/mpc_crawl.hpp"
+#include "robotoc/utils/pybind11_macros.hpp"
 
 
 namespace robotoc {
@@ -13,8 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mpc_crawl, m) {
   py::class_<MPCCrawl>(m, "MPCCrawl")
-    .def(py::init<const Robot&, const double, const int, const int>(),
-         py::arg("robot"), py::arg("T"), py::arg("N"), py::arg("nthreads"))
+    .def(py::init<const Robot&, const double, const int>(),
+         py::arg("robot"), py::arg("T"), py::arg("N"))
     .def("set_gait_pattern", &MPCCrawl::setGaitPattern,
          py::arg("planner"), py::arg("swing_height"), py::arg("swing_time"), 
          py::arg("stance_time"), py::arg("swing_start_time"))
@@ -45,7 +46,8 @@ PYBIND11_MODULE(mpc_crawl, m) {
     .def("get_friction_cone_handle", &MPCCrawl::getFrictionConeHandle)
     .def("get_solver", &MPCCrawl::getSolver)
     .def("get_contact_sequence", &MPCCrawl::getContactSequence)
-    .def("set_robot_properties", &MPCCrawl::setRobotProperties);
+    .def("set_robot_properties", &MPCCrawl::setRobotProperties)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(MPCCrawl);
 }
 
 } // namespace python

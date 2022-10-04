@@ -4,9 +4,8 @@
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
-#include "robotoc/ocp/split_kkt_matrix.hpp"
-#include "robotoc/ocp/split_kkt_residual.hpp"
-#include "robotoc/unconstr/unconstr_ocp.hpp"
+#include "robotoc/core/split_kkt_matrix.hpp"
+#include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/riccati/unconstr_riccati_factorizer.hpp"
 #include "robotoc/riccati/unconstr_riccati_recursion.hpp"
 
@@ -31,9 +30,9 @@ protected:
     T = 1;
     dt = T / N;
 
-    kkt_matrix = KKTMatrix(robot, N);
-    kkt_residual = KKTResidual(robot, N);
-    d = Direction(robot, N);
+    kkt_matrix = KKTMatrix(N+1, SplitKKTMatrix(robot));
+    kkt_residual = KKTResidual(N+1, SplitKKTResidual(robot));
+    d = Direction(N+1, SplitDirection(robot));
     riccati_factorization = UnconstrRiccatiFactorization(N+1, SplitRiccatiFactorization(robot));
     for (int i=0; i<=N; ++i) {
       const Eigen::MatrixXd H_seed = Eigen::MatrixXd::Random(dimx+dimv, dimx+dimv);
@@ -66,7 +65,7 @@ TEST_F(UnconstrRiccatiRecursionTest, test) {
   auto kkt_residual_ref = kkt_residual;
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  auto ocp = UnconstrOCP(robot, cost, constraints, T, N);
+  auto ocp = OCP(robot, cost, constraints, T, N);
   UnconstrRiccatiRecursion riccati_recursion(ocp);
   riccati_recursion.backwardRiccatiRecursion(kkt_matrix, kkt_residual, 
                                              riccati_factorization);
@@ -87,11 +86,13 @@ TEST_F(UnconstrRiccatiRecursionTest, test) {
   }
   d[0].dx.setRandom();
   auto d_ref = d;
-  riccati_recursion.forwardRiccatiRecursion(kkt_residual, d);
+  riccati_recursion.forwardRiccatiRecursion(kkt_residual, riccati_factorization, d);
   for (int i=0; i<N; ++i) {
     factorizer.forwardRiccatiRecursion(kkt_residual_ref[i], dt, lqr_policy[i],
                                        d_ref[i], d_ref[i+1]);
+    factorizer.computeCostateDirection(riccati_factorization_ref[i], d_ref[i]);
   }
+  factorizer.computeCostateDirection(riccati_factorization_ref[N], d_ref[N]);
   for (int i=0; i<=N; ++i) {
     EXPECT_TRUE(d[i].isApprox(d_ref[i]));
   }
