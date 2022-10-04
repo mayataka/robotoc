@@ -65,7 +65,7 @@ void ParNMPCIntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   data.performance_index.cost = cost_->evalStageCost(robot, contact_status_, 
                                                      data.cost_data, grid_info, s);
   constraints_->evalConstraint(robot, contact_status_, data.constraints_data, s);
-  data.performance_index.cost_barrier += data.constraints_data.logBarrier();
+  data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   evalUnconstrBackwardEuler(grid_info.dt, q_prev, v_prev, s, kkt_residual);
   data.unconstr_dynamics.evalUnconstrDynamics(robot, s);
   data.performance_index.primal_feasibility 
