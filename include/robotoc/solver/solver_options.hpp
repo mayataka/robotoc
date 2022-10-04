@@ -75,7 +75,7 @@ struct SolverOptions {
   LineSearchSettings line_search_settings;
 
   ///
-  /// @brief Discretization method of the hybrid optimal control problem.
+  /// @brief Discretization method of the optimal control problem.
   /// Only used in OCPSolver without the STO problem. Default is 
   /// DiscretizationMethod::GridBased.
   /// @note For the STO problem, discretization method is fixed to 

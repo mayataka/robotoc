@@ -134,7 +134,7 @@ void UnconstrOCPSolver::solve(const double t, const Eigen::VectorXd& q,
   if (init_solver) {
     discretize(t);
     initConstraints();
-    line_search_.clearFilter();
+    line_search_.clearHistory();
   }
   solver_statistics_.clear(); 
   for (int iter=0; iter<solver_options_.max_iter; ++iter) {

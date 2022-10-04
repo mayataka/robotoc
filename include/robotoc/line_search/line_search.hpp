@@ -82,7 +82,7 @@ public:
   ///
   /// @brief Clear the line search filter. 
   ///
-  void clearFilter();
+  void clearHistory();
 
   ///
   /// @brief Checks wheather the line search filter is empty or not. 

@@ -22,8 +22,7 @@ step_yaw = 0.0
 
 step_height = 0.1
 swing_time = 0.25
-stance_time = 0
-# stance_time = 0.05
+stance_time = 0.05
 swing_start_time = 0.5
 
 vcom_cmd = 0.5 * step_length / (swing_time+stance_time)

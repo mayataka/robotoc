@@ -48,7 +48,7 @@ double LineSearch::computeStepSize(
 }
 
 
-void LineSearch::clearFilter() {
+void LineSearch::clearHistory() {
   filter_.clear();
 }
 

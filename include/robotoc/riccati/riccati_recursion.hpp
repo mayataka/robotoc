@@ -19,7 +19,7 @@ namespace robotoc {
 
 ///
 /// @class RiccatiRecursion
-/// @brief Riccati recursion solver for hybrid optimal control problems.
+/// @brief Riccati recursion solver for optimal control problems.
 /// Solves the KKT system in linear time complexity w.r.t. the length of the 
 /// horizon.
 ///

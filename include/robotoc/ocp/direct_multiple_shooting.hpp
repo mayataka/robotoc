@@ -26,7 +26,7 @@ namespace robotoc {
 
 ///
 /// @class DirectMultipleShooting
-/// @brief Direct multiple shooting method of the hybrid optimal control 
+/// @brief Direct multiple shooting method of the optimal control 
 /// problems. 
 ///
 class DirectMultipleShooting {

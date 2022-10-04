@@ -5,7 +5,7 @@ namespace robotoc {
 
 /// 
 /// @enum DiscretizationMethod
-/// @brief Discretization method of the hybrid optimal control problem.
+/// @brief Discretization method of the optimal control problem.
 ///
 enum class DiscretizationMethod {
   GridBased,

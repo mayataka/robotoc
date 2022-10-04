@@ -60,8 +60,15 @@ void SolutionInterpolator::interpolate(
         const int grid_index = findStoredGridIndexBeforeTime(grid.t);
         const double alpha = (grid.t - stored_time_discretization_[grid_index].t) 
                               / stored_time_discretization_[grid_index].dt;
-        initEventSolution(robot, stored_solution_[grid_index], 
-                          stored_solution_[grid_index+1], alpha, solution[i]);
+        if (stored_time_discretization_[grid_index+1].type == GridType::Terminal) {
+          interpolatePartial(robot, stored_solution_[grid_index], 
+                             stored_solution_[grid_index+1], alpha, solution[i]);
+          modifyImpactSolution(solution[i]);
+        }
+        else {
+          initEventSolution(robot, stored_solution_[grid_index], 
+                            stored_solution_[grid_index+1], alpha, solution[i]);
+        }
       }
       continue;
     }
@@ -75,8 +82,14 @@ void SolutionInterpolator::interpolate(
         const int grid_index = findStoredGridIndexBeforeTime(grid.t);
         const double alpha = (grid.t - stored_time_discretization_[grid_index].t) 
                               / stored_time_discretization_[grid_index].dt;
-        initEventSolution(robot, stored_solution_[grid_index], 
-                          stored_solution_[grid_index+1], alpha, solution[i]);
+        if (stored_time_discretization_[grid_index+1].type == GridType::Terminal) {
+          interpolatePartial(robot, stored_solution_[grid_index], 
+                             stored_solution_[grid_index+1], alpha, solution[i]);
+        }
+        else {
+          initEventSolution(robot, stored_solution_[grid_index], 
+                            stored_solution_[grid_index+1], alpha, solution[i]);
+        }
       }
       continue;
     }
@@ -108,8 +121,9 @@ void SolutionInterpolator::interpolate(const Robot& robot,
   assert(alpha <= 1.0);
   robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
   s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
-  s.a = (1.0 - alpha) * s1.a + alpha * s2.a;
   s.u = (1.0 - alpha) * s1.u + alpha * s2.u;
+  s.a = (1.0 - alpha) * s1.a + alpha * s2.a;
+  s.dv.setZero();
   for (size_t i=0; i<s1.f.size(); ++i) {
     if (s2.isContactActive(i)) 
       s.f[i] = (1.0 - alpha) * s1.f[i] + alpha * s2.f[i];
@@ -140,8 +154,9 @@ void SolutionInterpolator::interpolatePartial(const Robot& robot,
   assert(alpha <= 1.0);
   robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
   s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
-  s.a = s1.a;
   s.u = s1.u;
+  s.a = s1.a;
+  s.dv.setZero();
   for (size_t i=0; i<s1.f.size(); ++i) {
     s.f[i] = s1.f[i];
   }
@@ -166,9 +181,9 @@ void SolutionInterpolator::initEventSolution(const Robot& robot,
   assert(alpha <= 1.0);
   robot.interpolateConfiguration(s1.q, s2.q, alpha, s.q);
   s.v = (1.0 - alpha) * s1.v + alpha * s2.v;
+  s.u = s2.u;
   s.a = (1.0 - alpha) * s1.a + alpha * s2.a;
   s.dv.setZero();
-  s.u = s2.u;
   for (size_t i=0; i<s2.f.size(); ++i) {
     s.f[i] = s2.f[i];
   }
@@ -194,7 +209,6 @@ void SolutionInterpolator::modifyImpactSolution(SplitSolution& s) {
 void SolutionInterpolator::modifyTerminalSolution(SplitSolution& s) {
   s.u.setZero();
   s.a.setZero();
-  s.dv.setZero();
   for (auto& e : s.f) {
     e.setZero();
   }

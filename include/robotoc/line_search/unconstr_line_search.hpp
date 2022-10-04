@@ -106,7 +106,7 @@ public:
   ///
   /// @brief Clear the line search filter. 
   ///
-  void clearFilter();
+  void clearHistory();
 
   ///
   /// @brief Clear the line search filter. 

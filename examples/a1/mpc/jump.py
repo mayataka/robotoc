@@ -5,9 +5,9 @@ import numpy as np
 
 
 jump_type = 'longitudinal'
-jump_type = 'lateral'
-jump_type = 'back'
-jump_type = 'rotational'
+# jump_type = 'lateral'
+# jump_type = 'back'
+# jump_type = 'rotational'
 
 if jump_type == 'longitudinal':
     jump_length = [0.6, 0, 0]
@@ -20,7 +20,7 @@ elif jump_type == 'back':
     jump_yaw = 0
 elif jump_type == 'rotational':
     jump_length = [0.1, 0.0, 0]
-    jump_yaw = np.pi / 6
+    jump_yaw = np.pi / 4
 
 model_info = robotoc.RobotModelInfo()
 model_info.urdf_path = '../a1_description/urdf/a1.urdf'
@@ -52,7 +52,7 @@ option_init = robotoc.SolverOptions()
 option_init.max_iter = 100
 option_init.initial_sto_reg_iter = 100
 option_init.nthreads = 4
-mpc.init(t0, q0, v0, option_init, sto=True)  
+mpc.init(t0, q0, v0, option_init, sto=(jump_type=='longitudinal'))  
 
 option_mpc = robotoc.SolverOptions()
 option_mpc.max_iter = 2 # MPC iterations

@@ -27,7 +27,7 @@ UnconstrLineSearch::UnconstrLineSearch()
 }
 
 
-void UnconstrLineSearch::clearFilter() {
+void UnconstrLineSearch::clearHistory() {
   filter_.clear();
 }
 

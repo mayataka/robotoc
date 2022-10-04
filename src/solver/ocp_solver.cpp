@@ -163,7 +163,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
     }
     dms_.initConstraints(robots_, time_discretization_, s_);
     sto_.initConstraints(time_discretization_);
-    line_search_.clearFilter();
+    line_search_.clearHistory();
   }
   solver_statistics_.clear(); 
   solver_statistics_.reserve(solver_options_.max_iter);
@@ -193,7 +193,7 @@ void OCPSolver::solve(const double t, const Eigen::VectorXd& q,
         }
         dms_.initConstraints(robots_, time_discretization_, s_);
         sto_.initConstraints(time_discretization_);
-        line_search_.clearFilter();
+        line_search_.clearHistory();
         inner_iter = 0;
         solver_statistics_.mesh_refinement_iter.push_back(iter+1); 
       }

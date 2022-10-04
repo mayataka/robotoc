@@ -25,7 +25,7 @@ namespace robotoc {
 
 ///
 /// @class UnconstrDirectMultipleShooting
-/// @brief Direct multiple shooting method of hybrid optimal control problems
+/// @brief Direct multiple shooting method of optimal control problems
 /// of unconstrained rigid-body systems. 
 ///
 class UnconstrDirectMultipleShooting {
