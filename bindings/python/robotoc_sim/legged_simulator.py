@@ -179,8 +179,8 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
                 self.world = pybullet.createMultiBody(0, terrain_shape)
                 pybullet.changeVisualShape(self.world, -1, rgbaColor=[1.0, 1.0, 1.0, 1.0])
                 pybullet.resetBasePositionAndOrientation(self.world, [0., 0., 0.], [0., 0., 0., 1.])
-                ray_test = pybullet.rayTest([q0[0], q0[1], self.height_range], 
-                                            [q0[0], q0[1], -self.height_range])
+                ray_test = pybullet.rayTest([q0[0], q0[1], self.terrain_settings.height_range], 
+                                            [q0[0], q0[1], -self.terrain_settings.height_range])
                 ray_hit_position = ray_test[0][3]
                 pybullet.resetBasePositionAndOrientation(self.world, [0., 0., -ray_hit_position[2]], [0., 0., 0., 1.])
         else:
@@ -214,9 +214,9 @@ class LeggedSimulator(metaclass=abc.ABCMeta):
     def disconnect(self):
         pybullet.disconnect()
 
-    def print_joint_info(self):
+    def print_joint_info(urdf_path):
         pybullet.connect(pybullet.DIRECT)
-        robot = pybullet.loadURDF(self.urdf_path, 
+        robot = pybullet.loadURDF(urdf_path, 
                                   useFixedBase=False, 
                                   useMaximalCoordinates=False)
         nJoints = pybullet.getNumJoints(robot)
