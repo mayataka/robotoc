@@ -22,17 +22,17 @@ inline Eigen::Matrix3d RotationMatrixFromQuaternion(
 
 ///
 /// @brief Convert a normal vector to its surface Rotation matrix.
-/// @param[in] normal Normal vector.
+/// @param[in] normal_vector Normal vector.
 /// @return Rotation matrixo of the surface.
 ///
 template <typename VectorType>
-inline Eigen::Matrix3d RotationMatrixFromNormal(
-    const Eigen::MatrixBase<VectorType>& normal) {
-  assert(normal.size() == 3);
+inline Eigen::Matrix3d RotationMatrixFromNormalVector(
+    const Eigen::MatrixBase<VectorType>& normal_vector) {
+  assert(normal_vector.size() == 3);
   Eigen::Matrix3d R;
-  const double nx = normal.coeff(0);
-  const double ny = normal.coeff(1);
-  const double nz = normal.coeff(2);
+  const double nx = normal_vector.coeff(0);
+  const double ny = normal_vector.coeff(1);
+  const double nz = normal_vector.coeff(2);
   const double nxny_norm = std::sqrt(nx*nx + ny*ny);
   constexpr double eps = std::numeric_limits<double>::epsilon();
   if (nxny_norm < eps) return Eigen::Matrix3d::Identity();
@@ -43,6 +43,29 @@ inline Eigen::Matrix3d RotationMatrixFromNormal(
   return R;
 }
 
+///
+/// @brief Convert a rotation matrix to a quaternion vector (x, y, z, w).
+/// @param[in] R rotation matrix.
+/// @return Quaternion vector (x, y, z, w).
+///
+template <typename MatrixType>
+inline Eigen::Vector4d QuaternionFromRotationMatrix(
+    const Eigen::MatrixBase<MatrixType>& R) {
+  assert(R.rows() == 3);
+  assert(R.cols() == 3);
+  return Eigen::Quaterniond(R).coeffs();
+}
+
+///
+/// @brief Convert a normal vector to its surface quaternion (x, y, z, w).
+/// @param[in] normal_vector Normal vector.
+/// @return Quaternion vector (x, y, z, w).
+///
+template <typename VectorType>
+inline Eigen::Vector4d QuaternionFromNormalVector(
+    const Eigen::MatrixBase<VectorType>& normal_vector) {
+  return QuaternionFromRotationMatrix(RotationMatrixFromNormalVector(normal_vector));
+}
 
 ///
 /// @enum ProjectionAxis
