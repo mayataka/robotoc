@@ -34,6 +34,9 @@ inline Eigen::Matrix3d RotationMatrixFromNormal(
   const double ny = normal.coeff(1);
   const double nz = normal.coeff(2);
   const double nxny_norm = std::sqrt(nx*nx + ny*ny);
+  constexpr double eps = std::numeric_limits<double>::epsilon();
+  if (nxny_norm < eps) return Eigen::Matrix3d::Identity();
+
   R <<    ny/nxny_norm,   -nx/nxny_norm,         0.,
        nx*nz/nxny_norm, ny*nz/nxny_norm, -nxny_norm,
                     nx,              ny,         nz;
