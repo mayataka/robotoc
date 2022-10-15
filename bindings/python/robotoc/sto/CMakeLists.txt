@@ -1,5 +1,5 @@
-pybind11_add_robotoc_module(sto_cost_function)
-pybind11_add_robotoc_module(sto_cost_function_component_base)
-pybind11_add_robotoc_module(sto_constraints)
+pybind11_add_robotoc_module(sto sto_cost_function)
+pybind11_add_robotoc_module(sto sto_cost_function_component_base)
+pybind11_add_robotoc_module(sto sto_constraints)
 
-install_robotoc_pybind_module(sto)
+install_robotoc_python_files(sto)

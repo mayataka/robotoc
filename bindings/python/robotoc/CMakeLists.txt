@@ -1,7 +1,7 @@
 set(ROBOTOC_PYTHON_VERSION ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
 set(ROBOTOC_PYTHON_BINDINGS_LIBDIR ${CMAKE_INSTALL_LIBDIR}/python${ROBOTOC_PYTHON_VERSION}/site-packages/robotoc)
 
-macro(pybind11_add_robotoc_module MODULE)
+macro(pybind11_add_robotoc_module MODULE_DIR MODULE)
   pybind11_add_module(
     ${MODULE} 
     SHARED 
@@ -12,14 +12,17 @@ macro(pybind11_add_robotoc_module MODULE)
     PRIVATE
     robotoc::robotoc
   )
+  install(
+    TARGETS ${MODULE} 
+    COMPONENT python
+    DESTINATION ${ROBOTOC_PYTHON_BINDINGS_LIBDIR}/${MODULE_DIR}
+  )
 endmacro()
 
-
-macro(install_robotoc_pybind_module CURRENT_MODULE_DIR)
-  file(GLOB PYTHON_BINDINGS_${CURRENT_MODULE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/*.cpython*)
+macro(install_robotoc_python_files CURRENT_MODULE_DIR)
   file(GLOB PYTHON_FILES_${CURRENT_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*.py)
   install(
-    FILES ${PYTHON_FILES_${CURRENT_MODULE_DIR}} ${PYTHON_BINDINGS_${CURRENT_MODULE_DIR}} 
+    FILES ${PYTHON_FILES_${CURRENT_MODULE_DIR}} 
     DESTINATION ${ROBOTOC_PYTHON_BINDINGS_LIBDIR}/${CURRENT_MODULE_DIR}
   )
 endmacro()

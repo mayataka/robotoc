@@ -1,4 +1,4 @@
-pybind11_add_robotoc_module(discrete_event)
-pybind11_add_robotoc_module(contact_sequence)
+pybind11_add_robotoc_module(planner discrete_event)
+pybind11_add_robotoc_module(planner contact_sequence)
 
-install_robotoc_pybind_module(planner)
+install_robotoc_python_files(planner)
