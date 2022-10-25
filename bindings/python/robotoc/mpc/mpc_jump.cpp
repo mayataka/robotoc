@@ -37,6 +37,8 @@ PYBIND11_MODULE(mpc_jump, m) {
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCJump::getInitialControlInput)
     .def("get_solution", &MPCJump::getSolution)
+    .def("get_control_policy", &MPCJump::getControlPolicy,
+          py::arg("t"))
     .def("KKT_error", 
           static_cast<double (MPCJump::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCJump::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

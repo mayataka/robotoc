@@ -32,6 +32,8 @@ PYBIND11_MODULE(mpc_crawl, m) {
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCCrawl::getInitialControlInput)
     .def("get_solution", &MPCCrawl::getSolution)
+    .def("get_control_policy", &MPCCrawl::getControlPolicy,
+          py::arg("t"))
     .def("KKT_error", 
           static_cast<double (MPCCrawl::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCCrawl::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

@@ -25,6 +25,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/mpc/control_policy.hpp"
 
 
 namespace robotoc {
@@ -160,6 +161,15 @@ public:
   /// @return const reference to the local LQR policies.
   ///
   const aligned_vector<LQRPolicy>& getLQRPolicy() const;
+
+  ///
+  /// @brief Gets the control policy at the specified time.  
+  /// @param[in] t The specified time.  
+  /// @return Control poclity at the specified time.
+  ///
+  ControlPolicy getControlPolicy(const double t) const { 
+    return ControlPolicy(ocp_solver_, t); 
+  }
 
   ///
   /// @brief Computes the KKT residual of the optimal control problem. 

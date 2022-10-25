@@ -27,8 +27,8 @@ void ControlPolicy::set(const OCPSolver& ocp_solver, const double _t) {
   const auto& lqr_policy = ocp_solver.getLQRPolicy();
   const int N = time_discretization.N();
   const int dimu = solution[0].u.size();
-  if (_t < time_discretization[0].t) {
-    t = _t;
+  t = _t;
+  if (t < time_discretization[0].t) {
     tauJ = solution[0].u;
     qJ   = solution[0].q.tail(dimu);
     dqJ  = solution[0].v.tail(dimu);
@@ -37,9 +37,9 @@ void ControlPolicy::set(const OCPSolver& ocp_solver, const double _t) {
     return;
   }
   for (int i=1; i<N-1; ++i) {
-    if ((_t < time_discretization[i].t) && (time_discretization[i-1].type != GridType::Impact)) {
+    if ((t < time_discretization[i].t) && (time_discretization[i-1].type != GridType::Impact)) {
       const double dt = time_discretization[i].t - time_discretization[i-1].t;
-      const double alpha = (time_discretization[i].t - _t) / dt;
+      const double alpha = (time_discretization[i].t - t) / dt;
       tauJ = alpha * solution[i-1].u + (1.0-alpha) * solution[i].u;
       qJ   = alpha * solution[i-1].q.tail(dimu) 
               + (1.0-alpha) * solution[i].q.tail(dimu);
@@ -52,7 +52,6 @@ void ControlPolicy::set(const OCPSolver& ocp_solver, const double _t) {
       return;
     }
   }
-  t = _t;
   tauJ = solution[N-1].u;
   qJ   = solution[N-1].q.tail(dimu);
   dqJ  = solution[N-1].v.tail(dimu);

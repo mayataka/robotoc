@@ -32,6 +32,8 @@ PYBIND11_MODULE(mpc_trot, m) {
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCTrot::getInitialControlInput)
     .def("get_solution", &MPCTrot::getSolution)
+    .def("get_control_policy", &MPCTrot::getControlPolicy,
+          py::arg("t"))
     .def("KKT_error", 
           static_cast<double (MPCTrot::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCTrot::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

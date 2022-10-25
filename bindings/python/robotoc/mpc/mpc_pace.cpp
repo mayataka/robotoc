@@ -32,6 +32,8 @@ PYBIND11_MODULE(mpc_pace, m) {
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCPace::getInitialControlInput)
     .def("get_solution", &MPCPace::getSolution)
+    .def("get_control_policy", &MPCPace::getControlPolicy,
+          py::arg("t"))
     .def("KKT_error", 
           static_cast<double (MPCPace::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCPace::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

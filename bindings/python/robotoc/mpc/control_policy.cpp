@@ -22,6 +22,8 @@ PYBIND11_MODULE(control_policy, m) {
     .def_readwrite("dqJ", &ControlPolicy::dqJ)
     .def_readwrite("Kp", &ControlPolicy::Kp)
     .def_readwrite("Kd", &ControlPolicy::Kd)
+    .def("set", &ControlPolicy::set,
+         py::arg("ocp_solver"), py::arg("t"))
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(ControlPolicy)
     DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(ControlPolicy);
 }
