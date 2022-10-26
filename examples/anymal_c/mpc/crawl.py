@@ -1,5 +1,5 @@
 import robotoc
-from robotoc_sim import MPCSimulation, CameraSettings
+from robotoc_sim import MPCSimulation, CameraSettings, TerrainSettings
 from anymal_c_simulator import ANYmalCSimulator
 import numpy as np
 from robot_descriptions import anymal_c_description
@@ -58,6 +58,9 @@ anymal_simulator = ANYmalCSimulator(urdf_path=model_info.urdf_path, time_step=ti
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.]))
 anymal_simulator.set_camera_settings(camera_settings=camera_settings)
+terrain_settings = TerrainSettings(height_range=0.7, from_urdf=False)
+anymal_simulator.set_terrain_settings(terrain_settings)
+q0[2] += 0.05 # offset for random terrain
 
 simulation_time = 10.0
 log = False

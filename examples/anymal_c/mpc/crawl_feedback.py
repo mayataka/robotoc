@@ -15,22 +15,23 @@ model_info.point_contacts = [robotoc.ContactModelInfo('LF_FOOT', baumgarte_time_
                              robotoc.ContactModelInfo('RH_FOOT', baumgarte_time_step)]
 robot = robotoc.Robot(model_info)
 
-step_length = np.array([0.3, 0, 0]) 
+step_length = np.array([0.3,0, 0]) 
 step_yaw = 0
 
 swing_height = 0.2
 swing_time = 0.25
+stance_time = 0.05
 stance_time = 0.0
 swing_start_time = 0.5
 
-vcom_cmd = 0.5 * step_length / (swing_time+stance_time)
+vcom_cmd = 0.25 * step_length / (swing_time+stance_time)
 yaw_rate_cmd = step_yaw / (swing_time+stance_time)
 
-T = 0.5
-N = 20
-mpc = robotoc.MPCTrot(robot, T, N)
+T = 0.8
+N = 40
+mpc = robotoc.MPCCrawl(robot, T, N)
 
-planner = robotoc.TrotFootStepPlanner(robot)
+planner = robotoc.CrawlFootStepPlanner(robot)
 planner.set_gait_pattern(step_length, (step_yaw*swing_time), (stance_time > 0.))
 mpc.set_gait_pattern(planner, swing_height, swing_time, stance_time, swing_start_time)
 
@@ -43,8 +44,8 @@ q0 = np.array([0, 0, 0.575, 0, 0, 0, 1,
 v0 = np.zeros(robot.dimv())
 
 option_init = robotoc.SolverOptions()
-option_init.nthreads = 4
 option_init.max_iter = 100
+option_init.nthreads = 4
 mpc.init(t0, q0, v0, option_init)
 
 option_mpc = robotoc.SolverOptions()
@@ -57,17 +58,15 @@ anymal_simulator = ANYmalCSimulator(urdf_path=model_info.urdf_path, time_step=ti
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.]))
 anymal_simulator.set_camera_settings(camera_settings=camera_settings)
-terrain_settings = TerrainSettings(height_range=0.7, from_urdf=False)
-anymal_simulator.set_terrain_settings(terrain_settings)
-q0[2] += 0.05 # offset for random terrain
 
 simulation_time = 10.0
 log = False
 record = False
 simulation = MPCSimulation(simulator=anymal_simulator)
 simulation.run(mpc=mpc, t0=t0, q0=q0, simulation_time=simulation_time, 
+               feedback_policy=True, simulation_steps_per_mpc_update=5, # 80 Hz MPC
                feedback_delay=True, verbose=False, 
-               record=record, log=log, name='anymal_trot')
+               record=record, log=log, name='anymal_crawl')
 
 if record:
     robotoc.utils.adjust_video_duration(simulation.name+'.mp4', 

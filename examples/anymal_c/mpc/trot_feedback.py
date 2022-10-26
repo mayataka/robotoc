@@ -1,5 +1,5 @@
 import robotoc
-from robotoc_sim import MPCSimulation, CameraSettings
+from robotoc_sim import MPCSimulation, CameraSettings, TerrainSettings
 from anymal_c_simulator import ANYmalCSimulator
 import numpy as np
 from robot_descriptions import anymal_c_description
@@ -43,8 +43,8 @@ q0 = np.array([0, 0, 0.575, 0, 0, 0, 1,
 v0 = np.zeros(robot.dimv())
 
 option_init = robotoc.SolverOptions()
-option_init.nthreads = 4
 option_init.max_iter = 200
+option_init.nthreads = 4
 mpc.init(t0, q0, v0, option_init)
 
 option_mpc = robotoc.SolverOptions()
