@@ -15,19 +15,18 @@ model_info.point_contacts = [robotoc.ContactModelInfo('LF_FOOT', baumgarte_time_
                              robotoc.ContactModelInfo('RH_FOOT', baumgarte_time_step)]
 robot = robotoc.Robot(model_info)
 
-step_length = np.array([0.3,0, 0]) 
-step_yaw = 0
+step_length = np.array([0.3, 0, 0]) 
+step_yaw = np.pi / 12
 
 swing_height = 0.2
 swing_time = 0.25
-stance_time = 0.05
-stance_time = 0.0
+stance_time = 0.1
 swing_start_time = 0.5
 
 vcom_cmd = 0.25 * step_length / (swing_time+stance_time)
 yaw_rate_cmd = step_yaw / (swing_time+stance_time)
 
-T = 0.8
+T = 0.7
 N = 40
 mpc = robotoc.MPCCrawl(robot, T, N)
 
@@ -58,8 +57,11 @@ anymal_simulator = ANYmalCSimulator(urdf_path=model_info.urdf_path, time_step=ti
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.]))
 anymal_simulator.set_camera_settings(camera_settings=camera_settings)
+terrain_settings = TerrainSettings(height_range=0.6, from_urdf=False)
+anymal_simulator.set_terrain_settings(terrain_settings)
+q0[2] += 0.05 # offset for random terrain
 
-simulation_time = 10.0
+simulation_time = 5.0
 log = False
 record = False
 simulation = MPCSimulation(simulator=anymal_simulator)

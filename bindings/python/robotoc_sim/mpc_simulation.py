@@ -47,7 +47,7 @@ class MPCSimulation(object):
                 else:
                     u = mpc.get_initial_control_input().copy()
             if inner_loop_count == 0:
-                mpc.update_solution(t, dt, q, v)
+                mpc.update_solution(t, simulation_steps_per_mpc_update*dt, q, v)
                 inner_loop_count = simulation_steps_per_mpc_update - 1
             else:
                 inner_loop_count -= 1

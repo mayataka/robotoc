@@ -20,13 +20,13 @@ step_yaw = np.pi/ 12
 
 swing_height = 0.2
 swing_time = 0.25
-stance_time = 0.0
+stance_time = 0.1
 swing_start_time = 0.5
 
 vcom_cmd = 0.5 * step_length / (swing_time+stance_time)
 yaw_rate_cmd = step_yaw / (swing_time+stance_time)
 
-T = 1.0
+T = 0.7
 N = 40
 mpc = robotoc.MPCTrot(robot, T, N)
 
@@ -35,7 +35,7 @@ planner.set_gait_pattern(step_length, (step_yaw*swing_time), (stance_time > 0.))
 mpc.set_gait_pattern(planner, swing_height, swing_time, stance_time, swing_start_time)
 
 t0 = 0.0
-q0 = np.array([0, 0, 0.575, 0, 0, 0, 1, 
+q0 = np.array([-2.0, 0, 0.575, 0, 0, 0, 1, 
                -0.25,  0.6, -0.85, 
                -0.25, -0.6,  0.85, 
                 0.25,  0.6, -0.85, 
@@ -57,8 +57,11 @@ anymal_simulator = ANYmalCSimulator(urdf_path=model_info.urdf_path, time_step=ti
 camera_settings = CameraSettings(camera_distance=2.0, camera_yaw=45, camera_pitch=-10.0, 
                                  camera_target_pos=q0[0:3]+np.array([0.1, 0.5, 0.]))
 anymal_simulator.set_camera_settings(camera_settings=camera_settings)
+terrain_settings = TerrainSettings(height_range=0.6, from_urdf=False)
+anymal_simulator.set_terrain_settings(terrain_settings)
+q0[2] += 0.05 # offset for random terrain
 
-simulation_time = 10.0
+simulation_time = 5.0
 log = False
 record = False
 simulation = MPCSimulation(simulator=anymal_simulator)
