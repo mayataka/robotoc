@@ -2,14 +2,23 @@ import pybullet
 import numpy as np
 import os
 
-    
+
+def get_control_input(control_policy, q: np.ndarray, v: np.ndarray):
+    nJ = control_policy.tauJ.shape[0]
+    qJ = q[-nJ:]
+    dqJ = v[-nJ:]
+    return control_policy.tauJ - control_policy.Kp @ (control_policy.qJ-qJ) \
+                               - control_policy.Kd @ (control_policy.dqJ-dqJ)
+
 class MPCSimulation(object):
     def __init__(self, simulator):
         self.simulator = simulator
 
     def run(self, mpc, t0: float, q0: np.ndarray, simulation_time: float, 
-            feedback_delay: bool=False, verbose: bool=False, 
+            feedback_policy: bool=False, feedback_delay: bool=False, 
+            simulation_steps_per_mpc_update: int=1, verbose: bool=False, 
             log: bool=False, record: bool=False, name: str='mpc_sim'):
+        assert simulation_steps_per_mpc_update >= 1
         self.simulator.init_simulation(t0, q0)
         self.name = name
         if log:
@@ -24,6 +33,8 @@ class MPCSimulation(object):
         if record:
             pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, name+".mp4")
 
+        use_feedback_policy = (simulation_steps_per_mpc_update >= 2) and feedback_policy
+        inner_loop_count = simulation_steps_per_mpc_update - 1
         dt = self.simulator.time_step
         while self.simulator.get_time() < t0 + simulation_time:
             t = self.simulator.get_time()
@@ -31,14 +42,24 @@ class MPCSimulation(object):
             if verbose:
                 print('t = {:.6g}:'.format(t))
             if feedback_delay:
-                u = mpc.get_initial_control_input().copy()
-            mpc.update_solution(t, dt, q, v)
+                if use_feedback_policy:
+                    u = get_control_input(mpc.get_control_policy(t), q, v) 
+                else:
+                    u = mpc.get_initial_control_input().copy()
+            if inner_loop_count == 0:
+                mpc.update_solution(t, simulation_steps_per_mpc_update*dt, q, v)
+                inner_loop_count = simulation_steps_per_mpc_update - 1
+            else:
+                inner_loop_count -= 1
             kkt_error = mpc.KKT_error(t, q, v) 
             if verbose:
                 print('KKT error = {:.6g}'.format(kkt_error))
                 print('')
             if not feedback_delay:
-                u = mpc.get_initial_control_input().copy()
+                if use_feedback_policy:
+                    u = get_control_input(mpc.get_control_policy(t), q, v) 
+                else:
+                    u = mpc.get_initial_control_input().copy()
             self.simulator.step_simulation(u)
             if log:
                 np.savetxt(q_log, [q])

@@ -123,11 +123,5 @@ int main(int argc, char *argv[]) {
   std::cout << "KKT error after convergence: " << ocp_solver.KKTError(t, q, v) << std::endl;
   std::cout << ocp_solver.getSolverStatistics() << std::endl;
 
-#ifdef ENABLE_VIEWER
-  robotoc::TrajectoryViewer viewer(path_to_urdf);
-  const double dt = T/N;
-  viewer.display(ocp_solver.getSolution("q"), dt);
-#endif 
-
   return 0;
 }

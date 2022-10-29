@@ -1,3 +1,4 @@
+from .control_policy import *
 from .contact_planner_base import *
 from .trot_foot_step_planner import *
 from .crawl_foot_step_planner import *

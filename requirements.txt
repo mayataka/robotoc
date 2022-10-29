@@ -1,0 +1,6 @@
+numpy
+meshcat
+pybullet
+robot_descriptions
+matplotlib
+seaborn

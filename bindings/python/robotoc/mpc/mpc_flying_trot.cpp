@@ -32,6 +32,8 @@ PYBIND11_MODULE(mpc_flying_trot, m) {
           py::arg("t"), py::arg("dt"), py::arg("q"), py::arg("v"))
     .def("get_initial_control_input", &MPCFlyingTrot::getInitialControlInput)
     .def("get_solution", &MPCFlyingTrot::getSolution)
+    .def("get_control_policy", &MPCFlyingTrot::getControlPolicy,
+          py::arg("t"))
     .def("KKT_error", 
           static_cast<double (MPCFlyingTrot::*)(const double, const Eigen::VectorXd&, const Eigen::VectorXd&)>(&MPCFlyingTrot::KKTError),
           py::arg("t"), py::arg("q"), py::arg("v"))

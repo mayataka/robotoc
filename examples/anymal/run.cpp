@@ -22,10 +22,6 @@
 
 #include "robotoc/utils/ocp_benchmarker.hpp"
 
-#ifdef ENABLE_VIEWER
-#include "robotoc/utils/trajectory_viewer.hpp"
-#endif 
-
  
 class ConfigurationSpaceRef final : public robotoc::ConfigurationSpaceRefBase {
 public:
@@ -321,23 +317,6 @@ int main(int argc, char *argv[]) {
 
   // const int num_iteration = 10000;
   // robotoc::benchmark::CPUTime(ocp_solver, t, q, v, num_iteration);
-
-#ifdef ENABLE_VIEWER
-  robotoc::TrajectoryViewer viewer(path_to_urdf, robotoc::BaseJointType::FloatingBase);
-  const auto time_discretization = ocp_solver.getTimeDiscretization();
-  const auto time_steps = time_discretization.timeSteps();
-  Eigen::Vector3d camera_pos;
-  Eigen::Vector4d camera_quat;
-  camera_pos << 0.119269, -7.96283, 1.95978;
-  camera_quat << 0.609016, 0.00297497, 0.010914, 0.793077;
-  viewer.setCameraTransform(camera_pos, camera_quat);
-  viewer.display(ocp_solver.getSolution("q"), time_steps);
-  camera_pos << 5.10483, -3.98692, 1.59321;
-  camera_quat << 0.547037, 0.243328, 0.314829, 0.736495;
-  viewer.setCameraTransform(camera_pos, camera_quat);
-  viewer.display(robot, ocp_solver.getSolution("q"), 
-                 ocp_solver.getSolution("f", "WORLD"), time_steps, mu);
-#endif 
 
   return 0;
 }

@@ -1,3 +1,4 @@
+pybind11_add_robotoc_module(mpc control_policy)
 pybind11_add_robotoc_module(mpc contact_planner_base)
 pybind11_add_robotoc_module(mpc trot_foot_step_planner)
 pybind11_add_robotoc_module(mpc crawl_foot_step_planner)

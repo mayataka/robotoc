@@ -43,21 +43,6 @@ jobs:
           sudo apt install -qqy robotpkg-py310-pinocchio
           sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer
           sudo apt install -qqy robotpkg-py310-qt5-gepetto-viewer-corba
-      - name: Install pinocchio-gepetto-viewer
-        run: |
-          export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
-          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH 
-          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH 
-          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
-          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
-          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
-          git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
-          cd pinocchio-gepetto-viewer
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          sudo make install
-          cd ../..
       - name: Install lcov
         run: |
           sudo apt-get update -y
@@ -72,7 +57,7 @@ jobs:
           export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
           mkdir -p build  && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_VIEWER=ON -DBUILD_TESTS=ON
+          cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
           cmake --build . --config Debug 
           ctest --output-on-failure
       - name: Collect and upload coverage to Codecov
