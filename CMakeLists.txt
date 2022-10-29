@@ -13,7 +13,6 @@ endif()
 ## Options ##
 #############
 option(OPTIMIZE_FOR_NATIVE "Enable -march=native" OFF)
-option(BUILD_VIEWER "Build trajectory viewer" OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 
@@ -33,8 +32,6 @@ find_package(OpenMP REQUIRED)
 # build robotoc 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES src/*.cpp)
 file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS include/${PROJECT_NAME}/*.h*)
-list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX ".trajectory_viewer.")
-list(FILTER ${PROJECT_NAME}_HEADERS EXCLUDE REGEX ".trajectory_viewer.")
 add_library(
   ${PROJECT_NAME} 
   SHARED
@@ -84,29 +81,6 @@ if (MACOSX)
     ${Boost_INCLUDE_DIRS}
   )
 endif()
-
-##################
-## Build viewer ##
-##################
-if (BUILD_VIEWER) 
-  find_package(PkgConfig)
-  pkg_check_modules(pinocchio-gepetto-viewer REQUIRED pinocchio-gepetto-viewer)
-  target_sources(
-    ${PROJECT_NAME} 
-    PRIVATE
-    src/utils/trajectory_viewer.cpp
-  )
-  target_link_libraries(
-    ${PROJECT_NAME} 
-    PUBLIC
-    ${pinocchio-gepetto-viewer_LINK_LIBRARIES}
-  )
-  target_include_directories(
-    ${PROJECT_NAME} 
-    PUBLIC
-    ${pinocchio-gepetto-viewer_INCLUDE_DIRS}
-  )
-endif() # end if (BUILD_VIEWER)
 
 #############
 ## Testing ##

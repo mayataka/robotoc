@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(robotoc REQUIRED)
 
-option(ENABLE_VIEWER "Enable trajectory viewer" OFF)
-
 macro(add_benchmark BENCHMARK)
   add_executable(
     ${BENCHMARK} 
@@ -29,13 +27,6 @@ macro(add_example EXAMPLE)
     PRIVATE
     robotoc::robotoc
   )
-  if (ENABLE_VIEWER)
-    target_compile_definitions(
-      ${EXAMPLE} 
-      PRIVATE
-      ENABLE_VIEWER    
-    )
-  endif()
 endmacro()
 
 add_benchmark(ocp_benchmark)
@@ -46,5 +37,4 @@ add_example(pace)
 add_example(bounce)
 add_example(jump)
 add_example(run)
-
 add_example(jump_sto)

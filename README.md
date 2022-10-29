@@ -25,7 +25,6 @@
 - Eigen3, [Pinocchio](https://stack-of-tasks.github.io/pinocchio/download.html)  , 
 - Python3, NumPy (for Python binding)
 - [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and/or [meshcat-python](https://github.com/rdeits/meshcat-python) (optional to visualize the solution trajectory in Python) 
-- [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (optional to visualize the solution trajectory in C++) 
 - [PyBullet](https://pybullet.org/wordpress/) (optional to simulate MPC examples)
 
 ## Installation 
@@ -64,24 +63,12 @@ and/or [meshcat-python](https://github.com/rdeits/meshcat-python) by
 pip install meshcat
 ```
 
-6. If you want to visualize the solution trajectory with C++, in addition to [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), you have to install [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
-```
-git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive && cd pinocchio-gepetto-viewer
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make install
-```
-and add the CMake option for `robotoc` as 
-```
-cmake .. -DBUILD_VIEWER=ON
-```
-
-7. If you do not want to install the Python bindings, change the CMake configuration as
+6. If you do not want to install the Python bindings, change the CMake configuration as
 ```
 cmake .. -DBUILD_PYTHON_INTERFACE=OFF
 ```
 
-8. In OSX, explicitly set g++ as the complier. First, find the path of g++ as 
+7. In OSX, explicitly set g++ as the complier. First, find the path of g++ as 
 ```
 ls -l /usr/local/bin | grep g++
 ```

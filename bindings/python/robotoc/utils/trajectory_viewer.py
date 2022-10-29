@@ -60,7 +60,7 @@ class TrajectoryViewer:
                                          self.robot.collision_model, 
                                          self.robot.visual_model)
         else:
-            print('Please choose viewer_type from "gepetto" or "meshcat"!')
+            print('Please choose viewer_type from "gepetto", "meshcat", or "rviz"!')
             return NotImplementedError()
 
 
