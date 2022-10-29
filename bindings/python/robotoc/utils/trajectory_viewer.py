@@ -54,6 +54,11 @@ class TrajectoryViewer:
                                             self.robot.visual_model)
             self.camera_tf = meshcat.transformations.translation_matrix([0.8, -2.5, -0.2]) 
             self.zoom = 3.0
+        elif viewer_type == 'rviz':
+            from pinocchio.visualize import RVizVisualizer
+            self.viewer = RVizVisualizer(self.robot.model, 
+                                         self.robot.collision_model, 
+                                         self.robot.visual_model)
         else:
             print('Please choose viewer_type from "gepetto" or "meshcat"!')
             return NotImplementedError()
@@ -103,6 +108,8 @@ class TrajectoryViewer:
             self.display_gepetto(dt, q, f)
         elif self.viewer_type == 'meshcat':
             self.display_meshcat(dt, q)
+        elif self.viewer_type == 'rviz':
+            self.display_rviz(dt, q)
 
 
     def display_gepetto(self, dt, q_traj, f_traj):
@@ -210,6 +217,17 @@ class TrajectoryViewer:
         self.viewer.viewer["/Background"].set_property("visible", True)
         self.viewer.viewer["/Background"].set_property("top_color", [0.9, 0.9, 0.9])
         self.viewer.viewer["/Background"].set_property("bottom_color", [0.9, 0.9, 0.9])
+        for q, dts in zip(q_traj, dt):
+            self.robot.display(q)
+            sleep_time = dts / self.play_speed
+            time.sleep(sleep_time)
+        self.robot.display(q_traj[-1])
+
+
+    def display_rviz(self, dt, q_traj, open=True):
+        self.robot.setVisualizer(self.viewer)
+        self.robot.initViewer(viewer=None)
+        self.robot.loadViewerModel(rootNodeName='robotoc.TrajectoryViewer')
         for q, dts in zip(q_traj, dt):
             self.robot.display(q)
             sleep_time = dts / self.play_speed
