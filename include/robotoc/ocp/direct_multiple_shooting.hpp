@@ -167,12 +167,11 @@ public:
   double maxDualStepSize() const;
 
   ///
-  /// @brief Computes the initial state direction. 
+  /// @brief Integrates the solution. 
   /// @param[in, out] robots aligned_vector of Robot for paralle computing.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
-  /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in, out] d Direction. 
   /// @param[in, out] s Solution. 
   ///
@@ -180,8 +179,20 @@ public:
                          const TimeDiscretization& time_discretization, 
                          const double primal_step_size,
                          const double dual_step_size,
-                         const KKTMatrix& kkt_matrix,
                          Direction& d, Solution& s);
+
+  ///
+  /// @brief Integrates the primal solution. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in] primal_step_size Primal step size.
+  /// @param[in] d Direction. 
+  /// @param[in, out] s Solution. 
+  ///
+  void integratePrimalSolution(const aligned_vector<Robot>& robots,
+                               const TimeDiscretization& time_discretization, 
+                               const double primal_step_size,
+                               const Direction& d, Solution& s);
 
   ///
   /// @brief Resizes the internal data. 

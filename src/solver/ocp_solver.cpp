@@ -140,7 +140,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
   dms_.integrateSolution(robots_, time_discretization_, 
-                         primal_step_size, dual_step_size, kkt_matrix_, d_, s_);
+                         primal_step_size, dual_step_size, d_, s_);
   sto_.integrateSolution(time_discretization_, primal_step_size, dual_step_size, d_);
 } 
 

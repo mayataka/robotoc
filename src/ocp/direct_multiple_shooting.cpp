@@ -213,7 +213,7 @@ void DirectMultipleShooting::integrateSolution(
     const aligned_vector<Robot>& robots, 
     const TimeDiscretization& time_discretization, 
     const double primal_step_size, const double dual_step_size, 
-    const KKTMatrix& kkt_matrix, Direction& d, Solution& s) {
+    Direction& d, Solution& s) {
   const int N = time_discretization.size() - 1;
   assert(ocp_data_.size() >= N+1);
   #pragma omp parallel for num_threads(nthreads_)
@@ -236,6 +236,31 @@ void DirectMultipleShooting::integrateSolution(
       intermediate_stage_.updatePrimal(robots[omp_get_thread_num()], 
                                        primal_step_size, d[i], s[i], ocp_data_[i]);
       intermediate_stage_.updateDual(dual_step_size, ocp_data_[i]);
+    }
+  }
+}
+
+
+void DirectMultipleShooting::integratePrimalSolution(
+    const aligned_vector<Robot>& robots, 
+    const TimeDiscretization& time_discretization, 
+    const double primal_step_size, const Direction& d, Solution& s) {
+  const int N = time_discretization.size() - 1;
+  assert(ocp_data_.size() >= N+1);
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N; ++i) {
+    const auto& grid = time_discretization[i];
+    if (grid.type == GridType::Terminal) {
+      terminal_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                   primal_step_size, d[i], s[i], ocp_data_[i]);
+    }
+    else if (grid.type == GridType::Impact) {
+      impact_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                 primal_step_size, d[i], s[i], ocp_data_[i]);
+    }
+    else {
+      intermediate_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                       primal_step_size, d[i], s[i], ocp_data_[i]);
     }
   }
 }

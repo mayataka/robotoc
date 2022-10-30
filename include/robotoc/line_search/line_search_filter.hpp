@@ -15,9 +15,13 @@ class LineSearchFilter {
 public:
   ///
   /// @brief Construct a line search filter.
-  /// @param[in] beta A parameter for filter acceptation. 
+  /// @param[in] cost_reduction_rate Reduction rate of the cost. Default is 
+  /// 0.005.
+  /// @param[in] constraint_violation_reduction_rate Reduction rate of the 
+  /// constraint violation. Default is 0.005
   ///
-  LineSearchFilter(const double beta=1.0e-05);
+  LineSearchFilter(const double cost_reduction_rate=0.005, 
+                   const double constraint_violation_reduction_rate=0.005);
 
   ///
   /// @brief Default destructor. 
@@ -74,7 +78,7 @@ public:
 
 private:
   std::vector<std::pair<double, double>> filter_;
-  double beta_;
+  double cost_reduction_rate_, constraint_violation_reduction_rate_;
 
 };
 

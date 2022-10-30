@@ -7,11 +7,16 @@
 
 namespace robotoc {
 
-LineSearchFilter::LineSearchFilter(const double beta) 
+LineSearchFilter::LineSearchFilter(const double cost_reduction_rate, 
+                                   const double constraint_violation_reduction_rate) 
   : filter_(),
-    beta_(beta) {
-  if (beta_ <= 0) {
-    throw std::out_of_range("[LineSearchFilter] invalid argument: beta must be positive!");
+    cost_reduction_rate_(cost_reduction_rate),
+    constraint_violation_reduction_rate_(constraint_violation_reduction_rate) {
+  if (cost_reduction_rate <= 0) {
+    throw std::out_of_range("[LineSearchFilter] invalid argument: cost_reduction_rate must be positive!");
+  }
+  if (constraint_violation_reduction_rate <= 0) {
+    throw std::out_of_range("[LineSearchFilter] invalid argument: constraint_violation_reduction_rate must be positive!");
   }
 }
 
@@ -23,8 +28,8 @@ bool LineSearchFilter::isAccepted(const double cost,
     return true;
   }
   for (const auto& e : filter_) {
-    if ((cost < e.first - beta_ * e.second) 
-        || (constraint_violation < e.second - beta_ * e.second)) {
+    if ((cost < e.first - cost_reduction_rate_ * e.second) 
+        || (constraint_violation < (1.0 - constraint_violation_reduction_rate_) * e.second)) {
       return true;
     }
   }
