@@ -15,7 +15,7 @@ OCPSolver::OCPSolver(const OCP& ocp,
     dms_(ocp, solver_options.nthreads),
     sto_(ocp),
     riccati_recursion_(ocp, solver_options.max_dts_riccati),
-    line_search_(ocp),
+    line_search_(ocp, solver_options.line_search_settings),
     ocp_(ocp),
     kkt_matrix_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTMatrix(ocp.robot)),
     kkt_residual_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTResidual(ocp.robot)),
@@ -140,7 +140,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   solver_statistics_.primal_step_size.push_back(primal_step_size);
   solver_statistics_.dual_step_size.push_back(dual_step_size);
   dms_.integrateSolution(robots_, time_discretization_, 
-                         primal_step_size, dual_step_size, kkt_matrix_, d_, s_);
+                         primal_step_size, dual_step_size, d_, s_);
   sto_.integrateSolution(time_discretization_, primal_step_size, dual_step_size, d_);
 } 
 

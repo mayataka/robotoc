@@ -25,6 +25,7 @@
 #include "robotoc/constraints/joint_torques_lower_limit.hpp"
 #include "robotoc/constraints/joint_torques_upper_limit.hpp"
 #include "robotoc/constraints/friction_cone.hpp"
+#include "robotoc/constraints/contact_wrench_cone.hpp"
 #include "robotoc/mpc/control_policy.hpp"
 
 
@@ -214,6 +215,12 @@ public:
   std::shared_ptr<FrictionCone> getFrictionConeHandle();
 
   ///
+  /// @brief Gets the contact wrench cone constraints handle.  
+  /// @return Shared ptr to the wrench cone constraints.
+  ///
+  std::shared_ptr<ContactWrenchCone> getContactWrenchConeHandle();
+
+  ///
   /// @brief Gets the const handle of the MPC solver.  
   /// @return Const reference to the MPC solver.
   ///
@@ -253,6 +260,7 @@ private:
 
   std::shared_ptr<ConfigurationSpaceCost> config_cost_;
   std::shared_ptr<FrictionCone> friction_cone_;
+  std::shared_ptr<ContactWrenchCone> contact_wrench_cone_;
 
   void resetMinimumDwellTimes(const double t, const double min_dt);
 

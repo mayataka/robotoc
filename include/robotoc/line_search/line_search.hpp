@@ -64,7 +64,7 @@ public:
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
-  /// @param[in, out] dms Direct multiple shooting structure.
+  /// @param[in] dms Direct multiple shooting structure.
   /// @param[in, out] robots aligned_vector of Robot for parallel computing.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
@@ -74,7 +74,7 @@ public:
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
   double computeStepSize(
-      DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
+      const DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
       const TimeDiscretization& time_discretization,
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
       const Direction& d, const double max_primal_step_size);
@@ -83,12 +83,6 @@ public:
   /// @brief Clear the line search filter. 
   ///
   void clearHistory();
-
-  ///
-  /// @brief Checks wheather the line search filter is empty or not. 
-  /// @return true if the filter is empty. false if not.
-  ///
-  bool isFilterEmpty() const;
 
   ///
   /// @brief Set line search settings.
@@ -105,40 +99,25 @@ public:
 private:
   LineSearchFilter filter_;
   LineSearchSettings settings_;
+  DirectMultipleShooting dms_trial_;
   Solution s_trial_;
   KKTResidual kkt_residual_;
 
-  void computeCostAndViolation(
-      OCP& ocp, aligned_vector<Robot>& robots, 
-      const std::shared_ptr<ContactSequence>& contact_sequence, 
-      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s);
-
-  void computeSolutionTrial(const aligned_vector<Robot>& robots, 
-                            const TimeDiscretization& time_discretization,
-                            const Solution& s, const Direction& d, 
-                            const double step_size);
-
-  static void computeSolutionTrial(const Robot& robot, const SplitSolution& s, 
-                                   const SplitDirection& d, 
-                                   const double step_size, 
-                                   SplitSolution& s_trial,
-                                   const bool impact=false);
-
   double lineSearchFilterMethod(
-      DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
+      const DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
       const TimeDiscretization& time_discretization,
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
       const Direction& d, const double max_primal_step_size);
 
   double meritBacktrackingLineSearch(
-      DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
+      const DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
       const TimeDiscretization& time_discretization,
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
       const Direction& d, const double max_primal_step_size);
 
-  bool armijoCond(const double merit_now, const double merit_next, 
-                  const double dd, const double step_size, 
-                  const double armijo_control_rate) const;
+  bool armijoCondition(const double merit, const double merit_trial, 
+                       const double merit_directional_derivative, 
+                       const double step_size) const;
 
   double penaltyParam(const TimeDiscretization time_discretization, 
                       const Solution& s) const;

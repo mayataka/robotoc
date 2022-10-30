@@ -178,4 +178,24 @@ void UnconstrDirectMultipleShooting::integrateSolution(
   }
 }
 
+
+void UnconstrDirectMultipleShooting::integratePrimalSolution(
+    const aligned_vector<Robot>& robots,
+    const std::vector<GridInfo>& time_discretization, 
+    const double primal_step_size, const Direction& d, Solution& s) {
+  assert(robots.size() >= nthreads_);
+  const int N = time_discretization.size() - 1;
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N; ++i) {
+    if (i < N) {
+      intermediate_stage_.updatePrimal(robots[omp_get_thread_num()], 
+                                       primal_step_size, d[i], s[i], data_[i]);
+    }
+    else {
+      terminal_stage_.updatePrimal(robots[omp_get_thread_num()],  
+                                   primal_step_size, d[i], s[i], data_[i]);
+    }
+  }
+}
+
 } // namespace robotoc

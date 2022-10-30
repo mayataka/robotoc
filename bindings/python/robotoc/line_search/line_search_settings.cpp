@@ -23,6 +23,8 @@ PYBIND11_MODULE(line_search_settings, m) {
     .def_readwrite("line_search_method", &LineSearchSettings::line_search_method)
     .def_readwrite("step_size_reduction_rate", &LineSearchSettings::step_size_reduction_rate)
     .def_readwrite("min_step_size", &LineSearchSettings::min_step_size)
+    .def_readwrite("filter_cost_reduction_rate", &LineSearchSettings::filter_cost_reduction_rate)
+    .def_readwrite("filter_constraint_violation_reduction_rate", &LineSearchSettings::filter_constraint_violation_reduction_rate)
     .def_readwrite("armijo_control_rate", &LineSearchSettings::armijo_control_rate)
     .def_readwrite("margin_rate", &LineSearchSettings::margin_rate)
     .def_readwrite("eps", &LineSearchSettings::eps)

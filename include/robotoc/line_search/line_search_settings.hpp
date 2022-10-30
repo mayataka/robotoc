@@ -39,6 +39,17 @@ public:
   double min_step_size = 0.05;
 
   ///
+  /// @brief The reduction rate of the cost in the filter line search method. 
+  ///
+  double filter_cost_reduction_rate = 0.005;
+
+  ///
+  /// @brief The reduction rate of the constraint violation in the filter line 
+  /// search method. 
+  ///
+  double filter_constraint_violation_reduction_rate = 0.005;
+
+  ///
   /// @brief Control rate in Armijo condition. This value 
   /// sets the slope of the linear approximation in the Armijo condition.
   ///

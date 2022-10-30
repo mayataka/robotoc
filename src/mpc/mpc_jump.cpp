@@ -57,20 +57,34 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N)
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
   constraints_->push_back(joint_position_lower);
   constraints_->push_back(joint_position_upper);
   constraints_->push_back(joint_velocity_lower);
   constraints_->push_back(joint_velocity_upper);
   constraints_->push_back(joint_torques_lower);
   constraints_->push_back(joint_torques_upper);
-  constraints_->push_back(friction_cone_);
+  if (robot.pointContactFrames().size() == 4) {
+    friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
+    constraints_->push_back(friction_cone_);
+    contact_wrench_cone_ = nullptr;
+  }
+  else if (robot.surfaceContactFrames().size() == 2) {
+    const double X = 0.1;
+    const double Y = 0.05;
+    contact_wrench_cone_ = std::make_shared<ContactWrenchCone>(robot, X, Y);
+    constraints_->push_back(contact_wrench_cone_);
+    friction_cone_ = nullptr;
+  }
+  else {
+    throw std::out_of_range(
+        "[MPCJump] invalid argument: 'robot' is not a quadrupedal robot or a humanoid robot!");
+  }
   // init contact status
   for (int i=0; i<cs_ground_.maxNumContacts(); ++i) {
     cs_ground_.activateContact(i);
   }
   const double friction_coefficient = 0.5;
-  cs_ground_.setFrictionCoefficients(std::vector<double>(4, friction_coefficient));
+  cs_ground_.setFrictionCoefficients(std::vector<double>(cs_ground_.maxNumContacts(), friction_coefficient));
 }
 
 
@@ -251,6 +265,11 @@ std::shared_ptr<Constraints> MPCJump::getConstraintsHandle() {
 
 std::shared_ptr<FrictionCone> MPCJump::getFrictionConeHandle() {
   return friction_cone_;
+}
+
+
+std::shared_ptr<ContactWrenchCone> MPCJump::getContactWrenchConeHandle() {
+  return contact_wrench_cone_;
 }
 
 
