@@ -182,8 +182,20 @@ public:
   void integrateSolution(const aligned_vector<Robot>& robots,
                          const std::vector<GridInfo>& time_discretization, 
                          const double primal_step_size,
-                         const double dual_step_size,
-                         Direction& d, Solution& s);
+                         const double dual_step_size, Direction& d, Solution& s);
+
+  ///
+  /// @brief Integrates the primal solution. 
+  /// @param[in, out] robots aligned_vector of Robot for paralle computing.
+  /// @param[in] time_discretization Time discretization. 
+  /// @param[in] primal_step_size Primal step size.
+  /// @param[in] d Direction. 
+  /// @param[in, out] s Solution. 
+  ///
+  void integratePrimalSolution(const aligned_vector<Robot>& robots,
+                               const std::vector<GridInfo>& time_discretization, 
+                               const double primal_step_size,
+                               const Direction& d, Solution& s);
 
 private:
   int nthreads_;

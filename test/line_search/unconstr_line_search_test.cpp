@@ -66,13 +66,11 @@ TEST_F(UnconstrLineSearchTest, UnconstrOCP) {
   UnconstrDirectMultipleShooting dms(ocp, nthreads);
   dms.initConstraints(robots, time_discretization, s);
   UnconstrLineSearch line_search(ocp);
-  EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(dms, robots, time_discretization, 
                                                        q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
-  EXPECT_FALSE(line_search.isFilterEmpty());
   const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
   const double step_size2 = line_search.computeStepSize(dms, robots, time_discretization, 
                                                         q, v, s, d, max_primal_step_size);
@@ -92,13 +90,11 @@ TEST_F(UnconstrLineSearchTest, UnconstrParNMPC) {
   UnconstrBackwardCorrection backward_correction(ocp, nthreads);
   backward_correction.initConstraints(robots, time_discretization, s);
   UnconstrLineSearch line_search(ocp);
-  EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(backward_correction, robots, time_discretization, 
                                                        q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
-  EXPECT_FALSE(line_search.isFilterEmpty());
   const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
   const double step_size2 = line_search.computeStepSize(backward_correction, robots, time_discretization, 
                                                         q, v, s, d, max_primal_step_size);

@@ -16,6 +16,7 @@
 #include "robotoc/unconstr/unconstr_direct_multiple_shooting.hpp"
 #include "robotoc/parnmpc/unconstr_backward_correction.hpp"
 #include "robotoc/line_search/line_search_filter.hpp"
+#include "robotoc/line_search/line_search_settings.hpp"
 
 
 namespace robotoc {
@@ -30,12 +31,10 @@ public:
   ///
   /// @brief Construct a line search.
   /// @param[in] ocp Optimal control problem. 
-  /// @param[in] step_size_reduction_rate Reduction rate of the step size. 
-  /// Defalt is 0.75.
-  /// @param[in] min_step_size Minimum step size. Default is 0.05.
+  /// @param[in] settings Line search settings.
   ///
-  UnconstrLineSearch(const OCP& ocp, const double step_size_reduction_rate=0.75, 
-                     const double min_step_size=0.05);
+  UnconstrLineSearch(const OCP& ocp, 
+                     const LineSearchSettings& settings=LineSearchSettings());
 
   ///
   /// @brief Default constructor. 
@@ -69,8 +68,8 @@ public:
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
-  /// @param[in, out] dms Direct multiple shooting method.
-  /// @param[in] robots aligned_vector of Robot.
+  /// @param[in] dms Direct multiple shooting method.
+  /// @param[in, out] robots aligned_vector of Robot.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -78,7 +77,7 @@ public:
   /// @param[in] d Direction. 
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
-  double computeStepSize(UnconstrDirectMultipleShooting& dms, 
+  double computeStepSize(const UnconstrDirectMultipleShooting& dms, 
                          aligned_vector<Robot>& robots, 
                          const std::vector<GridInfo>& time_discretization, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -87,8 +86,8 @@ public:
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
-  /// @param[in, out] backward_correction Backward correction method.
-  /// @param[in] robots aligned_vector of Robot.
+  /// @param[in] bc Backward correction method.
+  /// @param[in, out] robots aligned_vector of Robot.
   /// @param[in] time_discretization Time discretization. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -96,7 +95,7 @@ public:
   /// @param[in] d Direction. 
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
-  double computeStepSize(UnconstrBackwardCorrection& backward_correction, 
+  double computeStepSize(const UnconstrBackwardCorrection& bc, 
                          aligned_vector<Robot>& robots, 
                          const std::vector<GridInfo>& time_discretization, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -108,24 +107,13 @@ public:
   ///
   void clearHistory();
 
-  ///
-  /// @brief Clear the line search filter. 
-  ///
-  bool isFilterEmpty() const;
-
 private:
   LineSearchFilter filter_;
-  double step_size_reduction_rate_, min_step_size_;
+  LineSearchSettings settings_;
+  UnconstrDirectMultipleShooting dms_trial_;
+  UnconstrBackwardCorrection bc_trial_;
   Solution s_trial_;
   KKTResidual kkt_residual_;
-
-  void computeSolutionTrial(const Solution& s, const Direction& d, 
-                            const double step_size);
-
-  static void computeSolutionTrial(const SplitSolution& s, 
-                                  const SplitDirection& d, 
-                                  const double step_size, 
-                                  SplitSolution& s_trial);
 
 };
 

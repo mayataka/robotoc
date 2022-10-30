@@ -8,11 +8,12 @@
 namespace robotoc {
 
 UnconstrLineSearch::UnconstrLineSearch(const OCP& ocp,  
-                                       const double step_size_reduction_rate, 
-                                       const double min_step_size) 
-  : filter_(),
-    step_size_reduction_rate_(step_size_reduction_rate), 
-    min_step_size_(min_step_size),
+                                       const LineSearchSettings& settings) 
+  : filter_(settings.filter_cost_reduction_rate, 
+            settings.filter_constraint_violation_reduction_rate),
+    settings_(settings),
+    dms_trial_(ocp, 1),
+    bc_trial_(ocp, 1),
     s_trial_(ocp.N+1, SplitSolution(ocp.robot)), 
     kkt_residual_(ocp.N+1, SplitKKTResidual(ocp.robot)) {
 }
@@ -20,8 +21,9 @@ UnconstrLineSearch::UnconstrLineSearch(const OCP& ocp,
 
 UnconstrLineSearch::UnconstrLineSearch() 
   : filter_(),
-    step_size_reduction_rate_(0), 
-    min_step_size_(0),
+    settings_(), 
+    dms_trial_(),
+    bc_trial_(),
     s_trial_(), 
     kkt_residual_() {
 }
@@ -32,93 +34,65 @@ void UnconstrLineSearch::clearHistory() {
 }
 
 
-bool UnconstrLineSearch::isFilterEmpty() const {
-  return filter_.isEmpty();
-}
-
-
 double UnconstrLineSearch::computeStepSize(
-    UnconstrDirectMultipleShooting& dms, aligned_vector<Robot>& robots, 
+    const UnconstrDirectMultipleShooting& dms, aligned_vector<Robot>& robots, 
     const std::vector<GridInfo>& time_discretization, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Solution& s, const Direction& d, const double max_primal_step_size) {
   assert(max_primal_step_size > 0);
   assert(max_primal_step_size <= 1);
-  // If filter is empty, augment the current solution to the filter.
   if (filter_.isEmpty()) {
-    const double cost = dms.getEval().cost;
+    const double cost = dms.getEval().cost + dms.getEval().cost_barrier;
     const double violation = dms.getEval().primal_feasibility;
     filter_.augment(cost, violation);
   }
   double primal_step_size = max_primal_step_size;
-  while (primal_step_size > min_step_size_) {
-    computeSolutionTrial(s, d, primal_step_size);
-    dms.evalOCP(robots, time_discretization, q, v, s_trial_, kkt_residual_);
-    const double cost = dms.getEval().cost;
-    const double violation = dms.getEval().primal_feasibility;
+  while (primal_step_size > settings_.min_step_size) {
+    dms_trial_ = dms;
+    s_trial_ = s;
+    dms_trial_.integratePrimalSolution(robots, time_discretization, 
+                                       primal_step_size, d, s_trial_);
+    dms_trial_.evalOCP(robots, time_discretization, q, v, s_trial_, kkt_residual_);
+    const double cost = dms_trial_.getEval().cost + dms_trial_.getEval().cost_barrier;
+    const double violation = dms_trial_.getEval().primal_feasibility;
     if (filter_.isAccepted(cost, violation)) {
       filter_.augment(cost, violation);
-      break;
+      return primal_step_size;
     }
-    primal_step_size *= step_size_reduction_rate_;
+    primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return std::max(primal_step_size, min_step_size_);
+  return std::max(primal_step_size, settings_.min_step_size);
 }
 
 
 double UnconstrLineSearch::computeStepSize(
-    UnconstrBackwardCorrection& backward_correction, 
-    aligned_vector<Robot>& robots, 
+    const UnconstrBackwardCorrection& bc, aligned_vector<Robot>& robots, 
     const std::vector<GridInfo>& time_discretization, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Solution& s, const Direction& d, const double max_primal_step_size) {
   assert(max_primal_step_size > 0);
   assert(max_primal_step_size <= 1);
-  // If filter is empty, augment the current solution to the filter.
   if (filter_.isEmpty()) {
-    const double cost = backward_correction.getEval().cost;
-    const double violation = backward_correction.getEval().primal_feasibility;
+    const double cost = bc.getEval().cost + bc.getEval().cost_barrier;
+    const double violation = bc.getEval().primal_feasibility;
     filter_.augment(cost, violation);
   }
   double primal_step_size = max_primal_step_size;
-  while (primal_step_size > min_step_size_) {
-    computeSolutionTrial(s, d, primal_step_size);
-    backward_correction.evalOCP(robots, time_discretization, q, v, s_trial_, kkt_residual_);
-    const double cost = backward_correction.getEval().cost;
-    const double violation = backward_correction.getEval().primal_feasibility;
+  while (primal_step_size > settings_.min_step_size) {
+    bc_trial_ = bc;
+    s_trial_ = s;
+    bc_trial_.integratePrimalSolution(robots, time_discretization, 
+                                      primal_step_size, d, s_trial_);
+    bc_trial_.evalOCP(robots, time_discretization, q, v, s_trial_, kkt_residual_);
+    const double cost = bc_trial_.getEval().cost + bc_trial_.getEval().cost_barrier;
+    const double violation = bc_trial_.getEval().primal_feasibility;
     if (filter_.isAccepted(cost, violation)) {
       filter_.augment(cost, violation);
-      break;
+      return primal_step_size;
     }
-    primal_step_size *= step_size_reduction_rate_;
+    primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return std::max(primal_step_size, min_step_size_);
-}
-
-
-void UnconstrLineSearch::computeSolutionTrial(const Solution& s, 
-                                              const Direction& d, 
-                                              const double step_size) {
-  assert(step_size > 0);
-  assert(step_size <= 1);
-  const int N = s.size() - 1;
-  while (s_trial_.size() <= N) {
-    s_trial_.push_back(s_trial_.back());
-  }
-  for (int i=0; i<=N; ++i) {
-    computeSolutionTrial(s[i], d[i], step_size, s_trial_[i]);
-  }
-}
-
-
-void UnconstrLineSearch::computeSolutionTrial(const SplitSolution& s, 
-                                              const SplitDirection& d, 
-                                              const double step_size, 
-                                              SplitSolution& s_trial) {
-  s_trial.q = s.q + step_size * d.dq();
-  s_trial.v = s.v + step_size * d.dv();
-  s_trial.a = s.a + step_size * d.da();
-  s_trial.u = s.u + step_size * d.du;
+  return std::max(primal_step_size, settings_.min_step_size);
 }
 
 } // namespace robotoc

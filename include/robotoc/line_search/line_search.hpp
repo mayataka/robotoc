@@ -85,12 +85,6 @@ public:
   void clearHistory();
 
   ///
-  /// @brief Checks wheather the line search filter is empty or not. 
-  /// @return true if the filter is empty. false if not.
-  ///
-  bool isFilterEmpty() const;
-
-  ///
   /// @brief Set line search settings.
   /// @param[in] settings Line search settings. 
   ///

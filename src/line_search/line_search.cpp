@@ -7,10 +7,10 @@
 
 namespace robotoc {
 
-LineSearch::LineSearch(const OCP& ocp, 
-                       const LineSearchSettings& line_search_settings) 
-  : filter_(),
-    settings_(line_search_settings),
+LineSearch::LineSearch(const OCP& ocp, const LineSearchSettings& settings) 
+  : filter_(settings.filter_cost_reduction_rate, 
+            settings.filter_constraint_violation_reduction_rate),
+    settings_(settings),
     dms_trial_(ocp, 1),
     s_trial_(ocp.N+1+ocp.reserved_num_discrete_events, SplitSolution(ocp.robot)), 
     kkt_residual_(ocp.N+1+ocp.reserved_num_discrete_events, SplitKKTResidual(ocp.robot)) {
@@ -55,19 +55,14 @@ void LineSearch::clearHistory() {
 }
 
 
-bool LineSearch::isFilterEmpty() const {
-  return filter_.isEmpty();
-}
-
-
 double LineSearch::lineSearchFilterMethod(
     const DirectMultipleShooting& dms, aligned_vector<Robot>& robots,
     const TimeDiscretization& time_discretization,
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     const Direction& d, const double max_primal_step_size) {
   if (filter_.isEmpty()) {
-    const double cost = dms_trial_.getEval().cost;
-    const double violation = dms_trial_.getEval().primal_feasibility;
+    const double cost = dms.getEval().cost + dms.getEval().cost_barrier;
+    const double violation = dms.getEval().primal_feasibility;
     filter_.augment(cost, violation);
   }
   double primal_step_size = max_primal_step_size;
@@ -85,7 +80,7 @@ double LineSearch::lineSearchFilterMethod(
     }
     primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return primal_step_size;
+  return std::max(primal_step_size, settings_.min_step_size);
 }
 
 
@@ -95,7 +90,8 @@ double LineSearch::meritBacktrackingLineSearch(
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
     const Direction& d, const double max_primal_step_size) {
   const double penalty_param = penaltyParam(time_discretization, s);
-  const double merit = penalty_param * dms.getEval().cost + dms.getEval().primal_feasibility;
+  const double merit = dms.getEval().cost + dms.getEval().cost_barrier 
+                         + penalty_param * dms.getEval().primal_feasibility;
   dms_trial_ = dms;
   s_trial_ = s;
   dms_trial_.integratePrimalSolution(robots, time_discretization, settings_.eps, d, s_trial_);
@@ -118,7 +114,7 @@ double LineSearch::meritBacktrackingLineSearch(
     }
     primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return primal_step_size;
+  return std::max(primal_step_size, settings_.min_step_size);
 }
 
 

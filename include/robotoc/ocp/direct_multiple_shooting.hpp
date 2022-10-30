@@ -178,8 +178,7 @@ public:
   void integrateSolution(const aligned_vector<Robot>& robots,
                          const TimeDiscretization& time_discretization, 
                          const double primal_step_size,
-                         const double dual_step_size,
-                         Direction& d, Solution& s);
+                         const double dual_step_size, Direction& d, Solution& s);
 
   ///
   /// @brief Integrates the primal solution. 
