@@ -46,7 +46,7 @@ double LineSearch::computeStepSize(
   else {
     throw std::runtime_error("[LineSearch]: Invalid LineSearchMethod");
   }
-  return std::max(primal_step_size, settings_.min_step_size);
+  return primal_step_size;
 }
 
 
@@ -80,7 +80,7 @@ double LineSearch::lineSearchFilterMethod(
     }
     primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return std::max(primal_step_size, settings_.min_step_size);
+  return primal_step_size;
 }
 
 
@@ -114,7 +114,7 @@ double LineSearch::meritBacktrackingLineSearch(
     }
     primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return std::max(primal_step_size, settings_.min_step_size);
+  return primal_step_size;
 }
 
 

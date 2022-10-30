@@ -17,6 +17,7 @@
 #include "contact_sequence_factory.hpp"
 #include "solution_factory.hpp"
 #include "direction_factory.hpp"
+#include "kkt_factory.hpp"
 #include "cost_factory.hpp"
 #include "constraints_factory.hpp"
 
@@ -34,47 +35,17 @@ protected:
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = T / N;
     step_size_reduction_rate = 0.75;
-    min_step_size = 0.05;
   }
 
   virtual void TearDown() {
   }
-
-  Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, 
-                          const std::shared_ptr<ContactSequence>& contact_sequence) const;
-  Direction createDirection(const Robot& robot) const;
-  Direction createDirection(const Robot& robot, 
-                            const std::shared_ptr<ContactSequence>& contact_sequence) const;
   std::shared_ptr<ContactSequence> createContactSequence(const Robot& robot) const;
 
   void test(const Robot& robot, const LineSearchSettings& settings) const;
 
   int N, max_num_impact, nthreads;
-  double T, t, dt, step_size_reduction_rate, min_step_size;
+  double T, t, dt, step_size_reduction_rate;
 };
-
-
-Solution LineSearchTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_num_impact);
-}
-
-
-Solution LineSearchTest::createSolution(const Robot& robot, 
-                                        const std::shared_ptr<ContactSequence>& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impact, t);
-}
-
-
-Direction LineSearchTest::createDirection(const Robot& robot) const {
-  return testhelper::CreateDirection(robot, N, max_num_impact);
-}
-
-
-Direction LineSearchTest::createDirection(const Robot& robot, 
-                                          const std::shared_ptr<ContactSequence>& contact_sequence) const {
-  return testhelper::CreateDirection(robot, contact_sequence, T, N, max_num_impact, t);
-}
 
 
 std::shared_ptr<ContactSequence> LineSearchTest::createContactSequence(const Robot& robot) const {
@@ -86,12 +57,11 @@ void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impact);
-  const auto s = createSolution(robot, contact_sequence);
-  const auto d = createDirection(robot, contact_sequence);
+  TimeDiscretization time_discretization(T, N);
+  time_discretization.discretize(contact_sequence, t);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto kkt_residual_ref = kkt_residual;
+  auto kkt_residual = testhelper::CreateKKTResidual(robot, contact_sequence, time_discretization);
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   OCP ocp;
   ocp.robot = robot;
@@ -101,15 +71,19 @@ void LineSearchTest::test(const Robot& robot, const LineSearchSettings& settings
   ocp.N = N;
   ocp.T = T;
   DirectMultipleShooting dms(ocp, nthreads);
-  dms.initConstraints(ocp, robots, contact_sequence, s);
-  LineSearch line_search(ocp, nthreads, settings);
-  const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
-  const double step_size = line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, max_primal_step_size);
+  const auto s = testhelper::CreateSolution(robot, contact_sequence, time_discretization);
+  const auto d = testhelper::CreateDirection(robot, contact_sequence, time_discretization);
+  dms.initConstraints(robots, time_discretization, s);
+  dms.evalOCP(robots, time_discretization, q, v, s, kkt_residual);
+  LineSearch line_search(ocp, settings);
+  const double max_primal_step_size = settings.min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-settings.min_step_size);
+  const double step_size = line_search.computeStepSize(dms, robots, time_discretization, 
+                                                       q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
-  EXPECT_TRUE(step_size >= min_step_size);
-  const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
-  EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, very_small_max_primal_step_size),
-                   min_step_size);
+  EXPECT_TRUE(step_size > 0.0);
+  const double very_small_max_primal_step_size = settings.min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
+  EXPECT_DOUBLE_EQ(line_search.computeStepSize(dms, robots, time_discretization, q, v, s, d, very_small_max_primal_step_size),
+                   very_small_max_primal_step_size);
   EXPECT_NO_THROW(
     std::cout << settings << std::endl;
   );

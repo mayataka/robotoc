@@ -1,3 +1,3 @@
 add_robotoc_test(line_search_filter_test)
-# add_robotoc_test(line_search_test)
+add_robotoc_test(line_search_test)
 add_robotoc_test(unconstr_line_search_test)

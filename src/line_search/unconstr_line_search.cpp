@@ -61,7 +61,7 @@ double UnconstrLineSearch::computeStepSize(
     }
     primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return std::max(primal_step_size, settings_.min_step_size);
+  return primal_step_size;
 }
 
 
@@ -92,7 +92,7 @@ double UnconstrLineSearch::computeStepSize(
     }
     primal_step_size *= settings_.step_size_reduction_rate;
   }
-  return std::max(primal_step_size, settings_.min_step_size);
+  return primal_step_size;
 }
 
 } // namespace robotoc
