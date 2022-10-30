@@ -1,7 +1,7 @@
 #ifndef ROBOTOC_LINE_SEARCH_FILTER_HPP_
 #define ROBOTOC_LINE_SEARCH_FILTER_HPP_
 
-#include <set>
+#include <vector>
 #include <utility>
 
 
@@ -15,11 +15,9 @@ class LineSearchFilter {
 public:
   ///
   /// @brief Construct a line search filter.
-  /// @param[in] cost_reduction_rate Reduction rate of the cost. 
-  /// @param[in] constraints_reduction_rate Reduction rate of the constraints. 
+  /// @param[in] beta A parameter for filter acceptation. 
   ///
-  LineSearchFilter(const double cost_reduction_rate=0.005, 
-                   const double constraints_reduction_rate=0.005);
+  LineSearchFilter(const double beta=1.0e-05);
 
   ///
   /// @brief Default destructor. 
@@ -54,7 +52,7 @@ public:
   /// @return true if the pair of cost and constraint violation is accepted.
   /// false if not. 
   ///
-  bool isAccepted(const double cost, const double constraint_violation);
+  bool isAccepted(const double cost, const double constraint_violation) const;
 
   ///
   /// @brief Augment the pair of cost and constraint violation to the filter. 
@@ -75,8 +73,8 @@ public:
   bool isEmpty() const;
 
 private:
-  std::set<std::pair<double, double>> filter_;
-  double cost_reduction_rate_, constraints_reduction_rate_;
+  std::vector<std::pair<double, double>> filter_;
+  double beta_;
 
 };
 
