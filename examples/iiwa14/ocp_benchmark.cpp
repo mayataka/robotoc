@@ -36,7 +36,7 @@ int main() {
   config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   // Create joint constraints.
   const double barrier_param = 1.0e-03;

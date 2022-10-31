@@ -55,7 +55,7 @@ config_cost.set_v_weight(v_weight)
 config_cost.set_v_weight_terminal(v_weight)
 config_cost.set_v_weight_impact(v_weight_impact)
 config_cost.set_u_weight(u_weight)
-cost.push_back(config_cost)
+cost.add("config_cost", config_cost)
 
 robot.forward_kinematics(q_standing)
 x3d0_LF = robot.frame_position('LF_FOOT')
@@ -70,7 +70,7 @@ com_ref_flying_up = robotoc.PeriodicCoMRef(com_ref0_flying_up, vcom_ref_flying_u
                                            flying_down_time+2*ground_time, False)
 com_cost_flying_up = robotoc.CoMCost(robot, com_ref_flying_up)
 com_cost_flying_up.set_weight(np.full(3, 1.0e06))
-cost.push_back(com_cost_flying_up)
+cost.add("com_cost_flying_up", com_cost_flying_up)
 
 com_ref0_landed = robot.com()
 com_ref0_landed += jump_length
@@ -80,7 +80,7 @@ com_ref_landed = robotoc.PeriodicCoMRef(com_ref0_landed, vcom_ref_landed,
                                         ground_time+flying_time, False)
 com_cost_landed = robotoc.CoMCost(robot, com_ref_landed)
 com_cost_landed.set_weight(np.full(3, 1.0e06))
-cost.push_back(com_cost_landed)
+cost.add("com_cost_landed", com_cost_landed)
 
 # Create the constraints
 constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)

@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight_terminal(v_weight);
   config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_u_weight(u_weight);
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   robot.updateFrameKinematics(q_standing);
   const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
@@ -114,10 +114,10 @@ int main(int argc, char *argv[]) {
   LH_cost->set_weight(foot_track_weight);
   RF_cost->set_weight(foot_track_weight);
   RH_cost->set_weight(foot_track_weight);
-  cost->push_back(LF_cost);
-  cost->push_back(LH_cost);
-  cost->push_back(RF_cost);
-  cost->push_back(RH_cost);
+  cost->add("LF_cost", LF_cost);
+  cost->add("LH_cost", LH_cost);
+  cost->add("RF_cost", RF_cost);
+  cost->add("RH_cost", RH_cost);
 
   const Eigen::Vector3d com_ref0 = robot.CoM();
   const Eigen::Vector3d vcom_ref = 0.25 * step_length / swing_time;
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
                                                            double_support_time, true);
   auto com_cost = std::make_shared<robotoc::CoMCost>(robot, com_ref);
   com_cost->set_weight(Eigen::Vector3d::Constant(1.0e06));
-  cost->push_back(com_cost);
+  cost->add("com_cost", com_cost);
 
   // Create the constraints
   const double barrier_param = 1.0e-03;

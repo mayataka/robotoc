@@ -54,7 +54,7 @@ config_cost.set_v_weight_terminal(v_weight)
 config_cost.set_v_weight_impact(v_weight_impact)
 config_cost.set_dv_weight_impact(dv_weight_impact)
 config_cost.set_a_weight(a_weight)
-cost.push_back(config_cost)
+cost.add("config_cost", config_cost)
 
 # Create the constraints
 constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)

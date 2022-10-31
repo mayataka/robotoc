@@ -21,7 +21,7 @@ config_cost.set_q_weight_terminal(np.full(robot.dimv(), 10))
 config_cost.set_v_weight(np.full(robot.dimv(), 0.01))
 config_cost.set_v_weight_terminal(np.full(robot.dimv(), 0.01))
 config_cost.set_a_weight(np.full(robot.dimv(), 0.01))
-cost.push_back(config_cost)
+cost.add("config_cost", config_cost)
 
 # Create joint constraints.
 constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)

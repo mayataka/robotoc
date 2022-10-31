@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_dv_weight_impact(dv_weight_impact);
   config_cost->set_a_weight(a_weight);
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   // Create the constraints
   const double barrier_param = 1.0e-03;

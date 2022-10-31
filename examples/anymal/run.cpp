@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight_impact(v_weight);
   config_cost->set_a_weight(a_weight);
   config_cost->set_dv_weight_impact(a_weight);
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
   q_standing << -3, 0, 0.4792, 0, 0, 0, 1, 
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight);
   time_varying_config_cost->set_q_weight_impact(q_weight);
-  cost->push_back(time_varying_config_cost);
+  cost->add("time_varying_config_cost", time_varying_config_cost);
 
   // Create the constraints
   const double barrier_param = 1.0e-03;

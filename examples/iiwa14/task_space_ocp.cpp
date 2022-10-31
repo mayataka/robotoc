@@ -75,12 +75,12 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
   auto x6d_ref = std::make_shared<TaskSpace6DRef>();
   auto task_cost = std::make_shared<robotoc::TaskSpace6DCost>(robot, ee_frame, x6d_ref);
   task_cost->set_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   task_cost->set_weight_terminal(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  cost->push_back(task_cost);
+  cost->add("task_cost", task_cost);
 
   // Create joint constraints.
   const double barrier_param = 1.0e-03;
