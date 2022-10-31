@@ -64,8 +64,8 @@ void CostFunctionTest::testStageCost(Robot& robot) {
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimu);
   auto config_cost = std::make_shared<ConfigurationSpaceCost>(robot);
-  non_discounted_cost->push_back(config_cost);
-  discounted_cost->push_back(config_cost);
+  non_discounted_cost->add("config_cost", config_cost);
+  discounted_cost->add("config_cost", config_cost);
 
   auto contact_status = robot.createContactStatus();
   contact_status.setRandom();

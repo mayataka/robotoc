@@ -66,11 +66,11 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N)
   R_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
   com_cost_ = std::make_shared<CoMCost>(robot, com_ref_);
   com_cost_->set_weight(Eigen::Vector3d::Constant(1.0e03));
-  cost_->push_back(config_cost_);
-  cost_->push_back(base_rot_cost_);
-  cost_->push_back(L_foot_cost_);
-  cost_->push_back(R_foot_cost_);
-  cost_->push_back(com_cost_);
+  cost_->add("config_cost", config_cost_);
+  cost_->add("base_rot_cost", base_rot_cost_);
+  cost_->add("L_foot_cost", L_foot_cost_);
+  cost_->add("R_foot_cost", R_foot_cost_);
+  cost_->add("com_cost", com_cost_);
   // create constraints 
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);

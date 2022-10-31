@@ -10,6 +10,7 @@ namespace robotoc {
 CostFunction::CostFunction(const double discount_factor, 
                            const double discount_time_step)
   : costs_(),
+    cost_names_(),
     discount_factor_(discount_factor),
     discount_time_step_(discount_time_step),
     discounted_cost_(true) {
@@ -27,6 +28,7 @@ CostFunction::CostFunction(const double discount_factor,
 
 CostFunction::CostFunction()
   : costs_(),
+    cost_names_(),
     discount_factor_(1.0),
     discount_time_step_(0.0),
     discounted_cost_(false) {
@@ -68,13 +70,44 @@ double CostFunction::discountTimeStep() const {
 }
 
 
-void CostFunction::push_back(const CostFunctionComponentBasePtr& cost) {
+bool CostFunction::exist(const std::string& name) const {
+  return (cost_names_.find(name) != cost_names_.end());
+}
+
+
+void CostFunction::add(const std::string& name, 
+                       const CostFunctionComponentBasePtr& cost) {
+  if (exist(name)) {
+    throw std::runtime_error("[CostFunction] invalid argument: cost component '" + name + "' already exists!");
+  }
+  cost_names_.emplace(name, costs_.size());
   costs_.push_back(cost);
+}
+
+
+void CostFunction::erase(const std::string& name) {
+  if (!exist(name)) {
+    throw std::runtime_error("[CostFunction] invalid argument: cost component '" + name + "' does not exist!");
+  }
+  const int index = cost_names_.at(name);
+  cost_names_.erase(name);
+  costs_.erase(costs_.begin()+index);
+}
+
+
+std::shared_ptr<CostFunctionComponentBase> 
+CostFunction::get(const std::string& name) const {
+  if (!exist(name)) {
+    throw std::runtime_error("[CostFunction] invalid argument: cost component '" + name + "' does not exist!");
+  }
+  const int index = cost_names_.at(name);
+  return costs_.at(index);
 }
 
 
 void CostFunction::clear() {
   costs_.clear();
+  cost_names_.clear();
 }
 
 

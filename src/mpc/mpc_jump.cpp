@@ -49,7 +49,7 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N)
   config_cost_->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
   config_cost_->set_v_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 10.0));
   config_cost_->set_dv_weight_impact(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-03));
-  cost_->push_back(config_cost_);
+  cost_->add("config_cost", config_cost_);
   // create constraints 
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
