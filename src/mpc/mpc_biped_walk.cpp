@@ -82,14 +82,14 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N)
   const double Y = 0.05;
   contact_wrench_cone_ = std::make_shared<robotoc::ContactWrenchCone>(robot, X, Y);
   impact_wrench_cone_ = std::make_shared<robotoc::ImpactWrenchCone>(robot, X, Y);
-  constraints_->push_back(joint_position_lower);
-  constraints_->push_back(joint_position_upper);
-  constraints_->push_back(joint_velocity_lower);
-  constraints_->push_back(joint_velocity_upper);
-  constraints_->push_back(joint_torques_lower);
-  constraints_->push_back(joint_torques_upper);
-  constraints_->push_back(contact_wrench_cone_);
-  constraints_->push_back(impact_wrench_cone_);
+  constraints_->add("joint_position_lower", joint_position_lower);
+  constraints_->add("joint_position_upper", joint_position_upper);
+  constraints_->add("joint_velocity_lower", joint_velocity_lower);
+  constraints_->add("joint_velocity_upper", joint_velocity_upper);
+  constraints_->add("joint_torques_lower", joint_torques_lower);
+  constraints_->add("joint_torques_upper", joint_torques_upper);
+  constraints_->add("contact_wrench_cone_", contact_wrench_cone_);
+  constraints_->add("impact_wrench_cone_", impact_wrench_cone_);
   // create contact status
   cs_standing_.activateContacts(std::vector<int>({0, 1}));
   cs_right_swing_.activateContacts(std::vector<int>({0}));

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
@@ -67,20 +68,50 @@ public:
   Constraints& operator=(Constraints&&) noexcept = default;
 
   ///
-  /// @brief Appends a constraint component to the cost function.
-  /// @param[in, out] constraint_component Shared pointer to the constraint 
-  /// component appended to the constraints. The internal barrier parameter and 
-  /// the parameter of the fraction-to-boundary rule will be overitten.
+  /// @brief Checks if thsi has a constraint component of the specified name. 
+  /// @param[in] name Name of the constraint component.
+  /// @return treu if a constraint component of the specified name exists. 
   ///
-  void push_back(ConstraintComponentBasePtr constraint_component);
+  bool exist(const std::string& name) const;
 
   ///
-  /// @brief Appends a constraint component to the cost function.
-  /// @param[in, out] constraint_component Shared pointer to the constraint 
-  /// component appended to the constraints. The internal barrier parameter and 
-  /// the parameter of the fraction-to-boundary rule will be overitten.
+  /// @brief Adds a constraint component. If a component of the same name 
+  /// exists, throws an exeption.
+  /// @param[in] name Name of the constraint component.
+  /// @param[in] constraint shared pointer to the constraint component.
   ///
-  void push_back(ImpactConstraintComponentBasePtr constraint_component);
+  void add(const std::string& name, ConstraintComponentBasePtr constraint);
+
+  ///
+  /// @brief Adds a constraint component. If a component of the same name 
+  /// exists, throws an exeption.
+  /// @param[in] name Name of the constraint component.
+  /// @param[in] constraint shared pointer to the constraint component.
+  ///
+  void add(const std::string& name, ImpactConstraintComponentBasePtr constraint);
+
+  ///
+  /// @brief Erases a constraint component. If a component of the specified 
+  /// name does not exist, throws an exeption.
+  /// @param[in] name Name of the constraint component.
+  ///
+  void erase(const std::string& name);
+
+  ///
+  /// @brief Gets a constraint component. If a component of the specified 
+  /// name does not exist, throws an exeption. 
+  /// @param[in] name Name of the constraint component.
+  /// @return Shared ptr to the specified constraint component.
+  ///
+  ConstraintComponentBasePtr getConstraintComponent(const std::string& name) const;
+
+  ///
+  /// @brief Gets a constraint component. If a component of the specified 
+  /// name does not exist, throws an exeption. 
+  /// @param[in] name Name of the constraint component.
+  /// @return Shared ptr to the specified constraint component.
+  ///
+  ImpactConstraintComponentBasePtr getImpactConstraintComponent(const std::string& name) const;
 
   ///
   /// @brief Clears constraints by removing all components.
@@ -303,6 +334,10 @@ private:
                                           velocity_level_constraints_, 
                                           acceleration_level_constraints_;
   std::vector<ImpactConstraintComponentBasePtr> impact_level_constraints_;
+  std::unordered_map<std::string, size_t> position_level_constraint_names_, 
+                                          velocity_level_constraint_names_, 
+                                          acceleration_level_constraint_names_,
+                                          impact_level_constraint_names_;
   double barrier_, fraction_to_boundary_rule_;
 };
 

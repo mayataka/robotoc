@@ -96,13 +96,13 @@ int main(int argc, char *argv[]) {
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(friction_cone);
+  constraints->add("joint_position_lower", joint_position_lower);
+  constraints->add("joint_position_upper", joint_position_upper);
+  constraints->add("joint_velocity_lower", joint_velocity_lower);
+  constraints->add("joint_velocity_upper", joint_velocity_upper);
+  constraints->add("joint_torques_lower", joint_torques_lower);
+  constraints->add("joint_torques_upper", joint_torques_upper);
+  constraints->add("friction_cone", friction_cone);
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);

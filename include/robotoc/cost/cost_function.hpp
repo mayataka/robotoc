@@ -109,7 +109,7 @@ public:
   void add(const std::string& name, const CostFunctionComponentBasePtr& cost);
 
   ///
-  /// @brief Erases a cost function component.  If a component of the specified 
+  /// @brief Erases a cost function component. If a component of the specified 
   /// name does not exist, throws an exeption.
   /// @param[in] name Name of the cost function component.
   ///

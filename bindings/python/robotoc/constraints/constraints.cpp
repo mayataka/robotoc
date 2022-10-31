@@ -16,10 +16,18 @@ PYBIND11_MODULE(constraints, m) {
   py::class_<Constraints, std::shared_ptr<Constraints>>(m, "Constraints")
     .def(py::init<const double, const double>(),
           py::arg("barrier_param")=1.0e-03, py::arg("fraction_to_boundary_rule")=0.995)
-    .def("push_back", static_cast<void (Constraints::*)(ConstraintComponentBasePtr)>(&Constraints::push_back),
-          py::arg("constraint_component"))
-    .def("push_back", static_cast<void (Constraints::*)(ImpactConstraintComponentBasePtr)>(&Constraints::push_back),
-          py::arg("constraint_component"))
+    .def("exist", &Constraints::exist,
+          py::arg("name"))
+    .def("add", static_cast<void (Constraints::*)(const std::string&, ConstraintComponentBasePtr)>(&Constraints::add),
+          py::arg("name"), py::arg("constraint"))
+    .def("add", static_cast<void (Constraints::*)(const std::string&, ImpactConstraintComponentBasePtr)>(&Constraints::add),
+          py::arg("name"), py::arg("constraint"))
+    .def("erase", &Constraints::exist,
+          py::arg("name"))
+    .def("get_constraint_component", &Constraints::getConstraintComponent,
+          py::arg("name"))
+    .def("get_impact_constraint_component", &Constraints::getImpactConstraintComponent,
+          py::arg("name"))
     .def("clear", &Constraints::clear)
     .def("set_barrier_param", &Constraints::setBarrierParam,
           py::arg("barrier_param"))

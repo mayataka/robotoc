@@ -89,13 +89,13 @@ MPCCrawl::MPCCrawl(const Robot& robot, const double T, const int N)
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
-  constraints_->push_back(joint_position_lower);
-  constraints_->push_back(joint_position_upper);
-  constraints_->push_back(joint_velocity_lower);
-  constraints_->push_back(joint_velocity_upper);
-  constraints_->push_back(joint_torques_lower);
-  constraints_->push_back(joint_torques_upper);
-  constraints_->push_back(friction_cone_);
+  constraints_->add("joint_position_lower", joint_position_lower);
+  constraints_->add("joint_position_upper", joint_position_upper);
+  constraints_->add("joint_velocity_lower", joint_velocity_lower);
+  constraints_->add("joint_velocity_upper", joint_velocity_upper);
+  constraints_->add("joint_torques_lower", joint_torques_lower);
+  constraints_->add("joint_torques_upper", joint_torques_upper);
+  constraints_->add("friction_cone", friction_cone_);
   // init contact status
   cs_standing_.activateContacts(std::vector<int>({0, 1, 2, 3}));
   cs_lf_.activateContacts(std::vector<int>({1, 2, 3}));

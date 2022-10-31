@@ -57,22 +57,22 @@ MPCJump::MPCJump(const Robot& robot, const double T, const int N)
   auto joint_velocity_upper = std::make_shared<robotoc::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
-  constraints_->push_back(joint_position_lower);
-  constraints_->push_back(joint_position_upper);
-  constraints_->push_back(joint_velocity_lower);
-  constraints_->push_back(joint_velocity_upper);
-  constraints_->push_back(joint_torques_lower);
-  constraints_->push_back(joint_torques_upper);
+  constraints_->add("joint_position_lower", joint_position_lower);
+  constraints_->add("joint_position_upper", joint_position_upper);
+  constraints_->add("joint_velocity_lower", joint_velocity_lower);
+  constraints_->add("joint_velocity_upper", joint_velocity_upper);
+  constraints_->add("joint_torques_lower", joint_torques_lower);
+  constraints_->add("joint_torques_upper", joint_torques_upper);
   if (robot.pointContactFrames().size() == 4) {
     friction_cone_ = std::make_shared<robotoc::FrictionCone>(robot);
-    constraints_->push_back(friction_cone_);
+    constraints_->add("friction_cone", friction_cone_);
     contact_wrench_cone_ = nullptr;
   }
   else if (robot.surfaceContactFrames().size() == 2) {
     const double X = 0.1;
     const double Y = 0.05;
     contact_wrench_cone_ = std::make_shared<ContactWrenchCone>(robot, X, Y);
-    constraints_->push_back(contact_wrench_cone_);
+    constraints_->add("contact_wrench_cone_", contact_wrench_cone_);
     friction_cone_ = nullptr;
   }
   else {
