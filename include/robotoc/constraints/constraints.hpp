@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <iostream>
 
 #include "robotoc/robot/robot.hpp"
 #include "robotoc/robot/contact_status.hpp"
@@ -328,6 +329,46 @@ public:
   /// @return The parameter of the fraction-to-boundary-rule. 
   ///
   double getFractionToBoundaryRule() const;
+
+  ///
+  /// @brief Gets a list of the position-level constraints. 
+  /// @return Name list of the position-level constraints.
+  ///
+  std::vector<std::string> getPositionLevelConstraintList() const;
+
+  ///
+  /// @brief Gets a list of the velocity-level constraints. 
+  /// @return Name list of the velocity-level constraints.
+  ///
+  std::vector<std::string> getVelocityLevelConstraintList() const;
+
+  ///
+  /// @brief Gets a list of the acceleration-level constraints. 
+  /// @return Name list of the acceleration-level constraints.
+  ///
+  std::vector<std::string> getAccelerationLevelConstraintList() const;
+
+  ///
+  /// @brief Gets a list of the impact-level constraints. 
+  /// @return Name list of acceleration impact-level constraints.
+  ///
+  std::vector<std::string> getImpactLevelConstraintList() const;
+
+  ///
+  /// @brief Gets a list of the constraints. 
+  /// @return Name list of acceleration impact-level constraints.
+  ///
+  std::vector<std::string> getConstraintList() const;
+
+  ///
+  /// @brief Displays the constraints onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, const Constraints& constraints);
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const std::shared_ptr<Constraints>& constraints);
 
 private:
   std::vector<ConstraintComponentBasePtr> position_level_constraints_, 

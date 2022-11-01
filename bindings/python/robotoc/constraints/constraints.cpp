@@ -35,7 +35,14 @@ PYBIND11_MODULE(constraints, m) {
           py::arg("fraction_to_boundary_rule"))
     .def("get_barrier_param", &Constraints::getBarrierParam)
     .def("get_fraction_to_boundary_rule", &Constraints::getFractionToBoundaryRule)
-    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(Constraints);
+    .def("get_position_level_constraint_list", &Constraints::getPositionLevelConstraintList)
+    .def("get_velocity_level_constraint_list", &Constraints::getVelocityLevelConstraintList)
+    .def("get_acceleration_level_constraint_list", &Constraints::getAccelerationLevelConstraintList)
+    .def("get_impact_level_constraint_list", &Constraints::getImpactLevelConstraintList)
+    .def("get_constraint_list", &Constraints::getConstraintList)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(Constraints)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(Constraints);
+
 }
 
 } // namespace python

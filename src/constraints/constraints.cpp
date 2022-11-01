@@ -537,4 +537,92 @@ double Constraints::getFractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
 }
 
+
+std::vector<std::string> Constraints::getPositionLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : position_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getVelocityLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : velocity_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getAccelerationLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : acceleration_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getImpactLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : impact_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (const auto& e : getPositionLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  for (const auto& e : getVelocityLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  for (const auto& e : getAccelerationLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  for (const auto& e : getImpactLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  return constraint_list;
+}
+
+
+void Constraints::disp(std::ostream& os) const {
+  os << "Constraints:" << "\n";
+  os << "  position-level constraints:" << "\n";
+  for (const auto& e : getPositionLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+  os << "  velocity-level constraints:" << "\n";
+  for (const auto& e : getVelocityLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+  os << "  acceleration-level constraints:" << "\n";
+  for (const auto& e : getAccelerationLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+  os << "  impact-level constraints:" << "\n";
+  for (const auto& e : getImpactLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Constraints& constraints) {
+  constraints.disp(os);
+  return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os, 
+                         const std::shared_ptr<Constraints>& constraints) {
+  constraints->disp(os);
+  return os;
+}
+
 } // namespace robotoc

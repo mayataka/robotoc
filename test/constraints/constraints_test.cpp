@@ -115,6 +115,9 @@ void ConstraintsTest::timeStage0(Robot& robot,
     EXPECT_FALSE(kkt_residual.lf().isZero());
     EXPECT_FALSE(kkt_matrix.Qff().isZero());
   }
+  EXPECT_NO_THROW(
+    std::cout << constraints << std::endl;
+  );
 }
 
 
@@ -157,6 +160,9 @@ void ConstraintsTest::timeStage1(Robot& robot,
     EXPECT_FALSE(kkt_residual.lf().isZero());
     EXPECT_FALSE(kkt_matrix.Qff().isZero());
   }
+  EXPECT_NO_THROW(
+    std::cout << constraints << std::endl;
+  );
 }
 
 
@@ -199,6 +205,10 @@ void ConstraintsTest::timeStage2(Robot& robot,
     EXPECT_FALSE(kkt_residual.lf().isZero());
     EXPECT_FALSE(kkt_matrix.Qff().isZero());
   }
+  EXPECT_NO_THROW(
+    std::cout << constraints << std::endl;
+    std::cout << *constraints.get() << std::endl;
+  );
 }
 
 
