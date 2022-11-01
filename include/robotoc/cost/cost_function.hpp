@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -277,6 +278,23 @@ public:
                                const SplitSolution& s, 
                                SplitKKTResidual& kkt_residual,
                                SplitKKTMatrix& kkt_matrix) const;
+
+  ///
+  /// @brief Gets a list of the cost components. 
+  /// @return Name list of cost components.
+  ///
+  std::vector<std::string> getCostComponentList() const;
+
+  ///
+  /// @brief Displays the cost function onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const CostFunction& cost_function);
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const std::shared_ptr<CostFunction>& cost_function);
 
 private:
   std::vector<CostFunctionComponentBasePtr> costs_;

@@ -99,6 +99,10 @@ void CostFunctionTest::testStageCost(Robot& robot) {
     cost_component->as_shared_ptr<CoMCost>(),
     std::runtime_error
   );
+  EXPECT_NO_THROW(
+    std::cout << non_discounted_cost << std::endl;
+    std::cout << *non_discounted_cost.get() << std::endl;
+  );
 }
 
 

@@ -326,4 +326,34 @@ double CostFunction::quadratizeImpactCost(Robot& robot,
   return l;
 }
 
+
+std::vector<std::string> CostFunction::getCostComponentList() const {
+  std::vector<std::string> cost_component_list;
+  for (std::pair<std::string, size_t> e : cost_names_) {
+    cost_component_list.push_back(e.first);
+  }
+  return cost_component_list;
+}
+
+
+void CostFunction::disp(std::ostream& os) const {
+  os << "CostFunction:" << "\n";
+  for (const auto& e : getCostComponentList()) {
+    os << "  - " << e << "\n";
+  }
+}
+
+
+std::ostream& operator<<(std::ostream& os, const CostFunction& cost_function) {
+  cost_function.disp(os);
+  return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os, 
+                         const std::shared_ptr<CostFunction>& cost_function) {
+  cost_function->disp(os);
+  return os;
+}
+
 } // namespace robotoc

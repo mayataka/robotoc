@@ -57,7 +57,9 @@ PYBIND11_MODULE(cost_function, m) {
           py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"), 
           py::arg("kkt_matrix"))
-    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunction);
+    .def("get_cost_component_list", &CostFunction::getCostComponentList)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunction)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(CostFunction);
 }
 
 } // namespace python
