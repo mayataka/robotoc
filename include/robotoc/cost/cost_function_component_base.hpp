@@ -22,7 +22,7 @@ namespace robotoc {
 /// @class CostFunctionComponentBase
 /// @brief Base class of components of cost function.
 ///
-class CostFunctionComponentBase {
+class CostFunctionComponentBase : public std::enable_shared_from_this<CostFunctionComponentBase> {
 public:
   ///
   /// @brief Default constructor. 
@@ -210,12 +210,13 @@ public:
   /// @return shared ptr of this object as the specified type. 
   ///
   template <typename Derived>
-  std::shared_ptr<Derived> as() const {
-    Derived* derived_ptr = dynamic_cast<Derived*>(this);
+  std::shared_ptr<Derived> as_shared_ptr() {
+    auto ptr = shared_from_this();
+    auto derived_ptr = std::dynamic_pointer_cast<Derived>(ptr);
     if (derived_ptr == nullptr) {
-        throw std::runtime_error("[CostFunctionComponentBase] runtime error: failed in down-casting!");
+      throw std::runtime_error("[CostFunctionComponentBase] runtime error: failed in down-casting!");
     }
-    return std::shared_ptr<Derived>(derived_ptr);
+    return derived_ptr;
   }
 
 };

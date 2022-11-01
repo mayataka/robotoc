@@ -36,12 +36,13 @@ inline void ImpactConstraintComponentBase::updateDual(
 
 
 template <typename Derived>
-inline std::shared_ptr<Derived> ImpactConstraintComponentBase::as() const {
-  Derived* derived_ptr = dynamic_cast<Derived*>(this);
+inline std::shared_ptr<Derived> ImpactConstraintComponentBase::as_shared_ptr() {
+  auto ptr = shared_from_this();
+  auto derived_ptr = std::dynamic_pointer_cast<Derived>(ptr);
   if (derived_ptr == nullptr) {
     throw std::runtime_error("[ImpactConstraintComponentBase] runtime error: failed in down-casting!");
   }
-  return std::shared_ptr<Derived>(derived_ptr);
+  return derived_ptr;
 }
 
 

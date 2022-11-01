@@ -230,7 +230,7 @@ TEST_F(ConstraintsTest, floatingBase) {
 
 TEST_F(ConstraintsTest, testParams) {
   auto robot = testhelper::CreateQuadrupedalRobot(0.001);
-  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
+  auto friction_cone = std::make_shared<FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>(0.1, 0.5);
   constraints->add("friction_cone", friction_cone);
   EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.1);
@@ -239,6 +239,21 @@ TEST_F(ConstraintsTest, testParams) {
   EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.2);
   constraints->setFractionToBoundaryRule(0.8);
   EXPECT_DOUBLE_EQ(friction_cone->getFractionToBoundaryRule(), 0.8);
+}
+
+
+TEST_F(ConstraintsTest, testDownCast) {
+  auto robot = testhelper::CreateQuadrupedalRobot(0.001);
+  auto constraints = createConstraints(robot);
+  auto constraint_component = constraints->getConstraintComponent("friction_cone");
+  EXPECT_NO_THROW(
+    auto friction_cone = constraint_component->as_shared_ptr<FrictionCone>();
+  );
+  EXPECT_THROW(
+    auto joint_position_upper = constraint_component->as_shared_ptr<JointPositionLowerLimit>(),
+    std::runtime_error
+  );
+
 }
 
 } // namespace robotoc

@@ -21,7 +21,7 @@ namespace robotoc {
 /// @class ImpactConstraintComponentBase
 /// @brief Base class for impact constraint components. 
 ///
-class ImpactConstraintComponentBase {
+class ImpactConstraintComponentBase : public std::enable_shared_from_this<ImpactConstraintComponentBase> {
 public:
   ///
   /// @brief Constructor. 
@@ -226,7 +226,7 @@ public:
   /// @return shared ptr of this object as the specified type. 
   ///
   template <typename Derived>
-  std::shared_ptr<Derived> as() const;
+  std::shared_ptr<Derived> as_shared_ptr();
 
 protected:
   ///

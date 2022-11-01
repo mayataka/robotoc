@@ -16,7 +16,7 @@ namespace robotoc {
 /// @brief Base class of components of the cost function of the switching time
 /// optimization (STO) problem.
 ///
-class STOCostFunctionComponentBase {
+class STOCostFunctionComponentBase : public std::enable_shared_from_this<STOCostFunctionComponentBase> {
 public:
   ///
   /// @brief Default constructor. 
@@ -87,12 +87,13 @@ public:
   /// @return shared ptr of this object as the specified type. 
   ///
   template <typename Derived>
-  std::shared_ptr<Derived> as() const {
-    Derived* derived_ptr = dynamic_cast<Derived*>(this);
+  std::shared_ptr<Derived> as_shared_ptr() {
+    auto ptr = shared_from_this();
+    auto derived_ptr = std::dynamic_pointer_cast<Derived>(ptr);
     if (derived_ptr == nullptr) {
-        throw std::runtime_error("[STOCostFunctionComponentBase] runtime error: failed in down-casting!");
+      throw std::runtime_error("[STOCostFunctionComponentBase] runtime error: failed in down-casting!");
     }
-    return std::shared_ptr<Derived>(derived_ptr);
+    return derived_ptr;
   }
 
 };
