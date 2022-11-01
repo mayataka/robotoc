@@ -14,7 +14,14 @@ namespace py = pybind11;
 PYBIND11_MODULE(sto_cost_function, m) {
   py::class_<STOCostFunction, std::shared_ptr<STOCostFunction>>(m, "STOCostFunction")
     .def(py::init<>())
-    .def("push_back", &STOCostFunction::push_back)
+    .def("exist", &STOCostFunction::exist,
+          py::arg("name"))
+    .def("add", &STOCostFunction::add,
+          py::arg("name"), py::arg("cost"))
+    .def("erase", &STOCostFunction::erase,
+          py::arg("name"))
+    .def("get", &STOCostFunction::get,
+          py::arg("name"))
     .def("clear", &STOCostFunction::clear)
     DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(STOCostFunction);
 }

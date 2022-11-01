@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight_terminal(v_weight);
   config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_u_weight(u_weight);
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   robot.updateFrameKinematics(q_standing);
   const Eigen::Vector3d x3d0_LF = robot.framePosition("LF_FOOT");
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
                                                                      flying_down_time+2*ground_time, false);
   auto com_cost_flying_up = std::make_shared<robotoc::CoMCost>(robot, com_ref_flying_up);
   com_cost_flying_up->set_weight(Eigen::Vector3d::Constant(1.0e06));
-  cost->push_back(com_cost_flying_up);
+  cost->add("com_cost_flying_up", com_cost_flying_up);
 
   const Eigen::Vector3d com_ref0_landed = robot.CoM() + jump_length;
   const Eigen::Vector3d vcom_ref_landed = Eigen::Vector3d::Zero();
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
                                                                   ground_time+flying_time, false);
   auto com_cost_landed = std::make_shared<robotoc::CoMCost>(robot, com_ref_landed);
   com_cost_landed->set_weight(Eigen::Vector3d::Constant(1.0e06));
-  cost->push_back(com_cost_landed);
+  cost->add("com_cost_landed", com_cost_landed);
 
   // Create the constraints
   const double barrier_param = 1.0e-03;
@@ -121,13 +121,13 @@ int main(int argc, char *argv[]) {
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(friction_cone);
+  constraints->add("joint_position_lower", joint_position_lower);
+  constraints->add("joint_position_upper", joint_position_upper);
+  constraints->add("joint_velocity_lower", joint_velocity_lower);
+  constraints->add("joint_velocity_upper", joint_velocity_upper);
+  constraints->add("joint_torques_lower", joint_torques_lower);
+  constraints->add("joint_torques_upper", joint_torques_upper);
+  constraints->add("friction_cone", friction_cone);
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);

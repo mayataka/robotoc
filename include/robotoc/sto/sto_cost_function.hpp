@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "Eigen/Core"
 
@@ -56,11 +57,35 @@ public:
   STOCostFunction& operator=(STOCostFunction&&) noexcept = default;
 
   ///
-  /// @brief Append a cost function component to the cost function.
-  /// @param[in] cost shared pointer to the switching tmie cost function  
-  /// component appended to the cost.
+  /// @brief Checks if thsi has a STO cost function component of the specified 
+  /// name. 
+  /// @param[in] name Name of the STO cost function component.
+  /// @return treu if a STO cost function component of the specified name exists. 
   ///
-  void push_back(const STOCostFunctionComponentBasePtr& cost);
+  bool exist(const std::string& name) const;
+
+  ///
+  /// @brief Adds a STO cost function component. If a component of the same name 
+  /// exists, throws an exeption.
+  /// @param[in] name Name of the STO cost function component.
+  /// @param[in] cost shared pointer to the STO cost function component.
+  ///
+  void add(const std::string& name, const STOCostFunctionComponentBasePtr& cost);
+
+  ///
+  /// @brief Erases a STO cost function component. If a component of the 
+  /// specified name does not exist, throws an exeption.
+  /// @param[in] name Name of the STO cost function component.
+  ///
+  void erase(const std::string& name);
+
+  ///
+  /// @brief Gets a STO cost function component. If a component of the specified 
+  /// name does not exist, throws an exeption. 
+  /// @param[in] name Name of the STO cost function component.
+  /// @return Shared ptr to the specified STO cost function component.
+  ///
+  STOCostFunctionComponentBasePtr get(const std::string& name) const;
 
   ///
   /// @brief Clear cost function by removing all components.
@@ -96,6 +121,8 @@ public:
 
 private:
   std::vector<STOCostFunctionComponentBasePtr> costs_;
+  std::unordered_map<std::string, size_t> cost_names_;
+
 };
 
 } // namespace robotoc

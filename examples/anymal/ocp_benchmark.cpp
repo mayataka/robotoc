@@ -56,7 +56,7 @@ int main () {
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_v_weight_terminal(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
   auto local_contact_force_cost = std::make_shared<robotoc::LocalContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<model_info.point_contacts.size(); ++i) {
@@ -69,7 +69,7 @@ int main () {
   }
   local_contact_force_cost->set_f_weight(f_weight);
   local_contact_force_cost->set_f_ref(f_ref);
-  cost->push_back(local_contact_force_cost);
+  cost->add("local_contact_force_cost", local_contact_force_cost);
 
   // Create inequality constraints.
   auto constraints = std::make_shared<robotoc::Constraints>();
@@ -80,13 +80,13 @@ int main () {
   auto joint_torques_lower  = std::make_shared<robotoc::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto friction_cone        = std::make_shared<robotoc::FrictionCone>(robot);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(friction_cone);
+  constraints->add("joint_position_lower", joint_position_lower);
+  constraints->add("joint_position_upper", joint_position_upper);
+  constraints->add("joint_velocity_lower", joint_velocity_lower);
+  constraints->add("joint_velocity_upper", joint_velocity_upper);
+  constraints->add("joint_torques_lower", joint_torques_lower);
+  constraints->add("joint_torques_upper", joint_torques_upper);
+  constraints->add("friction_cone", friction_cone);
 
   // Create the contact sequence
   auto contact_sequence = std::make_shared<robotoc::ContactSequence>(robot);

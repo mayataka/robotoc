@@ -18,7 +18,14 @@ PYBIND11_MODULE(cost_function, m) {
           py::arg("discount_factor"), py::arg("discount_time_step"))
     .def("discount_factor", &CostFunction::discountFactor)
     .def("discount_time_step", &CostFunction::discountTimeStep)
-    .def("push_back", &CostFunction::push_back)
+    .def("exist", &CostFunction::exist,
+          py::arg("name"))
+    .def("add", &CostFunction::add,
+          py::arg("name"), py::arg("cost"))
+    .def("erase", &CostFunction::erase,
+          py::arg("name"))
+    .def("get", &CostFunction::get,
+          py::arg("name"))
     .def("clear", &CostFunction::clear)
     .def("create_cost_function_data", &CostFunction::createCostFunctionData,
           py::arg("robot"))
@@ -50,7 +57,9 @@ PYBIND11_MODULE(cost_function, m) {
           py::arg("robot"), py::arg("impact_status"), py::arg("data"), 
           py::arg("grid_info"), py::arg("s"), py::arg("kkt_residual"), 
           py::arg("kkt_matrix"))
-    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunction);
+    .def("get_cost_component_list", &CostFunction::getCostComponentList)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_CLONE(CostFunction)
+    DEFINE_ROBOTOC_PYBIND11_CLASS_PRINT(CostFunction);
 }
 
 } // namespace python

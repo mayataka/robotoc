@@ -63,15 +63,15 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(const Robot& rob
   auto joint_accel_upper = std::make_shared<robotoc::JointAccelerationUpperLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), 10));
   auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>(barrier_param, fraction_to_boundary_rule);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(joint_accel_lower);
-  constraints->push_back(joint_accel_upper);
-  constraints->push_back(friction_cone);
+  constraints->add("joint_position_lower", joint_position_lower);
+  constraints->add("joint_position_upper", joint_position_upper);
+  constraints->add("joint_velocity_lower", joint_velocity_lower);
+  constraints->add("joint_velocity_upper", joint_velocity_upper);
+  constraints->add("joint_torques_lower", joint_torques_lower);
+  constraints->add("joint_torques_upper", joint_torques_upper);
+  constraints->add("joint_accel_lower", joint_accel_lower);
+  constraints->add("joint_accel_upper", joint_accel_upper);
+  constraints->add("friction_cone", friction_cone);
   return constraints;  
 }
 
@@ -115,6 +115,9 @@ void ConstraintsTest::timeStage0(Robot& robot,
     EXPECT_FALSE(kkt_residual.lf().isZero());
     EXPECT_FALSE(kkt_matrix.Qff().isZero());
   }
+  EXPECT_NO_THROW(
+    std::cout << constraints << std::endl;
+  );
 }
 
 
@@ -157,6 +160,9 @@ void ConstraintsTest::timeStage1(Robot& robot,
     EXPECT_FALSE(kkt_residual.lf().isZero());
     EXPECT_FALSE(kkt_matrix.Qff().isZero());
   }
+  EXPECT_NO_THROW(
+    std::cout << constraints << std::endl;
+  );
 }
 
 
@@ -199,6 +205,10 @@ void ConstraintsTest::timeStage2(Robot& robot,
     EXPECT_FALSE(kkt_residual.lf().isZero());
     EXPECT_FALSE(kkt_matrix.Qff().isZero());
   }
+  EXPECT_NO_THROW(
+    std::cout << constraints << std::endl;
+    std::cout << *constraints.get() << std::endl;
+  );
 }
 
 
@@ -230,15 +240,30 @@ TEST_F(ConstraintsTest, floatingBase) {
 
 TEST_F(ConstraintsTest, testParams) {
   auto robot = testhelper::CreateQuadrupedalRobot(0.001);
-  auto friction_cone = std::make_shared<robotoc::FrictionCone>(robot);
+  auto friction_cone = std::make_shared<FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>(0.1, 0.5);
-  constraints->push_back(friction_cone);
+  constraints->add("friction_cone", friction_cone);
   EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.1);
   EXPECT_DOUBLE_EQ(friction_cone->getFractionToBoundaryRule(), 0.5);
   constraints->setBarrierParam(0.2);
   EXPECT_DOUBLE_EQ(friction_cone->getBarrierParam(), 0.2);
   constraints->setFractionToBoundaryRule(0.8);
   EXPECT_DOUBLE_EQ(friction_cone->getFractionToBoundaryRule(), 0.8);
+}
+
+
+TEST_F(ConstraintsTest, testDownCast) {
+  auto robot = testhelper::CreateQuadrupedalRobot(0.001);
+  auto constraints = createConstraints(robot);
+  auto constraint_component = constraints->getConstraintComponent("friction_cone");
+  EXPECT_NO_THROW(
+    auto friction_cone = constraint_component->as_shared_ptr<FrictionCone>();
+  );
+  EXPECT_THROW(
+    auto joint_position_upper = constraint_component->as_shared_ptr<JointPositionLowerLimit>(),
+    std::runtime_error
+  );
+
 }
 
 } // namespace robotoc

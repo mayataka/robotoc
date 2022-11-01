@@ -1,9 +1,12 @@
 #ifndef ROBOTOC_STO_COST_FUNCTION_COMPONENT_BASE_HPP_
 #define ROBOTOC_STO_COST_FUNCTION_COMPONENT_BASE_HPP_
 
-#include "robotoc/ocp/time_discretization.hpp"
+#include <memory>
+#include <stdexcept>
 
 #include "Eigen/Core"
+
+#include "robotoc/ocp/time_discretization.hpp"
 
 
 namespace robotoc {
@@ -13,7 +16,7 @@ namespace robotoc {
 /// @brief Base class of components of the cost function of the switching time
 /// optimization (STO) problem.
 ///
-class STOCostFunctionComponentBase {
+class STOCostFunctionComponentBase : public std::enable_shared_from_this<STOCostFunctionComponentBase> {
 public:
   ///
   /// @brief Default constructor. 
@@ -76,6 +79,22 @@ public:
   ///
   virtual void evalCostHessian(const TimeDiscretization& time_discretization,
                                Eigen::MatrixXd& Qtt) const = 0;
+
+  ///
+  /// @brief Gets the shared ptr of this object as the specified type. If this 
+  /// fails in dynamic casting, throws an exception.
+  /// @tparam Derived The derived type.
+  /// @return shared ptr of this object as the specified type. 
+  ///
+  template <typename Derived>
+  std::shared_ptr<Derived> as_shared_ptr() {
+    auto ptr = shared_from_this();
+    auto derived_ptr = std::dynamic_pointer_cast<Derived>(ptr);
+    if (derived_ptr == nullptr) {
+      throw std::runtime_error("[STOCostFunctionComponentBase] runtime error: failed in down-casting!");
+    }
+    return derived_ptr;
+  }
 
 };
 

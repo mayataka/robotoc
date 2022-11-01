@@ -21,7 +21,7 @@ config_cost.set_q_weight_terminal(np.full(robot.dimv(), 10))
 config_cost.set_v_weight(np.full(robot.dimv(), 0.01))
 config_cost.set_v_weight_terminal(np.full(robot.dimv(), 0.01))
 config_cost.set_a_weight(np.full(robot.dimv(), 0.01))
-cost.push_back(config_cost)
+cost.add("config_cost", config_cost)
 
 # Create joint constraints.
 constraints           = robotoc.Constraints(barrier_param=1.0e-03, fraction_to_boundary_rule=0.995)
@@ -31,12 +31,12 @@ joint_velocity_lower  = robotoc.JointVelocityLowerLimit(robot)
 joint_velocity_upper  = robotoc.JointVelocityUpperLimit(robot)
 joint_torques_lower   = robotoc.JointTorquesLowerLimit(robot)
 joint_torques_upper   = robotoc.JointTorquesUpperLimit(robot)
-constraints.push_back(joint_position_lower)
-constraints.push_back(joint_position_upper)
-constraints.push_back(joint_velocity_lower)
-constraints.push_back(joint_velocity_upper)
-constraints.push_back(joint_torques_lower)
-constraints.push_back(joint_torques_upper)
+constraints.add("joint_position_lower", joint_position_lower)
+constraints.add("joint_position_upper", joint_position_upper)
+constraints.add("joint_velocity_lower", joint_velocity_lower)
+constraints.add("joint_velocity_upper", joint_velocity_upper)
+constraints.add("joint_torques_lower", joint_torques_lower)
+constraints.add("joint_torques_upper", joint_torques_upper)
 
 # Create the OCP solver for unconstrained rigid-body systems.
 T = 3.0

@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
   config_cost->set_v_weight_impact(v_weight);
   config_cost->set_a_weight(a_weight);
   config_cost->set_dv_weight_impact(a_weight);
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
   q_standing << -3, 0, 0.4792, 0, 0, 0, 1, 
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight);
   time_varying_config_cost->set_q_weight_impact(q_weight);
-  cost->push_back(time_varying_config_cost);
+  cost->add("time_varying_config_cost", time_varying_config_cost);
 
   // Create the constraints
   const double barrier_param = 1.0e-03;
@@ -171,13 +171,13 @@ int main(int argc, char *argv[]) {
   auto joint_torques_upper   = std::make_shared<robotoc::JointTorquesUpperLimit>(robot);
   auto friction_cone         = std::make_shared<robotoc::FrictionCone>(robot);
   auto impact_friction_cone = std::make_shared<robotoc::ImpactFrictionCone>(robot);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(friction_cone);
+  constraints->add("joint_position_lower", joint_position_lower);
+  constraints->add("joint_position_upper", joint_position_upper);
+  constraints->add("joint_velocity_lower", joint_velocity_lower);
+  constraints->add("joint_velocity_upper", joint_velocity_upper);
+  constraints->add("joint_torques_lower", joint_torques_lower);
+  constraints->add("joint_torques_upper", joint_torques_upper);
+  constraints->add("friction_cone", friction_cone);
   constraints->push_back(impact_friction_cone);
 
   // Create the contact sequence

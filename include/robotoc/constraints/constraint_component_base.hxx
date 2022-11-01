@@ -5,6 +5,7 @@
 #include "robotoc/constraints/pdipm.hpp"
 
 #include <cassert>
+#include <stdexcept>
 
 
 namespace robotoc {
@@ -32,6 +33,17 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
                                                 const double step_size) {
   assert(step_size > 0);
   data.dual.noalias() += step_size * data.ddual;
+}
+
+
+template <typename Derived>
+inline std::shared_ptr<Derived> ConstraintComponentBase::as_shared_ptr() {
+  auto ptr = shared_from_this();
+  auto derived_ptr = std::dynamic_pointer_cast<Derived>(ptr);
+  if (derived_ptr == nullptr) {
+    throw std::runtime_error("[ConstraintComponentBase] runtime error: failed in down-casting!");
+  }
+  return derived_ptr;
 }
 
 

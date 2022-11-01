@@ -55,7 +55,7 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   config_cost->set_q_weight_impact(q_weight_impact);
   config_cost->set_v_weight_impact(v_weight_impact);
   config_cost->set_dv_weight_impact(dv_weight_impact);
-  cost->push_back(config_cost);
+  cost->add("config_cost", config_cost);
 
   if (robot.maxNumContacts() > 0) {
     auto local_contact_force_cost = std::make_shared<LocalContactForceCost>(robot);
@@ -66,7 +66,7 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
     }
     local_contact_force_cost->set_f_weight(f_weight);
     local_contact_force_cost->set_fi_weight(fi_weight);
-    cost->push_back(local_contact_force_cost);
+    cost->add("local_contact_force_cost", local_contact_force_cost);
   }
 
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
@@ -77,7 +77,7 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_q_weight_terminal(q_weight_terminal);
   time_varying_config_cost->set_q_weight_impact(q_weight_impact);
-  cost->push_back(time_varying_config_cost);
+  cost->add("time_varying_config_cost", time_varying_config_cost);
 
   return cost;
 }

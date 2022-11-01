@@ -66,11 +66,11 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N)
   R_foot_cost_->set_weight(Eigen::Vector3d::Constant(1.0e04));
   com_cost_ = std::make_shared<CoMCost>(robot, com_ref_);
   com_cost_->set_weight(Eigen::Vector3d::Constant(1.0e03));
-  cost_->push_back(config_cost_);
-  cost_->push_back(base_rot_cost_);
-  cost_->push_back(L_foot_cost_);
-  cost_->push_back(R_foot_cost_);
-  cost_->push_back(com_cost_);
+  cost_->add("config_cost", config_cost_);
+  cost_->add("base_rot_cost", base_rot_cost_);
+  cost_->add("L_foot_cost", L_foot_cost_);
+  cost_->add("R_foot_cost", R_foot_cost_);
+  cost_->add("com_cost", com_cost_);
   // create constraints 
   auto joint_position_lower = std::make_shared<robotoc::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<robotoc::JointPositionUpperLimit>(robot);
@@ -82,14 +82,14 @@ MPCBipedWalk::MPCBipedWalk(const Robot& robot, const double T, const int N)
   const double Y = 0.05;
   contact_wrench_cone_ = std::make_shared<robotoc::ContactWrenchCone>(robot, X, Y);
   impact_wrench_cone_ = std::make_shared<robotoc::ImpactWrenchCone>(robot, X, Y);
-  constraints_->push_back(joint_position_lower);
-  constraints_->push_back(joint_position_upper);
-  constraints_->push_back(joint_velocity_lower);
-  constraints_->push_back(joint_velocity_upper);
-  constraints_->push_back(joint_torques_lower);
-  constraints_->push_back(joint_torques_upper);
-  constraints_->push_back(contact_wrench_cone_);
-  constraints_->push_back(impact_wrench_cone_);
+  constraints_->add("joint_position_lower", joint_position_lower);
+  constraints_->add("joint_position_upper", joint_position_upper);
+  constraints_->add("joint_velocity_lower", joint_velocity_lower);
+  constraints_->add("joint_velocity_upper", joint_velocity_upper);
+  constraints_->add("joint_torques_lower", joint_torques_lower);
+  constraints_->add("joint_torques_upper", joint_torques_upper);
+  constraints_->add("contact_wrench_cone_", contact_wrench_cone_);
+  constraints_->add("impact_wrench_cone_", impact_wrench_cone_);
   // create contact status
   cs_standing_.activateContacts(std::vector<int>({0, 1}));
   cs_right_swing_.activateContacts(std::vector<int>({0}));

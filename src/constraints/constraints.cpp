@@ -13,6 +13,10 @@ Constraints::Constraints(const double barrier_param,
     velocity_level_constraints_(),
     acceleration_level_constraints_(),
     impact_level_constraints_(),
+    position_level_constraint_names_(), 
+    velocity_level_constraint_names_(), 
+    acceleration_level_constraint_names_(),
+    impact_level_constraint_names_(),
     barrier_(barrier_param), 
     fraction_to_boundary_rule_(fraction_to_boundary_rule) {
   if (barrier_param <= 0) {
@@ -30,40 +34,128 @@ Constraints::Constraints(const double barrier_param,
 }
 
 
-void Constraints::push_back(ConstraintComponentBasePtr constraint_component) {
-  constraint_component->setBarrierParam(barrier_);
-  constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
-  if (constraint_component->kinematicsLevel() 
+bool Constraints::exist(const std::string& name) const {
+  return ((position_level_constraint_names_.find(name) != position_level_constraint_names_.end())
+          || (velocity_level_constraint_names_.find(name) != velocity_level_constraint_names_.end())
+          || (acceleration_level_constraint_names_.find(name) != acceleration_level_constraint_names_.end())
+          || (impact_level_constraint_names_.find(name) != impact_level_constraint_names_.end()));
+}
+
+
+void Constraints::add(const std::string& name, 
+                      ConstraintComponentBasePtr constraint) {
+  if (exist(name)) {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' already exists!");
+  }
+  constraint->setBarrierParam(barrier_);
+  constraint->setFractionToBoundaryRule(fraction_to_boundary_rule_);
+  if (constraint->kinematicsLevel() 
         == KinematicsLevel::PositionLevel) {
-    position_level_constraints_.push_back(constraint_component);
+    position_level_constraint_names_.emplace(name, position_level_constraints_.size());
+    position_level_constraints_.push_back(constraint);
   }
-  else if (constraint_component->kinematicsLevel() 
+  else if (constraint->kinematicsLevel() 
               == KinematicsLevel::VelocityLevel) {
-    velocity_level_constraints_.push_back(constraint_component);
+    velocity_level_constraint_names_.emplace(name, velocity_level_constraints_.size());
+    velocity_level_constraints_.push_back(constraint);
   }
-  else if (constraint_component->kinematicsLevel() 
+  else if (constraint->kinematicsLevel() 
               == KinematicsLevel::AccelerationLevel) {
-    acceleration_level_constraints_.push_back(constraint_component);
+    acceleration_level_constraint_names_.emplace(name, acceleration_level_constraints_.size());
+    acceleration_level_constraints_.push_back(constraint);
   }
 }
 
 
-void Constraints::push_back(ImpactConstraintComponentBasePtr constraint_component) {
-  constraint_component->setBarrierParam(barrier_);
-  constraint_component->setFractionToBoundaryRule(fraction_to_boundary_rule_);
-  if (constraint_component->kinematicsLevel() 
-        == KinematicsLevel::AccelerationLevel) {
-    // Only the acceleration level constraints are valid at impact stage.
-    impact_level_constraints_.push_back(constraint_component); 
+void Constraints::add(const std::string& name, 
+                      ImpactConstraintComponentBasePtr constraint) {
+  if (exist(name)) {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' already exists!");
+  }
+  constraint->setBarrierParam(barrier_);
+  constraint->setFractionToBoundaryRule(fraction_to_boundary_rule_);
+  if (constraint->kinematicsLevel() 
+              == KinematicsLevel::AccelerationLevel) {
+    impact_level_constraint_names_.emplace(name, impact_level_constraints_.size());
+    impact_level_constraints_.push_back(constraint);
+  }
+}
+
+
+void Constraints::erase(const std::string& name) {
+  if (!exist(name)) {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' does not exist!");
+  }
+  if (position_level_constraint_names_.find(name) != position_level_constraint_names_.end()) {
+    const int index = position_level_constraint_names_.at(name);
+    position_level_constraint_names_.erase(name);
+    position_level_constraints_.erase(position_level_constraints_.begin()+index);
+  }
+  else if (velocity_level_constraint_names_.find(name) != velocity_level_constraint_names_.end()) {
+    const int index = velocity_level_constraint_names_.at(name);
+    velocity_level_constraint_names_.erase(name);
+    velocity_level_constraints_.erase(velocity_level_constraints_.begin()+index);
+  }
+  else if (acceleration_level_constraint_names_.find(name) != acceleration_level_constraint_names_.end()) {
+    const int index = acceleration_level_constraint_names_.at(name);
+    acceleration_level_constraint_names_.erase(name);
+    acceleration_level_constraints_.erase(acceleration_level_constraints_.begin()+index);
+  }
+  else if (impact_level_constraint_names_.find(name) != impact_level_constraint_names_.end()) {
+    const int index = impact_level_constraint_names_.at(name);
+    impact_level_constraint_names_.erase(name);
+    impact_level_constraints_.erase(impact_level_constraints_.begin()+index);
+  }
+}
+
+
+std::shared_ptr<ConstraintComponentBase> 
+Constraints::getConstraintComponent(const std::string& name) const {
+  if (!exist(name)) {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' does not exist!");
+  }
+  if (position_level_constraint_names_.find(name) != position_level_constraint_names_.end()) {
+    const int index = position_level_constraint_names_.at(name);
+    return position_level_constraints_.at(index);
+  }
+  else if (velocity_level_constraint_names_.find(name) != velocity_level_constraint_names_.end()) {
+    const int index = velocity_level_constraint_names_.at(name);
+    return velocity_level_constraints_.at(index);
+  }
+  else if (acceleration_level_constraint_names_.find(name) != acceleration_level_constraint_names_.end()) {
+    const int index = acceleration_level_constraint_names_.at(name);
+    return acceleration_level_constraints_.at(index);
+  }
+  else {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' does not exist!");
+  }
+}
+
+
+std::shared_ptr<ImpactConstraintComponentBase> 
+Constraints::getImpactConstraintComponent(const std::string& name) const {
+  if (!exist(name)) {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' does not exist!");
+  }
+  if (impact_level_constraint_names_.find(name) != impact_level_constraint_names_.end()) {
+    const int index = impact_level_constraint_names_.at(name);
+    return impact_level_constraints_.at(index);
+  }
+  else {
+    throw std::runtime_error("[Constraints] invalid argument: constraint component '" + name + "' does not exist!");
   }
 }
 
 
 void Constraints::clear() {
-  constraintsimpl::clear(position_level_constraints_);
-  constraintsimpl::clear(velocity_level_constraints_);
-  constraintsimpl::clear(acceleration_level_constraints_);
-  constraintsimpl::clear(impact_level_constraints_);
+  position_level_constraints_.clear();
+  velocity_level_constraints_.clear();
+  acceleration_level_constraints_.clear();
+  impact_level_constraints_.clear();
+  position_level_constraint_names_.clear();
+  velocity_level_constraint_names_.clear(); 
+  acceleration_level_constraint_names_.clear();
+  impact_level_constraint_names_.clear();
 }
 
 
@@ -443,6 +535,94 @@ double Constraints::getBarrierParam() const {
 
 double Constraints::getFractionToBoundaryRule() const {
   return fraction_to_boundary_rule_;
+}
+
+
+std::vector<std::string> Constraints::getPositionLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : position_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getVelocityLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : velocity_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getAccelerationLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : acceleration_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getImpactLevelConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (std::pair<std::string, size_t> e : impact_level_constraint_names_) {
+    constraint_list.push_back(e.first);
+  }
+  return constraint_list;
+}
+
+
+std::vector<std::string> Constraints::getConstraintList() const {
+  std::vector<std::string> constraint_list;
+  for (const auto& e : getPositionLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  for (const auto& e : getVelocityLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  for (const auto& e : getAccelerationLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  for (const auto& e : getImpactLevelConstraintList()) {
+    constraint_list.push_back(e);
+  }
+  return constraint_list;
+}
+
+
+void Constraints::disp(std::ostream& os) const {
+  os << "Constraints:" << "\n";
+  os << "  position-level constraints:" << "\n";
+  for (const auto& e : getPositionLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+  os << "  velocity-level constraints:" << "\n";
+  for (const auto& e : getVelocityLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+  os << "  acceleration-level constraints:" << "\n";
+  for (const auto& e : getAccelerationLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+  os << "  impact-level constraints:" << "\n";
+  for (const auto& e : getImpactLevelConstraintList()) {
+    os << "    - " << e << "\n";
+  }
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Constraints& constraints) {
+  constraints.disp(os);
+  return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os, 
+                         const std::shared_ptr<Constraints>& constraints) {
+  constraints->disp(os);
+  return os;
 }
 
 } // namespace robotoc

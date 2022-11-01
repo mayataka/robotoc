@@ -1,9 +1,11 @@
 #ifndef ROBOTOC_COST_FUNCTION_HPP_
 #define ROBOTOC_COST_FUNCTION_HPP_
 
-#include <vector>
 #include <memory>
 #include <cmath>
+#include <vector>
+#include <unordered_map>
+#include <iostream>
 
 #include "Eigen/Core"
 
@@ -93,11 +95,34 @@ public:
   double discountTimeStep() const;
 
   ///
-  /// @brief Append a cost function component to the cost function.
-  /// @param[in] cost shared pointer to the cost function component appended 
-  /// to the cost.
+  /// @brief Checks if thsi has a cost function component of the specified name. 
+  /// @param[in] name Name of the cost function component.
+  /// @return treu if a cost function component of the specified name exists. 
   ///
-  void push_back(const CostFunctionComponentBasePtr& cost);
+  bool exist(const std::string& name) const;
+
+  ///
+  /// @brief Adds a cost function component. If a component of the same name 
+  /// exists, throws an exeption.
+  /// @param[in] name Name of the cost function component.
+  /// @param[in] cost shared pointer to the cost function component.
+  ///
+  void add(const std::string& name, const CostFunctionComponentBasePtr& cost);
+
+  ///
+  /// @brief Erases a cost function component. If a component of the specified 
+  /// name does not exist, throws an exeption.
+  /// @param[in] name Name of the cost function component.
+  ///
+  void erase(const std::string& name);
+
+  ///
+  /// @brief Gets a cost function component. If a component of the specified 
+  /// name does not exist, throws an exeption. 
+  /// @param[in] name Name of the cost function component.
+  /// @return Shared ptr to the specified cost function component.
+  ///
+  CostFunctionComponentBasePtr get(const std::string& name) const;
 
   ///
   /// @brief Clear cost function by removing all components.
@@ -254,8 +279,26 @@ public:
                                SplitKKTResidual& kkt_residual,
                                SplitKKTMatrix& kkt_matrix) const;
 
+  ///
+  /// @brief Gets a list of the cost components. 
+  /// @return Name list of cost components.
+  ///
+  std::vector<std::string> getCostComponentList() const;
+
+  ///
+  /// @brief Displays the cost function onto a ostream.
+  ///
+  void disp(std::ostream& os) const;
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const CostFunction& cost_function);
+
+  friend std::ostream& operator<<(std::ostream& os, 
+                                  const std::shared_ptr<CostFunction>& cost_function);
+
 private:
   std::vector<CostFunctionComponentBasePtr> costs_;
+  std::unordered_map<std::string, size_t> cost_names_;
 
   double discount(const double t0, const double t) const {
     assert(t >= t0);

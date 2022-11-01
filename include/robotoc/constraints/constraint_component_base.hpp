@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_CONSTRAINT_COMPONENT_BASE_HPP_
 #define ROBOTOC_CONSTRAINT_COMPONENT_BASE_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -29,7 +31,7 @@ enum class KinematicsLevel {
 /// @class ConstraintComponentBase
 /// @brief Base class for constraint components. 
 ///
-class ConstraintComponentBase {
+class ConstraintComponentBase : public std::enable_shared_from_this<ConstraintComponentBase> {
 public:
   ///
   /// @brief Constructor. 
@@ -224,6 +226,15 @@ public:
   ///
   virtual void setFractionToBoundaryRule(
       const double fraction_to_boundary_rule) final;
+
+  ///
+  /// @brief Gets the shared ptr of this object as the specified type. If this 
+  /// fails in dynamic casting, throws an exception.
+  /// @tparam Derived The derived type.
+  /// @return shared ptr of this object as the specified type. 
+  ///
+  template <typename Derived>
+  std::shared_ptr<Derived> as_shared_ptr();
 
 protected:
   ///
