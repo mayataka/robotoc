@@ -1,6 +1,9 @@
 #ifndef ROBOTOC_COST_FUNCTION_COMPONENT_BASE_HPP_
 #define ROBOTOC_COST_FUNCTION_COMPONENT_BASE_HPP_
 
+#include <memory>
+#include <stdexcept>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -199,6 +202,21 @@ public:
                                       const GridInfo& grid_info, 
                                       const SplitSolution& s, 
                                       SplitKKTMatrix& kkt_matrix) const = 0; 
+
+  ///
+  /// @brief Gets the shared ptr of this object as the specified type. If this 
+  /// fails in dynamic casting, throws an exception.
+  /// @tparam Derived The derived type.
+  /// @return shared ptr of this object as the specified type. 
+  ///
+  template <typename Derived>
+  std::shared_ptr<Derived> as() const {
+    Derived* derived_ptr = dynamic_cast<Derived*>(this);
+    if (derived_ptr == nullptr) {
+        throw std::runtime_error("[CostFunctionComponentBase] runtime error: failed in down-casting!");
+    }
+    return std::shared_ptr<Derived>(derived_ptr);
+  }
 
 };
 

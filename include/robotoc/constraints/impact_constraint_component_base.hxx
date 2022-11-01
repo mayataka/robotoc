@@ -35,6 +35,16 @@ inline void ImpactConstraintComponentBase::updateDual(
 }
 
 
+template <typename Derived>
+inline std::shared_ptr<Derived> ImpactConstraintComponentBase::as() const {
+  Derived* derived_ptr = dynamic_cast<Derived*>(this);
+  if (derived_ptr == nullptr) {
+    throw std::runtime_error("[ImpactConstraintComponentBase] runtime error: failed in down-casting!");
+  }
+  return std::shared_ptr<Derived>(derived_ptr);
+}
+
+
 inline void ImpactConstraintComponentBase::computeComplementarySlackness(
     ConstraintComponentData& data) const {
   pdipm::computeComplementarySlackness(barrier_, data);

@@ -1,6 +1,8 @@
 #ifndef ROBOTOC_IMPACT_CONSTRAINT_COMPONENT_BASE_HPP_
 #define ROBOTOC_IMPACT_CONSTRAINT_COMPONENT_BASE_HPP_
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "robotoc/robot/robot.hpp"
@@ -216,6 +218,15 @@ public:
   ///
   virtual void setFractionToBoundaryRule(
       const double fraction_to_boundary_rule) final;
+
+  ///
+  /// @brief Gets the shared ptr of this object as the specified type. If this 
+  /// fails in dynamic casting, throws an exception.
+  /// @tparam Derived The derived type.
+  /// @return shared ptr of this object as the specified type. 
+  ///
+  template <typename Derived>
+  std::shared_ptr<Derived> as() const;
 
 protected:
   ///
