@@ -8,13 +8,44 @@ STOCostFunction::STOCostFunction()
 }
 
 
-void STOCostFunction::push_back(const STOCostFunctionComponentBasePtr& cost) {
+bool STOCostFunction::exist(const std::string& name) const {
+  return (cost_names_.find(name) != cost_names_.end());
+}
+
+
+void STOCostFunction::add(const std::string& name, 
+                          const STOCostFunctionComponentBasePtr& cost) {
+  if (exist(name)) {
+    throw std::runtime_error("[STOCostFunction] invalid argument: cost component '" + name + "' already exists!");
+  }
+  cost_names_.emplace(name, costs_.size());
   costs_.push_back(cost);
+}
+
+
+void STOCostFunction::erase(const std::string& name) {
+  if (!exist(name)) {
+    throw std::runtime_error("[STOCostFunction] invalid argument: cost component '" + name + "' does not exist!");
+  }
+  const int index = cost_names_.at(name);
+  cost_names_.erase(name);
+  costs_.erase(costs_.begin()+index);
+}
+
+
+std::shared_ptr<STOCostFunctionComponentBase> 
+STOCostFunction::get(const std::string& name) const {
+  if (!exist(name)) {
+    throw std::runtime_error("[STOCostFunction] invalid argument: cost component '" + name + "' does not exist!");
+  }
+  const int index = cost_names_.at(name);
+  return costs_.at(index);
 }
 
 
 void STOCostFunction::clear() {
   costs_.clear();
+  cost_names_.clear();
 }
 
 
