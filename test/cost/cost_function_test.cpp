@@ -93,12 +93,12 @@ void CostFunctionTest::testStageCost(Robot& robot) {
   auto cost_component = non_discounted_cost->get("config_cost");
   EXPECT_NO_THROW(
     auto config_cost_component = cost_component->as_shared_ptr<ConfigurationSpaceCost>();
+    config_cost_component->set_q_weight(q_weight);
   );
   EXPECT_THROW(
     cost_component->as_shared_ptr<CoMCost>(),
     std::runtime_error
   );
-  config_cost->set_q_weight(q_weight);
 }
 
 
