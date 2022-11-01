@@ -1,0 +1,4 @@
+<map id="robotoc::MPCPeriodicSwingFootRef" name="robotoc::MPCPeriodicSwingFootRef">
+<area shape="rect" id="node1" title="Periodic reference of the foot position." alt="" coords="15,79,198,119"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_task_space3_d_ref_base.html" title="Base class of reference task space position." alt="" coords="5,5,208,31"/>
+</map>

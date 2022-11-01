@@ -1,0 +1,5 @@
+<map id="robotoc::TaskSpace6DCost" name="robotoc::TaskSpace6DCost">
+<area shape="rect" id="node1" title="Cost on the task space placement (SE(3))." alt="" coords="37,181,217,207"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_cost_function_component_base.html" title="Base class of components of cost function." alt="" coords="5,108,249,133"/>
+<area shape="rect" id="node3" title=" " alt="" coords="9,5,246,60"/>
+</map>

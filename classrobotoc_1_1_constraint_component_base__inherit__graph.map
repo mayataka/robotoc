@@ -1,0 +1,14 @@
+<map id="robotoc::ConstraintComponentBase" name="robotoc::ConstraintComponentBase">
+<area shape="rect" id="node1" title="Base class for constraint components." alt="" coords="272,272,499,297"/>
+<area shape="rect" id="node3" href="$classrobotoc_1_1_contact_wrench_cone.html" title="Constraint on the contact wrench cone for surface contacts." alt="" coords="547,5,737,31"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_friction_cone.html" title="Constraint on the inner&#45;approximated firction cone." alt="" coords="570,55,714,80"/>
+<area shape="rect" id="node5" href="$classrobotoc_1_1_joint_acceleration_lower_limit.html" title="Constraint on the lower limits of the joint acceleration." alt="" coords="557,105,727,145"/>
+<area shape="rect" id="node6" href="$classrobotoc_1_1_joint_acceleration_upper_limit.html" title="Constraint on the upper limits of the joint acceleration." alt="" coords="557,169,727,209"/>
+<area shape="rect" id="node7" href="$classrobotoc_1_1_joint_position_lower_limit.html" title="Constraint on the lower limits of the joint position." alt="" coords="551,233,733,273"/>
+<area shape="rect" id="node8" href="$classrobotoc_1_1_joint_position_upper_limit.html" title="Constraint on the upper limits of the joint position." alt="" coords="551,297,733,337"/>
+<area shape="rect" id="node9" href="$classrobotoc_1_1_joint_torques_lower_limit.html" title="Constraint on the lower limits of the joint torques." alt="" coords="551,361,733,401"/>
+<area shape="rect" id="node10" href="$classrobotoc_1_1_joint_torques_upper_limit.html" title="Constraint on the upper limits of the joint torques." alt="" coords="551,425,733,465"/>
+<area shape="rect" id="node11" href="$classrobotoc_1_1_joint_velocity_lower_limit.html" title="Constraint on the lower limits of the joint velocity." alt="" coords="551,489,733,529"/>
+<area shape="rect" id="node12" href="$classrobotoc_1_1_joint_velocity_upper_limit.html" title="Constraint on the upper limits of the joint velocity." alt="" coords="552,553,732,593"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,257,224,312"/>
+</map>

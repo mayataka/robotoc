@@ -1,0 +1,28 @@
+<map id="/github/workspace/include/robotoc/solver" name="/github/workspace/include/robotoc/solver">
+<area shape="rect" id="node1" href="dir_4b38d2d47ad363bfaaf1e255a5e5328a.html" title="constraints" alt="" coords="27,125,114,151"/>
+<area shape="rect" id="node2" href="dir_504a5c45a9cb502e568e692b11596ee7.html" title="cost" alt="" coords="138,125,185,151"/>
+<area shape="rect" id="node3" href="dir_6b2d4520f3cc93e6745a9082baed6b91.html" title="utils" alt="" coords="209,125,255,151"/>
+<area shape="rect" id="node4" href="dir_758bc9d1c66b1b174a515597ea097199.html" title="robot" alt="" coords="280,125,331,151"/>
+<area shape="rect" id="node5" href="dir_89635912a3e7fc76bfa97e78c12c867a.html" title="planner" alt="" coords="355,125,419,151"/>
+<area shape="rect" id="node6" href="dir_97e421ca55032aa890956905ef58fd03.html" title="ocp" alt="" coords="443,125,485,151"/>
+<area shape="rect" id="node7" href="dir_a5707a8afcae806cd966dfb1daa3d1c7.html" title="unconstr" alt="" coords="509,125,581,151"/>
+<area shape="rect" id="node8" href="dir_abcb690d2cbba63e8388e79d01c3096b.html" title="sto" alt="" coords="605,125,645,151"/>
+<area shape="rect" id="node9" href="dir_bce76856df12343fc7dd05d9b6ff7448.html" title="core" alt="" coords="670,125,717,151"/>
+<area shape="rect" id="node10" href="dir_c7c66e1b51fa2da38762099c5d7881b3.html" title="riccati" alt="" coords="741,125,798,151"/>
+<area shape="rect" id="node11" href="dir_d2eea56f3da4f866a0dcfb6107860967.html" title="line_search" alt="" coords="823,125,911,151"/>
+<area shape="rect" id="node12" href="dir_da808dadc845e8020b9272cf873bcaf4.html" title="parnmpc" alt="" coords="935,125,1007,151"/>
+<area shape="rect" id="node13" href="dir_0a6712de3e459caf744bffd0434ca9ef.html" title="solver" alt="" coords="475,52,533,77"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000014_000000.html" title="3" alt="" coords="130,125,138,140"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000014_000002.html" title="3" alt="" coords="201,125,209,140"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000014_000017.html" title="7" alt="" coords="272,125,280,139"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000014_000012.html" title="5" alt="" coords="347,122,355,137"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000014_000010.html" title="1" alt="" coords="422,115,430,130"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000014_000008.html" title="8" alt="" coords="483,106,491,120"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000014_000016.html" title="1" alt="" coords="533,97,541,112"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000014_000015.html" title="3" alt="" coords="590,101,598,116"/>
+<area shape="rect" id="edge9-headlabel" href="dir_000014_000001.html" title="14" alt="" coords="648,106,663,121"/>
+<area shape="rect" id="edge10-headlabel" href="dir_000014_000011.html" title="3" alt="" coords="721,108,729,123"/>
+<area shape="rect" id="edge11-headlabel" href="dir_000014_000006.html" title="5" alt="" coords="802,108,810,123"/>
+<area shape="rect" id="edge12-headlabel" href="dir_000014_000009.html" title="1" alt="" coords="914,109,922,123"/>
+<area shape="rect" id="clust1" href="dir_8643683d32fc213ad1e39a0c60177f48.html" title="robotoc" alt="" coords="16,16,1017,161"/>
+</map>

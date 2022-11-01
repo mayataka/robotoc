@@ -1,0 +1,9 @@
+<map id="robotoc::ContactPlannerBase" name="robotoc::ContactPlannerBase">
+<area shape="rect" id="node1" title="Base interface of contact planners." alt="" coords="5,157,196,182"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_biped_walk_foot_step_planner.html" title="Foot step planner for the biped robot walk." alt="" coords="251,5,438,45"/>
+<area shape="rect" id="node3" href="$classrobotoc_1_1_crawl_foot_step_planner.html" title="Foot step planner for the crawl gait of quadrupeds." alt="" coords="244,70,445,95"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_flying_trot_foot_step_planner.html" title="Foot step planner for the flying trot gait of quadrupeds." alt="" coords="254,120,435,160"/>
+<area shape="rect" id="node5" href="$classrobotoc_1_1_jump_foot_step_planner.html" title="Foot step planner for the jump motion." alt="" coords="245,185,445,210"/>
+<area shape="rect" id="node6" href="$classrobotoc_1_1_pace_foot_step_planner.html" title="Foot step planner for the pace gait of quadrupeds." alt="" coords="245,234,444,259"/>
+<area shape="rect" id="node7" href="$classrobotoc_1_1_trot_foot_step_planner.html" title="Foot step planner for the trot gait of quadrupeds." alt="" coords="249,283,440,309"/>
+</map>

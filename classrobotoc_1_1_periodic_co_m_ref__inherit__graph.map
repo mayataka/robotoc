@@ -1,0 +1,4 @@
+<map id="robotoc::PeriodicCoMRef" name="robotoc::PeriodicCoMRef">
+<area shape="rect" id="node1" title="Periodic reference of the center of mass." alt="" coords="5,79,171,104"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_co_m_ref_base.html" title="Base class of reference position of the center of mass (CoM)." alt="" coords="14,5,162,31"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="/github/workspace/include/robotoc/cost/task_space_3d_cost.hpp" name="/github/workspace/include/robotoc/cost/task_space_3d_cost.hpp">
+<area shape="rect" id="node1" title=" " alt="" coords="440,5,613,60"/>
+<area shape="rect" id="node2" href="$discrete__time__swing__foot__ref_8hpp.html" title=" " alt="" coords="5,108,179,163"/>
+<area shape="rect" id="node3" href="$periodic__swing__foot__ref_8hpp.html" title=" " alt="" coords="203,108,376,163"/>
+<area shape="rect" id="node4" href="$mpc__biped__walk_8hpp.html" title=" " alt="" coords="132,211,305,265"/>
+<area shape="rect" id="node5" href="$mpc__crawl_8hpp.html" title=" " alt="" coords="329,218,519,258"/>
+<area shape="rect" id="node6" href="$mpc__flying__trot_8hpp.html" title=" " alt="" coords="543,211,716,265"/>
+<area shape="rect" id="node7" href="$mpc__pace_8hpp.html" title=" " alt="" coords="740,218,927,258"/>
+<area shape="rect" id="node8" href="$mpc__periodic__swing__foot__ref_8hpp.html" title=" " alt="" coords="501,108,680,163"/>
+<area shape="rect" id="node9" href="$mpc__trot_8hpp.html" title=" " alt="" coords="951,218,1129,258"/>
+</map>

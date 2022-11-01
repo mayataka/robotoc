@@ -1,0 +1,4 @@
+<map id="robotoc::TrotFootStepPlanner" name="robotoc::TrotFootStepPlanner">
+<area shape="rect" id="node1" title="Foot step planner for the trot gait of quadrupeds." alt="" coords="5,79,196,104"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_contact_planner_base.html" title="Base interface of contact planners." alt="" coords="5,5,196,31"/>
+</map>

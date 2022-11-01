@@ -1,0 +1,12 @@
+<map id="/github/workspace/include/robotoc/unconstr/unconstr_ocp_data.hpp" name="/github/workspace/include/robotoc/unconstr/unconstr_ocp_data.hpp">
+<area shape="rect" id="node1" title=" " alt="" coords="293,5,471,60"/>
+<area shape="rect" id="node2" href="$unconstr__backward__correction_8hpp.html" title=" " alt="" coords="151,211,328,265"/>
+<area shape="rect" id="node6" href="$parnmpc__intermediate__stage_8hpp.html" title=" " alt="" coords="29,108,207,163"/>
+<area shape="rect" id="node7" href="$parnmpc__terminal__stage_8hpp.html" title=" " alt="" coords="231,108,408,163"/>
+<area shape="rect" id="node8" href="$unconstr__direct__multiple__shooting_8hpp.html" title=" " alt="" coords="412,211,605,265"/>
+<area shape="rect" id="node9" href="$unconstr__intermediate__stage_8hpp.html" title=" " alt="" coords="484,108,661,163"/>
+<area shape="rect" id="node10" href="$unconstr__terminal__stage_8hpp.html" title=" " alt="" coords="685,108,863,163"/>
+<area shape="rect" id="node3" href="$unconstr__line__search_8hpp.html" title=" " alt="" coords="277,313,471,368"/>
+<area shape="rect" id="node5" href="$unconstr__parnmpc__solver_8hpp.html" title=" " alt="" coords="189,416,362,471"/>
+<area shape="rect" id="node4" href="$unconstr__ocp__solver_8hpp.html" title=" " alt="" coords="403,416,577,471"/>
+</map>

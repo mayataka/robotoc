@@ -1,0 +1,6 @@
+<map id="robotoc::CoMRefBase" name="robotoc::CoMRefBase">
+<area shape="rect" id="node1" title="Base class of reference position of the center of mass (CoM)." alt="" coords="247,5,395,31"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_discrete_time_co_m_ref.html" title="Discrete&#45;time reference of the center of mass." alt="" coords="5,79,200,104"/>
+<area shape="rect" id="node3" href="$classrobotoc_1_1_m_p_c_periodic_co_m_ref.html" title="Periodic reference positions of the center of mass." alt="" coords="224,79,419,104"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_periodic_co_m_ref.html" title="Periodic reference of the center of mass." alt="" coords="443,79,608,104"/>
+</map>

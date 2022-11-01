@@ -1,0 +1,24 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,787,136,827"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_constraint_component_base.html" title="Base class for constraint components." alt="" coords="193,304,419,329"/>
+<area shape="rect" id="node13" href="$classrobotoc_1_1_cost_function_component_base.html" title="Base class of components of cost function." alt="" coords="184,741,428,767"/>
+<area shape="rect" id="node19" href="$classrobotoc_1_1_impact_constraint_component_base.html" title="Base class for impact constraint components." alt="" coords="221,837,391,877"/>
+<area shape="rect" id="node22" href="$classrobotoc_1_1_s_t_o_cost_function_component_base.html" title="Base class of components of the cost function of the switching time optimization (STO) problem." alt="" coords="219,901,393,941"/>
+<area shape="rect" id="node3" href="$classrobotoc_1_1_contact_wrench_cone.html" title="Constraint on the contact wrench cone for surface contacts." alt="" coords="486,5,677,31"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_friction_cone.html" title="Constraint on the inner&#45;approximated firction cone." alt="" coords="509,55,653,80"/>
+<area shape="rect" id="node5" href="$classrobotoc_1_1_joint_acceleration_lower_limit.html" title="Constraint on the lower limits of the joint acceleration." alt="" coords="496,105,667,145"/>
+<area shape="rect" id="node6" href="$classrobotoc_1_1_joint_acceleration_upper_limit.html" title="Constraint on the upper limits of the joint acceleration." alt="" coords="496,169,667,209"/>
+<area shape="rect" id="node7" href="$classrobotoc_1_1_joint_position_lower_limit.html" title="Constraint on the lower limits of the joint position." alt="" coords="490,233,673,273"/>
+<area shape="rect" id="node8" href="$classrobotoc_1_1_joint_position_upper_limit.html" title="Constraint on the upper limits of the joint position." alt="" coords="491,297,672,337"/>
+<area shape="rect" id="node9" href="$classrobotoc_1_1_joint_torques_lower_limit.html" title="Constraint on the lower limits of the joint torques." alt="" coords="490,361,673,401"/>
+<area shape="rect" id="node10" href="$classrobotoc_1_1_joint_torques_upper_limit.html" title="Constraint on the upper limits of the joint torques." alt="" coords="491,425,672,465"/>
+<area shape="rect" id="node11" href="$classrobotoc_1_1_joint_velocity_lower_limit.html" title="Constraint on the lower limits of the joint velocity." alt="" coords="491,489,672,529"/>
+<area shape="rect" id="node12" href="$classrobotoc_1_1_joint_velocity_upper_limit.html" title="Constraint on the upper limits of the joint velocity." alt="" coords="491,553,671,593"/>
+<area shape="rect" id="node14" href="$classrobotoc_1_1_co_m_cost.html" title="Cost on the position of the center of mass." alt="" coords="519,617,644,643"/>
+<area shape="rect" id="node15" href="$classrobotoc_1_1_configuration_space_cost.html" title="Configuration space cost." alt="" coords="476,667,687,692"/>
+<area shape="rect" id="node16" href="$classrobotoc_1_1_local_contact_force_cost.html" title="Cost on the contact forces expressed in the local frames." alt="" coords="477,716,685,741"/>
+<area shape="rect" id="node17" href="$classrobotoc_1_1_task_space3_d_cost.html" title="Cost on the task space position." alt="" coords="491,765,671,791"/>
+<area shape="rect" id="node18" href="$classrobotoc_1_1_task_space6_d_cost.html" title="Cost on the task space placement (SE(3))." alt="" coords="491,815,671,840"/>
+<area shape="rect" id="node20" href="$classrobotoc_1_1_impact_friction_cone.html" title="Constraint on the inner&#45;approximated impact firction cone." alt="" coords="489,864,673,889"/>
+<area shape="rect" id="node21" href="$classrobotoc_1_1_impact_wrench_cone.html" title="Constraint on the wrench firction cone for surface contacts." alt="" coords="489,913,674,939"/>
+</map>

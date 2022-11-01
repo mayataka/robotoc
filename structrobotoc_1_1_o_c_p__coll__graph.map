@@ -1,0 +1,4 @@
+<map id="robotoc::OCP" name="robotoc::OCP">
+<area shape="rect" id="node1" title="The optimal control problem." alt="" coords="9,93,107,119"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_robot.html" title="Dynamics and kinematics model of robots. Wraps pinocchio::Model and pinocchio::Data...." alt="" coords="5,5,111,31"/>
+</map>

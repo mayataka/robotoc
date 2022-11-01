@@ -1,0 +1,5 @@
+<map id="robotoc::ImpactFrictionCone" name="robotoc::ImpactFrictionCone">
+<area shape="rect" id="node1" title="Constraint on the inner&#45;approximated impact firction cone." alt="" coords="10,196,194,221"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_impact_constraint_component_base.html" title="Base class for impact constraint components." alt="" coords="17,108,187,148"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,5,199,60"/>
+</map>

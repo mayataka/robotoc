@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classrobotoc_1_1_co_m_ref_base.html" title="Base class of reference position of the center of mass (CoM)." alt="" coords="5,55,153,80"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_discrete_time_co_m_ref.html" title="Discrete&#45;time reference of the center of mass." alt="" coords="201,5,396,31"/>
+<area shape="rect" id="node3" href="$classrobotoc_1_1_m_p_c_periodic_co_m_ref.html" title="Periodic reference positions of the center of mass." alt="" coords="201,55,396,80"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_periodic_co_m_ref.html" title="Periodic reference of the center of mass." alt="" coords="216,104,381,129"/>
+</map>

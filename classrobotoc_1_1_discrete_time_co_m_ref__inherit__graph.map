@@ -1,0 +1,4 @@
+<map id="robotoc::DiscreteTimeCoMRef" name="robotoc::DiscreteTimeCoMRef">
+<area shape="rect" id="node1" title="Discrete&#45;time reference of the center of mass." alt="" coords="5,79,200,104"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_co_m_ref_base.html" title="Base class of reference position of the center of mass (CoM)." alt="" coords="29,5,177,31"/>
+</map>

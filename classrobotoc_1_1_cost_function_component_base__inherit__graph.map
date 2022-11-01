@@ -1,0 +1,9 @@
+<map id="robotoc::CostFunctionComponentBase" name="robotoc::CostFunctionComponentBase">
+<area shape="rect" id="node1" title="Base class of components of cost function." alt="" coords="291,104,535,129"/>
+<area shape="rect" id="node3" href="$classrobotoc_1_1_co_m_cost.html" title="Cost on the position of the center of mass." alt="" coords="625,5,751,31"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_configuration_space_cost.html" title="Configuration space cost." alt="" coords="583,55,793,80"/>
+<area shape="rect" id="node5" href="$classrobotoc_1_1_local_contact_force_cost.html" title="Cost on the contact forces expressed in the local frames." alt="" coords="584,104,792,129"/>
+<area shape="rect" id="node6" href="$classrobotoc_1_1_task_space3_d_cost.html" title="Cost on the task space position." alt="" coords="598,153,778,179"/>
+<area shape="rect" id="node7" href="$classrobotoc_1_1_task_space6_d_cost.html" title="Cost on the task space placement (SE(3))." alt="" coords="598,203,778,228"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,89,243,144"/>
+</map>

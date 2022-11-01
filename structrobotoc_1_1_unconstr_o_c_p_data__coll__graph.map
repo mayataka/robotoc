@@ -1,0 +1,7 @@
+<map id="robotoc::UnconstrOCPData" name="robotoc::UnconstrOCPData">
+<area shape="rect" id="node1" title="Data structure for the optimal control problem of unconstrained rigid&#45;body systems." alt="" coords="351,80,529,105"/>
+<area shape="rect" id="node2" href="$structrobotoc_1_1_performance_index.html" title="Performance index of optimal control problems." alt="" coords="8,5,184,31"/>
+<area shape="rect" id="node3" href="$structrobotoc_1_1_cost_function_data.html" title="Composed of data used to compute the cost function and its derivatives." alt="" coords="9,55,183,80"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_constraints_data.html" title="Data for constraints. Composed of ConstraintComponentData corrensponding to the components of Constra..." alt="" coords="14,104,178,129"/>
+<area shape="rect" id="node5" href="$classrobotoc_1_1_unconstr_dynamics.html" title="Inverse dynamics constraint without constraints (floating base or contacts)." alt="" coords="5,153,187,179"/>
+</map>

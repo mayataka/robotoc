@@ -1,0 +1,10 @@
+<map id="robotoc::OCPData" name="robotoc::OCPData">
+<area shape="rect" id="node1" title="A data structure for an optimal control problem." alt="" coords="759,128,885,153"/>
+<area shape="rect" id="node2" href="$structrobotoc_1_1_performance_index.html" title="Performance index of optimal control problems." alt="" coords="361,5,537,31"/>
+<area shape="rect" id="node3" href="$structrobotoc_1_1_cost_function_data.html" title="Composed of data used to compute the cost function and its derivatives." alt="" coords="361,55,536,80"/>
+<area shape="rect" id="node4" href="$classrobotoc_1_1_constraints_data.html" title="Data for constraints. Composed of ConstraintComponentData corrensponding to the components of Constra..." alt="" coords="367,104,531,129"/>
+<area shape="rect" id="node5" href="$classrobotoc_1_1_state_equation_data.html" title="Data for the state equations." alt="" coords="359,153,538,179"/>
+<area shape="rect" id="node6" href="$classrobotoc_1_1_s_e3_jacobian_inverse.html" title="A class that computes the inverse of the Jacobian of SE(3)." alt="" coords="5,153,196,179"/>
+<area shape="rect" id="node7" href="$classrobotoc_1_1_contact_dynamics_data.html" title="Data used in ContactDynamics." alt="" coords="349,203,549,228"/>
+<area shape="rect" id="node8" href="$classrobotoc_1_1_switching_constraint_data.html" title="Data for the switching constraint." alt="" coords="341,252,556,277"/>
+</map>

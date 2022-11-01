@@ -1,0 +1,4 @@
+<map id="robotoc::JumpFootStepPlanner" name="robotoc::JumpFootStepPlanner">
+<area shape="rect" id="node1" title="Foot step planner for the jump motion." alt="" coords="5,79,205,104"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_contact_planner_base.html" title="Base interface of contact planners." alt="" coords="10,5,201,31"/>
+</map>

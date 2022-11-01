@@ -1,0 +1,4 @@
+<map id="robotoc::ConfigurationSpaceRefBase" name="robotoc::ConfigurationSpaceRefBase">
+<area shape="rect" id="node1" title="Base class of the configuration." alt="" coords="35,5,218,45"/>
+<area shape="rect" id="node2" href="$classrobotoc_1_1_m_p_c_periodic_configuration_ref.html" title="Periodic reference configuration for MPC of legged robots." alt="" coords="5,93,248,119"/>
+</map>

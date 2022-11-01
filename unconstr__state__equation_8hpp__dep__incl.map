@@ -1,0 +1,9 @@
+<map id="/github/workspace/include/robotoc/dynamics/unconstr_state_equation.hpp" name="/github/workspace/include/robotoc/dynamics/unconstr_state_equation.hpp">
+<area shape="rect" id="node1" title=" " alt="" coords="103,5,285,60"/>
+<area shape="rect" id="node2" href="$unconstr__intermediate__stage_8hpp.html" title=" " alt="" coords="5,108,183,163"/>
+<area shape="rect" id="node7" href="$unconstr__terminal__stage_8hpp.html" title=" " alt="" coords="207,108,384,163"/>
+<area shape="rect" id="node3" href="$unconstr__direct__multiple__shooting_8hpp.html" title=" " alt="" coords="97,211,291,265"/>
+<area shape="rect" id="node4" href="$unconstr__line__search_8hpp.html" title=" " alt="" coords="165,313,359,368"/>
+<area shape="rect" id="node5" href="$unconstr__ocp__solver_8hpp.html" title=" " alt="" coords="41,416,214,471"/>
+<area shape="rect" id="node6" href="$unconstr__parnmpc__solver_8hpp.html" title=" " alt="" coords="238,416,411,471"/>
+</map>
