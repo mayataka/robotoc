@@ -121,7 +121,7 @@ TEST_F(ControlPolicyTest, test) {
   // Initial time and initial state
   const double t = 0;
   const Eigen::VectorXd q = q_standing;
-  const Eigen::VectorXd v = Eigen::VectorXd::(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
 
   ocp_solver.discretize(t);
   ocp_solver.setSolution("q", q);
