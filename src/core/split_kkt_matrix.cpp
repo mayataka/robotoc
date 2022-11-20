@@ -14,7 +14,6 @@ SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Qxu(Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimu())),
     Quu(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())),
     Qtt(0),
-    Qtt_prev(0),
     hx(Eigen::VectorXd::Zero(2*robot.dimv())),
     ha(Eigen::VectorXd::Zero(robot.dimv())),
     hu(Eigen::VectorXd::Zero(robot.dimu())),
@@ -44,7 +43,6 @@ SplitKKTMatrix::SplitKKTMatrix()
     Qxu(),
     Quu(),
     Qtt(0),
-    Qtt_prev(0),
     hx(),
     ha(),
     hu(),
@@ -108,9 +106,9 @@ bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
     if (!Qff().isApprox(other.Qff())) return false;
     if (!Qqf().isApprox(other.Qqf())) return false;
   }
-  Eigen::VectorXd vec(2), other_vec(2);
-  vec << Qtt, Qtt_prev;
-  other_vec << other.Qtt, other.Qtt_prev;
+  Eigen::VectorXd vec(1), other_vec(1);
+  vec << Qtt;
+  other_vec << other.Qtt;
   if (!vec.isApprox(other_vec)) return false;
   if (!hx.isApprox(other.hx)) return false;
   if (!hu.isApprox(other.hu)) return false;
@@ -139,8 +137,8 @@ bool SplitKKTMatrix::hasNaN() const {
     if (Qff().hasNaN()) return true;
     if (Qqf().hasNaN()) return true;
   }
-  Eigen::VectorXd vec(2);
-  vec << Qtt, Qtt_prev;
+  Eigen::VectorXd vec(1);
+  vec << Qtt;
   if (vec.hasNaN()) return true;
   if (hx.hasNaN()) return true;
   if (hu.hasNaN()) return true;
@@ -170,7 +168,6 @@ void SplitKKTMatrix::setRandom() {
   Qff() = Qaaff.bottomRightCorner(dimf_, dimf_);
   Qqf().setRandom();
   Qtt = Eigen::VectorXd::Random(1)[0];
-  Qtt_prev = Eigen::VectorXd::Random(1)[0];
   hx.setRandom();
   hu.setRandom();
   ha.setRandom();
@@ -218,7 +215,6 @@ void SplitKKTMatrix::disp(std::ostream& os) const {
     os << "  Qqf = " << "\n" << Qqf() << "\n";
   }
   os << "  Qtt = " << Qtt << "\n";
-  os << "  Qtt_prev = " << Qtt_prev << "\n";
   os << "  hq = " << hq().transpose() << "\n";
   os << "  hv = " << hv().transpose() << "\n";
   os << "  hu = " << hu.transpose() << "\n";

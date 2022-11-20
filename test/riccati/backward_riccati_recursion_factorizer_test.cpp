@@ -82,8 +82,7 @@ TEST_P(BackwardRiccatiRecursionFactorizerTest, test) {
   riccati_ref.xi += 2 * riccati_next.Psi.dot(kkt_matrix.fx);
   riccati_ref.xi += lqr_policy.T.dot(riccati_ref.psi_u);
   riccati_ref.xi += riccati_next.xi;
-  riccati_ref.chi  = kkt_matrix.Qtt_prev;
-  riccati_ref.chi += riccati_next.Phi.dot(kkt_matrix.fx);
+  riccati_ref.chi  = riccati_next.Phi.dot(kkt_matrix.fx);
   riccati_ref.chi += lqr_policy.T.dot(riccati_ref.phi_u);
   riccati_ref.chi += riccati_next.chi;
   riccati_ref.rho  = lqr_policy.W.dot(riccati_ref.phi_u);

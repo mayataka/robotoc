@@ -114,8 +114,7 @@ void BackwardRiccatiRecursionFactorizer::factorizeSTOFactorization(
   riccati.xi   += lqr_policy.T.dot(riccati.psi_u);
   riccati.xi   += riccati_next.xi;
   if (has_next_sto_phase) {
-    riccati.chi  = kkt_matrix.Qtt_prev;
-    riccati.chi += riccati_next.Phi.dot(kkt_matrix.fx);
+    riccati.chi  = riccati_next.Phi.dot(kkt_matrix.fx);
     riccati.chi += lqr_policy.T.dot(riccati.phi_u);
     riccati.chi += riccati_next.chi;
     riccati.rho  = lqr_policy.W.dot(riccati.phi_u);

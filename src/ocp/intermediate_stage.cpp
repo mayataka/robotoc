@@ -142,7 +142,6 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   kkt_matrix.hu.array() *= (1.0/grid_info.num_grids_in_phase);
   kkt_matrix.fx.array() *= (1.0/grid_info.num_grids_in_phase);
   kkt_matrix.Qtt        *= (1.0/(grid_info.num_grids_in_phase*grid_info.num_grids_in_phase));
-  kkt_matrix.Qtt_prev    = - kkt_matrix.Qtt;
   if (grid_info.switching_constraint) {
     kkt_matrix.Phit().array() *= (1.0/grid_info.num_grids_in_phase);
   }

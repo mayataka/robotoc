@@ -162,7 +162,6 @@ TEST_P(IntermediateStageTest, evalKKT) {
   kkt_matrix_ref.hu.array() *= (1.0 / grid_info.num_grids_in_phase);
   kkt_matrix_ref.fx.array() *= (1.0 / grid_info.num_grids_in_phase);
   kkt_matrix_ref.Qtt        *= 1.0 / (grid_info.num_grids_in_phase * grid_info.num_grids_in_phase);
-  kkt_matrix_ref.Qtt_prev    = - kkt_matrix_ref.Qtt;
   if (switching_constraint) {
     kkt_matrix_ref.Phit().array() *= (1.0/grid_info.num_grids_in_phase);
   }
