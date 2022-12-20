@@ -28,8 +28,9 @@ KinematicsLevel JointTorquesLowerLimit::kinematicsLevel() const {
 
 bool JointTorquesLowerLimit::isFeasible(Robot& robot, 
                                         const ContactStatus& contact_status, 
-                                        ConstraintComponentData& data, 
-                                        const SplitSolution& s) const {
+                                        const GridInfo& grid_info,
+                                        const SplitSolution& s,
+                                        ConstraintComponentData& data) const {
   for (int i=0; i<dimc_; ++i) {
     if (s.u.coeff(i) < umin_.coeff(i)) {
       return false;
@@ -40,17 +41,19 @@ bool JointTorquesLowerLimit::isFeasible(Robot& robot,
 
 
 void JointTorquesLowerLimit::setSlack(Robot& robot, 
-                                      const ContactStatus& contact_status, 
-                                      ConstraintComponentData& data, 
-                                      const SplitSolution& s) const {
+                                      const ContactStatus& contact_status,
+                                      const GridInfo& grid_info,
+                                      const SplitSolution& s,
+                                      ConstraintComponentData& data) const {
   data.slack = s.u - umin_;
 }
 
 
 void JointTorquesLowerLimit::evalConstraint(Robot& robot, 
-                                            const ContactStatus& contact_status, 
-                                            ConstraintComponentData& data, 
-                                            const SplitSolution& s) const {
+                                            const ContactStatus& contact_status,
+                                            const GridInfo& grid_info,
+                                            const SplitSolution& s,
+                                            ConstraintComponentData& data) const {
   data.residual = umin_ - s.u + data.slack;
   computeComplementarySlackness(data);
   data.log_barrier = logBarrier(data.slack);
@@ -58,16 +61,17 @@ void JointTorquesLowerLimit::evalConstraint(Robot& robot,
 
 
 void JointTorquesLowerLimit::evalDerivatives(
-    Robot& robot, const ContactStatus& contact_status, 
-    ConstraintComponentData& data, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const ContactStatus& contact_status,
+    const GridInfo& grid_info, const SplitSolution& s,
+    ConstraintComponentData& data, SplitKKTResidual& kkt_residual) const {
   kkt_residual.lu.noalias() -= data.dual;
 }
 
 
 void JointTorquesLowerLimit::condenseSlackAndDual(
-    const ContactStatus& contact_status, ConstraintComponentData& data, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
+    const ContactStatus& contact_status, const GridInfo& grid_info, 
+    ConstraintComponentData& data, SplitKKTMatrix& kkt_matrix,
+    SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Quu.diagonal().array()
       += data.dual.array() / data.slack.array();
   computeCondensingCoeffcient(data);
@@ -76,8 +80,8 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
 
 
 void JointTorquesLowerLimit::expandSlackAndDual(
-    const ContactStatus& contact_status, ConstraintComponentData& data, 
-    const SplitDirection& d) const {
+    const ContactStatus& contact_status, const GridInfo& grid_info,
+    const SplitDirection& d, ConstraintComponentData& data) const {
   data.dslack = d.du - data.residual;
   computeDualDirection(data);
 }

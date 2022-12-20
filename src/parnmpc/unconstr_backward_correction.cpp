@@ -211,14 +211,14 @@ void UnconstrBackwardCorrection::backwardCorrection(
     }
     UnconstrSplitBackwardCorrection::computeDirection(s[i], s_new_[i], d[i]);
     if (i < N-1) {
-      intermediate_stage_.expandPrimalAndDual(time_discretization[i+1].dt,  
+      intermediate_stage_.expandPrimalAndDual(time_discretization[i+1],  
                                               kkt_matrix[i], kkt_residual[i], 
                                               data_[i], d[i]);
       primal_step_sizes_.coeffRef(i) = intermediate_stage_.maxPrimalStepSize(data_[i]);
       dual_step_sizes_.coeffRef(i)  = intermediate_stage_.maxDualStepSize(data_[i]);
     }
     else {
-      terminal_stage_.expandPrimalAndDual(time_discretization[i+1].dt,  
+      terminal_stage_.expandPrimalAndDual(time_discretization[i+1],  
                                           kkt_matrix[i], kkt_residual[i], 
                                           data_[i], d[i]);
       primal_step_sizes_.coeffRef(i) = terminal_stage_.maxPrimalStepSize(data_[i]);

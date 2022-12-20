@@ -35,7 +35,8 @@ bool UnconstrIntermediateStage::isFeasible(Robot& robot,
                                            const GridInfo& grid_info,
                                            const SplitSolution& s,
                                            UnconstrOCPData& data) const {
-  return constraints_->isFeasible(robot, contact_status_, data.constraints_data, s);
+  return constraints_->isFeasible(robot, contact_status_, grid_info, s, 
+                                  data.constraints_data);
 }
 
 
@@ -44,7 +45,8 @@ void UnconstrIntermediateStage::initConstraints(Robot& robot,
                                                 const SplitSolution& s,
                                                 UnconstrOCPData& data) const {
   data.constraints_data = constraints_->createConstraintsData(robot, grid_info.stage);
-  constraints_->setSlackAndDual(robot, contact_status_, data.constraints_data, s);
+  constraints_->setSlackAndDual(robot, contact_status_, grid_info, s,
+                                data.constraints_data);
 }
 
 
@@ -57,8 +59,9 @@ void UnconstrIntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   data.performance_index.setZero();
   kkt_residual.setZero();
   data.performance_index.cost = cost_->evalStageCost(robot, contact_status_, 
-                                                      data.cost_data, grid_info, s);
-  constraints_->evalConstraint(robot, contact_status_, data.constraints_data, s);
+                                                     data.cost_data, grid_info, s);
+  constraints_->evalConstraint(robot, contact_status_, grid_info, s,
+                               data.constraints_data);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   evalUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_residual);
   data.unconstr_dynamics.evalUnconstrDynamics(robot, s);
@@ -80,8 +83,8 @@ void UnconstrIntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   data.performance_index.cost = cost_->quadratizeStageCost(robot, contact_status_, 
                                                            data.cost_data, grid_info, s, 
                                                            kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, contact_status_, 
-                                     data.constraints_data, s, kkt_residual);
+  constraints_->linearizeConstraints(robot, contact_status_, grid_info, s,
+                                     data.constraints_data, kkt_residual);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   linearizeUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_matrix, kkt_residual);
   data.unconstr_dynamics.linearizeUnconstrDynamics(robot, grid_info.dt, s, kkt_residual);
@@ -91,20 +94,20 @@ void UnconstrIntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
       = data.dualFeasibility<1>() + kkt_residual.dualFeasibility<1>();
   data.performance_index.kkt_error
       = data.KKTError() + kkt_residual.KKTError();
-  constraints_->condenseSlackAndDual(contact_status_, data.constraints_data, 
+  constraints_->condenseSlackAndDual(contact_status_, grid_info,
+                                     data.constraints_data, 
                                      kkt_matrix, kkt_residual);
   data.unconstr_dynamics.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 
 
 void UnconstrIntermediateStage::expandPrimalAndDual(
-    const double dt, const SplitKKTMatrix& kkt_matrix, 
+    const GridInfo& grid_info, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, UnconstrOCPData& data, 
     SplitDirection& d) const {
-  assert(dt > 0);
   data.unconstr_dynamics.expandPrimal(d);
-  data.unconstr_dynamics.expandDual(dt, kkt_matrix, kkt_residual, d);
-  constraints_->expandSlackAndDual(contact_status_, data.constraints_data, d);
+  data.unconstr_dynamics.expandDual(grid_info.dt, kkt_matrix, kkt_residual, d);
+  constraints_->expandSlackAndDual(contact_status_, grid_info, d, data.constraints_data);
 }
 
 

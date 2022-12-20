@@ -127,13 +127,13 @@ public:
   ///
   /// @brief Expands the primal and dual variables, i.e., computes the Newton 
   /// direction of the condensed variables of this stage.
-  /// @param[in] dt Time step. 
+  /// @param[in] grid_info Grid info. 
   /// @param[in] kkt_matrix Split KKT matrix of this stage.
   /// @param[in] kkt_residual Split KKT residual of this stage.
   /// @param[in, out] data Data of this stage. 
   /// @param[in, out] d Split direction of this stage.
   ///
-  void expandPrimalAndDual(const double dt, const SplitKKTMatrix& kkt_matrix,
+  void expandPrimalAndDual(const GridInfo& grid_info, const SplitKKTMatrix& kkt_matrix,
                            const SplitKKTResidual& kkt_residual,
                            UnconstrOCPData& data, SplitDirection& d) const;
 

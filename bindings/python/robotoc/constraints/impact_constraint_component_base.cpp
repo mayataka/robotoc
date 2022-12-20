@@ -22,54 +22,56 @@ public:
                            allocateExtraData, data);
   }
 
-  bool isFeasible(Robot& robot, const ImpactStatus& impact_status, 
-                  ConstraintComponentData& data, 
-                  const SplitSolution& s) const override {
+  bool isFeasible(Robot& robot, const ImpactStatus& impact_status,
+                  const GridInfo& grid_info, const SplitSolution& s,
+                  ConstraintComponentData& data) const override {
     PYBIND11_OVERRIDE_PURE(bool, ImpactConstraintComponentBase, 
                            isFeasible, 
-                           robot, impact_status, data, s);
+                           robot, impact_status, grid_info, s, data);
   }
 
   void setSlack(Robot& robot, const ImpactStatus& impact_status, 
-                ConstraintComponentData& data, 
-                const SplitSolution& s) const override {
+                const GridInfo& grid_info, const SplitSolution& s,
+                ConstraintComponentData& data) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpactConstraintComponentBase, 
                            setSlack, 
-                           robot, impact_status, data, s);
+                           robot, impact_status, grid_info, s, data);
   }
 
   void evalConstraint(Robot& robot, const ImpactStatus& impact_status, 
-                      ConstraintComponentData& data, 
-                      const SplitSolution& s) const override {
+                      const GridInfo& grid_info, const SplitSolution& s,
+                      ConstraintComponentData& data) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpactConstraintComponentBase, 
                            evalConstraint, 
-                           robot, impact_status, data, s);
+                           robot, impact_status, grid_info, s, data);
   }
 
   void evalDerivatives(Robot& robot, const ImpactStatus& impact_status, 
-                       ConstraintComponentData& data,
-                       const SplitSolution& s,
-                       SplitKKTResidual& kkt_residual) const override {
+                      const GridInfo& grid_info, const SplitSolution& s,
+                      ConstraintComponentData& data,
+                      SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpactConstraintComponentBase, 
                            evalDerivatives, 
-                           robot, impact_status, data, s, kkt_residual);
+                           robot, impact_status, grid_info, s, data, kkt_residual);
   }
 
   void condenseSlackAndDual(const ImpactStatus& impact_status, 
+                            const GridInfo& grid_info, 
                             ConstraintComponentData& data,
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpactConstraintComponentBase, 
                            condenseSlackAndDual, 
-                           impact_status, data, kkt_matrix, kkt_residual);
+                           impact_status, grid_info, data, kkt_matrix, kkt_residual);
   }
 
   void expandSlackAndDual(const ImpactStatus& impact_status, 
-                          ConstraintComponentData& data, 
-                          const SplitDirection& d) const override {
+                          const GridInfo& grid_info, 
+                          const SplitDirection& d,
+                          ConstraintComponentData& data) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpactConstraintComponentBase, 
                            expandSlackAndDual, 
-                           impact_status, data, d);
+                           impact_status, grid_info, d, data);
   }
 
   int dimc() const override {
@@ -91,19 +93,18 @@ PYBIND11_MODULE(impact_constraint_component_base, m) {
     .def("allocateExtraData", &ImpactConstraintComponentBase::allocateExtraData,
           py::arg("data"))
     .def("isFeasible", &ImpactConstraintComponentBase::isFeasible,
-          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"))
+          py::arg("robot"), py::arg("contact_status"), py::arg("grid_info"), py::arg("s"), py::arg("data"))
     .def("setSlack", &ImpactConstraintComponentBase::setSlack,
-          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"))
+          py::arg("robot"), py::arg("contact_status"), py::arg("grid_info"), py::arg("s"), py::arg("data"))
     .def("evalConstraint", &ImpactConstraintComponentBase::evalConstraint,
-          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"))
+          py::arg("robot"), py::arg("contact_status"), py::arg("grid_info"), py::arg("s"), py::arg("data"))
     .def("evalDerivatives", &ImpactConstraintComponentBase::evalDerivatives,
-          py::arg("robot"), py::arg("contact_status"), py::arg("data"), py::arg("s"),
+          py::arg("robot"), py::arg("contact_status"), py::arg("grid_info"), py::arg("s"), py::arg("data"),
           py::arg("kkt_residual"))
     .def("condenseSlackAndDual", &ImpactConstraintComponentBase::condenseSlackAndDual,
-          py::arg("contact_status"), py::arg("data"), py::arg("kkt_matrix"), 
-          py::arg("kkt_residual"))
+          py::arg("contact_status"), py::arg("grid_info"), py::arg("data"), py::arg("kkt_matrix"), py::arg("kkt_residual"))
     .def("expandSlackAndDual", &ImpactConstraintComponentBase::expandSlackAndDual,
-          py::arg("contact_status"), py::arg("data"), py::arg("d"))
+          py::arg("contact_status"), py::arg("grid_info"), py::arg("d"), py::arg("data"))
     .def("dimc", &ImpactConstraintComponentBase::dimc);
 }
 

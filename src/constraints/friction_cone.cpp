@@ -76,8 +76,9 @@ void FrictionCone::allocateExtraData(ConstraintComponentData& data) const {
 
 
 bool FrictionCone::isFeasible(Robot& robot, const ContactStatus& contact_status,
-                              ConstraintComponentData& data, 
-                              const SplitSolution& s) const {
+                              const GridInfo& grid_info,
+                              const SplitSolution& s,
+                              ConstraintComponentData& data) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
@@ -97,9 +98,11 @@ bool FrictionCone::isFeasible(Robot& robot, const ContactStatus& contact_status,
 }
 
 
-void FrictionCone::setSlack(Robot& robot, const ContactStatus& contact_status, 
-                            ConstraintComponentData& data, 
-                            const SplitSolution& s) const {
+void FrictionCone::setSlack(Robot& robot,
+                            const ContactStatus& contact_status,
+                            const GridInfo& grid_info,
+                            const SplitSolution& s,
+                            ConstraintComponentData& data) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<max_num_contacts_; ++i) {
     const int idx = 5*i;
@@ -116,9 +119,10 @@ void FrictionCone::setSlack(Robot& robot, const ContactStatus& contact_status,
 
 
 void FrictionCone::evalConstraint(Robot& robot, 
-                                  const ContactStatus& contact_status, 
-                                  ConstraintComponentData& data, 
-                                  const SplitSolution& s) const {
+                                  const ContactStatus& contact_status,
+                                  const GridInfo& grid_info,
+                                  const SplitSolution& s,
+                                  ConstraintComponentData& data) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -142,9 +146,10 @@ void FrictionCone::evalConstraint(Robot& robot,
 
 
 void FrictionCone::evalDerivatives(Robot& robot, 
-                                   const ContactStatus& contact_status, 
-                                   ConstraintComponentData& data, 
-                                   const SplitSolution& s, 
+                                   const ContactStatus& contact_status,
+                                   const GridInfo& grid_info,
+                                   const SplitSolution& s,
+                                   ConstraintComponentData& data,
                                    SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -192,6 +197,7 @@ void FrictionCone::evalDerivatives(Robot& robot,
 
 
 void FrictionCone::condenseSlackAndDual(const ContactStatus& contact_status, 
+                                        const GridInfo& grid_info,
                                         ConstraintComponentData& data, 
                                         SplitKKTMatrix& kkt_matrix, 
                                         SplitKKTResidual& kkt_residual) const {
@@ -236,8 +242,9 @@ void FrictionCone::condenseSlackAndDual(const ContactStatus& contact_status,
 
 
 void FrictionCone::expandSlackAndDual(const ContactStatus& contact_status,
-                                      ConstraintComponentData& data, 
-                                      const SplitDirection& d) const {
+                                      const GridInfo& grid_info,
+                                      const SplitDirection& d,
+                                      ConstraintComponentData& data) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
   // determined by the fraction-to-boundary-rule.

@@ -81,7 +81,7 @@ TEST_P(IntermediateStageTest, evalOCP) {
 
   robot.updateKinematics(s.q, s.v, s.a);
   data_ref.performance_index.cost = cost->evalStageCost(robot, contact_status, data_ref.cost_data, grid_info, s);
-  constraints->evalConstraint(robot, contact_status, data_ref.constraints_data, s);
+  constraints->evalConstraint(robot, contact_status, grid_info, s, data_ref.constraints_data);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();
   evalStateEquation(robot, grid_info.dt, s, s_next, kkt_residual_ref);
   evalContactDynamics(robot, contact_status, s, data_ref.contact_dynamics_data);
@@ -136,7 +136,7 @@ TEST_P(IntermediateStageTest, evalKKT) {
   kkt_matrix_ref.hu   = (1.0/grid_info.dt) * kkt_residual_ref.lu;
   kkt_matrix_ref.ha   = (1.0/grid_info.dt) * kkt_residual_ref.la;
   kkt_matrix_ref.hf() = (1.0/grid_info.dt) * kkt_residual_ref.lf();
-  constraints->linearizeConstraints(robot, contact_status, data_ref.constraints_data, s, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, contact_status, grid_info, s, data_ref.constraints_data, kkt_residual_ref);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();
   linearizeStateEquation(robot, grid_info.dt, s_prev.q, s, s_next, data_ref.state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   linearizeContactDynamics(robot, contact_status, s, data_ref.contact_dynamics_data, kkt_residual_ref);
@@ -151,7 +151,7 @@ TEST_P(IntermediateStageTest, evalKKT) {
       = data_ref.dualFeasibility<1>() + kkt_residual_ref.dualFeasibility<1>();
   data_ref.performance_index.kkt_error 
       = data_ref.KKTError() + kkt_residual_ref.KKTError();
-  constraints->condenseSlackAndDual(contact_status, data_ref.constraints_data, 
+  constraints->condenseSlackAndDual(contact_status, grid_info, data_ref.constraints_data, 
                                     kkt_matrix_ref, kkt_residual_ref);
   condenseContactDynamics(robot, contact_status, grid_info.dt, 
                           data_ref.contact_dynamics_data, kkt_matrix_ref, kkt_residual_ref);
@@ -182,7 +182,7 @@ TEST_P(IntermediateStageTest, evalKKT) {
   stage.expandDual(grid_info, data, d_next, d);
   d_ref.setContactDimension(contact_status.dimf());
   expandContactDynamicsPrimal(data_ref.contact_dynamics_data, d_ref);
-  constraints->expandSlackAndDual(contact_status, data_ref.constraints_data, d_ref);
+  constraints->expandSlackAndDual(contact_status, grid_info, d_ref, data_ref.constraints_data);
   expandContactDynamicsDual(grid_info.dt, dts, data_ref.contact_dynamics_data, d_next, d_ref);
   correctCostateDirection(data_ref.state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));

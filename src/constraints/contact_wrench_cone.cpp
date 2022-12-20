@@ -81,8 +81,9 @@ void ContactWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
 
 bool ContactWrenchCone::isFeasible(Robot& robot, 
                                    const ContactStatus& contact_status,
-                                   ConstraintComponentData& data, 
-                                   const SplitSolution& s) const {
+                                   const GridInfo& grid_info,
+                                   const SplitSolution& s,
+                                   ConstraintComponentData& data) const {
   data.residual.setZero();
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -112,9 +113,10 @@ bool ContactWrenchCone::isFeasible(Robot& robot,
 
 
 void ContactWrenchCone::setSlack(Robot& robot, 
-                                 const ContactStatus& contact_status, 
-                                 ConstraintComponentData& data, 
-                                 const SplitSolution& s) const {
+                                 const ContactStatus& contact_status,
+                                 const GridInfo& grid_info,
+                                 const SplitSolution& s,
+                                 ConstraintComponentData& data) const {
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
@@ -138,9 +140,10 @@ void ContactWrenchCone::setSlack(Robot& robot,
 
 
 void ContactWrenchCone::evalConstraint(Robot& robot, 
-                                       const ContactStatus& contact_status, 
-                                       ConstraintComponentData& data, 
-                                       const SplitSolution& s) const {
+                                       const ContactStatus& contact_status,
+                                       const GridInfo& grid_info,
+                                       const SplitSolution& s,
+                                       ConstraintComponentData& data) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -168,10 +171,11 @@ void ContactWrenchCone::evalConstraint(Robot& robot,
 
 
 void ContactWrenchCone::evalDerivatives(Robot& robot, 
-                                        const ContactStatus& contact_status, 
-                                        ConstraintComponentData& data, 
-                                        const SplitSolution& s, 
-                                        SplitKKTResidual& kkt_residual) const {
+                                       const ContactStatus& contact_status,
+                                       const GridInfo& grid_info,
+                                       const SplitSolution& s,
+                                       ConstraintComponentData& data,
+                                       SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -198,6 +202,7 @@ void ContactWrenchCone::evalDerivatives(Robot& robot,
 
 
 void ContactWrenchCone::condenseSlackAndDual(const ContactStatus& contact_status, 
+                                             const GridInfo& grid_info,
                                              ConstraintComponentData& data, 
                                              SplitKKTMatrix& kkt_matrix, 
                                              SplitKKTResidual& kkt_residual) const {
@@ -233,8 +238,9 @@ void ContactWrenchCone::condenseSlackAndDual(const ContactStatus& contact_status
 
 
 void ContactWrenchCone::expandSlackAndDual(const ContactStatus& contact_status,
-                                           ConstraintComponentData& data, 
-                                           const SplitDirection& d) const {
+                                           const GridInfo& grid_info,
+                                           const SplitDirection& d,
+                                           ConstraintComponentData& data) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
   // determined by the fraction-to-boundary-rule.

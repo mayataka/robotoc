@@ -40,7 +40,7 @@ bool IntermediateStage::isFeasible(Robot& robot, const GridInfo& grid_info,
                                    const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
   const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
-  return constraints_->isFeasible(robot, contact_status, data.constraints_data, s);
+  return constraints_->isFeasible(robot, contact_status, grid_info, s, data.constraints_data);
 }
 
 
@@ -49,7 +49,7 @@ void IntermediateStage::initConstraints(Robot& robot, const GridInfo& grid_info,
   assert(grid_info.type == GridType::Intermediate || grid_info.type == GridType::Lift);
   data.constraints_data = constraints_->createConstraintsData(robot, grid_info.stage);
   const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
-  constraints_->setSlackAndDual(robot, contact_status, data.constraints_data, s);
+  constraints_->setSlackAndDual(robot, contact_status, grid_info, s, data.constraints_data);
 }
 
 
@@ -66,7 +66,7 @@ void IntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   // eval cost and constraints
   data.performance_index.cost 
       = cost_->evalStageCost(robot, contact_status, data.cost_data, grid_info, s);
-  constraints_->evalConstraint(robot, contact_status, data.constraints_data, s);
+  constraints_->evalConstraint(robot, contact_status, grid_info, s, data.constraints_data);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
   evalStateEquation(robot, grid_info.dt, s, s_next, kkt_residual);
@@ -106,8 +106,8 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   kkt_matrix.hu   = (1.0/grid_info.dt) * kkt_residual.lu;
   kkt_matrix.ha   = (1.0/grid_info.dt) * kkt_residual.la;
   kkt_matrix.hf() = (1.0/grid_info.dt) * kkt_residual.lf();
-  constraints_->linearizeConstraints(robot, contact_status, data.constraints_data, 
-                                     s, kkt_residual);
+  constraints_->linearizeConstraints(robot, contact_status, grid_info, s, 
+                                     data.constraints_data, kkt_residual);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
   linearizeStateEquation(robot, grid_info.dt, q_prev, s, s_next, 
@@ -131,7 +131,7 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
       = data.dualFeasibility<1>() + kkt_residual.dualFeasibility<1>();
   data.performance_index.kkt_error = data.KKTError() + kkt_residual.KKTError();
   // Forms linear system
-  constraints_->condenseSlackAndDual(contact_status, data.constraints_data, 
+  constraints_->condenseSlackAndDual(contact_status, grid_info,data.constraints_data, 
                                      kkt_matrix, kkt_residual);
   condenseContactDynamics(robot, contact_status, grid_info.dt, 
                           data.contact_dynamics_data, kkt_matrix, kkt_residual);
@@ -154,7 +154,7 @@ void IntermediateStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
   const auto& contact_status = contact_sequence_->contactStatus(grid_info.phase);
   d.setContactDimension(contact_status.dimf());
   expandContactDynamicsPrimal(data.contact_dynamics_data, d);
-  constraints_->expandSlackAndDual(contact_status, data.constraints_data, d);
+  constraints_->expandSlackAndDual(contact_status, grid_info, d, data.constraints_data);
 }
 
 

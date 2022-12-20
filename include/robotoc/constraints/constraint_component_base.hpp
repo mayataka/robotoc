@@ -12,6 +12,7 @@
 #include "robotoc/core/split_kkt_residual.hpp"
 #include "robotoc/core/split_kkt_matrix.hpp"
 #include "robotoc/constraints/constraint_component_data.hpp"
+#include "robotoc/ocp/grid_info.hpp"
 
 
 namespace robotoc {
@@ -85,36 +86,39 @@ public:
   /// @brief Checks whether the current solution s is feasible or not. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Constraint data.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Constraint data.
   /// @return true if s is feasible. false if not.
   ///
   virtual bool isFeasible(Robot& robot, const ContactStatus& contact_status, 
-                          ConstraintComponentData& data, 
-                          const SplitSolution& s) const = 0;
+                          const GridInfo& grid_info, const SplitSolution& s,
+                          ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Sets the slack variables of each constraint components. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[out] data Constraint data. 
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Constraint data. 
   ///
   virtual void setSlack(Robot& robot, const ContactStatus& contact_status, 
-                        ConstraintComponentData& data, 
-                        const SplitSolution& s) const = 0;
+                        const GridInfo& grid_info, const SplitSolution& s,
+                        ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Constraint data.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Constraint data.
   ///
   virtual void evalConstraint(Robot& robot, const ContactStatus& contact_status, 
-                              ConstraintComponentData& data, 
-                              const SplitSolution& s) const = 0;
+                              const GridInfo& grid_info, const SplitSolution& s,
+                              ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Computes the derivatives of the priaml residual, i.e., the 
@@ -123,13 +127,14 @@ public:
   /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Constraint data.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_residual Split KKT residual.
+  /// @param[in, out] data Constraint data.
+  /// @param[in, out] kkt_residual Split KKT residual.
   ///
   virtual void evalDerivatives(Robot& robot, const ContactStatus& contact_status, 
+                               const GridInfo& grid_info, const SplitSolution& s, 
                                ConstraintComponentData& data, 
-                               const SplitSolution& s, 
                                SplitKKTResidual& kkt_residual) const = 0;
 
   ///
@@ -137,13 +142,15 @@ public:
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Constraint data.
-  /// @param[out] kkt_matrix Split KKT matrix. The condensed Hessians are added  
-  /// to this object.
-  /// @param[out] kkt_residual Split KKT residual. The condensed residuals are 
+  /// @param[in] grid_info Grid info.
+  /// @param[in, out] data Constraint data.
+  /// @param[in, out] kkt_matrix Split KKT matrix. The condensed Hessians are 
   /// added to this object.
+  /// @param[in, out] kkt_residual Split KKT residual. The condensed residuals 
+  /// are added to this object.
   ///
   virtual void condenseSlackAndDual(const ContactStatus& contact_status,
+                                    const GridInfo& grid_info,
                                     ConstraintComponentData& data,
                                     SplitKKTMatrix& kkt_matrix,
                                     SplitKKTResidual& kkt_residual) const = 0;
@@ -152,12 +159,14 @@ public:
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
   /// @param[in] contact_status Contact status.
+  /// @param[in] grid_info Grid info.
   /// @param[in, out] data Constraint data.
   /// @param[in] d Split direction.
   ///
-  virtual void expandSlackAndDual(const ContactStatus& contact_status, 
-                                  ConstraintComponentData& data, 
-                                  const SplitDirection& d) const = 0;
+  virtual void expandSlackAndDual(const ContactStatus& contact_status,
+                                  const GridInfo& grid_info,
+                                  const SplitDirection& d,
+                                  ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Returns the size of the constraint. 

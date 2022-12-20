@@ -175,26 +175,26 @@ ConstraintsData Constraints::createConstraintsData(const Robot& robot,
 
 
 bool Constraints::isFeasible(Robot& robot, const ContactStatus& contact_status, 
-                             ConstraintsData& data, 
-                             const SplitSolution& s) const {
+                             const GridInfo& grid_info, const SplitSolution& s,
+                             ConstraintsData& data) const {
   if (data.isPositionLevelValid()) {
     if (!constraintsimpl::isFeasible(position_level_constraints_, robot, 
-                                     contact_status, 
-                                     data.position_level_data, s)) {
+                                     contact_status, grid_info, s,
+                                     data.position_level_data)) {
       return false;
     }
   }
   if (data.isVelocityLevelValid()) {
     if (!constraintsimpl::isFeasible(velocity_level_constraints_, robot, 
-                                     contact_status, 
-                                     data.velocity_level_data, s)) {
+                                     contact_status, grid_info, s,
+                                     data.velocity_level_data)) {
       return false;
     }
   }
   if (data.isAccelerationLevelValid()) {
     if (!constraintsimpl::isFeasible(acceleration_level_constraints_, robot, 
-                                     contact_status, 
-                                     data.acceleration_level_data, s)) {
+                                     contact_status, grid_info, s,
+                                     data.acceleration_level_data)) {
       return false;
     }
   }
@@ -203,12 +203,12 @@ bool Constraints::isFeasible(Robot& robot, const ContactStatus& contact_status,
 
 
 bool Constraints::isFeasible(Robot& robot, const ImpactStatus& impact_status, 
-                             ConstraintsData& data, 
-                             const SplitSolution& s) const {
+                             const GridInfo& grid_info, const SplitSolution& s,
+                             ConstraintsData& data) const {
   if (data.isImpactLevelValid()) {
     if (!constraintsimpl::isFeasible(impact_level_constraints_, robot, 
-                                     impact_status, 
-                                     data.impact_level_data, s)) {
+                                     impact_status, grid_info, s,
+                                     data.impact_level_data)) {
       return false;
     }
   }
@@ -218,126 +218,137 @@ bool Constraints::isFeasible(Robot& robot, const ImpactStatus& impact_status,
 
 void Constraints::setSlackAndDual(Robot& robot, 
                                   const ContactStatus& contact_status, 
-                                  ConstraintsData& data, 
-                                  const SplitSolution& s) const {
+                                  const GridInfo& grid_info,
+                                  const SplitSolution& s,
+                                  ConstraintsData& data) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::setSlackAndDual(position_level_constraints_, robot, 
-                                     contact_status, 
-                                     data.position_level_data, s);
+                                     contact_status, grid_info, s,
+                                     data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::setSlackAndDual(velocity_level_constraints_, robot, 
-                                     contact_status, 
-                                     data.velocity_level_data, s);
+                                     contact_status, grid_info, s,
+                                     data.velocity_level_data);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::setSlackAndDual(acceleration_level_constraints_, robot,
-                                     contact_status, 
-                                     data.acceleration_level_data, s);
+                                     contact_status, grid_info, s,
+                                     data.acceleration_level_data);
   }
 }
 
 
 void Constraints::setSlackAndDual(Robot& robot, 
                                   const ImpactStatus& impact_status,
-                                  ConstraintsData& data, 
-                                  const SplitSolution& s) const {
+                                  const GridInfo& grid_info,
+                                  const SplitSolution& s,
+                                  ConstraintsData& data) const {
   if (data.isImpactLevelValid()) {
     constraintsimpl::setSlackAndDual(impact_level_constraints_, robot,
-                                     impact_status, 
-                                     data.impact_level_data, s);
+                                     impact_status, grid_info, s,
+                                     data.impact_level_data);
   }
 }
 
 
 void Constraints::evalConstraint(Robot& robot, 
                                  const ContactStatus& contact_status, 
-                                 ConstraintsData& data, 
-                                 const SplitSolution& s) const {
+                                 const GridInfo& grid_info,
+                                 const SplitSolution& s,
+                                 ConstraintsData& data) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::evalConstraint(position_level_constraints_, robot, 
-                                    contact_status, data.position_level_data, s);
+                                    contact_status, grid_info, s,
+                                    data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::evalConstraint(velocity_level_constraints_, robot, 
-                                    contact_status, data.velocity_level_data, s);
+                                    contact_status, grid_info, s,
+                                    data.velocity_level_data);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::evalConstraint(acceleration_level_constraints_, robot, 
-                                    contact_status, data.acceleration_level_data, s);
+                                    contact_status, grid_info, s,
+                                    data.acceleration_level_data);
   }
 }
 
 
 void Constraints::evalConstraint(Robot& robot, 
                                  const ImpactStatus& impact_status, 
-                                 ConstraintsData& data, 
-                                 const SplitSolution& s) const {
+                                 const GridInfo& grid_info,
+                                 const SplitSolution& s,
+                                 ConstraintsData& data) const {
   if (data.isImpactLevelValid()) {
     constraintsimpl::evalConstraint(impact_level_constraints_, robot, 
-                                    impact_status, data.impact_level_data, s);
+                                    impact_status, grid_info, s, 
+                                    data.impact_level_data);
   }
 }
 
 
 void Constraints::linearizeConstraints(Robot& robot, 
                                        const ContactStatus& contact_status, 
-                                       ConstraintsData& data, 
+                                       const GridInfo& grid_info,
                                        const SplitSolution& s, 
+                                       ConstraintsData& data, 
                                        SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::linearizeConstraints(position_level_constraints_, robot, 
-                                          contact_status, 
-                                          data.position_level_data, s, 
+                                          contact_status, grid_info, s,
+                                          data.position_level_data, 
                                           kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::linearizeConstraints(velocity_level_constraints_, robot, 
-                                          contact_status, 
-                                          data.velocity_level_data, s, 
+                                          contact_status, grid_info, s,
+                                          data.velocity_level_data,
                                           kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::linearizeConstraints(acceleration_level_constraints_, robot, 
-                                          contact_status, 
+                                          contact_status, grid_info, s,
                                           data.acceleration_level_data, 
-                                          s, kkt_residual);
+                                          kkt_residual);
   }
 }
 
 
 void Constraints::linearizeConstraints(Robot& robot, 
                                        const ImpactStatus& impact_status, 
-                                       ConstraintsData& data, 
+                                       const GridInfo& grid_info,
                                        const SplitSolution& s, 
+                                       ConstraintsData& data, 
                                        SplitKKTResidual& kkt_residual) const {
   if (data.isImpactLevelValid()) {
     constraintsimpl::linearizeConstraints(impact_level_constraints_, robot, 
-                                          impact_status, 
-                                          data.impact_level_data, s, kkt_residual);
+                                          impact_status, grid_info, s,
+                                          data.impact_level_data, kkt_residual);
   }
 }
 
 
 void Constraints::condenseSlackAndDual(const ContactStatus& contact_status, 
+                                       const GridInfo& grid_info,
                                        ConstraintsData& data, 
                                        SplitKKTMatrix& kkt_matrix, 
                                        SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::condenseSlackAndDual(position_level_constraints_, 
-                                          contact_status, 
+                                          contact_status, grid_info,
                                           data.position_level_data, 
                                           kkt_matrix, kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::condenseSlackAndDual(velocity_level_constraints_, 
-                                          contact_status, 
+                                          contact_status, grid_info,
                                           data.velocity_level_data, 
                                           kkt_matrix, kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::condenseSlackAndDual(acceleration_level_constraints_, 
-                                          contact_status, 
+                                          contact_status, grid_info,
                                           data.acceleration_level_data, 
                                           kkt_matrix, kkt_residual);
   }
@@ -345,12 +356,13 @@ void Constraints::condenseSlackAndDual(const ContactStatus& contact_status,
 
 
 void Constraints::condenseSlackAndDual(const ImpactStatus& impact_status, 
+                                       const GridInfo& grid_info,
                                        ConstraintsData& data, 
                                        SplitKKTMatrix& kkt_matrix, 
                                        SplitKKTResidual& kkt_residual) const {
   if (data.isImpactLevelValid()) {
     constraintsimpl::condenseSlackAndDual(impact_level_constraints_, 
-                                          impact_status, 
+                                          impact_status, grid_info,
                                           data.impact_level_data, 
                                           kkt_matrix, kkt_residual);
   }
@@ -358,33 +370,35 @@ void Constraints::condenseSlackAndDual(const ImpactStatus& impact_status,
 
 
 void Constraints::expandSlackAndDual(const ContactStatus& contact_status,
-                                     ConstraintsData& data, 
-                                     const SplitDirection& d) const {
+                                     const GridInfo& grid_info,
+                                     const SplitDirection& d,
+                                     ConstraintsData& data) const {
   if (data.isPositionLevelValid()) {
     constraintsimpl::expandSlackAndDual(position_level_constraints_, 
-                                        contact_status,
-                                        data.position_level_data, d);
+                                        contact_status, grid_info, d,
+                                        data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::expandSlackAndDual(velocity_level_constraints_, 
-                                        contact_status,
-                                        data.velocity_level_data, d);
+                                        contact_status, grid_info, d,
+                                        data.velocity_level_data);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::expandSlackAndDual(acceleration_level_constraints_, 
-                                        contact_status,
-                                        data.acceleration_level_data, d);
+                                        contact_status, grid_info, d,
+                                        data.acceleration_level_data);
   }
 }
 
 
 void Constraints::expandSlackAndDual(const ImpactStatus& impact_status, 
-                                     ConstraintsData& data, 
-                                     const SplitDirection& d) const {
+                                     const GridInfo& grid_info,
+                                     const SplitDirection& d,
+                                     ConstraintsData& data) const {
   if (data.isImpactLevelValid()) {
     constraintsimpl::expandSlackAndDual(impact_level_constraints_, 
-                                        impact_status, 
-                                        data.impact_level_data, d);
+                                        impact_status, grid_info, d,
+                                        data.impact_level_data);
   }
 }
 

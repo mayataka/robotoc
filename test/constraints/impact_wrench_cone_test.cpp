@@ -46,6 +46,9 @@ protected:
               Y, -X, -(X+Y)*mu,  mu, -mu,  1,
               -Y,  X, -(X+Y)*mu, -mu,  mu,  1,
               -Y, -X, -(X+Y)*mu, -mu, -mu,  1;
+    grid_info = GridInfo::Random();
+    grid_info.type = GridType::Impact;
+    grid_info.dt = 0.0;
   }
 
   virtual void TearDown() {
@@ -61,6 +64,7 @@ protected:
 
   double barrier_param, dt, mu, X, Y, fraction_to_boundary_rule;
   Eigen::MatrixXd cone;
+  GridInfo grid_info;
 };
 
 
@@ -88,7 +92,7 @@ void ImpactWrenchConeTest::test_isFeasible(Robot& robot, const ImpactStatus& imp
         break;
     }
   }
-  EXPECT_EQ(constr.isFeasible(robot, impact_status, data, s), feasible);
+  EXPECT_EQ(constr.isFeasible(robot, impact_status, grid_info, s, data), feasible);
 }
 
 
@@ -100,7 +104,7 @@ void ImpactWrenchConeTest::test_setSlack(Robot& robot, const ImpactStatus& impac
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, impact_status);
   robot.updateFrameKinematics(s.q);
-  constr.setSlack(robot, impact_status, data, s);
+  constr.setSlack(robot, impact_status, grid_info, s, data);
   int c_begin = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     switch (robot.contactType(i)) {
@@ -135,7 +139,7 @@ void ImpactWrenchConeTest::test_evalConstraint(Robot& robot, const ImpactStatus&
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
-  constr.evalConstraint(robot, impact_status, data, s);
+  constr.evalConstraint(robot, impact_status, grid_info, s, data);
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
@@ -168,16 +172,16 @@ void ImpactWrenchConeTest::test_evalDerivatives(Robot& robot, const ImpactStatus
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, impact_status);
   robot.updateKinematics(s.q);
-  constr.setSlack(robot, impact_status, data, s);
+  constr.setSlack(robot, impact_status, grid_info, s, data);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
-  constr.evalConstraint(robot, impact_status, data, s);
+  constr.evalConstraint(robot, impact_status, grid_info, s, data);
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot, impact_status);
   auto kkt_res_ref = kkt_res;
-  constr.evalDerivatives(robot, impact_status, data, s, kkt_res);
+  constr.evalDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
   int dimf_stack = 0;
   int c_begin = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
@@ -210,7 +214,7 @@ void ImpactWrenchConeTest::test_condenseSlackAndDual(Robot& robot, const ImpactS
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, impact_status);
   robot.updateKinematics(s.q);
-  constr.setSlack(robot, impact_status, data, s);
+  constr.setSlack(robot, impact_status, grid_info, s, data);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -222,12 +226,12 @@ void ImpactWrenchConeTest::test_condenseSlackAndDual(Robot& robot, const ImpactS
   kkt_mat.setContactDimension(impact_status.dimf());
   kkt_mat.setRandom();
   auto kkt_res = SplitKKTResidual::Random(robot, impact_status);
-  constr.evalConstraint(robot, impact_status, data, s);
-  constr.evalDerivatives(robot, impact_status, data, s, kkt_res);
+  constr.evalConstraint(robot, impact_status, grid_info, s, data);
+  constr.evalDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(impact_status, data, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(impact_status, grid_info, data, kkt_mat, kkt_res);
   int dimf_stack = 0;
   int c_begin = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
@@ -265,7 +269,7 @@ void ImpactWrenchConeTest::test_expandSlackAndDual(Robot& robot, const ImpactSta
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, impact_status);
-  constr.setSlack(robot, impact_status, data, s);
+  constr.setSlack(robot, impact_status, grid_info, s, data);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -279,12 +283,12 @@ void ImpactWrenchConeTest::test_expandSlackAndDual(Robot& robot, const ImpactSta
   kkt_mat.setContactDimension(impact_status.dimf());
   kkt_mat.setRandom();
   auto kkt_res = SplitKKTResidual::Random(robot, impact_status);
-  constr.evalConstraint(robot, impact_status, data, s);
-  constr.evalDerivatives(robot, impact_status, data, s, kkt_res);
-  constr.condenseSlackAndDual(impact_status, data, kkt_mat, kkt_res);
+  constr.evalConstraint(robot, impact_status, grid_info, s, data);
+  constr.evalDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
+  constr.condenseSlackAndDual(impact_status, grid_info, data, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot, impact_status);
-  constr.expandSlackAndDual(impact_status, data, d);
+  constr.expandSlackAndDual(impact_status, grid_info, d, data);
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
   int dimf_stack = 0;

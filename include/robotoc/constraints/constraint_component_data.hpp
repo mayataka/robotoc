@@ -55,6 +55,11 @@ public:
   ConstraintComponentData& operator=(ConstraintComponentData&&) noexcept = default;
 
   ///
+  /// @brief Flag if this constraint is active or not.
+  ///
+  bool is_active;
+
+  ///
   /// @brief Slack variable of the constraint. Size is 
   /// ConstraintComponentData::dimc(). All elements must be positive.
   ///

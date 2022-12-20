@@ -33,6 +33,7 @@ protected:
     srand((unsigned int) time(0));
     barrier_param = 1.0e-03;
     mu = 0.7;
+    grid_info = GridInfo::Random();
   }
 
   virtual void TearDown() {
@@ -47,6 +48,7 @@ protected:
   void timeStage2(Robot& robot, const ContactStatus& contact_status) const;
 
   double barrier_param, mu;
+  GridInfo grid_info;
 };
 
 
@@ -93,8 +95,8 @@ void ConstraintsTest::timeStage0(Robot& robot,
   SplitKKTResidual kkt_residual(robot);
   kkt_matrix.setContactDimension(contact_status.dimf());
   kkt_residual.setContactDimension(contact_status.dimf());
-  constraints->setSlackAndDual(robot, contact_status, data, s);
-  constraints->linearizeConstraints(robot, contact_status, data, s, kkt_residual);
+  constraints->setSlackAndDual(robot, contact_status, grid_info, s, data);
+  constraints->linearizeConstraints(robot, contact_status, grid_info, s, data, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -102,7 +104,7 @@ void ConstraintsTest::timeStage0(Robot& robot,
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(contact_status, data, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(contact_status, grid_info, data, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa.isZero());
@@ -138,8 +140,8 @@ void ConstraintsTest::timeStage1(Robot& robot,
   SplitKKTResidual kkt_residual(robot);
   kkt_matrix.setContactDimension(contact_status.dimf());
   kkt_residual.setContactDimension(contact_status.dimf());
-  constraints->setSlackAndDual(robot, contact_status, data, s);
-  constraints->linearizeConstraints(robot, contact_status, data, s, kkt_residual);
+  constraints->setSlackAndDual(robot, contact_status, grid_info, s, data);
+  constraints->linearizeConstraints(robot, contact_status, grid_info, s, data, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -147,7 +149,7 @@ void ConstraintsTest::timeStage1(Robot& robot,
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(contact_status, data, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(contact_status, grid_info, data, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa.isZero());
@@ -183,8 +185,8 @@ void ConstraintsTest::timeStage2(Robot& robot,
   SplitKKTResidual kkt_residual(robot);
   kkt_matrix.setContactDimension(contact_status.dimf());
   kkt_residual.setContactDimension(contact_status.dimf());
-  constraints->setSlackAndDual(robot, contact_status, data, s);
-  constraints->linearizeConstraints(robot, contact_status, data, s, kkt_residual);
+  constraints->setSlackAndDual(robot, contact_status, grid_info, s, data);
+  constraints->linearizeConstraints(robot, contact_status, grid_info, s, data, kkt_residual);
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -192,7 +194,7 @@ void ConstraintsTest::timeStage2(Robot& robot,
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(contact_status, data, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(contact_status, grid_info, data, kkt_matrix, kkt_residual);
   EXPECT_FALSE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa.isZero());

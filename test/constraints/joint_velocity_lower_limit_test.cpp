@@ -21,6 +21,7 @@ protected:
     srand((unsigned int) time(0));
     barrier_param = 1.0e-03;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    grid_info = GridInfo::Random();
   }
 
   virtual void TearDown() {
@@ -35,6 +36,7 @@ protected:
   void test_expandSlackAndDual(Robot& robot) const;
 
   double barrier_param, dt;
+  GridInfo grid_info;
 };
 
 
@@ -50,9 +52,9 @@ void JointVelocityLowerLimitTest::test_isFeasible(Robot& robot) const {
   EXPECT_EQ(constr.dimc(), robot.dimv()-robot.dim_passive());
   const auto contact_status = robot.createContactStatus();
   SplitSolution s(robot);
-  EXPECT_TRUE(constr.isFeasible(robot, contact_status, data, s));
+  EXPECT_TRUE(constr.isFeasible(robot, contact_status, grid_info, s, data));
   s.v = -2*robot.jointVelocityLimit();
-  EXPECT_FALSE(constr.isFeasible(robot, contact_status, data, s));
+  EXPECT_FALSE(constr.isFeasible(robot, contact_status, grid_info, s, data));
 }
 
 
@@ -63,7 +65,7 @@ void JointVelocityLowerLimitTest::test_setSlack(Robot& robot) const {
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd vmin = - robot.jointVelocityLimit();
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   data_ref.slack = -vmin + s.v.tail(dimc);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
@@ -81,7 +83,7 @@ void JointVelocityLowerLimitTest::test_evalConstraint(Robot& robot) const {
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
   auto data_ref = data;
-  constr.evalConstraint(robot, contact_status, data, s);
+  constr.evalConstraint(robot, contact_status, grid_info, s, data);
   data_ref.residual = - s.v.tail(dimc) + vmin + data_ref.slack;
   pdipm::computeComplementarySlackness(barrier_param, data_ref);
   data_ref.log_barrier = pdipm::logBarrier(barrier_param, data_ref.slack);
@@ -95,11 +97,11 @@ void JointVelocityLowerLimitTest::test_evalDerivatives(Robot& robot) const {
   const int dimc = constr.dimc();
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_res_ref = kkt_res;
-  constr.evalDerivatives(robot, contact_status, data, s, kkt_res);
+  constr.evalDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   kkt_res_ref.lv().tail(dimc) -= data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
@@ -112,13 +114,13 @@ void JointVelocityLowerLimitTest::test_condenseSlackAndDual(Robot& robot) const 
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd vmin = - robot.jointVelocityLimit();
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   auto data_ref = data;
   auto kkt_mat = SplitKKTMatrix::Random(robot);
   auto kkt_res = SplitKKTResidual::Random(robot);
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(contact_status, data, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(contact_status, grid_info, data, kkt_mat, kkt_res);
   kkt_res_ref.lv().tail(dimc).array() 
       -= (data_ref.dual.array()*data_ref.residual.array()-data_ref.cmpl.array()) 
                / data_ref.slack.array();
@@ -136,12 +138,12 @@ void JointVelocityLowerLimitTest::test_expandSlackAndDual(Robot& robot) const {
   const auto contact_status = robot.createContactStatus();
   const auto s = SplitSolution::Random(robot);
   const Eigen::VectorXd vmin = - robot.jointVelocityLimit();
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot);
-  constr.expandSlackAndDual(contact_status, data, d);
+  constr.expandSlackAndDual(contact_status, grid_info, d, data);
   data_ref.dslack = d.dv().tail(dimc) - data_ref.residual;
   pdipm::computeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));

@@ -70,7 +70,7 @@ TEST_P(ImpactStageTest, evalOCP) {
   const Eigen::VectorXd v_after_impact = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impact);
   data_ref.performance_index.cost = cost->evalImpactCost(robot, impact_status, data_ref.cost_data, grid_info, s);
-  constraints->evalConstraint(robot, impact_status, data_ref.constraints_data, s);
+  constraints->evalConstraint(robot, impact_status, grid_info, s, data_ref.constraints_data);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();
   evalImpactStateEquation(robot, s, s_next, kkt_residual_ref);
   evalImpactDynamics(robot, impact_status, s, data_ref.contact_dynamics_data);
@@ -109,7 +109,7 @@ TEST_P(ImpactStageTest, evalKKT) {
   robot.updateKinematics(s.q, v_after_impact);
   data_ref.performance_index.cost = cost->quadratizeImpactCost(robot, impact_status, data_ref.cost_data, grid_info, s, 
                                                                 kkt_residual_ref, kkt_matrix_ref);
-  constraints->linearizeConstraints(robot, impact_status, data_ref.constraints_data, s, kkt_residual_ref);
+  constraints->linearizeConstraints(robot, impact_status, grid_info, s, data_ref.constraints_data, kkt_residual_ref);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();
   linearizeImpactStateEquation(robot, s_prev.q, s, s_next, data_ref.state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   linearizeImpactDynamics(robot, impact_status, s, data_ref.contact_dynamics_data, kkt_residual_ref);
@@ -118,7 +118,7 @@ TEST_P(ImpactStageTest, evalKKT) {
   data_ref.performance_index.dual_feasibility 
       = data_ref.dualFeasibility<1>() + kkt_residual_ref.dualFeasibility<1>();
   data_ref.performance_index.kkt_error = data_ref.KKTError() + kkt_residual_ref.KKTError();
-  constraints->condenseSlackAndDual(impact_status, data_ref.constraints_data, 
+  constraints->condenseSlackAndDual(impact_status, grid_info, data_ref.constraints_data, 
                                     kkt_matrix_ref, kkt_residual_ref);
   condenseImpactDynamics(robot, impact_status, data_ref.contact_dynamics_data, 
                           kkt_matrix_ref, kkt_residual_ref);
@@ -136,7 +136,7 @@ TEST_P(ImpactStageTest, evalKKT) {
   stage.expandDual(grid_info, data, d_next, d);
   d_ref.setContactDimension(impact_status.dimf());
   expandImpactDynamicsPrimal(data_ref.contact_dynamics_data, d_ref);
-  constraints->expandSlackAndDual(impact_status, data_ref.constraints_data, d_ref);
+  constraints->expandSlackAndDual(impact_status, grid_info, d_ref, data_ref.constraints_data);
   expandImpactDynamicsDual(data_ref.contact_dynamics_data, d_next, d_ref);
   correctCostateDirection(data_ref.state_equation_data, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));

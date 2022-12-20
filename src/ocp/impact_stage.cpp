@@ -39,7 +39,7 @@ bool ImpactStage::isFeasible(Robot& robot, const GridInfo& grid_info,
                              const SplitSolution& s, OCPData& data) const {
   assert(grid_info.type == GridType::Impact);
   const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
-  return constraints_->isFeasible(robot, impact_status, data.constraints_data, s);
+  return constraints_->isFeasible(robot, impact_status, grid_info, s, data.constraints_data);
 }
 
 
@@ -48,7 +48,7 @@ void ImpactStage::initConstraints(Robot& robot, const GridInfo& grid_info,
   assert(grid_info.type == GridType::Impact);
   data.constraints_data = constraints_->createConstraintsData(robot, -1);
   const auto& impact_status = contact_sequence_->impactStatus(grid_info.impact_index);
-  constraints_->setSlackAndDual(robot, impact_status, data.constraints_data, s);
+  constraints_->setSlackAndDual(robot, impact_status, grid_info, s, data.constraints_data);
 }
 
 
@@ -66,7 +66,7 @@ void ImpactStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   // eval cost and constraints
   data.performance_index.cost 
       = cost_->evalImpactCost(robot, impact_status, data.cost_data, grid_info, s);
-  constraints_->evalConstraint(robot, impact_status, data.constraints_data, s);
+  constraints_->evalConstraint(robot, impact_status, grid_info, s, data.constraints_data);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
   evalImpactStateEquation(robot, s, s_next, kkt_residual);
@@ -98,8 +98,8 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   data.performance_index.cost 
       = cost_->quadratizeImpactCost(robot, impact_status, data.cost_data,  
                                      grid_info, s, kkt_residual, kkt_matrix);
-  constraints_->linearizeConstraints(robot, impact_status, data.constraints_data, 
-                                     s, kkt_residual);
+  constraints_->linearizeConstraints(robot, impact_status, grid_info,
+                                     s, data.constraints_data, kkt_residual);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
   linearizeImpactStateEquation(robot, q_prev, s, s_next, data.state_equation_data, 
@@ -113,8 +113,9 @@ void ImpactStage::evalKKT(Robot& robot, const GridInfo& grid_info,
       = data.dualFeasibility<1>() + kkt_residual.dualFeasibility<1>();
   data.performance_index.kkt_error = data.KKTError() + kkt_residual.KKTError();
   // Forms linear system
-  constraints_->condenseSlackAndDual(impact_status, data.constraints_data, 
-                                     kkt_matrix, kkt_residual);
+  constraints_->condenseSlackAndDual(impact_status, grid_info, 
+                                     data.constraints_data, kkt_matrix,
+                                     kkt_residual);
   condenseImpactDynamics(robot, impact_status, data.contact_dynamics_data, 
                           kkt_matrix, kkt_residual);
   correctLinearizeImpactStateEquation(robot, s, s_next, data.state_equation_data, 
@@ -129,7 +130,7 @@ void ImpactStage::expandPrimal(const GridInfo& grid_info, OCPData& data,
   d.setContactDimension(impact_status.dimf());
   d.setSwitchingConstraintDimension(0);
   expandImpactDynamicsPrimal(data.contact_dynamics_data, d);
-  constraints_->expandSlackAndDual(impact_status, data.constraints_data, d);
+  constraints_->expandSlackAndDual(impact_status, grid_info, d, data.constraints_data);
 }
 
 

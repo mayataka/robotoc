@@ -79,9 +79,10 @@ void ImpactWrenchCone::allocateExtraData(ConstraintComponentData& data) const {
 
 
 bool ImpactWrenchCone::isFeasible(Robot& robot, 
-                                   const ImpactStatus& impact_status,
-                                   ConstraintComponentData& data, 
-                                   const SplitSolution& s) const {
+                                  const ImpactStatus& impact_status,
+                                  const GridInfo& grid_info,
+                                  const SplitSolution& s,
+                                  ConstraintComponentData& data) const {
   data.residual.setZero();
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -111,9 +112,10 @@ bool ImpactWrenchCone::isFeasible(Robot& robot,
 
 
 void ImpactWrenchCone::setSlack(Robot& robot, 
-                                 const ImpactStatus& impact_status,
-                                 ConstraintComponentData& data, 
-                                 const SplitSolution& s) const {
+                                const ImpactStatus& impact_status,
+                                const GridInfo& grid_info,
+                                const SplitSolution& s,
+                                ConstraintComponentData& data) const {
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     switch (contact_types_[i]) {
@@ -137,9 +139,10 @@ void ImpactWrenchCone::setSlack(Robot& robot,
 
 
 void ImpactWrenchCone::evalConstraint(Robot& robot, 
-                                       const ImpactStatus& impact_status,
-                                       ConstraintComponentData& data, 
-                                       const SplitSolution& s) const {
+                                      const ImpactStatus& impact_status,
+                                      const GridInfo& grid_info,
+                                      const SplitSolution& s,
+                                      ConstraintComponentData& data) const {
   data.residual.setZero();
   data.cmpl.setZero();
   data.log_barrier = 0;
@@ -167,10 +170,11 @@ void ImpactWrenchCone::evalConstraint(Robot& robot,
 
 
 void ImpactWrenchCone::evalDerivatives(Robot& robot, 
-                                        const ImpactStatus& impact_status, 
-                                        ConstraintComponentData& data, 
-                                        const SplitSolution& s, 
-                                        SplitKKTResidual& kkt_residual) const {
+                                       const ImpactStatus& impact_status,
+                                       const GridInfo& grid_info,
+                                       const SplitSolution& s,
+                                       ConstraintComponentData& data,
+                                       SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   int c_begin = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -197,9 +201,10 @@ void ImpactWrenchCone::evalDerivatives(Robot& robot,
 
 
 void ImpactWrenchCone::condenseSlackAndDual(const ImpactStatus& impact_status, 
-                                             ConstraintComponentData& data, 
-                                             SplitKKTMatrix& kkt_matrix, 
-                                             SplitKKTResidual& kkt_residual) const {
+                                            const GridInfo& grid_info,
+                                            ConstraintComponentData& data, 
+                                            SplitKKTMatrix& kkt_matrix, 
+                                            SplitKKTResidual& kkt_residual) const {
   data.cond.setZero();
   int dimf_stack = 0;
   int c_begin = 0;
@@ -232,8 +237,9 @@ void ImpactWrenchCone::condenseSlackAndDual(const ImpactStatus& impact_status,
 
 
 void ImpactWrenchCone::expandSlackAndDual(const ImpactStatus& impact_status, 
-                                           ConstraintComponentData& data, 
-                                           const SplitDirection& d) const {
+                                          const GridInfo& grid_info,
+                                          const SplitDirection& d,
+                                          ConstraintComponentData& data) const { 
   // Because data.slack(i) and data.dual(i) are always positive,  
   // positive data.dslack and data.ddual do not affect the step size 
   // determined by the fraction-to-boundary-rule.

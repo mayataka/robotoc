@@ -79,36 +79,39 @@ public:
   /// @brief Checks whether the current solution s is feasible or not. 
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Constraint data.
+  /// @param[in] grid_info Grid info.
   /// @param[in] s Impact split solution.
+  /// @param[in, out] data Constraint data.
   /// @return true if s is feasible. false if not.
   ///
   virtual bool isFeasible(Robot& robot, const ImpactStatus& impact_status, 
-                          ConstraintComponentData& data, 
-                          const SplitSolution& s) const = 0;
+                          const GridInfo& grid_info, const SplitSolution& s,
+                          ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Sets the slack variables of each constraint components. 
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[out] data Constraint data. 
-  /// @param[in] s Impact split solution.
+  /// @param[in] grid_info Grid info.
+  /// @param[in] s Split solution.
+  /// @param[in, out] data Constraint data.
   ///
   virtual void setSlack(Robot& robot, const ImpactStatus& impact_status, 
-                        ConstraintComponentData& data, 
-                        const SplitSolution& s) const = 0;
+                        const GridInfo& grid_info, const SplitSolution& s,
+                        ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Computes the primal residual, residual in the complementary 
   /// slackness, and the log-barrier function of the slack varible.
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Constraints data.
-  /// @param[in] s Impact split solution.
+  /// @param[in] grid_info Grid info.
+  /// @param[in] s Split solution.
+  /// @param[in, out] data Constraint data.
   ///
   virtual void evalConstraint(Robot& robot, const ImpactStatus& impact_status, 
-                              ConstraintComponentData& data, 
-                              const SplitSolution& s) const = 0;
+                              const GridInfo& grid_info, const SplitSolution& s,
+                              ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Computes the derivatives of the priaml residual, i.e., the 
@@ -117,13 +120,14 @@ public:
   /// always called just after evalConstraint().
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Constraint data.
-  /// @param[in] s Impact split solution.
-  /// @param[out] kkt_residual Impact split KKT residual.
+  /// @param[in] grid_info Grid info.
+  /// @param[in] s Split solution.
+  /// @param[in, out] data Constraint data.
+  /// @param[in, out] kkt_residual Split KKT residual.
   ///
   virtual void evalDerivatives(Robot& robot, const ImpactStatus& impact_status, 
+                               const GridInfo& grid_info, const SplitSolution& s,
                                ConstraintComponentData& data, 
-                               const SplitSolution& s,
                                SplitKKTResidual& kkt_residual) const = 0;
 
   ///
@@ -131,27 +135,31 @@ public:
   /// condensed Hessians and KKT residuals. This function is always called 
   /// just after evalDerivatives().
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Constraints data.
-  /// @param[out] kkt_matrix Impact split KKT matrix. The condensed Hessians   
-  /// are added to this data.
-  /// @param[out] kkt_residual Impact split KKT residual. The condensed KKT
-  /// residual are added to this data.
+  /// @param[in] grid_info Grid info.
+  /// @param[in, out] data Constraint data.
+  /// @param[in, out] kkt_matrix Split KKT matrix. The condensed Hessians are 
+  /// added to this object.
+  /// @param[in, out] kkt_residual Split KKT residual. The condensed residuals 
+  /// are added to this object.
   ///
-  virtual void condenseSlackAndDual(
-      const ImpactStatus& impact_status, ConstraintComponentData& data, 
-      SplitKKTMatrix& kkt_matrix, 
-      SplitKKTResidual& kkt_residual) const = 0;
+  virtual void condenseSlackAndDual(const ImpactStatus& impact_status,
+                                    const GridInfo& grid_info,
+                                    ConstraintComponentData& data,
+                                    SplitKKTMatrix& kkt_matrix,
+                                    SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Expands the slack and dual, i.e., computes the directions of the 
   /// slack and dual variables from the directions of the primal variables.
   /// @param[in] impact_status Impact status.
-  /// @param[in, out] data Constraints data.
-  /// @param[in] d Impact split direction.
+  /// @param[in] grid_info Grid info.
+  /// @param[in, out] data Constraint data.
+  /// @param[in] d Split direction.
   ///
-  virtual void expandSlackAndDual(const ImpactStatus& impact_status, 
-                                  ConstraintComponentData& data, 
-                                  const SplitDirection& d) const = 0;
+  virtual void expandSlackAndDual(const ImpactStatus& impact_status,
+                                  const GridInfo& grid_info,
+                                  const SplitDirection& d,
+                                  ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Returns the size of the constraint. 

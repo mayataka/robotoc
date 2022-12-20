@@ -34,6 +34,7 @@ protected:
              0, -1, -(mu/std::sqrt(2));
     contact_surface = Eigen::Quaterniond::UnitRandom().toRotationMatrix();
     cone_surface_local = cone * contact_surface.transpose();
+    grid_info = GridInfo::Random();
   }
 
   virtual void TearDown() {
@@ -51,6 +52,7 @@ protected:
   double barrier_param, dt, mu, fraction_to_boundary_rule;
   Eigen::MatrixXd cone, cone_surface_local;
   Eigen::Matrix3d contact_surface;
+  GridInfo grid_info;
 };
 
 
@@ -82,7 +84,7 @@ void FrictionConeTest::test_isFeasible(Robot& robot,
         }
       }
     }
-    EXPECT_EQ(constr.isFeasible(robot, contact_status, data, s), feasible);
+    EXPECT_EQ(constr.isFeasible(robot, contact_status, grid_info, s, data), feasible);
   }
 }
 
@@ -95,7 +97,7 @@ void FrictionConeTest::test_setSlack(Robot& robot, const ContactStatus& contact_
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
   robot.updateFrameKinematics(s.q);
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
     robot.transformFromLocalToWorld(robot.contactFrames()[i], s.f[i].template head<3>(), f_world);
@@ -120,7 +122,7 @@ void FrictionConeTest::test_evalConstraint(Robot& robot, const ContactStatus& co
   data.residual.setRandom();
   data.cmpl.setRandom();
   auto data_ref = data;
-  constr.evalConstraint(robot, contact_status, data, s);
+  constr.evalConstraint(robot, contact_status, grid_info, s, data);
   data_ref.residual.setZero();
   data_ref.cmpl.setZero();
   data_ref.log_barrier = 0;
@@ -148,16 +150,16 @@ void FrictionConeTest::test_evalDerivatives(Robot& robot, const ContactStatus& c
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
   robot.updateKinematics(s.q);
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
   data.dual = data.dual.array().abs();
-  constr.evalConstraint(robot, contact_status, data, s);
+  constr.evalConstraint(robot, contact_status, grid_info, s, data);
   auto data_ref = data;
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
   auto kkt_res_ref = kkt_res;
-  constr.evalDerivatives(robot, contact_status, data, s, kkt_res);
+  constr.evalDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -199,7 +201,7 @@ void FrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
   robot.updateKinematics(s.q);
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -208,12 +210,12 @@ void FrictionConeTest::test_condenseSlackAndDual(Robot& robot,
   data.cmpl.setRandom();
   auto kkt_mat = SplitKKTMatrix::Random(robot, contact_status);
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
-  constr.evalConstraint(robot, contact_status, data, s);
-  constr.evalDerivatives(robot, contact_status, data, s, kkt_res);
+  constr.evalConstraint(robot, contact_status, grid_info, s, data);
+  constr.evalDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   auto data_ref = data;
   auto kkt_mat_ref = kkt_mat;
   auto kkt_res_ref = kkt_res;
-  constr.condenseSlackAndDual(contact_status, data, kkt_mat, kkt_res);
+  constr.condenseSlackAndDual(contact_status, grid_info, data, kkt_mat, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -263,7 +265,7 @@ void FrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus
   constr.allocateExtraData(data);
   const int dimc = constr.dimc();
   const auto s = SplitSolution::Random(robot, contact_status);
-  constr.setSlack(robot, contact_status, data, s);
+  constr.setSlack(robot, contact_status, grid_info, s, data);
   data.slack.setRandom();
   data.dual.setRandom();
   data.slack = data.slack.array().abs();
@@ -274,12 +276,12 @@ void FrictionConeTest::test_expandSlackAndDual(Robot& robot, const ContactStatus
   data.ddual.setRandom();
   auto kkt_mat = SplitKKTMatrix::Random(robot, contact_status);
   auto kkt_res = SplitKKTResidual::Random(robot, contact_status);
-  constr.evalConstraint(robot, contact_status, data, s);
-  constr.evalDerivatives(robot, contact_status, data, s, kkt_res);
-  constr.condenseSlackAndDual(contact_status, data, kkt_mat, kkt_res);
+  constr.evalConstraint(robot, contact_status, grid_info, s, data);
+  constr.evalDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
+  constr.condenseSlackAndDual(contact_status, grid_info, data, kkt_mat, kkt_res);
   auto data_ref = data;
   const auto d = SplitDirection::Random(robot, contact_status);
-  constr.expandSlackAndDual(contact_status, data, d);
+  constr.expandSlackAndDual(contact_status, grid_info, d, data);
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
   int dimf_stack = 0;

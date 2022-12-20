@@ -31,14 +31,15 @@ inline void createConstraintsData(
 
 template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline bool isFeasible(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-    Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    Robot& robot, const ContactStatusType& contact_status,
+    const GridInfo& grid_info, const SplitSolution& s,
+    std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    bool feasible = constraints[i]->isFeasible(robot, contact_status, data[i], s);
+    bool feasible = constraints[i]->isFeasible(robot, contact_status, grid_info, s, data[i]);
     if (!feasible) {
       return false;
     }
@@ -49,14 +50,15 @@ inline bool isFeasible(
 
 template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void setSlackAndDual(
-   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-   Robot& robot, const ContactStatusType& contact_status, 
-   std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    Robot& robot, const ContactStatusType& contact_status,
+    const GridInfo& grid_info, const SplitSolution& s, 
+    std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->setSlack(robot, contact_status, data[i], s);
+    constraints[i]->setSlack(robot, contact_status, grid_info, s, data[i]);
     constraints[i]->setSlackAndDualPositive(data[i]);
   }
 }
@@ -66,14 +68,15 @@ template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void evalConstraint(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
+    const GridInfo& grid_info, const SplitSolution& s,
+    std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
     data[i].residual.setZero();
     data[i].cmpl.setZero();
-    constraints[i]->evalConstraint(robot, contact_status, data[i], s);
+    constraints[i]->evalConstraint(robot, contact_status, grid_info, s, data[i]);
   }
 }
 
@@ -81,8 +84,9 @@ inline void evalConstraint(
 template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void linearizeConstraints(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    Robot& robot, const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s, 
+    Robot& robot, const ContactStatusType& contact_status,
+    const GridInfo& grid_info, const SplitSolution& s,
+    std::vector<ConstraintComponentData>& data,  
     SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
@@ -90,8 +94,8 @@ inline void linearizeConstraints(
     assert(data[i].checkDimensionalConsistency());
     data[i].residual.setZero();
     data[i].cmpl.setZero();
-    constraints[i]->evalConstraint(robot, contact_status, data[i], s);
-    constraints[i]->evalDerivatives(robot, contact_status, data[i], s, 
+    constraints[i]->evalConstraint(robot, contact_status, grid_info, s, data[i]);
+    constraints[i]->evalDerivatives(robot, contact_status, grid_info, s, data[i], 
                                     kkt_residual);
   }
 }
@@ -100,30 +104,29 @@ inline void linearizeConstraints(
 template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void condenseSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-    const ContactStatusType& contact_status,
+    const ContactStatusType& contact_status, const GridInfo& grid_info,
     std::vector<ConstraintComponentData>& data, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->condenseSlackAndDual(contact_status, data[i], kkt_matrix, 
-                                         kkt_residual);
+    constraints[i]->condenseSlackAndDual(contact_status, grid_info, data[i],
+                                         kkt_matrix, kkt_residual);
   }
 }
 
 
-template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType,
-          typename SplitDirectionType>
+template <typename ConstraintComponentBaseTypePtr, typename ContactStatusType>
 inline void expandSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const ContactStatusType& contact_status, 
-    std::vector<ConstraintComponentData>& data, const SplitDirectionType& d) {
+    const ContactStatusType& contact_status, const GridInfo& grid_info,
+    const SplitDirection& d, std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->expandSlackAndDual(contact_status, data[i], d);
+    constraints[i]->expandSlackAndDual(contact_status, grid_info, d, data[i]);
   }
 }
 

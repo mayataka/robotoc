@@ -134,7 +134,7 @@ void UnconstrDirectMultipleShooting::computeStepSizes(
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N; ++i) {
     if (i < N) {
-      intermediate_stage_.expandPrimalAndDual(time_discretization[i].dt, 
+      intermediate_stage_.expandPrimalAndDual(time_discretization[i], 
                                               kkt_matrix[i], kkt_residual[i], 
                                               data_[i], d[i]);
       max_primal_step_sizes_.coeffRef(i) 

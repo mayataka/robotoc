@@ -65,29 +65,31 @@ public:
   void allocateExtraData(ConstraintComponentData& data) const override {}
 
   bool isFeasible(Robot& robot, const ContactStatus& contact_status, 
-                  ConstraintComponentData& data, 
-                  const SplitSolution& s) const override;
+                  const GridInfo& grid_info, const SplitSolution& s,
+                  ConstraintComponentData& data) const override;
 
   void setSlack(Robot& robot, const ContactStatus& contact_status, 
-                ConstraintComponentData& data, 
-                const SplitSolution& s) const override;
+                const GridInfo& grid_info, const SplitSolution& s,
+                ConstraintComponentData& data) const override;
 
   void evalConstraint(Robot& robot, const ContactStatus& contact_status, 
-                      ConstraintComponentData& data, 
-                      const SplitSolution& s) const override;
+                      const GridInfo& grid_info, const SplitSolution& s,
+                      ConstraintComponentData& data) const override;
 
   void evalDerivatives(Robot& robot, const ContactStatus& contact_status, 
-                       ConstraintComponentData& data, const SplitSolution& s,
+                       const GridInfo& grid_info, const SplitSolution& s,
+                       ConstraintComponentData& data,
                        SplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(const ContactStatus& contact_status, 
+                            const GridInfo& grid_info,
                             ConstraintComponentData& data, 
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
   void expandSlackAndDual(const ContactStatus& contact_status, 
-                          ConstraintComponentData& data, 
-                          const SplitDirection& d) const override; 
+                          const GridInfo& grid_info, const SplitDirection& d, 
+                          ConstraintComponentData& data) const override; 
 
   int dimc() const override;
 
