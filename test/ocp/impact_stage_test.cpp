@@ -69,7 +69,7 @@ TEST_P(ImpactStageTest, evalOCP) {
 
   const Eigen::VectorXd v_after_impact = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impact);
-  data_ref.performance_index.cost = cost->evalImpactCost(robot, impact_status, data_ref.cost_data, grid_info, s);
+  data_ref.performance_index.cost = cost->evalImpactCost(robot, impact_status, grid_info, s, data_ref.cost_data);
   constraints->evalConstraint(robot, impact_status, grid_info, s, data_ref.constraints_data);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();
   evalImpactStateEquation(robot, s, s_next, kkt_residual_ref);
@@ -107,7 +107,7 @@ TEST_P(ImpactStageTest, evalKKT) {
 
   const Eigen::VectorXd v_after_impact = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impact);
-  data_ref.performance_index.cost = cost->quadratizeImpactCost(robot, impact_status, data_ref.cost_data, grid_info, s, 
+  data_ref.performance_index.cost = cost->quadratizeImpactCost(robot, impact_status, grid_info, s, data_ref.cost_data, 
                                                                 kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, impact_status, grid_info, s, data_ref.constraints_data, kkt_residual_ref);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();

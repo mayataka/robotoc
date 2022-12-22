@@ -60,7 +60,7 @@ TEST_P(TerminalStageTest, evalOCP) {
   stage.initConstraints(robot, grid_info, s, data_ref);
 
   robot.updateKinematics(s.q, s.v);
-  data_ref.performance_index.cost = cost->evalTerminalCost(robot, data_ref.cost_data, grid_info, s);
+  data_ref.performance_index.cost = cost->evalTerminalCost(robot, grid_info, s, data_ref.cost_data);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   EXPECT_TRUE(data.performance_index.isApprox(data_ref.performance_index));
 }
@@ -87,7 +87,7 @@ TEST_P(TerminalStageTest, evalKKT) {
   stage.initConstraints(robot, grid_info, s, data_ref);
 
   robot.updateKinematics(s.q, s.v);
-  data_ref.performance_index.cost = cost->quadratizeTerminalCost(robot, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
+  data_ref.performance_index.cost = cost->quadratizeTerminalCost(robot, grid_info, s, data_ref.cost_data, kkt_residual_ref, kkt_matrix_ref);
   linearizeTerminalStateEquation(robot, s_prev.q, s, data_ref.state_equation_data, kkt_matrix_ref, kkt_residual_ref);
   data_ref.performance_index.dual_feasibility = kkt_residual_ref.dualFeasibility();
   data_ref.performance_index.kkt_error = kkt_residual_ref.KKTError();

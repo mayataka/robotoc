@@ -64,8 +64,8 @@ TEST_F(ParNMPCTerminalStageTest, evalOCP) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, grid_info, s, data_ref.constraints_data);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->evalStageCost(robot, contact_status, data_ref.cost_data, grid_info, s);
-  performance_index_ref.cost += cost->evalTerminalCost(robot, data_ref.cost_data, grid_info, s);
+  performance_index_ref.cost = cost->evalStageCost(robot, contact_status, grid_info, s, data_ref.cost_data);
+  performance_index_ref.cost += cost->evalTerminalCost(robot, grid_info, s, data_ref.cost_data);
   constraints->evalConstraint(robot, contact_status, grid_info, s, data_ref.constraints_data);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
   evalUnconstrBackwardEuler(grid_info.dt, s_prev.q, s_prev.v, s, kkt_residual_ref);
@@ -96,8 +96,8 @@ TEST_F(ParNMPCTerminalStageTest, evalKKT) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, grid_info, s, data_ref.constraints_data);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
-  performance_index_ref.cost += cost->quadratizeTerminalCost(robot, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
+  performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, grid_info, s, data_ref.cost_data, kkt_residual_ref, kkt_matrix_ref);
+  performance_index_ref.cost += cost->quadratizeTerminalCost(robot, grid_info, s, data_ref.cost_data, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, contact_status, grid_info, s, data_ref.constraints_data, kkt_residual_ref);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
   linearizeUnconstrBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);

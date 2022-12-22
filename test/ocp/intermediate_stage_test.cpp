@@ -80,7 +80,7 @@ TEST_P(IntermediateStageTest, evalOCP) {
   stage.initConstraints(robot, grid_info, s, data_ref);
 
   robot.updateKinematics(s.q, s.v, s.a);
-  data_ref.performance_index.cost = cost->evalStageCost(robot, contact_status, data_ref.cost_data, grid_info, s);
+  data_ref.performance_index.cost = cost->evalStageCost(robot, contact_status, grid_info, s, data_ref.cost_data);
   constraints->evalConstraint(robot, contact_status, grid_info, s, data_ref.constraints_data);
   data_ref.performance_index.cost_barrier = data_ref.constraints_data.logBarrier();
   evalStateEquation(robot, grid_info.dt, s, s_next, kkt_residual_ref);
@@ -129,7 +129,7 @@ TEST_P(IntermediateStageTest, evalKKT) {
   stage.initConstraints(robot, grid_info, s, data_ref);
 
   robot.updateKinematics(s.q, s.v, s.a);
-  data_ref.performance_index.cost = cost->quadratizeStageCost(robot, contact_status, data_ref.cost_data, grid_info, s, 
+  data_ref.performance_index.cost = cost->quadratizeStageCost(robot, contact_status, grid_info, s, data_ref.cost_data, 
                                                               kkt_residual_ref, kkt_matrix_ref);
   kkt_residual_ref.h  = (1.0/grid_info.dt) * data_ref.performance_index.cost;
   kkt_matrix_ref.hx   = (1.0/grid_info.dt) * kkt_residual_ref.lx;

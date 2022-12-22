@@ -88,46 +88,44 @@ public:
   void set_fi_weight(const std::vector<Eigen::Vector3d>& fi_weight);
 
   double evalStageCost(Robot& robot, const ContactStatus& contact_status, 
-                       CostFunctionData& data, const GridInfo& grid_info, 
-                       const SplitSolution& s) const override;
+                       const GridInfo& grid_info, const SplitSolution& s,
+                       CostFunctionData& data) const override;
 
   void evalStageCostDerivatives(Robot& robot, const ContactStatus& contact_status, 
-                                CostFunctionData& data, const GridInfo& grid_info,
-                                const SplitSolution& s, 
+                                const GridInfo& grid_info, const SplitSolution& s, 
+                                CostFunctionData& data,
                                 SplitKKTResidual& kkt_residual) const override;
 
   void evalStageCostHessian(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const GridInfo& grid_info,  
-                            const SplitSolution& s, 
+                            const GridInfo& grid_info, const SplitSolution& s, 
+                            CostFunctionData& data,
                             SplitKKTMatrix& kkt_matrix) const override;
 
-  double evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                          const GridInfo& grid_info, 
-                          const SplitSolution& s) const override;
+  double evalTerminalCost(Robot& robot, const GridInfo& grid_info,
+                          const SplitSolution& s,
+                          CostFunctionData& data) const override;
 
-  void evalTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                   const GridInfo& grid_info, 
-                                   const SplitSolution& s, 
+  void evalTerminalCostDerivatives(Robot& robot, const GridInfo& grid_info,
+                                   const SplitSolution& s, CostFunctionData& data, 
                                    SplitKKTResidual& kkt_residual) const override;
 
-  void evalTerminalCostHessian(Robot& robot, CostFunctionData& data, 
-                               const GridInfo& grid_info, 
-                               const SplitSolution& s, 
+  void evalTerminalCostHessian(Robot& robot, const GridInfo& grid_info,
+                               const SplitSolution& s, CostFunctionData& data, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
   double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
-                         CostFunctionData& data, const GridInfo& grid_info, 
-                         const SplitSolution& s) const override;
+                         const GridInfo& grid_info, const SplitSolution& s,
+                         CostFunctionData& data) const override;
 
   void evalImpactCostDerivatives(Robot& robot, const ImpactStatus& impact_status, 
-                                  CostFunctionData& data, const GridInfo& grid_info,
-                                  const SplitSolution& s, 
-                                  SplitKKTResidual& kkt_residual) const override;
+                                 const GridInfo& grid_info, const SplitSolution& s, 
+                                 CostFunctionData& data,
+                                 SplitKKTResidual& kkt_residual) const override;
 
   void evalImpactCostHessian(Robot& robot, const ImpactStatus& impact_status, 
-                              CostFunctionData& data, const GridInfo& grid_info,
-                              const SplitSolution& s, 
-                              SplitKKTMatrix& kkt_matrix) const override;
+                             const GridInfo& grid_info, const SplitSolution& s, 
+                             CostFunctionData& data,
+                             SplitKKTMatrix& kkt_matrix) const override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

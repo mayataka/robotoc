@@ -61,10 +61,9 @@ void ParNMPCTerminalStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   robot.updateKinematics(s.q);
   data.performance_index.setZero();
   kkt_residual.setZero();
-  data.performance_index.cost = cost_->evalStageCost(robot, contact_status_, 
-                                                     data.cost_data, grid_info, s);
-  data.performance_index.cost += cost_->evalTerminalCost(robot, data.cost_data, 
-                                                        grid_info, s);
+  data.performance_index.cost = cost_->evalStageCost(robot, contact_status_,
+                                                     grid_info, s, data.cost_data);
+  data.performance_index.cost += cost_->evalTerminalCost(robot, grid_info, s, data.cost_data);
   constraints_->evalConstraint(robot, contact_status_, grid_info, s,
                                data.constraints_data);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
@@ -89,10 +88,10 @@ void ParNMPCTerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   kkt_matrix.setZero();
   kkt_residual.setZero();
   data.performance_index.cost = cost_->quadratizeStageCost(robot, contact_status_, 
-                                                           data.cost_data, grid_info, s, 
+                                                           grid_info, s, data.cost_data,  
                                                            kkt_residual, kkt_matrix);
-  data.performance_index.cost += cost_->quadratizeTerminalCost(robot, data.cost_data, 
-                                                               grid_info, s, 
+  data.performance_index.cost += cost_->quadratizeTerminalCost(robot, grid_info, s, 
+                                                               data.cost_data, 
                                                                kkt_residual, kkt_matrix);
   constraints_->linearizeConstraints(robot, contact_status_, grid_info, s,
                                      data.constraints_data, kkt_residual);
@@ -163,7 +162,7 @@ void ParNMPCTerminalStage::evalTerminalCostHessian(
   robot.updateKinematics(s.q);
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  double cost = cost_->quadratizeTerminalCost(robot, data.cost_data, grid_info, s, 
+  double cost = cost_->quadratizeTerminalCost(robot, grid_info, s, data.cost_data,  
                                               kkt_residual, kkt_matrix);
 }
 

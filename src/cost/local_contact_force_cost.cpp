@@ -80,9 +80,9 @@ void LocalContactForceCost::set_fi_weight(
 
 double LocalContactForceCost::evalStageCost(Robot& robot, 
                                             const ContactStatus& contact_status, 
-                                            CostFunctionData& data, 
                                             const GridInfo& grid_info,
-                                            const SplitSolution& s) const {
+                                            const SplitSolution& s,
+                                            CostFunctionData& data) const {
   double l = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
@@ -96,8 +96,8 @@ double LocalContactForceCost::evalStageCost(Robot& robot,
 
 
 void LocalContactForceCost::evalStageCostDerivatives(
-    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ContactStatus& contact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data,
     SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -121,8 +121,8 @@ void LocalContactForceCost::evalStageCostDerivatives(
 
 
 void LocalContactForceCost::evalStageCostHessian(
-    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ContactStatus& contact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data,
     SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -145,30 +145,30 @@ void LocalContactForceCost::evalStageCostHessian(
 
 
 double LocalContactForceCost::evalTerminalCost(Robot& robot, 
-                                               CostFunctionData& data, 
                                                const GridInfo& grid_info,  
-                                               const SplitSolution& s) const {
+                                               const SplitSolution& s,
+                                               CostFunctionData& data) const {
   return 0;
 }
 
 
 void LocalContactForceCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const GridInfo& grid_info,  
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const GridInfo& grid_info,  const SplitSolution& s,
+    CostFunctionData& data, SplitKKTResidual& kkt_residual) const {
   // Do nothing.
 }
 
 
 void LocalContactForceCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const GridInfo& grid_info,  
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const GridInfo& grid_info,  const SplitSolution& s,
+    CostFunctionData& data, SplitKKTMatrix& kkt_matrix) const {
   // Do nothing.
 }
 
 
 double LocalContactForceCost::evalImpactCost(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s) const {
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data) const {
   double l = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
     if (impact_status.isImpactActive(i)) {
@@ -182,8 +182,8 @@ double LocalContactForceCost::evalImpactCost(
 
 
 void LocalContactForceCost::evalImpactCostDerivatives(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {
@@ -207,8 +207,8 @@ void LocalContactForceCost::evalImpactCostDerivatives(
 
 
 void LocalContactForceCost::evalImpactCostHessian(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data,
     SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_num_contacts_; ++i) {

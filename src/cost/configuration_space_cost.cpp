@@ -250,9 +250,9 @@ void ConfigurationSpaceCost::set_dv_weight_impact(
 
 double ConfigurationSpaceCost::evalStageCost(Robot& robot, 
                                              const ContactStatus& contact_status, 
-                                             CostFunctionData& data, 
                                              const GridInfo& grid_info,
-                                             const SplitSolution& s) const {
+                                             const SplitSolution& s,
+                                             CostFunctionData& data) const {
   double l = 0;
   if (enable_q_cost_ && isCostConfigActive(grid_info)) {
     evalConfigDiff(robot, data, grid_info, s.q);
@@ -272,8 +272,8 @@ double ConfigurationSpaceCost::evalStageCost(Robot& robot,
 
 
 void ConfigurationSpaceCost::evalStageCostDerivatives(
-    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ContactStatus& contact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_q_cost_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
@@ -300,8 +300,8 @@ void ConfigurationSpaceCost::evalStageCostDerivatives(
 
 
 void ConfigurationSpaceCost::evalStageCostHessian(
-    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ContactStatus& contact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTMatrix& kkt_matrix) const {
   if (enable_q_cost_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
@@ -325,9 +325,9 @@ void ConfigurationSpaceCost::evalStageCostHessian(
 
 
 double ConfigurationSpaceCost::evalTerminalCost(Robot& robot, 
-                                                CostFunctionData& data, 
                                                 const GridInfo& grid_info, 
-                                                const SplitSolution& s) const {
+                                                const SplitSolution& s,
+                                                CostFunctionData& data) const {
   double l = 0;
   if (enable_q_cost_terminal_ && isCostConfigActive(grid_info)) {
     evalConfigDiff(robot, data, grid_info, s.q);
@@ -341,8 +341,8 @@ double ConfigurationSpaceCost::evalTerminalCost(Robot& robot,
 
 
 void ConfigurationSpaceCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+    Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
+    CostFunctionData& data, SplitKKTResidual& kkt_residual) const {
   if (enable_q_cost_terminal_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       evalConfigDiffJac(robot, data, grid_info, s.q);
@@ -361,8 +361,8 @@ void ConfigurationSpaceCost::evalTerminalCostDerivatives(
 
 
 void ConfigurationSpaceCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const GridInfo& grid_info,
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+    Robot& robot, const GridInfo& grid_info, const SplitSolution& s, 
+    CostFunctionData& data, SplitKKTMatrix& kkt_matrix) const {
   if (enable_q_cost_terminal_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
       kkt_matrix.Qqq().noalias()
@@ -379,8 +379,8 @@ void ConfigurationSpaceCost::evalTerminalCostHessian(
 
 
 double ConfigurationSpaceCost::evalImpactCost(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s) const {
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info, 
+    const SplitSolution& s, CostFunctionData& data) const {
   double l = 0;
   if (enable_q_cost_impact_ && isCostConfigActive(grid_info)) {
     evalConfigDiff(robot, data, grid_info, s.q);
@@ -397,8 +397,8 @@ double ConfigurationSpaceCost::evalImpactCost(
 
 
 void ConfigurationSpaceCost::evalImpactCostDerivatives(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_q_cost_impact_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
@@ -421,8 +421,8 @@ void ConfigurationSpaceCost::evalImpactCostDerivatives(
 
 
 void ConfigurationSpaceCost::evalImpactCostHessian(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTMatrix& kkt_matrix) const {
   if (enable_q_cost_impact_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {

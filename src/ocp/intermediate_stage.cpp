@@ -65,7 +65,7 @@ void IntermediateStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   data.performance_index.setZero();
   // eval cost and constraints
   data.performance_index.cost 
-      = cost_->evalStageCost(robot, contact_status, data.cost_data, grid_info, s);
+      = cost_->evalStageCost(robot, contact_status, grid_info, s, data.cost_data);
   constraints_->evalConstraint(robot, contact_status, grid_info, s, data.constraints_data);
   data.performance_index.cost_barrier = data.constraints_data.logBarrier();
   // eval dynamics
@@ -99,8 +99,8 @@ void IntermediateStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   data.performance_index.setZero();
   // eval cost and constraints
   data.performance_index.cost 
-      = cost_->quadratizeStageCost(robot, contact_status, data.cost_data,  
-                                   grid_info, s, kkt_residual, kkt_matrix);
+      = cost_->quadratizeStageCost(robot, contact_status, grid_info, s, 
+                                   data.cost_data, kkt_residual, kkt_matrix);
   kkt_residual.h  = (1.0/grid_info.dt) * data.performance_index.cost;
   kkt_matrix.hx   = (1.0/grid_info.dt) * kkt_residual.lx;
   kkt_matrix.hu   = (1.0/grid_info.dt) * kkt_residual.lu;

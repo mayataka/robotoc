@@ -119,13 +119,13 @@ CostFunctionData CostFunction::createCostFunctionData(const Robot& robot) const 
 
 double CostFunction::evalStageCost(Robot& robot, 
                                    const ContactStatus& contact_status, 
-                                   CostFunctionData& data, 
                                    const GridInfo& grid_info,
-                                   const SplitSolution& s) const {
+                                   const SplitSolution& s,
+                                   CostFunctionData& data) const {
   assert(grid_info.dt > 0);
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalStageCost(robot, contact_status, data, grid_info, s);
+    l += e->evalStageCost(robot, contact_status, grid_info, s, data);
   }
   if (discounted_cost_) {
     const double f = std::pow(discount_factor_, grid_info.stage);
@@ -137,15 +137,15 @@ double CostFunction::evalStageCost(Robot& robot,
 
 double CostFunction::linearizeStageCost(Robot& robot, 
                                         const ContactStatus& contact_status, 
-                                        CostFunctionData& data, 
                                         const GridInfo& grid_info, 
                                         const SplitSolution& s, 
+                                        CostFunctionData& data, 
                                         SplitKKTResidual& kkt_residual) const {
   assert(grid_info.dt > 0);
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalStageCost(robot, contact_status, data, grid_info, s);
-    e->evalStageCostDerivatives(robot, contact_status, data, grid_info, s,
+    l += e->evalStageCost(robot, contact_status, grid_info, s, data);
+    e->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, 
                                 kkt_residual);
   }
   if (discounted_cost_) {
@@ -164,18 +164,18 @@ double CostFunction::linearizeStageCost(Robot& robot,
 
 double CostFunction::quadratizeStageCost(Robot& robot, 
                                          const ContactStatus& contact_status, 
-                                         CostFunctionData& data, 
                                          const GridInfo& grid_info, 
                                          const SplitSolution& s, 
+                                         CostFunctionData& data, 
                                          SplitKKTResidual& kkt_residual, 
                                          SplitKKTMatrix& kkt_matrix) const {
   assert(grid_info.dt > 0);
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalStageCost(robot, contact_status, data, grid_info, s);
-    e->evalStageCostDerivatives(robot, contact_status, data, grid_info, s,
+    l += e->evalStageCost(robot, contact_status, grid_info, s, data);
+    e->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, 
                                 kkt_residual);
-    e->evalStageCostHessian(robot, contact_status, data, grid_info, s,
+    e->evalStageCostHessian(robot, contact_status, grid_info, s, data, 
                             kkt_matrix);
   }
   if (discounted_cost_) {
@@ -198,12 +198,11 @@ double CostFunction::quadratizeStageCost(Robot& robot,
 }
 
 
-double CostFunction::evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                                      const GridInfo& grid_info, 
-                                      const SplitSolution& s) const {
+double CostFunction::evalTerminalCost(Robot& robot, const GridInfo& grid_info, 
+                                      const SplitSolution& s, CostFunctionData& data) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalTerminalCost(robot, data, grid_info, s);
+    l += e->evalTerminalCost(robot, grid_info, s, data);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);
@@ -213,14 +212,14 @@ double CostFunction::evalTerminalCost(Robot& robot, CostFunctionData& data,
 }
 
 
-double CostFunction::linearizeTerminalCost(Robot& robot, CostFunctionData& data, 
-                                           const GridInfo& grid_info, 
+double CostFunction::linearizeTerminalCost(Robot& robot, const GridInfo& grid_info, 
                                            const SplitSolution& s, 
+                                           CostFunctionData& data, 
                                            SplitKKTResidual& kkt_residual) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalTerminalCost(robot, data, grid_info, s);
-    e->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_residual);
+    l += e->evalTerminalCost(robot, grid_info, s, data);
+    e->evalTerminalCostDerivatives(robot, grid_info, s, data, kkt_residual);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);
@@ -231,17 +230,16 @@ double CostFunction::linearizeTerminalCost(Robot& robot, CostFunctionData& data,
 }
 
 
-double CostFunction::quadratizeTerminalCost(Robot& robot, 
-                                            CostFunctionData& data, 
-                                            const GridInfo& grid_info, 
+double CostFunction::quadratizeTerminalCost(Robot& robot, const GridInfo& grid_info, 
                                             const SplitSolution& s, 
+                                            CostFunctionData& data, 
                                             SplitKKTResidual& kkt_residual, 
                                             SplitKKTMatrix& kkt_matrix) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalTerminalCost(robot, data, grid_info, s);
-    e->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_residual);
-    e->evalTerminalCostHessian(robot, data, grid_info, s, kkt_matrix);
+    l += e->evalTerminalCost(robot, grid_info, s, data);
+    e->evalTerminalCostDerivatives(robot, grid_info, s, data, kkt_residual);
+    e->evalTerminalCostHessian(robot, grid_info, s, data, kkt_matrix);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);
@@ -253,14 +251,13 @@ double CostFunction::quadratizeTerminalCost(Robot& robot,
 }
 
 
-double CostFunction::evalImpactCost(Robot& robot, 
-                                     const ImpactStatus& impact_status, 
-                                     CostFunctionData& data, 
+double CostFunction::evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
                                      const GridInfo& grid_info, 
-                                     const SplitSolution& s) const {
+                                     const SplitSolution& s,
+                                     CostFunctionData& data) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalImpactCost(robot, impact_status, data, grid_info, s);
+    l += e->evalImpactCost(robot, impact_status, grid_info, s, data);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);
@@ -270,17 +267,16 @@ double CostFunction::evalImpactCost(Robot& robot,
 }
 
 
-double CostFunction::linearizeImpactCost(Robot& robot, 
-                                          const ImpactStatus& impact_status, 
-                                          CostFunctionData& data, 
-                                          const GridInfo& grid_info, 
-                                          const SplitSolution& s, 
-                                          SplitKKTResidual& kkt_residual) const {
+double CostFunction::linearizeImpactCost(Robot& robot, const ImpactStatus& impact_status, 
+                                         const GridInfo& grid_info, 
+                                         const SplitSolution& s, 
+                                         CostFunctionData& data, 
+                                         SplitKKTResidual& kkt_residual) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalImpactCost(robot, impact_status, data, grid_info, s);
-    e->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, 
-                                  kkt_residual);
+    l += e->evalImpactCost(robot, impact_status, grid_info, s, data);
+    e->evalImpactCostDerivatives(robot, impact_status, grid_info, s, data,  
+                                 kkt_residual);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);
@@ -295,20 +291,19 @@ double CostFunction::linearizeImpactCost(Robot& robot,
 }
 
 
-double CostFunction::quadratizeImpactCost(Robot& robot, 
-                                           const ImpactStatus& impact_status, 
-                                           CostFunctionData& data, 
-                                           const GridInfo& grid_info, 
-                                           const SplitSolution& s, 
-                                           SplitKKTResidual& kkt_residual, 
-                                           SplitKKTMatrix& kkt_matrix) const {
+double CostFunction::quadratizeImpactCost(Robot& robot, const ImpactStatus& impact_status, 
+                                          const GridInfo& grid_info, 
+                                          const SplitSolution& s, 
+                                          CostFunctionData& data, 
+                                          SplitKKTResidual& kkt_residual, 
+                                          SplitKKTMatrix& kkt_matrix) const {
   double l = 0;
   for (const auto e : costs_) {
-    l += e->evalImpactCost(robot, impact_status, data, grid_info, s);
-    e->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, 
-                                  kkt_residual);
-    e->evalImpactCostHessian(robot, impact_status, data, grid_info, s, 
-                              kkt_matrix);
+    l += e->evalImpactCost(robot, impact_status, grid_info, s, data);
+    e->evalImpactCostDerivatives(robot, impact_status, grid_info, s, data,  
+                                 kkt_residual);
+    e->evalImpactCostHessian(robot, impact_status, grid_info, s, data,  
+                             kkt_matrix);
   }
   if (discounted_cost_) {
     const double f = discount(grid_info.t0, grid_info.t);

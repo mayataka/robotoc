@@ -84,11 +84,11 @@ void CostFunctionTest::testStageCost(Robot& robot) {
 
   const auto s = SplitSolution::Random(robot, contact_status);
 
-  const double non_discounted_value = non_discounted_cost->evalStageCost(robot, contact_status, data, grid_info, s);
-  const double discounted_value = discounted_cost->evalStageCost(robot, contact_status, data, grid_info, s);
+  const double non_discounted_value = non_discounted_cost->evalStageCost(robot, contact_status, grid_info, s, data);
+  const double discounted_value = discounted_cost->evalStageCost(robot, contact_status, grid_info, s, data);
   // EXPECT_DOUBLE_EQ(non_discounted_value*std::pow(discount_factor, (grid_info.t-grid_info.t0)/discount_time_step), discounted_value);
   non_discounted_cost->setDiscountFactor(discount_factor, discount_time_step);
-  EXPECT_DOUBLE_EQ(discounted_value, non_discounted_cost->evalStageCost(robot, contact_status, data, grid_info, s));
+  EXPECT_DOUBLE_EQ(discounted_value, non_discounted_cost->evalStageCost(robot, contact_status, grid_info, s, data));
 
   auto cost_component = non_discounted_cost->get("config_cost");
   EXPECT_NO_THROW(

@@ -117,9 +117,9 @@ void TaskSpace3DCost::set_weight_impact(const Eigen::Vector3d& weight_impact) {
 
 double TaskSpace3DCost::evalStageCost(Robot& robot, 
                                       const ContactStatus& contact_status, 
-                                      CostFunctionData& data, 
                                       const GridInfo& grid_info, 
-                                      const SplitSolution& s) const {
+                                      const SplitSolution& s,
+                                      CostFunctionData& data) const {
   if (enable_cost_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -132,8 +132,8 @@ double TaskSpace3DCost::evalStageCost(Robot& robot,
 
 
 void TaskSpace3DCost::evalStageCostDerivatives(
-    Robot& robot, const ContactStatus& contact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ContactStatus& contact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_cost_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
@@ -148,9 +148,9 @@ void TaskSpace3DCost::evalStageCostDerivatives(
 
 void TaskSpace3DCost::evalStageCostHessian(Robot& robot, 
                                            const ContactStatus& contact_status, 
-                                           CostFunctionData& data, 
                                            const GridInfo& grid_info, 
                                            const SplitSolution& s, 
+                                           CostFunctionData& data, 
                                            SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
@@ -159,9 +159,9 @@ void TaskSpace3DCost::evalStageCostHessian(Robot& robot,
 }
 
 
-double TaskSpace3DCost::evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                                         const GridInfo& grid_info, 
-                                         const SplitSolution& s) const {
+double TaskSpace3DCost::evalTerminalCost(Robot& robot, const GridInfo& grid_info, 
+                                         const SplitSolution& s,
+                                         CostFunctionData& data) const {
   if (enable_cost_terminal_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_terminal_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -173,9 +173,9 @@ double TaskSpace3DCost::evalTerminalCost(Robot& robot, CostFunctionData& data,
 }
 
 
-void TaskSpace3DCost::evalTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+void TaskSpace3DCost::evalTerminalCostDerivatives(Robot& robot, const GridInfo& grid_info, 
+                                                  const SplitSolution& s, CostFunctionData& data,
+                                                  SplitKKTResidual& kkt_residual) const {
   if (enable_cost_terminal_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
     robot.getFrameJacobian(frame_id_, data.J_6d);
@@ -187,9 +187,9 @@ void TaskSpace3DCost::evalTerminalCostDerivatives(
 }
 
 
-void TaskSpace3DCost::evalTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const GridInfo& grid_info, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+void TaskSpace3DCost::evalTerminalCostHessian(Robot& robot, const GridInfo& grid_info,
+                                              const SplitSolution& s, CostFunctionData& data, 
+                                              SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_terminal_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * weight_terminal_.asDiagonal() * data.J_3d;
@@ -197,11 +197,9 @@ void TaskSpace3DCost::evalTerminalCostHessian(
 }
 
 
-double TaskSpace3DCost::evalImpactCost(Robot& robot,  
-                                        const ImpactStatus& impact_status,
-                                        CostFunctionData& data, 
-                                        const GridInfo& grid_info, 
-                                        const SplitSolution& s) const {
+double TaskSpace3DCost::evalImpactCost(Robot& robot, const ImpactStatus& impact_status,
+                                       const GridInfo& grid_info, const SplitSolution& s,
+                                       CostFunctionData& data) const {
   if (enable_cost_impact_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_impact_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
@@ -214,8 +212,8 @@ double TaskSpace3DCost::evalImpactCost(Robot& robot,
 
 
 void TaskSpace3DCost::evalImpactCostDerivatives(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+     const SplitSolution& s, CostFunctionData& data, 
     SplitKKTResidual& kkt_residual) const {
   if (enable_cost_impact_ && isCostActive(grid_info)) {
     data.J_6d.setZero();
@@ -229,8 +227,8 @@ void TaskSpace3DCost::evalImpactCostDerivatives(
 
 
 void TaskSpace3DCost::evalImpactCostHessian(
-    Robot& robot, const ImpactStatus& impact_status, CostFunctionData& data, 
-    const GridInfo& grid_info, const SplitSolution& s, 
+    Robot& robot, const ImpactStatus& impact_status, const GridInfo& grid_info,
+    const SplitSolution& s, CostFunctionData& data, 
     SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_impact_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()

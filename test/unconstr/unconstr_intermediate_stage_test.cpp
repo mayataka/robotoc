@@ -63,7 +63,7 @@ TEST_F(UnconstrIntermediateStageTest, evalOCP) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, grid_info, s, data_ref.constraints_data);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->evalStageCost(robot, contact_status, data_ref.cost_data, grid_info, s);
+  performance_index_ref.cost = cost->evalStageCost(robot, contact_status, grid_info, s, data_ref.cost_data);
   constraints->evalConstraint(robot, contact_status, grid_info, s, data_ref.constraints_data);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
   evalUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_residual_ref);
@@ -94,7 +94,7 @@ TEST_F(UnconstrIntermediateStageTest, evalKKT) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, grid_info, s, data_ref.constraints_data);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
+  performance_index_ref.cost = cost->quadratizeStageCost(robot, contact_status, grid_info, s, data_ref.cost_data, kkt_residual_ref, kkt_matrix_ref);
   constraints->linearizeConstraints(robot, contact_status, grid_info, s, data_ref.constraints_data, kkt_residual_ref);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
   linearizeUnconstrForwardEuler(grid_info.dt, s, s_next, kkt_matrix_ref, kkt_residual_ref);

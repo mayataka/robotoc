@@ -55,8 +55,8 @@ void UnconstrTerminalStage::evalOCP(Robot& robot, const GridInfo& grid_info,
   robot.updateKinematics(s.q);
   data.performance_index.setZero();
   kkt_residual.setZero();
-  data.performance_index.cost = cost_->evalTerminalCost(robot, data.cost_data, 
-                                                         grid_info, s);
+  data.performance_index.cost = cost_->evalTerminalCost(robot, grid_info, s, 
+                                                        data.cost_data);
   // constraints_->evalConstraint(robot, contact_status_, data.constraints_data, s);
   // data.performance_index.cost_barrier = constraints_data_.logBarrier();
   // data.performance_index.primal_feasibility 
@@ -74,9 +74,9 @@ void UnconstrTerminalStage::evalKKT(Robot& robot, const GridInfo& grid_info,
   data.performance_index.setZero();
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  data.performance_index.cost = cost_->quadratizeTerminalCost(robot, data.cost_data, 
-                                                               grid_info, s, 
-                                                               kkt_residual, kkt_matrix);
+  data.performance_index.cost = cost_->quadratizeTerminalCost(robot, grid_info, s,
+                                                              data.cost_data, 
+                                                              kkt_residual, kkt_matrix);
   // constraints_->linearizeConstraints(robot, contact_status_, 
   //                                    data.constraints_data, s, kkt_residual);
   // data.performance_index.cost_barrier = constraints_data_.logBarrier();

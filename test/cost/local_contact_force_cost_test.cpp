@@ -60,9 +60,9 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   kkt_res.setContactDimension(contact_status.dimf());
   kkt_mat.setContactDimension(contact_status.dimf());
   auto s = SplitSolution::Random(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0);
-  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), 0);
+  cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   contact_status.setRandom();
@@ -75,15 +75,15 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
                                     * (fl.array()-f_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), 0.5*dt*l_ref);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), 0.5*dt*l_ref);
   kkt_res.setContactDimension(contact_status.dimf());
   kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
-  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
+  cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
+  cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -149,22 +149,22 @@ void LocalContactForceCostTest::testTerminalCost(Robot& robot) const {
   kkt_res.setContactDimension(contact_status.dimf());
   kkt_mat.setContactDimension(contact_status.dimf());
   auto s = SplitSolution::Random(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), 0);
-  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
-  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, grid_info, s, data), 0);
+  cost->evalTerminalCostDerivatives(robot, grid_info, s, data, kkt_res);
+  cost->evalTerminalCostHessian(robot, grid_info, s, data, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   contact_status.setRandom();
   s.setRandom(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), 0);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, grid_info, s, data), 0);
   kkt_res.setContactDimension(contact_status.dimf());
   kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
-  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
+  cost->evalTerminalCostDerivatives(robot, grid_info, s, data, kkt_res);
+  cost->evalTerminalCostHessian(robot, grid_info, s, data, kkt_mat);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -196,9 +196,9 @@ void LocalContactForceCostTest::testImpactCost(Robot& robot) const {
   kkt_res.setContactDimension(impact_status.dimf());
   kkt_mat.setContactDimension(impact_status.dimf());
   SplitSolution s = SplitSolution::Random(robot, impact_status);
-  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), 0);
-  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
-  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, grid_info, s, data), 0);
+  cost->evalImpactCostDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
+  cost->evalImpactCostHessian(robot, impact_status, grid_info, s, data, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   impact_status.setRandom();
@@ -211,15 +211,15 @@ void LocalContactForceCostTest::testImpactCost(Robot& robot) const {
                                      * (fl.array()-fi_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), 0.5*l_ref);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, grid_info, s, data), 0.5*l_ref);
   kkt_res.setContactDimension(impact_status.dimf());
   kkt_mat.setContactDimension(impact_status.dimf());
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   auto kkt_res_ref = kkt_res;
   auto kkt_mat_ref = kkt_mat;
-  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
-  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
+  cost->evalImpactCostDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
+  cost->evalImpactCostHessian(robot, impact_status, grid_info, s, data, kkt_mat);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (impact_status.isImpactActive(i)) {

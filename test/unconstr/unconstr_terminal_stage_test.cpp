@@ -61,7 +61,7 @@ TEST_F(UnconstrTerminalStageTest, evalOCP) {
   const auto contact_status = robot.createContactStatus();
   // constraints->setSlackAndDual(robot, contact_status, data.constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->evalTerminalCost(robot, data.cost_data, grid_info, s);
+  performance_index_ref.cost = cost->evalTerminalCost(robot, grid_info, s, data.cost_data);
   // constraints->evalConstraint(robot, contact_status, data.constraints_data, s);
   // performance_index_ref.cost_barrier = data.constraints_data.logBarrier();
   // performance_index_ref.primal_feasibility 
@@ -90,7 +90,7 @@ TEST_F(UnconstrTerminalStageTest, evalKKT) {
   const auto contact_status = robot.createContactStatus();
   constraints->setSlackAndDual(robot, contact_status, grid_info, s, data_ref.constraints_data);
   robot.updateKinematics(s.q, s.v, s.a);
-  performance_index_ref.cost = cost->quadratizeTerminalCost(robot, data_ref.cost_data, grid_info, s, kkt_residual_ref, kkt_matrix_ref);
+  performance_index_ref.cost = cost->quadratizeTerminalCost(robot, grid_info, s, data_ref.cost_data, kkt_residual_ref, kkt_matrix_ref);
   // constraints->linearizeConstraints(robot, contact_status, grid_info, s, data_ref.constraints_data, kkt_residual_ref);
   performance_index_ref.cost_barrier = data_ref.constraints_data.logBarrier();
   linearizeUnconstrForwardEulerTerminal(s, kkt_residual_ref);

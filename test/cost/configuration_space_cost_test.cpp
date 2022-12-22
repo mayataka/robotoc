@@ -135,8 +135,8 @@ void ConfigurationSpaceCostTest::testStageCostConstRef(Robot& robot) const {
                             + (a_weight.array()*s.a.array()*s.a.array()).sum()
                             + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
   const auto contact_status = robot.createContactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), cost_ref);
-  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), cost_ref);
+  cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -149,7 +149,7 @@ void ConfigurationSpaceCostTest::testStageCostConstRef(Robot& robot) const {
   kkt_res_ref.la += dt * a_weight.asDiagonal() * s.a;
   kkt_res_ref.lu += dt * u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
@@ -201,8 +201,8 @@ void ConfigurationSpaceCostTest::testTerminalCostConstRef(Robot& robot) const {
   }
   const double cost_ref = 0.5 * ((q_weight_terminal.array()* q_diff.array()*q_diff.array()).sum()
                                 + (v_weight_terminal.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), cost_ref);
-  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, grid_info, s, data), cost_ref);
+  cost->evalTerminalCostDerivatives(robot, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -213,7 +213,7 @@ void ConfigurationSpaceCostTest::testTerminalCostConstRef(Robot& robot) const {
   }
   kkt_res_ref.lv() += v_weight_terminal.asDiagonal() * (s.v-v_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight_terminal.asDiagonal() * Jq_diff;
   }
@@ -269,8 +269,8 @@ void ConfigurationSpaceCostTest::testImpactCostConstRef(Robot& robot) const {
                                 + (v_weight_impact.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
                                 + (dv_weight_impact.array()* s.dv.array()*s.dv.array()).sum());
   const auto impact_status = robot.createImpactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), cost_ref);
-  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, grid_info, s, data), cost_ref);
+  cost->evalImpactCostDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -282,7 +282,7 @@ void ConfigurationSpaceCostTest::testImpactCostConstRef(Robot& robot) const {
   kkt_res_ref.lv() += v_weight_impact.asDiagonal() * (s.v-v_ref);
   kkt_res_ref.ldv += dv_weight_impact.asDiagonal() * s.dv;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
+  cost->evalImpactCostHessian(robot, impact_status, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight_impact.asDiagonal() * Jq_diff;
   }
@@ -321,15 +321,15 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
 
   const auto s = SplitSolution::Random(robot);
   const auto contact_status = robot.createContactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info0, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_infof, s), 0);
-  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info0, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info0, s, data), 0);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_infof, s, data), 0);
+  cost->evalStageCostDerivatives(robot, contact_status, grid_info0, s, data, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostDerivatives(robot, contact_status, data, grid_infof, s, kkt_res);
+  cost->evalStageCostDerivatives(robot, contact_status, grid_infof, s, data, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, grid_info0, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, grid_info0, s, data, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, grid_infof, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, grid_infof, s, data, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
@@ -337,9 +337,9 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   const double cost_ref = 0.5 * dt * (q_weight.array()*q_diff.array()*q_diff.array()).sum();
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, data, grid_info, s), cost_ref);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), cost_ref);
 
-  cost->evalStageCostDerivatives(robot, contact_status, data, grid_info, s, kkt_res);
+  cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -349,7 +349,7 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
     kkt_res_ref.lq() += dt * q_weight.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalStageCostHessian(robot, contact_status, data, grid_info, s, kkt_mat);
+  cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
@@ -381,15 +381,15 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   cost->set_q_weight_terminal(q_weight_terminal);
 
   const auto s = SplitSolution::Random(robot);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info0, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_infof, s), 0);
-  cost->evalTerminalCostDerivatives(robot, data, grid_info0, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, grid_info0, s, data), 0);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, grid_infof, s, data), 0);
+  cost->evalTerminalCostDerivatives(robot, grid_info0, s, data, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostDerivatives(robot, data, grid_infof, s, kkt_res);
+  cost->evalTerminalCostDerivatives(robot, grid_infof, s, data, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostHessian(robot, data, grid_info0, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, grid_info0, s, data, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalTerminalCostHessian(robot, data, grid_infof, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, grid_infof, s, data, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
@@ -397,9 +397,9 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   const double cost_ref = 0.5 * (q_weight_terminal.array()*q_diff.array()*q_diff.array()).sum();
-  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, data, grid_info, s), cost_ref);
+  EXPECT_DOUBLE_EQ(cost->evalTerminalCost(robot, grid_info, s, data), cost_ref);
 
-  cost->evalTerminalCostDerivatives(robot, data, grid_info, s, kkt_res);
+  cost->evalTerminalCostDerivatives(robot, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -409,7 +409,7 @@ void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
     kkt_res_ref.lq() += q_weight_terminal.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalTerminalCostHessian(robot, data, grid_info, s, kkt_mat);
+  cost->evalTerminalCostHessian(robot, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight_terminal.asDiagonal() * Jq_diff;
   }
@@ -442,15 +442,15 @@ void ConfigurationSpaceCostTest::testImpactCost(Robot& robot) const {
 
   const auto s = SplitSolution::Random(robot);
   const auto impact_status = robot.createImpactStatus();
-  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info0, s), 0);
-  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_infof, s), 0);
-  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info0, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, grid_info0, s, data), 0);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, grid_infof, s, data), 0);
+  cost->evalImpactCostDerivatives(robot, impact_status, grid_info0, s, data, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_infof, s, kkt_res);
+  cost->evalImpactCostDerivatives(robot, impact_status, grid_infof, s, data, kkt_res);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpactCostHessian(robot, impact_status, data, grid_info0, s, kkt_mat);
+  cost->evalImpactCostHessian(robot, impact_status, grid_info0, s, data, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  cost->evalImpactCostHessian(robot, impact_status, data, grid_infof, s, kkt_mat);
+  cost->evalImpactCostHessian(robot, impact_status, grid_infof, s, data, kkt_mat);
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 
   Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
@@ -458,9 +458,9 @@ void ConfigurationSpaceCostTest::testImpactCost(Robot& robot) const {
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   const double cost_ref = 0.5 * (q_weight_impact.array()*q_diff.array()*q_diff.array()).sum();
-  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, data, grid_info, s), cost_ref);
+  EXPECT_DOUBLE_EQ(cost->evalImpactCost(robot, impact_status, grid_info, s, data), cost_ref);
 
-  cost->evalImpactCostDerivatives(robot, impact_status, data, grid_info, s, kkt_res);
+  cost->evalImpactCostDerivatives(robot, impact_status, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
@@ -470,7 +470,7 @@ void ConfigurationSpaceCostTest::testImpactCost(Robot& robot) const {
     kkt_res_ref.lq() += q_weight_impact.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->evalImpactCostHessian(robot, impact_status, data, grid_info, s, kkt_mat);
+  cost->evalImpactCostHessian(robot, impact_status, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight_impact.asDiagonal() * Jq_diff;
   }

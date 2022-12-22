@@ -141,29 +141,29 @@ public:
   /// @brief Computes the stage cost. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @return Stage cost.
   ///
   double evalStageCost(Robot& robot, const ContactStatus& contact_status,
-                       CostFunctionData& data, const GridInfo& grid_info, 
-                       const SplitSolution& s) const;
+                       const GridInfo& grid_info, const SplitSolution& s,
+                       CostFunctionData& data) const;
 
   ///
   /// @brief Computes the stage cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Stage cost.
   ///
   double linearizeStageCost(Robot& robot, const ContactStatus& contact_status, 
-                            CostFunctionData& data, const GridInfo& grid_info, 
-                            const SplitSolution& s, 
+                            const GridInfo& grid_info, const SplitSolution& s, 
+                            CostFunctionData& data,
                             SplitKKTResidual& kkt_residual) const;
 
   ///
@@ -171,9 +171,9 @@ public:
   /// its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] contact_status Contact status.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
@@ -181,52 +181,50 @@ public:
   /// @return Stage cost.
   ///
   double quadratizeStageCost(Robot& robot, const ContactStatus& contact_status, 
-                             CostFunctionData& data, const GridInfo& grid_info, 
-                             const SplitSolution& s, 
-                             SplitKKTResidual& kkt_residual,
+                             const GridInfo& grid_info, const SplitSolution& s, 
+                             CostFunctionData& data, SplitKKTResidual& kkt_residual,
                              SplitKKTMatrix& kkt_matrix) const;
 
   ///
   /// @brief Computes the terminal cost. 
   /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @return Terminal cost.
   ///
-  double evalTerminalCost(Robot& robot, CostFunctionData& data, 
-                          const GridInfo& grid_info, 
-                          const SplitSolution& s) const;
+  double evalTerminalCost(Robot& robot, const GridInfo& grid_info, 
+                          const SplitSolution& s, CostFunctionData& data) const;
 
   ///
   /// @brief Computes the terminal cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Stage cost.
   ///
-  double linearizeTerminalCost(Robot& robot, CostFunctionData& data, 
-                               const GridInfo& grid_info, const SplitSolution& s, 
+  double linearizeTerminalCost(Robot& robot, const GridInfo& grid_info,
+                               const SplitSolution& s, CostFunctionData& data, 
                                SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the terminal cost, its first-order partial derivatives, 
   /// and its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
   /// this object.
   /// @return Stage cost.
   ///
-  double quadratizeTerminalCost(Robot& robot, CostFunctionData& data, 
-                                const GridInfo& grid_info, const SplitSolution& s, 
+  double quadratizeTerminalCost(Robot& robot, const GridInfo& grid_info,
+                                const SplitSolution& s, CostFunctionData& data, 
                                 SplitKKTResidual& kkt_residual,
                                 SplitKKTMatrix& kkt_matrix) const;
 
@@ -234,39 +232,39 @@ public:
   /// @brief Computes the impact cost. 
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @return Stage cost.
   ///
   double evalImpactCost(Robot& robot, const ImpactStatus& impact_status, 
-                         CostFunctionData& data, const GridInfo& grid_info,
-                         const SplitSolution& s) const;
+                        const GridInfo& grid_info, const SplitSolution& s,
+                        CostFunctionData& data) const;
 
   ///
   /// @brief Computes the impact cost and its first-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @return Stage cost.
   ///
   double linearizeImpactCost(Robot& robot, const ImpactStatus& impact_status, 
-                              CostFunctionData& data, const GridInfo& grid_info,
-                              const SplitSolution& s, 
-                              SplitKKTResidual& kkt_residual) const;
+                             const GridInfo& grid_info, const SplitSolution& s, 
+                             CostFunctionData& data,
+                             SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the impact cost, its first-order partial derivatives, 
   /// and its Hessian, i.e., its second-order partial derivatives. 
   /// @param[in] robot Robot model.
   /// @param[in] impact_status Impact status.
-  /// @param[in] data Cost function data.
   /// @param[in] grid_info Grid info.
   /// @param[in] s Split solution.
+  /// @param[in, out] data Cost function data.
   /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
   /// are added to this object.
   /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
@@ -274,10 +272,10 @@ public:
   /// @return Stage cost.
   ///
   double quadratizeImpactCost(Robot& robot, const ImpactStatus& impact_status, 
-                               CostFunctionData& data, const GridInfo& grid_info,
-                               const SplitSolution& s, 
-                               SplitKKTResidual& kkt_residual,
-                               SplitKKTMatrix& kkt_matrix) const;
+                              const GridInfo& grid_info, const SplitSolution& s, 
+                              CostFunctionData& data,
+                              SplitKKTResidual& kkt_residual,
+                              SplitKKTMatrix& kkt_matrix) const;
 
   ///
   /// @brief Gets a list of the cost components. 
