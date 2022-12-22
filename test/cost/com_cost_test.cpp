@@ -105,15 +105,15 @@ void CoMCostTest::testStageCostConstRef(Robot& robot) const {
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_diff = robot.CoM() - const_ref;
-  const double l_ref = dt * 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
+  const double l_ref = 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
   const auto contact_status = robot.createContactStatus();
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
-  kkt_res_ref.lq() += dt * J_3d.transpose() * weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dt * J_3d.transpose() * weight.asDiagonal() * J_3d;
+  kkt_res_ref.lq() += J_3d.transpose() * weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_3d.transpose() * weight.asDiagonal() * J_3d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -225,14 +225,14 @@ void CoMCostTest::testStageCost(Robot& robot) const {
 
   const Eigen::Vector3d com_ref = com0_ref + (t-t0) * vcom_ref;
   const Eigen::Vector3d q_diff = robot.CoM() - com_ref;
-  const double l_ref = dt * 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
+  const double l_ref = 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   Eigen::MatrixXd J_3d = Eigen::MatrixXd::Zero(3, dimv);
   robot.getCoMJacobian(J_3d);
-  kkt_res_ref.lq() += dt * J_3d.transpose() * weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dt * J_3d.transpose() * weight.asDiagonal() * J_3d;
+  kkt_res_ref.lq() += J_3d.transpose() * weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_3d.transpose() * weight.asDiagonal() * J_3d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

@@ -131,7 +131,7 @@ double CostFunction::evalStageCost(Robot& robot,
     const double f = std::pow(discount_factor_, grid_info.stage);
     l *= f;
   }
-  return l;
+  return grid_info.dt * l;
 }
 
 
@@ -148,15 +148,16 @@ double CostFunction::linearizeStageCost(Robot& robot,
     e->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, 
                                 kkt_residual);
   }
+  double dt = grid_info.dt;
   if (discounted_cost_) {
-    const double f = discount(grid_info.t0, grid_info.t);
-    l *= f;
-    kkt_residual.lx.array() *= f;
-    kkt_residual.lu.array() *= f;
-    kkt_residual.la.array() *= f;
-    if (kkt_residual.lf().size() > 0) {
-      kkt_residual.lf().array() *= f;
-    }
+    dt *= discount(grid_info.t0, grid_info.t);
+  }
+  l *= dt;
+  kkt_residual.lx.array() *= dt;
+  kkt_residual.lu.array() *= dt;
+  kkt_residual.la.array() *= dt;
+  if (kkt_residual.lf().size() > 0) {
+    kkt_residual.lf().array() *= dt;
   }
   return l;
 }
@@ -178,21 +179,22 @@ double CostFunction::quadratizeStageCost(Robot& robot,
     e->evalStageCostHessian(robot, contact_status, grid_info, s, data, 
                             kkt_matrix);
   }
+  double dt = grid_info.dt;
   if (discounted_cost_) {
-    const double f = discount(grid_info.t0, grid_info.t);
-    l *= f;
-    kkt_residual.lx.array() *= f;
-    kkt_residual.lu.array() *= f;
-    kkt_residual.la.array() *= f;
-    kkt_matrix.Qxx.array() *= f;
-    kkt_matrix.Qxu.array() *= f;
-    kkt_matrix.Quu.array() *= f;
-    kkt_matrix.Qaa.array() *= f;
-    if (kkt_residual.lf().size() > 0) {
-      kkt_residual.lf().array() *= f;
-      kkt_matrix.Qff().array() *= f;
-      kkt_matrix.Qqf().array() *= f;
-    }
+    dt *= discount(grid_info.t0, grid_info.t);
+  }
+  l *= dt;
+  kkt_residual.lx.array() *= dt;
+  kkt_residual.lu.array() *= dt;
+  kkt_residual.la.array() *= dt;
+  kkt_matrix.Qxx.array() *= dt;
+  kkt_matrix.Qxu.array() *= dt;
+  kkt_matrix.Quu.array() *= dt;
+  kkt_matrix.Qaa.array() *= dt;
+  if (kkt_residual.lf().size() > 0) {
+    kkt_residual.lf().array() *= dt;
+    kkt_matrix.Qff().array() *= dt;
+    kkt_matrix.Qqf().array() *= dt;
   }
   return l;
 }

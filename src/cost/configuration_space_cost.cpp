@@ -267,7 +267,7 @@ double ConfigurationSpaceCost::evalStageCost(Robot& robot,
   if (enable_u_cost_) {
     l += (u_weight_.array()*(s.u-u_ref_).array()*(s.u-u_ref_).array()).sum();
   }
-  return 0.5 * grid_info.dt * l;
+  return 0.5 * l;
 }
 
 
@@ -279,22 +279,20 @@ void ConfigurationSpaceCost::evalStageCostDerivatives(
     if (robot.hasFloatingBase()) {
       evalConfigDiffJac(robot, data, grid_info, s.q);
       kkt_residual.lq().noalias()
-          += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
+          += data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
     }
     else {
-      kkt_residual.lq().array() += grid_info.dt * q_weight_.array() * data.qdiff.array();
+      kkt_residual.lq().array() += q_weight_.array() * data.qdiff.array();
     }
   }
   if (enable_v_cost_) {
-    kkt_residual.lv().array()
-        += grid_info.dt * v_weight_.array() * (s.v.array()-v_ref_.array());
+    kkt_residual.lv().array() += v_weight_.array() * (s.v.array()-v_ref_.array());
   }
   if (enable_a_cost_) {
-    kkt_residual.la.array() += grid_info.dt * a_weight_.array() * s.a.array();
+    kkt_residual.la.array() += a_weight_.array() * s.a.array();
   }
   if (enable_u_cost_) {
-    kkt_residual.lu.array() 
-        += grid_info.dt * u_weight_.array() * (s.u.array()-u_ref_.array());
+    kkt_residual.lu.array() += u_weight_.array() * (s.u.array()-u_ref_.array());
   }
 }
 
@@ -305,21 +303,20 @@ void ConfigurationSpaceCost::evalStageCostHessian(
     SplitKKTMatrix& kkt_matrix) const {
   if (enable_q_cost_ && isCostConfigActive(grid_info)) {
     if (robot.hasFloatingBase()) {
-      kkt_matrix.Qqq().noalias()
-          += grid_info.dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
+      kkt_matrix.Qqq().noalias() += data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
     }
     else {
-      kkt_matrix.Qqq().diagonal().noalias() += grid_info.dt * q_weight_;
+      kkt_matrix.Qqq().diagonal().noalias() += q_weight_;
     }
   }
   if (enable_v_cost_) {
-    kkt_matrix.Qvv().diagonal().noalias() += grid_info.dt * v_weight_;
+    kkt_matrix.Qvv().diagonal().noalias() += v_weight_;
   }
   if (enable_a_cost_) {
-    kkt_matrix.Qaa.diagonal().noalias() += grid_info.dt * a_weight_;
+    kkt_matrix.Qaa.diagonal().noalias() += a_weight_;
   }
   if (enable_u_cost_) {
-    kkt_matrix.Quu.diagonal().noalias() += grid_info.dt * u_weight_;
+    kkt_matrix.Quu.diagonal().noalias() += u_weight_;
   }
 }
 

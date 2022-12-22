@@ -129,8 +129,7 @@ void ConfigurationSpaceCostTest::testStageCostConstRef(Robot& robot) const {
   else {
     q_diff = s.q - q_ref;
   }
-  const double cost_ref = 0.5 * dt 
-                           * ((q_weight.array()*q_diff.array()*q_diff.array()).sum()
+  const double cost_ref = 0.5 * ((q_weight.array()*q_diff.array()*q_diff.array()).sum()
                             + (v_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
                             + (a_weight.array()*s.a.array()*s.a.array()).sum()
                             + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
@@ -140,25 +139,25 @@ void ConfigurationSpaceCostTest::testStageCostConstRef(Robot& robot) const {
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
-    kkt_res_ref.lq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
+    kkt_res_ref.lq() += Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
   }
   else {
-    kkt_res_ref.lq() += dt * q_weight.asDiagonal() * (s.q-q_ref);
+    kkt_res_ref.lq() += q_weight.asDiagonal() * (s.q-q_ref);
   }
-  kkt_res_ref.lv() += dt * v_weight.asDiagonal() * (s.v-v_ref);
-  kkt_res_ref.la += dt * a_weight.asDiagonal() * s.a;
-  kkt_res_ref.lu += dt * u_weight.asDiagonal() * (s.u-u_ref);
+  kkt_res_ref.lv() += v_weight.asDiagonal() * (s.v-v_ref);
+  kkt_res_ref.la += a_weight.asDiagonal() * s.a;
+  kkt_res_ref.lu += u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
-    kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
+    kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
   else {
-    kkt_mat_ref.Qqq() += dt * q_weight.asDiagonal();
+    kkt_mat_ref.Qqq() += q_weight.asDiagonal();
   }
-  kkt_mat_ref.Qvv() += dt * v_weight.asDiagonal();
-  kkt_mat_ref.Qaa += dt * a_weight.asDiagonal();
-  kkt_mat_ref.Quu += dt * u_weight.asDiagonal();
+  kkt_mat_ref.Qvv() += v_weight.asDiagonal();
+  kkt_mat_ref.Qaa += a_weight.asDiagonal();
+  kkt_mat_ref.Quu += u_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));
@@ -336,25 +335,25 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   robot.integrateConfiguration(q0_ref, v_ref, (t-t0), q_ref);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot.subtractConfiguration(s.q, q_ref, q_diff);
-  const double cost_ref = 0.5 * dt * (q_weight.array()*q_diff.array()*q_diff.array()).sum();
+  const double cost_ref = 0.5 * (q_weight.array()*q_diff.array()*q_diff.array()).sum();
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), cost_ref);
 
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
-    kkt_res_ref.lq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
+    kkt_res_ref.lq() += Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
   }
   else {
-    kkt_res_ref.lq() += dt * q_weight.asDiagonal() * (s.q-q_ref);
+    kkt_res_ref.lq() += q_weight.asDiagonal() * (s.q-q_ref);
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   if (robot.hasFloatingBase()) {
-    kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
+    kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
   else {
-    kkt_mat_ref.Qqq() += dt * q_weight.asDiagonal();
+    kkt_mat_ref.Qqq() += q_weight.asDiagonal();
   }
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

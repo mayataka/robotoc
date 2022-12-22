@@ -91,7 +91,7 @@ double LocalContactForceCost::evalStageCost(Robot& robot,
                                  * (fl.array()-f_ref_[i].array())).sum();
     }
   }
-  return 0.5 * grid_info.dt * l;
+  return 0.5 * l;
 }
 
 
@@ -104,7 +104,7 @@ void LocalContactForceCost::evalStageCostDerivatives(
     if (contact_status.isContactActive(i)) {
       const auto& fl = s.f[i].template head<3>();
       kkt_residual.lf().template segment<3>(dimf_stack).array()
-          += grid_info.dt * f_weight_[i].array() * (fl.array()-f_ref_[i].array());
+          += f_weight_[i].array() * (fl.array()-f_ref_[i].array());
       switch (contact_types_[i]) {
         case ContactType::PointContact:
           dimf_stack += 3;
@@ -128,7 +128,7 @@ void LocalContactForceCost::evalStageCostHessian(
   for (int i=0; i<max_num_contacts_; ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
-          += grid_info.dt * f_weight_[i];
+          += f_weight_[i];
       switch (contact_types_[i]) {
         case ContactType::PointContact:
           dimf_stack += 3;

@@ -114,7 +114,7 @@ void TaskSpace3DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   robot.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = dt * 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
+  const double l_ref = 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
   const auto contact_status = robot.createContactStatus();
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
@@ -122,8 +122,8 @@ void TaskSpace3DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += dt * J_diff.transpose() * weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += J_diff.transpose() * weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_diff.transpose() * weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -240,15 +240,15 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const Eigen::Vector3d q_ref = x3d0_ref + (t-t0) * vx3d0_ref;
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = dt * 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
+  const double l_ref = 0.5 * q_diff.transpose() * weight.asDiagonal() * q_diff;
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += dt * J_diff.transpose() * weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += J_diff.transpose() * weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += J_diff.transpose() * weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

@@ -122,7 +122,7 @@ void TaskSpace6DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   const SE3 placement = robot.framePlacement(frame_id);
   const SE3 diff_x6d = x6d_ref.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
-  const double l_ref = dt * 0.5 * diff_6d.transpose() * weight.asDiagonal() * diff_6d;
+  const double l_ref = 0.5 * diff_6d.transpose() * weight.asDiagonal() * diff_6d;
   const auto contact_status = robot.createContactStatus();
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
@@ -132,8 +132,8 @@ void TaskSpace6DCostTest::testStageCostConstRef(Robot& robot, const int frame_id
   computeJLog6Map(diff_x6d, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
-  kkt_res_ref.lq() += dt * J66_J_6d.transpose() * weight.asDiagonal() * diff_6d;
-  kkt_mat_ref.Qqq() += dt * J66_J_6d.transpose() * weight.asDiagonal() * J66_J_6d;
+  kkt_res_ref.lq() += J66_J_6d.transpose() * weight.asDiagonal() * diff_6d;
+  kkt_mat_ref.Qqq() += J66_J_6d.transpose() * weight.asDiagonal() * J66_J_6d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
@@ -265,7 +265,7 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const SE3 placement = robot.framePlacement(frame_id);
   const SE3 diff_x6d = x6d_ref.inverse() * placement;
   const Eigen::VectorXd diff_6d = Log6Map(diff_x6d);
-  const double l_ref = dt * 0.5 * diff_6d.transpose() * weight.asDiagonal() * diff_6d;
+  const double l_ref = 0.5 * diff_6d.transpose() * weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), l_ref);
   cost->evalStageCostDerivatives(robot, contact_status, grid_info, s, data, kkt_res);
   cost->evalStageCostHessian(robot, contact_status, grid_info, s, data, kkt_mat);
@@ -274,8 +274,8 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   computeJLog6Map(diff_x6d, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
-  kkt_res_ref.lq() += dt * J66_J_6d.transpose() * weight.asDiagonal() * diff_6d;
-  kkt_mat_ref.Qqq() += dt * J66_J_6d.transpose() * weight.asDiagonal() * J66_J_6d;
+  kkt_res_ref.lq() += J66_J_6d.transpose() * weight.asDiagonal() * diff_6d;
+  kkt_mat_ref.Qqq() += J66_J_6d.transpose() * weight.asDiagonal() * J66_J_6d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

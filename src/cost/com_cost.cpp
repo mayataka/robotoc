@@ -95,7 +95,7 @@ double CoMCost::evalStageCost(Robot& robot, const ContactStatus& contact_status,
   if (enable_cost_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-    return 0.5 * grid_info.dt * l;
+    return 0.5 * l;
   }
   else {
     return 0.0;
@@ -113,7 +113,7 @@ void CoMCost::evalStageCostDerivatives(Robot& robot,
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 
-        += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.diff_3d;
+        += data.J_3d.transpose() * weight_.asDiagonal() * data.diff_3d;
   }
 }
 
@@ -126,7 +126,7 @@ void CoMCost::evalStageCostHessian(Robot& robot,
                                    SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
-        += grid_info.dt * data.J_3d.transpose() * weight_.asDiagonal() * data.J_3d;
+        += data.J_3d.transpose() * weight_.asDiagonal() * data.J_3d;
   }
 }
 

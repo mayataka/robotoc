@@ -75,7 +75,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
                                     * (fl.array()-f_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), 0.5*dt*l_ref);
+  EXPECT_DOUBLE_EQ(cost->evalStageCost(robot, contact_status, grid_info, s, data), 0.5*l_ref);
   kkt_res.setContactDimension(contact_status.dimf());
   kkt_mat.setContactDimension(contact_status.dimf());
   kkt_res.lf().setRandom();
@@ -89,7 +89,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
     if (contact_status.isContactActive(i)) {
       const auto& fl = s.f[i].template head<3>();
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
-          += dt * f_weight[i].array() * (fl.array()-f_ref[i].array());
+          += f_weight[i].array() * (fl.array()-f_ref[i].array());
       switch (robot.contactType(i)) {
         case ContactType::PointContact:
           dimf_stack += 3;
@@ -105,7 +105,7 @@ void LocalContactForceCostTest::testStageCost(Robot& robot) const {
   dimf_stack = 0;
   for (int i=0; i<robot.maxNumContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
-      kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += dt * f_weight[i];
+      kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += f_weight[i];
       switch (robot.contactType(i)) {
         case ContactType::PointContact:
           dimf_stack += 3;

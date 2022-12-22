@@ -169,7 +169,7 @@ double TaskSpace6DCost::evalStageCost(Robot& robot,
   if (enable_cost_ && isCostActive(grid_info)) {
     evalDiff(robot, data, grid_info);
     const double l = (weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-    return 0.5 * grid_info.dt * l;
+    return 0.5 * l;
   }
   else {
     return 0.0;
@@ -188,7 +188,7 @@ void TaskSpace6DCost::evalStageCostDerivatives(
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.JJ_6d.noalias() = data.J_66 * data.J_6d;
     kkt_residual.lq().noalias() 
-        += grid_info.dt * data.JJ_6d.transpose() * weight_.asDiagonal() * data.diff_6d;
+        += data.JJ_6d.transpose() * weight_.asDiagonal() * data.diff_6d;
   }
 }
 
@@ -201,7 +201,7 @@ void TaskSpace6DCost::evalStageCostHessian(Robot& robot,
                                            SplitKKTMatrix& kkt_matrix) const {
   if (enable_cost_ && isCostActive(grid_info)) {
     kkt_matrix.Qqq().noalias()
-        += grid_info.dt * data.JJ_6d.transpose() * weight_.asDiagonal() * data.JJ_6d;
+        += data.JJ_6d.transpose() * weight_.asDiagonal() * data.JJ_6d;
   }
 }
 
